@@ -1,0 +1,31 @@
+# Agents
+
+An AI agent is an application that can interact with users in natural language. Agents use LLMs to generate responses to user queries and can also execute actions on behalf of the user.
+
+Each agent consists of the following components:
+
+- Agent instructions: A set of instructions that define the agent's behavior and capabilities.
+- Tools: Functions that the agent can use to interact with its environment.
+
+
+## Agent Instructions
+
+Agent instructions tell the agent what its role is, how to interact with the user, what actions it can take, how to behave and respond to user queries, and how to interact with other agents. Here's an example of simple agent instructions:
+
+```yaml
+You're a Kubernetes agent that can help users manage their Kubernetes resources.
+Your responses should be clear and concise; you should provide helpful information and guidance to users.
+```
+
+Instructions are an important part of the agent's behavior. They define the agent's role and capabilities and help the agent understand its environment and the tasks it can perform.
+
+
+## Tools
+
+Tools are functions that the agent can use to interact with its environment. For example, a Kubernetes agent might have tools to list pods, get pod logs, and describe services.
+
+Tools definitions and their descriptions are made available to the agent and are sent to the LLMs together with the instructions. Based on the user query, the agent can use the tools to interact with the environment and generate responses.
+
+For example, we could add the `list_resources` tool to agent that would allow it to list resources in the Kubernetes cluster. The agent will determine based on the user input if it makes sense to invoke any of the available tools. 
+
+If the user asks "List all pods in the cluster", the agent can use the `list_resources` tool to list all pods in the cluster. Note that depending on how the instructions/tools are written and configure, the agent might list all the namespaces first then list all the pods in each namespace. Alternatively, if the `list_resources` tool allows listing resources across namespaces, the agent will pick that option.

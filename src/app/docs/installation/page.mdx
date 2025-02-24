@@ -1,0 +1,28 @@
+# Installing Kagent
+
+This guide covers different ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/quickstart).
+
+## Installation Methods
+
+### Using Helm (Recommended)
+
+The recommended way to install kagent is using Helm:
+
+```bash
+helm repo add kagent https://kagent.github.io/charts
+helm repo update
+helm install kagent kagent/kagent -f values.yaml
+```
+
+## Uninstallation
+
+To remove kagent from your cluster:
+
+```bash
+helm uninstall kagent
+```
+
+## Next Steps
+
+- [Configure your first agent](/docs/quickstart/first-steps)
+- [Explore available agents](/docs/agents)

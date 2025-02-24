@@ -1,0 +1,78 @@
+# Quick Start
+
+This guide will help you get started with kagent, an open-source framework that brings the power of agentic AI to cloud-native environments. We'll walk through setting up a local development environment and deploying your first AI agent.
+
+## Prerequisites
+
+Before you begin, make sure you have the following tools installed:
+
+- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) - for creating a local Kubernetes cluster
+- [Helm](https://helm.sh/docs/intro/install/) - for installing kagent
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) - for interacting with your cluster
+
+To run agents you'll also nee an OpenAI API key. You can [get one here](https://platform.openai.com/account/api-keys).
+
+## Installing kagent
+
+1. Add the Kagent Helm repository:
+
+```bash
+helm repo add kagent https://kagent.github.io/charts
+helm repo update
+```
+
+
+1. Set the OpenAI API key as an environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+1. Install kagent using Helm:
+
+```bash
+helm install kagent kagent/kagent \
+    --namespace kagent \
+    --create-namespace \
+    --set openai.apiKey=$OPENAI_API_KEY \
+```
+
+
+## Accessing the kagent UI
+
+1. Forward the Kagent UI port to your local machine:
+
+```bash
+kubectl port-forward svc/kagent-app 8080:80
+```
+
+2. Open your browser and navigate to [http://localhost:8080](http://localhost:8080)
+
+
+![Kagent UI](/images/kagent-ui.png)
+
+## Running Your First AI Agent
+
+Once you're in the Kagent UI, you can start interacting with the pre-configured agents. You can click on the agent card to view the agent details and start a conversation.
+
+The agent will help you manage and understand your Kubernetes resources using natural language.
+
+## Next Steps
+
+- Learn about [Core Concepts](/docs/concepts)
+- Explore [Custom Agents](/docs/custom-agents)
+- Check out our [Examples](/docs/examples)
+- Join our [Community](/community)
+
+## Troubleshooting
+
+If you encounter any issues:
+
+- Make sure your OpenAI API key is correct
+- Check the logs from the `kagent` deployment for error messages
+- Visit our [Troubleshooting Guide](/docs/troubleshooting) for more help
+
+## Need Help?
+
+- Visit our [GitHub repository](https://github.com/kagent-dev/kagent)
+- Check out the [FAQ](/docs/faq)
