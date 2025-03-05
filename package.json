@@ -10,7 +10,8 @@
     "build:worker": "npx opennextjs-cloudflare",
     "dev:worker": "wrangler dev --port 3000",
     "preview:worker": "npm run build:worker && npm run dev:worker",
-    "deploy:worker": "npm run build:worker && wrangler deploy"
+    "deploy:worker": "npm run build:worker && wrangler deploy --minify",
+    "dry-run:worker": "wrangler deploy --minify --outdir bundler/ --dry-run"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",

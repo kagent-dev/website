@@ -9,7 +9,7 @@ export default function Navbar() {
     <nav className="py-8">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-3">
+          <Link href="/">
             <KAgentLogoWithText className="h-5" />
           </Link>
           <div className="flex items-center space-x-8">
