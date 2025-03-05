@@ -1,8 +1,12 @@
 import React from "react";
-import { Bot, Wrench, GitBranch, ArrowRight, Code } from "lucide-react";
+import {  Wrench, GitBranch, ArrowRight, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
+import KagentLogo from "@/components/icons/kagent-logo";
+import Discord from "@/components/icons/discord";
+import { DISCORD_LINK, GITHUB_LINK } from "@/data/links";
+import Github from "@/components/icons/github";
 
 const MarketingPage = () => {
   return (
@@ -40,13 +44,13 @@ const MarketingPage = () => {
               <CardHeader>
                 <Wrench className="h-6 w-6 text-violet-500 mb-4" />
                 <CardTitle>Tools</CardTitle>
-                <CardDescription className="text-gray-400">Pre-defined functions for AI agents to interact with Kubernetes, Prometheus, Istio, and Argo</CardDescription>
+                <CardDescription className="text-gray-400">Pre-defined functions for AI agents to interact with Kubernetes, Prometheus, Istio, Argo, Helm, and other cloud-native projects</CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="bg-white/5 border-white/10">
               <CardHeader>
-                <Bot className="h-6 w-6 text-violet-500 mb-4" />
+                <KagentLogo animate={true} className="h-6 w-6 mb-4" />
                 <CardTitle>Agents</CardTitle>
                 <CardDescription className="text-gray-400">Autonomous systems that plan, execute tasks, analyze results, and continuously improve outcomes</CardDescription>
               </CardHeader>
@@ -56,7 +60,7 @@ const MarketingPage = () => {
               <CardHeader>
                 <Code className="h-6 w-6 text-violet-500 mb-4" />
                 <CardTitle>Framework</CardTitle>
-                <CardDescription className="text-gray-400">Simple interface to run agents via UI or declaratively, with full extensibility for custom solutions</CardDescription>
+                <CardDescription className="text-gray-400">Simple CLI and UI interface to run agents, with full extensibility for custom solutions</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -83,17 +87,21 @@ const MarketingPage = () => {
       {/* Community Section */}
       <div className="py-32 border-t border-white/10">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-medium mb-8">Join the kagent Community</h2>
+          <h2 className="text-3xl font-medium mb-8">Get involved with the <span className="text-violet-500 font-semibold">kagent</span> community</h2>
           <p className="text-xl text-gray-400 mb-12 leading-relaxed">
-            Whether you&apos;re a platform engineer, DevOps professional, or CNCF project maintainer, help us build the future of AI-driven cloud-native operations.
+            Whether you&apos;re a platform engineer, DevOps professional, or CNCF project maintainer, help us build and shape the future of AI-driven cloud-native operations with kagent.
           </p>
           <div className="flex justify-center space-x-6">
-            <Button variant="outline" size="lg">
-              Join CNCF Slack
+            <Button  size="lg">
+              <Discord />
+              <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer">
+                Discord
+              </Link>
             </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link href="https://github.com/kagent-dev/kagent" target="_blank" rel="noopener noreferrer">
-                Contribute
+            <Button size="lg">
+              <Github />
+              <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer">
+                GitHub
               </Link>
             </Button>
           </div>

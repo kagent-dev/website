@@ -1,5 +1,23 @@
 # kagent Architecture
 
-This page describes the architecture of kagent and how it works. 
+Kagent consists of multiple components running inside and outside of Kubernetes cluster.
 
-![Kagent Architecture](/images/arch.png)
+
+![Architecture](/images/arch.png)
+
+## Controller
+
+The kagent controller is a Kubernetes controller that knows how to handle custom CRDs for creating and managing AI agents in the cluster. 
+
+## Backend
+
+Kagent backend is based 
+
+## CLI
+
+Kagent CLI is one of the entry points to kagent. The CLI connects to the kagent controller and allows you to manage resources and initiate chats with agents. 
+
+
+## Dashboard (UI)
+
+Kagent dashboard provides a web interface for managing and working with AI agents.

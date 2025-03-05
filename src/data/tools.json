@@ -1,0 +1,679 @@
+[
+    {
+      "provider": "kagent.tools.istio.AnalyzeClusterConfig",
+      "description": "Analyzes live cluster configuration",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "AnalyzeClusterConfig",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.ApplyWaypoint",
+      "description": "Apply a waypoint configuration to a cluster",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ApplyWaypoint",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.DeleteWaypoint",
+      "description": "Delete a waypoint configuration from a cluster",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "DeleteWaypoint",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.GenerateManifest",
+      "description": "Generates an Istio install manifest and outputs to the console by default.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GenerateManifest",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.GenerateWaypoint",
+      "description": "Generate a waypoint configuration as YAML",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GenerateWaypoint",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.Install",
+      "description": "Install Istio",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "Install",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.ListWaypoints",
+      "description": "List managed waypoint configurations in the cluster",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ListWaypoints",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.ProxyConfig",
+      "description": "Get specific proxy configuration for a single pod",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ProxyConfig",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.ProxyStatus",
+      "description": "Get Envoy proxy status for a pod, retrieves last sent and last acknowledged xDS sync from Istiod to each Envoy in the mesh",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ProxyStatus",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.RemoteClusters",
+      "description": "Lists the remote clusters each istiod instance is connected to",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "RemoteClusters",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.WaypointStatus",
+      "description": "Get status of a waypoint",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "WaypointStatus",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.istio.ZTunnelConfig",
+      "description": "Get ztunnel configuration",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ZTunnelConfig",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.AnnotateResource",
+      "description": "Annotate a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "AnnotateResource",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.ApplyManifest",
+      "description": "Apply a YAML resource file to the Kubernetes cluster.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ApplyManifest",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.CheckServiceConnectivity",
+      "description": "Check connectivity to a service in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "CheckServiceConnectivity",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.CreateResource",
+      "description": "Create a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "CreateResource",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.DeleteResource",
+      "description": "Delete a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "DeleteResource",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.DescribeResource",
+      "description": "Describe a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "DescribeResource",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.ExecuteCommand",
+      "description": "Executes a command inside a pod in Kubernetes. For example, to run `ls` in a pod named `my-pod` in the namespace `my-namespace`, use `execute_command('my-pod', 'my-namespace', 'ls')`.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ExecuteCommand",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GetAvailableAPIResources",
+      "description": "Gets the supported API resources in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetAvailableAPIResources",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GetClusterConfiguration",
+      "description": "Get the configuration of the Kubernetes cluster.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetClusterConfiguration",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GetEvents",
+      "description": "Get the events in the Kubernetes cluster.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetEvents",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GetPodLogs",
+      "description": "Get logs from a specific pod in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetPodLogs",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GetResources",
+      "description": "Get information about resources in Kubernetes. Always prefer output type `wide` unless otherwise specified. 'all' is NOT an option, you must specify a resource type.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetResources",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GetResourceYAML",
+      "description": "Get the YAML representation of a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetResourceYAML",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.LabelResource",
+      "description": "Label a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "LabelResource",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.PatchResource",
+      "description": "Patch a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "PatchResource",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.RemoveAnnotation",
+      "description": "Remove an annotation from a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "RemoveAnnotation",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.RemoveLabel",
+      "description": "Remove a label from a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "RemoveLabel",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.Rollout",
+      "description": "Perform a rollout on a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "Rollout",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.Scale",
+      "description": "Scale a resource in Kubernetes.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "Scale",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.k8s.GenerateResourceTool",
+      "description": "GenerateResourceTool knows how to generate a resource YAML configuration for Istio, Gateway API, Argo resources from a detailed description.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GenerateResourceTool",
+      "config": {
+        "model": "gpt-4o",
+        "openai_api_key": "",
+        "temperature": 0.0
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.AlertmanagersTool",
+      "description": "Provides information about the Alertmanager instances known to Prometheus.\n        Use this tool to verify the connection status between Prometheus and its Alertmanagers.\n        Shows both active and dropped Alertmanager instances.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "AlertmanagersTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.AlertsTool",
+      "description": "Retrieves all currently firing alerts in the Prometheus server.\n        Use this tool to monitor the current alert state and identify ongoing issues.\n        Returns details about alert names, labels, and when they started firing.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "AlertsTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.BuildInfoTool",
+      "description": "Retrieves information about how the Prometheus server was built.\n        Use this tool to verify version information, build timestamps, and other compilation details.\n        Helps confirm the version and build configuration of the running server.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "BuildInfoTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.CleanTombstonesTool",
+      "description": "Removes tombstone files created during Prometheus data deletion operations.\n        Use this tool to maintain database cleanliness and recover storage space.\n        Tombstones are markers for deleted data and can be safely removed after their retention period.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "CleanTombstonesTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.CreateSnapshotTool",
+      "description": "Creates a snapshot of the current Prometheus TSDB data.\n        Use this tool for backup purposes or creating point-in-time copies of the data.\n        You can optionally skip snapshotting the head block (latest, incomplete data).",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "CreateSnapshotTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.DeleteSeriesTool",
+      "description": "Deletes time series data matching specific criteria in Prometheus.\n        Use this tool carefully to remove obsolete data or free up storage space.\n        Deleted data cannot be recovered. You can specify time ranges and series selectors.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "DeleteSeriesTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.LabelNamesTool",
+      "description": "Retrieves all label names that are available in the Prometheus server.\n        Use this tool to discover what dimensions are available for querying and filtering metrics.\n        You can optionally filter by time range and series selectors.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "LabelNamesTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.LabelValuesTool",
+      "description": "Retrieves all possible values for a specific label name in Prometheus.\n        Use this tool to understand the range of values a particular label can have.\n        You can filter by time range and series selectors to narrow down the results.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "LabelValuesTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.MetadataTool",
+      "description": "Retrieves metadata for Prometheus metrics including help text and type information.\n        Use this tool to understand what metrics mean and how they should be interpreted.\n        You can filter by specific metric names and set limits on the number of results.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "MetadataTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.QueryRangeTool",
+      "description": "Executes time series queries over a specified time range in Prometheus.\n        Use this tool for analyzing metric patterns, trends, and historical data.\n        You can specify the time range, resolution (step), and timeout for the query.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "QueryRangeTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.QueryTool",
+      "description": "Executes instant queries against Prometheus to retrieve current metric values.\n        Use this tool when you need to get the latest values of metrics or perform calculations on current data.\n        The query must be a valid PromQL expression.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "QueryTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.RulesTool",
+      "description": "Retrieves information about configured alerting and recording rules in Prometheus.\n        Use this tool to understand what alerts are defined and what metrics are being pre-computed.\n        You can filter rules by type, name, group, and other criteria.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "RulesTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.RuntimeInfoTool",
+      "description": "Provides detailed information about the Prometheus server's runtime state.\n        Use this tool to monitor server health and performance through details about garbage collection,\n        memory usage, and other runtime metrics.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "RuntimeInfoTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.SeriesQueryTool",
+      "description": "Finds time series that match certain label selectors in Prometheus.\n        Use this tool to discover which metrics exist and their label combinations.\n        You can specify time ranges to limit the search scope and set a maximum number of results.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "SeriesQueryTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.StatusConfigTool",
+      "description": "Retrieves the current configuration of the Prometheus server.\n        Use this tool to view the complete runtime configuration including scrape configs, alert rules, and other settings.\n        Helps verify the current server configuration state.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "StatusConfigTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.StatusFlagsTool",
+      "description": "Retrieves the current command-line flag values used by Prometheus.\n        Use this tool to understand how the Prometheus server was started and what runtime options are enabled.\n        Shows all configuration flags and their current values.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "StatusFlagsTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.TargetMetadataTool",
+      "description": "Retrieves metadata about metrics exposed by specific Prometheus targets.\n        Use this tool to understand metric types, help texts, and units.\n        You can filter by target labels and specific metric names.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "TargetMetadataTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.TargetsTool",
+      "description": "Provides information about all Prometheus scrape targets and their current state.\n        Use this tool to monitor which targets are being scraped successfully and which are failing.\n        You can filter targets by state (active/dropped) and scrape pool.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "TargetsTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.TSDBStatusTool",
+      "description": "Provides information about the time series database (TSDB) status in Prometheus.\n        Use this tool to monitor database health through details about data storage, head blocks,\n        WAL status, and other TSDB metrics.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "TSDBStatusTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.WALReplayTool",
+      "description": "Retrieves the status of Write-Ahead Log (WAL) replay operations in Prometheus.\n        Use this tool to monitor the progress of WAL replay during server startup or recovery.\n        Helps track data durability and recovery progress.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "WALReplayTool",
+      "config": {
+        "base_url": "http://localhost:9090/api/v1",
+        "username": "",
+        "password": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.prometheus.GeneratePromQLTool",
+      "description": "GeneratePromQLTool generates PromQL queries from natural language descriptions.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GeneratePromQLTool",
+      "config": {
+        "model": "gpt-4o",
+        "openai_api_key": "",
+        "temperature": 0.0
+      }
+    },
+    {
+      "provider": "kagent.tools.docs.QueryTool",
+      "description": "Searches a vector database for relevant documentation related to various software projects.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "QueryTool",
+      "config": {
+        "docs_base_path": "",
+        "docs_download_url": "https://doc-sqlite-db.s3.sa-east-1.amazonaws.com",
+        "openai_api_key": ""
+      }
+    },
+    {
+      "provider": "kagent.tools.helm.GetRelease",
+      "description": "\nThis command consists of multiple subcommands which can be used to\nget extended information about the release, including:\n\n\nAvailable specifiers:\n  all         download all information for a named release\n  hooks       download all hooks for a named release\n  manifest    download the manifest for a named release. The manifest is a YAML-formatted\n               file containing the complete state of the release.\n  notes       download the notes for a named release. The notes are a text\n               document that contains information about the release.\n  values      download the values file for a named release. The values are a\n               YAML-formatted file containing the values used to generate the\n               release.\n",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "GetRelease",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.helm.ListReleases",
+      "description": "\nThis command lists all of the releases for a specified namespace (uses current namespace context if namespace not specified).\n\n\nIf the --filter flag is provided, it will be treated as a filter. Filters are\nregular expressions (Perl compatible) that are applied to the list of releases.\nOnly items that match the filter will be returned.\n\n    $ helm list --filter 'ara[a-z]+'\n    NAME                UPDATED                                  CHART\n    maudlin-arachnid    2020-06-18 14:17:46.125134977 +0000 UTC  alpine-0.1.0\n    ",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "ListReleases",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.helm.Uninstall",
+      "description": "\nThis command takes a release name and uninstalls the release.\n\nIt removes all of the resources associated with the last release of the chart\nas well as the release history, freeing it up for future use.\n\nUse the '--dry-run' flag to see which releases will be uninstalled without actually\nuninstalling them.\n\nUsage:\n  helm uninstall RELEASE_NAME [...] [flags]\n\n",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "Uninstall",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.helm.Upgrade",
+      "description": "\nThis command upgrades a release to a new version of a chart.\n\nThe upgrade arguments must be a release and chart. The chart\nargument can be either: a chart reference('example/mariadb'), a path to a chart directory,\na packaged chart, or a fully qualified URL. For chart references, the latest\nversion will be specified unless the '--version' flag is set.\n\nThere are six different ways you can express the chart you want to install:\n\n1. By chart reference: helm install mymaria example/mariadb\n2. By path to a packaged chart: helm install mynginx ./nginx-1.2.3.tgz\n3. By path to an unpacked chart directory: helm install mynginx ./nginx\n4. By absolute URL: helm install mynginx https://example.com/charts/nginx-1.2.3.tgz\n5. By chart reference and repo url: helm install --repo https://example.com/charts/ mynginx nginx\n6. By OCI registries: helm install mynginx --version 1.2.3 oci://example.com/charts/nginx\n",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "Upgrade",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.PauseRollout",
+      "description": "Pause a rollout in Argo Rollouts, with options to configure Kubernetes context and authentication.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "PauseRollout",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.PromoteRollout",
+      "description": "Promote a rollout in Argo Rollouts, with options to configure Kubernetes context and authentication.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "PromoteRollout",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.SetRolloutImage",
+      "description": "Set the image for a container in an Argo Rollouts deployment.",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "SetRolloutImage",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.VerifyKubectlPluginInstall",
+      "description": "Verify Argo Rollouts kubectl plugin installation status",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "VerifyKubectlPluginInstall",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.VerifyArgoRolloutsControllerInstall",
+      "description": "Verify Argo Rollouts controller is running in the kubernetes cluster",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "VerifyArgoRolloutsControllerInstall",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.CheckPluginLogsTool",
+      "description": "Check Argo Rollouts controller logs for Gateway API plugin installation status",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "CheckPluginLogsTool",
+      "config": {}
+    },
+    {
+      "provider": "kagent.tools.argo.VerifyGatewayPluginTool",
+      "description": "Verify and configure Gateway API plugin for Argo Rollouts",
+      "component_type": "tool",
+      "component_version": 1,
+      "version": 1,
+      "label": "VerifyGatewayPluginTool",
+      "config": {}
+    }
+  ]

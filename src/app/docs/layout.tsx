@@ -26,7 +26,6 @@ const navigation: NavItem[] = [
       { title: "What is kagent", href: "/docs/concepts/what-is-kagent" },
       { title: "Architecture", href: "/docs/concepts/architecture" },
       { title: "Agents", href: "/docs/concepts/agents" },
-      { title: "Multi-agent scenarios", href: "/docs/concepts/multi-agent" },
       { title: "Tools", href: "/docs/concepts/tools" },
     ],
   },

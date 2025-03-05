@@ -12,9 +12,6 @@ export default function DocsPage() {
           <Button size="lg" asChild>
             <Link href="/docs/quickstart">Get Started</Link>
           </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/docs/examples">View Examples</Link>
-          </Button>
         </div>
       </div>
 

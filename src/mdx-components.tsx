@@ -1,39 +1,8 @@
-import { ExternalLink } from "lucide-react";
 import type { MDXComponents } from "mdx/types";
 import { useMemo } from "react";
-import Link from "next/link";
-
-const SmartLink = ({
-  children,
-  href,
-  ...props
-}: {
-  children: React.ReactNode;
-  href: string;
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
-  const isExternal = href?.startsWith("http") || href?.startsWith("www");
-
-  if (isExternal) {
-    return (
-      <a
-        className="font-medium text-primary underline inline-flex items-center gap-1 hover:text-primary/80 transition-colors"
-        target="_blank"
-        rel="noopener noreferrer"
-        href={href}
-        {...props}
-      >
-        {children}
-        <ExternalLink className="ml-1 h-4 w-4" />
-      </a>
-    );
-  }
-
-  return (
-    <Link className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 transition-colors" href={href} {...props}>
-      {children}
-    </Link>
-  );
-};
+import { PlatformTabs } from "./components/mdx/platform-tabs";
+import SmartLink from "./components/mdx/smart-link";
+import { CodeBlock } from "./components/mdx/code-block";
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return useMemo(
@@ -92,11 +61,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           {children}
         </em>
       ),
-      code: ({ children, ...props }) => (
-        <code className="relative rounded-md bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm" {...props}>
-          {children}
-        </code>
-      ),
+      code: ({ children, ...props }) => <CodeBlock {...props}>{children}</CodeBlock>,
       // Block elements
       blockquote: ({ children, ...props }) => (
         <blockquote className="mt-6 border-l-4 border-primary pl-6 italic text-muted-foreground" {...props}>
@@ -128,11 +93,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         </td>
       ),
       // Pre (for code blocks)
-      pre: ({ children, ...props }) => (
-        <pre className="mb-4 mt-6 overflow-x-auto rounded-lg border border-muted bg-muted p-4 font-mono text-sm" {...props}>
-          {children}
-        </pre>
-      ),
+      pre: ({ children }) => (<>{children}</>),
+      PlatformTabs,
       ...components,
     }),
     [components]
