@@ -8,6 +8,7 @@ import Navbar from "@/components/navbar";
 export const metadata: Metadata = {
   title: "kagent | Bringing Agentic AI to cloud native",
   description: "An open-source framework for DevOps and platform engineers to run AI agents in Kubernetes, automating complex operations and troubleshooting tasks.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kagent.dev"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
