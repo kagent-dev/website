@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { GITHUB_LINK } from "@/data/links";
 import Link from "next/link";
 
-const ToolsRegistry = () => {
+const AgentRegistry = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -45,4 +45,4 @@ const ToolsRegistry = () => {
   );
 };
 
-export default ToolsRegistry;
+export default AgentRegistry;

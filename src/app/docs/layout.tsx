@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Metadata } from "next/types";
 
 interface NavItem {
   title: string;
@@ -40,6 +41,10 @@ const navigation: NavItem[] = [
   },
 ];
 
+export const metadata: Metadata = {
+  title: "kagent | Documentation",
+};
+
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="max-w-6xl mx-auto flex min-h-[calc(100vh-256px)]">
@@ -47,27 +52,18 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <nav className="px-6 py-16 space-y-8">
           {navigation.map((section) => (
             <div key={section.title}>
-              <h3 className="font-bold text-sm mb-4">
-                {section.title}
-              </h3>
+              <h3 className="font-bold text-sm mb-4">{section.title}</h3>
               <ul className="space-y-2">
                 {section.items?.map((item) => (
                   <li key={item.href}>
                     <Button variant="link" className="block text-sm py-1 text-secondary-foreground/70" asChild>
-                    <Link
-                      href={item.href}
-                    >
-                      {item.title}
-                    </Link>
+                      <Link href={item.href}>{item.title}</Link>
                     </Button>
                     {item.items && (
                       <ul className="ml-4 mt-2 space-y-2">
                         {item.items.map((subItem) => (
                           <li key={subItem.href}>
-                            <Link
-                              href={subItem.href}
-                              className="block text-sm py-1 text-white/40 hover:text-white"
-                            >
+                            <Link href={subItem.href} className="block text-sm py-1 text-white/40 hover:text-white">
                               {subItem.title}
                             </Link>
                           </li>
