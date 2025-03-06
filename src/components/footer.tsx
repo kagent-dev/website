@@ -20,7 +20,7 @@ export default function Footer() {
           </Link>
         </div>
         <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-          <KagentLogo animate={true} className="h-6 w-6" />
+          <KagentLogo animate={true} className="h-6 w-6 text-[#942DE7]" />
           <p>is an open source project</p>
         </div>
       </div>

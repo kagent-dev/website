@@ -13,7 +13,7 @@ export default function KAgentLogoWithText({ className } : { className?: string 
 
   return (
     <svg viewBox="0 0 494 110" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <g clip-path="url(#clip0_16068_64093)">
+      <g clipPath="url(#clip0_16068_64093)">
         <path d="M91.609 46.098H76.3328V61.472H91.609V46.098Z" fill="#942DE7" />
         <path d="M61.0806 46.098H45.8045V61.472H61.0806V46.098Z" fill="#942DE7" />
         <path
