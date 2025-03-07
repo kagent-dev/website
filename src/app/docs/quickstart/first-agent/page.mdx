@@ -55,11 +55,11 @@ We'll leave the default model (GPT-4o) selected and move to the next step.
 
 Tools are the other building block of the agent. They are the commands that the agent can run to interact with the environment. As LLMs don't have the ability to run commands, tools are the way to bridge the gap between the agent and the environment. Kagent provides a set of built-in tools that you can use to interact with Kubernetes, Istio, Prometheus and projects. You can also [build your own tools](#)!
 
-For this agent, we'll add the following tools two tools - GetResources and GetAvailableAPIResources. The first tool will enable the agent to run `kubectl get` command and retrieve resources running in the cluster. The second tool will enable the agent to get a list of available API resources in the cluster.
+For this agent, we'll add the following tools two tools - GetResources and GetAvailableAPIResources. The first tool will enable the agent to run *kubectl get* command and retrieve resources running in the cluster. The second tool will enable the agent to get a list of available API resources in the cluster.
 
-Click the Add Tools button and search for `GetResources` and `GetAvailableAPIResources` - click on them to select them and then click the Save Selection to add them to the agent.
+Click the Add Tools button and search for **GetResources** and **GetAvailableAPIResources** - click on them to select them and then click the Save Selection to add them to the agent.
 
-![Kagent with tools](/images/kagent-ui.png)
+![Kagent with tools](/images/kagent-new.png)
 
 Last thing to do is to click the Create Agent button to create the agent.
 
