@@ -9,7 +9,7 @@ export default function ConceptsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <QuickLink title="What is kagent" description="Learn about the kagent features." href="/docs/concepts/what-is-kagent" />
+        <QuickLink title="What is kagent" description="Learn about the kagent features." href="/docs/introduction/what-is-kagent" />
         <QuickLink title="Architecture" description="Learn about the architecture of kagent." href="/docs/concepts/architecture" />
         <QuickLink title="Agents" description="Learn about AI agents." href="/docs/concepts/agents" />
         <QuickLink title="Tools" description="Learn about tools and MCP." href="/docs/concepts/tools" />

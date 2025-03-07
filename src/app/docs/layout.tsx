@@ -14,8 +14,9 @@ const navigation: NavItem[] = [
     title: "Introduction",
     href: "#",
     items: [
-      { title: "Installation", href: "/docs/installation" },
-      { title: "Feature Roadmap", href: "/docs/roadmap" },
+      { title: "What is kagent", href: "/docs/introduction/what-is-kagent" },
+      { title: "Installation", href: "/docs/introduction/installation" },
+      { title: "Feature Roadmap", href: "/docs/introduction/roadmap" },
       { title: "Contributing", href: "https://github.com/kagent-dev/kagent" },
     ],
   },
@@ -23,8 +24,8 @@ const navigation: NavItem[] = [
     title: "Getting Started",
     href: "#",
     items: [
-      { title: "Quick Start", href: "/docs/quickstart" },
-      { title: "Your First Agent", href: "/docs/quickstart/first-agent" },
+      { title: "Quick Start", href: "/docs/getting-started/quickstart" },
+      { title: "Your First Agent", href: "/docs/getting-started/first-agent" },
     ],
   },
 
@@ -32,7 +33,6 @@ const navigation: NavItem[] = [
     title: "Core Concepts",
     href: "#",
     items: [
-      { title: "What is kagent", href: "/docs/concepts/what-is-kagent" },
       { title: "Architecture", href: "/docs/concepts/architecture" },
       { title: "Agents", href: "/docs/concepts/agents" },
       { title: "Tools", href: "/docs/concepts/tools" },
@@ -42,9 +42,9 @@ const navigation: NavItem[] = [
     title: "Resources",
     href: "/docs/resources",
     items: [
-      { title: "Examples", href: "/docs/examples" },
-      { title: "Troubleshooting", href: "/docs/troubleshooting" },
-      { title: "FAQs", href: "/docs/faq" },
+      { title: "Examples", href: "/docs/resources/examples" },
+      { title: "Troubleshooting", href: "/docs/resources/troubleshooting" },
+      { title: "FAQs", href: "/docs/resources/faq" },
     ],
   },
 ];

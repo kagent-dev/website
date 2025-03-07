@@ -30,7 +30,7 @@ export default function Navbar() {
             </Button>
             <ThemeToggle />
             <Button variant="secondary" asChild>
-              <Link href="/docs/quickstart">Get Started</Link>
+              <Link href="/docs/getting-started/quickstart">Get Started</Link>
             </Button>
           </div>
         </div>

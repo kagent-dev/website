@@ -15,7 +15,7 @@ export default function Footer() {
           <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
             Community
           </Link>
-          <Link href="/docs/quickstart" className="text-sm text-muted-foreground hover:text-primary">
+          <Link href="/docs/getting-started/quickstart" className="text-sm text-muted-foreground hover:text-primary">
             Get Started
           </Link>
         </div>
