@@ -11,15 +11,23 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   {
-    title: "Getting Started",
+    title: "Introduction",
     href: "#",
     items: [
-      { title: "Quick Start", href: "/docs/quickstart" },
       { title: "Installation", href: "/docs/installation" },
       { title: "Feature Roadmap", href: "/docs/roadmap" },
       { title: "Contributing", href: "https://github.com/kagent-dev/kagent" },
     ],
   },
+  {
+    title: "Getting Started",
+    href: "#",
+    items: [
+      { title: "Quick Start", href: "/docs/quickstart" },
+      { title: "Your First Agent", href: "/docs/quickstart/first-agent" },
+    ],
+  },
+
   {
     title: "Core Concepts",
     href: "#",
