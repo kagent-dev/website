@@ -64,7 +64,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       code: ({ children, ...props }) => <CodeBlock {...props}>{children}</CodeBlock>,
       // Block elements
       blockquote: ({ children, ...props }) => (
-        <blockquote className="mt-6 border-l-4 border-primary pl-6 italic text-muted-foreground" {...props}>
+        <blockquote {...props}>
           {children}
         </blockquote>
       ),

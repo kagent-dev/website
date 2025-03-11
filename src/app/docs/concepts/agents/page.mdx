@@ -27,3 +27,7 @@ Tools definitions and their descriptions are made available to the agent and are
 For example, we could add the **list_resources** tool to agent that would allow it to list resources in the Kubernetes cluster. The agent will determine based on the user input if it makes sense to invoke any of the available tools.
 
 If the user asks "List all pods in the cluster", the agent can use the **list_resources** tool to list all pods in the cluster. Note that depending on how the instructions/tools are written and configure, the agent might list all the namespaces first then list all the pods in each namespace. Alternatively, if the **list_resources** tool allows listing resources across namespaces, the agent will pick that option.
+
+Some tools support additional configuration that can be set in when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
+
+KAgent comes with a set of built-in tools that you can use to interact with your environment. KAgent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.

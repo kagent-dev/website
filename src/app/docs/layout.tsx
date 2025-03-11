@@ -86,7 +86,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         </nav>
       </div>
 
-      <div className="prose-lg p-16 flex-1 prose-li:marker:text-muted-foreground prose-ol:list-decimal prose-ul:list-disc">{children}</div>
+      <div className="prose-lg p-16 flex-1 prose-li:marker:text-muted-foreground prose-ol:list-decimal prose-ul:list-disc prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:italic ">
+        {children}
+      </div>
     </div>
   );
 }
