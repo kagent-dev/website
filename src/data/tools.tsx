@@ -5,6 +5,7 @@ import { IstioIcon } from "@/components/icons/istio";
 import { KubernetesIcon } from "@/components/icons/kubernetes";
 import { PrometheusIcon } from "@/components/icons/prometheus";
 import { ArgoIcon } from "@/components/icons/argo";
+import { GrafanaIcon } from "@/components/icons/grafana";
 
 export interface Tool {
   id: string;
@@ -68,6 +69,9 @@ const loadToolsFromConfig = (): Tool[] => {
       } else if (config.provider.includes("argo")) {
         icon = <ArgoIcon className="w-10 h-10"/>;
         tags = ["Argo"];
+      } else if (config.provider.includes("grafana")) {
+        icon = <GrafanaIcon className="w-10 h-10"/>;
+        tags = ["Grafana"];
       }
       else {
         // Default icon for other tools
@@ -142,6 +146,13 @@ const allCategories: Category[] = [
     description: "Tools for managing and interacting with Argo projects and workflows",
     icon: <ArgoIcon className="w-10 h-10"/>,
     tools: tools.filter((tool) => tool.tags.includes("Argo")),
+  },
+  {
+    id: "grafana",
+    name: "Grafana",
+    description: "Tools for managing and interacting with Grafana dashboards and data sources",
+    icon: <GrafanaIcon className="w-10 h-10"/>,
+    tools: tools.filter((tool) => tool.tags.includes("Grafana")),
   },
   {
     id: "other",
