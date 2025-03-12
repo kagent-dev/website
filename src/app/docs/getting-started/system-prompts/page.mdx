@@ -15,7 +15,7 @@ Before we start writing a system prompt, it's important to understand the core c
 3. **User query** - The user query is the query that the user makes to the agent. It is the input that the agent will use to generate the response.
 
 
-When desigining agent prompts, the user query is slightly less relevant than the agent instructions and tools, as you may not always have control over it. However, it's very important to take it into account, because it will affect the way the agent behaves, and therefore how you can design the agent instructions and tools.
+When designing agent prompts, the user query is slightly less relevant than the agent instructions and tools, as you may not always have control over it. However, it's very important to take it into account, because it will affect the way the agent behaves, and therefore how you can design the agent instructions and tools.
 
 ## Prompt structure
 
@@ -147,7 +147,7 @@ It will also work with individual resource names, or a list of resource names.
 
 Notice how much information we've added to the prompt. We've added a detailed operational protocol, and safety guidelines. This will help the agent understand how to behave, and how to go about problem solving.
 
-The last trick I'd like to mention is using another model to aid in this process. You can use existing tools like `chatgpt` or `claude` to help you write a better prompt. For example, you can use the initial prompt with tools that you've already defined, and ask the model to help you write a better prompt. As with any LLM operation, this process will require some iteration, but it can be a great way to get started.
+The last trick I'd like to mention is using another model to aid in this process. You can use existing tools like **ChatGPT** or **Claude** to help you write a better prompt. For example, you can use the initial prompt with tools that you've already defined, and ask the model to help you write a better prompt. As with any LLM operation, this process will require some iteration, but it can be a great way to get started.
 
 ## Reference
 
