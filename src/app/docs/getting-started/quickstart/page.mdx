@@ -20,25 +20,14 @@ To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. Y
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-2. Install kagent using Helm to your cluster:
-
-```bash
-helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-    --namespace kagent \
-    --create-namespace \
-    --set openai.apiKey=$OPENAI_API_KEY \
-```
-
-## Installing kagent CLI
-
-Using a CLI is one way you can interact with kagent.
+2. Download the kagent CLI:
 
 <PlatformTabs />
 
 <div id="mac-tab">
 
 ```bash
-curl -LO https://github.com/kagent-dev/kagent/releases/download/v0.0.10/kagent-darwin-arm64
+curl -LO https://github.com/kagent-dev/kagent/releases/download/v0.0.12/kagent-darwin-arm64
 mv kagent-darwin-arm64 kagent
 chmod +x kagent
 sudo mv kagent /usr/local/bin/kagent
@@ -63,35 +52,53 @@ sudo chmod +x /usr/local/bin/kagent
 </div>
 
 
-To use the CLI we'll do a port-forward to the API server inside the cluster:
+3. Install kagent to the cluster using the CLI. First run the CLI:
 
-```shell
-kubectl port-forward svc/kagent kagent-app 8081:8081
+```bash
+kagent
 ```
 
-You can run kagent to start the REPL environment and then use commands to interact with kagent:
+Then, once within the CLI environment, run the install command:
+
+```bash
+install
+```
+
+```console
+kagent >> install
+kagent installed successfully
+```
+
+## Using the CLI
+
+You can run *kagent* to start the REPL environment and then use commands to interact with kagent:
 
 ```shell
 kagent >> help
 
 Commands:
-  clear        clear the screen
-  exit         exit the program
-  get          get kagent resources.
-  help         display help
-  run          Run a kagent agent
-  version      Print the kagent version.
+  clear          clear the screen
+  dashboard      Open the kagent dashboard.
+  exit           exit the program
+  get            get kagent resources.
+  help           display help
+  install        Install kagent.
+  run            Run a kagent agent
+  uninstall      Uninstall kagent.
+  version        Print the kagent version.
 ```
 
 ## Accessing the kagent dashboard (UI)
 
-1. Forward the kagent UI port to your local machine:
+1. To open the kagent dashboard, run the dashboard command from the CLI
 
-```bash
-kubectl port-forward svc/kagent-app -n kagent 8080:80
+```
+kagent >> dashboard
+kagent dashboard is available at http://localhost:8082
+Press Enter to stop the port-forward...
 ```
 
-2. Open your browser and navigate to [http://localhost:8080](http://localhost:8080)
+The CLI will set up the port-forward to the service running inside the cluster and open the dashboard.
 
 ![kagent UI](/images/kagent-landing.png)
 
