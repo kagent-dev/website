@@ -4,9 +4,66 @@ This guide covers ways to install and configure kagent in your Kubernetes enviro
 
 ## Installation Methods
 
-### Using Helm (Recommended)
+### Using kagent CLI (Recommended)
 
-The recommended way to install kagent is using Helm - make sure you set the `OPENAI_API_KEY` environment variable:
+1. Set the OpenAI API key as an environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+2. Download the kagent CLI:
+
+<PlatformTabs />
+
+<div id="mac-tab">
+
+```bash
+curl -LO https://github.com/kagent-dev/kagent/releases/download/v0.0.12/kagent-darwin-arm64
+mv kagent-darwin-arm64 kagent
+chmod +x kagent
+sudo mv kagent /usr/local/bin/kagent
+```
+</div>
+
+<div id="windows-tab">
+```powershell
+Invoke-WebRequest -Uri https://github.com/kagent-dev/kagent/releases/latest/download/kagent_windows_amd64.zip -OutFile kagent.zip
+Expand-Archive -Path kagent.zip -DestinationPath .\kagent
+Move-Item .\kagent\kagent.exe C:\Windows\System32\
+```
+</div>
+
+<div id="linux-tab">
+```bash
+curl -LO https://github.com/kagent-dev/kagent/releases/latest/download/kagent_linux_amd64.tar.gz
+tar -xzf kagent_linux_amd64.tar.gz
+sudo mv kagent /usr/local/bin/
+sudo chmod +x /usr/local/bin/kagent
+```
+</div>
+
+
+3. Install kagent to the cluster using the CLI. First run the CLI:
+
+```bash
+kagent
+```
+
+Then, once within the CLI environment, run the install command:
+
+```bash
+install
+```
+
+```console
+kagent >> install
+kagent installed successfully
+```
+
+### Using Helm
+
+Another way to install kagent is using Helm - make sure you set the `OPENAI_API_KEY` environment variable:
 
 ```bash
 helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
@@ -19,6 +76,13 @@ helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
 ## Uninstallation
 
 To remove kagent from your cluster:
+
+```bash
+$ kagent
+kagent >> uninstall
+```
+
+Or, if you prefer Helm:
 
 ```bash
 helm uninstall kagent
