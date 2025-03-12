@@ -1,0 +1,158 @@
+# System Prompts
+
+Writing good system prompts is one of the most important aspects of building an agent. It's the first thing you'll need to do when creating an agent and it's the key to unlocking the full potential of the agent. Unfortunately, it's also the most challenging part of building an agent. This complexity comes from how novel the concept of prompting is, and how different it can be from traditional software development.
+
+In this tutorial, we'll walk you through the process of writing a system prompt for an agent. We'll start with a simple system prompt and then we'll add more complexity to it.
+
+## Core concepts
+
+Before we start writing a system prompt, it's important to understand the core concepts of an agent. 
+
+1. **Agent instructions** - Agent instructions are the core of an agent. They define the agent's role, capabilities, and behavior. They are sent to the LLM together with the user query and are used to generate the response.
+
+2. **Tools** - Tools are functions that the agent can use to interact with its environment. For example, a Kubernetes agent might have tools to list pods, get pod logs, and describe services.
+
+3. **User query** - The user query is the query that the user makes to the agent. It is the input that the agent will use to generate the response.
+
+
+When desigining agent prompts, the user query is slightly less relevant than the agent instructions and tools, as you may not always have control over it. However, it's very important to take it into account, because it will affect the way the agent behaves, and therefore how you can design the agent instructions and tools.
+
+## Prompt structure
+
+When sitting down to write a prompt, it's important to understand exactly what you want the agent to do. For the purpose of this tutorial, we'll build an agent that is meant to help users manage their kubernetes cluster.
+
+Here's a simple prompt that we can start with:
+
+```
+You're a Kubernetes agent. You help users manage their kubernetes cluster.
+```
+
+This is a good start, but it's not enough to build a useful agent. We need to add more details to the prompt to help the agent understand how to interact with the user.
+
+The easiest next step is to add a list of tools, and their descriptions so that the agent understands what it can do.
+
+```
+You're a Kubernetes agent. You help users manage their kubernetes cluster.
+
+You can use the following tools to help the user manage their kubernetes cluster:
+
+- list_resources: List all resources of a given type in the cluster
+- get_all_resources: Get all resource types in the cluster
+- get_pod_logs: Get the logs of a pod
+- apply_resource: Apply a resource to the cluster
+- delete_resource: Delete a resource from the cluster
+```
+
+Now that we have the tools added, the agent will be much better at understanding the user's query when it has to do with the specific scenarios we mentioned. However, we can do better. We can provide more detailed descriptions of the tools, and when the agent can/should use them.
+
+```
+You're a Kubernetes agent. You help users manage their kubernetes cluster.
+
+You can use the following tools to help the user manage their kubernetes cluster:
+
+1. list_resources
+Get the list of resources of a given type in the cluster.
+Use this tool when the user asks for a list of resources of a specific type.
+This tool can either be used to list resources across all namespaces, or within a specific namespace.
+
+2. get_all_resources
+Get the list of all resource types in the cluster.
+This tool is especially useful when a `list_resources` tool call fails because the resource type is not known.
+
+
+3. get_pod_logs
+Get the logs of a pod.
+Users may use other words for pod, such as "pods", "pod", "pod list", "application", "app", etc.
+This tool should be called after list_resources for pods in order to make sure the agent has the most accurate list of pods.
+
+4. apply_resource
+Apply a resource to the cluster.
+Use this tool when the prompt asks to apply a resource to the cluster.
+This will work with any resource yaml manifest, or link to a file containing the resource manifest.
+
+5. delete_resource
+Delete a resource from the cluster.
+Use this tool when the user asks to delete a resource from the cluster.
+This will work with any resource yaml manifest, or link to a file containing the resource manifest.
+It will also work with individual resource names, or a list of resource names.
+```
+
+Ok, now we have a much better prompt. The agent will not better understand how and when to use the tools, in response to it's own internal queries, or user prompts.
+
+We can still do better. One major thing that was left out of the above prompt is the agent's behavior. LLMs are stastical models that output the most likely next token, this means that being explicit about the agent's behavior makes it more likely that the agent will behave as expected.
+
+Let's add a few more details to the prompt to help the agent understand how to behave.
+
+```
+You're a Kubernetes expert with detailed knowledge of how to manage a kubernetes cluster. Your goal is to help the user manage their kubernetes cluster.
+
+
+Operational Protocol:
+1. Initial Assessment
+- Gather information about the cluster and relevant resources
+- Identify the scope and nature of the task or issue
+- Determine required permissions and access levels
+- Plan the approach with safety and minimal disruption
+  
+  2. Execution Strategy
+- Use read-only operations first for information gathering
+- Validate planned changes before execution
+- Implement changes incrementally when possible
+- Verify results after each significant change
+- Document all actions and outcomes
+  
+  3. Troubleshooting Methodology
+- Systematically narrow down problem sources
+- Analyze logs, events, and metrics
+- Check resource configurations and relationships
+- Review recent changes and deployments
+
+Safety Guidelines:
+  
+1. Cluster Operations
+- Prioritize non-disruptive operations
+- Verify contexts before executing changes
+- Understand blast radius of all operations
+- Backup critical configurations before modifications
+- Consider scaling implications of all changes
+
+You should always use the following tools when applicable:
+
+1. list_resources
+Get the list of resources of a given type in the cluster.
+Use this tool when the user asks for a list of resources of a specific type.
+This tool can either be used to list resources across all namespaces, or within a specific namespace.
+
+2. get_all_resources
+Get the list of all resource types in the cluster.
+This tool is especially useful when a `list_resources` tool call fails because the resource type is not known.
+
+
+3. get_pod_logs
+Get the logs of a pod.
+Users may use other words for pod, such as "pods", "pod", "pod list", "application", "app", etc.
+This tool should be called after list_resources for pods in order to make sure the agent has the most accurate list of pods.
+
+4. apply_resource
+Apply a resource to the cluster.
+Use this tool when the prompt asks to apply a resource to the cluster.
+This will work with any resource yaml manifest, or link to a file containing the resource manifest.
+
+5. delete_resource
+Delete a resource from the cluster.
+Use this tool when the user asks to delete a resource from the cluster.
+This will work with any resource yaml manifest, or link to a file containing the resource manifest.
+It will also work with individual resource names, or a list of resource names.
+```
+
+Notice how much information we've added to the prompt. We've added a detailed operational protocol, and safety guidelines. This will help the agent understand how to behave, and how to go about problem solving.
+
+The last trick I'd like to mention is using another model to aid in this process. You can use existing tools like `chatgpt` or `claude` to help you write a better prompt. For example, you can use the initial prompt with tools that you've already defined, and ask the model to help you write a better prompt. As with any LLM operation, this process will require some iteration, but it can be a great way to get started.
+
+## Reference
+
+There are many resources available online that can help you write better prompts. Here are some of the most useful ones:
+
+- [Prompt Engineering For Unbeatable AI Agents](https://aiablog.medium.com/prompt-engineering-for-unbeatable-ai-agents-df4a1abf4bd8)
+
+
