@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   title: "kagent | Bringing Agentic AI to cloud native",
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <GoogleTagManager gtmId="GTM-KNRGVQPF" />
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Navbar />
