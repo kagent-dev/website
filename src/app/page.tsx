@@ -23,7 +23,7 @@ const MarketingPage = () => {
           </p>
           <div className="flex justify-center space-x-4">
             <Button size="lg" asChild>
-              <Link href="/docs/quickstart">
+              <Link href="/docs/getting-started/quickstart">
                 Quick Start <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

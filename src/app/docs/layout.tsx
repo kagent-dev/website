@@ -17,8 +17,8 @@ const navigation: NavItem[] = [
     items: [
       { title: "What is kagent", href: "/docs/introduction/what-is-kagent" },
       { title: "Installation", href: "/docs/introduction/installation" },
-      { title: "Feature Roadmap", href: "/docs/introduction/roadmap" },
-      { title: "Contributing", href: "https://github.com/kagent-dev/kagent" },
+      { title: "Feature Roadmap", href: "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap" },
+      { title: "Contributing", href: "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" },
     ],
   },
   {
