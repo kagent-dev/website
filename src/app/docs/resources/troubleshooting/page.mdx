@@ -1,2 +1,23 @@
 # Troubleshooting
 
+## My agent doesn't seem to be working
+
+If your agent is not showing up even though you applied the manifest, it's likely because the agent has been rejected by the engine, this error should be reported on the status of the agent.
+
+Run the following command to get the status of the agent:
+
+```shell
+kubectl get agent [agent-name] -o yaml
+```
+
+This should give you the reason why the agent was rejected.
+
+If it's not there, you can try to get the logs of the agent:
+
+```shell
+kubectl logs -n kagent kagent -c controller
+kubectl logs -n kagent kagent -c app
+```
+
+
+
