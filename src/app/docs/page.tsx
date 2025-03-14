@@ -17,8 +17,8 @@ export default function DocsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
         <QuickLink title="Quick Start" description="Get up and running with kagent in your Kubernetes cluster in minutes." href="/docs/getting-started/quickstart" />
+        <QuickLink title="Build an Agent" description="Build your first agent." href="/docs/getting-started/first-agent" />
         <QuickLink title="Core Concepts" description="Learn about the fundamental concepts and architecture of kagent." href="/docs/introduction/what-is-kagent" />
-        <QuickLink title="Examples" description="Examples to get you up and running with kagent." href="/docs/resources/examples" />
         <QuickLink title="FAQs" description="Frequently asked questions about kagent and its use cases." href="/docs/resources/faq" />
       </div>
     </div>
