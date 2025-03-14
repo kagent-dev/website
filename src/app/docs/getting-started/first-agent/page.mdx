@@ -13,7 +13,7 @@ $ kagent
 kagent >> dashboard
 ```
 
-![Kagent UI](/images/kagent-landing.png)
+![kagent UI](/images/kagent-landing.png "Kagent dashboard main page")
 
 ## Creating the agent
 
@@ -23,7 +23,7 @@ We'll creating an agent that can use Kubernetes tools to interact with the clust
 
 Set the following description:
 
-```
+```console
 This agent can interact with the Kubernetes API to get information about the cluster.
 ```
 
@@ -52,13 +52,13 @@ We'll leave the default model (GPT-4o) selected and move to the next step.
 
 ## Adding tools
 
-Tools are the other building block of the agent. They are the commands that the agent can run to interact with the environment. As LLMs don't have the ability to run commands, tools are the way to bridge the gap between the agent and the environment. Kagent provides a set of built-in tools that you can use to interact with Kubernetes, Istio, Prometheus and projects. You can also [build your own tools](#)!
+Tools are the other building block of the agent. They are the commands that the agent can run to interact with the environment. As LLMs don't have the ability to run commands, tools are the way to bridge the gap between the agent and the environment. Kagent provides a set of built-in tools that you can use to interact with Kubernetes, Istio, Prometheus and projects. You can also [build your own tools](/tools)!
 
 For this agent, we'll add the following tools two tools - GetResources and GetAvailableAPIResources. The first tool will enable the agent to run *kubectl get* command and retrieve resources running in the cluster. The second tool will enable the agent to get a list of available API resources in the cluster.
 
 Click the Add Tools button and search for **GetResources** and **GetAvailableAPIResources** - click on them to select them and then click the Save Selection to add them to the agent.
 
-![Kagent with tools](/images/kagent-new.png)
+![Kagent with tools](/images/kagent-new.png "Adding tools to the agent")
 
 Last thing to do is to click the Create Agent button to create the agent.
 
@@ -66,7 +66,7 @@ Last thing to do is to click the Create Agent button to create the agent.
 
 Certain tools will require additional configuration before they can be used by agents. To configure the individual tools, click the settings icon in the list of tools to open the configuration dialog.
 
-![configuring tools](/images/kagent-config.png)
+![configuring tools](/images/kagent-config.png "Configuring tools")
 
 ## Testing the agent
 
@@ -74,9 +74,9 @@ Once the agent is created, you'll be automatically redirected to the chat interf
 
 Let's try asking the agent for the available API resources "Which API resources are available in my cluster?"
 
-The agent will call the GetAvailableAPIResources tool and then synthesize a response based on the result of that tool call.
+The agent will call the `GetAvailableAPIResources` tool and then synthesize a response based on the result of that tool call.
 
-![agent response](/images/kagent-chat-1.png)
+![agent response](/images/kagent-chat-1.png "Chatting with the new agent")
 
 ## Next Steps
 

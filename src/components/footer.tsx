@@ -1,5 +1,6 @@
 import Link from "next/link";
 import KagentLogo from "./icons/kagent-logo";
+import { DISCORD_LINK, GITHUB_LINK } from "@/data/links";
 
 export default function Footer() {
   return (
@@ -9,10 +10,10 @@ export default function Footer() {
           <Link href="/docs" className="text-sm text-muted-foreground hover:text-primary">
             Documentation
           </Link>
-          <Link href="https://github.com/kagent-dev/kagent" className="text-sm text-muted-foreground hover:text-primary">
+          <Link href={GITHUB_LINK} className="text-sm text-muted-foreground hover:text-primary">
             GitHub
           </Link>
-          <Link href="#" className="text-sm text-muted-foreground hover:text-primary">
+          <Link href={DISCORD_LINK} className="text-sm text-muted-foreground hover:text-primary">
             Community
           </Link>
           <Link href="/docs/getting-started/quickstart" className="text-sm text-muted-foreground hover:text-primary">

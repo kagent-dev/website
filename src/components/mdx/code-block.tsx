@@ -21,6 +21,10 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
     setTimeout(() => setCopied(false), 2000);
   };
 
+  if (!language || !className) {
+    return <code className='font-mono'>{children}</code>
+  }
+
   return (
     <div className={`relative rounded-lg ${className}`}>
       <div className="absolute right-4 top-4">

@@ -35,8 +35,8 @@ const MarketingPage = () => {
           </div>
         </div>
       </div>
-      <div className="max-w-5xl mx-auto">
-        <Image src="/images/hero.png" alt="Hero Image" width={800} height={600} layout="responsive" />
+      <div className="max-w-5xl flex items-center justify-center mx-auto">
+        <Image src="/images/hero.png" alt="Hero Image" width={800} height={600} />
       </div>
 
       {/* Key Components Section */}

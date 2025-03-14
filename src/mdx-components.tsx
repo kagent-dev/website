@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { PlatformTabs } from "./components/mdx/platform-tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
+import Image from "next/image";
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return useMemo(
@@ -63,11 +64,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       ),
       code: ({ children, ...props }) => <CodeBlock {...props}>{children}</CodeBlock>,
       // Block elements
-      blockquote: ({ children, ...props }) => (
-        <blockquote {...props}>
-          {children}
-        </blockquote>
-      ),
+      blockquote: ({ children, ...props }) => <blockquote {...props}>{children}</blockquote>,
       hr: (props) => <hr className="my-8 border-muted" {...props} />,
       // Tables
       table: ({ children, ...props }) => (
@@ -92,8 +89,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           {children}
         </td>
       ),
+      img: ({ ...props }) => (
+        <figure>
+          <Image src={props.src} alt={props.title} width="0" height="0" sizes="100vw" className="w-full h-auto" />
+          {props.title && <figcaption className="text-xs text-center italic">{props.title}</figcaption>}
+        </figure>
+      ),
       // Pre (for code blocks)
-      pre: ({ children }) => (<>{children}</>),
+      pre: ({ children }) => <>{children}</>,
       PlatformTabs,
       ...components,
     }),

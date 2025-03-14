@@ -45,7 +45,6 @@ const navigation: NavItem[] = [
     title: "Resources",
     href: "/docs/resources",
     items: [
-      { title: "Examples", href: "/docs/resources/examples" },
       { title: "Troubleshooting", href: "/docs/resources/troubleshooting" },
       { title: "FAQs", href: "/docs/resources/faq" },
     ],
