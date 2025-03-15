@@ -58,22 +58,21 @@ const loadToolsFromConfig = (): Tool[] => {
         icon = <KubernetesIcon className="w-10 h-10" />;
         tags = ["Kubernetes"];
       } else if (config.provider.includes("istio")) {
-        icon = <IstioIcon className="w-10 h-10"/>;
+        icon = <IstioIcon className="w-10 h-10" />;
         tags = ["Istio"];
       } else if (config.provider.includes("docs")) {
-        icon = <BookOpenText className="w-10 h-10"/>;
+        icon = <BookOpenText className="w-10 h-10" />;
         tags = ["Documentation", "Vector DB", "Search"];
       } else if (config.provider.includes("helm")) {
         icon = <HelmIcon className="w-10 h-10" />;
         tags = ["Helm"];
       } else if (config.provider.includes("argo")) {
-        icon = <ArgoIcon className="w-10 h-10"/>;
+        icon = <ArgoIcon className="w-10 h-10" />;
         tags = ["Argo"];
       } else if (config.provider.includes("grafana")) {
-        icon = <GrafanaIcon className="w-10 h-10"/>;
+        icon = <GrafanaIcon className="w-10 h-10" />;
         tags = ["Grafana"];
-      }
-      else {
+      } else {
         // Default icon for other tools
         icon = <BookOpenText />;
         tags = ["Other"];
@@ -108,14 +107,16 @@ const allCategories: Category[] = [
   {
     id: "documentation",
     name: "Documentation",
-    description: "Tools for searching and managing documentation across different products and services",
+    description:
+      "Tools for searching and managing documentation across different products and services",
     icon: <BookOpenText />,
     tools: tools.filter((tool) => tool.tags.includes("Documentation")),
   },
   {
     id: "prometheus",
     name: "Prometheus",
-    description: "Complete suite of tools for monitoring, querying, and managing Prometheus instances",
+    description:
+      "Complete suite of tools for monitoring, querying, and managing Prometheus instances",
     icon: <PrometheusIcon className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.tags.includes("Prometheus")),
   },
@@ -130,28 +131,31 @@ const allCategories: Category[] = [
     id: "istio",
     name: "Istio",
     description: "Tools for managing and interacting with Istio service mesh",
-    icon: <IstioIcon className="w-10 h-10"/>,
+    icon: <IstioIcon className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.tags.includes("Istio")),
   },
   {
     id: "helm",
     name: "Helm",
-    description: "Tools for managing and interacting with Helm charts and repositories",
+    description:
+      "Tools for managing and interacting with Helm charts and repositories",
     icon: <HelmIcon className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.tags.includes("Helm")),
   },
   {
     id: "argo",
     name: "Argo",
-    description: "Tools for managing and interacting with Argo projects and workflows",
-    icon: <ArgoIcon className="w-10 h-10"/>,
+    description:
+      "Tools for managing and interacting with Argo projects and workflows",
+    icon: <ArgoIcon className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.tags.includes("Argo")),
   },
   {
     id: "grafana",
     name: "Grafana",
-    description: "Tools for managing and interacting with Grafana dashboards and data sources",
-    icon: <GrafanaIcon className="w-10 h-10"/>,
+    description:
+      "Tools for managing and interacting with Grafana dashboards and data sources",
+    icon: <GrafanaIcon className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.tags.includes("Grafana")),
   },
   {
@@ -160,12 +164,18 @@ const allCategories: Category[] = [
     description: "Other tools that don't fit into the other categories",
     icon: <BookOpenText className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.tags.includes("Other")),
-  }
+  },
 ];
 
 // Filter out categories with no tools
-export const categories: Category[] = allCategories.filter(category => category.tools.length > 0);
+export const categories: Category[] = allCategories.filter(
+  (category) => category.tools.length > 0
+);
 
 export const getAllTools = () => tools;
-export const getToolsByCategory = (categoryId: string) => categories.find((cat) => cat.id === categoryId)?.tools || [];
-export const getCategory = (categoryId: string) => categories.find((cat) => cat.id === categoryId);
+export const getToolByProvider = (provider: string) =>
+  tools.find((tool) => tool.provider === provider);
+export const getToolsByCategory = (categoryId: string) =>
+  categories.find((cat) => cat.id === categoryId)?.tools || [];
+export const getCategory = (categoryId: string) =>
+  categories.find((cat) => cat.id === categoryId);

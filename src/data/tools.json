@@ -45,7 +45,7 @@
     "config": {}
   },
   {
-    "provider": "kagent.tools.istio.Install",
+    "provider": "kagent.tools.istio.InstallIstio",
     "description": "Install Istio",
     "component_type": "tool",
     "component_version": 1,
