@@ -29,7 +29,7 @@ const loadAgentsFromConfig = (): Agent[] => {
 
       if (config.metadata.name.toLowerCase().includes("observability")) {
         icon = <PrometheusIcon className="w-10 h-10" />;
-      } else if (config.metadata.name.toLowerCase().includes("kubernetes")) {
+      } else if (config.metadata.name.toLowerCase().includes("k8s")) {
         icon = <KubernetesIcon className="w-10 h-10" />;
       } else if (config.metadata.name.toLowerCase().includes("istio")) {
         icon = <IstioIcon className="w-10 h-10" />;
