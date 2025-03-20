@@ -23,7 +23,7 @@ When sitting down to write a prompt, it's important to understand exactly what y
 
 Here's a simple prompt that we can start with:
 
-```
+```md
 You're a Kubernetes agent. You help users manage their kubernetes cluster.
 ```
 
@@ -31,7 +31,7 @@ This is a good start, but it's not enough to build a useful agent. We need to ad
 
 The easiest next step is to add a list of tools, and their descriptions so that the agent understands what it can do.
 
-```
+```md
 You're a Kubernetes agent. You help users manage their kubernetes cluster.
 
 You can use the following tools to help the user manage their kubernetes cluster:
@@ -45,7 +45,7 @@ You can use the following tools to help the user manage their kubernetes cluster
 
 Now that we have the tools added, the agent will be much better at understanding the user's query when it has to do with the specific scenarios we mentioned. However, we can do better. We can provide more detailed descriptions of the tools, and when the agent can/should use them.
 
-```
+```md
 You're a Kubernetes agent. You help users manage their kubernetes cluster.
 
 You can use the following tools to help the user manage their kubernetes cluster:
@@ -83,7 +83,7 @@ We can still do better. One major thing that was left out of the above prompt is
 
 Let's add a few more details to the prompt to help the agent understand how to behave.
 
-```
+```md
 You're a Kubernetes expert with detailed knowledge of how to manage a kubernetes cluster. Your goal is to help the user manage their kubernetes cluster.
 
 
@@ -154,5 +154,3 @@ The last trick I'd like to mention is using another model to aid in this process
 There are many resources available online that can help you write better prompts. Here are some of the most useful ones:
 
 - [Prompt Engineering For Unbeatable AI Agents](https://aiablog.medium.com/prompt-engineering-for-unbeatable-ai-agents-df4a1abf4bd8)
-
-
