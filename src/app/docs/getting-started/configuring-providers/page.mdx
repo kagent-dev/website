@@ -1,0 +1,73 @@
+# Configuring LLM providers
+
+OpenAI gpt-4o is configured as a default LLM provider for kagent (the `default-model-config` in the kagent namespace). The ModelConfig resource is used for configuring models.
+
+The following providers are currently supported:
+
+- OpenAI
+- Azure OpenAI
+- Anthropic (note that there's an [active issue with tool calling](https://github.com/kagent-dev/kagent/issues/200))
+
+## Configuring Anthropic
+
+1. Create a Kubernetes Secret that stores the API key, replace `<your_api_key>` with an actual API key:
+
+```shell
+export ANTHROPIC_API_KEY=<your_api_key>
+kubectl create secret generic kagent-anthropic -n kagent --from-literal ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+```
+
+2. Create a ModelConfig resource that references the secret and key name, and specify the Anthropic model you want to use:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: claude-model-config
+  namespace: kagent
+spec:
+  apiKeySecretName: kagent-anthropic
+  apiKeySecretKey: ANTHROPIC_API_KEY
+  model: claude-3-sonnet-20240229
+  provider: Anthropic
+```
+
+3. Apply the above resource to the cluster.
+
+Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
+
+![Model selection](/images/modelselection.png "kagent model selection dropdown")
+
+
+## Configuring Azure OpenAI
+
+1. Create a Kubernetes Secret that stores the API key, replace `<your_api_key>` with an actual API key:
+
+```shell
+export AZURE_OPENAI_API_KEY=<your_api_key>
+kubectl create secret generic kagent-azureopenai -n kagent --from-literal AZURE_OPENAI_API_KEY=$AZURE_OPENAI_API_KEY
+```
+
+2. Create a ModelConfig resource that references the secret and key name, and specify the additional information that's required for the Azure OpenAI - that's the deployment name, version and the Azure AD token. You can get these values from Azure.
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: azureopenai-model-config
+  namespace: kagent
+spec:
+  apiKeySecretName: kagent-azureopenai
+  apiKeySecretKey: AZURE_OPENAI_API_KEY
+  model: gpt-4o-mini
+  provider: AzureOpenAI
+  azureOpenAI:
+    azureEndpoint: "https://{yourendpointname}.openai.azure.com/"
+    apiVersion: "2025-03-01-preview"
+    azureDeployment: "gpt-4o-mini"
+    azureAdToken: <azure_ad_token_value>
+```
+
+3. Apply the above resource to the cluster.
+
+Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.

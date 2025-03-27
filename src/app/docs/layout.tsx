@@ -28,6 +28,7 @@ const navigation: NavItem[] = [
       { title: "Quick Start", href: "/docs/getting-started/quickstart" },
       { title: "Your First Agent", href: "/docs/getting-started/first-agent" },
       { title: "Writing System Prompts", href: "/docs/getting-started/system-prompts" },
+      { title: "Configuring LLM Providers", href: "/docs/getting-started/configuring-providers" },
 
     ],
   },
