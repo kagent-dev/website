@@ -1,9 +1,11 @@
 // default open-next.config.ts file created by @opennextjs/cloudflare
 
+
 const config = {
   default: {
     override: {
       wrapper: "cloudflare-node",
+      incrementalCache: "dummy",
       converter: "edge",
       tagCache: "dummy",
       queue: "dummy",
