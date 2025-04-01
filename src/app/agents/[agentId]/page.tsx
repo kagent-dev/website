@@ -65,7 +65,7 @@ const AgentPage = () => {
             </CardHeader>
             <Separator />
             <CardContent className="pt-6">
-              <div className="prose w-full max-w-none">
+              <div className="prose w-full max-w-none dark:prose-invert">
                 <ReactMarkdown>{agent.systemMessage.join("\n")}</ReactMarkdown>
               </div>
             </CardContent>
