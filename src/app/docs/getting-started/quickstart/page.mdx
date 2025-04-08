@@ -22,33 +22,10 @@ export OPENAI_API_KEY="your-api-key-here"
 
 2. Download the kagent CLI:
 
-<PlatformTabs />
-
-<div id="mac-tab">
-
 ```bash
 # Download/run the install script
 curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
 ```
-</div>
-
-<div id="windows-tab">
-```powershell
-Invoke-WebRequest -Uri https://github.com/kagent-dev/kagent/releases/latest/download/kagent_windows_amd64.zip -OutFile kagent.zip
-Expand-Archive -Path kagent.zip -DestinationPath .\kagent
-Move-Item .\kagent\kagent.exe C:\Windows\System32\
-```
-</div>
-
-<div id="linux-tab">
-```bash
-curl -LO https://github.com/kagent-dev/kagent/releases/latest/download/kagent_linux_amd64.tar.gz
-tar -xzf kagent_linux_amd64.tar.gz
-sudo mv kagent /usr/local/bin/
-sudo chmod +x /usr/local/bin/kagent
-```
-</div>
-
 
 3. Install kagent to the cluster using the CLI. First run the CLI:
 
