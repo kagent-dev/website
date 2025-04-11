@@ -43,6 +43,13 @@ const navigation: NavItem[] = [
     ],
   },
   {
+    title: "Examples",
+    href: "/docs/examples",
+    items: [
+      { title: "Documentation agent", href: "/docs/examples/documentation" },
+    ],
+  },
+  {
     title: "Resources",
     href: "/docs/resources",
     items: [
