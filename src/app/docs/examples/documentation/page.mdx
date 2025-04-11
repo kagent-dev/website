@@ -1,0 +1,196 @@
+# Creating an agent leveraging documentation
+
+In this example, we're going to crawl a documentation website, store the content in a vector database and leverage it to anwser questions about it.
+
+## Create the vector database
+
+We're going to use the [doc2vec](https://github.com/kagent-dev/doc2vec) project to crawl the [MCP documentation](https://modelcontextprotocol.io/) websize and store the content in a [sqlite-vec](https://github.com/asg017/sqlite-vec) database.
+
+Clone the `doc2vec` repo:
+
+```shell
+git clone https://github.com/kagent-dev/doc2vec.git
+```
+
+Install the dependencies:
+
+```shell
+cd doc2vec
+npm install
+```
+
+Update the configuration file to crawl the MCP documentation sqlite:
+
+```shell
+cat <<EOF > config.yaml
+sources:
+  - type: website
+    product_name: 'mcp'
+    version: 'latest'
+    url: 'https://modelcontextprotocol.io/'
+    max_size: 1048576
+    database_config:
+      type: 'sqlite'
+      params:
+        db_path: './mcp.db'
+EOF
+```
+
+Launch the process:
+
+```shell
+npm start
+```
+
+It will take several minutes to complete
+
+## Create the MCP server to use the MCP documentation database
+
+Now that we have the database, we can create a MCP server to leverage it.
+
+The goal is to deploy it on Kubernetes to allow our agent to use it.
+
+To simplify the process, we're going to store the database in the Docker image.
+
+Let's build and push the Docker image:
+
+```shell
+cd mcp
+cp ../mcp.db .
+docker build -t <your docker repository> .
+docker push <your docker repository> .
+```
+
+## Deploy the MCP server
+
+Create a Secret for the OpenAI API Key which is going to be used to create the embeddings:
+
+```bash
+kubectl create secret generic mcp-secrets \
+  --from-literal=OPENAI_API_KEY=<your_openai_api_key>
+```
+
+Create a ConfigMap for the Database Configuration:
+
+```bash
+kubectl create configmap mcp-config \
+  --from-literal=SQLITE_DB_DIR=/data \
+  --from-literal=PORT=3001
+```
+
+Create a file named `deployment.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-sqlite-vec
+  labels:
+    app: mcp-sqlite-vec
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-sqlite-vec
+  template:
+    metadata:
+      labels:
+        app: mcp-sqlite-vec
+    spec:
+      containers:
+      - name: mcp-sqlite-vec
+        image: <your docker repository>
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-secrets
+              key: OPENAI_API_KEY
+        - name: SQLITE_DB_DIR
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-config
+              key: SQLITE_DB_DIR
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-config
+              key: PORT
+```
+
+Apply it:
+```bash
+kubectl apply -f deployment.yaml
+```
+
+Create a file named `service.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-sqlite-vec
+spec:
+  selector:
+    app: mcp-sqlite-vec
+  ports:
+  - port: 3001
+    targetPort: 3001
+  type: ClusterIP
+```
+
+Apply it:
+```bash
+kubectl apply -f service.yaml
+```
+
+## Add the MCP server in kagent
+
+In the kagent UI, click on `tools` and then on `Manage tool servers`.
+
+![manage tool servers](/images/manage-tool-servers.png "Manage tool servers")
+
+Click on `Add Server`.
+
+Call it `sqlite-vec`.
+
+Select `URL` and use `http://mcp-sqlite-vec.default:3001/sse`.
+
+![add tool server](/images/add-tool-server.png "Add tool server")
+
+Click on `Add Server`.
+
+After refreshing the page, you should see the `query-documentation` tool being discovered.
+
+![list tool servers](/images/list-tool-servers.png "List tool servers")
+
+## Create the MCP agent
+
+Click on `New Agent`
+
+Use the following information:
+
+- Agent Name: mcp-agent
+- Description: The MCP agent is answering questions about MCP, using the MCP documentation
+- Agent Instructions: Use your tool to answer any question about the Model Context Protocol (MCP).  Use `mcp` for the product and `latest` for the version.
+
+Click on `Add Tools`.
+
+Select the `query-documentation` tool.
+
+![list agents](/images/list-agents.png "List agents")
+
+Congratulations, the agent is ready !
+
+## Use the MCP agent
+
+Click on the agent and ask a question.
+
+For example, `How can a MCP server using sse ?`
+
+![mcp agent](/images/mcp-agent.png "MCP agent")
+
+As you can see, the agent has used the `query-documentation` tool to answer the question.
