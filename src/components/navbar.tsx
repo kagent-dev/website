@@ -1,6 +1,6 @@
 'use client'
 import Link from "next/link";
-import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
+import { GITHUB_LINK } from "@/data/links";
 import { useState } from "react";
 import KAgentLogoWithText from "./icons/kagent-logo-text";
 import { ThemeToggle } from "./theme-toggle";
@@ -33,7 +33,7 @@ export default function Navbar() {
               <Link href={GITHUB_LINK}>GitHub</Link>
             </Button>
             <Button variant="link" className="text-secondary-foreground" asChild>
-              <Link href={DISCORD_LINK}>Community</Link>
+              <Link href="/community">Community</Link>
             </Button>
             <ThemeToggle />
             <Button variant="secondary" asChild>
@@ -72,7 +72,7 @@ export default function Navbar() {
                 <Link href={GITHUB_LINK}>GitHub</Link>
               </Button>
               <Button variant="ghost" className="justify-start" asChild>
-                <Link href={DISCORD_LINK}>Community</Link>
+                <Link href="/community">Community</Link>
               </Button>
               <Button variant="secondary" className="mt-4" asChild>
                 <Link href="/docs/getting-started/quickstart">Get Started</Link>

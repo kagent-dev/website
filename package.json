@@ -25,6 +25,7 @@
     "@types/mdx": "^2.0.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.7.3",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.475.0",
     "next": "^15.2.4",
@@ -49,6 +50,7 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "wrangler": "^4.8.0"
+    "wrangler": "^4.8.0",
+    "yaml-loader": "^0.8.1"
   }
 }
