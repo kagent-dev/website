@@ -1,0 +1,18 @@
+livestreams:
+  - date: "March 26, 2025"
+    title: "Kagent - Bringing Agentic AI to Cloud-Native"
+    url: "https://www.youtube.com/watch?v=3wRs_wxpLrA"
+    description: "Join us as we introduce kagent, the new open-source framework from Solo.io that brings AI agents to Kubernetes! In this stream, we'll demonstrate how kagent helps DevOps and platform engineers automate Kubernetes and cloud-native tasks through AI agents. Built on Microsoft's AutoGen framework and the Model Context Protocol, kagent integrates with cloud-native tools like Argo, Helm, Istio, and Prometheus."
+    status: "completed"
+
+  - date: "April 10, 2025"
+    title: "Building AI agent with kagent"
+    url: "https://www.youtube.com/watch?v=qiCkScw6h1k"
+    description: "In the last live stream, we introduced kagent, an open-source framework that brings AI agents to Kubernetes. In this stream, we'll show you demos on how to get started and build your first AI agent with kagent!"
+    status: "completed"
+
+  - date: "April 17, 2025"
+    title: "Security for agents and tools"
+    url: "https://www.youtube.com/watch?v=9IEsKNCd8S4"
+    description: "In this live stream, we'll discuss security for AI agents and tools in the enterprise environment."
+    status: "upcoming" 
