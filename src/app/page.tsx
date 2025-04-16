@@ -1,3 +1,5 @@
+'use client';
+
 import React from "react";
 import { GitBranch, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,35 +10,59 @@ import Github from "@/components/icons/github";
 import { KeyComponents } from "@/components/key-components";
 import { UseCases } from "@/components/use-cases";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 const MarketingPage = () => {
   return (
     <>
+      {/* Animated Background */}
+      <div className="gradient-bg" />
+
       {/* Hero Section */}
-      <div className="pt-32 pb-16">
+      <div className="pt-32 pb-16 relative">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h1 className="text-5xl md:text-6xl font-medium tracking-tight mb-8">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-5xl md:text-6xl font-medium tracking-tight mb-8"
+          >
             Bringing <span className="text-primary">Agentic AI</span> to cloud native
-          </h1>
-          <p className="text-xl text-gray-400 mb-12 leading-relaxed">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-xl text-gray-400 mb-12 leading-relaxed"
+          >
             An open-source framework for DevOps and platform engineers to run AI agents in Kubernetes, automating complex operations and troubleshooting tasks.
-          </p>
-          <div className="flex justify-center space-x-4">
-            <Button size="lg" asChild>
+          </motion.p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="flex justify-center space-x-4"
+          >
+            <Button size="lg" asChild className="hover:scale-105 transition-transform">
               <Link href="/docs/getting-started/quickstart">
                 Quick Start <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="" asChild>
+            <Button size="lg" variant="outline" className="hover:scale-105 transition-transform" asChild>
               <Link href="https://github.com/kagent-dev/kagent" target="_blank" rel="noopener noreferrer">
                 View on GitHub <GitBranch className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-          </div>
+          </motion.div>
         </div>
-      </div>
-      <div className="max-w-5xl flex items-center justify-center mx-auto">
-        <Image src="/images/hero.png" alt="Hero Image" width={800} height={600} />
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.6 }}
+          className="max-w-5xl flex items-center justify-center mx-auto mt-16"
+        >
+          <Image src="/images/hero.png" alt="Hero Image" width={800} height={600} className="rounded-lg shadow-2xl" />
+        </motion.div>
       </div>
 
       {/* Key Components Section */}

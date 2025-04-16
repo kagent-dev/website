@@ -2,8 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
 
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 15s ease infinite;
+}
 
+.gradient-bg {
+  @apply fixed inset-0 -z-10;
+}
+
+.gradient-bg::before {
+  content: '';
+  @apply absolute inset-0;
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--background)),
+    hsl(var(--muted) / 0.2),
+    hsl(var(--background))
+  );
+  @apply animate-gradient;
+}
+
+.gradient-bg::after {
+  content: '';
+  @apply absolute inset-0;
+  background: radial-gradient(
+    circle at 50% 120%,
+    hsl(var(--primary) / 0.02),
+    hsl(var(--background) / 0)
+  );
+}
 
 @layer base {
   :root {
@@ -61,14 +101,6 @@
     --chart-5: 340 75% 55%;
   }
 }
-
-
-
-
-
-
-
-
 
 @layer base {
   * {
