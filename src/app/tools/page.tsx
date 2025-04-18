@@ -27,7 +27,9 @@ const ToolsRegistry = () => {
         <div className="border-b border-white/10">
           <div className="max-w-6xl mx-auto px-6 py-8">
             <h1 className="text-3xl font-medium mb-4">Tools Registry</h1>
-            <p className="text-muted-foreground text-lg mb-8">Discover and integrate tools into your AI agents</p>
+            <p className="text-muted-foreground text-lg mb-8">
+              Kagent fully supports the MCP protocol, which allows you to use tools for any MCP server. The list of tools below is a collection of built-in tools that are MCP-enabled and can be used with Kagent out of
+            </p>
 
             <div className="relative max-w-2xl">
               <div className="relative">
@@ -48,7 +50,7 @@ const ToolsRegistry = () => {
           {/* Bottom CTA Section */}
           <div className="mt-20 py-12 px-8 border border-white/10 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 text-center">
             <h2 className="text-2xl font-medium mb-3">Can&apos;t find what you&apos;re looking for?</h2>
-            <p className="text-muted-foreground text-lg mb-6 max-w-2xl mx-auto">Build and contribute your own tools to the registry to help make agents smarter and more powerful</p>
+            <p className="text-muted-foreground text-lg mb-6 max-w-2xl mx-auto">You can build and contribute your own tools to the kagent tool registry or bring your own tools from other MCP servers.</p>
             <Button size="lg" className="gap-2" asChild>
               <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer">
                 <Plus className="h-5 w-5" />
