@@ -6,10 +6,10 @@ import { Card, CardHeader, CardTitle, CardDescription } from "./ui/card";
 
 const keyComponents = [
   {
-    title: "Tools",
+    title: "MCP Tools",
     icon: Wrench,
     link: "/tools",
-    description: "Predefined functions for AI agents to interact with Kubernetes, Prometheus, Istio, Argo, Helm, and other cloud-native projects",
+    description: "Use tools from any MCP server for your AI agents or use a collection of built-in tools to interact with Kubernetes, Prometheus, Istio, Argo, Helm, and other cloud-native projects",
   },
   {
     title: "Agents",
