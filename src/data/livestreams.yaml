@@ -15,4 +15,10 @@ livestreams:
     title: "Security for agents and tools"
     url: "https://www.youtube.com/watch?v=9IEsKNCd8S4"
     description: "In this live stream, we'll discuss security for AI agents and tools in the enterprise environment."
-    status: "upcoming" 
+    status: "completed"
+  
+  - date: "April 24, 2025"
+    title: "State of AI data planes"
+    url: "https://www.youtube.com/watch?v=vgBosIZmfOU"
+    description: "Join us for a discussion on the state of AI data planes: MCP, A2A, and beyond."
+    status: "upcoming"
