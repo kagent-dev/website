@@ -28,7 +28,7 @@ const ToolsRegistry = () => {
           <div className="max-w-6xl mx-auto px-6 py-8">
             <h1 className="text-3xl font-medium mb-4">Tools Registry</h1>
             <p className="text-muted-foreground text-lg mb-8">
-              Kagent fully supports the MCP protocol, which allows you to use tools for any MCP server. The list of tools below is a collection of built-in tools that are MCP-enabled and can be used with Kagent out of
+              Kagent fully supports the MCP protocol, which allows you to use tools from any MCP server. The list of tools below is a collection of built-in tools that are MCP-enabled and can be used with Kagent out of
             </p>
 
             <div className="relative max-w-2xl">
