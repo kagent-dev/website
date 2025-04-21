@@ -19,7 +19,6 @@ export OPENAI_API_KEY="your-api-key-here"
 curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
 ```
 
-
 3. Install kagent to the cluster using the CLI. First run the CLI:
 
 ```bash
@@ -39,12 +38,28 @@ kagent installed successfully
 
 ### Using Helm
 
-Another way to install kagent is using Helm - make sure you set the `OPENAI_API_KEY` environment variable:
+Another way to install kagent is using Helm.
+
+
+1. Install the Helm chart with CRDs:
+
+```bash
+helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+    --namespace kagent \
+    --create-namespace \
+```
+
+2. Set the `OPENAI_API_KEY` environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+3. Install the kagent Helm chart:
 
 ```bash
 helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
     --namespace kagent \
-    --create-namespace \
     --set openai.apiKey=$OPENAI_API_KEY \
 
 ```
@@ -58,11 +73,21 @@ $ kagent
 kagent >> uninstall
 ```
 
-Or, if you prefer Helm:
+Or, if you used Helm:
+
+1. Uninstall kagent chart:
 
 ```bash
-helm uninstall kagent
+helm uninstall kagent -n kagent
 ```
+
+2. Optionally, remove all kagent CRDs and resources:
+
+```
+helm uninstall kagent-crds -n kagent
+```
+
+>Note that uninstalling the `kagent-crds` chart deletes all kagent resources across all namespaces.
 
 ## Next Steps
 
