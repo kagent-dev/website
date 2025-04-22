@@ -7,7 +7,7 @@ If your agent is not showing up even though you applied the manifest, it's likel
 Run the following command to get the status of the agent:
 
 ```shell
-kubectl get agent [agent-name] -o yaml
+kubectl get agent -n kagent [agent-name] -o yaml
 ```
 
 This should give you the reason why the agent was rejected.
@@ -15,8 +15,8 @@ This should give you the reason why the agent was rejected.
 If it's not there, you can try to get the logs of the agent:
 
 ```shell
-kubectl logs -n kagent kagent -c controller
-kubectl logs -n kagent kagent -c app
+kubectl logs -n kagent deployment/kagent -c controller
+kubectl logs -n kagent deployment/kagent -c app
 ```
 
 You can also ask for help in the [community](https://discord.gg/Fu3k65f2k3) or log an issue on [Github](https://github.com/kagent-dev/kagent).
