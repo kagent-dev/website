@@ -1,12 +1,12 @@
 # Adding MCP Tools to Your First Kagent Agent
 
-MCP (Model-Controlled Proxy) tools extend the agent's abilities by calling external services to perform tasks that require logic or access outside the cluster.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/introduction) tools extend the agent's abilities by calling external services to perform tasks that require logic or access outside the cluster.
 
 In this guide, you'll learn how to add an MCP tool to your first AI agent using the kagent resources.
 
 ## Prerequisites
 
-Before you begin make sure you have a Kubernetes cluster with kagent installed. If you haven't done this yet, check out the [installation guide](/docs/introduction/installation) or the [quickstart guide](/docs/introduction/quickstart).
+Before you begin make sure you have a Kubernetes cluster with kagent installed. If you haven't done this yet, check out the [installation guide](/docs/introduction/installation) or the [quickstart guide](/docs/getting-started/quickstart).
 
 We'll be working with the kagent custom resources, so make sure you have them present on your cluster:
 
@@ -16,7 +16,7 @@ kubectl get crd | grep kagent.dev
 
 ## Creating the agent
 
-Similar to the [first agent](/docs/first-agent) guide, we will first create a simple agent that can interact with the cluster. This time we will use the `Agent` resource to create the agent.
+Similar to the [first agent](/docs/getting-started/first-agent) guide, we will first create a simple agent that can interact with the cluster. This time we will use the `Agent` resource to create the agent.
 
 ```shell
 kubectl apply -f - <<EOF
@@ -136,7 +136,7 @@ EOF
 
 Now in addition to the `Agent` resource, we need to define a `ToolServer` resource:
 
-```
+```shell
 kubectl apply -f - <<EOF
 apiVersion: kagent.dev/v1alpha1
 kind: Agent
@@ -183,7 +183,7 @@ MCP tools require a little more additional configuration before they can be used
 
 You will notice that we're configuring the MCP server by pointing to the URL of the service we just deployed. The tool section defines the tool that the agent will use. In this case, we'll use a tool called fetch that takes a single input parameter - the URL to fetch. The input schema is discovered from the tool itself so you do not need to specify it.
 
-Note: that MCP servers can implement multiple tools and as an agent developer you can decide which tools to use.
+>Note that MCP servers can implement multiple tools and as an agent developer you can decide which tools to use.
 
 ## Testing the agent with the MCP tool
 
