@@ -21,4 +21,10 @@ livestreams:
     title: "State of AI data planes"
     url: "https://www.youtube.com/watch?v=vgBosIZmfOU"
     description: "Join us for a discussion on the state of AI data planes: MCP, A2A, and beyond."
+    status: "completed"
+  
+  - date: "May 1, 2025"
+    title: "Building Your First AI Agent"
+    url: "https://www.youtube.com/watch?v=SCC8Xe-3e1w"
+    description: "If you're curious about how to get started building AI agents but don't know how to get started, this stream is for you!"
     status: "upcoming"
