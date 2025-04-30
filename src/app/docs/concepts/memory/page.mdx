@@ -1,0 +1,56 @@
+# Memory
+
+
+Model agent use have a cutoff date on the knowledge they have access to. A technique for injecting fresh and up-to-date information into agents and models is through a concept called RAG (Retrieval-Augmented Generation).
+
+In a typical interaction with the LLM, the users query and any system prompts/instructions are sent to the LLM to generate a response. With RAG, the user query is sent to a vector database to retrieve relevant information (retrieval), then the request sent to the LLM is augmented with the retrieved information. With this technique, the LLM can answer questions that are beyond its training data.
+
+
+
+## Configure Memory in kagent
+
+
+```shell
+export PINECONE_API_KEY=<your_api_key>
+kubectl create secret generic pinecone-credentials -n kagent --from-literal PINECONE_API_KEY=$PINECONE_API_KEY
+```
+
+
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Memory
+metadata:
+  name: my-pinecone-memory
+  namespace: kagent
+spec:
+  provider: Pinecone
+  apiKeySecretRef: pinecone-credentials
+  apiKeySecretKey: PINECONE_API_KEY
+  pinecone:
+    indexHost: https://kagent-test-index-jmiopck.svc.aped-4627-b74a.pinecone.io
+    topK: 10
+    namespace: kagent-test-index
+    recordFields:
+      - chunk_text
+      - category
+```
+
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Agent
+metadata:
+  name: memoryagent
+  namespace: kagent
+spec:
+  description: memory
+  modelConfig: default-model-config
+  systemMessage: Answer questions
+  memory:
+    - my-pinecone-memory
+```
+
+
+
+

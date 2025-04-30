@@ -42,6 +42,7 @@ const navigation: NavItem[] = [
       { title: "Architecture", href: "/docs/concepts/architecture" },
       { title: "Agents", href: "/docs/concepts/agents" },
       { title: "Tools", href: "/docs/concepts/tools" },
+      { title: "Memory", href: "/docs/concepts/memory" },
     ],
   },
   {
