@@ -27,7 +27,7 @@ metadata:
   namespace: kagent
 spec:
   description: This agent can interact with the Kubernetes API to get information about the cluster.
-  modelConfigRef: default-model-config
+  modelConfig: default-model-config
   systemMessage: |-
     You're a friendly and helpful agent that uses Kubernetes tools to answer user questions about the cluster.
 
@@ -145,7 +145,7 @@ metadata:
   namespace: kagent
 spec:
   description: This agent can use a single tool to retrieve the contents of a webpage.
-  modelConfigRef: default-model-config
+  modelConfig: default-model-config
   systemMessage: |-
     You're a friendly and helpful agent that uses the fetch tool to retrieve webpage contents.
 
