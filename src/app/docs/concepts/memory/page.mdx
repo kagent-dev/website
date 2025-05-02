@@ -1,0 +1,64 @@
+# Memory
+
+The LLMs agents use have a cutoff date on the knowledge they've been trained on. A technique for injecting fresh and up-to-date information into agents and models is through a concept called RAG (Retrieval-Augmented Generation).
+
+In a typical interaction with the LLM, the users query and any system prompts/instructions are sent to the LLM to generate a response. With RAG, the user query is sent to a vector database where relevant information is retrieved. The additional information is added to the original user query and sent the LLM. With this technique, the LLMs can answer questions that are beyond its training data.
+
+In kagent we call this concept **Memory**. Every query sent to the agent will be augmented with the relevant information from the memory. 
+
+## Configure Memory in kagent
+
+To configure memory in kagent, you need to create a secret containing your API key for the vector database you want to use. At the moment we support [Pinecone](https://www.pinecone.io/) with built-in embeddings.
+
+```shell
+export PINECONE_API_KEY=<your_api_key>
+kubectl create secret generic pinecone-credentials -n kagent --from-literal PINECONE_API_KEY=$PINECONE_API_KEY
+```
+
+Once the API key is in place, you can use the Memory CRD to configure the memory for your agent. For example:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Memory
+metadata:
+  name: my-pinecone-memory
+  namespace: kagent
+spec:
+  provider: Pinecone
+  # The secret containing the API key for the vector database
+  apiKeySecretRef: pinecone-credentials
+  # The key in the secret containing the API key
+  apiKeySecretKey: PINECONE_API_KEY
+  pinecone:
+    # The host of the vector database
+    indexHost: https://kagent-test-index-jmiopck.svc.aped-4627-b74a.pinecone.io
+    # The number of results to return
+    topK: 10
+    # The namespace of the vector database
+    namespace: kagent-test-index
+    # The score threshold for the results (any results with a score below this will be ignored)
+    scoreThreshold: "0.5"
+    # The fields to include in the memory
+    recordFields:
+      - chunk_text
+      - category
+```
+
+You can use Kubernetes CLI to create the memory.
+
+To attach memory to an agent, you can use the `memory` field in the agent spec. Note that the field is an array, so you can attach multiple memories to an agent:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Agent
+metadata:
+  name: memoryagent
+  namespace: kagent
+spec:
+  description: memory
+  modelConfig: default-model-config
+  systemMessage: Answer questions
+  memory:
+    # The name of the memory to attach
+    - my-pinecone-memory
+```

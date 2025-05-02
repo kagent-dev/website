@@ -32,4 +32,22 @@ If the user asks "List all pods in the cluster", the agent can use the **list_re
 
 Some tools support additional configuration that can be set in when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
 
-KAgent comes with a set of built-in tools that you can use to interact with your environment. KAgent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+Kagent comes with a set of built-in tools that you can use to interact with your environment. Kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+
+## Agents as Tools
+
+Kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural langauge. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
+
+Here's how you could reference an existing agent (`promql-agent`) as a tool:
+
+```yaml
+...
+    # Referencing existing tools
+    - type: Builtin
+      builtin:
+        name: kagent.tools.k8s.GetAvailableAPIResources
+    # Referencing an existing agent as a tool
+    - type: Agent
+      agent:
+        ref: promql-agent
+```
