@@ -10,6 +10,10 @@ You can check out the full list of built-in tools [here](/tools).
 
 The built-in tools are meant as a good starting point for any agents running in kubernetes, however we don't envision them covering all possible use-cases, so we support multiple tool extension points to allow you to bring in your own tools.
 
+## Agents as Tools
+
+You also have an option of using agents as tools. Any agent you create can be referenced and used by other agents you have.
+
 ## MCP Tools
 
 MCP stands for [Model Context Protocol](https://modelcontextprotocol.io/introduction). It is a protocol, originally created by Anthropic, which is meant as a flexible way to provide tools and other information to Agents. In the year or so since its inception, it has begun to gain traction and more and more tools are adopting it. The [servers](https://github.com/modelcontextprotocol/servers) repository has a list of MCP servers that you can use immediately with kagent! Of course there are more than just the ones listed there, so we also support bringing in your own MCP servers.
