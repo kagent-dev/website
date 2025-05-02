@@ -27,4 +27,18 @@ livestreams:
     title: "Building Your First AI Agent"
     url: "https://www.youtube.com/watch?v=SCC8Xe-3e1w"
     description: "If you're curious about how to get started building AI agents but don't know how to get started, this stream is for you!"
+    status: "completed"
+
+communityMeetings:
+  - date: "April 29, 2025"
+    title: "All Things AI community meeting "
+    url: "https://www.youtube.com/watch?v=krICTNUsrjs"
+    meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
+    status: "completed"
+
+  - date: "May 6, 2025"
+    title: "All Things AI community meeting "
+    url: "https://www.youtube.com/watch?v=krICTNUsrjs"
+    description: "Join us for the questions, discussions and demos in the All Things AI community meeting"
+    meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "upcoming"
