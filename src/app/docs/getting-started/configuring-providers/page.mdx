@@ -1,3 +1,9 @@
+---
+title: "Configuring LLM Providers"
+pageOrder: 5
+description: "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent."
+---
+
 # Configuring LLM providers
 
 OpenAI gpt-4o is configured as a default LLM provider for kagent (the `default-model-config` in the kagent namespace). The ModelConfig resource is used for configuring models.
@@ -6,7 +12,8 @@ The following providers are currently supported:
 
 - OpenAI
 - Azure OpenAI
-- Anthropic (note that there's an [active issue with tool calling](https://github.com/kagent-dev/kagent/issues/200))
+- Anthropic
+- Ollama
 
 ## Configuring Anthropic
 

@@ -1,0 +1,112 @@
+[
+  {
+    "title": "Introduction",
+    "href": "/docs/introduction",
+    "order": 1,
+    "description": "Welcome to kagent! Start here to understand what kagent is, how to install it, and how to contribute.",
+    "items": [
+      {
+        "title": "Installing kagent",
+        "href": "/docs/introduction/installation"
+      },
+      {
+        "title": "What is kagent",
+        "href": "/docs/introduction/what-is-kagent"
+      },
+      {
+        "title": "Feature Roadmap",
+        "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
+        "external": true
+      },
+      {
+        "title": "Contributing",
+        "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md",
+        "external": true
+      }
+    ]
+  },
+  {
+    "title": "Getting Started",
+    "href": "/docs/getting-started",
+    "order": 2,
+    "description": "Guides to help you get started with kagent, from quick setup to your first agent and tool.",
+    "items": [
+      {
+        "title": "Quick Start",
+        "href": "/docs/getting-started/quickstart"
+      },
+      {
+        "title": "Your First Agent",
+        "href": "/docs/getting-started/first-agent"
+      },
+      {
+        "title": "Your First MCP tool",
+        "href": "/docs/getting-started/first-mcp-tool"
+      },
+      {
+        "title": "Writing System Prompts",
+        "href": "/docs/getting-started/system-prompts"
+      },
+      {
+        "title": "Configuring LLM Providers",
+        "href": "/docs/getting-started/configuring-providers"
+      }
+    ]
+  },
+  {
+    "title": "Core Concepts",
+    "href": "/docs/concepts",
+    "order": 3,
+    "description": "Understand the fundamental concepts and architecture of kagent.",
+    "items": [
+      {
+        "title": "Architecture",
+        "href": "/docs/concepts/architecture"
+      },
+      {
+        "title": "Agents",
+        "href": "/docs/concepts/agents"
+      },
+      {
+        "title": "Memory",
+        "href": "/docs/concepts/memory"
+      },
+      {
+        "title": "Tools",
+        "href": "/docs/concepts/tools"
+      }
+    ]
+  },
+  {
+    "title": "Examples",
+    "href": "/docs/examples",
+    "order": 4,
+    "description": "Explore practical examples and use cases for kagent.",
+    "items": [
+      {
+        "title": "A2A Agents",
+        "href": "/docs/examples/a2a-agents"
+      },
+      {
+        "title": "Documentation Agent",
+        "href": "/docs/examples/documentation"
+      }
+    ]
+  },
+  {
+    "title": "Resources",
+    "href": "/docs/resources",
+    "order": 5,
+    "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent.",
+    "items": [
+      {
+        "title": "Faq",
+        "href": "/docs/resources/faq"
+      },
+      {
+        "title": "Troubleshooting",
+        "href": "/docs/resources/troubleshooting"
+      }
+    ]
+  }
+]
