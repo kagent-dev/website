@@ -49,6 +49,7 @@ const navigation: NavItem[] = [
     title: "Examples",
     href: "/docs/examples",
     items: [
+      { title: "A2A Agents", href: "/docs/examples/a2a-agents" },
       { title: "Documentation agent", href: "/docs/examples/documentation" },
     ],
   },
