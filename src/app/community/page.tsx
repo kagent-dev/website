@@ -110,6 +110,11 @@ const CommunityPage = () => {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDay = today.getDate();
+
   return (
     <div className="pt-24 pb-16 bg-gradient-to-b from-background to-background/80">
       <div className="max-w-5xl mx-auto px-6">
@@ -142,14 +147,28 @@ const CommunityPage = () => {
             <div className="grid gap-8 md:grid-cols-2">
               {upcomingEvents.map((event: UpcomingEvent, index: number) => {
                 const videoId = event.type === 'livestream' ? getYouTubeVideoId(event.url) : null;
+                
+                const eventDate = new Date(event.date);
+                const isToday = eventDate.getFullYear() === todayYear &&
+                                eventDate.getMonth() === todayMonth &&
+                                eventDate.getDate() === todayDay;
+
                 return (
                   <motion.div 
                     key={`${event.type}-${index}`} 
-                    className="group overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md"
+                    className={`group relative overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + index * 0.1 }}
                   >
+                    {/* Happening Today Badge - Moved to top */}
+                    {isToday && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <span className="rounded-md bg-primary px-3 py-1 text-xs font-bold text-primary-foreground shadow-lg">
+                          Happening Today!
+                        </span>
+                      </div>
+                    )}
                     {/* Thumbnail for Livestreams OR Icon Placeholder for Meetings */}
                     {event.type === 'livestream' ? (
                       videoId && (

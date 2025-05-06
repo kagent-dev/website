@@ -29,6 +29,12 @@ livestreams:
     description: "If you're curious about how to get started building AI agents but don't know how to get started, this stream is for you!"
     status: "completed"
 
+  - date: "May 8, 2025"
+    title: "Using custom models in kagent"
+    url: "https://www.youtube.com/watch?v=8_HCF9Hxj10"
+    description: "In the last stream we talked about AI agent basics and explained how instructions and tools make your agents smarter. In this stream, we'll show the kagent onboarding experience and how you can use custom models from Ollama or Anthropic in kagent."
+    status: "upcoming"
+
 communityMeetings:
   - date: "April 29, 2025"
     title: "All Things AI community meeting "
