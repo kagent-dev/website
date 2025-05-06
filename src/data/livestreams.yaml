@@ -37,14 +37,22 @@ livestreams:
 
 communityMeetings:
   - date: "April 29, 2025"
-    title: "All Things AI community meeting "
+    title: "All Things AI Agents community meeting "
     url: "https://www.youtube.com/watch?v=krICTNUsrjs"
+    description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "completed"
 
   - date: "May 6, 2025"
-    title: "All Things AI community meeting "
-    url: "https://www.youtube.com/watch?v=krICTNUsrjs"
-    description: "Join us for the questions, discussions and demos in the All Things AI community meeting"
+    title: "All Things AI Agents community meeting "
+    url: "https://www.youtube.com/watch?v=afeKDUU0ZXI"
+    description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
+    meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
+    status: "completed"
+
+  - date: "May 13, 2025"
+    title: "All Things AI Agents community meeting "
+    url: "https://www.youtube.com/watch?v=afeKDUU0ZXI"
+    description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "upcoming"

@@ -194,7 +194,7 @@ const CommunityPage = () => {
                     )}
                     <div className="p-6">
                       <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-xl font-medium">{event.title}</h3>
+                        <h3 className="text-lg font-medium max-w-xs line-clamp-1">{event.title}</h3>
                         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                           {event.date}
                         </span>
