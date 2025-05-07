@@ -93,7 +93,7 @@ async function buildNavigation() {
             href: sectionHref,
             order: sectionOrder,
             description: sectionDescription,
-            items: sectionItems.length > 0 ? sectionItems.map(item => ({title: item.title, href: item.href, external: item.external })) : undefined,
+            items: sectionItems.length > 0 ? sectionItems.map(item => ({title: item.title, href: item.href, description: item.description, external: item.external })) : undefined,
         });
     }
   }
