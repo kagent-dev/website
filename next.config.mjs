@@ -2,6 +2,7 @@
 
 import createMDX from "@next/mdx";
 import rehypeUnwrapImages from 'rehype-unwrap-images'
+import remarkFrontmatter from 'remark-frontmatter'
 
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
@@ -25,6 +26,7 @@ const nextConfig = {
 
 const withMDX = createMDX({
   options: {
+    remarkPlugins: [remarkFrontmatter],
     rehypePlugins: [rehypeUnwrapImages],
   },
 })
