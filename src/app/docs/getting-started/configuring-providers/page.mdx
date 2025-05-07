@@ -33,7 +33,7 @@ metadata:
   name: claude-model-config
   namespace: kagent
 spec:
-  apiKeySecretName: kagent-anthropic
+  apiKeySecretRef: kagent-anthropic
   apiKeySecretKey: ANTHROPIC_API_KEY
   model: claude-3-sonnet-20240229
   provider: Anthropic
@@ -65,7 +65,7 @@ metadata:
   name: azureopenai-model-config
   namespace: kagent
 spec:
-  apiKeySecretName: kagent-azureopenai
+  apiKeySecretRef: kagent-azureopenai
   apiKeySecretKey: AZURE_OPENAI_API_KEY
   model: gpt-4o-mini
   provider: AzureOpenAI
@@ -149,7 +149,7 @@ metadata:
   namespace: kagent
 spec:
   apiKeySecretKey: OPENAI_API_KEY
-  apiKeySecretName: kagent-openai
+  apiKeySecretRef: kagent-openai
   model: llama3
   provider: Ollama
   ollama:
