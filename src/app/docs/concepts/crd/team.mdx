@@ -1,0 +1,90 @@
+---
+title: "Team CRD"
+description: "Learn about the Team CRD and how to use it to group agents into teams."
+---
+
+# Team CRD
+
+The Team CRD allows you to group multiple agents into teams for collaborative tasks. Teams can share resources, coordinate actions, and maintain consistent communication patterns.
+
+## Schema
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Team
+metadata:
+  name: string
+  namespace: string
+spec:
+  description: string
+  agents: []
+  coordinator: string
+  communication: object
+  metadata: object
+```
+
+## Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `metadata.name` | string | Yes | Name of the team |
+| `metadata.namespace` | string | Yes | Kubernetes namespace |
+| `spec.description` | string | No | Description of the team's purpose |
+| `spec.agents` | array | Yes | List of agent references |
+| `spec.coordinator` | string | Yes | Name of the coordinating agent |
+| `spec.communication` | object | No | Team communication settings |
+| `spec.metadata` | object | No | Additional team metadata |
+
+## Example
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Team
+metadata:
+  name: research-team
+  namespace: kagent
+spec:
+  description: "Team of research assistants for technical documentation"
+  agents:
+    - name: research-assistant
+    - name: code-analyzer
+    - name: documentation-writer
+  coordinator: research-assistant
+  communication:
+    mode: "hierarchical"
+    maxConcurrentTasks: 3
+  metadata:
+    category: "research"
+    version: "1.0.0"
+```
+
+## Usage
+
+1. Create a namespace for your teams:
+   ```bash
+   kubectl create namespace kagent
+   ```
+
+2. Apply the team manifest:
+   ```bash
+   kubectl apply -f team.yaml
+   ```
+
+3. Verify the team:
+   ```bash
+   kubectl get teams -n kagent
+   ```
+
+## Best Practices
+
+1. Keep teams focused on specific domains
+2. Choose an appropriate coordinator agent
+3. Configure communication patterns
+4. Monitor team performance
+5. Use namespaces for team organization
+
+## Related Resources
+
+- [Agent CRD](./agent) - Define individual agents
+- [Memory CRD](./memory) - Configure team memory
+- [ModelConfig CRD](./model-config) - Define model configurations 

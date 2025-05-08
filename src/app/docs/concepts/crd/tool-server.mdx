@@ -1,0 +1,99 @@
+---
+title: "ToolServer CRD"
+description: "Learn about the ToolServer CRD and how to use it to define tool server configurations."
+---
+
+# ToolServer CRD
+
+The ToolServer CRD defines configurations for tool servers that provide additional capabilities to agents. It specifies server endpoints, authentication, and available tools.
+
+## Schema
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ToolServer
+metadata:
+  name: string
+  namespace: string
+spec:
+  endpoint: string
+  auth: object
+  tools: []
+  limits: object
+  metadata: object
+```
+
+## Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `metadata.name` | string | Yes | Name of the tool server |
+| `metadata.namespace` | string | Yes | Kubernetes namespace |
+| `spec.endpoint` | string | Yes | Server endpoint URL |
+| `spec.auth` | object | Yes | Authentication configuration |
+| `spec.tools` | array | Yes | List of available tools |
+| `spec.limits` | object | No | Usage limits |
+| `spec.metadata` | object | No | Additional server metadata |
+
+## Example
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ToolServer
+metadata:
+  name: research-tools
+  namespace: kagent
+spec:
+  endpoint: "https://tools.example.com/api"
+  auth:
+    type: "api-key"
+    keySecret: "tool-server-key"
+  tools:
+    - name: web-search
+      description: "Search the web for information"
+      parameters:
+        query: string
+        maxResults: integer
+    - name: code-search
+      description: "Search code repositories"
+      parameters:
+        query: string
+        language: string
+  limits:
+    requestsPerMinute: 100
+    maxConcurrent: 10
+  metadata:
+    category: "research"
+    version: "1.0.0"
+```
+
+## Usage
+
+1. Create a namespace for your tool servers:
+   ```bash
+   kubectl create namespace kagent
+   ```
+
+2. Apply the tool server manifest:
+   ```bash
+   kubectl apply -f tool-server.yaml
+   ```
+
+3. Verify the tool server:
+   ```bash
+   kubectl get toolservers -n kagent
+   ```
+
+## Best Practices
+
+1. Secure tool server endpoints
+2. Configure proper authentication
+3. Define clear tool interfaces
+4. Set appropriate usage limits
+5. Use namespaces for organization
+
+## Related Resources
+
+- [Agent CRD](./agent) - Use tool servers
+- [Team CRD](./team) - Share tool servers
+- [ModelConfig CRD](./model-config) - Configure model tools 

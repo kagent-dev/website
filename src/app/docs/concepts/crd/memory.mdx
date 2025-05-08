@@ -1,0 +1,93 @@
+---
+title: "Memory CRD"
+description: "Learn about the Memory CRD and how to use it to configure agent memory storage and retrieval."
+---
+
+# Memory CRD
+
+The Memory CRD configures how agents store and retrieve information. It defines the storage backend, retention policies, and memory access patterns.
+
+## Schema
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Memory
+metadata:
+  name: string
+  namespace: string
+spec:
+  type: string
+  storage: object
+  retention: object
+  access: object
+  metadata: object
+```
+
+## Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `metadata.name` | string | Yes | Name of the memory configuration |
+| `metadata.namespace` | string | Yes | Kubernetes namespace |
+| `spec.type` | string | Yes | Memory type (e.g., "vector", "key-value") |
+| `spec.storage` | object | Yes | Storage configuration |
+| `spec.retention` | object | No | Memory retention settings |
+| `spec.access` | object | No | Memory access patterns |
+| `spec.metadata` | object | No | Additional memory metadata |
+
+## Example
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Memory
+metadata:
+  name: research-memory
+  namespace: kagent
+spec:
+  type: "vector"
+  storage:
+    backend: "redis"
+    connection:
+      host: "redis-master"
+      port: 6379
+  retention:
+    maxSize: "1GB"
+    ttl: "7d"
+  access:
+    mode: "read-write"
+    maxConcurrent: 10
+  metadata:
+    category: "research"
+    version: "1.0.0"
+```
+
+## Usage
+
+1. Create a namespace for your memory configurations:
+   ```bash
+   kubectl create namespace kagent
+   ```
+
+2. Apply the memory manifest:
+   ```bash
+   kubectl apply -f memory.yaml
+   ```
+
+3. Verify the memory configuration:
+   ```bash
+   kubectl get memories -n kagent
+   ```
+
+## Best Practices
+
+1. Choose appropriate storage backends
+2. Configure retention policies
+3. Set up access patterns
+4. Monitor memory usage
+5. Use namespaces for organization
+
+## Related Resources
+
+- [Agent CRD](./agent) - Configure agent memory
+- [Team CRD](./team) - Share memory across teams
+- [ModelConfig CRD](./model-config) - Define model configurations 

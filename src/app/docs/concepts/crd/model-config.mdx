@@ -1,0 +1,95 @@
+---
+title: "ModelConfig CRD"
+description: "Learn about the ModelConfig CRD and how to use it to define language model configurations."
+---
+
+# ModelConfig CRD
+
+The ModelConfig CRD defines configurations for language models used by agents. It specifies model parameters, API settings, and usage limits.
+
+## Schema
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: string
+  namespace: string
+spec:
+  provider: string
+  model: string
+  api: object
+  parameters: object
+  limits: object
+  metadata: object
+```
+
+## Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `metadata.name` | string | Yes | Name of the model configuration |
+| `metadata.namespace` | string | Yes | Kubernetes namespace |
+| `spec.provider` | string | Yes | Model provider (e.g., "openai", "anthropic") |
+| `spec.model` | string | Yes | Model name/identifier |
+| `spec.api` | object | Yes | API configuration |
+| `spec.parameters` | object | No | Model parameters |
+| `spec.limits` | object | No | Usage limits |
+| `spec.metadata` | object | No | Additional model metadata |
+
+## Example
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: gpt4-config
+  namespace: kagent
+spec:
+  provider: "openai"
+  model: "gpt-4"
+  api:
+    endpoint: "https://api.openai.com/v1"
+    keySecret: "openai-api-key"
+  parameters:
+    temperature: 0.7
+    maxTokens: 2000
+    topP: 1.0
+  limits:
+    requestsPerMinute: 60
+    tokensPerMinute: 40000
+  metadata:
+    category: "research"
+    version: "1.0.0"
+```
+
+## Usage
+
+1. Create a namespace for your model configurations:
+   ```bash
+   kubectl create namespace kagent
+   ```
+
+2. Apply the model configuration:
+   ```bash
+   kubectl apply -f model-config.yaml
+   ```
+
+3. Verify the configuration:
+   ```bash
+   kubectl get modelconfigs -n kagent
+   ```
+
+## Best Practices
+
+1. Use appropriate model providers
+2. Configure API settings securely
+3. Set reasonable usage limits
+4. Monitor model performance
+5. Use namespaces for organization
+
+## Related Resources
+
+- [Agent CRD](./agent) - Use model configurations
+- [Team CRD](./team) - Share model configurations
+- [Memory CRD](./memory) - Configure model memory 
