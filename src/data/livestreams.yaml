@@ -33,7 +33,19 @@ livestreams:
     title: "Using custom models in kagent"
     url: "https://www.youtube.com/watch?v=8_HCF9Hxj10"
     description: "In the last stream we talked about AI agent basics and explained how instructions and tools make your agents smarter. In this stream, we'll show the kagent onboarding experience and how you can use custom models from Ollama or Anthropic in kagent."
-    status: "upcoming"
+    status: "completed"
+
+  - date: "May 15, 2025"
+    title: "RAG and Memory in kagent"
+    url: "https://www.youtube.com/watch?v=N7RAPajneks"
+    description: |
+        In this live stream, we'll explain what RAG (Retrieval Augmented Generation) is and how've implemented it in kagent to make your agents more context-aware. 
+
+        We'll cover these topics:
+        - What is RAG, how it works and why it matters for AI apps
+        - Implemented of memory in kagent using Pinecone
+        - How to use query documentation tool to add relevant context
+    status: "completed"
 
 communityMeetings:
   - date: "April 29, 2025"
