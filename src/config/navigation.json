@@ -103,6 +103,11 @@
         "title": "Documentation Agent",
         "href": "/docs/examples/documentation",
         "description": "See an example of a kagent agent built to help with documentation-related tasks."
+      },
+      {
+        "title": "Slack and A2A",
+        "href": "/docs/examples/discord-bot",
+        "description": "Learn how to create a Slack bot that interacts with kagent via A2A"
       }
     ]
   },
