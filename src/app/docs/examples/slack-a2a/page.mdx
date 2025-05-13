@@ -4,11 +4,22 @@ pageOrder: 3
 description: "Learn how to create a Slack bot that interacts with kagent via A2A"
 ---
 
+export const metadata = {
+  title: "Integrating kagent and Slack with A2A",
+  description: "Learn how to create a Slack bot that interacts with kagent via A2A",
+  author: "kagent.dev",
+  openGraph: {
+    images: "/images/slack-a2a/slack-a2a-kagent.png",
+  }
+
+};
+
+
 # Integrating kagent with Slack
 
 Kagent enables you to create AI agents that run inside your Kubernetes cluster. They have access to a variety of [built-in tools](/docs/concepts/tools) like Kubernetes, Istio, Grafana, Prometheus, Argo and can be extended with any other tools [using MCP](/docs/examples/documentation). They can also draw information [from your data](/docs/concepts/memory) and execute other agents.
 
-![Slack - A2A - MCP - kagent](/images/discord-bot/slack-a2a-kagent.png)
+![Slack - A2A - MCP - kagent](/images/slack-a2a/slack-a2a-kagent.png)
 
 Slack is a popular platform for team communication and collaboration. What if you could bridge these two worlds, allowing you to manage your Kubernetes resources directly from Slack or allow agents to send notifications to your Slack channels?
 
@@ -27,11 +38,11 @@ You will need a Slack workspace and sufficient permissions to create and install
 
 1. From the Your Apps page click the "Create an app" button.
 
-![Create an app](/images/discord-bot/1-create-slack-app.png)
+![Create an app](/images/slack-a2a/1-create-slack-app.png)
 
 2. Choose "From scratch" options and give your app a name (we'll use `My kagent app`) and pick a workspace.
 
-![Configure your app](/images/discord-bot/2-name-workspace.png)
+![Configure your app](/images/slack-a2a/2-name-workspace.png)
 
 3. Click Create App to create the app.
 
@@ -44,7 +55,7 @@ You'll be redirected to the app's basic information page. Next, we need to give 
     - `chat:write`
     - `commands`
 
-![Bot Token Scopes](/images/discord-bot/bot-token-scopes.png)
+![Bot Token Scopes](/images/slack-a2a/bot-token-scopes.png)
 
 These scopes will allow the app to send messages as the "My kagent app" and with the commands we'll be able to configure slash commands users can invoke.
 
@@ -52,17 +63,17 @@ Now that we have the scopes set up, we can install the app (that won't do anythi
 
 You'll be redirected to the app's installation page. Make sure you select a channel where the app will be able to post messages and click "Allow" to install the app to your workspace.
 
-![Install to workspace](/images/discord-bot/install-app.png)
+![Install to workspace](/images/slack-a2a/install-app.png)
 
 If you open your Slack workspaces you'll notice the "My kagent app" is added to the list of apps.
 
-![Kagent app installed in Slack](/images/discord-bot/app-in-slack.png)
+![Kagent app installed in Slack](/images/slack-a2a/app-in-slack.png)
 
 Let's go back to the "OAuth & Permissions" page - notice the Bot User OAuth Token (`SLACK_BOT_TOKEN`). Copy it and save it somewhere as we'll use it later. 
 
 Click on the "Basic Information" and go to the "App-Level Tokens" section and click the "Generate token and Scopes" button. From the dialog, name your token (`mytoken`) and click the Add Scope and add the `connections:write` scope as shown below.
 
-![Generate app-level token](/images/discord-bot/app-level-token.png)
+![Generate app-level token](/images/slack-a2a/app-level-token.png)
 
 Click "Generate", copy the token and save it somewhere as we'll use it later (`SLACK_APP_TOKEN`).
 
@@ -78,7 +89,7 @@ Lastly we'll add a slash command that will allow us to invoke the bot directly u
 1. Click the "Slash Commands" tab from the left sidebar.
 2. Click "Create New Command" button.
 3. Fill out the form with the following values:
-    ![Create slash command](/images/discord-bot/slash-commands.png)
+    ![Create slash command](/images/slack-a2a/slash-commands.png)
 4. Click Save.
 
 ## Writing a Slack bot
@@ -251,7 +262,7 @@ Now restart the bot with `uv run main.py` and try the `/mykagent` command in Sla
 
 You can see the output of the agent in the Slack channel:
 
-![Agent response in Slack](/images/discord-bot/show-pods.png)
+![Agent response in Slack](/images/slack-a2a/show-pods.png)
 
 You can try asking other questions and the agent will use the tools to answer your questions.
 
@@ -358,11 +369,11 @@ Can you show me all deployments in my cluster and send it to Slack?
 
 The agent will run the tools it needs to run and finally caall the `send_message_to_slack` tool to send a message to Slack:
 
-![Sending message to Slack](/images/discord-bot/send-to-slack.png)
+![Sending message to Slack](/images/slack-a2a/send-to-slack.png)
 
 You should see the message in the Slack channel:
 
-![Message in Slack](/images/discord-bot/message-in-slack.png)
+![Message in Slack](/images/slack-a2a/message-in-slack.png)
 
 ## Conclusion
 

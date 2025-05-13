@@ -106,7 +106,7 @@
       },
       {
         "title": "Slack and A2A",
-        "href": "/docs/examples/discord-bot",
+        "href": "/docs/examples/slack-a2a",
         "description": "Learn how to create a Slack bot that interacts with kagent via A2A"
       }
     ]
