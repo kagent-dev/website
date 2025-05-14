@@ -1,5 +1,4 @@
 import { ImageResponse } from 'next/og'
-import { getPost } from '@/lib/posts'
 
 // Image metadata
 export const size = {
@@ -9,8 +8,11 @@ export const size = {
 
 export const contentType = 'image/png'
 
-export default async function Image({ params }: { params: { slug: string } }) {
-  const post = await getPost(params.slug)
+export default async function Image() {
+  const post = {
+    title: 'AI Reliability Engineering For More Dependable Humans',
+    author: 'Christian Posta',
+  }
 
 
   return new ImageResponse(
