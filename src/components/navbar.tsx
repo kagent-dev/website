@@ -20,6 +20,9 @@ export default function Navbar() {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
+          <Button variant="link" className="text-secondary-foreground" asChild>
+              <Link href="/blog">Blog</Link>
+            </Button>
             <Button variant="link" className="text-secondary-foreground" asChild>
               <Link href="/docs">Docs</Link>
             </Button>
@@ -59,6 +62,9 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2">
             <div className="flex flex-col space-y-2">
+            <Button variant="ghost" className="justify-start" asChild>
+                <Link href="/blog">Blog</Link>
+              </Button>
               <Button variant="ghost" className="justify-start" asChild>
                 <Link href="/docs">Docs</Link>
               </Button>
