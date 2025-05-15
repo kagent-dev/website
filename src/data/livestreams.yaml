@@ -45,7 +45,7 @@ livestreams:
         - What is RAG, how it works and why it matters for AI apps
         - Implemented of memory in kagent using Pinecone
         - How to use query documentation tool to add relevant context
-    status: "upcoming"
+    status: "completed"
 
 communityMeetings:
   - date: "April 29, 2025"
