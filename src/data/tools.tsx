@@ -6,6 +6,7 @@ import { KubernetesIcon } from "@/components/icons/kubernetes";
 import { PrometheusIcon } from "@/components/icons/prometheus";
 import { ArgoIcon } from "@/components/icons/argo";
 import { GrafanaIcon } from "@/components/icons/grafana";
+import getToolCategoryId from '../lib/getToolCategoryId';
 
 export interface Tool {
   id: string;
@@ -13,6 +14,7 @@ export interface Tool {
   description: string;
   icon: ReactNode;
   tags: string[];
+  categoryId: string;
   builtin: boolean;
   mcp: boolean;
   provider: string;
@@ -50,6 +52,7 @@ const loadToolsFromConfig = (): Tool[] => {
       // Determine the icon based on the provider prefix
       let icon: ReactNode;
       let tags: string[] = [];
+      const categoryId = getToolCategoryId(config.provider);
 
       if (config.provider.includes("prometheus")) {
         icon = <PrometheusIcon className="w-10 h-10" />;
@@ -85,6 +88,7 @@ const loadToolsFromConfig = (): Tool[] => {
         description: config.description,
         icon,
         tags,
+        categoryId,
         builtin: true,
         mcp: true,
         provider: config.provider,
@@ -110,7 +114,7 @@ const allCategories: Category[] = [
     description:
       "Tools for searching and managing documentation across different products and services",
     icon: <BookOpenText />,
-    tools: tools.filter((tool) => tool.tags.includes("Documentation")),
+    tools: tools.filter((tool) => tool.categoryId === "documentation"),
   },
   {
     id: "prometheus",
@@ -118,21 +122,21 @@ const allCategories: Category[] = [
     description:
       "Complete suite of tools for monitoring, querying, and managing Prometheus instances",
     icon: <PrometheusIcon className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Prometheus")),
+    tools: tools.filter((tool) => tool.categoryId === "prometheus"),
   },
   {
     id: "kubernetes",
     name: "Kubernetes",
     description: "Tools for managing and interacting with Kubernetes clusters",
     icon: <KubernetesIcon className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Kubernetes")),
+    tools: tools.filter((tool) => tool.categoryId === "kubernetes"),
   },
   {
     id: "istio",
     name: "Istio",
     description: "Tools for managing and interacting with Istio service mesh",
     icon: <IstioIcon className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Istio")),
+    tools: tools.filter((tool) => tool.categoryId === "istio"),
   },
   {
     id: "helm",
@@ -140,7 +144,7 @@ const allCategories: Category[] = [
     description:
       "Tools for managing and interacting with Helm charts and repositories",
     icon: <HelmIcon className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Helm")),
+    tools: tools.filter((tool) => tool.categoryId === "helm"),
   },
   {
     id: "argo",
@@ -148,7 +152,7 @@ const allCategories: Category[] = [
     description:
       "Tools for managing and interacting with Argo projects and workflows",
     icon: <ArgoIcon className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Argo")),
+    tools: tools.filter((tool) => tool.categoryId === "argo"),
   },
   {
     id: "grafana",
@@ -156,14 +160,14 @@ const allCategories: Category[] = [
     description:
       "Tools for managing and interacting with Grafana dashboards and data sources",
     icon: <GrafanaIcon className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Grafana")),
+    tools: tools.filter((tool) => tool.categoryId === "grafana"),
   },
   {
     id: "other",
     name: "Other",
     description: "Other tools that don't fit into the other categories",
     icon: <BookOpenText className="w-10 h-10" />,
-    tools: tools.filter((tool) => tool.tags.includes("Other")),
+    tools: tools.filter((tool) => tool.categoryId === "other"),
   },
 ];
 
