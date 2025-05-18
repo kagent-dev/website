@@ -39,9 +39,9 @@ export default function Navbar() {
               <Link href="/community">Community</Link>
             </Button>
             <DocSearch
-              appId={process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || ""}
+              appId="0Q0AZY5UR3"
               indexName="kagent"
-              apiKey={process.env.NEXT_PUBLIC_SEARCH_READ_API_KEY || ""}
+              apiKey="fd2a6ceddf6d52e55495a46fc7b0a5db"
             />
 
             <ThemeToggle />
