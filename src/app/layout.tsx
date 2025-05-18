@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
 import { GoogleTagManager } from "@next/third-parties/google";
+import Script from "next/script";
+import '@docsearch/css';
 
 export const metadata: Metadata = {
   title: "kagent | Bringing Agentic AI to cloud native",
@@ -19,12 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Navbar />
-
           <main className="flex-1">{children}</main>
-
           <Footer />
         </ThemeProvider>
       </body>
+      <Script src="https://cdn.jsdelivr.net/npm/@docsearch/react@3" />
     </html>
   );
 }
