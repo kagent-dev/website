@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @keyframes gradient {
   0% {
     background-position: 0% 50%;
@@ -47,6 +48,7 @@
 
 @layer base {
   :root {
+    --docsearch-primary-color: #942DE7;
     --background: 0 0% 100%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;

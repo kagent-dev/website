@@ -27,7 +27,7 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
     <>
       <Background />
       <div className="min-h-screen">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row min-h-[calc(100vh-256px)]">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row min-h-[calc(100vh-256px)]">
           {/* Mobile Sidebar Toggle */}
           <div className="md:hidden sticky top-0 z-10 bg-background p-4 border-b flex justify-between items-center">
             <span className="font-bold">Documentation</span>

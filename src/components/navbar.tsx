@@ -6,21 +6,21 @@ import KAgentLogoWithText from "./icons/kagent-logo-text";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
+import { DocSearch } from "@docsearch/react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <nav className="py-4 md:py-8">
-      <div className="max-w-6xl mx-auto px-4 md:px-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex justify-between items-center">
           <Link href="/">
             <KAgentLogoWithText className="h-5" />
           </Link>
-          
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
-          <Button variant="link" className="text-secondary-foreground" asChild>
+            <Button variant="link" className="text-secondary-foreground" asChild>
               <Link href="/blog">Blog</Link>
             </Button>
             <Button variant="link" className="text-secondary-foreground" asChild>
@@ -38,18 +38,24 @@ export default function Navbar() {
             <Button variant="link" className="text-secondary-foreground" asChild>
               <Link href="/community">Community</Link>
             </Button>
+            <DocSearch
+              appId={process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || ""}
+              indexName="kagent"
+              apiKey={process.env.NEXT_PUBLIC_SEARCH_READ_API_KEY || ""}
+            />
+
             <ThemeToggle />
             <Button variant="secondary" asChild>
               <Link href="/docs/getting-started/quickstart">Get Started</Link>
             </Button>
           </div>
-          
+
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
             <ThemeToggle />
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="ml-2 px-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
@@ -57,12 +63,12 @@ export default function Navbar() {
             </Button>
           </div>
         </div>
-        
+
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2">
             <div className="flex flex-col space-y-2">
-            <Button variant="ghost" className="justify-start" asChild>
+              <Button variant="ghost" className="justify-start" asChild>
                 <Link href="/blog">Blog</Link>
               </Button>
               <Button variant="ghost" className="justify-start" asChild>
