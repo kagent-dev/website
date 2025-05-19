@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Adding Guardrails to kagent with kgateway AI Gateway",
+  publishDate: "2025-05-19T01:00:00Z",
+  description: "Adding guardrails, observability, and security to Agent to LLM communication with an AI gateway like kgateway",
+  author: "Christian Posta",
+  authorIds: ["christianposta"],
+}
+
+# Adding guardrails to kagent with kgateway AI gateway
+
+AI agents are quickly becoming integral to enterprise operations, automating tasks ranging from customer support to [infrastructure management and SRE](https://kagent.dev/blog/ai-reliability-aire). As organizations deploy these agents at scale, ensuring secure, observable, and compliant interactions with Large Language Models (LLMs) becomes paramount. This is where the combination of two open-source projects [kagent](https://kagent.dev) and [kgateway](https://kgateway.dev) offers a robust solution.
+
+[kagent](https://kagent.dev) serves as a Kubernetes-native framework that enables DevOps and platform engineers to [build, deploy, and manage AI agents](https://kagent.dev/docs/getting-started/first-agent) as first-class Kubernetes resources. These agents can perform complex tasks by leveraging a suite of tools ([MCP](https://modelcontextprotocol.io), et. al.)  and other Agents (over [A2A](https://google.github.io/A2A/specification/)) within the cloud-native ecosystem. By utilizing Kubernetes Custom Resource Definitions (CRDs), kagent ensures that AI agents are scalable, observable, and seamlessly integrated into existing Kubernetes workflows.
+
+![Traffic flow to LLM](/images/blog/kgateway/kagent-llm.gif)
+
+However, as these agents interact with various LLMs, whether hosted on-premises or by external providers, the need for controlled and secure outbound communication becomes critical. [kgateway](https://kgateway.dev) addresses this by acting as a smart AI egress gateway. 
+
+![Traffic flow through AI gateway](/images/blog/kgateway/kagent-aigw.gif)
+
+Positioned between the AI agents and the LLMs they access, kgateway provides:
+
+* [Security Enforcement](https://kgateway.dev/docs/ai/auth/): Implements organization-wide policies to ensure that outbound requests comply with security and compliance standards.  
+* [Observability](https://kgateway.dev/docs/ai/observability/): Offers detailed metrics and tracing for all AI-related traffic, facilitating monitoring and debugging.  
+* [Traffic Management](https://kgateway.dev/docs/ai/failover/): Enables features like A/B testing, traffic splitting, and canary deployments across different LLMs
+
+See this Demo here:
+
+<YouTube id="gvs0U3oQMRM" />
+
+By integrating [kgateway](https://kgateway.dev/) as an egress gateway, organizations gain fine-grained control over the interactions between AI agents and LLMs, ensuring that all communications are secure, compliant, and observable.
+
+In essence, while kagent orchestrates the lifecycle and operation of AI agents within Kubernetes, kgateway governs their interactions with external LLMs. Together, they provide a comprehensive, Kubernetes-native infrastructure for deploying, managing, and securing AI-driven applications at scale.
