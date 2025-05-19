@@ -12,6 +12,12 @@ const posts = [
         publishDate: '2025-05-14',
         title: 'AI Reliability Engineering For More Dependable Humans',
         description: 'AI Reliability Engineering (AIRE) brings AI agents to SRE and Platform Engineering workflows for dependable humans.',
+    },
+    {
+        slug: 'kgateway-guardrails',
+        publishDate: '2025-05-19',
+        title: 'Adding Guardrails to kagent with kgateway AI Gateway',
+        description: 'Adding guardrails, observability, and security to Agent to LLM communication with an AI gateway like kgateway',
     }
 ]
 
