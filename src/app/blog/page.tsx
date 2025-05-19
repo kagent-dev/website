@@ -29,7 +29,7 @@ export default async function BlogPage() {
                 <div className="max-w-3xl mx-auto px-4">
                     <h1 className="text-4xl font-bold text-center mb-16 text-foreground">Blog</h1>
                     <div className="space-y-12 md:space-y-16">
-                        {posts.map((post) => (
+                        {posts.sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()).map((post) => (
                             <div key={post.slug} className="py-4">
                                 <div className="flex items-center space-x-3 text-sm text-muted-foreground mb-2">
                                     <span>{shortDate(post.publishDate)}</span>
