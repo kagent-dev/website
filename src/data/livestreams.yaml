@@ -48,7 +48,7 @@ livestreams:
     status: "completed"
 
 
-  - date: "May 15, 2025"
+  - date: "May 22, 2025"
     title: "Securing kagent with guardrails and model failover using an AI gateway"
     url: "https://www.youtube.com/watch?v=tM-QI6wrp6s"
     description: |
@@ -58,29 +58,36 @@ livestreams:
 
 communityMeetings:
   - date: "April 29, 2025"
-    title: "All Things AI Agents community meeting "
+    title: "All Things AI Agents community meeting"
     url: "https://www.youtube.com/watch?v=krICTNUsrjs"
     description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "completed"
 
   - date: "May 6, 2025"
-    title: "All Things AI Agents community meeting "
+    title: "All Things AI Agents community meeting"
     url: "https://www.youtube.com/watch?v=afeKDUU0ZXI"
     description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "completed"
 
   - date: "May 13, 2025"
-    title: "All Things AI Agents community meeting "
+    title: "All Things AI Agents community meeting"
     url: "https://www.youtube.com/watch?v=7cN5BzO-1e4"
     description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "completed"
 
   - date: "May 20, 2025"
-    title: "All Things AI Agents community meeting "
-    url: "https://www.youtube.com/watch?v=afeKDUU0ZXI"
+    title: "All Things AI Agents community meeting"
+    url: "https://www.youtube.com/watch?v=Xfv3-q_8Gw0"
+    description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
+    meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
+    status: "completed"
+
+  - date: "May 27, 2025"
+    title: "All Things AI Agents community meeting"
+    url: ""
     description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
     status: "upcoming"
