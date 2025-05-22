@@ -53,7 +53,7 @@ livestreams:
     url: "https://www.youtube.com/watch?v=tM-QI6wrp6s"
     description: |
       Enterprises building agents with kagent will need a way to govern calls to backend LLMs. In this livestream, we’ll explore how we can use an AI gateway like kgateway to apply guardrails, tracing, and model failover to the calls from kagent agents
-    status: "upcoming"
+    status: "completed"
 
 
 communityMeetings:
