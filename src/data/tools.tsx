@@ -7,6 +7,8 @@ import { PrometheusIcon } from "@/components/icons/prometheus";
 import { ArgoIcon } from "@/components/icons/argo";
 import { GrafanaIcon } from "@/components/icons/grafana";
 import getToolCategoryId from '../lib/getToolCategoryId';
+import { CiliumIcon } from "@/components/icons/cilium";
+import KGatewayIcon from "@/components/icons/kgateway";
 
 export interface Tool {
   id: string;
@@ -15,12 +17,7 @@ export interface Tool {
   icon: ReactNode;
   tags: string[];
   categoryId: string;
-  builtin: boolean;
-  mcp: boolean;
   provider: string;
-  stats: {
-    version: string;
-  };
 }
 
 export interface Category {
@@ -48,7 +45,7 @@ const loadToolsFromConfig = (): Tool[] => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const toolConfigs: ToolConfig[] = require("./tools.json");
 
-    return toolConfigs.map((config) => {
+    const tools = toolConfigs.map((config) => {
       // Determine the icon based on the provider prefix
       let icon: ReactNode;
       let tags: string[] = [];
@@ -75,6 +72,12 @@ const loadToolsFromConfig = (): Tool[] => {
       } else if (config.provider.includes("grafana")) {
         icon = <GrafanaIcon className="w-10 h-10" />;
         tags = ["Grafana"];
+      } else if (config.provider.includes("cilium")) {
+        icon = <CiliumIcon className="w-10 h-10" />;
+        tags = ["Cilium"];
+      } else if (config.provider.includes("kgateway")) {
+        icon = <KGatewayIcon className="w-10 h-10" />;
+        tags = ["KGateway"];
       } else {
         // Default icon for other tools
         icon = <BookOpenText />;
@@ -89,14 +92,12 @@ const loadToolsFromConfig = (): Tool[] => {
         icon,
         tags,
         categoryId,
-        builtin: true,
-        mcp: true,
         provider: config.provider,
-        stats: {
-          version: `${config.version}.0.0`,
-        },
+
       };
     });
+
+    return tools.sort((a, b) => a.categoryId.localeCompare(b.categoryId));
   } catch (error) {
     console.error("Failed to load tools configuration:", error);
     return [];
@@ -161,6 +162,13 @@ const allCategories: Category[] = [
       "Tools for managing and interacting with Grafana dashboards and data sources",
     icon: <GrafanaIcon className="w-10 h-10" />,
     tools: tools.filter((tool) => tool.categoryId === "grafana"),
+  },
+  {
+    id: "cilium",
+    name: "Cilium",
+    description: "Tools for managing and interacting with Cilium service mesh",
+    icon: <CiliumIcon className="w-10 h-10" />,
+    tools: tools.filter((tool) => tool.categoryId === "cilium"),
   },
   {
     id: "other",

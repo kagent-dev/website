@@ -45,7 +45,7 @@
     "config": {}
   },
   {
-    "provider": "kagent.tools.istio.InstallIstio",
+    "provider": "kagent.tools.istio.Install",
     "description": "Install Istio",
     "component_type": "tool",
     "component_version": 1,
@@ -87,6 +87,15 @@
     "component_version": 1,
     "version": 1,
     "label": "RemoteClusters",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.istio.Version",
+    "description": "Returns the Istio CLI client version, control plane and the data plane versions and number of proxies running in the cluster. If Istio is not installed, it will return the Istio CLI client version.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "Version",
     "config": {}
   },
   {
@@ -136,11 +145,20 @@
   },
   {
     "provider": "kagent.tools.k8s.CreateResource",
-    "description": "Create a resource in Kubernetes.",
+    "description": "Create a resource in Kubernetes. Must be a local file.",
     "component_type": "tool",
     "component_version": 1,
     "version": 1,
     "label": "CreateResource",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.k8s.CreateResourceFromUrl",
+    "description": "Create a resource in Kubernetes from a url.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "CreateResourceFromUrl",
     "config": {}
   },
   {
@@ -286,9 +304,15 @@
     "version": 1,
     "label": "GenerateResourceTool",
     "config": {
-      "model": "gpt-4o",
-      "openai_api_key": "",
-      "temperature": 0.0
+      "model_client": {
+        "provider": "<YourProviderHere",
+        "component_type": "model",
+        "version": 1,
+        "component_version": 1,
+        "description": "A description of the model",
+        "label": "<YourLabelHere>",
+        "config": {}
+      }
     }
   },
   {
@@ -559,14 +583,20 @@
     "version": 1,
     "label": "GeneratePromQLTool",
     "config": {
-      "model": "gpt-4o",
-      "openai_api_key": "",
-      "temperature": 0.0
+      "model_client": {
+        "provider": "<YourProviderHere",
+        "component_type": "model",
+        "version": 1,
+        "component_version": 1,
+        "description": "A description of the model",
+        "label": "<YourLabelHere>",
+        "config": {}
+      }
     }
   },
   {
     "provider": "kagent.tools.docs.QueryTool",
-    "description": "Searches a vector database for relevant documentation related to various software projects.",
+    "description": "Searches a vector database for relevant documentation related to one of these projects: kubernetes, istio, argo, argo-rollouts, helm, prometheus, gateway-api, gloo-gateway, kgateway, gloo-edge, otel, cilium, ambient",
     "component_type": "tool",
     "component_version": 1,
     "version": 1,
@@ -574,7 +604,8 @@
     "config": {
       "docs_base_path": "",
       "docs_download_url": "https://doc-sqlite-db.s3.sa-east-1.amazonaws.com",
-      "openai_api_key": ""
+      "openai_api_key": "",
+      "min_similarity": 0.7
     }
   },
   {
@@ -819,5 +850,536 @@
       "password": "",
       "api_key": ""
     }
+  },
+  {
+    "provider": "kagent.tools.datetime.GetCurrentDateTime",
+    "description": "Returns the current date and time in ISO 8601 format.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetCurrentDateTime",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.InstallCilium",
+    "description": "Install Cilium on the cluster.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "InstallCilium",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.UninstallCilium",
+    "description": "Uninstall Cilium from the cluster.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "UninstallCilium",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.CiliumStatusAndVersion",
+    "description": "Get the status and version of Cilium installation.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "CiliumStatusAndVersion",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.UpgradeCilium",
+    "description": "Upgrade Cilium on the cluster.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "UpgradeCilium",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetEndpointsList",
+    "description": "Get the list of all endpoints in the cluster.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetEndpointsList",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetEndpointDetails",
+    "description": "List the details of an endpoint in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetEndpointDetails",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ManageEndpointConfig",
+    "description": "Manage the configuration of an endpoint in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ManageEndpointConfig",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ManageEndpointLabels",
+    "description": "Manage the labels (add or delete) of an endpoint in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ManageEndpointLabels",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DisconnectEndpoint",
+    "description": "Disconnect an endpoint from the network",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DisconnectEndpoint",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetEndpointHealth",
+    "description": "Get the health of an endpoint in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetEndpointHealth",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetEndpointLogs",
+    "description": "Get the logs of an endpoint in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetEndpointLogs",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListBGPPeers",
+    "description": "Lists BGP peering state",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListBGPPeers",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListBGPRoutes",
+    "description": "Lists BGP routes",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListBGPRoutes",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ConnectToRemoteCluster",
+    "description": "Connect to a remote cluster (clustermesh)",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ConnectToRemoteCluster",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DisconnectRemoteCluster",
+    "description": "Disconnect from a remote cluster (clustermesh)",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DisconnectRemoteCluster",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ToggleClusterMesh",
+    "description": "Enable or disable clustermesh ability in a cluster using Helm",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ToggleClusterMesh",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ShowClusterMeshStatus",
+    "description": "Show clustermesh status",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ShowClusterMeshStatus",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ShowFeaturesStatus",
+    "description": "Show feature status",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ShowFeaturesStatus",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ToggleHubble",
+    "description": "Toggle Hubble",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ToggleHubble",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetDaemonStatus",
+    "description": "Get the status of the daemon",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetDaemonStatus",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListIdentities",
+    "description": "List all identities in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListIdentities",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetIdentityDetails",
+    "description": "Get the details of an identity in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetIdentityDetails",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ShowConfigurationOptions",
+    "description": "Show Cilium configuration options",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ShowConfigurationOptions",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ToggleConfigurationOption",
+    "description": "Toggle a Cilium configuration option",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ToggleConfigurationOption",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.RequestDebuggingInformation",
+    "description": "Request debugging information from Cilium agent",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "RequestDebuggingInformation",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DisplayEncryptionState",
+    "description": "Display the current encryption state",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DisplayEncryptionState",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.FlushIPsecState",
+    "description": "Flush the IPsec state",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "FlushIPsecState",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListEnvoyConfig",
+    "description": "List the Envoy configuration",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListEnvoyConfig",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.FQDNCache",
+    "description": "Manage the FQDN cache",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "FQDNCache",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ShowDNSNames",
+    "description": "Show the internal state Cilium has for DNS names/regexes",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ShowDNSNames",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListIPAddresses",
+    "description": "List the IP addresses in the userspace IPCache",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListIPAddresses",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ShowIPCacheInformation",
+    "description": "Show the information of the IP cache",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ShowIPCacheInformation",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DeleteKeyFromKVStore",
+    "description": "Delete a key from the kvstore",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DeleteKeyFromKVStore",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetKVStoreKey",
+    "description": "Get a key from the kvstore",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetKVStoreKey",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.SetKVStoreKey",
+    "description": "Set a key in the kvstore",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "SetKVStoreKey",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ShowLoadInformation",
+    "description": "Show the load information",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ShowLoadInformation",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListLocalRedirectPolicies",
+    "description": "List the local redirect policies",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListLocalRedirectPolicies",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListBPFMapEvents",
+    "description": "List the events of the BPF maps",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListBPFMapEvents",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetBPFMap",
+    "description": "Get the BPF map",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetBPFMap",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListBPFMaps",
+    "description": "List all open BPF maps",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListBPFMaps",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListMetrics",
+    "description": "List the metrics",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListMetrics",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListClusterNodes",
+    "description": "List the nodes in the cluster",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListClusterNodes",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListNodeIds",
+    "description": "List the node IDs and the associated IP addresses",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListNodeIds",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DisplayPolicyNodeInformation",
+    "description": "Display the policy node information",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DisplayPolicyNodeInformation",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DeletePolicyRules",
+    "description": "Delete the policy rules",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DeletePolicyRules",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DisplaySelectors",
+    "description": "Display cached information about selectors",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DisplaySelectors",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListXDPCIDRFilters",
+    "description": "List the XDP CIDR filters (prefilter)",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListXDPCIDRFilters",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.UpdateXDPCIDRFilters",
+    "description": "Update the XDP CIDR filters",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "UpdateXDPCIDRFilters",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DeleteXDPCIDRFilters",
+    "description": "Delete the XDP CIDR filters",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DeleteXDPCIDRFilters",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ValidateCiliumNetworkPolicies",
+    "description": "Validate the Cilium network policies. It's recommended to run this before upgrading Cilium to ensure all policies are valid.",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ValidateCiliumNetworkPolicies",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListPCAPRecorders",
+    "description": "List the pcap recorders",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListPCAPRecorders",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetPCAPRecorder",
+    "description": "Displays the individual pcap recorder",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetPCAPRecorder",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DeletePCAPRecorder",
+    "description": "Delete the pcap recorder",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DeletePCAPRecorder",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.UpdatePCAPRecorder",
+    "description": "Update the pcap recorder",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "UpdatePCAPRecorder",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.ListServices",
+    "description": "List the services",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "ListServices",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.GetServiceInformation",
+    "description": "Get the information of the service",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "GetServiceInformation",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.DeleteService",
+    "description": "Delete the service",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "DeleteService",
+    "config": {}
+  },
+  {
+    "provider": "kagent.tools.cilium.UpdateService",
+    "description": "Update the service",
+    "component_type": "tool",
+    "component_version": 1,
+    "version": 1,
+    "label": "UpdateService",
+    "config": {}
   }
 ]

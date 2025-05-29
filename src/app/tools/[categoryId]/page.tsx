@@ -1,8 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Check, Cog, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -52,8 +51,6 @@ const CategoryPage = () => {
               <TableRow>
                 <TableHead>Tool</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>Type</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -61,25 +58,6 @@ const CategoryPage = () => {
                 <TableRow key={tool.id}>
                   <TableCell className="font-medium">{tool.name}</TableCell>
                   <TableCell className="max-w-md">{tool.description}</TableCell>
-                  <TableCell>
-                    <span>v{tool.stats.version}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      {tool.builtin && (
-                        <Badge variant="outline">
-                          <Check className="w-3 h-3 mr-1" />
-                          Built-in
-                        </Badge>
-                      )}
-                      {tool.mcp && (
-                        <Badge variant="outline">
-                          <Cog className="w-3 h-3 mr-1" />
-                          MCP
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -93,29 +71,12 @@ const CategoryPage = () => {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{tool.name}</CardTitle>
-                  <span className="text-sm text-muted-foreground">
-                    v{tool.stats.version}
-                  </span>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-3">
                   {tool.description}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {tool.builtin && (
-                    <Badge variant="outline" className="text-xs">
-                      <Check className="w-3 h-3 mr-1" />
-                      Built-in
-                    </Badge>
-                  )}
-                  {tool.mcp && (
-                    <Badge variant="outline" className="text-xs">
-                      <Cog className="w-3 h-3 mr-1" />
-                      MCP
-                    </Badge>
-                  )}
-                </div>
               </CardContent>
             </Card>
           ))}

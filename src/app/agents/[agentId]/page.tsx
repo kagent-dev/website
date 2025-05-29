@@ -75,6 +75,7 @@ const AgentPage = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Tools Card */}
+          {agent.tools && agent.tools.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -93,16 +94,17 @@ const AgentPage = () => {
               {agent.tools && agent.tools.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
                   {agent.tools.map((tool) => (
-                    <div key={tool.id} className="text-sm text-muted-foreground truncate">
-                      {tool.provider}
+                    <div key={tool.builtin.name} className="text-sm text-muted-foreground truncate">
+                      {tool.builtin.name}
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">No tools available</p>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Button className="w-full" size="lg" asChild>
             <Link href="/docs/getting-started/quickstart">
