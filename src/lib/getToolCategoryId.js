@@ -9,6 +9,7 @@ function getToolCategoryId(provider) {
     if (provider.includes('helm')) return 'helm';
     if (provider.includes('argo')) return 'argo';
     if (provider.includes('grafana')) return 'grafana';
+    if (provider.includes('cilium')) return 'cilium';
     return 'other';
 }
 
