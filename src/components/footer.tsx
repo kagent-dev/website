@@ -1,6 +1,6 @@
 import Link from "next/link";
 import KagentLogo from "./icons/kagent-logo";
-import { GITHUB_LINK } from "@/data/links";
+import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
 import { Separator } from "./ui/separator";
 
 export default function Footer() {
@@ -47,6 +47,11 @@ export default function Footer() {
               <li>
                 <Link href="/community" className="text-sm text-muted-foreground hover:text-primary">
                   Community
+                </Link>
+              </li>
+              <li>
+                <Link href={DISCORD_LINK} className="text-sm text-muted-foreground hover:text-primary">
+                  Discord
                 </Link>
               </li>
               <li>
