@@ -144,7 +144,7 @@ const CommunityPage = () => {
               <Calendar className="w-5 h-5 text-primary" />
               <h2 className="text-2xl font-medium">Upcoming Events</h2>
             </div>
-            <div className="grid gap-8 md:grid-cols-2">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {upcomingEvents.map((event: UpcomingEvent, index: number) => {
                 const videoId = event.type === 'livestream' ? getYouTubeVideoId(event.url) : null;
                 
@@ -156,7 +156,7 @@ const CommunityPage = () => {
                 return (
                   <motion.div 
                     key={`${event.type}-${index}`} 
-                    className={`group relative overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md`}
+                    className={`group relative overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md hover:border-primary/50`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + index * 0.1 }}
@@ -194,14 +194,14 @@ const CommunityPage = () => {
                     )}
                     <div className="p-6">
                       <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-lg font-medium max-w-xs line-clamp-1">{event.title}</h3>
+                        <h3 className="text-lg font-medium">{event.title}</h3>
                         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                           {event.date}
                         </span>
                       </div>
                       {/* Description - Show if it exists for any type */}
                       {event.description && (
-                         <p className="mb-6 text-muted-foreground line-clamp-2">{event.description}</p>
+                         <p className="mb-6 text-muted-foreground max-h-[3em] overflow-hidden group-hover:max-h-[200px] transition-all duration-300 ease-in-out">{event.description}</p>
                       )}
                       {/* Buttons */} 
                       <div className="flex flex-col space-y-2 mt-4"> {/* Ensure margin if description is missing */} 
@@ -341,7 +341,7 @@ const CommunityPage = () => {
                 return (
                   <motion.div 
                     key={`${event.type}-${index}`} 
-                    className={`${cardBaseClasses} ${cardBorderClasses}`}
+                    className={`${cardBaseClasses} ${cardBorderClasses} hover:border-primary/50`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.0 + index * 0.1 }}
@@ -366,7 +366,7 @@ const CommunityPage = () => {
                       </div>
                       <p className="mb-3 text-sm text-muted-foreground">{event.date}</p> {/* Added date display here */}
                       {event.description && (
-                        <p className="mb-4 text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                        <p className="mb-4 text-sm text-muted-foreground max-h-[3em] overflow-hidden group-hover:max-h-[200px] transition-all duration-300 ease-in-out">{event.description}</p>
                       )}
                       
                       {/* Action Buttons */}
