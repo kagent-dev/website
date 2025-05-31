@@ -42,7 +42,7 @@ Before you begin development, ensure you have the following installed:
 
 The documentation is built using MDX files. To contribute to the documentation:
 
-1. Navigate to the `app/docs/` directory
+1. Navigate to the `src/app/docs/` directory
 2. Edit existing .mdx files or create new ones
 3. If adding a new page, ensure it's properly linked in the navigation (layout.tsx)
 
