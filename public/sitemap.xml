@@ -1,0 +1,276 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    
+    <url>
+        <loc>https://kagent.dev/agents\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents\[agentId]\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/blog\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/blog\[slug]\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/community\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\concepts\agents\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\concepts\architecture\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\concepts\memory\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\concepts\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\concepts\tools\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\examples\a2a-agents\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\examples\documentation\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\examples\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\examples\slack-a2a\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\getting-started\configuring-providers\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\getting-started\first-agent\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\getting-started\first-mcp-tool\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\getting-started\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\getting-started\quickstart\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\getting-started\system-prompts\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\introduction\installation\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\introduction\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\introduction\what-is-kagent\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\resources\faq\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\resources\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs\resources\troubleshooting\page.mdx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools\[categoryId]\page.tsx</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/istio</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/kubernetes</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/prometheus</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/documentation</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/helm</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/argo</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/grafana</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/other</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/tools/cilium</loc>
+        <lastmod>2025-05-31</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+</urlset>
