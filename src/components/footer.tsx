@@ -2,6 +2,10 @@ import Link from "next/link";
 import KagentLogo from "./icons/kagent-logo";
 import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
 import { Separator } from "./ui/separator";
+import Github from "./icons/github";
+import DiscordIcon from "./icons/discord";
+import Twitter from "./icons/twitter";
+import LinkedIn from "./icons/linkedin";
 
 export default function Footer() {
   return (
@@ -134,13 +138,29 @@ export default function Footer() {
 
         <Separator className="mb-8" />
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
             <KagentLogo animate={true} className="h-6 w-6 text-[#942DE7]" />
             <p>is an open source project</p>
           </div>
-          <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} kagent. All rights reserved.
+          <div className="flex flex-col items-center md:items-end gap-4">
+            <div className="flex items-center gap-4">
+              <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Github className="h-5 w-5" />
+              </Link>
+              <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <DiscordIcon className="h-5 w-5" />
+              </Link>
+              <Link href="https://x.com/kagent_dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Twitter className="h-5 w-5" />
+              </Link>
+              <Link href="https://www.linkedin.com/company/kagent/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <LinkedIn className="h-5 w-5" />
+              </Link>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} kagent. All rights reserved.
+            </div>
           </div>
         </div>
       </div>
