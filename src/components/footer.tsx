@@ -108,17 +108,17 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href={DISCORD_LINK} className="text-sm text-muted-foreground hover:text-primary">
+                <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   Discord
                 </Link>
               </li>
               <li>
-                <Link href={GITHUB_LINK} className="text-sm text-muted-foreground hover:text-primary">
+                <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   GitHub
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   Contributing
                 </Link>
               </li>
@@ -128,7 +128,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   Roadmap
                 </Link>
               </li>
