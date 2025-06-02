@@ -9,7 +9,6 @@ import { DISCORD_LINK, GITHUB_LINK } from "@/data/links";
 import Github from "@/components/icons/github";
 import { KeyComponents } from "@/components/key-components";
 import { UseCases } from "@/components/use-cases";
-import AboutKagent from "@/components/about-kagent";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
@@ -73,14 +72,6 @@ const MarketingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <KeyComponents />
           </div>
-        </div>
-      </div>
-
-      {/* About Kagent Section */}
-      <div className="py-32 border-t border-white/10">
-        <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-3xl font-medium text-center mb-16">About Kagent</h2>
-          <AboutKagent />
         </div>
       </div>
 
