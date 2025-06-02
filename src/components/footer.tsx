@@ -1,11 +1,12 @@
 import Link from "next/link";
 import KagentLogo from "./icons/kagent-logo";
-import { GITHUB_LINK, DISCORD_LINK, X_LINK, LINKEDIN_LINK } from "@/data/links";
+import { GITHUB_LINK, DISCORD_LINK, X_LINK, LINKEDIN_LINK, YOUTUBE_LINK } from "@/data/links";
 import { Separator } from "./ui/separator";
 import Github from "./icons/github";
 import DiscordIcon from "./icons/discord";
 import Twitter from "./icons/twitter";
 import LinkedIn from "./icons/linkedin";
+import Youtube from "./icons/youtube";
 
 export default function Footer() {
   return (
@@ -156,6 +157,9 @@ export default function Footer() {
               </Link>
               <Link href={LINKEDIN_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                 <LinkedIn className="h-5 w-5" />
+              </Link>
+              <Link href={YOUTUBE_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Youtube className="h-5 w-5" />
               </Link>
             </div>
             <div className="text-sm text-muted-foreground">
