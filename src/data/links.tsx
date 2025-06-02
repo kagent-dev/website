@@ -1,2 +1,4 @@
 export const GITHUB_LINK = "https://github.com/kagent-dev/kagent"
 export const DISCORD_LINK = "https://discord.gg/Fu3k65f2k3"
+export const X_LINK = "https://twitter.com/kagent_dev"
+export const LINKEDIN_LINK = "https://www.linkedin.com/company/kagent"

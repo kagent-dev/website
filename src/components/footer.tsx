@@ -1,6 +1,6 @@
 import Link from "next/link";
 import KagentLogo from "./icons/kagent-logo";
-import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
+import { GITHUB_LINK, DISCORD_LINK, X_LINK, LINKEDIN_LINK } from "@/data/links";
 import { Separator } from "./ui/separator";
 import Github from "./icons/github";
 import DiscordIcon from "./icons/discord";
@@ -151,10 +151,10 @@ export default function Footer() {
               <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                 <DiscordIcon className="h-5 w-5" />
               </Link>
-              <Link href="https://x.com/kagent_dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={X_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                 <Twitter className="h-5 w-5" />
               </Link>
-              <Link href="https://www.linkedin.com/company/kagent/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={LINKEDIN_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                 <LinkedIn className="h-5 w-5" />
               </Link>
             </div>
