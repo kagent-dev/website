@@ -50,17 +50,17 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/introduction/architecture" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/concepts/architecture" className="text-sm text-muted-foreground hover:text-primary">
                   Architecture
                 </Link>
               </li>
               <li>
-                <Link href="/docs/introduction/core-concepts" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/concepts" className="text-sm text-muted-foreground hover:text-primary">
                   Core Concepts
                 </Link>
               </li>
               <li>
-                <Link href="/docs/introduction/llm-providers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/getting-started/configuring-providers" className="text-sm text-muted-foreground hover:text-primary">
                   Configuring LLM Providers
                 </Link>
               </li>
@@ -87,7 +87,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/examples/documentation-agent" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/examples/documentation" className="text-sm text-muted-foreground hover:text-primary">
                   Documentation Agent
                 </Link>
               </li>
