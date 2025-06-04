@@ -1,0 +1,58 @@
+---
+title: "Google Vertex AI"
+pageOrder: 3
+description: "Learn how to configure Google Vertex AI models in kagent."
+---
+
+export const metadata = {
+  title: "Configuring Google Vertex AI models in kagent",
+  description: "Learn how to configure Google Vertex AI models in kagent.",
+  author: "kagent.dev"
+};
+
+## Configuring Google Vertex AI
+
+Google Vertex AI is supported for Gemini and Anthropic models.
+
+1. Create the [Google Application Default Credentials file](https://cloud.google.com/docs/authentication/provide-credentials-adc) and store it in a Kubernetes Secret:
+
+```shell
+kubectl create secret generic kagent-google-creds -n kagent --from-file=./google_creds.json
+```
+
+2. For Gemini models: create a ModelConfig resource using the `GeminiVertexAI` provider that references the secret and key name, and specify the Gemini model you want to use. Note the `projectID` and `location` are required:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: gemini-model-config-vertexai
+  namespace: kagent
+spec:
+  apiKeySecretRef: kagent-google-creds
+  apiKeySecretKey: google_creds.json
+  model: gemini-2.0-flash-lite
+  provider: GeminiVertexAI
+  geminiVertexAI:
+    projectID: kagent-dev
+    location: us-west1
+    maxOutputTokens: 1000
+```
+
+3. For Anthropic models: create a ModelConfig resource using the `AnthropicVertexAI` provider that references the secret and key name, and specify the Anthropic model you want to use. Note the `projectID` and `location` are required:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: anthropic-model-config-vertexai
+  namespace: kagent
+spec:
+  apiKeySecretRef: kagent-google-creds
+  apiKeySecretKey: google_creds.json
+  model: claude-sonnet-4@20250514
+  provider: AnthropicVertexAI
+  anthropicVertexAI:
+    projectID: kagent-dev
+    location: us-east5
+```

@@ -52,18 +52,13 @@
         "title": "Writing System Prompts",
         "href": "/docs/getting-started/system-prompts",
         "description": "Learn the art and science of writing effective system prompts for your kagent agents."
-      },
-      {
-        "title": "Configuring LLM Providers",
-        "href": "/docs/getting-started/configuring-providers",
-        "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent."
       }
     ]
   },
   {
     "title": "Core Concepts",
     "href": "/docs/concepts",
-    "order": 3,
+    "order": 4,
     "description": "Understand the fundamental concepts and architecture of kagent.",
     "items": [
       {
@@ -89,9 +84,47 @@
     ]
   },
   {
+    "title": "Supported Providers",
+    "href": "/docs/supported-providers",
+    "order": 4,
+    "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent.",
+    "items": [
+      {
+        "title": "Anthropic",
+        "href": "/docs/supported-providers/anthropic",
+        "description": "Learn how to configure Anthropic models for kagent."
+      },
+      {
+        "title": "Azure OpenAI",
+        "href": "/docs/supported-providers/azure-openai",
+        "description": "Learn how to configure Azure OpenAI models in kagent."
+      },
+      {
+        "title": "Google Vertex AI",
+        "href": "/docs/supported-providers/google-vertexai",
+        "description": "Learn how to configure Google Vertex AI models in kagent."
+      },
+      {
+        "title": "Ollama",
+        "href": "/docs/supported-providers/ollama",
+        "description": "Learn how to configure Ollama models in kagent."
+      },
+      {
+        "title": "OpenAI",
+        "href": "/docs/supported-providers/openai",
+        "description": "Learn how to configure OpenAI models in kagent."
+      },
+      {
+        "title": "Custom Models",
+        "href": "/docs/supported-providers/custom-models",
+        "description": "Learn how to configure custom AI models in kagent."
+      }
+    ]
+  },
+  {
     "title": "Examples",
     "href": "/docs/examples",
-    "order": 4,
+    "order": 5,
     "description": "Explore practical examples and use cases for kagent.",
     "items": [
       {
@@ -114,7 +147,7 @@
   {
     "title": "Resources",
     "href": "/docs/resources",
-    "order": 5,
+    "order": 6,
     "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent.",
     "items": [
       {
