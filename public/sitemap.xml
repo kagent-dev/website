@@ -2,252 +2,308 @@
     
     <url>
         <loc>https://kagent.dev/agents</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/blog</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/community</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/concepts/agents</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/concepts/architecture</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/concepts/memory</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/concepts</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/concepts/tools</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/examples/a2a-agents</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/examples/documentation</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/examples</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/examples/slack-a2a</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/getting-started/configuring-providers</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/getting-started/first-agent</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/getting-started/first-mcp-tool</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/getting-started</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/getting-started/quickstart</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/getting-started/system-prompts</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/introduction/installation</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/introduction</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/introduction/what-is-kagent</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/resources/faq</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/resources</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/resources/troubleshooting</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/page.tsx</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/argo-rollouts-conversion-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/cilium-crd-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/helm-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/istio-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/k8s-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/kgateway-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/observability-agent</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/agents/promql-agent</loc>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/istio</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/kubernetes</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/prometheus</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/documentation</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/helm</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/argo</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/grafana</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/other</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/cilium</loc>
-        <lastmod>2025-06-03</lastmod>
+        <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
