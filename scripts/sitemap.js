@@ -80,7 +80,7 @@ async function getDynamicRoutes() {
         const agentDataString = fs.readFileSync(agentDataPath, 'utf-8');
         const agents = JSON.parse(agentDataString);
         if (Array.isArray(agents)) {
-            const agentUrls = agents.map(agent => `/agents/${agent.metadata.name}`);
+            const agentUrls = agents.map(agent => `/agents/${agent.name}`);
             dynamicUrls = dynamicUrls.concat(agentUrls);
         } else {
             console.warn("Could not load dynamic agent routes: agents.json is not an array or is empty.");
