@@ -1,0 +1,40 @@
+---
+title: "OpenAI"
+pageOrder: 5
+description: "Learn how to configure OpenAI models in kagent."
+---
+
+export const metadata = {
+  title: "Configuring OpenAI models in kagent",
+  description: "Learn how to configure OpenAI models for kagent.",
+  author: "kagent.dev"
+};
+
+## Configuring OpenAI
+
+1. Create a Kubernetes Secret that stores the API key, replace `<your_api_key>` with an actual API key:
+
+```shell
+export OPENAI_API_KEY=<your_api_key>
+kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_KEY=$OPENAI_API_KEY
+```
+
+2. Create a ModelConfig resource that references the secret and key name:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: openai-model-config
+  namespace: kagent
+spec:
+  apiKeySecretRef: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-4o-mini
+  provider: OpenAI
+  openAI: {}
+```
+
+3. Apply the above resource to the cluster.
+
+Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.

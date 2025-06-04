@@ -85,13 +85,6 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/docs/getting-started/configuring-providers</loc>
-        <lastmod>2025-06-04</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
         <loc>https://kagent.dev/docs/getting-started/first-agent</loc>
         <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
@@ -170,6 +163,55 @@
     
     <url>
         <loc>https://kagent.dev/docs/resources/troubleshooting</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers/anthropic</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers/azure-openai</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers/custom-models</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers/google-vertexai</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers/ollama</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers/openai</loc>
+        <lastmod>2025-06-04</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/supported-providers</loc>
         <lastmod>2025-06-04</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
