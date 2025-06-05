@@ -6,6 +6,15 @@ import remarkFrontmatter from 'remark-frontmatter'
 
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  async redirects() {
+    return [
+      {
+        source: '/docs/getting-started/configuring-providers',
+        destination: '/docs/supported-providers',
+        permanent: true,
+      },
+    ];
+  },
   webpack: (config) => {
     config.module.rules.push({
       test: /\.ya?ml$/,
