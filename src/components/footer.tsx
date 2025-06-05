@@ -60,7 +60,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/getting-started/configuring-providers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/supported-providers" className="text-sm text-muted-foreground hover:text-primary">
                   Configuring LLM Providers
                 </Link>
               </li>
