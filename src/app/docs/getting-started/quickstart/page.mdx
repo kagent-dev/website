@@ -12,7 +12,7 @@ export const metadata = {
 
 # Quick Start
 
-This guide will help you get started with [kagent](https://github.com/kagent-dev/kagent), an open-source framework that brings the power of agentic AI to cloud-native environments. We'll walk through setting environment and deploying your first AI agent.
+This guide will help you get started with [kagent](https://github.com/kagent-dev/kagent), an open-source framework that brings the power of agentic AI to cloud-native environments. We'll walk through setting up the environment and deploying your first AI agent.
 
 ## Prerequisites
 
@@ -95,7 +95,6 @@ Let's start by listing the current agents:
 
 ```shell
 kagent >> get agents
-kagent >> get agents
 +---+---------------------+----+----------------------------+
 | # | NAME                | ID | CREATED                    |
 +---+---------------------+----+----------------------------+
@@ -110,7 +109,7 @@ To start a new agent, run the `run chat` command:
 ```shell
 kagent >> run chat [agent-name] [session-name] [initial-task]
 ```
-If you don't provide any flags, it will it will prompt you for the values:
+If you don't provide any flags, it will prompt you for the values:
 
 ```shell
 kagent >> run chat
