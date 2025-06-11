@@ -142,7 +142,15 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
             <KagentLogo animate={true} className="h-6 w-6 text-[#942DE7]" />
-            <p>is an open source project</p>
+            <p>was created at
+              <Link href="https://solo.io/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
+                Solo.io 
+              </Link>{' '}
+            and is a
+            <Link href="https://cncf.io/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
+                Cloud Native Computing Foundation
+              </Link>{' '}
+            sandbox project</p>
           </div>
           <div className="flex flex-col items-center md:items-end gap-4">
             <div className="flex items-center gap-4">
@@ -163,7 +171,10 @@ export default function Footer() {
               </Link>
             </div>
             <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} kagent. All rights reserved.
+              © {new Date().getFullYear()} kagent, a Series of LF Projects, LLC.
+              <Link href="https://www.linuxfoundation.org/trademark-usage/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
+                Trademark Usage
+              </Link>
             </div>
           </div>
         </div>
