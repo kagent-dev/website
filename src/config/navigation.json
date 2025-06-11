@@ -80,6 +80,11 @@
         "title": "Memory",
         "href": "/docs/concepts/memory",
         "description": "Learn how kagent agents manage memory and conversation history to maintain context and improve interactions."
+      },
+      {
+        "title": "Model Information",
+        "href": "/docs/concepts/model-info",
+        "description": "Learn about model capabilities and configuration in kagent."
       }
     ]
   },

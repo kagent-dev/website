@@ -41,10 +41,17 @@ spec:
   provider: OpenAI
   openAI:
     baseUrl: https://your-custom-openai-provider.com
+  # Required: Specify model capabilities
   modelInfo:
+    vision: false
     functionCalling: true
-    family: unknown
+    jsonOutput: true
+    family: "custom"
+    structuredOutput: true
+    multipleSystemMessages: false
 ```
+
+For custom models, you must specify the model's capabilities using the `modelInfo` field. This helps kagent understand what features your model supports and how to interact with it effectively. For detailed information about model capabilities and how to configure them, see [Model Information](/docs/concepts/model-info).
 
 If you don't need an API key you can elide the `apiKeySecretRef` and `apiKeySecretKey` fields.
 
