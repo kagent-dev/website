@@ -10,12 +10,85 @@ export const metadata = {
   author: "kagent.dev"
 };
 
+# Custom Models and Model Capabilities
+
+When using custom models or overriding model capabilities in kagent, you need to specify what features your model supports. This is done through the `modelInfo` configuration.
+
+## Model Capabilities
+
+<table style={{width: '100%'}}>
+  <thead>
+    <tr>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Capability</th>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>vision</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Process and understand images</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>functionCalling</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Use tools and execute actions</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>jsonOutput</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Generate valid JSON responses</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>family</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Model architecture type (e.g., "gpt", "llama")</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>structuredOutput</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Generate formatted responses</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>multipleSystemMessages</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Support multiple system prompts</td>
+    </tr>
+  </tbody>
+</table>
+
+## Provider Requirements
+
+<table style={{width: '100%'}}>
+  <thead>
+    <tr>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Provider</th>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>ModelInfo</th>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>OpenAI</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Optional</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Pre-configured for standard models</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Anthropic</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Optional</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Pre-configured for Claude models</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Ollama</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Required</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Must specify all capabilities</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Custom</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Required</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Must specify all capabilities</td>
+    </tr>
+  </tbody>
+</table>
+
 ## Configuring Custom Models
 
 Often you may want to use a custom model with an existing provider, for example if you're using a self-hosted model exposed via the OpenAI API.
 Or if you're using a proxy to the OpenAI API.
-
-We require certain information about any model to be able to use it. We ship with a default set of models, but you can also add custom models.
 
 The example below will add an API key, but given that this is a custom provider, the key is optional.
 
@@ -50,8 +123,6 @@ spec:
     structuredOutput: true
     multipleSystemMessages: false
 ```
-
-For custom models, you must specify the model's capabilities using the `modelInfo` field. This helps kagent understand what features your model supports and how to interact with it effectively. For detailed information about model capabilities and how to configure them, see [Model Information](/docs/concepts/model-info).
 
 If you don't need an API key you can elide the `apiKeySecretRef` and `apiKeySecretKey` fields.
 
