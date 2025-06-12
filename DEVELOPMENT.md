@@ -15,8 +15,8 @@ Before you begin development, ensure you have the following installed:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/kagent-dev/website/ kagent-website
-   cd kagent-website
+   git clone https://github.com/kagent-dev/website.git
+   cd src
    ```
 
 2. **Install dependencies**
