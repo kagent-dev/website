@@ -239,6 +239,7 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/agents/cilium-crd-agent</loc>
         <lastmod>2025-06-11</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
