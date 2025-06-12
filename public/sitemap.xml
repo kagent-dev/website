@@ -239,21 +239,6 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/agents/cilium-policy-agent</loc>
-        <lastmod>2025-06-11</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
-        <loc>https://kagent.dev/agents/cilium-manager-agent</loc>
-        <lastmod>2025-06-11</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
-        <loc>https://kagent.dev/agents/cilium-debug-agent</loc>
         <lastmod>2025-06-11</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
