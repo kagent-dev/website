@@ -35,6 +35,8 @@ spec:
   openAI: {}
 ```
 
+For OpenAI's standard models like GPT-4 and GPT-3.5, kagent automatically configures the appropriate model capabilities. However, you can override these settings using the `modelInfo` field if needed. For more information about model capabilities and configuration, see [Custom Models](/docs/supported-providers/custom-models).
+
 3. Apply the above resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
