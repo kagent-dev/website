@@ -67,7 +67,7 @@ You can run `kubectl get pod -n ollama` and wait until the pod has started.
 
 Once the pod has started, you can port-forward to the Ollama service and use `ollama run [model-name]` to download/run the model. You can download Ollama binary [here](https://ollama.com/download/).
 
->As kagent relies on calling tools, sure you're using a model that allows function calling.
+>As kagent relies on calling tools, make sure you're using a model that allows function calling.
 
 Let's assume we've downloaded the `llama3` model, you can then use the following ModelConfig to configure the model:
 
