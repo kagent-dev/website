@@ -7,6 +7,7 @@ import DiscordIcon from "./icons/discord";
 import Twitter from "./icons/twitter";
 import LinkedIn from "./icons/linkedin";
 import Youtube from "./icons/youtube";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -146,11 +147,7 @@ export default function Footer() {
               <Link href="https://solo.io/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
                 Solo.io 
               </Link>{' '}
-            and is a
-            <Link href="https://cncf.io/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
-                Cloud Native Computing Foundation
-              </Link>{' '}
-            sandbox project</p>
+            </p>
           </div>
           <div className="flex flex-col items-center md:items-end gap-4">
             <div className="flex items-center gap-4">
@@ -177,6 +174,23 @@ export default function Footer() {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* CNCF Banner Section at the bottom */}
+        <div className="flex flex-col items-center justify-center mt-16">
+          <p className="text-xl md:text-3xl text-center mb-4 font-light">
+            Kagent is a{' '}
+            <Link href="https://www.cncf.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Cloud Native Computing Foundation</Link>{' '}
+            <span className="text-black">Sandbox</span> project
+          </p>
+          <Image
+            src="/images/cncf-sandbox-horizontal-color.png"
+            alt="Cloud Native Computing Foundation"
+            width={700}
+            height={180}
+            className="mb-2"
+            priority
+          />
         </div>
       </div>
     </footer>
