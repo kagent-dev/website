@@ -181,7 +181,7 @@ export default function Footer() {
           <p className="text-xl md:text-3xl text-center mb-4 font-light">
             Kagent is a{' '}
             <Link href="https://www.cncf.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Cloud Native Computing Foundation</Link>{' '}
-            <span className="text-black">Sandbox</span> project
+            <span className="text-white">Sandbox</span> project
           </p>
           <Image
             src="/images/cncf-sandbox-horizontal-color.png"
