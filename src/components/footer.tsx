@@ -96,6 +96,11 @@ export default function Footer() {
                   Slack and A2A
                 </Link>
               </li>
+              <li>
+                <Link href="/docs/examples/discord-a2a" className="text-sm text-muted-foreground hover:text-primary">
+                  Discord and A2A
+                </Link>
+              </li>
             </ul>
           </div>
 
