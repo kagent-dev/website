@@ -121,6 +121,42 @@ that the configuration is valid before applying it to the cluster.
 Closes #123
 ```
 
+## Signing Your Commits
+
+All commits must be signed with a Developer Certificate of Origin (DCO). This is a lightweight way for contributors to certify that they wrote or otherwise have the right to submit the code they are contributing to the project.
+
+### How to Sign Your Commits
+
+1. Configure Git to sign your commits:
+   ```bash
+   git config --global user.signingkey YOUR_GPG_KEY_ID
+   ```
+
+2. Sign your commits when making them:
+   ```bash
+   git commit -s -m "your commit message"
+   ```
+   The `-s` flag adds a Signed-off-by line to your commit message.
+
+3. For existing commits that need to be signed, you can amend them:
+   ```bash
+   git commit --amend -s --no-edit
+   ```
+
+4. When pushing changes, make sure to push the signed commits:
+   ```bash
+   git push --force-with-lease origin your-branch-name
+   ```
+
+### DCO Sign-off Format
+
+Each commit message must include a sign-off line in the following format:
+```
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+This line certifies that you have the right to submit the work under the project's license and agree to the Developer Certificate of Origin.
+
 ## Community
 
 - Join our [Discord server](https://bit.ly/kagentdiscord) for discussions
