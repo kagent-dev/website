@@ -21,7 +21,7 @@ This guide shows how to connect a Discord bot to one of your agents using the A2
 
 > GitHub Repository: [lekkerelou/kagent-a2a-discord](https://github.com/lekkerelou/kagent-a2a-discord)
 
-![Discord - A2A - kagent](/images/discord-a2a/discord-banner.png)
+![Discord - A2A - kagent](/images/discord-a2a/discord-a2a-kagent.png)
 
 We’ll walk through:
 
@@ -35,13 +35,21 @@ We’ll walk through:
 
 1. Visit the [Discord Developer Portal](https://discord.com/developers/applications)
 2. Click **New Application**, give it a name, and save.
-3. Go to the **Bot** tab → **Add Bot**
-4. Under **Privileged Gateway Intents**, enable **Message Content Intent**
+![Discord Developer Portal](/images/discord-a2a/discord-portal.png)
+3. Go to the **Bot** tab → **Reset Token** and save the Discord Bot Token
+![Discord Developer Portal : Bot Reset Token](/images/discord-a2a/discord-token.png)
+4. Under **Privileged Gateway Intents**, enable **Message Content Intent**. This allows the bot to receive Discord message content.
+![Discord Developer Portal : Bot Message Intents](/images/discord-a2a/discord-intents.png)
 5. Copy your bot token, you'll need it for your `.env` file.
 
-Under the **OAuth2 → URL Generator**, check:
+Under the **OAuth2 → OAuth2 URL Generator**, check:
 - `bot` under scopes
 - `Send Messages`, `Read Message History` under bot permissions
+
+![Discord Developer Portal : Bot OAuth2 1](/images/discord-a2a/discord-oauth2-1.png)
+![Discord Developer Portal : Bot OAuth2 2](/images/discord-a2a/discord-oauth2-2.png)
+
+> Make sure the "Integration Type" is set to Guild Install.
 
 Use the generated URL to invite your bot to your server.
 
