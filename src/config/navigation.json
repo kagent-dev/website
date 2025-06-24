@@ -52,6 +52,11 @@
         "title": "Writing System Prompts",
         "href": "/docs/getting-started/system-prompts",
         "description": "Learn the art and science of writing effective system prompts for your kagent agents."
+      },
+      {
+        "title": "Tracing",
+        "href": "/docs/getting-started/tracing",
+        "description": "A guide to tracing your kagent agents."
       }
     ]
   },
