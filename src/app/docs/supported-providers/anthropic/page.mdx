@@ -36,6 +36,8 @@ spec:
   anthropic: {}
 ```
 
+For Anthropic's Claude models, kagent automatically configures the appropriate model capabilities, including vision support for Claude-3 models. You can override these settings using the `modelInfo` field if needed. For more information about model capabilities and configuration, see [Custom Models](/docs/supported-providers/custom-models).
+
 3. Apply the above resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
