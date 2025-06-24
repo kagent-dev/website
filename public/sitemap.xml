@@ -127,6 +127,13 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/docs/getting-started/tracing</loc>
+        <lastmod>2025-06-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://kagent.dev/docs/introduction/installation</loc>
         <lastmod>2025-06-24</lastmod>
         <changefreq>weekly</changefreq>
