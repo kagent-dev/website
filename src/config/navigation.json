@@ -52,6 +52,11 @@
         "title": "Writing System Prompts",
         "href": "/docs/getting-started/system-prompts",
         "description": "Learn the art and science of writing effective system prompts for your kagent agents."
+      },
+      {
+        "title": "Tracing",
+        "href": "/docs/getting-started/tracing",
+        "description": "A guide to tracing your kagent agents."
       }
     ]
   },
@@ -141,6 +146,11 @@
         "title": "Slack and A2A",
         "href": "/docs/examples/slack-a2a",
         "description": "Learn how to create a Slack bot that interacts with kagent via A2A"
+      },
+      {
+        "title": "Discord and A2A",
+        "href": "/docs/examples/discord-a2a",
+        "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
       }
     ]
   },

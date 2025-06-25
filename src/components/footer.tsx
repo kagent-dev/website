@@ -96,6 +96,11 @@ export default function Footer() {
                   Slack and A2A
                 </Link>
               </li>
+              <li>
+                <Link href="/docs/examples/discord-a2a" className="text-sm text-muted-foreground hover:text-primary">
+                  Discord and A2A
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -129,7 +134,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/orgs/kagent-dev/projects/3" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   Roadmap
                 </Link>
               </li>
