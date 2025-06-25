@@ -1,12 +1,12 @@
 import { getAuthorById, Author } from '../authors';
 import Link from 'next/link';
-
+import Image from 'next/image';
 
 function AuthorComponent({ authors }: { authors: Author[] }) {
     return <div className="w-full max-w-sm p-4 bg-card rounded-lg">
         {authors.map((author) => (
             <div key={author.id} className="flex flex-col items-center text-center">
-                <img src={author.photo} alt={author.name} className="w-32 h-32 rounded-full mb-4 shadow-lg border-[#942DE7] border-2 object-cover" />
+                <Image src={author.photo} alt={author.name} width={128} height={128} className="w-32 h-32 rounded-full mb-4 shadow-lg border-[#942DE7] border-2 object-cover" />
                 <div className="text-xl font-semibold text-card-foreground">{author.name}</div>
                 <div className="text-sm text-muted-foreground italic">{author.title}</div>
                 <div className="text-sm text-muted-foreground mt-10">{author.bio}</div>
