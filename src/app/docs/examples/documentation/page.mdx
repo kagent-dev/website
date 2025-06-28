@@ -12,7 +12,7 @@ export const metadata = {
 
 # Creating an agent leveraging documentation
 
-In this example, we're going to crawl a documentation website, store the content in a vector database and leverage it to answer questions about it.
+In this example, we're going to crawl a documentation website, store the content in a vector database and leverage it to answer questions about the documentation.
 
 ## Create the vector database
 
@@ -33,13 +33,13 @@ npm install
 
 Set the `OPENAI_API_KEY` environment variable:
 
-```shell
+```bash
 export OPENAI_API_KEY=<your key>
 ```
 
-Update the configuration file to crawl the MCP documentation sqlite:
+Update the configuration file to crawl the MCP documentation:
 
-```shell
+```bash
 cat <<EOF > config.yaml
 sources:
   - type: website
@@ -56,7 +56,7 @@ EOF
 
 Launch the process:
 
-```shell
+```bash
 npm start
 ```
 
@@ -72,7 +72,7 @@ To simplify the process, we're going to store the database in the Docker image.
 
 Let's build and push the Docker image:
 
-```shell
+```bash
 cd mcp
 cp ../mcp.db .
 docker build -t <your docker repository> .
@@ -193,7 +193,7 @@ Use the following information:
 
 - Agent Name: mcp-agent
 - Description: The MCP agent is answering questions about MCP, using the MCP documentation
-- Agent Instructions: Use your tool to answer any question about the Model Context Protocol (MCP).  Use `mcp` for the product and `latest` for the version.
+- Agent Instructions: Use your tool to answer any question about the Model Context Protocol (MCP). Use `mcp` for the product and `latest` for the version.
 
 Click on `Add Tools`.
 
@@ -201,13 +201,13 @@ Select the `query-documentation` tool.
 
 ![list agents](/images/list-agents.png "List agents")
 
-Congratulations, the agent is ready !
+Congratulations, the agent is ready!
 
 ## Use the MCP agent
 
 Click on the agent and ask a question.
 
-For example, `How can you build an MCP server using sse ?`
+For example, `How can you build an MCP server using sse?`
 
 ![mcp agent](/images/mcp-agent.png "MCP agent")
 
