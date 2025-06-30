@@ -117,16 +117,16 @@ The output will be a JSON object that describes the agent as per the [A2A protoc
 
 ## Use the A2A host CLI to invoke the agent
 
-We'll use the A2A host CLI to call the agent. This CLI part of the [A2A repository](https://github.com/google/A2A/tree/main/samples/python/hosts/cli). Start by cloning the repository:
+We'll use the A2A host CLI to call the agent. This CLI part of the [A2A samples repository](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/cli). Start by cloning the repository:
 
 ```bash
-git clone https://github.com/google/A2A.git
+git clone https://github.com/a2aproject/a2a-samples.git
 ```
 
-Then from the `A2A/samples/python/hosts/cli` directory, run the CLI and point it to the kagent endpoint:
+Then from the `a2a-samples/samples/python/hosts/cli` directory, run the CLI and point it to the kagent endpoint:
 
 ```bash
-cd A2A/samples/python/hosts/cli
+cd a2a-samples/samples/python/hosts/cli
 uv run . --agent http://127.0.0.1:8083/api/a2a/kagent/k8s-a2a-agent
 ```
 
