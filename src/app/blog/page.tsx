@@ -18,6 +18,12 @@ const posts = [
         publishDate: '2025-05-19',
         title: 'Adding Guardrails to kagent with kgateway AI Gateway',
         description: 'Adding guardrails, observability, and security to Agent to LLM communication with an AI gateway like kgateway',
+    },
+    {
+        slug: 'kagent-celebrating-100-days',
+        publishDate: '2025-07-01',
+        title: 'Celebrating 100 Days of Kagent',
+        description: '100+ contributors, 1000+ GitHub stars and more!',
     }
 ]
 
