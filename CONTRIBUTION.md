@@ -74,6 +74,44 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 7. Once approved, a maintainer will merge your PR
 
+## Adding a new blog post
+1. Create your blog post in `src/blogContent` folder. You can copy an existing blog post and modify it.
+2. Make sure you add the following metadata at the top of your blog post - update the title, published date, description, author, and authorIds accordingly.
+
+```json
+export const metadata = {
+  title: "AI Reliability Engineering For More Dependable Humans",
+  publishDate: "2025-05-14T10:00:00Z",
+  description: "AI Reliability Engineering (AIRE) brings AI agents to SRE and Platform Engineering workflows for dependable humans.",
+  author: "Christian Posta",
+  authorIds: ["christianposta"],
+}
+```
+3. Next, you must add the blog post to the main blog page. You can do that by adding a new entry into the post array in this file `https://github.com/kagent-dev/website/blob/main/src/app/blog/page.tsx`. For example:
+
+```json
+const posts = [
+    {
+        slug: 'ai-reliability-aire',
+        publishDate: '2025-05-14',
+        title: 'AI Reliability Engineering For More Dependable Humans',
+        description: 'AI Reliability Engineering (AIRE) brings AI agents to SRE and Platform Engineering workflows for dependable humans.',
+    },
+    ...
+    {
+        slug: 'your-blog-post-slug',
+        publishDate: '2025-05-14',
+        title: 'Your title',
+        description: 'Your description',
+    }
+]
+``` 
+Make sure the slug in this file matches the slug you used in the .mdx file.
+
+If you need to add a new author, you can do that in the [authors.ts file](https://github.com/kagent-dev/website/blob/main/src/app/blog/authors.ts). Make sure the id of an author matches the author ID you used in the metadata in your blog post.
+
+4. All images can be added to the public/images folder. 
+
 ## Style Guide
 
 - Follow the existing code style
