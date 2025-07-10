@@ -55,12 +55,12 @@ spec:
     - ALWAYS format your response as Markdown
     - Your response will include a summary of actions you took and an explanation of the result
   tools:
-  - builtin:
-      name: kagent.tools.k8s.GetAvailableAPIResources
-    type: Builtin
-  - builtin:
-      name: kagent.tools.k8s.GetResources
-    type: Builtin
+    - type: McpServer
+      mcpServer:
+        toolServer: kagent-tool-server
+        toolNames:
+        - k8s_get_resources
+        - k8s_get_available_api_resources
 EOF
 ```
 

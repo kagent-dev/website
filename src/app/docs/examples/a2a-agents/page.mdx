@@ -32,9 +32,12 @@ spec:
   systemMessage: |-
       You are an expert Kubernetes agent that uses tools to help users.
   tools:
-  - builtin:
-      name: kagent.tools.k8s.GetResources
-    type: Builtin
+    - type: McpServer
+      mcpServer:
+        toolServer: kagent-tool-server
+        toolNames:
+        - k8s_get_resources
+        - k8s_get_available_api_resources
   a2aConfig:
     skills:
     - id: get-resources-skill
