@@ -44,11 +44,7 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
     }));
   };
 
-  const isActiveItem = (href: string) => {
-    if (pathname === href) return true;
-    if (pathname.startsWith(href + '/')) return true;
-    return false;
-  };
+  const isActiveItem = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <>
