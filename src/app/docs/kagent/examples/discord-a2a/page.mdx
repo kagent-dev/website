@@ -1,0 +1,166 @@
+---
+title: "Discord and A2A"
+pageOrder: 4
+description: "Learn how to create a Discord bot that interacts with kagent via A2A"
+---
+
+export const metadata = {
+    title: "Integrating kagent and Discord with A2A",
+    description: "Learn how to create a Discord bot that interacts with kagent via A2A",
+    author: "kagent.dev",
+    openGraph: {
+        images: "/images/discord-a2a/discord-a2a-kagent.png",
+    }
+};
+
+# Integrating kagent with Discord
+
+Kagent enables you to create AI agents that run inside your Kubernetes cluster. They can access a variety of [built-in tools](/docs/kagent/concepts/tools), fetch data from your [memory](/docs/kagent/concepts/memory), and use other [external tools via MCP](/docs/kagent/examples/documentation).
+
+This guide shows how to connect a Discord bot to one of your agents using the A2A protocol, enabling natural conversations and command execution inside Discord.
+
+> GitHub Repository: [lekkerelou/kagent-a2a-discord](https://github.com/lekkerelou/kagent-a2a-discord)
+
+![Discord - A2A - kagent](/images/discord-a2a/discord-a2a-kagent.png)
+
+We’ll walk through:
+
+1. Setting up a Discord bot.
+2. Connecting it to a kagent agent via A2A.
+3. Running and testing the integration locally or in Docker.
+
+---
+
+## Creating a Discord Bot
+
+1. Visit the [Discord Developer Portal](https://discord.com/developers/applications)
+2. Click **New Application**, give it a name, and save.
+![Discord Developer Portal](/images/discord-a2a/discord-portal.png)
+3. Go to the **Bot** tab → **Reset Token** and save the Discord Bot Token
+![Discord Developer Portal : Bot Reset Token](/images/discord-a2a/discord-token.png)
+4. Under **Privileged Gateway Intents**, enable **Message Content Intent**. This allows the bot to receive Discord message content.
+![Discord Developer Portal : Bot Message Intents](/images/discord-a2a/discord-intents.png)
+5. Copy your bot token, you'll need it for your `.env` file.
+
+Under the **OAuth2 → OAuth2 URL Generator**, check:
+- `bot` under scopes
+- `Send Messages`, `Read Message History` under bot permissions
+
+![Discord Developer Portal : Bot OAuth2 1](/images/discord-a2a/discord-oauth2-1.png)
+![Discord Developer Portal : Bot OAuth2 2](/images/discord-a2a/discord-oauth2-2.png)
+
+> Make sure the "Integration Type" is set to Guild Install.
+
+Use the generated URL to invite your bot to your server.
+
+---
+
+## Setting up the bot code
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/lekkerelou/kagent-a2a-discord.git
+cd kagent-a2a-discord
+```
+
+2. Copy the example environment file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```dotenv
+DISCORD_BOT_TOKEN=your_token
+KAGENT_A2A_URL=http://127.0.0.1:8083/api/a2a/kagent/my-k8s-agent
+```
+
+3. Create and activate a virtual environment:
+
+```bash
+uv venv
+```
+
+4. Install dependencies:
+
+```bash
+uv sync
+```
+
+5. Run the bot:
+
+```bash
+uv run main.py
+# or
+python main.py
+```
+
+You should see logs indicating the bot is online.
+
+---
+
+## Running with Docker
+
+If you prefer Docker, you can use the pre-built image:
+
+```bash
+docker pull ghcr.io/lekkerelou/kagent-a2a-discord:latest
+docker run --env-file .env ghcr.io/lekkerelou/kagent-a2a-discord:latest
+```
+
+> You can also build the image locally if needed:
+>
+> ```bash
+> docker build -t a2a-discord-bot .
+> docker run --env-file .env a2a-discord-bot
+> ```
+
+
+
+---
+
+## Bot Behavior
+
+The bot listens to messages in all channels unless restricted by environment variables.
+
+### Optional `.env` keys
+
+You can customize the bot's behavior with the following optional environment variables:
+
+- `DISCORD_MENTION_ONLY`: Set to `true` to make the bot respond only when mentioned.
+- `DISCORD_CHANNEL_ONLY`: A comma-separated list of channel IDs where the bot is allowed to respond.
+
+When a message is received, it’s sent to the A2A endpoint (`KAGENT_A2A_URL`), and the agent’s response is posted back in Discord.
+
+---
+
+## Agent Setup
+
+If you haven’t deployed your agent yet, follow the instructions in [Deploying an Agent](/docs/kagent/examples/slack-a2a#deploying-an-agent). You can reuse the same agent across Slack and Discord integrations.
+
+Be sure to port-forward your agent if running locally:
+
+```bash
+kubectl port-forward -n kagent svc/kagent-service 8083:8083
+```
+
+Set `KAGENT_A2A_URL` accordingly in your `.env`:
+
+```
+http://127.0.0.1:8083/api/a2a/kagent/my-k8s-agent
+```
+
+---
+
+## Conclusion
+
+You now have a working Discord bot connected to your kagent agent via A2A. From here, you can:
+
+- Customize the bot behavior
+- Extend the agent with new tools
+- Deploy in production
+
+For questions or support, join our [Discord community](https://discord.gg/Fu3k65f2k3),
+or open an issue on [GitHub](https://github.com/lekkerelou/kagent-a2a-discord/issues).

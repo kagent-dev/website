@@ -1,0 +1,174 @@
+---
+title: "Quick Start"
+pageOrder: 1
+description: "A quick guide to get kagent installed and running with your first AI agent."
+---
+
+export const metadata = {
+  title: "kagent quick start",
+  description: "Get started with this guide and get kagent installed and run your first AI agent.",
+  author: "kagent.dev"
+};
+
+# Quick Start
+
+This guide will help you get started with [kagent](https://github.com/kagent-dev/kagent), an open-source framework that brings the power of agentic AI to cloud-native environments. We'll walk through setting up the environment and deploying your first AI agent.
+
+## Prerequisites
+
+Before you begin, make sure you have the following tools installed:
+
+- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) for creating and running a local Kubernetes cluster
+- [Helm](https://helm.sh/docs/intro/install/) - for installing the kagent chart
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) - for interacting with your cluster
+
+To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. You can [get one here](https://platform.openai.com/account/api-keys).
+
+## Installing kagent
+
+1. Set the OpenAI API key as an environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+2. Download the kagent CLI:
+
+```bash
+# Download/run the install script
+curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+```
+
+3. Install kagent to the cluster using the CLI. First run the CLI:
+
+```bash
+kagent install
+```
+
+```console
+kagent installed successfully
+```
+
+## Accessing the kagent dashboard (UI)
+
+1. To open the kagent dashboard, run the dashboard command from the CLI
+
+```bash
+kagent dashboard
+```
+
+```console
+kagent dashboard is available at http://localhost:8082
+Press Enter to stop the port-forward...
+```
+
+The CLI will set up the port-forward to the service running inside the cluster and open the dashboard.
+
+![kagent UI](/images/kagent-landing.png "Kagent dashboard main page")
+
+## Running Your First AI Agent
+
+Once you're in the kagent UI, you can start interacting with the pre-configured sample agents. You can click on the agent card to view the agent details and start a conversation.
+
+![kagent chat](/images/kagent-chat-1.png "Chatting with an agent")
+
+## Using the CLI
+
+You can run *kagent* to start the REPL environment and then use commands to interact with kagent:
+
+```shell
+kagent >> help
+
+Commands:
+  clear          clear the screen
+  dashboard      Open the kagent dashboard.
+  exit           exit the program
+  get            get kagent resources.
+  help           display help
+  install        Install kagent.
+  run            Run a kagent agent
+  uninstall      Uninstall kagent.
+  version        Print the kagent version.
+```
+
+Let's start by listing the current agents:
+
+```shell
+kagent >> get agents
++---+---------------------+----+----------------------------+
+| # | NAME                | ID | CREATED                    |
++---+---------------------+----+----------------------------+
+| 0 | helm-agent          | 2  | 2025-03-13T19:08:14.527935 |
+| 1 | observability-agent | 3  | 2025-03-13T19:08:14.348957 |
+| 2 | istio-agent         | 1  | 2025-03-13T19:08:13.794848 |
++---+---------------------+----+----------------------------+
+```
+
+To start a new agent, run the `run chat` command:
+
+```shell
+kagent >> run chat [agent-name] [session-name] [initial-task]
+```
+If you don't provide any flags, it will prompt you for the values:
+
+```shell
+kagent >> run chat
+
+Select an agent:
+   observability-agent
+   istio-agent
+ ❯ helm-agent
+
+Select a session:
+ ❯ [New Session]
+Enter a session name: test
+Enter a task: What helm chart are installed in my cluster?
+```
+
+Once a task has been entered, the agent will start running and you'll see the conversation in the CLI:
+
+```shell
+Event Type: ToolCall(s)
+Source: helm_agent
++---+--------------------+-----------------------------------------+
+| # | NAME               | ARGUMENTS                               |
++---+--------------------+-----------------------------------------+
+| 0 | helm_list_releases | {"all_namespaces":true,"deployed":true} |
++---+--------------------+-----------------------------------------+
+----------------------------------
+
+Event Type: TextMessage
+Source: helm_agent
+
+I found the following Helm release deployed across all namespaces:
+
+- **Release Name:** kagent
+  - **Namespace:** kagent
+  - **Revision:** 11
+  - **Updated:** 2025-03-13 19:18:49 UTC
+  - **Status:** Deployed
+  - **Chart:** kagent-v0.0.18-4-g4926e59-dirty
+
+If you need more details about any specific release, let me know!
+----------------------------------
+
+Usage: Prompt Tokens: 6573, Completion Tokens: 229
+helm-agent--test>
+```
+
+As you can see above, the agent found the `kagent` release. If anything else is running in your cluster, it will probably find that too.
+
+Now keep chatting with the agent to see what other things it can do :)
+
+
+## Next Steps
+
+- Create your [first agent](/docs/kagent/getting-started/first-agent)
+- Learn about [Core Concepts](/docs/kagent/concepts)
+- Join our [Community](https://discord.gg/Fu3k65f2k3)
+
+## Need Help?
+
+- Visit our [GitHub repository](https://github.com/kagent-dev/kagent)
+- Ask a question on [Discord](https://discord.gg/Fu3k65f2k3)
+- Check out the [FAQ](/docs/kagent/resources/faq)

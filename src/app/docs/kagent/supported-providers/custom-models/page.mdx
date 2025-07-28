@@ -1,0 +1,136 @@
+---
+title: "Custom Models"
+pageOrder: 6
+description: "Learn how to configure custom AI models in kagent."
+---
+
+export const metadata = {
+  title: "Configuring custom models in kagent",
+  description: "Learn how to configure custom AI models in kagent.",
+  author: "kagent.dev"
+};
+
+# Custom Models and Model Capabilities
+
+When using custom models or overriding model capabilities in kagent, you need to specify what features your model supports. This is done through the `modelInfo` configuration.
+
+## Model Capabilities
+
+<table style={{width: '100%'}}>
+  <thead>
+    <tr>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Capability</th>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>vision</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Process and understand images</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>functionCalling</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Use tools and execute actions</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>jsonOutput</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Generate valid JSON responses</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>family</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Model architecture type (e.g., "gpt", "llama")</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>structuredOutput</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Generate formatted responses</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}><code>multipleSystemMessages</code></td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Support multiple system prompts</td>
+    </tr>
+  </tbody>
+</table>
+
+## Provider Requirements
+
+<table style={{width: '100%'}}>
+  <thead>
+    <tr>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Provider</th>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>ModelInfo</th>
+      <th style={{borderBottom: '2px solid #e5e7eb', textAlign: 'left'}}>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>OpenAI</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Optional</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Pre-configured for standard models</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Anthropic</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Optional</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Pre-configured for Claude models</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Ollama</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Required</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Must specify all capabilities</td>
+    </tr>
+    <tr>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Custom</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Required</td>
+      <td style={{borderBottom: '1px solid #e5e7eb'}}>Must specify all capabilities</td>
+    </tr>
+  </tbody>
+</table>
+
+## Configuring Custom Models
+
+Often you may want to use a custom model with an existing provider, for example if you're using a self-hosted model exposed via the OpenAI API.
+Or if you're using a proxy to the OpenAI API.
+
+The example below will add an API key, but given that this is a custom provider, the key is optional.
+
+1. Create a Kubernetes Secret that stores the API key, replace `<your_api_key>` with an actual API key:
+
+```shell
+export OPENAI_API_KEY=<your_api_key>
+kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_KEY=$OPENAI_API_KEY
+```
+
+2. Create a ModelConfig resource that references the secret and key name, and specify the model you want to use:
+
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: custom-openai-model-config
+  namespace: kagent
+spec:
+  apiKeySecretRef: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: <insert-model-name> # This should match the model name passed to the provider.
+  provider: OpenAI
+  openAI:
+    baseUrl: https://your-custom-openai-provider.com
+  # Required: Specify model capabilities
+  modelInfo:
+    vision: false
+    functionCalling: true
+    jsonOutput: true
+    family: "unknown"
+    structuredOutput: true
+    multipleSystemMessages: false
+```
+
+If you don't need an API key you can elide the `apiKeySecretRef` and `apiKeySecretKey` fields.
+
+3. Apply the above resource to the cluster.
+
+Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
+
+See provider documentation for specific configuration:
+- [OpenAI](/docs/kagent/supported-providers/openai)
+- [Anthropic](/docs/kagent/supported-providers/anthropic)
+- [Ollama](/docs/kagent/supported-providers/ollama)
