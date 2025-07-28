@@ -18,9 +18,8 @@ interface DocsLayoutClientProps {
 }
 
 export default function DocsLayoutClient({ navigation, children }: DocsLayoutClientProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() => {
+
+  function initializeExpandedSections(navigation: NavItem[]): { [key: string]: boolean } {
     const initial: { [key: string]: boolean } = {};
     navigation.forEach(section => {
       initial[section.title] = true;
@@ -31,7 +30,13 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
       });
     });
     return initial;
-  });
+  }
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() =>
+    initializeExpandedSections(navigation)
+  );
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -54,10 +59,10 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
           {/* Mobile Sidebar Toggle */}
           <div className="md:hidden sticky top-0 z-10 bg-background p-4 border-b flex justify-between items-center">
             <span className="font-bold">Documentation</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={toggleSidebar} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
               className="p-1"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -65,19 +70,18 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
           </div>
 
           {/* Sidebar - hidden on mobile unless toggled */}
-          <div 
-            className={`${ sidebarOpen ? 'block' : 'hidden' } md:block w-full md:w-64 flex-shrink-0 md:border-r border-white/10 overflow-y-auto`}
+          <div
+            className={`${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-64 flex-shrink-0 md:border-r border-white/10 overflow-y-auto`}
           >
             <nav className="px-2 md:px-3 py-6 md:py-16 space-y-4 md:space-y-6">
               {navigation.map((section) => (
                 <div key={section.title}>
                   <div className="flex items-center justify-between mb-3 md:mb-4">
                     {section.href ? (
-                      <Link 
+                      <Link
                         href={section.href}
-                        className={`font-black text-lg hover:text-primary transition-colors flex-1 ${
-                          isActiveItem(section.href) ? 'underline underline-offset-4' : ''
-                        }`}
+                        className={`font-black text-lg hover:text-primary transition-colors flex-1 ${isActiveItem(section.href) ? 'underline underline-offset-4' : ''
+                          }`}
                         onClick={() => {
                           if (window.innerWidth < 768) {
                             setSidebarOpen(false);
@@ -108,13 +112,12 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
                       {section.items?.map((item) => (
                         <li key={item.href}>
                           <div className="flex items-center justify-between">
-                            <Button 
-                              variant="link" 
-                              className={`flex-1 text-sm py-1 justify-start px-0 ${
-                                isActiveItem(item.href) 
-                                  ? 'text-secondary-foreground font-bold underline decoration-1 underline-offset-2' 
-                                  : 'text-secondary-foreground/70 font-bold' 
-                              }`}
+                            <Button
+                              variant="link"
+                              className={`flex-1 text-sm py-1 justify-start px-0 ${isActiveItem(item.href)
+                                  ? 'text-secondary-foreground font-bold underline decoration-1 underline-offset-2'
+                                  : 'text-secondary-foreground/70 font-bold'
+                                }`}
                               asChild
                               onClick={() => {
                                 if (window.innerWidth < 768) {
@@ -142,13 +145,12 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
                             <ul className="ml-4 mt-2 space-y-2">
                               {item.items.map((subItem) => (
                                 <li key={subItem.href}>
-                                  <Link 
-                                    href={subItem.href} 
-                                    className={`block text-sm py-1 hover:text-secondary-foreground ${
-                                      isActiveItem(subItem.href)
+                                  <Link
+                                    href={subItem.href}
+                                    className={`block text-sm py-1 hover:text-secondary-foreground ${isActiveItem(subItem.href)
                                         ? 'text-secondary-foreground underline decoration-1 underline-offset-2'
                                         : 'text-secondary-foreground/70'
-                                    }`}
+                                      }`}
                                     onClick={() => {
                                       if (window.innerWidth < 768) {
                                         setSidebarOpen(false);
