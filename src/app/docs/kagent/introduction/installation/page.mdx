@@ -1,0 +1,103 @@
+---
+title: "Installing kagent"
+pageOrder: 1
+description: "Learn how to install kagent"
+---
+
+export const metadata = {
+  title: "Installing kagent",
+  description: "Learn how to install kagent.",
+  author: "kagent.dev"
+};
+
+# Installing kagent
+
+This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart).
+
+## Installation Methods
+
+### Using kagent CLI (Recommended)
+
+1. Set the OpenAI API key as an environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+2. Download the kagent CLI:
+
+```bash
+# Download/run the install script
+curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+```
+
+3. Install kagent to the cluster using the CLI. First run the CLI:
+
+```bash
+kagent install
+```
+
+```console
+kagent installed successfully
+```
+
+### Using Helm
+
+Another way to install kagent is using Helm.
+
+
+1. Install the Helm chart with CRDs:
+
+```bash
+helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+    --namespace kagent \
+    --create-namespace \
+```
+
+2. Set the `OPENAI_API_KEY` environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+3. Install the kagent Helm chart:
+
+```bash
+helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+    --namespace kagent \
+    --set providers.openAI.apiKey=$OPENAI_API_KEY \
+
+```
+
+## Uninstallation
+
+To remove kagent from your cluster:
+
+```bash
+$ kagent uninstall
+```
+
+```console
+kagent uninstalled successfully
+```
+
+Or, if you used Helm:
+
+1. Uninstall kagent chart:
+
+```bash
+helm uninstall kagent -n kagent
+```
+
+2. Optionally, remove all kagent CRDs and resources:
+
+```bash
+helm uninstall kagent-crds -n kagent
+```
+
+>Note that uninstalling the `kagent-crds` chart deletes all kagent resources across all namespaces.
+
+## Next Steps
+
+- [Create your first agent](/docs/kagent/getting-started/first-agent)
+- [Explore available agents](/agents)

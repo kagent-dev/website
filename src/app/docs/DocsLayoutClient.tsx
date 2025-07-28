@@ -1,8 +1,9 @@
 'use client'
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Background } from "@/components/background";
 
 interface NavItem {
@@ -18,9 +19,35 @@ interface DocsLayoutClientProps {
 
 export default function DocsLayoutClient({ navigation, children }: DocsLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() => {
+    const initial: { [key: string]: boolean } = {};
+    navigation.forEach(section => {
+      initial[section.title] = true;
+      section.items?.forEach(item => {
+        if (item.items && item.items.length > 0) {
+          initial[item.title] = true;
+        }
+      });
+    });
+    return initial;
+  });
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
+    }));
+  };
+
+  const isActiveItem = (href: string) => {
+    if (pathname === href) return true;
+    if (pathname.startsWith(href + '/')) return true;
+    return false;
   };
 
   return (
@@ -45,47 +72,103 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
           <div 
             className={`${ sidebarOpen ? 'block' : 'hidden' } md:block w-full md:w-64 flex-shrink-0 md:border-r border-white/10 overflow-y-auto`}
           >
-            <nav className="px-4 md:px-6 py-6 md:py-16 space-y-6 md:space-y-8">
+            <nav className="px-2 md:px-3 py-6 md:py-16 space-y-4 md:space-y-6">
               {navigation.map((section) => (
                 <div key={section.title}>
-                  <h3 className="font-bold text-sm mb-3 md:mb-4">{section.title}</h3>
-                  <ul className="space-y-2">
-                    {section.items?.map((item) => (
-                      <li key={item.href}>
-                        <Button 
-                          variant="link" 
-                          className="block text-sm py-1 text-secondary-foreground/70" 
-                          asChild
-                          onClick={() => {
-                            if (window.innerWidth < 768) {
-                              setSidebarOpen(false);
-                            }
-                          }}
-                        >
-                          <Link href={item.href}>{item.title}</Link>
-                        </Button>
-                        {item.items && (
-                          <ul className="ml-4 mt-2 space-y-2">
-                            {item.items.map((subItem) => (
-                              <li key={subItem.href}>
-                                <Link 
-                                  href={subItem.href} 
-                                  className="block text-sm py-1 text-white/40 hover:text-white"
-                                  onClick={() => {
-                                    if (window.innerWidth < 768) {
-                                      setSidebarOpen(false);
-                                    }
-                                  }}
-                                >
-                                  {subItem.title}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    {section.href ? (
+                      <Link 
+                        href={section.href}
+                        className={`font-black text-lg hover:text-primary transition-colors flex-1 ${
+                          isActiveItem(section.href) ? 'underline underline-offset-4' : ''
+                        }`}
+                        onClick={() => {
+                          if (window.innerWidth < 768) {
+                            setSidebarOpen(false);
+                          }
+                        }}
+                      >
+                        {section.title}
+                      </Link>
+                    ) : (
+                      <h3 className="font-black text-base flex-1">{section.title}</h3>
+                    )}
+                    {section.items && section.items.length > 0 && (
+                      <button
+                        onClick={() => toggleSection(section.title)}
+                        className="ml-2 p-1 hover:bg-white/10 rounded transition-colors"
+                        aria-label={`Toggle ${section.title} section`}
+                      >
+                        {expandedSections[section.title] ? (
+                          <ChevronUp size={18} />
+                        ) : (
+                          <ChevronDown size={18} />
                         )}
-                      </li>
-                    ))}
-                  </ul>
+                      </button>
+                    )}
+                  </div>
+                  {expandedSections[section.title] && (
+                    <ul className="space-y-2">
+                      {section.items?.map((item) => (
+                        <li key={item.href}>
+                          <div className="flex items-center justify-between">
+                            <Button 
+                              variant="link" 
+                              className={`flex-1 text-sm py-1 justify-start px-0 ${
+                                isActiveItem(item.href) 
+                                  ? 'text-secondary-foreground font-bold underline decoration-1 underline-offset-2' 
+                                  : 'text-secondary-foreground/70 font-bold' 
+                              }`}
+                              asChild
+                              onClick={() => {
+                                if (window.innerWidth < 768) {
+                                  setSidebarOpen(false);
+                                }
+                              }}
+                            >
+                              <Link href={item.href}>{item.title}</Link>
+                            </Button>
+                            {item.items && item.items.length > 0 && (
+                              <button
+                                onClick={() => toggleSection(item.title)}
+                                className="ml-2 p-1 hover:bg-white/10 rounded transition-colors"
+                                aria-label={`Toggle ${item.title} section`}
+                              >
+                                {expandedSections[item.title] ? (
+                                  <ChevronUp size={14} />
+                                ) : (
+                                  <ChevronDown size={14} />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          {item.items && expandedSections[item.title] && (
+                            <ul className="ml-4 mt-2 space-y-2">
+                              {item.items.map((subItem) => (
+                                <li key={subItem.href}>
+                                  <Link 
+                                    href={subItem.href} 
+                                    className={`block text-sm py-1 hover:text-secondary-foreground ${
+                                      isActiveItem(subItem.href)
+                                        ? 'text-secondary-foreground underline decoration-1 underline-offset-2'
+                                        : 'text-secondary-foreground/70'
+                                    }`}
+                                    onClick={() => {
+                                      if (window.innerWidth < 768) {
+                                        setSidebarOpen(false);
+                                      }
+                                    }}
+                                  >
+                                    {subItem.title}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               ))}
             </nav>

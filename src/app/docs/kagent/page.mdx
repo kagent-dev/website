@@ -1,0 +1,54 @@
+---
+title: "kagent"
+sectionOrder: 1
+description: "Complete documentation for kagent - the AI agent platform for Kubernetes."
+---
+
+export const metadata = {
+  title: "kagent Documentation",
+  description: "Complete documentation for kagent - the AI agent platform for Kubernetes.",
+  author: "kagent.dev"
+};
+
+import QuickLink from '@/components/quick-link';
+
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Kagent Documentation</h1>
+    <p className="text-xl mb-8">Your complete guide to the AI agent platform for Kubernetes</p>
+    </div>
+
+## What is kagent?
+
+Kagent is an innovative AI agent platform designed specifically for Kubernetes environments. 
+It empowers developers and operations teams to create intelligent, autonomous agents that can 
+monitor, manage, and automate complex Kubernetes workloads using the power of large language models (LLMs).
+
+## Key Features
+
+- **AI-Powered Automation** - Create intelligent agents that understand natural language and can perform complex Kubernetes operations
+- **Multi-Provider Support** - Works with OpenAI, Anthropic, Google Vertex AI, Azure OpenAI, Ollama, and custom models
+- **Tool Integration** - Supports Model Context Protocol (MCP) tools, built-in Kubernetes tools, and custom HTTP tools
+- **Agent-to-Agent Communication** - Enable sophisticated workflows through A2A (Agent-to-Agent) interactions
+- **Comprehensive Observability** - Built-in tracing and monitoring to understand agent behavior and performance
+- **Cloud Native** - Designed from the ground up to run natively in Kubernetes environments
+
+## Why Choose kagent?
+
+Whether you're looking to automate routine operations, implement intelligent monitoring, 
+or create sophisticated multi-agent workflows, kagent provides the tools and framework 
+to bring AI to your Kubernetes infrastructure. Start with simple automation and scale 
+to complex, intelligent systems that can reason about your cluster's state and make 
+informed decisions.
+
+    <h2 className="text-2xl font-bold mb-6 text-center">Explore the Documentation</h2>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="Introduction" description="Welcome to kagent! Start here to understand what kagent is and how to install it." href="/docs/kagent/introduction" />
+    <QuickLink title="Getting Started" description="Guides to help you get started with kagent, from quick setup to your first agent." href="/docs/kagent/getting-started" />
+    <QuickLink title="Core Concepts" description="Understand the fundamental concepts and architecture of kagent." href="/docs/kagent/concepts" />
+    <QuickLink title="Supported Providers" description="Learn how to configure various LLM providers for kagent." href="/docs/kagent/supported-providers" />
+    <QuickLink title="Examples" description="Explore practical examples and use cases for kagent." href="/docs/kagent/examples" />
+    <QuickLink title="Resources" description="Find helpful resources, troubleshooting tips, and FAQs." href="/docs/kagent/resources" />
+    </div>
+</div> 
