@@ -24,88 +24,131 @@ async function getPageMetadata(filePath) {
 }
 
 async function buildNavigation() {
-  const topLevelDirs = fs.readdirSync(DOCS_BASE_PATH, { withFileTypes: true })
+  const topLevelSections = fs.readdirSync(DOCS_BASE_PATH, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory() && !EXCLUDED_DIRS_FILES.has(dirent.name));
 
-  let navigationSections = [];
+  let allSections = [];
 
-  for (const sectionDir of topLevelDirs) {
-    const sectionDirPath = path.join(DOCS_BASE_PATH, sectionDir.name);
-    const sectionPageMdxPath = path.join(sectionDirPath, 'page.mdx');
+  for (const topLevelSection of topLevelSections) {
+    const topLevelSectionPath = path.join(DOCS_BASE_PATH, topLevelSection.name);
+    const topLevelPageMdxPath = path.join(topLevelSectionPath, 'page.mdx');
     
-    let sectionTitle = kebabToTitleCase(sectionDir.name);
-    let sectionOrder = Infinity;
-    let sectionDescription = '';
-    let sectionHref = `/docs/${sectionDir.name}`;
+    let topLevelTitle = kebabToTitleCase(topLevelSection.name);
+    let topLevelOrder = Infinity;
+    let topLevelDescription = '';
+    let topLevelHref = `/docs/${topLevelSection.name}`;
 
-    const sectionMeta = await getPageMetadata(sectionPageMdxPath);
-    if (sectionMeta) {
-      if (sectionMeta.title) sectionTitle = sectionMeta.title;
-      if (sectionMeta.sectionOrder !== undefined) sectionOrder = sectionMeta.sectionOrder;
-      if (sectionMeta.description) sectionDescription = sectionMeta.description;
+    // Get metadata for the top-level section (e.g., kagent)
+    const topLevelMeta = await getPageMetadata(topLevelPageMdxPath);
+    if (topLevelMeta) {
+      if (topLevelMeta.title) topLevelTitle = topLevelMeta.title;
+      if (topLevelMeta.sectionOrder !== undefined) topLevelOrder = topLevelMeta.sectionOrder;
+      if (topLevelMeta.description) topLevelDescription = topLevelMeta.description;
     }
 
-    let sectionItems = [];
-    const itemDirs = fs.readdirSync(sectionDirPath, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory() && dirent.name !== 'page.mdx' && !EXCLUDED_DIRS_FILES.has(dirent.name));
+    // Get all subsections within this top-level section
+    const subSectionDirs = fs.readdirSync(topLevelSectionPath, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory() && !EXCLUDED_DIRS_FILES.has(dirent.name));
 
-    for (const itemDir of itemDirs) {
-      const itemPageMdxPath = path.join(sectionDirPath, itemDir.name, 'page.mdx');
-      const itemMeta = await getPageMetadata(itemPageMdxPath);
+    let subSections = [];
 
-      if (itemMeta) {
-        const pageTitle = itemMeta.title || kebabToTitleCase(itemDir.name);
-        const pageOrder = itemMeta.pageOrder !== undefined ? itemMeta.pageOrder : (itemMeta.order !== undefined ? itemMeta.order : Infinity);
-        const pageDescription = itemMeta.description || '';
-        
-        sectionItems.push({
-          title: pageTitle,
-          href: `/docs/${sectionDir.name}/${itemDir.name}`,
-          order: pageOrder,
-          description: pageDescription,
-        });
+    for (const subSectionDir of subSectionDirs) {
+      const subSectionDirPath = path.join(topLevelSectionPath, subSectionDir.name);
+      const subSectionPageMdxPath = path.join(subSectionDirPath, 'page.mdx');
+      
+      let subSectionTitle = kebabToTitleCase(subSectionDir.name);
+      let subSectionOrder = Infinity;
+      let subSectionDescription = '';
+      let subSectionHref = `/docs/${topLevelSection.name}/${subSectionDir.name}`;
+
+      const subSectionMeta = await getPageMetadata(subSectionPageMdxPath);
+      if (subSectionMeta) {
+        if (subSectionMeta.title) subSectionTitle = subSectionMeta.title;
+        if (subSectionMeta.sectionOrder !== undefined) subSectionOrder = subSectionMeta.sectionOrder;
+        if (subSectionMeta.description) subSectionDescription = subSectionMeta.description;
+      }
+
+      let subSectionItems = [];
+      const itemDirs = fs.readdirSync(subSectionDirPath, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory() && dirent.name !== 'page.mdx' && !EXCLUDED_DIRS_FILES.has(dirent.name));
+
+      for (const itemDir of itemDirs) {
+        const itemPageMdxPath = path.join(subSectionDirPath, itemDir.name, 'page.mdx');
+        const itemMeta = await getPageMetadata(itemPageMdxPath);
+
+        if (itemMeta) {
+          const pageTitle = itemMeta.title || kebabToTitleCase(itemDir.name);
+          const pageOrder = itemMeta.pageOrder !== undefined ? itemMeta.pageOrder : (itemMeta.order !== undefined ? itemMeta.order : Infinity);
+          const pageDescription = itemMeta.description || '';
+          
+          subSectionItems.push({
+            title: pageTitle,
+            href: `/docs/${topLevelSection.name}/${subSectionDir.name}/${itemDir.name}`,
+            order: pageOrder,
+            description: pageDescription,
+          });
+        }
+      }
+
+      // Sort items within the subsection
+      subSectionItems.sort((a, b) => a.order - b.order);
+
+      // Add hardcoded items for Introduction section in kagent (keeping this specific to kagent for now)
+      if (topLevelSection.name === 'kagent' && subSectionDir.name === 'introduction') {
+          // Find where 'Installation' is, if generated
+          const installationIndex = subSectionItems.findIndex(item => item.title.toLowerCase() === 'installation');
+          const hardcodedItems = [
+              { title: "Feature Roadmap", href: "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap", order: installationIndex !== -1 ? installationIndex + 1 : Infinity, external: true },
+              { title: "Contributing", href: "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md", order: installationIndex !== -1 ? installationIndex + 2 : Infinity, external: true },
+          ];
+          subSectionItems.push(...hardcodedItems);
+          subSectionItems.sort((a, b) => a.order - b.order); // Re-sort after adding
+      }
+      
+      // Check if the subsection itself is a page (has items or page.mdx)
+      const hasContent = fs.existsSync(subSectionPageMdxPath) || subSectionItems.length > 0;
+
+      if (hasContent) {
+          subSections.push({
+              title: subSectionTitle,
+              href: subSectionHref,
+              order: subSectionOrder,
+              description: subSectionDescription,
+              items: subSectionItems.length > 0 ? subSectionItems.map(item => ({title: item.title, href: item.href, description: item.description, external: item.external })) : undefined,
+          });
       }
     }
 
-    // Sort items within the section
-    sectionItems.sort((a, b) => a.order - b.order);
+    // Sort subsections by order
+    subSections.sort((a, b) => a.order - b.order);
 
-    // Add hardcoded items for Introduction section in specified order
-    if (sectionDir.name === 'introduction') {
-        // Find where 'Installation' is, if generated
-        const installationIndex = sectionItems.findIndex(item => item.title.toLowerCase() === 'installation');
-        const hardcodedItems = [
-            { title: "Feature Roadmap", href: "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap", order: installationIndex !== -1 ? installationIndex + 1 : Infinity, external: true },
-            { title: "Contributing", href: "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md", order: installationIndex !== -1 ? installationIndex + 2 : Infinity, external: true },
-        ];
-        sectionItems.push(...hardcodedItems);
-        sectionItems.sort((a, b) => a.order - b.order); // Re-sort after adding
-    }
-    
-    // Check if the section itself is a page (has items or page.mdx)
-    // For sections that are just categories, href might remain '#', 
-    // but here we make section itself clickable if it has a page.mdx
-    const hasContent = fs.existsSync(sectionPageMdxPath) || sectionItems.length > 0;
+    // Check if the top-level section has content
+    const hasTopLevelContent = fs.existsSync(topLevelPageMdxPath) || subSections.length > 0;
 
-    if (hasContent) {
-        navigationSections.push({
-            title: sectionTitle,
-            href: sectionHref,
-            order: sectionOrder,
-            description: sectionDescription,
-            items: sectionItems.length > 0 ? sectionItems.map(item => ({title: item.title, href: item.href, description: item.description, external: item.external })) : undefined,
+    if (hasTopLevelContent) {
+        allSections.push({
+            title: topLevelTitle,
+            href: topLevelHref,
+            order: topLevelOrder,
+            description: topLevelDescription,
+            items: subSections.length > 0 ? subSections.map(section => ({
+              title: section.title,
+              href: section.href,
+              description: section.description,
+              items: section.items
+            })) : undefined,
         });
     }
   }
 
-  // Sort sections by sectionOrder
-  navigationSections.sort((a, b) => a.order - b.order);
+  // Sort all sections by order
+  allSections.sort((a, b) => a.order - b.order);
 
   const outputConfigDir = path.dirname(OUTPUT_NAV_PATH);
   if (!fs.existsSync(outputConfigDir)) {
     fs.mkdirSync(outputConfigDir, { recursive: true });
   }
-  fs.writeFileSync(OUTPUT_NAV_PATH, JSON.stringify(navigationSections, null, 2));
+  fs.writeFileSync(OUTPUT_NAV_PATH, JSON.stringify(allSections, null, 2));
   console.log('Navigation generated at', OUTPUT_NAV_PATH);
 }
 

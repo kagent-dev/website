@@ -1,222 +1,176 @@
 [
   {
-    "title": "Introduction",
-    "href": "/docs/introduction",
+    "title": "kagent",
+    "href": "/docs/kagent",
     "order": 1,
-    "description": "Welcome to kagent! Start here to understand what kagent is, how to install it, and how to contribute.",
-    "items": [
-      {
-        "title": "Installing kagent",
-        "href": "/docs/introduction/installation",
-        "description": "Learn how to install kagent"
-      },
-      {
-        "title": "What is kagent",
-        "href": "/docs/introduction/what-is-kagent",
-        "description": "Understand what kagent is and its core purpose."
-      },
-      {
-        "title": "Feature Roadmap",
-        "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
-        "external": true
-      },
-      {
-        "title": "Contributing",
-        "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md",
-        "external": true
-      }
-    ]
-  },
-  {
-    "title": "kmcp",
-    "href": "/docs/kmcp",
-    "order": 1,
-    "description": "",
+    "description": "Complete documentation for kagent - the AI agent platform for Kubernetes.",
     "items": [
       {
         "title": "Introduction",
-        "href": "/docs/kmcp/introduction",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+        "href": "/docs/kagent/introduction",
+        "description": "Welcome to kagent! Start here to understand what kagent is, how to install it, and how to contribute.",
+        "items": [
+          {
+            "title": "Installing kagent",
+            "href": "/docs/kagent/introduction/installation",
+            "description": "Learn how to install kagent"
+          },
+          {
+            "title": "What is kagent",
+            "href": "/docs/kagent/introduction/what-is-kagent",
+            "description": "Understand what kagent is and its core purpose."
+          },
+          {
+            "title": "Feature Roadmap",
+            "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
+            "external": true
+          },
+          {
+            "title": "Contributing",
+            "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md",
+            "external": true
+          }
+        ]
       },
       {
-        "title": "Quickstart",
-        "href": "/docs/kmcp/quickstart",
-        "description": "Get started with KMCP"
+        "title": "Getting Started",
+        "href": "/docs/kagent/getting-started",
+        "description": "Guides to help you get started with kagent, from quick setup to your first agent and tool.",
+        "items": [
+          {
+            "title": "Quick Start",
+            "href": "/docs/kagent/getting-started/quickstart",
+            "description": "A quick guide to get kagent installed and running with your first AI agent."
+          },
+          {
+            "title": "Your First Agent",
+            "href": "/docs/kagent/getting-started/first-agent",
+            "description": "Learn how to create your first AI agent using the kagent dashboard."
+          },
+          {
+            "title": "Your First MCP tool",
+            "href": "/docs/kagent/getting-started/first-mcp-tool",
+            "description": "Learn how to add an MCP (Model Context Protocol) tool to your kagent agent."
+          },
+          {
+            "title": "Writing System Prompts",
+            "href": "/docs/kagent/getting-started/system-prompts",
+            "description": "Learn the art and science of writing effective system prompts for your kagent agents."
+          },
+          {
+            "title": "Tracing",
+            "href": "/docs/kagent/getting-started/tracing",
+            "description": "A guide to tracing your kagent agents."
+          }
+        ]
       },
       {
-        "title": "Develop MCP servers",
-        "href": "/docs/kmcp/create",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+        "title": "Core Concepts",
+        "href": "/docs/kagent/concepts",
+        "description": "Understand the fundamental concepts and architecture of kagent.",
+        "items": [
+          {
+            "title": "Architecture",
+            "href": "/docs/kagent/concepts/architecture",
+            "description": "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard."
+          },
+          {
+            "title": "Agents",
+            "href": "/docs/kagent/concepts/agents",
+            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools."
+          },
+          {
+            "title": "Tools",
+            "href": "/docs/kagent/concepts/tools",
+            "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
+          },
+          {
+            "title": "Memory",
+            "href": "/docs/kagent/concepts/memory",
+            "description": "Learn how kagent agents manage memory and conversation history to maintain context and improve interactions."
+          }
+        ]
       },
       {
-        "title": "Add MCP tools",
-        "href": "/docs/kmcp/tools",
-        "description": ""
+        "title": "Supported Providers",
+        "href": "/docs/kagent/supported-providers",
+        "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent.",
+        "items": [
+          {
+            "title": "Anthropic",
+            "href": "/docs/kagent/supported-providers/anthropic",
+            "description": "Learn how to configure Anthropic models for kagent."
+          },
+          {
+            "title": "Azure OpenAI",
+            "href": "/docs/kagent/supported-providers/azure-openai",
+            "description": "Learn how to configure Azure OpenAI models in kagent."
+          },
+          {
+            "title": "Google Vertex AI",
+            "href": "/docs/kagent/supported-providers/google-vertexai",
+            "description": "Learn how to configure Google Vertex AI models in kagent."
+          },
+          {
+            "title": "Ollama",
+            "href": "/docs/kagent/supported-providers/ollama",
+            "description": "Learn how to configure Ollama models in kagent."
+          },
+          {
+            "title": "OpenAI",
+            "href": "/docs/kagent/supported-providers/openai",
+            "description": "Learn how to configure OpenAI models in kagent."
+          },
+          {
+            "title": "Custom Models",
+            "href": "/docs/kagent/supported-providers/custom-models",
+            "description": "Learn how to configure custom AI models in kagent."
+          }
+        ]
       },
       {
-        "title": "Deploy the KMCP controller",
-        "href": "/docs/kmcp/controller",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+        "title": "Examples",
+        "href": "/docs/kagent/examples",
+        "description": "Explore practical examples and use cases for kagent.",
+        "items": [
+          {
+            "title": "A2A Agents",
+            "href": "/docs/kagent/examples/a2a-agents",
+            "description": "Discover how to implement Agent-to-Agent (A2A) communication and collaboration with kagent."
+          },
+          {
+            "title": "Documentation Agent",
+            "href": "/docs/kagent/examples/documentation",
+            "description": "See an example of a kagent agent built to help with documentation-related tasks."
+          },
+          {
+            "title": "Slack and A2A",
+            "href": "/docs/kagent/examples/slack-a2a",
+            "description": "Learn how to create a Slack bot that interacts with kagent via A2A"
+          },
+          {
+            "title": "Discord and A2A",
+            "href": "/docs/kagent/examples/discord-a2a",
+            "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
+          }
+        ]
       },
       {
-        "title": "Deploy MCP server",
-        "href": "/docs/kmcp/mcp-server",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
-      },
-      {
-        "title": "Reference",
-        "href": "/docs/kmcp/reference",
-        "description": ""
-      },
-      {
-        "title": "Landing",
-        "href": "/docs/kmcp/landing",
-        "description": ""
-      }
-    ]
-  },
-  {
-    "title": "Getting Started",
-    "href": "/docs/getting-started",
-    "order": 2,
-    "description": "Guides to help you get started with kagent, from quick setup to your first agent and tool.",
-    "items": [
-      {
-        "title": "Quick Start",
-        "href": "/docs/getting-started/quickstart",
-        "description": "A quick guide to get kagent installed and running with your first AI agent."
-      },
-      {
-        "title": "Your First Agent",
-        "href": "/docs/getting-started/first-agent",
-        "description": "Learn how to create your first AI agent using the kagent dashboard."
-      },
-      {
-        "title": "Your First MCP tool",
-        "href": "/docs/getting-started/first-mcp-tool",
-        "description": "Learn how to add an MCP (Model Context Protocol) tool to your kagent agent."
-      },
-      {
-        "title": "Writing System Prompts",
-        "href": "/docs/getting-started/system-prompts",
-        "description": "Learn the art and science of writing effective system prompts for your kagent agents."
-      },
-      {
-        "title": "Tracing",
-        "href": "/docs/getting-started/tracing",
-        "description": "A guide to tracing your kagent agents."
-      }
-    ]
-  },
-  {
-    "title": "Core Concepts",
-    "href": "/docs/concepts",
-    "order": 4,
-    "description": "Understand the fundamental concepts and architecture of kagent.",
-    "items": [
-      {
-        "title": "Architecture",
-        "href": "/docs/concepts/architecture",
-        "description": "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard."
-      },
-      {
-        "title": "Agents",
-        "href": "/docs/concepts/agents",
-        "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools."
-      },
-      {
-        "title": "Tools",
-        "href": "/docs/concepts/tools",
-        "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
-      },
-      {
-        "title": "Memory",
-        "href": "/docs/concepts/memory",
-        "description": "Learn how kagent agents manage memory and conversation history to maintain context and improve interactions."
-      }
-    ]
-  },
-  {
-    "title": "Supported Providers",
-    "href": "/docs/supported-providers",
-    "order": 4,
-    "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent.",
-    "items": [
-      {
-        "title": "Anthropic",
-        "href": "/docs/supported-providers/anthropic",
-        "description": "Learn how to configure Anthropic models for kagent."
-      },
-      {
-        "title": "Azure OpenAI",
-        "href": "/docs/supported-providers/azure-openai",
-        "description": "Learn how to configure Azure OpenAI models in kagent."
-      },
-      {
-        "title": "Google Vertex AI",
-        "href": "/docs/supported-providers/google-vertexai",
-        "description": "Learn how to configure Google Vertex AI models in kagent."
-      },
-      {
-        "title": "Ollama",
-        "href": "/docs/supported-providers/ollama",
-        "description": "Learn how to configure Ollama models in kagent."
-      },
-      {
-        "title": "OpenAI",
-        "href": "/docs/supported-providers/openai",
-        "description": "Learn how to configure OpenAI models in kagent."
-      },
-      {
-        "title": "Custom Models",
-        "href": "/docs/supported-providers/custom-models",
-        "description": "Learn how to configure custom AI models in kagent."
-      }
-    ]
-  },
-  {
-    "title": "Examples",
-    "href": "/docs/examples",
-    "order": 5,
-    "description": "Explore practical examples and use cases for kagent.",
-    "items": [
-      {
-        "title": "A2A Agents",
-        "href": "/docs/examples/a2a-agents",
-        "description": "Discover how to implement Agent-to-Agent (A2A) communication and collaboration with kagent."
-      },
-      {
-        "title": "Documentation Agent",
-        "href": "/docs/examples/documentation",
-        "description": "See an example of a kagent agent built to help with documentation-related tasks."
-      },
-      {
-        "title": "Slack and A2A",
-        "href": "/docs/examples/slack-a2a",
-        "description": "Learn how to create a Slack bot that interacts with kagent via A2A"
-      },
-      {
-        "title": "Discord and A2A",
-        "href": "/docs/examples/discord-a2a",
-        "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
-      }
-    ]
-  },
-  {
-    "title": "Resources",
-    "href": "/docs/resources",
-    "order": 6,
-    "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.",
-    "items": [
-      {
-        "title": "Troubleshooting",
-        "href": "/docs/resources/troubleshooting",
-        "description": "Find solutions to common issues and troubleshooting tips for kagent."
-      },
-      {
-        "title": "FAQs",
-        "href": "/docs/resources/faq",
-        "description": "Find answers to frequently asked questions about kagent."
+        "title": "Resources",
+        "href": "/docs/kagent/resources",
+        "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.",
+        "items": [
+          {
+            "title": "Troubleshooting",
+            "href": "/docs/kagent/resources/troubleshooting",
+            "description": "Find solutions to common issues and troubleshooting tips for kagent."
+          },
+          {
+            "title": "FAQs",
+            "href": "/docs/kagent/resources/faq",
+            "description": "Find answers to frequently asked questions about kagent."
+          }
+        ]
       }
     ]
   }
