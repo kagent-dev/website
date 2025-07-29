@@ -107,7 +107,7 @@ const AgentPage = () => {
           )}
 
           <Button className="w-full" size="lg" asChild>
-            <Link href="/docs/getting-started/quickstart">
+            <Link href="/docs/kagent/getting-started/quickstart">
               <ExternalLink className="h-4 w-4 mr-2" />
               Get Started
             </Link>

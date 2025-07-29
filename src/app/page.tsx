@@ -44,7 +44,7 @@ const MarketingPage = () => {
             className="flex justify-center space-x-4"
           >
             <Button size="lg" asChild className="hover:scale-105 transition-transform">
-              <Link href="/docs/getting-started/quickstart">
+              <Link href="/docs/kagent/getting-started/quickstart">
                 Quick Start <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

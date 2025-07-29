@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/docs/getting-started/configuring-providers',
-        destination: '/docs/supported-providers',
+        destination: '/docs/kagent/supported-providers',
         permanent: true,
       },
     ];
