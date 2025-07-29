@@ -28,6 +28,54 @@
     ]
   },
   {
+    "title": "kmcp",
+    "href": "/docs/kmcp",
+    "order": 1,
+    "description": "",
+    "items": [
+      {
+        "title": "Introduction",
+        "href": "/docs/kmcp/introduction",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+      },
+      {
+        "title": "Quickstart",
+        "href": "/docs/kmcp/quickstart",
+        "description": "Get started with KMCP"
+      },
+      {
+        "title": "Develop MCP servers",
+        "href": "/docs/kmcp/create",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+      },
+      {
+        "title": "Add MCP tools",
+        "href": "/docs/kmcp/tools",
+        "description": ""
+      },
+      {
+        "title": "Deploy the KMCP controller",
+        "href": "/docs/kmcp/controller",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+      },
+      {
+        "title": "Deploy MCP server",
+        "href": "/docs/kmcp/mcp-server",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+      },
+      {
+        "title": "Reference",
+        "href": "/docs/kmcp/reference",
+        "description": ""
+      },
+      {
+        "title": "Landing",
+        "href": "/docs/kmcp/landing",
+        "description": ""
+      }
+    ]
+  },
+  {
     "title": "Getting Started",
     "href": "/docs/getting-started",
     "order": 2,
