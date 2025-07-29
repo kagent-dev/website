@@ -20,7 +20,7 @@ const keyComponents = [
   {
     title: "Framework",
     icon: Code,
-    link: "/docs/concepts",
+    link: "/docs/kagent/concepts",
     description: "Simple CLI and UI interface to run agents, with full extensibility for custom solutions",
   },
 ];

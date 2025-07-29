@@ -46,7 +46,7 @@ export default function Navbar() {
 
             <ThemeToggle />
             <Button variant="secondary" asChild>
-              <Link href="/docs/getting-started/quickstart">Get Started</Link>
+              <Link href="/docs/kagent/getting-started/quickstart">Get Started</Link>
             </Button>
           </div>
 
@@ -87,7 +87,7 @@ export default function Navbar() {
                 <Link href="/community">Community</Link>
               </Button>
               <Button variant="secondary" className="mt-4" asChild>
-                <Link href="/docs/getting-started/quickstart">Get Started</Link>
+                <Link href="/docs/kagent/getting-started/quickstart">Get Started</Link>
               </Button>
             </div>
           </div>
