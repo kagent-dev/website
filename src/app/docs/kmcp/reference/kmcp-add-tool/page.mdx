@@ -1,0 +1,30 @@
+---
+title: kmcp add-tool
+pageOrder: 10
+description: kmcp add-tool command
+---
+
+# `kmcp add-tool`
+
+Create a boilerplate for a sample `echo` tool in the `tools` directory of your MCP project and update all the MCP server dependencies to import that tool. You can use this boilerplate as the base to build your own tool. 
+
+```bash
+kmcp add-tool [tool-name] [flags]
+```
+
+**Flags:**
+- `--description, -d` - Tool description
+- `--force, -f` - Overwrite existing tool file
+- `--interactive, -i` - Interactive tool creation
+- `--project-dir` - Project directory (default: current directory)
+- `--verbose, -v` - Show detailed output
+## Example
+
+The following command creates a `mytool` MCP tool in the `my-mcp-server` MCP project. You can edit the file and adjust the code as needed. 
+
+```sh
+kmcp add-tool mytool --project-dir my-mcp-server
+```
+
+
+

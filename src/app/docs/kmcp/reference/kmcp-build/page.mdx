@@ -1,0 +1,29 @@
+---
+title: kmcp build
+pageOrder: 10
+description: kmcp build command
+---
+
+# `kmcp build` 
+
+Build a Docker image for your MCP server. You can later use this image to deploy your MCP server in a Kubernetes environment. 
+
+```bash
+kmcp build [flags]
+```
+
+**Flags:**
+- `--docker` - Build Docker image
+- `--output, -o` - Output directory or image name
+- `--tag, -t` - Docker image tag
+- `--platform` - Target platform (e.g., linux/amd64, linux/arm64)
+- `--project-dir, -d` - Build directory (default: current directory)
+- `--verbose, -v` - Show detailed build output
+
+## Example
+
+The following command creates a Docker image for the `my-mcp-server` project on your local machine and tags the image as latest. 
+
+```sh
+kmcp build --docker --tag latest --project-dir my-mcp-server -v    
+```
