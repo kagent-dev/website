@@ -14,13 +14,17 @@ Install the KMCP CLI and quickly spin up your first FastMCP Python server in a K
 - [Kind](https://kind.sigs.k8s.io) for creating and running a local Kubernetes cluster
 - [Helm](https://helm.sh/docs/intro/install/) for installing the KMCP chart
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) for running FastMCP servers
+- MCP Inspector tool to test access to your MCP server
+  ```sh
+  npm install -g @modelcontextprotocol/inspector
+  ```
 
 ## Install the KMCP CLI
 
 1. Download the KMCP CLI from the [release page](https://github.com/kagent-dev/kmcp/releases). To find the operating system and system architecture for which you need to download the CLI, run the following commands. 
    ```sh
    OS=$(uname | tr '[:upper:]' '[:lower:]' )
-   ARCH=$(uname -m | sed -E 's/aarch/arm/; s/x86_64/amd64/; s/armv7l/armv7/')
+   ARCH=$(uname -m )
    echo $OS
    echo $ARCH
    ``` 
@@ -48,12 +52,7 @@ Install the KMCP CLI and quickly spin up your first FastMCP Python server in a K
    kmcp init python my-mcp-server
    ```
 
-2. Install the MCP inspector tool. 
-   ```sh
-   npm install -g @modelcontextprotocol/inspector
-   ```
-
-3. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it.
+2. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it.
    ```sh
    kmcp run --project-dir my-mcp-server
    ```
@@ -69,7 +68,7 @@ Install the KMCP CLI and quickly spin up your first FastMCP Python server in a K
       http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=39359f4867a366abc8ecdf5daa243d547d4f61a43e207cc1adbdc23ae47550f8
    ```
    
-4. Click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
+3. In the MCP inspector tool, click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
    * Select **STDIO** from the **Transport Type** drop down. 
    * In the **Command** field, enter `uv`. 
    * In the **Arguments** field, enter `run python src/main.py`. 
@@ -77,7 +76,7 @@ Install the KMCP CLI and quickly spin up your first FastMCP Python server in a K
    
    ![Locally run the MCP server](/images/kmcp-local-inspector-ov.png "Locally run your MCP server with the MCP inspector tool")
 
-5. Try out the `echo` MCP tool. 
+4. Try out the `echo` MCP tool. 
    1. Go to the **Tools** tab and click **List Tools**. 
    2. Select the `echo` tool. 
    3. Enter any string in the **message** field, such as `Hello world` and click **Run Tool**. 
@@ -94,7 +93,7 @@ The KMCP controller manages the lifecycle of MCP servers that are defined in an 
 
 1. Create a kind cluster. 
    
-   If you already have a Kubernetes cluster that you want to use, switch to the kubeconfig context for that cluster by using the `kubectl config use-context [CONTEXT-NAME]` command. 
+   **Tip**: If you already have a Kubernetes cluster that you want to use, switch to the kubeconfig context for that cluster by using the `kubectl config use-context [CONTEXT-NAME]` command. 
    ```sh
    kind create cluster
    ```

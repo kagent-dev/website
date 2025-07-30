@@ -21,7 +21,7 @@ kmcp run [flags]
 ## Example
 
 The following command runs the MCP server that is defined in the `my-mcp-server` project on your local machine. 
-The command returns the URL that the MCP inspector tool is exposed on. 
+The command automatically builds the Docker image for your MCP server and opens the MCP inspector tool so that you can connect to your server. 
 
 ```sh
 kmcp run --project-dir my-mcp-server

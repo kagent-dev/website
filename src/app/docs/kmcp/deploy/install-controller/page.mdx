@@ -12,14 +12,14 @@ The KMCP controller manages the lifecycle of MCP servers that are defined in an 
 ## Prerequisites
 
 - [Kind](https://kind.sigs.k8s.io) for creating and running a local Kubernetes cluster
-- [Docker](https://docs.docker.com/desktop/) for runningxs local kind clusters
+- [Docker](https://docs.docker.com/desktop/) for running local kind clusters
 - [Helm](https://helm.sh/docs/intro/install/) for installing the KMCP controller chart
 
 ## Install the controller
 
 1. Create a kind cluster. 
    
-   If you already have a Kubernetes cluster that you want to use, switch to the kubeconfig context for that cluster by using the `kubectl config use-context [CONTEXT-NAME]` command. 
+   **Tip**: If you already have a Kubernetes cluster that you want to use, switch to the kubeconfig context for that cluster by using the `kubectl config use-context [CONTEXT-NAME]` command. 
    ```sh
    kind create cluster
    ```

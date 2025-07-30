@@ -6,7 +6,7 @@ description:
 
 # Deploy MCP servers
 
-Use the KMCP controller to automatically spin your MCP server in a Kubernetes environment. 
+Use the KMCP controller to automatically spin up your MCP server in a Kubernetes environment. 
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Use the KMCP controller to automatically spin your MCP server in a Kubernetes en
 
 Use the `kmcp build` command to create a Docker image for your MCP server. The command uses the `Dockerfile` in your MCP project. 
 
-1. Build a Docker image from the code in your MCP project
+1. Build a Docker image from the code in your MCP project. The following command creates an `my-mcp-server:latest` image. 
    ```sh
    kmcp build --docker --tag latest --project-dir my-mcp-server -v
    ```
@@ -40,7 +40,9 @@ Use the `kmcp build` command to create a Docker image for your MCP server. The c
    
    * **Option 2: Create an MCPServer resource**
    
-     FastMCP example
+     You can manually create an MCPServer resource yourself as shown in the following examples. 
+   
+     * FastMCP example
      ```yaml
      kubectl apply -f- <<EOF
      apiVersion: kagent.dev/v1alpha1
@@ -57,7 +59,7 @@ Use the `kmcp build` command to create a Docker image for your MCP server. The c
      EOF
      ```
    
-     MCP Go example: 
+     * MCP Go example: 
      ```yaml
      kubectl apply -f- <<EOF
      apiVersion: kagent.dev/v1alpha1

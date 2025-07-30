@@ -11,14 +11,17 @@ description:
 ## Prerequisites
 
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/) to build and run FastMCP servers. 
-- Install the MCP inspector tool by running `npx @modelcontextprotocol/inspector`. The tool is used to access and test your MCP server. 
+- Install the MCP inspector tool to access and test your MCP server.
+  ```sh
+  npx @modelcontextprotocol/inspector
+  ```
 
 ## Create the MCP project
 
 1. Create a scaffold for your FastMCP server project.
 
    The following command creates an MCP server 
-in the `my-mcp-server` directory and a sample echo tool that you can later use to test your server. Follow the interactive CLI prompts to optionaly add a description and author for your project.
+in the `my-mcp-server` directory and a sample echo tool that you can later use to test your server. Follow the interactive CLI prompts to optionally add a description and author for your project.
    
    ```sh
    kmcp init python my-mcp-server
@@ -45,7 +48,9 @@ in the `my-mcp-server` directory and a sample echo tool that you can later use t
 
 ## Add tools
 
-1. Create a boilerplate for an `echo` MCP tool in the `src/tools` directory of your MCP project. You can use the boilerplate as a base to create your own tools.  
+1. Create a boilerplate for an MCP tool in the `src/tools` directory of your MCP project. 
+
+   The boilerplate includes code for an echo tool that is similar to the `my-mcp-server/src/tools/echo.py` tool that is automatically created when you initialize the project. You can use the boilerplate as a base to create your own tools.  
    ```sh
    kmcp add-tool mytool --project-dir my-mcp-server 
    ```
@@ -63,7 +68,7 @@ Use the `kmcp run` command to run your MCP server on your local machine so that 
 
 1. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it. 
    ```sh
-   kmcp run local --project-dir my-mcp-server
+   kmcp run --project-dir my-mcp-server
    ```
 
 2. Click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
@@ -74,18 +79,19 @@ Use the `kmcp run` command to run your MCP server on your local machine so that 
    
    ![Locally run the MCP server](/images/kmcp-local-inspector-ov.png "Locally run your MCP server with the MCP inspector tool")
 
-3. Try out the `echo` MCP tool. 
+3. Try out the `mytool` MCP tool. 
    1. Go to the **Tools** tab and click **List Tools**. 
-   2. Select the `echo` tool. 
+   2. Select the `mytool` tool. 
    3. Enter any string in the **message** field, such as `Hello world` and click **Run Tool**. 
    4. Verify that you see your message echoed in the **Tool result** card. 
    
-   ![Run echo tool in MCP inspector UI](/images/kmcp-local-echo-success.png "Successful run of the echo tool")
+   ![Run mytool tool in MCP inspector UI](/images/kmcp-local-mytool-success.png "Successful run of the mytool tool")
    
    
    
 ## Next
 
-* Explore other MCP frameworks, such as [MCP Go](/docs/kmcp/develop/mcp-go)
-* [Deploy your MCP server to a Kubernetes cluster](/docs/kmcp/deploy)
+* Explore other MCP frameworks, such as [MCP Go](/docs/kmcp/develop/mcp-go).
+* [Deploy your MCP server to a Kubernetes cluster](/docs/kmcp/deploy).
+* Learn how to [manage secrets for your MCP server](/docs/kmcp/secrets). 
 
