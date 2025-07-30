@@ -62,6 +62,11 @@ The scaffolding templates include common patterns for building tools that intera
 
 The result is a consistent, enterprise-ready development experience.
 
+### Built-in Support for Agentgateway
+
+With kmcp, your MCP service has built-in support for [agentgateway](https://agentgateway.dev), which provides drop-in security, observability, and governance for agent-to-tool communication. You can apply any of the [security policies](https://agentgateway.dev/docs/security/) supported by agentgateway easily.
+
+
 ## Getting Started with kmcp
 
 Here’s how the kmcp workflow looks in practice.
@@ -93,7 +98,17 @@ kmcp build --docker --tag my-weather-server:v1.0.0
 
 You now have a production-ready container image for your MCP service.
 
-### Step 3: Deploy to Kubernetes
+### Step 3: Controller Setup
+
+To enable CRD support and declarative management, you can install the `kmcp` controller once per cluster:
+
+```console
+kmcp deploy controller --namespace kmcp-system
+```
+
+After this, MCP services can be deployed and updated using Kubernetes-native workflows.
+
+### Step 4: Deploy to Kubernetes
 
 ```console
 kmcp deploy mcp my-weather-server \
@@ -109,17 +124,7 @@ You can also dry-run to generate manifests without applying them:
 kmcp deploy mcp my-weather-server --dry-run --output ./deployment.yaml
 ```
 
-### **Step 4: Optional Controller Setup**
-
-To enable CRD support and declarative management, you can install the kmcp controller once per cluster:
-
-```console
-kmcp deploy controller --namespace kmcp-system
-```
-
-After this, MCP services can be deployed and updated using Kubernetes-native workflows.
-
-See Demo here:
+See the full demo here:
 
 <YouTube id="seNr0f7CFWU" />
 
