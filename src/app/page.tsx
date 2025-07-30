@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { GitBranch, ArrowRight, Zap, Code, Bot, Layers, Shield, Rocket, Cpu, Network, BarChart, Settings } from "lucide-react";
+import { GitBranch, ArrowRight, Code, Bot, Rocket, Network, BarChart, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Discord from "@/components/icons/discord";
