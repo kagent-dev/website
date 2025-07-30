@@ -1,0 +1,132 @@
+export const metadata = {
+  title: "From MCP Servers to Services: Introducing kmcp for Enterprise-Grade MCP Development",
+  publishDate: "2025-07-30T01:00:00Z",
+  description: "Discover kmcp, the lightweight toolkit that takes MCP servers from prototype to production. Learn how to scaffold, build, and deploy enterprise-grade MCP services to Kubernetes in minutes—no Dockerfiles or complex manifests required. Includes demo video and complete getting started guide.",
+  author: "Christian Posta",
+  authorIds: ["christianposta"],
+}
+
+# From MCP Servers to Services: Introducing kmcp for Enterprise-Grade MCP Development
+
+Right now, developers are shipping a wave of new MCP servers. These servers are typically designed to run locally, often inside a desktop agent or CLI shell, and they’re optimized for speed of development, not operational hardening. That’s fine if you’re experimenting or running personal agents, but it’s a different story when you want to run these tools as managed services inside an enterprise.
+
+This is where [**kmcp**](https://github.com/kagent-dev/kmcp) comes in.
+
+kmcp is a lightweight set of tools that helps you take MCP servers from prototype to production. It gives you a clear path from initialization to deployment, without the need to write Dockerfiles, patch together Kubernetes manifests, or reverse engineer the MCP spec. It lets you scaffold a new project, package it as a container, and deploy it to Kubernetes using a consistent and flexible workflow.
+
+Whether you’re building internal copilots, customer-facing agents, or an enterprise catalog of AI tools, kmcp gives you the foundation to build and operate MCP services the right way.
+
+## What Is kmcp?
+
+kmcp is a focused set of tools designed to simplify and accelerate MCP service development and deployment.
+
+With kmcp, you can:
+
+* Scaffold new MCP projects with `kmcp init`, using templates that follow best practices  
+* Build container images with `kmcp build`, including cross-platform options  
+* Deploy to Kubernetes with `kmcp deploy`, with support for both stdio and http transports  
+* Manage MCP services as Kubernetes-native resources using CRDs  
+* Focus on writing the actual tool logic rather than building infrastructure around it
+
+The goal is simple: reduce friction for teams building secure and scalable MCP services. 
+
+## kmcp Features and Capabilities
+
+### Scaffold Production-Ready Projects
+
+The `kmcp init` command generates a complete MCP project structure. This includes directory layout, language-specific dependencies, test harness, Dockerfile, project metadata, and kmcp configuration. You can choose a supported framework, set author details, and skip prompts for automation. 
+
+Initial support is focused on FastMCP with Python, but the system is built to be extensible across other languages and frameworks. Kmcp will support Python, TypeScript, Golang, Java, and JavaScript frameworks. 
+
+### Simplify Builds
+
+Use `kmcp build` to create a container image for your service. You can tag it, target specific platforms, or output artifacts to a local directory. The build process standardizes packaging, applies secure defaults, and prepares the service for cloud-native environments.
+
+No need to write your own Dockerfile or guess how to handle dependencies.
+
+### Kubernetes-Native Deployment
+
+Once built, `kmcp deploy` runs your MCP service in Kubernetes. You can deploy to any namespace, choose the transport (stdio or http), configure ports and environment variables, and even generate manifests without applying them directly.
+
+With kmcp, your MCP service becomes a first-class Kubernetes resource, using the `MCPServer` custom resources to manage lifecycle and configuration.
+
+### Support for Multiple Transports
+
+kmcp supports both stdio and HTTP Streamable transports. This allows your MCP service to operate in different architectural environments, whether it’s plugged into a local agent shell or exposed as a remote API for multi-agent workloads.
+
+The transport can be configured at deploy time, and kmcp handles service discovery and port mapping automatically.
+
+### Optimized for AI Tool Integration
+
+The scaffolding templates include common patterns for building tools that interact with external systems. This might be an API client, a database integration, or a workflow coordinator. These patterns eliminate boilerplate and let you focus on building useful capabilities for your agents.
+
+The result is a consistent, enterprise-ready development experience.
+
+## Getting Started with kmcp
+
+Here’s how the kmcp workflow looks in practice.
+
+### Step 1: Initialize a New MCP Project
+
+```console
+kmcp init my-weather-server \
+    --framework fastmcp-python \
+    --author "Jane Developer" \
+    --email "jane@company.com" \
+    --non-interactive
+```
+
+This creates a full project layout, including:
+
+* Source code and tool logic
+* Tests
+* Dockerfile
+* Python dependencies
+* kmcp configuration
+
+### Step 2: Build and Package the Service
+
+```console
+cd my-weather-server
+kmcp build --docker --tag my-weather-server:v1.0.0
+```
+
+You now have a production-ready container image for your MCP service.
+
+### Step 3: Deploy to Kubernetes
+
+```console
+kmcp deploy mcp my-weather-server \
+    --namespace tools \
+    --transport http \
+    --port 3000 \
+    --env "API_KEY=your-weather-api-key"
+```
+
+You can also dry-run to generate manifests without applying them:
+
+```console
+kmcp deploy mcp my-weather-server --dry-run --output ./deployment.yaml
+```
+
+### **Step 4: Optional Controller Setup**
+
+To enable CRD support and declarative management, you can install the kmcp controller once per cluster:
+
+```console
+kmcp deploy controller --namespace kmcp-system
+```
+
+After this, MCP services can be deployed and updated using Kubernetes-native workflows.
+
+See Demo here:
+
+<YouTube id="seNr0f7CFWU" />
+
+## **Try kmcp Today**
+
+kmcp is open source and [available now](https://github.com/kagent-dev/kmcp). You can use it to scaffold, build, and deploy MCP services in minutes. It brings production sensibilities to a fast-moving space and helps developers and teams take a more disciplined approach to AI service development.
+
+If you’re building or operating AI systems that rely on tools and context providers, this is your on-ramp to doing it the right way.
+
+To learn more or see how this fits into your enterprise environment, reach out to Solo.io. We’re helping organizations move beyond experimental agents and toward secure, scalable, AI-native architectures built on MCP.

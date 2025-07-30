@@ -24,6 +24,12 @@ const posts = [
         publishDate: '2025-07-01',
         title: 'Celebrating 100 Days of Kagent',
         description: '100+ contributors, 1000+ GitHub stars and more!',
+    },
+    {
+        slug: 'kmcp',
+        publishDate: '2025-07-30',
+        title: 'From MCP Servers to Services: Introducing kmcp for Enterprise-Grade MCP Development',
+        description: 'Discover kmcp, the lightweight toolkit that takes MCP servers from prototype to production. Learn how to scaffold, build, and deploy enterprise-grade MCP services to Kubernetes in minutes—no Dockerfiles or complex manifests required. Includes demo video and complete getting started guide.',
     }
 ]
 
