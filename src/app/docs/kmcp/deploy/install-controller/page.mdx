@@ -1,19 +1,24 @@
 ---
-title: "Install the KMCP controller"
+title: "Install the kmcp controller"
 pageOrder: 10
-description: "Deploy the KMCP controller in a Kubernetes cluster."
+description: "Deploy the kmcp controller in a Kubernetes cluster."
 ---
 
+export const metadata = {
+  title: "Install the kmcp controller",
+  description: "Deploy the kmcp controller in Kubernetes cluster.",
+  author: "kagent.dev"
+};
 
-# Install the KMCP controller
+# Install the kmcp controller
 
-The KMCP controller manages the lifecycle of MCP servers that are defined in an MCPServer custom resource. 
+The kmcp controller manages the lifecycle of MCP servers that are defined in an MCPServer custom resource. 
 
 ## Prerequisites
 
 - [Kind](https://kind.sigs.k8s.io) for creating and running a local Kubernetes cluster
 - [Docker](https://docs.docker.com/desktop/) for running local kind clusters
-- [Helm](https://helm.sh/docs/intro/install/) for installing the KMCP controller chart
+- [Helm](https://helm.sh/docs/intro/install/) for installing the kmcp controller chart
 
 ## Install the controller
 
@@ -24,16 +29,16 @@ The KMCP controller manages the lifecycle of MCP servers that are defined in an 
    kind create cluster
    ```
 
-2. Install the following KMCP controller components in your cluster. 
+2. Install the following kmcp controller components in your cluster. 
    * The MCPServer Custom Resource Definition to define your MCP server. 
-   * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the KMCP controller.
-   * The KMCP controller deployment that automatically manages the lifecycle of MCPServer resources. 
+   * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the kmcp controller.
+   * The kmcp controller deployment that automatically manages the lifecycle of MCPServer resources. 
    
    ```sh
    kmcp install
    ``` 
    
-3. Verify that the KMCP controller manager is up and running. 
+3. Verify that the kmcp controller manager is up and running. 
    ```sh
    kubectl get pods -n kmcp-system
    ```

@@ -295,13 +295,6 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/docs/kmcp/quickstart2</loc>
-        <lastmod>2025-07-30</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-add-tool</loc>
         <lastmod>2025-07-30</lastmod>
         <changefreq>weekly</changefreq>

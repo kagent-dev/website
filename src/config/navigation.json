@@ -188,12 +188,7 @@
       {
         "title": "Quickstart",
         "href": "/docs/kmcp/quickstart",
-        "description": "Get started with KMCP"
-      },
-      {
-        "title": "Quickstart2",
-        "href": "/docs/kmcp/quickstart2",
-        "description": "Get started with KMCP"
+        "description": "Get started with kmcp"
       },
       {
         "title": "Develop MCP servers",
@@ -218,9 +213,9 @@
         "description": "Quickly develop and deploy Model Context Protocol (MCP) servers.",
         "items": [
           {
-            "title": "Install the KMCP controller",
+            "title": "Install the kmcp controller",
             "href": "/docs/kmcp/deploy/install-controller",
-            "description": "Deploy the KMCP controller in a Kubernetes cluster."
+            "description": "Deploy the kmcp controller in a Kubernetes cluster."
           },
           {
             "title": "Deploy MCP servers",
