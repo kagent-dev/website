@@ -51,7 +51,7 @@ Another way to install kagent is using Helm.
 ```bash
 helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
     --namespace kagent \
-    --create-namespace \
+    --create-namespace
 ```
 
 2. Set the `OPENAI_API_KEY` environment variable:
@@ -65,7 +65,7 @@ export OPENAI_API_KEY="your-api-key-here"
 ```bash
 helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
     --namespace kagent \
-    --set providers.openAI.apiKey=$OPENAI_API_KEY \
+    --set providers.openAI.apiKey=$OPENAI_API_KEY
 
 ```
 
