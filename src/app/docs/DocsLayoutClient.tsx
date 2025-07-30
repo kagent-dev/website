@@ -22,10 +22,10 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
   function initializeExpandedSections(navigation: NavItem[]): { [key: string]: boolean } {
     const initial: { [key: string]: boolean } = {};
     navigation.forEach(section => {
-      initial[section.title] = true;
+      initial[section.title] = false;
       section.items?.forEach(item => {
         if (item.items && item.items.length > 0) {
-          initial[item.title] = true;
+          initial[item.title] = false;
         }
       });
     });
@@ -80,9 +80,12 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
                     {section.href ? (
                       <Link
                         href={section.href}
-                        className={`font-black text-lg hover:text-primary transition-colors flex-1 ${isActiveItem(section.href) ? 'underline underline-offset-4' : ''
-                          }`}
+                        className={`font-black text-lg hover:text-primary transition-colors flex-1 ${isActiveItem(section.href) ? 'underline underline-offset-4' : ''}`}
                         onClick={() => {
+                          // Navigate to the page AND expand/collapse if it has sub-items
+                          if (section.items && section.items.length > 0) {
+                            toggleSection(section.title);
+                          }
                           if (window.innerWidth < 768) {
                             setSidebarOpen(false);
                           }
@@ -91,19 +94,28 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
                         {section.title}
                       </Link>
                     ) : (
-                      <h3 className="font-black text-base flex-1">{section.title}</h3>
+                      <div 
+                        className={`font-black text-lg flex-1 ${section.items && section.items.length > 0 ? 'cursor-pointer select-none hover:text-primary transition-colors' : ''}`}
+                        onClick={() => {
+                          if (section.items && section.items.length > 0) {
+                            toggleSection(section.title);
+                          }
+                        }}
+                      >
+                        {section.title}
+                      </div>
                     )}
                     {section.items && section.items.length > 0 && (
                       <button
                         onClick={() => toggleSection(section.title)}
-                        className="ml-2 p-1 hover:bg-white/10 rounded transition-colors"
+                        className="ml-2 p-1 hover:bg-white/10 rounded transition-colors cursor-pointer"
                         aria-label={`Toggle ${section.title} section`}
                       >
                         {expandedSections[section.title] ? (
                           <ChevronUp size={18} />
                         ) : (
                           <ChevronDown size={18} />
-                        )}
+                        )} 
                       </button>
                     )}
                   </div>
@@ -112,21 +124,24 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
                       {section.items?.map((item) => (
                         <li key={item.href}>
                           <div className="flex items-center justify-between">
-                            <Button
-                              variant="link"
-                              className={`flex-1 text-sm py-1 justify-start px-0 ${isActiveItem(item.href)
+                            <Link
+                              href={item.href}
+                              className={`flex-1 text-sm py-1 hover:text-secondary-foreground transition-colors ${isActiveItem(item.href)
                                   ? 'text-secondary-foreground font-bold underline decoration-1 underline-offset-2'
                                   : 'text-secondary-foreground/70 font-bold'
                                 }`}
-                              asChild
                               onClick={() => {
+                                // Navigate to the page AND expand/collapse if it has sub-items
+                                if (item.items && item.items.length > 0) {
+                                  toggleSection(item.title);
+                                }
                                 if (window.innerWidth < 768) {
                                   setSidebarOpen(false);
                                 }
                               }}
                             >
-                              <Link href={item.href}>{item.title}</Link>
-                            </Button>
+                              {item.title}
+                            </Link>
                             {item.items && item.items.length > 0 && (
                               <button
                                 onClick={() => toggleSection(item.title)}
