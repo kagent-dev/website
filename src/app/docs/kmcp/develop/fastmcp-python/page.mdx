@@ -1,0 +1,91 @@
+---
+title: FastMCP Python
+pageOrder: 10
+description:
+---
+
+# FastMCP Python
+
+[FastMCP Python](https://github.com/jlowin/fastmcp) is a lightweight, high-performance Python framework that implements the Model Context Protocol (MCP). With KMCP, you can quickly create an MCP project that uses the FastMCP framework with a sample MCP server and `echo` tool that you can use as a boilerplate to develop your own tools. 
+
+## Prerequisites
+
+- Install [uv](https://docs.astral.sh/uv/getting-started/installation/) to build and run FastMCP servers. 
+- Install the MCP inspector tool by running `npx @modelcontextprotocol/inspector`. The tool is used to access and test your MCP server. 
+
+## Create the MCP project
+
+1. Create a scaffold for your FastMCP server project.
+
+   The following command creates an MCP server 
+in the `my-mcp-server` directory and a sample echo tool that you can later use to test your server. Follow the interactive CLI prompts to optionaly add a description and author for your project.
+   
+   ```sh
+   kmcp init python my-mcp-server
+   ```
+   
+2. Review the project structure that was created for you. 
+   ```sh
+   find my-mcp-server  
+   ```
+   
+   Example project structure:
+   ```sh
+   ├── src/
+   |   ├── core/           # MCP server code and utilities
+   │   ├── tools/          # Tool implementations
+   │   └── main.py         # MCP server entry point
+   ├── tests/              # Built-in test suite
+   ├── Dockerfile          # Dockerfile for spinning up your MCP server in a Kubernetes environment
+   ├── kmcp.yaml           # MCP container definition for spinning up your MCP server
+   ├── pyproject.toml      # Python dependencies
+   ├── .env.example        # Sample environment variables file for your MCP server
+   └── README.md           # MCP Project documentation
+   ```
+
+## Add tools
+
+1. Create a boilerplate for an `echo` MCP tool in the `src/tools` directory of your MCP project. You can use the boilerplate as a base to create your own tools.  
+   ```sh
+   kmcp add-tool mytool --project-dir my-mcp-server 
+   ```
+
+2. Review the code for the `mytool` tool. 
+   ```sh
+   cat my-mcp-server/src/tools/mytool.py
+   ```
+
+3. Make changes to the `mytool.py` tool to implement your own tool logic.
+
+## Run locally
+
+Use the `kmcp run` command to run your MCP server on your local machine so that you can test your MCP server and tools. 
+
+1. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it. 
+   ```sh
+   kmcp run local --project-dir my-mcp-server
+   ```
+
+2. Click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
+   * Select **STDIO** from the **Transport Type** drop down. 
+   * In the **Command** section, enter `uv`. 
+   * In the **Arguments** section, enter `run python src/main.py`.
+   * In the **Configuration** section, enter the **Proxy Session Token** that was returned in the `kmcp run` command. 
+   
+   ![Locally run the MCP server](/images/kmcp-local-inspector-ov.png "Locally run your MCP server with the MCP inspector tool")
+
+3. Try out the `echo` MCP tool. 
+   1. Go to the **Tools** tab and click **List Tools**. 
+   2. Select the `echo` tool. 
+   3. Enter any string in the **message** field, such as `Hello world` and click **Run Tool**. 
+   4. Verify that you see your message echoed in the **Tool result** card. 
+   
+   ![Run echo tool in MCP inspector UI](/images/kmcp-local-echo-success.png "Successful run of the echo tool")
+   
+   
+   
+## Next
+
+* Explore other MCP frameworks, such as [MCP Go](/docs/kmcp/develop/mcp-go)
+* [Deploy your MCP server to a Kubernetes cluster](/docs/kmcp/deploy)
+

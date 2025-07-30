@@ -1,29 +1,33 @@
 ---
 title: "Quickstart"
-pageOrder: 20
+sectionOrder: 20
 description: "Get started with KMCP"
 ---
 
 # Quickstart
 
-Install the KMCP CLI, and quickly develop and spin up a FastMCP server in your Kubernetes cluster. 
+Install the KMCP CLI and quickly spin up your first FastMCP Python server. 
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/desktop/) for building your MCP server images locally
-- [Kind](https://kind.sigs.k8s.io) for creating and running a local Kubernetes cluster
-- [Helm](https://helm.sh/docs/intro/install/) for installing the KMCP chart
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) for running FastMCP servers
 
 ## Install the KMCP CLI
 
-1. Download the KMCP CLI from the [release page](https://github.com/kagent-dev/kmcp/releases). 
-
-2. Move the KMCP CLI to your binary directory.
+1. Download the KMCP CLI from the [release page](https://github.com/kagent-dev/kmcp/releases). To find the operating system and system architecture for which you need to download the CLI, run the following commands. 
    ```sh
-   chmod +x kmcp
-   mv kmcp /usr/local/bin 
-   export PATH=$HOME/.kmcp/bin:$PATH 
+   OS=$(uname | tr '[:upper:]' '[:lower:]' )
+   ARCH=$(uname -m | sed -E 's/aarch/arm/; s/x86_64/amd64/; s/armv7l/armv7/')
+   echo $OS
+   echo $ARCH
+   ``` 
+
+2. Install the KMCP CLI. 
+   ```sh
+   chmod +x kmcp-$OS-$ARCH
+   mv kmcp-$OS-$ARCH kmcp
+   sudo mv kmcp /usr/local/bin 
+   export PATH=$HOME/.kmcp/bin:$PATH
    ```
 
 3. Verify that the KMCP CLI is installed. 
@@ -31,145 +35,60 @@ Install the KMCP CLI, and quickly develop and spin up a FastMCP server in your K
    kmcp --help
    ```
  
-## Develop an MCP server
+## Spin up your first MCP server
 
-Use KMCP to quickly create a scaffold for your first MCP server project. The scaffold inclues all the components to spin up an MCP server that exposes an `echo` MCP tool. The tool echoes back any string that you send to it. 
+1. Create a scaffold for your FastMCP Python server project in the `my-mcp-server` directory. The scaffold includes all the files and dependencies to spin up the MCP server with a sample `echo` tool. 
 
-1. Create a scaffold for your MCP server project. 
-   Follow the interactive CLI prompts to select the MCP framework that you want to use, such as [FastMCP docs](https://github.com/jlowin/fastmcp).
-   
-   The following command creates a `my-mcp-server` directory that includes a sample MCP server and a default echo tool that you can use to later test your server. 
-   ```sh
-   kmcp init my-mcp-server 
-   ```
-   
-2. Create a Docker container image for your MCP server. 
-   ```sh
-   cd my-mcp-server
-   kmcp build --docker --tag latest . -v 
-   ```
-   
-   Example output: 
-   ```
-   ✓ Successfully built Docker image: my-mcp-server:latest
-   ```
-
-3. Load the image to your kind cluster. 
-   ```sh
-   kind load docker-image my-mcp-server:latest --name kind 
-   ```
-
-## Install the KMCP controller
-
-Install the KMCP controller in your cluster. The controller automatically manages the lifecycle of MCP servers that are defined in an MCPServer resource.
-
-1. Create a kind cluster. 
-   ```sh
-   kind create cluster
-   ```
-
-2. Install the following KMCP controller components in your kind cluster: 
-   * The MCPServer Custom Resource Definition to define your MCP server. 
-   * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the KMCP controller.
-   * The KMCP controller deployment that automatically manages the lifecycle of MCPServer resources. 
+   **Tip:** Want to use a different MCP framework instead? Try out [MCP Go](/docs/kmcp/develop/mcp-go).
    
    ```sh
-   kmcp install
+   kmcp init python my-mcp-server
    ```
-   
-   Need to change controller image
-   And download from here https://github.com/kagent-dev/kmcp/pkgs/container/kmcp%2Fcontroller
-   First, docker login ghcr.io (with user name and personal access token)
-   Then, docker pull ghcr.io/kagent-dev/kmcp/controller:v0.0.1-test
-   Then, docker load docker-image ghcr.io/kagent-dev/kmcp/controller:v0.0.1-test2 --name kind
-   Then, kubectl edit deployment kmcp-controller-manager -n kmcp-system  
-   Then, change to test2 image 
 
-3. Verify that the KMCP controller is up and running. 
+2. Install the MCP inspector tool. 
    ```sh
-   kubectl get pods -n kmcp-system
+   npm install -g @modelcontextprotocol/inspector
    ```
-   
-4. Optional: View the logs of the KMCP controller. 
+
+3. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it.
    ```sh
-   kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
-   ```
-   
-## Deploy the MCP server
-
-With the KMCP controller manager in place, you can now deploy the MCP server that you built earlier. 
-
-1. Create an MCP server resource that references the MCP server image that you built earlier. 
-   ```yaml
-   kubectl apply -f- <<EOF
-   apiVersion: kagent.dev/v1alpha1
-   kind: MCPServer
-   metadata:
-     name: my-mcp-server
-   spec:
-     deployment:
-       image: "my-mcp-server:latest"
-       port: 3000
-       cmd: "python"
-       args: ["src/main.py"]
-     transportType: "stdio"
-   EOF
-   ```
-   
-If the MCP server does not come up, change the image pull policy to `IfNotPresent`
-
-2. Verify that your MCP server is up and running. 
-   ```sh
-   kubectl get pods 
+   kmcp run --project-dir my-mcp-server
    ```
    
    Example output: 
    ```sh
-   NAME                             READY   STATUS    RESTARTS   AGE
-   my-mcp-server-5745b494b6-fwzmf   1/1     Running   0          10s
-   ```
+   Starting MCP inspector...
+   ⚙️ Proxy server listening on localhost:6277
+   🔑 Session token: 39359f4867a366abc8ecdf5daa243d547d4f61a43e207cc1adbdc23ae47550f8
+      Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
 
-## Test access to the MCP server
-
-1. Port-forward the MCP server that you deployed. 
-   ```sh
-   kubectl port-forward deploy/my-mcp-server 3000
-   ```
-
-2. Open the MCP inspector tool. In your CLI output, find the URL that the MCP inspector tool is exposed on. 
-   ```sh
-   npx @modelcontextprotocol/inspector
-   ```
-   
-   Example output: 
-   ```sh
    🚀 MCP Inspector is up and running at:
-   http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=8aca1a7088efc984e433fd750ed042b1881fbda3734282e3f0e524b00fc3e69f
+      http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=39359f4867a366abc8ecdf5daa243d547d4f61a43e207cc1adbdc23ae47550f8
    ```
    
-3. Open the MCP inspector tool by using the URL from the previous command. Then, connect to your MCP server. 
-   * Select **Streamable HTTP** from the **Transport Type** drop down. 
-   * Enter `http://localhost:3000/mcp` in the **URL** field. 
-   * Expand the **Configuration** section and make sure that the **Proxy Session Token** is set to the value of the `PROXY_AUTH_TOKEN` that was shown in the CLI output when you opened the MCP inspector tool. 
+4. Click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
+   * Select **STDIO** from the **Transport Type** drop down. 
+   * In the **Command** field, enter `uv`. 
+   * In the **Arguments** field, enter `run python src/main.py`. 
+   * In the **Configuration** section, enter the session token from the previous command output in the **Proxy Session Token** field. 
    
-   ![MCP inspector UI](/images/kmcp-inspector-ov.png "Connect to MCP server with MCP inspector tool")
+   ![Locally run the MCP server](/images/kmcp-local-inspector-ov.png "Locally run your MCP server with the MCP inspector tool")
 
-
-4. Try out the `echo` MCP tool. 
+5. Try out the `echo` MCP tool. 
    1. Go to the **Tools** tab and click **List Tools**. 
    2. Select the `echo` tool. 
    3. Enter any string in the **message** field, such as `Hello world` and click **Run Tool**. 
    4. Verify that you see your message echoed in the **Tool result** card. 
    
-   ![Run echo tool in MCP inspector UI](/images/kmcp-inspector-echo-success.png "Successful run of the echo tool")
+   ![Run echo tool in MCP inspector UI](/images/kmcp-local-echo-success.png "Successful run of the echo tool")
    
-   
-   
-Congratulations, you successfully developed an MCP server and deployed it to a Kubernetes cluster with KMCP!
+Congratulations, you successfully developed your first MCP server with KMCP!
 
 ## Next
 
-Check out the following resources to learn more about how to use KMCP. 
+Check out the following topics to learn more about how KMCP simplifies the development and deployment of MCP servers. 
 
-*
-
+* [Install the KMCP controller](/docs/kmcp/deploy/install-controller) in a Kubernetes cluster to deploy and manage the lifecycle of your MCP servers. 
+* [Deploy your MCP server](/docs/kmcp/deploy/server) in a Kubernetes cluster. 
+* Learn how to [manage secrets for your MCP server](/docs/kmcp/secrets) when deploying it in a Kubernetes cluster. 
+* Explore other MCP frameworks, such as [MCP Go](/docs/kmcp/develop/mcp-go). 

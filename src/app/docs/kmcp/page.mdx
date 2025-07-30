@@ -10,6 +10,33 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Getting Started
+'use client';
 
-This section will guide you through the initial steps of using kagent. 
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import QuickLink from "@/components/quick-link";
+
+export default function DocsPage() {
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">KMCP Documentation</h1>
+        <p className="text-xl text-gray-400 mb-8">Speed up local development of Model Context Protocol (MCP) servers and manage their deployment to cloud-native environments.</p>
+        <div className="flex justify-center space-x-4">
+          <Button size="lg" asChild>
+            <Link href="/docs/kmcp/quickstart">Get Started</Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <QuickLink title="Quick Start" description="Quickly develop a FastMCP Python server with a sample echo tool and deploy it to a Kubernetes cluster. " href="/docs/kmcp/quickstart" />
+        <QuickLink title="Introduction" description="Learn more about KMCP and why you should use it." href="/docs/kmcp/introduction" />
+        <QuickLink title="Develop MCP servers" description="Quickly create an MCP server project with boilerplates to speed up development of MCP tools. " href="/docs/kmcp/develop" />
+        <QuickLink title="Deploy to Kubernetes" description="Use the KMCP controller to deploy MCP servers to Kubernetes and manage their lifecycles." href="/docs/kmcp/deploy" />
+        <QuickLink title="Manage secrets" description="Learn how to manage secrets for your MCP servers. " href="/docs/kmcp/secrets" />
+        <QuickLink title="Reference" description="Explore KMCP commands." href="/docs/kmcp/reference" />
+      </div>
+    </div>
+  );
+}

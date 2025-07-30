@@ -1,0 +1,38 @@
+---
+title: kmcp deploy
+pageOrder: 10
+description: kmcp deploy command
+---
+
+# `kmcp deploy`
+
+Deploy an MCP server to Kubernetes by generating the MCPServer CRDs. The command uses the `kmcp.yaml` file in your MCP project to spin up and deploy the MCP server in the environment that you specified. 
+
+```bash
+kmcp deploy [name] [flags]
+```
+
+**Flags:**
+- `--namespace, -n` - Kubernetes namespace (default: "default")
+- `--dry-run` - Generate manifest without applying to cluster
+- `--output, -o` - Output file for the generated YAML
+- `--image` - Docker image to deploy (overrides build image)
+- `--transport` - Transport type (stdio, http)
+- `--port` - Container port (default: from project config)
+- `--target-port` - Target port for HTTP transport
+- `--command` - Command to run (overrides project config)
+- `--args` - Command arguments
+- `--env` - Environment variables (KEY=VALUE)
+- `--force` - Force deployment even if validation fails
+- `--file, -f` - Path to kmcp.yaml file (default: current directory)
+- `--environment` - Target environment for deployment (e.g., staging, production) (default: "staging")
+- `--verbose, -v` - Show detailed output
+
+## Example
+
+The following example spins up an MCP server in the staging environment that is defined in the `my-mcp-server/kmcp.yaml` file. 
+
+```sh
+kmcp deploy --environment staging --file my-mcp-server/kmcp.yaml
+```
+

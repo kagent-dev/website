@@ -1,0 +1,49 @@
+---
+title: "Install the KMCP controller"
+pageOrder: 10
+description: "Deploy the KMCP controller in a Kubernetes cluster."
+---
+
+
+# Install the KMCP controller
+
+The KMCP controller manages the lifecycle of MCP servers that are defined in an MCPServer custom resource. 
+
+## Prerequisites
+
+- [Kind](https://kind.sigs.k8s.io) for creating and running a local Kubernetes cluster
+- [Docker](https://docs.docker.com/desktop/) for runningxs local kind clusters
+- [Helm](https://helm.sh/docs/intro/install/) for installing the KMCP controller chart
+
+## Install the controller
+
+1. Create a kind cluster. 
+   
+   If you already have a Kubernetes cluster that you want to use, switch to the kubeconfig context for that cluster by using the `kubectl config use-context [CONTEXT-NAME]` command. 
+   ```sh
+   kind create cluster
+   ```
+
+2. Install the following KMCP controller components in your cluster. 
+   * The MCPServer Custom Resource Definition to define your MCP server. 
+   * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the KMCP controller.
+   * The KMCP controller deployment that automatically manages the lifecycle of MCPServer resources. 
+   
+   ```sh
+   kmcp install
+   ``` 
+   
+3. Verify that the KMCP controller manager is up and running. 
+   ```sh
+   kubectl get pods -n kmcp-system
+   ```
+   
+   Example output: 
+   ```sh
+   NAME                                       READY   STATUS    RESTARTS   AGE
+   kmcp-controller-manager-66c8764c66-8h5sl   1/1     Running   0          27h
+   ```
+
+## Next
+
+[Deploy your MCP servers](/docs/kmcp/deploy/server) to your cluster and manage their lifecycle. 
