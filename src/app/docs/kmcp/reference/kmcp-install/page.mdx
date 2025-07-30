@@ -1,0 +1,30 @@
+---
+title: "kmcp install"
+pageOrder: 10
+description: "kmcp install command"
+---
+
+# `kmcp install`
+
+Install the KMCP controller and its required Custom Resource Definitions (CRDs)
+on a Kubernetes cluster. The KMCP contoller manages the lifecycle of MCPServer resources. 
+
+The command installs the following resources:
+* The MCPServer Custom Resource Definition to define your MCP server. 
+* The ClusterRole and ClusterRoleBinding to control RBAC permissions for the KMCP controller.
+* The KMCP controller deployment that automatically manages the lifecycle of MCPServer resources. 
+
+```bash
+kmcp install [flags]
+```
+
+**Note**: Run this command once for each cluster to set up the necessary infrastructure
+for deploying MCP servers.
+
+**Flags:**
+- `--version` - Version of the controller to deploy (defaults to kmcp version)
+- `--namespace` - Namespace for the KMCP controller (defaults to kmcp-system)
+- `--registry-config` - Path to Docker registry config file
+- `--verbose, -v` - Show detailed output
+
+

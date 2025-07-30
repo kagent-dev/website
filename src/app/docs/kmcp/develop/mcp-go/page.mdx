@@ -1,0 +1,98 @@
+---
+title: MCP Go
+pageOrder: 10
+description:
+---
+
+# MCP Go
+
+[MCP Go](https://github.com/jlowin/fastmcp) uses the native Go SDK to implement the Model Context Protocol (MCP). The framework provides type-safe tool definitions and is best suited for high-throughput and high-performance services, system-level integrations, and performance-critical applications.
+
+## Prerequisites
+
+- Install [go](https://go.dev/doc/install) version 1.23 or later.
+- Install the MCP inspector tool to access and test your MCP server.
+  ```sh
+  npx @modelcontextprotocol/inspector
+  ```
+
+## Create the MCP project
+
+1. Create a scaffold for your MCP Go server project.
+
+   The following command creates an MCP server 
+in the `my-mcp-server` directory and a sample echo tool that you can later use to test your server. Follow the interactive CLI prompts to optionaly add a description and author for your project.
+   
+   ```sh
+   kmcp init go my-mcp-server --go-module-name my-mcp-server
+   ```
+   
+2. Review the project structure that was created for you. 
+   ```sh
+   find my-mcp-server  
+   ```
+   
+   Example project structure:
+   ```sh
+   my-mcp-server/
+   ├── main.go              # Server entry point
+   ├── go.mod               # Go module definition
+   ├── go.sum               # Dependency checksums
+   ├── tools/               # Tool implementations
+   │   ├── all_tools.go     # Tool registration
+   │   ├── echo.go          # Example tool
+   │   └── tool.go          # Tool template
+   ├── Dockerfile           # Container definition
+   ├── .gitignore           # Git ignore rules
+   ├── kmcp.yaml            # Project configuration
+   └── README.md            # Project documentation
+   ```
+
+## Add tools
+
+1. Create a boilerplate for an MCP tool that is named `mytool`. The following command creates the `mytool.go` tool in the `tools` directory of your MCP project. 
+   
+   The boilerplate includes code for an echo tool that is similar to the `my-mcp-server/tools/echo.go` tool that is automatically created when you initialize the project. You can use the boilerplate as a base to create your own tools.  
+   ```sh
+   kmcp add-tool mytool --project-dir my-mcp-server 
+   ```
+
+2. Review the code for the `mytool` tool. 
+   ```sh
+   cat my-mcp-server/tools/mytool.go
+   ```
+   
+3. Make changes to the `mytool.go` tool to implement your own tool logic.
+
+
+## Run locally
+
+Use the `kmcp run` command to run your MCP server on your local machine so that you can test your MCP server and tools. 
+
+1. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it. 
+   ```sh
+   kmcp run --project-dir my-mcp-server
+   ```
+
+2. Click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
+   * Select **STDIO** from the **Transport Type** drop down. 
+   * In the **Command** section, enter `go`. 
+   * In the **Arguments** section, enter `run main.go`.
+   * In the **Configuration** section, enter the **Proxy Session Token** that was returned in the `kmcp run` command. 
+   
+   ![Locally run the MCP server](/images/kmcp-local-inspector-go-ov.png "Locally run your MCP server with the MCP inspector tool")
+
+3. Try out the `mytool` MCP tool. 
+   1. Go to the **Tools** tab and click **List Tools**. 
+   2. Select the `mytool` tool. 
+   3. Enter any string in the **message** field, such as `Hello world` and click **Run Tool**. 
+   4. Verify that you see your message echoed in the **Tool result** card. 
+   
+   ![Run mytool tool in MCP inspector UI](/images/kmcp-local-go-mytool-success.png "Successful run of the mytool tool")
+   
+   
+## Next
+
+* Explore other MCP frameworks, such as [FastMCP Python](/docs/kmcp/develop/fastmcp-python).
+* [Deploy your MCP server to a Kubernetes cluster](/docs/kmcp/deploy).
+* Learn how to [manage secrets for your MCP server](/docs/kmcp/secrets). 

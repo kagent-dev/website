@@ -173,5 +173,109 @@
         ]
       }
     ]
+  },
+  {
+    "title": "kmcp",
+    "href": "/docs/kmcp",
+    "order": 1,
+    "description": "",
+    "items": [
+      {
+        "title": "Introduction",
+        "href": "/docs/kmcp/introduction",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+      },
+      {
+        "title": "Quickstart",
+        "href": "/docs/kmcp/quickstart",
+        "description": "Get started with KMCP"
+      },
+      {
+        "title": "Quickstart2",
+        "href": "/docs/kmcp/quickstart2",
+        "description": "Get started with KMCP"
+      },
+      {
+        "title": "Develop MCP servers",
+        "href": "/docs/kmcp/develop",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers.",
+        "items": [
+          {
+            "title": "FastMCP Python",
+            "href": "/docs/kmcp/develop/fastmcp-python",
+            "description": ""
+          },
+          {
+            "title": "MCP Go",
+            "href": "/docs/kmcp/develop/mcp-go",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "title": "Deploy to Kubernetes",
+        "href": "/docs/kmcp/deploy",
+        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers.",
+        "items": [
+          {
+            "title": "Install the KMCP controller",
+            "href": "/docs/kmcp/deploy/install-controller",
+            "description": "Deploy the KMCP controller in a Kubernetes cluster."
+          },
+          {
+            "title": "Deploy MCP servers",
+            "href": "/docs/kmcp/deploy/server",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "title": "Manage secrets",
+        "href": "/docs/kmcp/secrets",
+        "description": "Configure your MCP server to read additional environment variables from a Kubernetes secret."
+      },
+      {
+        "title": "Reference",
+        "href": "/docs/kmcp/reference",
+        "description": "",
+        "items": [
+          {
+            "title": "kmcp add-tool",
+            "href": "/docs/kmcp/reference/kmcp-add-tool",
+            "description": "kmcp add-tool command"
+          },
+          {
+            "title": "kmcp build",
+            "href": "/docs/kmcp/reference/kmcp-build",
+            "description": "kmcp build command"
+          },
+          {
+            "title": "kmcp deploy",
+            "href": "/docs/kmcp/reference/kmcp-deploy",
+            "description": "kmcp deploy command"
+          },
+          {
+            "title": "kmcp init",
+            "href": "/docs/kmcp/reference/kmcp-init",
+            "description": "kmcp init command"
+          },
+          {
+            "title": "kmcp install",
+            "href": "/docs/kmcp/reference/kmcp-install",
+            "description": "kmcp install command"
+          },
+          {
+            "title": "kmcp run",
+            "href": "/docs/kmcp/reference/kmcp-run",
+            "description": "kmcp run command"
+          },
+          {
+            "title": "kmcp secrets",
+            "href": "/docs/kmcp/reference/kmcp-secrets",
+            "description": "kmcp secrets command"
+          }
+        ]
+      }
+    ]
   }
 ]
