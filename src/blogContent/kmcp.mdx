@@ -34,19 +34,19 @@ The goal is simple: reduce friction for teams building secure and scalable MCP s
 
 ### Scaffold Production-Ready Projects
 
-The `kmcp init` command generates a complete MCP project structure. This includes directory layout, language-specific dependencies, test harness, Dockerfile, project metadata, and kmcp configuration. You can choose a supported framework, set author details, and skip prompts for automation. 
+The `kmcp init python` (FastMCP) and `kmcp init go` (MCP Go) commands generate a complete MCP project structure. This includes directory layout, language-specific dependencies, test harness, Dockerfile, project metadata, and kmcp configuration. You can set author details, and skip prompts for automation. 
 
-Initial support is focused on FastMCP with Python, but the system is built to be extensible across other languages and frameworks. Kmcp will support Python, TypeScript, Golang, Java, and JavaScript frameworks. 
+Initial support is focused on FastMCP with Python and MCP Go, but the system is built to be extensible across other languages and frameworks. Kmcp will support Python, TypeScript, Golang, Java, and JavaScript frameworks. 
 
 ### Simplify Builds
 
-Use `kmcp build` to create a container image for your service. You can tag it, target specific platforms, or output artifacts to a local directory. The build process standardizes packaging, applies secure defaults, and prepares the service for cloud-native environments.
+Use `kmcp build` to create a container image for your service. You can tag it, target specific platforms, push it to a container registry, or load it to a kind cluster. The build process standardizes packaging, applies secure defaults, and prepares the service for cloud-native environments.
 
 No need to write your own Dockerfile or guess how to handle dependencies.
 
 ### Kubernetes-Native Deployment
 
-Once built, `kmcp deploy` runs your MCP service in Kubernetes. You can deploy to any namespace, choose the transport (stdio or http), configure ports and environment variables, and even generate manifests without applying them directly.
+Once built, `kmcp deploy` runs your MCP service in Kubernetes. You can deploy to any namespace, choose the transport (stdio or http), configure ports and environment variables, and even generate manifests without applying them directly. The deploy command automatically opens the MCP inspector tool so that you can test and verify your MCP server deployment. 
 
 With kmcp, your MCP service becomes a first-class Kubernetes resource, using the `MCPServer` custom resources to manage lifecycle and configuration.
 
@@ -74,8 +74,7 @@ Here’s how the kmcp workflow looks in practice.
 ### Step 1: Initialize a New MCP Project
 
 ```console
-kmcp init my-weather-server \
-    --framework fastmcp-python \
+kmcp init python my-weather-server \
     --author "Jane Developer" \
     --email "jane@company.com" \
     --non-interactive
@@ -93,17 +92,17 @@ This creates a full project layout, including:
 
 ```console
 cd my-weather-server
-kmcp build --docker --tag my-weather-server:v1.0.0
+kmcp build --tag my-weather-server:v1.0.0
 ```
 
 You now have a production-ready container image for your MCP service.
 
 ### Step 3: Controller Setup
 
-To enable CRD support and declarative management, you can install the `kmcp` controller once per cluster:
+To enable CRD support and declarative management, you can install the `kmcp` controller components in your cluster:
 
 ```console
-kmcp deploy controller --namespace kmcp-system
+kmcp install
 ```
 
 After this, MCP services can be deployed and updated using Kubernetes-native workflows.
@@ -111,9 +110,9 @@ After this, MCP services can be deployed and updated using Kubernetes-native wor
 ### Step 4: Deploy to Kubernetes
 
 ```console
-kmcp deploy mcp my-weather-server \
+kmcp deploy \
+    --image my-weather-server:v1.0.0 \
     --namespace tools \
-    --transport http \
     --port 3000 \
     --env "API_KEY=your-weather-api-key"
 ```
@@ -121,7 +120,7 @@ kmcp deploy mcp my-weather-server \
 You can also dry-run to generate manifests without applying them:
 
 ```console
-kmcp deploy mcp my-weather-server --dry-run --output ./deployment.yaml
+kmcp deploy --dry-run --output ./deployment.yaml
 ```
 
 See the full demo here:
