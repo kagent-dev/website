@@ -181,7 +181,7 @@ const MarketingPage = () => {
                 </p>
                 <div className="flex space-x-4">
                   <Button variant="outline" asChild className="hover:scale-105 transition-transform hover:shadow-lg">
-                    <Link href="/docs/kmcp/getting-started">
+                    <Link href="/docs/kmcp/quickstart">
                       Quick Start
                     </Link>
                   </Button>
