@@ -77,11 +77,13 @@ in the `my-mcp-server` directory and a sample echo tool that you can later use t
 Use the `kmcp run` command to run your MCP server on your local machine so that you can test your MCP server and tools. 
 
 1. Run your MCP server on your local machine. The command builds the Docker image for your MCP server and automatically opens the MCP inspector tool so that you can connect to your MCP server and test it. 
+   
+   **Tip**: The following command automatically opens the MCP inspector tool so that you can test your MCP server. If you do not want to open the MCP inspector tool, add the `--no-inspector` option to your command. 
    ```sh
    kmcp run --project-dir my-mcp-server
    ```
 
-2. Click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
+2. In the MCP inspector tool, click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool. 
    * Select **STDIO** from the **Transport Type** drop down. 
    * In the **Command** section, enter `go`. 
    * In the **Arguments** section, enter `run main.go`.

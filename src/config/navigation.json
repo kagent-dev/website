@@ -198,7 +198,7 @@
           {
             "title": "FastMCP Python",
             "href": "/docs/kmcp/develop/fastmcp-python",
-            "description": ""
+            "description": "Create the MCP server with kmcp"
           },
           {
             "title": "MCP Go",

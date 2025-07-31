@@ -13,17 +13,18 @@ kmcp build [flags]
 ```
 
 **Flags:**
-- `--docker` - Build Docker image
-- `--output, -o` - Output directory or image name
-- `--tag, -t` - Docker image tag
+- `-h, --help` - Help for the command
+- `--kind-load` - Load image onto a kind cluster (requires kind)
+- `--kind-load-cluster` - Name of the kind cluster to load the image onto (default: current cluster context)
 - `--platform` - Target platform (e.g., linux/amd64, linux/arm64)
 - `--project-dir, -d` - Build directory (default: current directory)
-- `--verbose, -v` - Show detailed build output
+- `--push` - Push the Docker image to a container registry
+- `--tag, -t` - Docker image tag
 
 ## Example
 
-The following command creates a Docker image for the `my-mcp-server` project on your local machine and tags the image as latest. 
+The following command creates a Docker image for the `my-mcp-server` project on your local machine and tags the image as latest. The image is then loaded to a kind cluster named `kind`. 
 
 ```sh
-kmcp build --docker --tag latest --project-dir my-mcp-server -v    
+kmcp build --project-dir my-mcp-server -t my-mcp-server:latest --kind-load-cluster kind
 ```
