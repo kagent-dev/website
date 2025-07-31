@@ -112,7 +112,6 @@ After this, MCP services can be deployed and updated using Kubernetes-native wor
 ```console
 kmcp deploy \
     --image my-weather-server:v1.0.0 \
-    --transport http \
     --namespace tools \
     --port 3000 \
     --env "API_KEY=your-weather-api-key"
