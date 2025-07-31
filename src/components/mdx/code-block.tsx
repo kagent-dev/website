@@ -22,7 +22,7 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
   };
 
   if (!language || !className) {
-    return <code className='font-mono'>{children}</code>
+    return <code className='font-mono text-foreground'>{children}</code>
   }
 
   return (
