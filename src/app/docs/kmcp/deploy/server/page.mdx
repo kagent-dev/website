@@ -18,30 +18,24 @@ Use the kmcp controller to automatically spin up your MCP server in a Kubernetes
 
 - Create a [FastMCP](/docs/kmcp/develop/fastmcp-python) or [MCP Go](/docs/kmcp/develop/mcp-go) project with a sample MCP server and tool. 
 - [Install the KMCP controller](/docs/kmcp/deploy/server) in a local kind cluster to manage the lifecycle of MCP servers in your cluster. 
-
-## Build the MCP server image
-
-Use the `kmcp build` command to create a Docker image for your MCP server. The command uses the `Dockerfile` in your MCP project. 
-
-1. Build a Docker image from the code in your MCP project. The following command creates an `my-mcp-server:latest` image. 
-   ```sh
-   kmcp build --docker --tag latest --project-dir my-mcp-server -v
-   ```
-
-2. Load the image to your kind cluster. 
-   ```sh
-   kind load docker-image my-mcp-server:latest --name kind 
-   ```
    
 ## Deploy the MCP server
 
-1. Deploy your MCP server. Choose between the following options: 
+1. Build a Docker image for your MCP server and load it to your kind cluster. The following command assumes that your kind cluster is named `kind`.
+   ```sh
+   kmcp build --project-dir my-mcp-server -t my-mcp-server:latest --kind-load-cluster kind
+   ```
+
+2. Deploy your MCP server. Choose between the following options: 
    
-   * **Option 1: Use the kmcp build command**
+   * **Option 1: Use the kmcp deploy command**
      
-     The `kmcp build` command automatically creates the MCPServer resource for you and spins up the MCP server based on the configuration in the `kmcp.yaml` file. The following example spins up an MCP server for the `staging` environment.  
+     The `kmcp deploy` command automatically creates an MCPServer resource in your cluster that contains the MCP server configuration that is defined in the `kmcp.yaml` file in your MCP project. The kmcp controller then uses this resource to spin up and manage the lifecycle of your MCP server. After the MCP server is deployed, the command automatically starts the MCP inspector tool so that you can test your server. 
+     
+     **Tip**: If you do not want to start the MCP inspector tool, add the `--no-inspector` flag to the command. 
+     
      ```sh
-     kmcp deploy --environment staging --file my-mcp-server/kmcp.yaml
+     kmcp deploy --file my-mcp-server/kmcp.yaml --image my-mcp-server:latest
      ```
    
    * **Option 2: Create an MCPServer resource**
@@ -81,7 +75,7 @@ Use the `kmcp build` command to create a Docker image for your MCP server. The c
      EOF
      ```
 
-2. Verify that the MCP server is up and running. 
+3. Verify that the MCP server is up and running. 
    ```sh
    kubectl get pods
    ```
@@ -94,23 +88,24 @@ Use the `kmcp build` command to create a Docker image for your MCP server. The c
 
 ## Test access to the MCP server
 
-1. Port-forward the MCP server that you deployed. 
-   ```sh
-   kubectl port-forward deploy/my-mcp-server 3000
-   ```
+1. Run the MCP inspector tool. Note that if you used the `kmcp deploy` command to spin up your MCP server, the MCP inspector tool is already running. You can skip to the next step. 
+   1. Port-forward the MCP server that you deployed. 
+      ```sh
+      kubectl port-forward deploy/my-mcp-server 3000
+      ```
 
-2. Run the MCP inspector tool. In your CLI output, find the URL that the MCP inspector tool is exposed on. 
-   ```sh
-   npx @modelcontextprotocol/inspector
-   ```
+   2. Run the MCP inspector tool. In your CLI output, find the URL that the MCP inspector tool is exposed on. 
+      ```sh
+      npx @modelcontextprotocol/inspector
+      ```
    
-   Example output: 
-   ```sh
-   🚀 MCP Inspector is up and running at:
-   http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=8aca1a7088efc984e433fd750ed042b1881fbda3734282e3f0e524b00fc3e69f
-   ```
+      Example output: 
+      ```sh
+      🚀 MCP Inspector is up and running at:
+      http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=8aca1a7088efc984e433fd750ed042b1881fbda3734282e3f0e524b00fc3e69f
+      ```
    
-3. Open the MCP inspector tool by using the URL from the previous command. Then, connect to your MCP server. 
+2. In your MCP inspector tool, click **Connect** to connect to your MCP server. Note that it might take a few seconds for the MCP inspector tool to successfully connect to your MCP server. If the connection fails, make sure the following fields are set in the MCP inspector tool.
    * Select **Streamable HTTP** from the **Transport Type** drop down. 
    * Enter `http://127.0.0.1:3000/mcp` in the **URL** field. 
    * Expand the **Configuration** section and make sure that the **Proxy Session Token** is set to the value of the `PROXY_AUTH_TOKEN` that was shown in the CLI output when you opened the MCP inspector tool. 

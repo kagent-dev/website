@@ -13,26 +13,30 @@ kmcp deploy [name] [flags]
 ```
 
 **Flags:**
-- `--namespace, -n` - Kubernetes namespace (default: "default")
+- `--args` - Command arguments
+- `--command` - Command to run (overrides project config)
 - `--dry-run` - Generate manifest without applying to cluster
-- `--output, -o` - Output file for the generated YAML
+- `--env` - Environment variables (KEY=VALUE)
+- `--environment` - Target environment for deployment (e.g., staging, production) (default: "staging")
+- `--file, -f` - Path to kmcp.yaml file (default: current directory)
+- `--force` - Force deployment even if validation fails
+- `-h, --help` - Help for the command
 - `--image` - Docker image to deploy (overrides build image)
-- `--transport` - Transport type (stdio, http)
+- `--namespace, -n` - Kubernetes namespace (default: "default")
+- `--no-inspector` - Do not start the MCP inspector tool when deploying the MCP server
+- `--output, -o` - Output file for the generated YAML
 - `--port` - Container port (default: from project config)
 - `--target-port` - Target port for HTTP transport
-- `--command` - Command to run (overrides project config)
-- `--args` - Command arguments
-- `--env` - Environment variables (KEY=VALUE)
-- `--force` - Force deployment even if validation fails
-- `--file, -f` - Path to kmcp.yaml file (default: current directory)
-- `--environment` - Target environment for deployment (e.g., staging, production) (default: "staging")
+- `--transport` - Transport type (stdio, http)
+
+**Global Flags:**
 - `--verbose, -v` - Show detailed output
 
 ## Example
 
-The following example spins up an MCP server in the staging environment that is defined in the `my-mcp-server/kmcp.yaml` file. 
+The following example spins up an MCP server in the staging environment with the configuration that is defined in the `my-mcp-server/kmcp.yaml` file. To spin up the server, you use the `my-mcp-server:latest` image. The command automatically opens the MCP inspector tool so that you can test your MCP server.  
 
 ```sh
-kmcp deploy --environment staging --file my-mcp-server/kmcp.yaml
+kmcp deploy --environment staging --file my-mcp-server/kmcp.yaml --image my-mcp-server:latest
 ```
 

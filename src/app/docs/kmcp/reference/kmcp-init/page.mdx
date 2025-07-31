@@ -17,17 +17,22 @@ kmcp init [subcommand] [project-name] [flags]
 - `go [project-name]` - Initialize a Go MCP server project using mcp-go
 
 **Flags:**
-- `--force` - Overwrite existing directory
-- `--no-git` - Skip git initialization
 - `--author` - Set project author
-- `--email` - Set author email
 - `--description` - Set project description
-- `--non-interactive` - Use defaults without prompts
+- `--email` - Set author email
+- `--force` - Overwrite existing directory
+- `-h, --help` - Help for the command
 - `--namespace` - Default namespace for project resources (default: "default")
-- `--verbose, -v` - Show detailed output
+- `--no-git` - Skip git initialization
+- `--non-interactive` - Use defaults without prompts
 
 **Go-specific Flags:**
 - `--go-module-name` - The Go module name for the project (e.g., github.com/my-org/my-project)
+
+
+**Global Flags:**
+- `--verbose, -v` - Show detailed output
+
 
 ## Example
 

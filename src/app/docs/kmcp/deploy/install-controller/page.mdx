@@ -38,6 +38,22 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    kmcp install
    ``` 
    
+   Example output: 
+   ```sh
+   🚀 Deploying KMCP controller to cluster...
+   No version specified, using latest: v0.1.0
+   Release "kmcp" does not exist. Installing it now.
+   NAME: kmcp
+   LAST DEPLOYED: Wed Jul 30 18:41:01 2025
+   NAMESPACE: kmcp-system
+   STATUS: deployed
+   REVISION: 1
+   TEST SUITE: None
+   ✅ KMCP controller deployed successfully
+   💡 Check controller status with: kubectl get pods -n kmcp-system
+   💡 View controller logs with: kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
+   ```
+   
 3. Verify that the kmcp controller manager is up and running. 
    ```sh
    kubectl get pods -n kmcp-system
@@ -47,6 +63,11 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    ```sh
    NAME                                       READY   STATUS    RESTARTS   AGE
    kmcp-controller-manager-66c8764c66-8h5sl   1/1     Running   0          27h
+   ```
+   
+4. Optional: Look at the logs of the kmcp controller manager. 
+   ```sh
+   kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
    ```
 
 ## Next
