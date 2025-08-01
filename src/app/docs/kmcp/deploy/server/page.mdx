@@ -89,14 +89,14 @@ Use the kmcp controller to automatically spin up your MCP server in a Kubernetes
 ## Test access to the MCP server
 
 1. Run the MCP inspector tool. Note that if you used the `kmcp deploy` command to spin up your MCP server, the MCP inspector tool is already running. You can skip to the next step. 
-   1. Port-forward the MCP server that you deployed. 
+   1. Port-forward the MCP server that you deployed.  
       ```sh
       kubectl port-forward deploy/my-mcp-server 3000
       ```
 
    2. Run the MCP inspector tool. In your CLI output, find the URL that the MCP inspector tool is exposed on. 
       ```sh
-      npx @modelcontextprotocol/inspector
+      npx @modelcontextprotocol/inspector   
       ```
    
       Example output: 
