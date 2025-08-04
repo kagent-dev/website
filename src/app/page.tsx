@@ -12,6 +12,12 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import Image from "next/image";
 import { motion } from "framer-motion";
 import KMCPIcon from "@/components/icons/kmcpicon";
+import adopters from "@/data/adopters.yaml";
+
+interface Adopter {
+  name: string;
+  logo: string;
+}
 
 const MarketingPage = () => {
   const benefits = [
@@ -259,6 +265,27 @@ const MarketingPage = () => {
                 GitHub
               </Link>
             </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Adopters Section */}
+      <div className="py-32 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-4xl font-medium text-center mb-20 text-foreground">Who uses our <span className="text-violet-500 font-semibold">projects</span></h2>
+          <div className="overflow-x-auto">
+            <div className="flex justify-center items-center gap-10 flex-wrap">
+              {adopters.adopters.map((adopter: Adopter, index: number) => (
+                <div key={index} className="flex justify-center items-center">
+                  <Image src={adopter.logo} alt={adopter.name} width={150} height={100} className="object-contain" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="text-center mt-10">
+            <Link href="https://github.com/kagent-dev/website" target="_blank" rel="noopener noreferrer" className="text-sm underline hover:underline hover:text-primary">
+              Add your logo here
+            </Link>
           </div>
         </div>
       </div>
