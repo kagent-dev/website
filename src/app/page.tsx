@@ -283,7 +283,7 @@ const MarketingPage = () => {
             </div>
           </div>
           <div className="text-center mt-10">
-            <Link href="https://github.com/kagent-dev/website" target="_blank" rel="noopener noreferrer" className="text-sm underline hover:underline hover:text-primary">
+            <Link href="https://github.com/kagent-dev/website?tab=readme-ov-file#adopters" target="_blank" rel="noopener noreferrer" className="text-sm underline hover:underline hover:text-primary">
               Add your logo here
             </Link>
           </div>
