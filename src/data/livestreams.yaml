@@ -143,6 +143,20 @@ communityMeetings:
 
   - date: "July 22, 2025"
     title: "All Things AI Agents community meeting"
+    url: "https://www.youtube.com/watch?v=gRqcmbAZb_k"
+    description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
+    meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
+    status: "completed"
+
+  - date: "July 27, 2025"
+    title: "All Things AI Agents community meeting"
+    url: "https://www.youtube.com/watch?v=oqbOAR6E0V0"
+    description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
+    meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
+    status: "completed"
+
+  - date: "August 5, 2025"
+    title: "All Things AI Agents community meeting"
     url: ""
     description: "Join us for the questions, discussions and demos in the All Things AI Agents community meeting"
     meetingNotes: "https://docs.google.com/document/d/1rfXZSLIA4GXyTiwzJqSbAbbJIgL6kF0h00lrMnPh-KM/edit?tab=t.0#heading=h.o8pz6aqnzzgk"
