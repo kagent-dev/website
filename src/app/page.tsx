@@ -11,7 +11,7 @@ import KagentLogo from "@/components/icons/kagent-logo";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import MCPIcon from "@/components/icons/mcp";
+import KMCPIcon from "@/components/icons/kmcpicon";
 
 const MarketingPage = () => {
   const benefits = [
@@ -169,7 +169,7 @@ const MarketingPage = () => {
               <div className="relative bg-muted/50 backdrop-blur-sm border border-border rounded-3xl p-10">
                 <div className="flex items-center mb-8">
                   <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mr-6">
-                    <MCPIcon className="w-10 h-10 text-primary" />
+                    <KMCPIcon className="w-8 h-8 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-3xl font-semibold text-foreground">kmcp</h3>
