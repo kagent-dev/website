@@ -25,4 +25,4 @@ For instructions on how to contribute to the kagent website project, see the [CO
 
 ## Adopters
 
-We’d love to highlight kagent adopters on our website! 🌟 If you're using kagent in a dev/test or production environment, feel free to add yourself to the [adopters file](src/data/adopters.yaml) by submitting a PR with your company name and logo. Thank you for your support! 💖
+We’d love to highlight kagent or kmcp adopters on our website! 🌟 If you're using kagent or kmcp in a dev/test or production environment, feel free to add yourself to the [adopters file](src/data/adopters.yaml) by submitting a PR with your company name and logo. Thank you for your support! 💖
