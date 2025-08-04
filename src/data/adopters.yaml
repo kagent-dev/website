@@ -1,0 +1,9 @@
+# List of companies using kagent/kmcp
+# To add your company logo:
+# 1. Add a logo to /public/images/adopters folder
+# 2. Reference the logo and company name here
+# 3. Submit a pull request
+
+adopters:
+  - name: "Solo.io"
+    logo: "/images/adopters/solo-io.png"
