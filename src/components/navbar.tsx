@@ -3,10 +3,18 @@ import Link from "next/link";
 import { GITHUB_LINK } from "@/data/links";
 import { useState } from "react";
 import KAgentLogoWithText from "./icons/kagent-logo-text";
+import KagentLogo from "./icons/kagent-logo";
+import KMCPIcon from "./icons/kmcpicon";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { DocSearch } from "@docsearch/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,9 +31,33 @@ export default function Navbar() {
             <Button variant="link" className="text-secondary-foreground" asChild>
               <Link href="/blog">Blog</Link>
             </Button>
-            <Button variant="link" className="text-secondary-foreground" asChild>
-              <Link href="/docs">Docs</Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="link"
+                  className="text-secondary-foreground flex items-center"
+                >
+                  Docs
+                  <ChevronDown className="ml-1 w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-white shadow-md rounded-md py-2" align="start">
+                <DropdownMenuItem 
+                  onClick={() => window.location.href = '/docs/kagent'}
+                  className="flex items-center space-x-2 hover:bg-primary/10 cursor-pointer transition-colors group"
+                >
+                  <KagentLogo className="w-4 h-4 transition-colors group-hover:text-primary" />
+                  <span>kagent</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => window.location.href = '/docs/kmcp'}
+                  className="flex items-center space-x-2 hover:bg-primary/10 cursor-pointer transition-colors group"
+                >
+                  <KMCPIcon className="w-4 h-4 transition-colors group-hover:text-primary" />
+                  <span>kMCP</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="link" className="text-secondary-foreground" asChild>
               <Link href="/tools">Tools</Link>
             </Button>
@@ -71,9 +103,33 @@ export default function Navbar() {
               <Button variant="ghost" className="justify-start" asChild>
                 <Link href="/blog">Blog</Link>
               </Button>
-              <Button variant="ghost" className="justify-start" asChild>
-                <Link href="/docs">Docs</Link>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="justify-start flex items-center"
+                  >
+                    Docs
+                    <ChevronDown className="ml-1 w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-white shadow-md rounded-md py-2" align="start">
+                  <DropdownMenuItem 
+                    onClick={() => window.location.href = '/docs/kagent'}
+                    className="flex items-center space-x-2 hover:bg-primary/10 cursor-pointer transition-colors group"
+                  >
+                    <KagentLogo className="w-4 h-4 transition-colors group-hover:text-primary" />
+                    <span>KAgent</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => window.location.href = '/docs/kmcp'}
+                    className="flex items-center space-x-2 hover:bg-primary/10 cursor-pointer transition-colors group"
+                  >
+                    <KMCPIcon className="w-4 h-4 transition-colors group-hover:text-primary" />
+                    <span>KMCP</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" className="justify-start" asChild>
                 <Link href="/tools">Tools</Link>
               </Button>
