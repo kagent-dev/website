@@ -168,7 +168,7 @@ const CommunityPage = () => {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-4xl font-light tracking-tight mb-4">
-            Join Our Community
+            Join Our Community DONT MERGE!
           </h1>
           <p className="text-muted-foreground max-w-5xl mx-auto">
             Connect with other kagent users, contribute to the project, and stay updated with our latest events and livestreams.
