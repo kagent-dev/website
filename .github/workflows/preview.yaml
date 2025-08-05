@@ -11,12 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the site
+        run: npm run build:worker
+
       - name: Create website preview
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v3.14.1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: versions upload
+
       - name: Print website URL
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
