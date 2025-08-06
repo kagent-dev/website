@@ -7,5 +7,7 @@
 adopters:
   - name: "Solo.io"
     logo: "/images/adopters/solo-io.png"
+    website: "https://solo.io/"
   - name: "Amdocs"
     logo: "/images/adopters/amdocs.png"
+    website: "https://www.amdocs.com/"
