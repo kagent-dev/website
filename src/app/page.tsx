@@ -17,6 +17,7 @@ import adopters from "@/data/adopters.yaml";
 interface Adopter {
   name: string;
   logo: string;
+  website: string;
 }
 
 const MarketingPage = () => {
@@ -277,7 +278,9 @@ const MarketingPage = () => {
             <div className="flex justify-center items-center gap-10 flex-wrap">
               {adopters.adopters.map((adopter: Adopter, index: number) => (
                 <div key={index} className="flex justify-center items-center">
-                  <Image src={adopter.logo} alt={adopter.name} width={150} height={100} className="object-contain" />
+                  <Link href={adopter.website} target="_blank" rel="noopener noreferrer">
+                    <Image src={adopter.logo} alt={adopter.name} width={150} height={100} className="object-contain" />
+                  </Link>
                 </div>
               ))}
             </div>
