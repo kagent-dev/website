@@ -21,3 +21,7 @@ adopters:
   - name: "Au10tix"
     logo: "/images/adopters/au10tix.png"
     website: "https://www.au10tix.com"
+  - name: "Krateo"
+    logo_dark: "/images/adopters/krateo-dark.svg"
+    logo_light: "/images/adopters/krateo-light.svg"
+    website: "https://krateo.io/"
