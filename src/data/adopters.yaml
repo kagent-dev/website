@@ -3,10 +3,17 @@
 # 1. Add a logo to /public/images/adopters folder
 # 2. Reference the logo and company name here
 # 3. Submit a pull request
+#
+# Logo options:
+# - Use 'logo' for a single logo that works in both light and dark modes
+# - Use 'logo_light' and 'logo_dark' for separate logos optimized for each mode
+#   (logo_light is display on light mode, and logo_dark on dark mode)
+# - If only one logo is provided, it will be used for both modes
 
 adopters:
   - name: "Solo.io"
-    logo: "/images/adopters/solo-io.png"
+    logo_dark: "/images/adopters/solo-io-dark.png"
+    logo_light: "/images/adopters/solo-io-light.png"
     website: "https://solo.io/"
   - name: "Amdocs"
     logo: "/images/adopters/amdocs.png"

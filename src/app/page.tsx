@@ -13,14 +13,35 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import KMCPIcon from "@/components/icons/kmcpicon";
 import adopters from "@/data/adopters.yaml";
+import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 
 interface Adopter {
   name: string;
-  logo: string;
+  logo?: string;
+  logo_light?: string;
+  logo_dark?: string;
   website: string;
 }
 
 const MarketingPage = () => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Helper function to get the appropriate logo based on theme
+  const getAdopterLogo = (adopter: Adopter): string => {
+    // If separate light/dark logos are provided, use them based on theme
+    if (adopter.logo_light && adopter.logo_dark && mounted) {
+      return resolvedTheme === 'dark' ? adopter.logo_dark : adopter.logo_light;
+    }
+    // Fall back to single logo or light logo if not mounted yet
+    return adopter.logo || adopter.logo_light || '';
+  };
+
   const benefits = [
     {
       title: "Open Standards",
@@ -279,7 +300,13 @@ const MarketingPage = () => {
               {adopters.adopters.map((adopter: Adopter, index: number) => (
                 <div key={index} className="flex justify-center items-center">
                   <Link href={adopter.website} target="_blank" rel="noopener noreferrer">
-                    <Image src={adopter.logo} alt={adopter.name} width={150} height={100} className="object-contain" />
+                    <Image
+                      src={getAdopterLogo(adopter)}
+                      alt={adopter.name}
+                      width={150}
+                      height={100}
+                      className="object-contain"
+                    />
                   </Link>
                 </div>
               ))}
