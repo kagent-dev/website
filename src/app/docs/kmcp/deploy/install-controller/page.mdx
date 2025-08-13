@@ -29,7 +29,15 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    kind create cluster
    ```
 
-2. Install the following kmcp controller components in your cluster. 
+2. Install the kmcp CRDs.
+
+   ```sh
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kmcp-system \
+     --create-namespace
+   ```
+
+3. Install the following kmcp controller components in your cluster. 
    * The MCPServer Custom Resource Definition to define your MCP server. 
    * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the kmcp controller.
    * The kmcp controller deployment that automatically manages the lifecycle of MCPServer resources. 
@@ -54,7 +62,7 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    💡 View controller logs with: kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
    ```
    
-3. Verify that the kmcp controller manager is up and running. 
+4. Verify that the kmcp controller manager is up and running. 
    ```sh
    kubectl get pods -n kmcp-system
    ```
@@ -65,7 +73,7 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    kmcp-controller-manager-66c8764c66-8h5sl   1/1     Running   0          27h
    ```
    
-4. Optional: Look at the logs of the kmcp controller manager. 
+5. Optional: Look at the logs of the kmcp controller manager. 
    ```sh
    kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
    ```
