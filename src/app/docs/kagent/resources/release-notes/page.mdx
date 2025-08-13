@@ -24,7 +24,7 @@ Review the main changes from kagent version 0.5 to v0.6, then continue reading f
 * API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
 * The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
 * The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
-* The ModelConfig APIs rename the secret name field from `apiKeySecretRef` to `apiKeySecret`.
+* The ModelConfig APIs rename the secret name field from `apiKeySecret` to `apiKeySecret`.
 
 ## New! Helm chart for kmcp CRDs
 
@@ -397,4 +397,4 @@ spec:
 
 ## ModelConfig API
 
-The secret name field is renamed from `apiKeySecretRef` to `apiKeySecret`.
+The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.

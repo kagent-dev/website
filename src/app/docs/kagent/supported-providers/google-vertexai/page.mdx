@@ -29,7 +29,7 @@ metadata:
   name: gemini-model-config-vertexai
   namespace: kagent
 spec:
-  apiKeySecretRef: kagent-google-creds
+  apiKeySecret: kagent-google-creds
   apiKeySecretKey: google_creds.json
   model: gemini-2.0-flash-lite
   provider: GeminiVertexAI
@@ -48,7 +48,7 @@ metadata:
   name: anthropic-model-config-vertexai
   namespace: kagent
 spec:
-  apiKeySecretRef: kagent-google-creds
+  apiKeySecret: kagent-google-creds
   apiKeySecretKey: google_creds.json
   model: claude-sonnet-4@20250514
   provider: AnthropicVertexAI
