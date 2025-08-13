@@ -99,64 +99,47 @@ Once you're in the kagent UI, you can start interacting with the pre-configured 
 
 ## Using the CLI
 
-Interact with kagent in your terminal. Note that to use the CLI, you must have installed kagent with `kagent install` command.
+Interact with kagent in your terminal.
 
-1. Run *kagent* to start an interactive REPL environment with kagent. You can enter `help` to view the available commands.
+1. Review the available commands.
 
    ```shell
-   kagent >> help
+   kagent help
    
-   Commands:
-   Commands:
-     bug-report      Generate a bug report with system information
-     clear           clear the screen
-     dashboard       Open the kagent dashboard.
-     exit            exit the program
-     get             get kagent resources.
-     help            display help
-     install         Install kagent.
-     run             Run a kagent agent
-     uninstall       Uninstall kagent.
-     version         Print the kagent version.
+   Available Commands:
+     bug-report  Generate a bug report
+     completion  Generate the autocompletion script for the specified shell
+     dashboard   Open the kagent dashboard
+     get         Get a kagent resource
+     help        Help about any command
+     install     Install kagent
+     invoke      Invoke a kagent agent
+     uninstall   Uninstall kagent
+     version     Print the kagent version
    ```
 
 2. List the current agents.
 
-```shell
-kagent >> get agents
-+---+---------------------+----+----------------------------+
-| # | NAME                | ID | CREATED                    |
-+---+---------------------+----+----------------------------+
-| 0 | helm-agent          | 2  | 2025-03-13T19:08:14.527935 |
-| 1 | observability-agent | 3  | 2025-03-13T19:08:14.348957 |
-| 2 | istio-agent         | 1  | 2025-03-13T19:08:13.794848 |
-+---+---------------------+----+----------------------------+
-```
-
-3. To start a new agent, run the `run chat` command:
-
    ```shell
-   kagent >> run chat [agent-name] [session-name] [initial-task]
-   ```
-   If you don't provide any flags, it will prompt you for the values:
-   
-   ```shell
-   kagent >> run chat
-   
-   Select an agent:
-      observability-agent
-      istio-agent
-    ❯ helm-agent
-   
-   Select a session:
-    ❯ [New Session]
-   Enter a session name: test
-   Enter a task: What helm chart are installed in my cluster?
+   kagent get agents
+   +---+---------------------+----+----------------------------+
+   | # | NAME                | ID | CREATED                    |
+   +---+---------------------+----+----------------------------+
+   | 0 | helm-agent          | 2  | 2025-03-13T19:08:14.527935 |
+   | 1 | observability-agent | 3  | 2025-03-13T19:08:14.348957 |
+   | 2 | istio-agent         | 1  | 2025-03-13T19:08:13.794848 |
+   +---+---------------------+----+----------------------------+
    ```
 
-4. Enter a task. Then, the agent starts running and you'll see the conversation in the CLI.
+3. Interact with an agent with the `invoke` command. The agent is called and a conversation starts.
 
    ```shell
+   kagent invoke -t "What Helm charts are in my cluster?" --agent helm-agent
+   ```
+   
+   Example output:
+
+   ```console
    Event Type: ToolCall(s)
    Source: helm_agent
    +---+--------------------+-----------------------------------------+
