@@ -26,7 +26,6 @@ bundler
 # misc
 .DS_Store
 *.pem
-.githooks
 
 # debug
 npm-debug.log*

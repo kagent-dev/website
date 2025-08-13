@@ -33,12 +33,6 @@ Previously, the kagent CRD Helm chart installed the CRDs for both kagent and kmc
 * kagent CRD Helm chart location (no change): `oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds`
 * kmcp CRD Helm chart location: `oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds`
 
-
-
-
-
-
-
 ## General API changes
 
 API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
