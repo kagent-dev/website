@@ -19,192 +19,221 @@ In this guide, you'll learn how to add an MCP tool to your first AI agent using 
 
 ## Prerequisites
 
-Before you begin make sure you have a Kubernetes cluster with kagent installed. If you haven't done this yet, check out the [installation guide](/docs/kagent/introduction/installation) or the [quickstart guide](/docs/kagent/getting-started/quickstart).
+1. Install kagent in a Kubernetes cluster. If you haven't done this yet, check out the [installation guide](/docs/kagent/introduction/installation) or the [quickstart guide](/docs/kagent/getting-started/quickstart).
 
-We'll be working with the kagent custom resources, so make sure you have them present on your cluster:
+2. Make sure that you have the kagent custom resources in your cluster.
+
+   ```shell
+   kubectl get crd | grep kagent.dev
+   ```
+
+## Creating an agent
+
+To create an agent, follow the [Your First Agent guide](/docs/kagent/getting-started/first-agent).
+
+Take a look at the Agent custom resource for your first agent, such as with the following command.
 
 ```shell
-kubectl get crd | grep kagent.dev
+kubectl get agent my-first-k8s-agent -n kagent -o yaml
 ```
 
-## Creating the agent
+Example output: Pay attention to the following details:
 
-Similar to the [first agent](/docs/kagent/getting-started/first-agent) guide, we will first create a simple agent that can interact with the cluster. This time we will use the `Agent` resource to create the agent.
+* The `type` field is set to `Inline`. This means that the agent is using an inline model configuration and system message, as opposed to `BYO` where you can bring your own agent configuration separately.
+* The `inline` field contains the model configuration and system message.
+* The `systemMessage` field contains the system message that the agent will use. Note that the way you structure your instructions is up to you. You can add more details, or simplify them as needed. It's important to make sure the instructions are clear and easy to follow.
+* The `tools` field contains the tools that the agent can run to interact with the environment. The tools refer to a RemoteMCPServer, because these tools are built in to kagent. However, you can also create your own MCPServer or regular Kubernetes Service and designate the Service as for MCP use.
+* The `status` shows that the agent is accepted and ready.
 
-```shell
-kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha1
+```yaml
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
-  name: simple-k8s-agent
+  creationTimestamp: "2025-08-13T18:05:07Z"
+  generation: 1
+  name: my-first-k8s-agent
   namespace: kagent
 spec:
-  description: This agent can interact with the Kubernetes API to get information about the cluster.
-  modelConfig: default-model-config
-  systemMessage: |-
-    You're a friendly and helpful agent that uses Kubernetes tools to answer user questions about the cluster.
-
-    # Instructions
-
-    - If user question is unclear, ask for clarification before running any tools
-    - Always be helpful and friendly
-    - If you don't know how to answer the question DO NOT make things up
-      respond with "Sorry, I don't know how to answer that" and ask the user to further clarify the question
-
-    # Response format
-    - ALWAYS format your response as Markdown
-    - Your response will include a summary of actions you took and an explanation of the result
-  tools:
-    - type: McpServer
-      mcpServer:
-        toolServer: kagent-tool-server
+  description: This agent can interact with the Kubernetes API to get information
+    about the cluster.
+  type: Inline
+  inline: 
+    modelConfig: default-model-config
+    systemMessage: |-
+      You're a friendly and helpful agent that uses Kubernetes tools to answer users questions about the cluster.
+  
+      # Instructions
+      - If user question is unclear, ask for clarification before running any tools
+      - Always be helpful and friendly
+      - If you don't know how to answer the question DO NOT make things up
+        respond with "Sorry, I don't know how to answer that" and ask the user to further clarify the question
+        If you are unable to help, or something goes wrong, refer the user to https://kagent.dev for more information or support.
+  
+      # Response format
+      - ALWAYS format your response as Markdown
+      - Your response will include a summary of actions you took and an explanation of the result
+    tools:
+    - mcpServer:
+        apiGroup: kagent.dev
+        kind: RemoteMCPServer
+        name: kagent-tool-server
+        toolNames:
+        - k8s_get_available_api_resources
+      type: McpServer
+    - mcpServer:
+        apiGroup: kagent.dev
+        kind: RemoteMCPServer
+        name: kagent-tool-server
         toolNames:
         - k8s_get_resources
-        - k8s_get_available_api_resources
-EOF
+      type: McpServer
+status:
+  conditions:
+  - lastTransitionTime: "2025-08-13T18:05:07Z"
+    message: ""
+    reason: AgentReconciled
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2025-08-13T18:05:23Z"
+    message: Deployment is ready
+    reason: DeploymentReady
+    status: "True"
+    type: Ready
+  configHash: 297ryAv8Xqp/ib2XUWNeDphuiqwA1wk7DAxt+E1vQhQ=
+  observedGeneration: 1
 ```
 
->Note that the way you structure your instructions is up to you. You can add more details, or simplify them as needed. It's important to make sure the instructions are clear and easy to follow.
+## Configuring MCP tools
 
-We'll leave the default model (GPT-4o) selected and move to the next step.
+Now that you've reviewed an existing agent that uses MCP tools, let's create our own from scratch.
 
-## Adding tools
+The following example creates an agent that can retrieve information from a website. You create a [simple MCP example server](https://github.com/peterj/mcp-website-fetcher/pkgs/container/mcp-website-fetcher) that only has one tool, the fetch tool. The fetch tool takes a URL as input and returns the contents of the page.
 
-Tools are the other building block of the agent. They are the commands that the agent can run to interact with the environment. As LLMs don't have the ability to run commands, tools are the way to bridge the gap between the agent and the environment. Kagent provides a set of built-in tools that you can use to interact with Kubernetes, Istio, Prometheus and projects. You can also [build your own tools](/tools)!
+1. Create a Deployment for the MCP server.
 
-In our Agent resource, we added two tools:
-- `GetResources`, which will enable the agent to run *kubectl get* command and retrieve resources running in the cluster. 
-- `GetAvailableAPIResources`, which will enable the agent to get a list of available API resources in the cluster.
+   ```yaml 
+   kubectl apply -f - <<EOF
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: mcp-website-fetcher
+     namespace: kagent
+     labels:
+       app: mcp-website-fetcher
+   spec:
+     replicas: 1
+     selector:
+       matchLabels:
+         app: mcp-website-fetcher
+     template:
+       metadata:
+         labels:
+           app: mcp-website-fetcher
+       spec:
+         containers:
+           - name: mcp-website-fetcher
+             image: ghcr.io/peterj/mcp-website-fetcher:sha-d2db5b3
+             imagePullPolicy: IfNotPresent
+             ports:
+               - containerPort: 8000
+             resources:
+               limits:
+                 cpu: "500m"
+                 memory: "256Mi"
+               requests:
+                 cpu: "100m"
+                 memory: "128Mi"
+             livenessProbe:
+               httpGet:
+                 path: /sse
+                 port: 8000
+               initialDelaySeconds: 10
+               periodSeconds: 30
+   EOF
+   ```
 
-### Test out the agent 
+2. Create a Service with special configuration that designates the Service as an MCP server for kagent to process.
 
-Let's test out the agent by asking it a question. First we need to open the kagent dashboard and select the agent we just created. We can either use the `kagent` CLI tool to open the dashboard or port-forward manually:
+   * Label: Add the `kagent.dev/mcp-service: "true"` label to the Service so that kagent can discover the tools for the Service.
+   * App protocol: In the `spec.ports` section, set the `appProtocol: mcp`. You must set this field for kagent to pick up the Service as an MCP server.
+   * Annotations: You can use the following annotations to further configure the your MCP Service.
+     * `kagent.dev/mcp-service-path`: Set the path on which the MCP server lives. The default value is `/mcp`.
+     * `kagent.dev/mcp-service-port`: Set the port number to be used. No port is set by default.
+     * `kagent.dev/mcp-service-port`: Set the protocol to use. Accepted values are SSE or STREAMABLE_HTTP. The default value is STREAMABLE_HTTP.
 
-```shell
-kubectl -n kagent port-forward svc/kagent 8001:80
-```
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: mcp-website-fetcher
+     namespace: kagent
+     labels:
+       kagent.dev/mcp-service: "true"
+     annotations:
+       kagent.dev/mcp-service-path: /sse
+       kagent.dev/mcp-service-port: 8000
+       kagent.dev/mcp-service-protocol: SSE
+   spec:
+     selector:
+       app: mcp-website-fetcher
+     ports:
+       - port: 80
+         targetPort: 8000
+     type: ClusterIP
+   EOF
+   ```
 
-![discover agent](/images/first-agent-discovery.png "Dashboard showing the discovered agent")
+3. Create an Agent resource. Note that in the `tools` section, you refer to the MCP Service that you just created. One tool is included, the fetch tool. Even if the MCP server has multiple tools, you can decide which tools to include for this particular agent. The tool takes a single input parameter: the URL to fetch. You do not have to include the input schema, however. Kagent automatically discovers the input schema from the tool itself.
 
-In the chat interface, type "What pods are running in the cluster?" and press enter. The agent should respond with a list of pods running in the cluster and a call using the `GetResources` tool.
-
-![first agent chat](/images/first-agent-chat.png "Dashboard showing the first agent chat")
-
-### Configuring MCP tools
-
-Let's create an agent that uses the MCP tools to retrieve information from a website using the Kagent resources. For this example, we will use a [simple MCP example server](https://github.com/peterj/mcp-website-fetcher/pkgs/container/mcp-website-fetcher) that only has one tool - the fetch tool. The fetch tool will take a URL as input and return the contents of the page.
-
-First let's apply a simple MCP server that will run in our cluster:
-```shell 
-kubectl apply -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mcp-website-fetcher
-  namespace: kagent
-  labels:
-    app: mcp-website-fetcher
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mcp-website-fetcher
-  template:
-    metadata:
-      labels:
-        app: mcp-website-fetcher
-    spec:
-      containers:
-        - name: mcp-website-fetcher
-          image: ghcr.io/peterj/mcp-website-fetcher:sha-d2db5b3
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8000
-          resources:
-            limits:
-              cpu: "500m"
-              memory: "256Mi"
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-          livenessProbe:
-            httpGet:
-              path: /sse
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 30
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mcp-website-fetcher
-  namespace: kagent
-spec:
-  selector:
-    app: mcp-website-fetcher
-  ports:
-    - port: 80
-      targetPort: 8000
-  type: ClusterIP
-EOF
-```
-
-Now in addition to the `Agent` resource, we need to define a `ToolServer` resource:
-
-```shell
-kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha1
-kind: Agent
-metadata:
-  name: simple-fetch-agent
-  namespace: kagent
-spec:
-  description: This agent can use a single tool to retrieve the contents of a webpage.
-  modelConfig: default-model-config
-  systemMessage: |-
-    You're a friendly and helpful agent that uses the fetch tool to retrieve webpage contents.
-
-    # Instructions
-
-    - If user question is unclear, ask for clarification before running any tools
-    - Always be helpful and friendly
-    - If you don't know how to answer the question DO NOT make things up
-      respond with "Sorry, I don't know how to answer that" and ask the user to further clarify the question
-
-    # Response format
-    - ALWAYS format your response as Markdown
-    - Your response will include a summary of actions you took and an explanation of the result
-  tools:
-  - type: McpServer
-    mcpServer:
-      toolServer: mcp-toolserver
-      toolNames:
-      - fetch
----
-apiVersion: kagent.dev/v1alpha1
-kind: ToolServer
-metadata:
-  name: mcp-toolserver
-  namespace: kagent
-spec:
-  description: Fetches a website and returns its content
-  config:
-    sse:
-      url: http://mcp-website-fetcher.kagent.svc.cluster.local/sse
-EOF
-```
-
-MCP tools require a little more additional configuration before they can be used by agents. 
-
-You will notice that we're configuring the MCP server by pointing to the URL of the service we just deployed. The tool section defines the tool that the agent will use. In this case, we'll use a tool called fetch that takes a single input parameter - the URL to fetch. The input schema is discovered from the tool itself so you do not need to specify it.
-
->Note that MCP servers can implement multiple tools and as an agent developer you can decide which tools to use.
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha1
+   kind: Agent
+   metadata:
+     name: simple-fetch-agent
+     namespace: kagent
+   spec:
+     description: This agent can use a single tool to retrieve the contents of a webpage.
+     type: Inline
+     inline:
+       modelConfig: default-model-config
+       systemMessage: |-
+         You're a friendly and helpful agent that uses the fetch tool to retrieve webpage contents.
+     
+         # Instructions
+     
+         - If user question is unclear, ask for clarification before running any tools
+         - Always be helpful and friendly
+         - If you don't know how to answer the question DO NOT make things up
+           respond with "Sorry, I don't know how to answer that" and ask the user to further clarify the question
+     
+         # Response format
+         - ALWAYS format your response as Markdown
+         - Your response will include a summary of actions you took and an explanation of the result
+       tools:
+       - type: McpServer
+         mcpServer:
+           name: mcp-website-fetcher
+           kind: Service
+           toolNames:
+           - fetch
+   EOF
+   ```
 
 ## Testing the agent with the MCP tool
 
-Now let's try our agent out with the new integration. Open the kagent dashboard and select the agent we just created. You should see a new tool appear in the tool list.
+Now let's try our agent out with the fetch tool. 
 
-Now let's ask our agent a question. Type "Show me the contents of the https://en.wikipedia.org/wiki/Service_mesh website?" and press enter. The agent should respond with the contents of the website.
+1. Open the kagent dashboard.
+
+   ```shell
+   kagent dashboard
+   ```
+
+2. Select the **simple-fetch-agent** that you just created. Under **Agent Details**, you see the **fetch** tool.
+
+3. In the chat box, enter `"Show me the contents of the https://en.wikipedia.org/wiki/Service_mesh website?"` and click **Send**. The agent responds with the contents of the website.
 
 ![mcp tool call](/images/mcp-tool-call.png "Dashboard showing the agent chat with MCP tool call")
 
