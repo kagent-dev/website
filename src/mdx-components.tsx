@@ -1,6 +1,7 @@
 import type { MDXComponents } from "mdx/types";
 import { useMemo } from "react";
 import { PlatformTabs } from "./components/mdx/platform-tabs";
+import { Tabs } from "./components/mdx/tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
 import Image from "next/image";
@@ -111,6 +112,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       // Pre (for code blocks)
       pre: ({ children }) => <>{children}</>,
       PlatformTabs,
+      Tabs,
       YouTube,
       ...components,
     }),
