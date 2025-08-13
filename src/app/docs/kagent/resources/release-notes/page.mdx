@@ -1,0 +1,400 @@
+---
+title: "Release Notes"
+pageOrder: 3
+description: "Review the release notes for kagent."
+---
+
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
+export const metadata = {
+  title: "Release Notes",
+  description: "Review the release notes for kagent.",
+  author: "kagent.dev"
+};
+
+# Release Notes
+
+The kagent documentation shows information only for the latest release. If you run an older version, review the release notes to understand the main changes from version to version.
+
+# v0.6
+
+Review the main changes from kagent version 0.5 to v0.6, then continue reading for more detailed information.
+
+* A new Helm chart for kmcp CRDs is available.
+* API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+* The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
+* The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
+* The ModelConfig APIs rename the secret name field from `apiKeySecretRef` to `apiKeySecret`.
+
+## New! Helm chart for kmcp CRDs
+
+Previously, the kagent installation included only one CRD Helm chart. Now, you install two CRD Helm charts: one for kagent CRDs and one for kmcp CRDs.
+
+<Tabs tabs={[
+  { id: 'kagent', label: 'kagent CRD Helm chart' },
+  { id: 'kmcp', label: 'kmcp CRD Helm chart' }
+]} />
+
+<div id="kagent-tab">
+  kagent CRD Helm chart location (no change): `oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds`
+
+  Example installation command:
+  ```shell
+  helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+    --namespace kagent \
+    --create-namespace
+  ```
+</div>
+
+<div id="kmcp-tab">
+  kmcp CRD Helm chart location: `oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds`
+
+  Example installation command:
+  ```shell
+  helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+    --namespace kmcp-system \
+    --create-namespace
+  ```
+</div>
+
+## General API changes
+
+API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+
+## Tools APIs
+
+The Tools-related APIs are split up into several different APIs. Some functionality is moved to kmcp, such as the ToolServer API.
+
+### ToolServer
+
+The ToolServer API is completely removed from kagent. Instead, use other resources including some [kmcp APIs](https://kagent.dev/docs/kmcp) to create and manage tools.
+
+#### Stdio ToolServer now in kmcp MCPServer
+
+Flip through the following tabs to understand the API differences between the old kagent ToolServer and the new method of using kmcp along with a kagent MCPServer and Kubernetes Service for the Stdio transport type.
+
+<Tabs tabs={[
+  { id: 'kagent', label: 'kagent ToolServer' },
+  { id: 'kmcp', label: 'kmcp MCPServer' }
+]} />
+
+<div id="kagent-tab">
+  Old ToolServer example:
+  * The `stdio` config section includes the Grafana deployment details.
+  * The Grafana details, including the API key, are loaded as environment settings directly in the ToolServer.
+  ```yaml
+  apiVersion: kagent.dev/v1alpha1
+  kind: ToolServer
+  metadata:
+    name: mcp-grafana
+    namespace: kagent
+  spec:
+    config:
+      stdio:
+        command: /app/python/bin/mcp-grafana
+        args:
+          - -t
+          - stdio
+          - debug
+        readTimeoutSeconds: 30
+        envFrom:
+        - name: "GRAFANA_URL"
+          value: my-url.com
+        - name: "GRAFANA_API_KEY"
+          valueFrom:
+            type: Secret
+            key: "grafana"
+            valueRef: kagent-toolserver-secret
+    description: ""
+  ```
+</div>
+
+<div id="kmcp-tab">
+  kmcp example:
+  * The kagent MCPServer includes the Grafana deployment details, with `stdio` as the transport type.
+  * The Grafana API key is loaded separately in a Secret, which is more secure.
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: grafana-api-key
+  type: Opaque
+  data:
+    GRAFANA_API_KEY: my-base-64-ikey
+  ---
+  apiVersion: kagent.dev/v1alpha1
+  kind: MCPServer
+  metadata:
+    name: grafana
+  spec:
+    deployment:
+      image: "mcp/grafana:latest"
+      port: 3000
+      cmd: "/app/mcp-grafana"
+      args:
+        - "--transport"
+        - "stdio"
+      env:
+        GRAFANA_URL: my-url.com
+      secretRefs:
+        - name: grafana-api-key
+    transportType: "stdio"
+  ```
+</div>
+
+#### HTTP ToolServer moved to RemoteMCPServer
+
+ToolServer resources that used `type: streamableHttp` are now configured as RemoteMCPServer resources. For more detailed information, review the API definitions:
+* ToolServer: [toolserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/controller/api/v1alpha1/toolserver_types.go)
+* RemoteMCPServer: [remotemcpserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/controller/api/v1alpha2/remotemcpserver_types.go)
+* MCPServer: [mcpserver_types.go](https://github.com/kagent-dev/kmcp/blob/main/api/v1alpha1/mcpserver_types.go)
+
+<Tabs tabs={[
+  { id: 'old-http', label: 'Old ToolServer (v1alpha1)' },
+  { id: 'new-http', label: 'New RemoteMCPServer (v1alpha2)' }
+]} />
+
+<div id="old-http-tab">
+  Old ToolServer API:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha1
+  kind: ToolServer
+  metadata:
+    name: kagent-tool-server
+  spec:
+    config:
+      type: streamableHttp
+      streamableHttp:
+        url: "http://kagent-tools.kagent:8084/mcp"
+        timeout: 30s
+        sseReadTimeout: 5m0s
+    description: "Official KAgent tool server"
+  ```
+</div>
+
+<div id="new-http-tab">
+  New RemoteMCPServer API:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: RemoteMCPServer
+  metadata:
+    name: kagent-tool-server
+  spec:
+    url: "http://kagent-tools.kagent:8084/mcp"
+    timeout: 30s
+    sseReadTimeout: 5m0s
+    description: "Official KAgent tool server"
+  ```
+</div>
+
+### Kubernetes Services as HTTP MCP servers
+
+Now, you can use Kubernetes Services as MCP Servers.
+
+<Tabs tabs={[
+  { id: 'old-svc', label: 'Old Service' },
+  { id: 'new-svc', label: 'New Service for MCP' }
+]} />
+
+<div id="old-svc-tab">
+In the old configuration, you created a Service for your MCP Deployment, and then a ToolServer resource that referred to the Service.
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kagent-querydoc
+  namespace: kagent
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: kagent.dev/v1alpha1
+kind: ToolServer
+metadata:
+  name: kagent-querydoc
+  namespace: kagent
+spec:
+  description: Queries a documentation site
+  config:
+    sse:
+      url: http://kagent-querydoc.kagent.svc.cluster.local/sse
+```
+</div>
+
+<div id="new-http-tab">
+In v0.6, you add certain fields to designate the Service as an MCP server.
+
+In the following configuration file, notice the following settings:
+* `kagent.dev/mcp-service: "true"`: Optional: Configure kagent to discover the tools for this Service.
+* `appProtocol: mcp`: Required: Configure the port that the controller uses. If not set, and there is a single port, the controller uses that port for the MCP server.
+
+**Additional annotations**: You can use the following annotations to further configure the your MCP Service.
+
+* `kagent.dev:mcp-service-path`: Set the path on which the MCP server lives. The default value is `/mcp`.
+* `kagent.dev/mcp-service-port`: Set the port number to be used. No port is set by default.
+* `kagent.dev/mcp-service-port`: Set the protocol to use. Accepted values are `SSE` or `STREAMABLE_HTTP`. The default value is `STREAMABLE_HTTP`.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kagent.dev/mcp-service: "true"
+  annotations:
+    kagent.dev:mcp-service-path: /sse
+    kagent.dev/mcp-service-port: 8080
+    kagent.dev/mcp-service-protocol: SSE
+  name: kagent-querydoc
+  namespace: kagent
+spec:
+  ports:
+  - appProtocol: mcp
+    name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+```
+
+</div>
+
+## Agent APIs
+
+### API to specify the MCP server
+
+<Tabs tabs={[
+  { id: 'old-mcp', label: 'Old API (v1alpha1)' },
+  { id: 'new-mcp', label: 'New API (v1alpha2)' }
+]} />
+
+<div id="old-mcp-tab">
+  **Old API Example:**
+  ```yaml
+  tools:
+    - type: McpServer
+      mcpServer:
+        toolServer: kagent-querydoc
+        toolNames:
+          - query_documentation
+  ```
+</div>
+
+<div id="new-mcp-tab">
+  **New API Example:**
+  ```yaml
+  tools:
+    - type: McpServer
+      mcpServer:
+        name: kagent-querydoc
+        kind: Service
+        toolNames:
+          - query_documentation
+  ```
+  
+  **Key Changes:**
+  * The `toolServer` field has been removed
+  * Replaced with: `name`, `kind`, and `apiGroup` fields
+  * This allows specifying 3 different types: `RemoteMCPServer`, `Service`, and `MCPServer`
+</div>
+
+
+The toolServer field has been removed, and has been replaced with the following:
+name
+kind
+apiGroup
+This allows for specifying the 3 different types which may be used. Those are:
+RemoteMCPServer
+Service
+MCPServer
+Here are the 2 api defs:
+* [v1alpha1](https://github.com/kagent-dev/kagent/blob/069582fbd748cb66df31d620ceb2a7beae85caf0/go/controller/api/v1alpha1/agent_types.go#L106)
+* [v1alpha2](https://github.com/kagent-dev/kagent/blob/069582fbd748cb66df31d620ceb2a7beae85caf0/go/controller/api/v1alpha2/agent_types.go#L93)
+
+### Top-level field for Agent APIs
+
+A new top-level `type` field is added to the Agents API. For existing Agents, set the `type` to `Inline`, and then nest the previous Agent configuration under the `inline` setting.
+
+This change supports the new type for BYO agents.
+
+<Tabs tabs={[
+  { id: 'old-agent', label: 'Old Agent API' },
+  { id: 'new-agent', label: 'New Agent API with inline type' }
+]} />
+
+<div id="old-agent-tab">
+[v1alpha1 Example](https://github.com/kagent-dev/kagent/blob/main/helm/agents/k8s/templates/agent.yaml):
+  
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    name: k8s-agent
+    namespace: {{ include "kagent.namespace" . }}
+    labels:
+      {{- include "kagent.labels" . | nindent 4 }}
+  spec:
+    description: An Kubernetes Expert AI Agent specializing in cluster operations, troubleshooting, and maintenance.
+    systemMessage: |
+      # Kubernetes AI Agent System Prompt
+
+      You are KubeAssist, an advanced AI agent
+      # ... (truncated for brevity)
+  ```
+</div>
+
+<div id="new-agent-tab">
+[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `inline` setting.
+  
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    name: k8s-agent
+    namespace: kagent
+  spec:
+    description: An Kubernetes Expert AI Agent specializing in cluster operations, troubleshooting, and maintenance.
+    type: Inline
+    inline:
+      systemMessage: |
+        # Kubernetes AI Agent System Prompt
+
+        You are KubeAssist, an advanced AI agent
+        # ... (truncated for brevity)
+  ```
+  
+  **Key Changes:**
+  * Added `type: Inline` field to specify agent type
+  * Agent configuration now under `inline` section
+  * Supports new BYO deployment model
+</div>
+
+### New! BYO agents
+
+A new agent type has been added to the Agents API so that you can bring your own (BYO) agent. The agent must be written in ADK, with other frameworks under development.
+
+BYO Agent example configuration:
+  
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: basic-agent
+spec:
+  description: This agent can do anything.
+  type: BYO
+  byo:
+    deployment:
+      image: my-byo:latest
+      env:
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kagent-google
+              key: GOOGLE_API_KEY
+```
+
+## ModelConfig API
+
+The secret name field is renamed from `apiKeySecretRef` to `apiKeySecret`.

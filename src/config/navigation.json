@@ -169,6 +169,11 @@
             "title": "FAQs",
             "href": "/docs/kagent/resources/faq",
             "description": "Find answers to frequently asked questions about kagent."
+          },
+          {
+            "title": "Release Notes",
+            "href": "/docs/kagent/resources/release-notes",
+            "description": "Review the release notes for kagent."
           }
         ]
       }
