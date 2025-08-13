@@ -158,29 +158,32 @@ metadata:
   namespace: kagent
 spec:
   description: My Kubernetes Agent
-  modelConfig: openai-model-config
-  systemMessage: |-
+  type: Inline
+  inline:
+    modelConfig: openai-model-config
+    systemMessage: |-
         You're an expert Kubernetes agent that uses tools to answer users questions and help them with their Kubernetes clusters. Your answers should be concise and to the point.
-  a2aConfig:
-    skills:
-    - id: answer-questions-about-your-cluster
-      name: Answer Questions About Your Cluster
-      description: Answer questions about your Kubernetes cluster
-      inputModes:
-      - text
-      outputModes:
-      - text
-      tags: ["kubernetes"]
-  tools:
-    - type: McpServer
-      mcpServer:
-        toolServer: kagent-tool-server
-        toolNames:
-        - k8s_get_resources
-        - k8s_get_available_api_resources
-        - k8s_get_resource_yaml
-        - k8s_get_cluster_configuration
-        - k8s_get_pod_logs
+    a2aConfig:
+      skills:
+      - id: answer-questions-about-your-cluster
+        name: Answer Questions About Your Cluster
+        description: Answer questions about your Kubernetes cluster
+        inputModes:
+        - text
+        outputModes:
+        - text
+        tags: ["kubernetes"]
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+          - k8s_get_resources
+          - k8s_get_available_api_resources
+          - k8s_get_resource_yaml
+          - k8s_get_cluster_configuration
+          - k8s_get_pod_logs
 EOF
 ```
 
@@ -288,24 +291,26 @@ export SLACK_CHANNEL_IDS="your_slack_channel_id"
 Now we can deploy the MCP server:
 
 ```shell
-kubectl apply -f - <<EOF
+kubectl apply -f- <<EOF
 apiVersion: kagent.dev/v1alpha1
-kind: ToolServer
+kind: MCPServer
 metadata:
   name: slack-mcp
   namespace: kagent
 spec:
-  config:
-    stdio:
-      args:
-      - -y
-      - '@modelcontextprotocol/server-slack'
-      command: npx
-      env:
-        SLACK_BOT_TOKEN: $SLACK_BOT_TOKEN
-        SLACK_TEAM_ID: $SLACK_TEAM_ID
-        SLACK_CHANNEL_IDS: $SLACK_CHANNEL_IDS
-  description: ""
+  deployment:
+    #from kmcp?
+    image: "slack-mcp-server:latest"
+    port: 3000
+    cmd: "npx"
+    args:
+    - -y
+    - '@modelcontextprotocol/server-slack'
+    env:
+      SLACK_BOT_TOKEN: $SLACK_BOT_TOKEN
+      SLACK_TEAM_ID: $SLACK_TEAM_ID
+      SLACK_CHANNEL_IDS: $SLACK_CHANNEL_IDS
+  transportType: "stdio"
 EOF
 ```
 
@@ -320,35 +325,39 @@ metadata:
   namespace: kagent
 spec:
   description: My Kubernetes Agent
-  modelConfig: openai-model-config
-  systemMessage: |-
+  type: Inline
+  inline:
+    modelConfig: openai-model-config
+    systemMessage: |-
         You're an expert Kubernetes agent that uses tools to answer users questions and help them with their Kubernetes clusters. Your answers should be concise and to the point.
-  a2aConfig:
-    skills:
-    - id: answer-questions-about-your-cluster
-      name: Answer Questions About Your Cluster
-      description: Answer questions about your Kubernetes cluster
-      inputModes:
-      - text
-      outputModes:
-      - text
-      tags: ["kubernetes"]
-  tools:
-    - type: McpServer
-      mcpServer:
-        toolServer: kagent-tool-server
+    a2aConfig:
+      skills:
+      - id: answer-questions-about-your-cluster
+        name: Answer Questions About Your Cluster
+        description: Answer questions about your Kubernetes cluster
+        inputModes:
+        - text
+        outputModes:
+        - text
+        tags: ["kubernetes"]
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+          - k8s_get_resources
+          - k8s_get_available_api_resources
+          - k8s_get_resource_yaml
+          - k8s_get_cluster_configuration
+          - k8s_get_pod_logs
+    # Adding the MCP server and the tool
+    - mcpServer:
         toolNames:
-        - k8s_get_resources
-        - k8s_get_available_api_resources
-        - k8s_get_resource_yaml
-        - k8s_get_cluster_configuration
-        - k8s_get_pod_logs
-  # Adding the MCP server and the tool
-  - mcpServer:
-      toolNames:
-      - send_message_to_slack
-      toolServer: slack-mcp
-    type: McpServer
+        - send_message_to_slack
+        name: slack-mcp
+        kind: MCPServer
+      type: McpServer
 EOF
 ```
 

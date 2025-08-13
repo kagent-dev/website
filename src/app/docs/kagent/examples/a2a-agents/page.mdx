@@ -28,33 +28,36 @@ metadata:
   namespace: kagent
 spec:
   description: An example A2A agent that knows how to use Kubernetes tools.
-  modelConfig: openai-model-config
-  systemMessage: |-
-      You are an expert Kubernetes agent that uses tools to help users.
-  tools:
-    - type: McpServer
-      mcpServer:
-        toolServer: kagent-tool-server
-        toolNames:
-        - k8s_get_resources
-        - k8s_get_available_api_resources
-  a2aConfig:
-    skills:
-    - id: get-resources-skill
-      name: Get Resources
-      description: Get resources in the Kubernetes cluster
-      inputModes:
-      - text
-      outputModes:
-      - text
-      examples:
-      - "Get all resources in the Kubernetes cluster"
-      - "Get the pods in the default namespace"
-      - "Get the services in the istio-system namespace"
-      - "Get the deployments in the istio-system namespace"
-      - "Get the jobs in the istio-system namespace"
-      - "Get the cronjobs in the istio-system namespace"
-      - "Get the statefulsets in the istio-system namespace"
+  type: Inline
+  inline:
+    modelConfig: openai-model-config
+    systemMessage: |-
+        You are an expert Kubernetes agent that uses tools to help users.
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+          - k8s_get_resources
+          - k8s_get_available_api_resources
+    a2aConfig:
+      skills:
+      - id: get-resources-skill
+        name: Get Resources
+        description: Get resources in the Kubernetes cluster
+        inputModes:
+        - text
+        outputModes:
+        - text
+        examples:
+        - "Get all resources in the Kubernetes cluster"
+        - "Get the pods in the default namespace"
+        - "Get the services in the istio-system namespace"
+        - "Get the deployments in the istio-system namespace"
+        - "Get the jobs in the istio-system namespace"
+        - "Get the cronjobs in the istio-system namespace"
+        - "Get the statefulsets in the istio-system namespace"
 ```
 
 ## Testing the A2A endpoint
