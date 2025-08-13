@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard."
 ---
 
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
 export const metadata = {
   title: "kagent architecture",
   description: "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard.",
@@ -46,6 +48,29 @@ The CLI offers a way to interact with the engine for those who prefer a CLI inte
 ## Dashboard (UI)
 
 Kagent dashboard provides a web interface for managing and working with AI agents. Is it the simplest way to get started with kagent.
+
+<Tabs tabs={[
+  { id: 'kagent', label: 'kagent dashboard' },
+  { id: 'kubectl', label: 'kubectl port-forward' }
+]} />
+
+<div id="kagent-tab">
+  ```shell
+  kagent dashboard
+  ```
+</div>
+
+<div id="kubectl-tab">
+1. Enable port-forwarding on the `kagent` service.
+   
+   ```shell
+   kubectl -n kagent port-forward svc/kagent 8001:80
+   ```
+
+2. Open your browser to [http://localhost:8001](http://localhost:8001).
+</div>
+
+![kagent dashboard](/images/kagent-landing.png "kagent landing page")
 
 ## Next Steps
 
