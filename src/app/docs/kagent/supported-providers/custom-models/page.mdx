@@ -102,7 +102,7 @@ kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_
 2. Create a ModelConfig resource that references the secret and key name, and specify the model you want to use:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: custom-openai-model-config

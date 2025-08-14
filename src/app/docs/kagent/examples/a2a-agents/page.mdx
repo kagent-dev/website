@@ -21,7 +21,7 @@ Let's look at how this works in kagent!
 We'll create a simple agent (`k8s-a2a-agent`) that can retrieve resources from a Kubernetes cluster. Note the definition of the agent follows the Agent CRD with the `a2aConfig` section added that describes the skills the agent can perform. You can follow the [quick start](/docs/kagent/getting-started/quickstart) to install kagent and then apply the following definition to your cluster:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: k8s-a2a-agent

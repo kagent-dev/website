@@ -151,7 +151,7 @@ Let's deploy it:
 
 ```shell
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: my-k8s-agent
@@ -292,7 +292,7 @@ Now we can deploy the MCP server:
 
 ```shell
 kubectl apply -f- <<EOF
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: MCPServer
 metadata:
   name: slack-mcp
@@ -317,7 +317,7 @@ The MCP server has tool called `send_message_to_slack` that can be used to send 
 
 ```shell
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: my-k8s-agent

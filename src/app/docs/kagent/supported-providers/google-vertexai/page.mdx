@@ -23,7 +23,7 @@ kubectl create secret generic kagent-google-creds -n kagent --from-file=./google
 2. For Gemini models: create a ModelConfig resource using the `GeminiVertexAI` provider that references the secret and key name, and specify the Gemini model you want to use. Note the `projectID` and `location` are required:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: gemini-model-config-vertexai
@@ -42,7 +42,7 @@ spec:
 3. For Anthropic models: create a ModelConfig resource using the `AnthropicVertexAI` provider that references the secret and key name, and specify the Anthropic model you want to use. Note the `projectID` and `location` are required:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: anthropic-model-config-vertexai

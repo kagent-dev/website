@@ -83,7 +83,7 @@ Flip through the following tabs to understand the API differences between the ol
   * The `stdio` config section includes the Grafana deployment details.
   * The Grafana details, including the API key, are loaded as environment settings directly in the ToolServer.
   ```yaml
-  apiVersion: kagent.dev/v1alpha1
+  apiVersion: kagent.dev/v1alpha2
   kind: ToolServer
   metadata:
     name: mcp-grafana
@@ -122,7 +122,7 @@ Flip through the following tabs to understand the API differences between the ol
   data:
     GRAFANA_API_KEY: my-base-64-ikey
   ---
-  apiVersion: kagent.dev/v1alpha1
+  apiVersion: kagent.dev/v1alpha2
   kind: MCPServer
   metadata:
     name: grafana
@@ -157,7 +157,7 @@ ToolServer resources that used `type: streamableHttp` are now configured as Remo
 <div id="old-http-tab">
   Old ToolServer API:
   ```yaml
-  apiVersion: kagent.dev/v1alpha1
+  apiVersion: kagent.dev/v1alpha2
   kind: ToolServer
   metadata:
     name: kagent-tool-server
@@ -211,7 +211,7 @@ spec:
       protocol: TCP
       targetPort: http
 ---
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ToolServer
 metadata:
   name: kagent-querydoc
