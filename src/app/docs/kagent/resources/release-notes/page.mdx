@@ -360,8 +360,8 @@ This change supports the new type for BYO agents.
     namespace: kagent
   spec:
     description: An Kubernetes Expert AI Agent specializing in cluster operations, troubleshooting, and maintenance.
-    type: Inline
-    inline:
+    type: Declarative
+    declarative:
       systemMessage: |
         # Kubernetes AI Agent System Prompt
 
@@ -370,7 +370,7 @@ This change supports the new type for BYO agents.
   ```
   
   **Key Changes:**
-  * Added `type: Inline` field to specify agent type
+  * Added `type: Declarative` field to specify agent type
   * Agent configuration now under `inline` section
   * Supports new BYO deployment model
 </div>

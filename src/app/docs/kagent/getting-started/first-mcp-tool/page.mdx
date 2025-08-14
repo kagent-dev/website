@@ -56,8 +56,8 @@ metadata:
 spec:
   description: This agent can interact with the Kubernetes API to get information
     about the cluster.
-  type: Inline
-  inline: 
+  type: Declarative
+  declarative: 
     modelConfig: default-model-config
     systemMessage: |-
       You're a friendly and helpful agent that uses Kubernetes tools to answer users questions about the cluster.
@@ -195,8 +195,8 @@ The following example creates an agent that can retrieve information from a webs
      namespace: kagent
    spec:
      description: This agent can use a single tool to retrieve the contents of a webpage.
-     type: Inline
-     inline:
+     type: Declarative
+     declarative:
        modelConfig: default-model-config
        systemMessage: |-
          You're a friendly and helpful agent that uses the fetch tool to retrieve webpage contents.
