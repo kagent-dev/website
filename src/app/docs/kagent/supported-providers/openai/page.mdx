@@ -25,7 +25,7 @@ kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_
 apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
-  name: openai-model-config
+  name: default-model-config
   namespace: kagent
 spec:
   apiKeySecret: kagent-openai
