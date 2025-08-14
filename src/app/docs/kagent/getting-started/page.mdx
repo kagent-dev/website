@@ -10,6 +10,19 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Getting Started
+import QuickLink from '@/components/quick-link';
 
-This section will guide you through the initial steps of using kagent. 
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Getting Started</h1>
+    <p className="text-xl text-gray-400 mb-8">Guides to help you get started with kagent, from quick setup to your first agent and tool.</p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="Quick Start" description="A quick guide to get kagent installed and running with your first AI agent." href="/docs/kagent/getting-started/quickstart" />
+    <QuickLink title="Your First Agent" description="Learn how to create your first AI agent using the kagent dashboard." href="/docs/kagent/getting-started/first-agent" />
+    <QuickLink title="Your First MCP Tool" description="Learn how to add an MCP (Model Context Protocol) tool to your kagent agent." href="/docs/kagent/getting-started/first-mcp-tool" />
+    <QuickLink title="Writing System Prompts" description="Learn the art and science of writing effective system prompts for your kagent agents." href="/docs/kagent/getting-started/system-prompts" />
+    <QuickLink title="Tracing" description="A guide to tracing your kagent agents for debugging and monitoring." href="/docs/kagent/getting-started/tracing" />
+    </div>
+</div> 

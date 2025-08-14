@@ -4,13 +4,21 @@ pageOrder: 100
 description: ""
 ---
 
-# Reference
+import QuickLink from '@/components/quick-link';
 
-Review the KMCP commands: 
-* [kmcp add-tool](/docs/kmcp/reference/kmcp-add-tool) to generate an MCP tool boilerplate that you can use as the base to create your own. 
-* [kmcp build](/docs/kmcp/reference/kmcp-build) to build a Docker image for your MCP server. 
-* [kmcp deploy](/docs/kmcp/reference/kmcp-deploy) to deploy your MCP server to a Kubernetes cluster. 
-* [kmcp init](/docs/kmcp/reference/kmcp-init) to create a scaffold for your MCP server project. 
-* [kmcp install](/docs/kmcp/reference/kmcp-install) to install the KMCP controller manager and all its dependencies.
-* [kmcp run](/docs/kmcp/reference/kmcp-run) to run an MCP server on your local machine. 
-* [kmcp secrets](/docs/kmcp/reference/kmcp-secrets) to create Kubernetes secrets for the environment variables that you want to use in your MCP server. 
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Reference</h1>
+    <p className="text-xl text-gray-400 mb-8">Review the KMCP commands and learn how to use them effectively.</p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="kmcp add-tool" description="Generate an MCP tool boilerplate that you can use as the base to create your own." href="/docs/kmcp/reference/kmcp-add-tool" />
+    <QuickLink title="kmcp build" description="Build a Docker image for your MCP server." href="/docs/kmcp/reference/kmcp-build" />
+    <QuickLink title="kmcp deploy" description="Deploy your MCP server to a Kubernetes cluster." href="/docs/kmcp/reference/kmcp-deploy" />
+    <QuickLink title="kmcp init" description="Create a scaffold for your MCP server project." href="/docs/kmcp/reference/kmcp-init" />
+    <QuickLink title="kmcp install" description="Install the KMCP controller manager and all its dependencies." href="/docs/kmcp/reference/kmcp-install" />
+    <QuickLink title="kmcp run" description="Run an MCP server on your local machine." href="/docs/kmcp/reference/kmcp-run" />
+    <QuickLink title="kmcp secrets" description="Create Kubernetes secrets for the environment variables that you want to use in your MCP server." href="/docs/kmcp/reference/kmcp-secrets" />
+    </div>
+</div> 

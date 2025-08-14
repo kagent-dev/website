@@ -10,10 +10,16 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Deploy to Kubernetes
+import QuickLink from '@/components/quick-link';
 
-Use the kmcp controller to manage the lifecycle of your MCP servers in a Kubernetes environment. 
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Deploy to Kubernetes</h1>
+    <p className="text-xl text-gray-400 mb-8">Use the kmcp controller to manage the lifecycle of your MCP servers in a Kubernetes environment.</p>
+    </div>
 
-Explore the following guides to get started: 
-* [Install the kmcp controller](/docs/kmcp/deploy/install-controller)
-* [Deploy MCP servers](/docs/kmcp/deploy/server)
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="Install the kmcp controller" description="Set up the kmcp controller in your Kubernetes cluster." href="/docs/kmcp/deploy/install-controller" />
+    <QuickLink title="Deploy MCP servers" description="Learn how to deploy your MCP servers to Kubernetes." href="/docs/kmcp/deploy/server" />
+    </div>
+</div>
