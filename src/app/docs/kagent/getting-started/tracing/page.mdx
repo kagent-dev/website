@@ -146,15 +146,17 @@ Review the tracing data in Jaeger for the agent queries that you just sent.
 
 2. In your browser, open the Jaeger UI: [http://localhost:16686](http://localhost:16686).
 
-3. From the Jaeger **Search** menu, in the **Service** dropdown, select the `kagent` service.
+3. From the Jaeger **Search** menu, in the **Service** dropdown, select the `kagent` service. 
 
-4. Click **Find Traces**.
+4. In the **Operation** dropdown, select `agent_run [k8s-agent]` to filter for traces specific to the agent.
 
-5. Review the traces for the `k8s-agent` agent.
+5. Click **Find Traces**.
+
+6. Review the traces for the `kagent` service.
 
    ![Jaeger UI](/images/jaeger-landing.png "Jaeger results page")
 
-6. Click on a trace such as `kagent: run_stream` to see more details.
+7. Click on a trace to see more details.
 
    ![Jaeger UI](/images/jaeger-trace.png "Jaeger trace details")
 
