@@ -25,3 +25,7 @@ adopters:
     logo_dark: "/images/adopters/krateo-dark.svg"
     logo_light: "/images/adopters/krateo-light.svg"
     website: "https://krateo.io/"
+  - name: "CodeWizard"
+    logo_dark: "/images/adopters/codewizard.png"
+    logo_light: "/images/adopters/codewizard.png"
+    website: "https://codewizard.co.il/"
