@@ -31,7 +31,7 @@ kubectl create secret generic pinecone-credentials -n kagent --from-literal PINE
 Once the API key is in place, you can use the Memory CRD to configure the memory for your agent. For example:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: Memory
 metadata:
   name: my-pinecone-memory
@@ -39,7 +39,7 @@ metadata:
 spec:
   provider: Pinecone
   # The secret containing the API key for the vector database
-  apiKeySecretRef: pinecone-credentials
+  apiKeySecret: pinecone-credentials
   # The key in the secret containing the API key
   apiKeySecretKey: PINECONE_API_KEY
   pinecone:
@@ -62,7 +62,7 @@ You can use Kubernetes CLI to create the memory.
 To attach memory to an agent, you can use the `memory` field in the agent spec. Note that the field is an array, so you can attach multiple memories to an agent:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: memoryagent

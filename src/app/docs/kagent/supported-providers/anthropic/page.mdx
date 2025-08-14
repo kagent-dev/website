@@ -23,13 +23,13 @@ kubectl create secret generic kagent-anthropic -n kagent --from-literal ANTHROPI
 2. Create a ModelConfig resource that references the secret and key name, and specify the Anthropic model you want to use:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: claude-model-config
   namespace: kagent
 spec:
-  apiKeySecretRef: kagent-anthropic
+  apiKeySecret: kagent-anthropic
   apiKeySecretKey: ANTHROPIC_API_KEY
   model: claude-3-sonnet-20240229
   provider: Anthropic

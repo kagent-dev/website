@@ -83,11 +83,6 @@
             "title": "Tools",
             "href": "/docs/kagent/concepts/tools",
             "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
-          },
-          {
-            "title": "Memory",
-            "href": "/docs/kagent/concepts/memory",
-            "description": "Learn how kagent agents manage memory and conversation history to maintain context and improve interactions."
           }
         ]
       },

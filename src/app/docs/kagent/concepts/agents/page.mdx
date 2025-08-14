@@ -56,9 +56,13 @@ Here's how you could reference an existing agent (`promql-agent`) as a tool:
 ```yaml
 ...
     # Referencing existing tools
+    tools:
     - type: McpServer
       mcpServer:
-        toolServer: kagent-tool-server
+        name: kagent-tool-server
+        # Or a Kubernetes Service with "appProtocol: mcp", labels, and annotations for MCP
+        # Or an MCPServer
+        kind: RemoteMCPServer
         toolNames:
         - k8s_get_resources
         - k8s_get_available_api_resources

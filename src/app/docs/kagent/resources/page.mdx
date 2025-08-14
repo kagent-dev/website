@@ -10,15 +10,20 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Resources
+import QuickLink from '@/components/quick-link';
 
-This section contains additional resources to help you with kagent, including troubleshooting guides, frequently asked questions, and ways to connect with the community.
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Resources</h1>
+    <p className="text-xl text-gray-400 mb-8">Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.</p>
+    </div>
 
-## Helpful Links
-
-- [Troubleshooting Guide](/docs/kagent/resources/troubleshooting)
-- [Frequently Asked Questions](/docs/kagent/resources/faq)
-- [Quick Start Guide](/docs/kagent/getting-started/quickstart)
-- [Official GitHub Repository](https://github.com/kagent-dev/kagent)
-- [Contribution Guide](https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md)
-- [Join our Discord Community](https://discord.gg/Fu3k65f2k3) 
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="Troubleshooting Guide" description="Get help with common issues and problems when using kagent." href="/docs/kagent/resources/troubleshooting" />
+    <QuickLink title="Frequently Asked Questions" description="Find answers to common questions about kagent." href="/docs/kagent/resources/faq" />
+    <QuickLink title="Quick Start Guide" description="Get up and running quickly with kagent." href="/docs/kagent/getting-started/quickstart" />
+    <QuickLink title="Official GitHub Repository" description="Access the source code and contribute to kagent development." href="https://github.com/kagent-dev/kagent" />
+    <QuickLink title="Contribution Guide" description="Learn how to contribute to the kagent project." href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" />
+    <QuickLink title="Join our Discord Community" description="Connect with other kagent users and developers." href="https://discord.gg/Fu3k65f2k3" />
+    </div>
+</div> 
