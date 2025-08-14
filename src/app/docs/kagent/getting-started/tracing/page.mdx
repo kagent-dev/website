@@ -10,23 +10,30 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Prerequisites
+## Prerequisites
 
-- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) for creating and running a local Kubernetes cluster
-- [Helm](https://helm.sh/docs/intro/install/) - for installing the kagent chart
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) - for interacting with your cluster
+This guide walks you through all the steps you need to get started with tracing your kagent agents, including a basic installation. However, you might want to try out the other getting started guides first to get a better understanding of how kagent works.
 
-This guide will walk you through all the steps you need to get started with tracing your kagent agents. However, we recommend starting with the other getting-started guides first to get a better understanding of how kagent works.
+- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) for creating and running a local Kubernetes cluster.
+- [Helm](https://helm.sh/docs/intro/install/) for installing the kagent chart.
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) for interacting with your cluster.
+- kagent CLI for interacting with kagent, such as to launch the dashboard.
 
-To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. You can [get one here](https://platform.openai.com/account/api-keys).
+  ```bash
+  # Download/run the install script
+  curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+  ```
+
+To run the AI agents you also need an [OpenAI](https://openai.com) API key. You can [get one here](https://platform.openai.com/account/api-keys).
 
 ## Installing Jaeger
 
 In order to demonstrate tracing, we'll first need to install Jaeger. We will use the Jaeger all in one mode to demonstrate the tracing capabilities without needing to install any other components.
 
-Firstly create a file called `jaeger.yaml` with the following content:
+Create the `jaeger.yaml` file using the following command:
 
 ```yaml
+cat << 'EOF' > jaeger.yaml
 provisionDataStore:
   cassandra: false
 allInOne:
@@ -39,6 +46,7 @@ collector:
   enabled: false
 query:
   enabled: false
+EOF
 ```
 
 Then install Jaeger using the following command:
@@ -55,90 +63,100 @@ helm upgrade --install jaeger jaegertracing/jaeger \
 
 ## Installing kagent
 
+The following steps include commands to install or upgrade the kagent Helm release.
+
 1. Set the OpenAI API key as an environment variable:
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
 
-2. Install the Helm chart with CRDs:
+2. If you did not already, install the kagent CRDs.
 
-```bash
-helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
-    --namespace kagent \
-    --create-namespace
-```
-3. Create a file called `kagent-tracing.yaml` with the following content:
+   ```bash
+   helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+       --namespace kagent \
+       --create-namespace
+   ```
 
-```yaml
-otel:
-  tracing:
-    enabled: true
-    exporter:
-      otlp:
-        endpoint: http://jaeger-collector.jaeger.svc.cluster.local:4317
-```
+3. If you already installed kagent, get your current Helm release values.
 
-4. Install the kagent Helm chart:
+   ```shell
+   helm get values kagent -n kagent > values.yaml
+   ```
 
-```bash
-helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-    --namespace kagent \
-    --set providers.openAI.apiKey=$OPENAI_API_KEY \
-    --values kagent-tracing.yaml
-```
+3. Create or update your values file to include the following settings to enable tracing.
+
+   ```yaml
+   otel:
+     tracing:
+       enabled: true
+       exporter:
+         otlp:
+           endpoint: http://jaeger-collector.jaeger.svc.cluster.local:4317
+   ```
+
+4. Install or upgrade the kagent Helm chart with the tracing details.
+
+   ```bash
+   helm upgrade -i kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.openAI.apiKey=$OPENAI_API_KEY \
+       --values values.yaml
+   ```
 
 ## Tracing your first agent
 
-Now that we have Jaeger installed and kagent configured to use it, we can start tracing our first agent.
+Now that you installed kagent with Jaeger, learn how to trace requests to an agent.
 
-1. Download the kagent CLI:
+### Generate tracing data
 
-```bash
-# Download/run the install script
-curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
-```
+To generate tracing data, you can chat with a pre-configured agent such as `k8s-agent`. For more information about agents, see the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
 
-## Accessing the kagent dashboard (UI)
+1. Launch the kagent dashboard.
 
-2. To open the kagent dashboard, run the dashboard command from the CLI
+   ```bash
+   kagent dashboard
+   ```
 
-```bash
-kagent dashboard
-```
+   Example output:
 
-```console
-kagent dashboard is available at http://localhost:8082
-Press Enter to stop the port-forward...
-```
+   ```console
+   kagent dashboard is available at http://localhost:8082
+   Press Enter to stop the port-forward...
+   ```
 
-The CLI will set up the port-forward to the service running inside the cluster and open the dashboard.
+   ![kagent UI](/images/kagent-landing.png "Kagent dashboard main page")
 
-![kagent UI](/images/kagent-landing.png "Kagent dashboard main page")
+2. Click the pre-configured `k8s-agent` agent.
 
-## Running the k8s-agent
+3. In the conversation box, enter a query such as "What pods are running in my cluster?".
 
-Once you're in the kagent UI, you can start interacting with the pre-configured sample agents. You can click on the agent card to view the agent details and start a conversation. For the purpose of this guide, we'll use the `k8s-agent` agent. Specifically we'll use the `k8s-agent` agent to get the list of pods in the cluster.
+   ![kagent UI](/images/k8s-agent-query-light.png "Chatting with an agent")
 
-![kagent UI](/images/k8s-agent-query-light.png "Chatting with an agent")
+### Review tracing data in Jaeger
 
-Once that query is complete, we can go take a look at the data in Jaeger.
+Review the tracing data in Jaeger for the agent queries that you just sent.
 
-```bash
-kubectl port-forward svc/jaeger-query -n jaeger 16686:16686
-```
+1. In your terminal, enable port-forwarding for the Jaeger query service.
 
-Once the port-forward is set up, you can open the Jaeger UI in your browser at [http://localhost:16686](http://localhost:16686).
+   ```bash
+   kubectl port-forward svc/jaeger-query -n jaeger 16686:16686
+   ```
 
-From the Jaeger UI, select the `kagent` service on the top-left and then hit "search" to see the traces for the `k8s-agent` agent.
+2. In your browser, open the Jaeger UI: [http://localhost:16686](http://localhost:16686).
 
-Specifically the result we're looking for should resemble the following:
+3. From the Jaeger **Search** menu, in the **Service** dropdown, select the `kagent` service.
 
-![Jaeger UI](/images/jaeger-landing.png "Jaeger results page")
+4. Click **Find Traces**.
 
-Once you've found the trace, you can click on it to see the details.
+5. Review the traces for the `k8s-agent` agent.
 
-![Jaeger UI](/images/jaeger-trace.png "Jaeger trace details")
+   ![Jaeger UI](/images/jaeger-landing.png "Jaeger results page")
+
+6. Click on a trace such as `kagent: run_stream` to see more details.
+
+   ![Jaeger UI](/images/jaeger-trace.png "Jaeger trace details")
 
 That's it! You've now traced your first agent.
 
