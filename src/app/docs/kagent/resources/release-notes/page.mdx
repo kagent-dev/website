@@ -62,9 +62,11 @@ Previously, the kagent installation included only one CRD Helm chart. Now, you i
   ```
 </div>
 
-## General API changes
+## General changes
 
-API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+**`namespace/name` references**: API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+
+**Local development `buildx` access**: The `make helm-install` command now creates a local Docker registry to push development images to. As part of the build process, you might need to allow the buildx builder to access your host network. For more information, see the [developer docs in the kagent repo](https://github.com/kagent-dev/kagent/blob/main/DEVELOPMENT.md#troubleshooting).
 
 ## Tools APIs
 
