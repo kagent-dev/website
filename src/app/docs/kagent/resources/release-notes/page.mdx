@@ -20,11 +20,16 @@ The kagent documentation shows information only for the latest release. If you r
 
 Review the main changes from kagent version 0.5 to v0.6, then continue reading for more detailed information.
 
+* The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 * A new Helm chart for kmcp CRDs is available.
 * API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
 * The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
 * The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
 * The ModelConfig APIs rename the secret name field from `apiKeySecret` to `apiKeySecret`.
+
+## Upgraded API version
+
+The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 
 ## New! Helm chart for kmcp CRDs
 
