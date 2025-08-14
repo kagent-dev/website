@@ -65,15 +65,6 @@ Let's create an agent that can use Kubernetes tools to interact with the cluster
 
 ![Create new agent](/images/kagent-new.png "Create a new agent")
 
-{/* TODO memory 
-## Adding memory
-
-Memories are database instances with information that you want the agent to have access to when completing tasks.
-
-Before you can add memories to an agent, you must first create a memory instance. For now, let's skip memory. When you're ready, you can check out the [memory guide](/docs/kagent/concepts/memory).
-
-![Memory](/images/kagent-memory.png "Skip adding memory for now") */}
-
 ## Adding tools
 
 Tools are an essential building block of the agent. They are the commands that the agent can run to interact with the environment. As LLMs don't have the ability to run commands, tools are the way to bridge the gap between the agent and the environment. Kagent provides a set of built-in tools that you can use to interact with Kubernetes, Istio, Prometheus and projects. You can also [build your own tools](/tools)!
