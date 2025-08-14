@@ -16,11 +16,16 @@ Every AI agent created with kagent implements the [A2A protocol](https://develop
 
 Let's look at how this works in kagent!
 
-## Create an AI agent that supports A2A
+## Prerequisites
 
-We'll create a simple agent (`k8s-a2a-agent`) that can retrieve resources from a Kubernetes cluster. Note the definition of the agent follows the Agent CRD with the `a2aConfig` section added that describes the skills the agent can perform. You can follow the [quick start](/docs/kagent/getting-started/quickstart) to install kagent and then apply the following definition to your cluster:
+Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+## Creating an AI agent that supports A2A
+
+Create a simple agent (`k8s-a2a-agent`) that can retrieve resources from a Kubernetes cluster. Note the definition of the agent follows the Agent CRD with the `a2aConfig` section added that describes the skills the agent can perform.
 
 ```yaml
+kubectl apply -f - <<EOF
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
@@ -30,7 +35,7 @@ spec:
   description: An example A2A agent that knows how to use Kubernetes tools.
   type: Inline
   inline:
-    modelConfig: openai-model-config
+    modelConfig: default-model-config
     systemMessage: |-
         You are an expert Kubernetes agent that uses tools to help users.
     tools:
@@ -50,6 +55,9 @@ spec:
         - text
         outputModes:
         - text
+        tags:
+        - k8s
+        - resources
         examples:
         - "Get all resources in the Kubernetes cluster"
         - "Get the pods in the default namespace"
@@ -58,134 +66,179 @@ spec:
         - "Get the jobs in the istio-system namespace"
         - "Get the cronjobs in the istio-system namespace"
         - "Get the statefulsets in the istio-system namespace"
+EOF
 ```
 
 ## Testing the A2A endpoint
 
-The A2A endpoint is exposed on the port `8083` of the kagent service. So let's do a port-forward to make the endpoint accessible:
+The A2A endpoint is exposed on the port `8083` of the kagent controller service.
 
-```bash
-kubectl port-forward svc/kagent 8083:8083 -n kagent
+1. Enable port-forwarding on the `kagent-controller` service.
+
+   >Note that you could also expose the A2A endpoint publicly by using a gateway.
+
+   ```bash
+   kubectl port-forward svc/kagent-controller 8083:8083 -n kagent
+   ```
+
+2. To test that the agent is available and has an agent card, send a request to the `.well-known/agent.json` endpoint. Note the API endpoint follows the pattern `/api/a2a/{namespace}/{agent-name}/.well-known/agent.json`.
+
+   ```bash
+   curl localhost:8083/api/a2a/kagent/k8s-a2a-agent/.well-known/agent.json
+   ```
+
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+
+   ```json
+   {
+     "name": "k8s_a2a_agent",
+     "description": "An example A2A agent that knows how to use Kubernetes tools.",
+     "url": "http://127.0.0.1:8083/api/a2a/kagent/k8s-a2a-agent/",
+     "version": "",
+     "capabilities": {
+       "streaming": true,
+       "pushNotifications": false,
+       "stateTransitionHistory": true
+     },
+     "defaultInputModes": [
+       "text"
+     ],
+     "defaultOutputModes": [
+       "text"
+     ],
+     "skills": [
+       {
+         "id": "get-resources-skill",
+         "name": "Get Resources",
+         "description": "Get resources in the Kubernetes cluster",
+         "tags": [
+           "k8s",
+           "resources"
+         ],
+         "examples": [
+           "Get all resources in the Kubernetes cluster",
+           "Get the pods in the default namespace",
+           "Get the services in the istio-system namespace",
+           "Get the deployments in the istio-system namespace",
+           "Get the jobs in the istio-system namespace",
+           "Get the cronjobs in the istio-system namespace",
+           "Get the statefulsets in the istio-system namespace"
+         ],
+         "inputModes": [
+           "text"
+         ],
+         "outputModes": [
+           "text"
+         ]
+       }
+     ]
+   }
+   ```
+
+## Invoking the agent
+
+You can invoke the agent in several ways, including the kagent dashboard, kagent CLI, and the A2A host CLI.
+
+### Dashboard
+
+Launch the dashboard with `kagent dashboard`, find your `k8s-a2a-agent`, and start chatting. For complete steps, see the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
+
+### kagent CLI
+
+To use the kagent CLI, make sure that the controller is still being port-forwarded.
+
+Then, use the invoke command. For more options, run `kagent help invoke`.
+
+```shell
+kagent invoke --agent k8s-a2a-agent --task "Get the pods in the kagent namespace"
 ```
 
->Note that you could also expose the A2A endpoint publicly by using a gateway.
+Example output: The output includes both the response as well as the details of the response. The formatting is in JSON but can be quite long, depending on the call and the agent configuration.
 
-To test that the agent is available and has an agent card, we can send a request to the `.well-known/agent.json` endpoint. Note the API endpoint follows the pattern `/api/a2a/{namespace}/{agent-name}/.well-known/agent.json`.
-
-Let's send a request to the endpoint:
-
-```bash
- curl localhost:8083/api/a2a/kagent/k8s-a2a-agent/.well-known/agent.json
-```
-
-The output will be a JSON object that describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
 ```json
 {
-  "name": "k8s-a2a-agent",
-  "description": "An example A2A agent that knows how to use Kubernetes tools.",
-  "url": "http://127.0.0.1:8083/api/a2a/kagent/k8s-a2a-agent",
-  "version": "1",
-  "capabilities": {
-    "streaming": false,
-    "pushNotifications": false,
-    "stateTransitionHistory": false
-  },
-  "defaultInputModes": [
-    "text"
-  ],
-  "defaultOutputModes": [
-    "text"
-  ],
-  "skills": [
+  "artifacts": [
     {
-      "id": "get-resources-skill",
-      "name": "Get Resources",
-      "description": "Get resources in the Kubernetes cluster",
-      "examples": [
-        "Get all resources in the Kubernetes cluster",
-        "Get the pods in the default namespace",
-        "Get the services in the istio-system namespace",
-        "Get the deployments in the istio-system namespace",
-        "Get the jobs in the istio-system namespace",
-        "Get the cronjobs in the istio-system namespace",
-        "Get the statefulsets in the istio-system namespace"
-      ],
-      "inputModes": [
-        "text"
-      ],
-      "outputModes": [
-        "text"
+      "artifactId": "c08e6186-6e6b-4b93-9042-bf9121863707",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "There are 59 pods in your cluster."
+        }
       ]
     }
   ]
+...
 }
 ```
 
-## Use the A2A host CLI to invoke the agent
+### A2A host CLI
 
-We'll use the A2A host CLI to call the agent. This CLI part of the [A2A samples repository](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/cli). Start by cloning the repository:
+You can use the A2A host CLI to invoke the agent. This CLI is part of the [A2A samples repository](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/cli).
 
-```bash
-git clone https://github.com/a2aproject/a2a-samples.git
-```
+1. Clone the A2A samples repository.
 
-Then from the `a2a-samples/samples/python/hosts/cli` directory, run the CLI and point it to the kagent endpoint:
+   ```bash
+   git clone https://github.com/a2aproject/a2a-samples.git
+   ```
 
-```bash
-cd a2a-samples/samples/python/hosts/cli
-uv run . --agent http://127.0.0.1:8083/api/a2a/kagent/k8s-a2a-agent
-```
+2. From the `a2a-samples/samples/python/hosts/cli` directory, point the CLI to the kagent endpoint.
 
-The CLI will connect to the kagent, display the agent card and prompt you for input:
+   ```bash
+   cd a2a-samples/samples/python/hosts/cli
+   uv run . --agent http://127.0.0.1:8083/api/a2a/kagent/k8s-a2a-agent
+   ```
 
-```console
-======= Agent Card ========
-{"name":"my-a2a-agent","description":"An example A2A agent that knows how to use Kubernetes tools.","url":"http://127.0.0.1:8083/api/a2a/kagent/my-a2a-agent","version":"1","capabilities":{"streaming":false,"pushNotifications":false,"stateTransitionHistory":false},"defaultInputModes":["text"],"defaultOutputModes":["text"],"skills":[{"id":"kagent-k8s-agent","name":"Get Resources","description":"Get resources in the Kubernetes cluster","examples":["Get all resources in the Kubernetes cluster","Get the pods in the default namespace","Get the services in the istio-system namespace","Get the deployments in the istio-system namespace","Get the jobs in the istio-system namespace","Get the cronjobs in the istio-system namespace","Get the statefulsets in the istio-system namespace"],"inputModes":["text"],"outputModes":["text"]}]}
-=========  starting a new task ======== 
+   Example output: The CLI connects to the kagent, displays the agent card and prompts you for input.
 
-What do you want to send to the agent? (:q or quit to exit):
-```
+   ```console
+   ======= Agent Card ========
+   {"name":"my-a2a-agent","description":"An example A2A agent that knows how to use Kubernetes tools.","url":"http://127.0.0.1:8083/api/a2a/kagent/my-a2a-agent","version":"1","capabilities":{"streaming":false,"pushNotifications":false,"stateTransitionHistory":false},"defaultInputModes":["text"],"defaultOutputModes":["text"],"skills":[{"id":"kagent-k8s-agent","name":"Get Resources","description":"Get resources in the Kubernetes cluster","examples":["Get all resources in the Kubernetes cluster","Get the pods in the default namespace","Get the services in the istio-system namespace","Get the deployments in the istio-system namespace","Get the jobs in the istio-system namespace","Get the cronjobs in the istio-system namespace","Get the statefulsets in the istio-system namespace"],"inputModes":["text"],"outputModes":["text"]}]}
+   =========  starting a new task ======== 
+   
+   What do you want to send to the agent? (:q or quit to exit):
+   ```
 
-Let's send the task "Get the pods in the kagent namespace" to the agent. You'll be also prompted to optionally attach a file to the request, but just hit enter to skip this step. The request will be sent to the agent and the response will be displayed in the CLI. Her'es the formated version of the response:
+3. Send the task `"Get the pods in the kagent namespace"` to the agent. You'll be also prompted to optionally attach a file to the request, but just hit enter to skip this step. 
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": "0df6761ed3394b43a2dee2bd6572bc94",
-  "result": {
-    "id": "89bae00376e44ed094a2174e163da9f6",
-    "sessionId": "d966626d06ab42b19bd3999e65333311",
-    "status": {
-      "state": "completed",
-      "message": {
-        "role": "agent",
-        "parts": [
-          {
-            "type": "text",
-            "text": "Processed result: There is one pod running in the \"kagent\" namespace:\n\n- Pod Name: kagent-748fb675c6-9ddsz\n- Status: Running\n- Ready Containers: 3 out of 3\n- Restarts: 0\n- Age: 31 minutes\n- Pod IP: 10.244.0.11\n- Node: kagent-control-plane\n\nLet me know if you need more details or want to perform any actions on this pod."
-          }
-        ]
-      },
-      "timestamp": "2025-05-06T22:27:31+00:00"
-    },
-    "artifacts": [
-      {
-        "name": "Task Result",
-        "description": "The result of the task processing",
-        "parts": [
-          {
-            "type": "text",
-            "text": "There is one pod running in the \"kagent\" namespace:\n\n- Pod Name: kagent-748fb675c6-9ddsz\n- Status: Running\n- Ready Containers: 3 out of 3\n- Restarts: 0\n- Age: 31 minutes\n- Pod IP: 10.244.0.11\n- Node: kagent-control-plane\n\nLet me know if you need more details or want to perform any actions on this pod."
-          }
-        ],
-        "index": 0,
-        "lastChunk": true
-      }
-    ]
-  }
-}
-```
+   Example output: The `result` section contains the result of the task and the `artifacts` section contains the output of the task and it shows the pods running inside the kagent namespace.
 
-The `result` section contains the result of the task and the `artifacts` section contains the output of the task and it shows the pods running inside the kagent namespace.
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": "0df6761ed3394b43a2dee2bd6572bc94",
+     "result": {
+       "id": "89bae00376e44ed094a2174e163da9f6",
+       "sessionId": "d966626d06ab42b19bd3999e65333311",
+       "status": {
+         "state": "completed",
+         "message": {
+           "role": "agent",
+           "parts": [
+             {
+               "type": "text",
+               "text": "Processed result: There is one pod running in the \"kagent\" namespace:\n\n- Pod Name: kagent-748fb675c6-9ddsz\n- Status: Running\n- Ready Containers: 3 out of 3\n- Restarts: 0\n- Age: 31 minutes\n- Pod IP: 10.244.0.11\n- Node: kagent-control-plane\n\nLet me know if you need more details or want to perform any actions on this pod."
+             }
+           ]
+         },
+         "timestamp": "2025-05-06T22:27:31+00:00"
+       },
+       "artifacts": [
+         {
+           "name": "Task Result",
+           "description": "The result of the task processing",
+           "parts": [
+             {
+               "type": "text",
+               "text": "There is one pod running in the \"kagent\" namespace:\n\n- Pod Name: kagent-748fb675c6-9ddsz\n- Status: Running\n- Ready Containers: 3 out of 3\n- Restarts: 0\n- Age: 31 minutes\n- Pod IP: 10.244.0.11\n- Node: kagent-control-plane\n\nLet me know if you need more details or want to perform any actions on this pod."
+             }
+           ],
+           "index": 0,
+           "lastChunk": true
+         }
+       ]
+     }
+   }
+   ```
 
 The agent has processed the request and returned the result.
