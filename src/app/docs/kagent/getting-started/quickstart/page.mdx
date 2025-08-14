@@ -39,15 +39,23 @@ export OPENAI_API_KEY="your-api-key-here"
 curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
 ```
 
-3. Install kagent to the cluster using the CLI. First run the CLI:
+3. Install the kmcp CRDs so that you can create MCP servers.
 
-```bash
-kagent install
-```
+   ```sh
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kmcp-system \
+     --create-namespace
+   ```
 
-```console
-kagent installed successfully
-```
+4. Install kagent to the cluster by using the CLI.
+
+   ```bash
+   kagent install
+   ```
+
+   ```console
+   kagent installed successfully
+   ```
 
 ## Accessing the kagent dashboard (UI)
 
