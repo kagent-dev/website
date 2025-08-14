@@ -26,6 +26,7 @@ Review the main changes from kagent version 0.5 to v0.6, then continue reading f
 * The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
 * The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
 * The ModelConfig APIs rename the secret name field from `apiKeySecret` to `apiKeySecret`.
+* Memory APIs are not supported in ADK.
 
 ## Upgraded API version
 
@@ -405,3 +406,7 @@ spec:
 ## ModelConfig API
 
 The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.
+
+## Memory API
+
+The Memory API is not supported in ADK. The [agent development kit](https://google.github.io/adk-docs/) is required to bring your own agents. As such, the Memory docs are removed.

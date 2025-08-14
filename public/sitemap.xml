@@ -36,13 +36,6 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/docs/kagent/concepts/memory</loc>
-        <lastmod>2025-08-14</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
         <loc>https://kagent.dev/docs/kagent/concepts</loc>
         <lastmod>2025-08-14</lastmod>
         <changefreq>weekly</changefreq>
