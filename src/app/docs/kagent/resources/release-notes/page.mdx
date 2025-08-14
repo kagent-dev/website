@@ -382,13 +382,14 @@ This change supports the new type for BYO agents.
 
 A new agent type has been added to the Agents API so that you can bring your own (BYO) agent. The agent must be written in ADK, with other frameworks under development.
 
-BYO Agent example configuration:
+BYO Agent example configuration. For more information, see the [BYO Agent](/docs/kagent/examples/a2a-byo) guide.
   
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: basic-agent
+  namespace: kagent
 spec:
   description: This agent can do anything.
   type: BYO
