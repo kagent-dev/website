@@ -255,6 +255,11 @@
         "description": "",
         "items": [
           {
+            "title": "API docs",
+            "href": "/docs/kmcp/reference/api",
+            "description": "kmcp API reference docs"
+          },
+          {
             "title": "kmcp add-tool",
             "href": "/docs/kmcp/reference/kmcp-add-tool",
             "description": "kmcp add-tool command"
