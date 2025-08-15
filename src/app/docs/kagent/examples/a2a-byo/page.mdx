@@ -1,0 +1,258 @@
+---
+title: "BYO A2A Agents"
+pageOrder: 1
+description: "Bring your own A2A agent to kagent"
+---
+
+export const metadata = {
+  title: "Bringing your own A2A agent to kagent",
+  description: "Learn how to bring your own A2A agent to kagent",
+  author: "kagent.dev"
+};
+
+# Bringing your own A2A agent to kagent with ADK
+
+Bring your own custom agents. Currently, custom agents must be built with the [Agent Development Kit (ADK)](https://google.github.io/adk-docs/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
+
+Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. Kagent can invoke your agent directly through the A2A protocol.
+
+## Prerequisites
+
+Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+## Building a custom agent
+
+The following example builds a simple agent from the [kagent code repository](https://github.com/kagent-dev/kagent). The sample app is built with Google's ADK framework and performs two basic tasks: rolls a die with a specified number of sides and determines whether a number in a list is prime. It uses Google's Gemini model as the underlying LLM provider.
+
+1. Clone the kagent code repository.
+
+   ```bash
+   git clone https://github.com/kagent-dev/kagent.git
+   ```
+
+2. From the root directory, build the kagent-adk image and push it to your local Docker registry. If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+
+   ```bash
+   make build-kagent-adk
+   ```
+
+   Example output:
+
+   ```console
+   => => pushing manifest for localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5-9-g7c3a48c@sha256:084280184b398d56c787e51d1fef33002402364
+   ```
+
+3. From the output of the previous step, tag and push the image as `latest`.
+
+   ```bash
+   docker tag localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5-9-g7c3a48c@sha256:084280184b398d56c787e51d1fef33002402364 localhost:5001/kagent-dev/kagent/kagent-adk:latest
+   docker push localhost:5001/kagent-dev/kagent/kagent-adk:latest
+   ```
+
+4. Build the custom agent image and push it to your local Docker registry.
+
+   ```bash
+   cd python/samples/adk/basic
+   docker build . -t localhost:5001/my-byo:latest \
+     --build-arg DOCKER_REGISTRY=localhost:5001 \
+     --build-arg VERSION=latest \
+     --push
+   ```
+
+## Creating a BYO Agent resource 
+
+Now that you have your own custom agent image, you can create a BYO Agent resource for kagent to manage.
+
+1. Save the API key for your LLM provider, such as Gemini, in an environment variable.
+
+   ```bash
+   export GOOGLE_API_KEY=your-api-key-here
+   ```
+
+2. Create a secret with the API key.
+
+   ```bash
+   kubectl create secret generic kagent-google -n kagent  --from-literal=GOOGLE_API_KEY=$GOOGLE_API_KEY   --dry-run=client -oyaml | k apply -f -
+   ```
+
+3. Create a BYO Agent resource.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: basic-agent
+     namespace: kagent
+   spec:
+     description: This agent can do anything.
+     type: BYO
+     byo:
+       deployment:
+         image: localhost:5001/my-byo:latest
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+
+## Testing the A2A endpoint
+
+The A2A endpoint is exposed on the port `8083` of the kagent controller service.
+
+1. Enable port-forwarding on the `kagent-controller` service.
+
+   >Note that you could also expose the A2A endpoint publicly by using a gateway.
+
+   ```bash
+   kubectl port-forward svc/kagent-controller 8083:8083 -n kagent
+   ```
+
+2. To test that the agent is available and has an agent card, send a request to the `.well-known/agent.json` endpoint. Note the API endpoint follows the pattern `/api/a2a/{namespace}/{agent-name}/.well-known/agent.json`.
+
+   ```bash
+   curl localhost:8083/api/a2a/kagent/basic-agent/.well-known/agent.json
+   ```
+
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+
+   ```json
+   {
+     "name": "basic_agent",
+     "description": "This agent can do anything.",
+     "url": "http://127.0.0.1:8083/api/a2a/kagent/basic-agent/",
+     "version": "",
+     "capabilities": {
+       "streaming": true,
+       "pushNotifications": false,
+       "stateTransitionHistory": true
+     },
+     "defaultInputModes": [
+       "text"
+     ],
+     "defaultOutputModes": [
+       "text"
+     ],
+     "skills": []
+   }
+   ```
+
+## Invoking the agent
+
+You can invoke the agent in several ways, including the kagent dashboard, kagent CLI, and the A2A host CLI.
+
+### Dashboard
+
+Launch the dashboard with `kagent dashboard`, find your `basic-agent`, and start chatting. For complete steps, see the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
+
+![BYO Agent](/images/byo-basic.png "Chat with your basic agent")
+
+### kagent CLI
+
+To use the kagent CLI, make sure that the controller is still being port-forwarded.
+
+Then, use the invoke command. For more options, run `kagent help invoke`.
+
+```shell
+kagent invoke --agent basic-agent --task "Roll a die with 6 sides"
+```
+
+Example output: The output includes both the response as well as the details of the response. The formatting is in JSON but can be quite long, depending on the call and the agent configuration.
+
+```json
+{
+  "artifacts": [
+    {
+      "artifactId": "2d44a62e-d079-4dae-8ee8-f8759add9ffe",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "I rolled a 4 on the 6-sided die.\n"
+        }
+      ]
+    }
+  ],
+...
+```
+
+### A2A host CLI
+
+You can use the A2A host CLI to invoke the agent. This CLI is part of the [A2A samples repository](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/cli).
+
+1. Clone the A2A samples repository.
+
+   ```bash
+   git clone https://github.com/a2aproject/a2a-samples.git
+   ```
+
+2. From the `a2a-samples/samples/python/hosts/cli` directory, point the CLI to the kagent endpoint.
+
+   ```bash
+   cd a2a-samples/samples/python/hosts/cli
+   uv run . --agent http://127.0.0.1:8083/api/a2a/kagent/basic-agent
+   ```
+
+   Example output: The CLI connects to the kagent, displays the agent card and prompts you for input.
+
+   ```console
+   ======= Agent Card ========
+   {"capabilities":{"pushNotifications":false,"stateTransitionHistory":true,"streaming":true},"defaultInputModes":["text"],"defaultOutputModes":["text"],"description":"This agent can do anything.","name":"basic_agent","protocolVersion":"0.2.6","skills":[],"url":"http://127.0.0.1:8083/api/a2a/kagent/basic-agent/","version":""}
+   =========  starting a new task ======== 
+   
+   What do you want to send to the agent? (:q or quit to exit): 
+   ```
+
+3. Send the task `"Roll a die with 6 sides"` to the agent. You'll be also prompted to optionally attach a file to the request, but just hit enter to skip this step. 
+
+   Example output: You get a stream of events that include the prompt and the agent's response, such as the following.
+
+   ```json
+   {
+     "contextId": "157a0834df2c459d9cee45316ffbfb5b",
+     "final": false,
+     "kind": "status-update",
+     "metadata": {
+       "adk_app_name": "kagent__NS__basic_agent",
+       "adk_author": "hello_world_agent",
+       "adk_invocation_id": "e-8619b200-2f0a-4257-bd6b-b08bd1b139fd",
+       "adk_session_id": "157a0834df2c459d9cee45316ffbfb5b",
+       "adk_usage_metadata": {
+         "candidatesTokenCount": 15,
+         "candidatesTokensDetails": [
+           {
+             "modality": "TEXT",
+             "tokenCount": 15
+           }
+         ],
+         "promptTokenCount": 415,
+         "promptTokensDetails": [
+           {
+             "modality": "TEXT",
+             "tokenCount": 415
+           }
+         ],
+         "totalTokenCount": 430
+       },
+       "adk_user_id": "admin@kagent.dev"
+     },
+     "status": {
+       "message": {
+         "kind": "message",
+         "messageId": "dd05c3cd-2dc3-4efd-9791-d7124be6dd52",
+         "parts": [
+           {
+             "kind": "text",
+             "text": "I rolled a 6-sided die and got a 5.\n"
+           }
+         ],
+         "role": "agent"
+       },
+       "state": "working",
+       "timestamp": "2025-08-14T22:15:04.276358+00:00"
+     },
+     "taskId": "59d2b071-04e9-4fef-a0dd-e925dd13cceb"
+   }
+   ```

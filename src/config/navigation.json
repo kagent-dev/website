@@ -134,6 +134,11 @@
             "description": "Discover how to implement Agent-to-Agent (A2A) communication and collaboration with kagent."
           },
           {
+            "title": "BYO A2A Agents",
+            "href": "/docs/kagent/examples/a2a-byo",
+            "description": "Bring your own A2A agent to kagent"
+          },
+          {
             "title": "Documentation Agent",
             "href": "/docs/kagent/examples/documentation",
             "description": "See an example of a kagent agent built to help with documentation-related tasks."

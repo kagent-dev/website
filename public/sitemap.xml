@@ -57,6 +57,13 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/docs/kagent/examples/a2a-byo</loc>
+        <lastmod>2025-08-14</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://kagent.dev/docs/kagent/examples/discord-a2a</loc>
         <lastmod>2025-08-14</lastmod>
         <changefreq>weekly</changefreq>
