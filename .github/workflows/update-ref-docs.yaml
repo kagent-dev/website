@@ -137,16 +137,52 @@ jobs:
                 continue
               fi
               
+              # Generate the helm documentation
               go run github.com/norwoodj/helm-docs/cmd/helm-docs@v1.14.2 \
                 --chart-search-root "$GITHUB_WORKSPACE/kagent/helm/$dir" \
-                --dry-run > "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                --dry-run > "src/app/docs/kagent/resources/helm/${file}/temp.mdx"
 
               # Remove badge line and following empty line 
               # (might be replaced by helm docs template in the future)
-              sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+              sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/${file}/temp.mdx"
 
               # Remove backticks from the Default column in the table
-              sed -i 's/| `\([^`]*\)` |/| \1 |/g' "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+              sed -i 's/| `\([^`]*\)` |/| \1 |/g' "src/app/docs/kagent/resources/helm/${file}/temp.mdx"
+
+              # Add frontmatter based on chart type
+              if [ "$file" = "helm" ]; then
+                echo '---' > "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'title: "Helm Chart Configuration"' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'sectionOrder: 2' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'description: "kagent Helm chart configuration reference"' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '---' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'export const metadata = {' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '  title: "Helm Chart Configuration",' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '  description: "kagent Helm chart configuration reference",' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '  author: "kagent.dev"' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '};' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+              else
+                echo '---' > "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'title: "CRDs Chart Configuration"' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'sectionOrder: 3' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'description: "kagent CRDs Helm chart configuration reference"' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '---' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo 'export const metadata = {' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '  title: "CRDs Chart Configuration",' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '  description: "kagent CRDs Helm chart configuration reference",' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '  author: "kagent.dev"' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '};' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+                echo '' >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+              fi
+
+              # Append the processed helm documentation
+              cat "src/app/docs/kagent/resources/helm/${file}/temp.mdx" >> "src/app/docs/kagent/resources/helm/${file}/page.mdx"
+
+              # Clean up temporary file
+              rm -f "src/app/docs/kagent/resources/helm/${file}/temp.mdx"
             done
 
             echo "=== Debug: After creating index file ==="
