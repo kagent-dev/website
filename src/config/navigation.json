@@ -161,6 +161,21 @@
         "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.",
         "items": [
           {
+            "title": "API Reference",
+            "href": "/docs/kagent/resources/api",
+            "description": "Complete API reference documentation for kagent CRDs and resources."
+          },
+          {
+            "title": "Helm Charts",
+            "href": "/docs/kagent/resources/helm/helm",
+            "description": "Configuration reference for the main kagent Helm chart."
+          },
+          {
+            "title": "CRDs Chart",
+            "href": "/docs/kagent/resources/helm/crds",
+            "description": "Configuration reference for the kagent CRDs Helm chart."
+          },
+          {
             "title": "Troubleshooting",
             "href": "/docs/kagent/resources/troubleshooting",
             "description": "Find solutions to common issues and troubleshooting tips for kagent."
