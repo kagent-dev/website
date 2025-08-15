@@ -20,53 +20,69 @@ This guide covers ways to install and configure kagent in your Kubernetes enviro
 
 1. Set the OpenAI API key as an environment variable:
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
 
 2. Download the kagent CLI:
 
-```bash
-# Download/run the install script
-curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
-```
+   ```bash
+   # Download/run the install script
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+   ```
 
-3. Install kagent to the cluster using the CLI. First run the CLI:
+3. Install the kmcp CRDs so that you can create MCP servers.
 
-```bash
-kagent install
-```
+   ```sh
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kmcp-system \
+     --create-namespace
+   ```
 
-```console
-kagent installed successfully
-```
+4. Install kagent to the cluster by using the CLI.
+
+   ```bash
+   kagent install
+   ```
+   
+   ```console
+   kagent installed successfully
+   ```
 
 ### Using Helm
 
 Another way to install kagent is using Helm.
 
 
-1. Install the Helm chart with CRDs:
+1. Install the kagent Helm chart with CRDs.
 
-```bash
-helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
-    --namespace kagent \
-    --create-namespace
-```
+   ```bash
+   helm install kagent-crds oci://ghcr.io/kagent-dev/   kagent/helm/kagent-crds \
+       --namespace kagent \
+       --create-namespace
+   ```
 
-2. Set the `OPENAI_API_KEY` environment variable:
+2. Install the kmcp CRDs so that you can create MCP servers.
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
+   ```sh
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kmcp-system \
+     --create-namespace
+   ```
 
-3. Install the kagent Helm chart:
+3. Set the `OPENAI_API_KEY` environment variable:
 
-```bash
-helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-    --namespace kagent \
-    --set providers.openAI.apiKey=$OPENAI_API_KEY
-```
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+4. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.openAI.apiKey=$OPENAI_API_KEY
+   ```
 
 ## Uninstallation
 
