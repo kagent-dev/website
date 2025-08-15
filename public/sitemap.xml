@@ -162,7 +162,7 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/docs/kagent/resources/api</loc>
+        <loc>https://kagent.dev/docs/kagent/resources/api-ref</loc>
         <lastmod>2025-08-15</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
@@ -170,6 +170,13 @@
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/faq</loc>
+        <lastmod>2025-08-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kagent/resources/helm</loc>
         <lastmod>2025-08-15</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
@@ -309,7 +316,7 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/docs/kmcp/reference/api</loc>
+        <loc>https://kagent.dev/docs/kmcp/reference/api-ref</loc>
         <lastmod>2025-08-15</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
