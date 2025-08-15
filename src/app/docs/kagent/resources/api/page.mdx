@@ -1,0 +1,726 @@
+---
+title: "API docs"
+sectionOrder: 1
+description: "kagent API reference docs"
+---
+
+export const metadata = {
+  title: "API docs",
+  description: "kagent API reference docs",
+  author: "kagent.dev"
+};
+
+# API Reference
+
+## Packages
+- [kagent.dev/v1alpha2](#kagentdevv1alpha2)
+
+
+## kagent.dev/v1alpha2
+
+Package v1alpha1 contains API Schema definitions for the agent v1alpha1 API group.
+
+### Resource Types
+- [Agent](#agent)
+- [ModelConfig](#modelconfig)
+- [RemoteMCPServer](#remotemcpserver)
+
+
+
+#### A2AConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `skills` _[AgentSkill](#agentskill) array_ |  |  | MinItems: 1 <br /> |
+
+
+#### Agent
+
+
+
+Agent is the Schema for the agents API.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
+| `kind` _string_ | `Agent` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AgentSpec](#agentspec)_ |  |  |  |
+| `status` _[AgentStatus](#agentstatus)_ |  |  |  |
+
+
+#### AgentSkill
+
+_Underlying type:_ _AgentSkill_
+
+
+
+
+
+_Appears in:_
+- [A2AConfig](#a2aconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | ID is the unique identifier for the skill. |  |  |
+| `name` _string_ | Name is the human-readable name of the skill. |  |  |
+| `description` _string_ | Description is an optional detailed description of the skill. |  |  |
+| `tags` _string array_ | Tags are optional tags for categorization. |  |  |
+| `examples` _string array_ | Examples are optional usage examples. |  |  |
+| `inputModes` _string array_ | InputModes are the supported input data modes/types. |  |  |
+| `outputModes` _string array_ | OutputModes are the supported output data modes/types. |  |  |
+
+
+#### AgentSpec
+
+
+
+AgentSpec defines the desired state of Agent.
+
+
+
+_Appears in:_
+- [Agent](#agent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[AgentType](#agenttype)_ |  | Declarative | Enum: [Declarative BYO] <br /> |
+| `byo` _[BYOAgentSpec](#byoagentspec)_ |  |  |  |
+| `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ |  |  |  |
+| `description` _string_ |  |  |  |
+
+
+#### AgentStatus
+
+
+
+AgentStatus defines the observed state of Agent.
+
+
+
+_Appears in:_
+- [Agent](#agent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `observedGeneration` _integer_ |  |  |  |
+| `configHash` _integer array_ | This is used to determine if the agent config has changed.<br />If it has changed, the agent will be restarted. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+
+
+#### AgentType
+
+_Underlying type:_ _string_
+
+AgentType represents the agent type
+
+_Validation:_
+- Enum: [Declarative BYO]
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+
+| Field | Description |
+| --- | --- |
+| `Declarative` |  |
+| `BYO` |  |
+
+
+#### AnthropicConfig
+
+
+
+AnthropicConfig contains Anthropic-specific configuration options
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `baseUrl` _string_ | Base URL for the Anthropic API (overrides default) |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+| `temperature` _string_ | Temperature for sampling |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+| `topK` _integer_ | Top-k sampling parameter |  |  |
+
+
+#### AnthropicVertexAIConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `projectID` _string_ | The project ID |  |  |
+| `location` _string_ | The project location |  |  |
+| `temperature` _string_ | Temperature |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+| `topK` _string_ | Top-k sampling parameter |  |  |
+| `stopSequences` _string array_ | Stop sequences |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+
+
+#### AzureOpenAIConfig
+
+
+
+AzureOpenAIConfig contains Azure OpenAI-specific configuration options
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `azureEndpoint` _string_ | Endpoint for the Azure OpenAI API |  |  |
+| `apiVersion` _string_ | API version for the Azure OpenAI API |  |  |
+| `azureDeployment` _string_ | Deployment name for the Azure OpenAI API |  |  |
+| `azureAdToken` _string_ | Azure AD token for authentication |  |  |
+| `temperature` _string_ | Temperature for sampling |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+
+
+#### BYOAgentSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `deployment` _[ByoDeploymentSpec](#byodeploymentspec)_ | Trust relationship to the agent. |  |  |
+
+
+#### BaseVertexAIConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [AnthropicVertexAIConfig](#anthropicvertexaiconfig)
+- [GeminiVertexAIConfig](#geminivertexaiconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `projectID` _string_ | The project ID |  |  |
+| `location` _string_ | The project location |  |  |
+| `temperature` _string_ | Temperature |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+| `topK` _string_ | Top-k sampling parameter |  |  |
+| `stopSequences` _string array_ | Stop sequences |  |  |
+
+
+#### ByoDeploymentSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [BYOAgentSpec](#byoagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `image` _string_ |  |  | MinLength: 1 <br /> |
+| `cmd` _string_ |  |  |  |
+| `args` _string array_ |  |  |  |
+| `replicas` _integer_ | If not specified, the default value is 1. | 1 | Minimum: 1 <br /> |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
+| `labels` _object (keys:string, values:string)_ |  |  |  |
+| `annotations` _object (keys:string, values:string)_ |  |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
+
+
+#### DeclarativeAgentSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `systemMessage` _string_ |  |  | MinLength: 1 <br /> |
+| `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
+| `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is true. |  |  |
+| `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
+| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
+| `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
+
+
+#### DeclarativeDeploymentSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `imageRegistry` _string_ |  |  |  |
+| `replicas` _integer_ | If not specified, the default value is 1. | 1 | Minimum: 1 <br /> |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
+| `labels` _object (keys:string, values:string)_ |  |  |  |
+| `annotations` _object (keys:string, values:string)_ |  |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
+
+
+#### GeminiConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+
+
+#### GeminiVertexAIConfig
+
+
+
+GeminiVertexAIConfig contains Gemini Vertex AI-specific configuration options
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `projectID` _string_ | The project ID |  |  |
+| `location` _string_ | The project location |  |  |
+| `temperature` _string_ | Temperature |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+| `topK` _string_ | Top-k sampling parameter |  |  |
+| `stopSequences` _string array_ | Stop sequences |  |  |
+| `maxOutputTokens` _integer_ | Maximum output tokens |  |  |
+| `candidateCount` _integer_ | Candidate count |  |  |
+| `responseMimeType` _string_ | Response mime type |  |  |
+
+
+#### MCPTool
+
+
+
+
+
+
+
+_Appears in:_
+- [RemoteMCPServerStatus](#remotemcpserverstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  |  |
+| `description` _string_ |  |  |  |
+
+
+#### McpServerTool
+
+
+
+
+
+
+
+_Appears in:_
+- [Tool](#tool)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `kind` _string_ |  |  |  |
+| `apiGroup` _string_ |  |  |  |
+| `name` _string_ |  |  |  |
+| `toolNames` _string array_ | The names of the tools to be provided by the ToolServer<br />For a list of all the tools provided by the server,<br />the client can query the status of the ToolServer object after it has been created |  |  |
+
+
+#### ModelConfig
+
+
+
+ModelConfig is the Schema for the modelconfigs API.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
+| `kind` _string_ | `ModelConfig` | | |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[ModelConfigSpec](#modelconfigspec)_ |  |  |  |
+| `status` _[ModelConfigStatus](#modelconfigstatus)_ |  |  |  |
+
+
+#### ModelConfigSpec
+
+
+
+ModelConfigSpec defines the desired state of ModelConfig.
+
+
+
+_Appears in:_
+- [ModelConfig](#modelconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `model` _string_ |  |  |  |
+| `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig |  |  |
+| `apiKeySecretKey` _string_ | The key in the secret that contains the API key |  |  |
+| `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
+| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI] <br /> |
+| `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
+| `anthropic` _[AnthropicConfig](#anthropicconfig)_ | Anthropic-specific configuration |  |  |
+| `azureOpenAI` _[AzureOpenAIConfig](#azureopenaiconfig)_ | Azure OpenAI-specific configuration |  |  |
+| `ollama` _[OllamaConfig](#ollamaconfig)_ | Ollama-specific configuration |  |  |
+| `gemini` _[GeminiConfig](#geminiconfig)_ | Gemini-specific configuration |  |  |
+| `geminiVertexAI` _[GeminiVertexAIConfig](#geminivertexaiconfig)_ | Gemini Vertex AI-specific configuration |  |  |
+| `anthropicVertexAI` _[AnthropicVertexAIConfig](#anthropicvertexaiconfig)_ | Anthropic-specific configuration |  |  |
+
+
+#### ModelConfigStatus
+
+
+
+ModelConfigStatus defines the observed state of ModelConfig.
+
+
+
+_Appears in:_
+- [ModelConfig](#modelconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `observedGeneration` _integer_ |  |  |  |
+
+
+#### ModelProvider
+
+_Underlying type:_ _string_
+
+ModelProvider represents the model provider type
+
+_Validation:_
+- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI]
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description |
+| --- | --- |
+| `Anthropic` |  |
+| `AzureOpenAI` |  |
+| `OpenAI` |  |
+| `Ollama` |  |
+| `Gemini` |  |
+| `GeminiVertexAI` |  |
+| `AnthropicVertexAI` |  |
+
+
+#### OllamaConfig
+
+
+
+OllamaConfig contains Ollama-specific configuration options
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host for the Ollama API |  |  |
+| `options` _object (keys:string, values:string)_ | Options for the Ollama API |  |  |
+
+
+#### OpenAIConfig
+
+
+
+OpenAIConfig contains OpenAI-specific configuration options
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `baseUrl` _string_ | Base URL for the OpenAI API (overrides default) |  |  |
+| `organization` _string_ | Organization ID for the OpenAI API |  |  |
+| `temperature` _string_ | Temperature for sampling |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+| `frequencyPenalty` _string_ | Frequency penalty |  |  |
+| `presencePenalty` _string_ | Presence penalty |  |  |
+| `seed` _integer_ | Seed value |  |  |
+| `n` _integer_ | N value |  |  |
+| `timeout` _integer_ | Timeout |  |  |
+
+
+#### RemoteMCPServer
+
+
+
+RemoteMCPServer is the Schema for the RemoteMCPServers API.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
+| `kind` _string_ | `RemoteMCPServer` | | |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[RemoteMCPServerSpec](#remotemcpserverspec)_ |  |  |  |
+| `status` _[RemoteMCPServerStatus](#remotemcpserverstatus)_ |  |  |  |
+
+
+#### RemoteMCPServerProtocol
+
+_Underlying type:_ _string_
+
+
+
+_Validation:_
+- Enum: [SSE STREAMABLE_HTTP]
+
+_Appears in:_
+- [RemoteMCPServerSpec](#remotemcpserverspec)
+
+| Field | Description |
+| --- | --- |
+| `SSE` |  |
+| `STREAMABLE_HTTP` |  |
+
+
+#### RemoteMCPServerSpec
+
+
+
+RemoteMCPServerSpec defines the desired state of RemoteMCPServer.
+
+
+
+_Appears in:_
+- [RemoteMCPServer](#remotemcpserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `description` _string_ |  |  |  |
+| `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
+| `url` _string_ |  |  | MinLength: 1 <br /> |
+| `headersFrom` _[ValueRef](#valueref) array_ |  |  |  |
+| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
+| `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
+| `terminateOnClose` _boolean_ |  | true |  |
+
+
+#### RemoteMCPServerStatus
+
+
+
+RemoteMCPServerStatus defines the observed state of RemoteMCPServer.
+
+
+
+_Appears in:_
+- [RemoteMCPServer](#remotemcpserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `discoveredTools` _[MCPTool](#mcptool) array_ |  |  | Optional: \{\} <br /> |
+
+
+#### SharedDeploymentSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [ByoDeploymentSpec](#byodeploymentspec)
+- [DeclarativeDeploymentSpec](#declarativedeploymentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `replicas` _integer_ | If not specified, the default value is 1. | 1 | Minimum: 1 <br /> |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
+| `labels` _object (keys:string, values:string)_ |  |  |  |
+| `annotations` _object (keys:string, values:string)_ |  |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
+
+
+#### Tool
+
+
+
+
+
+
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[ToolProviderType](#toolprovidertype)_ |  |  | Enum: [McpServer Agent] <br /> |
+| `mcpServer` _[McpServerTool](#mcpservertool)_ |  |  |  |
+| `agent` _[TypedLocalReference](#typedlocalreference)_ |  |  |  |
+
+
+#### ToolProviderType
+
+_Underlying type:_ _string_
+
+ToolProviderType represents the tool provider type
+
+_Validation:_
+- Enum: [McpServer Agent]
+
+_Appears in:_
+- [Tool](#tool)
+
+| Field | Description |
+| --- | --- |
+| `McpServer` |  |
+| `Agent` |  |
+
+
+#### TypedLocalReference
+
+
+
+
+
+
+
+_Appears in:_
+- [McpServerTool](#mcpservertool)
+- [Tool](#tool)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `kind` _string_ |  |  |  |
+| `apiGroup` _string_ |  |  |  |
+| `name` _string_ |  |  |  |
+
+
+#### ValueRef
+
+
+
+ValueRef represents a configuration value
+
+
+
+_Appears in:_
+- [RemoteMCPServerSpec](#remotemcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  |  |
+| `value` _string_ |  |  |  |
+| `valueFrom` _[ValueSource](#valuesource)_ |  |  |  |
+
+
+#### ValueSource
+
+
+
+ValueSource defines a source for configuration values from a Secret or ConfigMap
+
+
+
+_Appears in:_
+- [ValueRef](#valueref)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[ValueSourceType](#valuesourcetype)_ |  |  | Enum: [ConfigMap Secret] <br /> |
+| `name` _string_ | The name of the ConfigMap or Secret. |  |  |
+| `key` _string_ | The key of the ConfigMap or Secret. |  |  |
+
+
+#### ValueSourceType
+
+_Underlying type:_ _string_
+
+
+
+
+
+_Appears in:_
+- [ValueSource](#valuesource)
+
+| Field | Description |
+| --- | --- |
+| `ConfigMap` |  |
+| `Secret` |  |
+
+
