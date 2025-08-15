@@ -161,24 +161,14 @@
         "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.",
         "items": [
           {
-            "title": "API Reference",
-            "href": "/docs/kagent/resources/api",
-            "description": "Complete API reference documentation for kagent CRDs and resources."
+            "title": "API docs",
+            "href": "/docs/kagent/resources/api-ref",
+            "description": "kagent API reference docs"
           },
           {
-            "title": "Helm Charts",
-            "href": "/docs/kagent/resources/helm/helm",
-            "description": "Configuration reference for the main kagent Helm chart."
-          },
-          {
-            "title": "CRDs Chart",
-            "href": "/docs/kagent/resources/helm/crds",
-            "description": "Configuration reference for the kagent CRDs Helm chart."
-          },
-          {
-            "title": "Troubleshooting",
-            "href": "/docs/kagent/resources/troubleshooting",
-            "description": "Find solutions to common issues and troubleshooting tips for kagent."
+            "title": "Helm Chart Configuration",
+            "href": "/docs/kagent/resources/helm",
+            "description": "kagent Helm chart configuration reference"
           },
           {
             "title": "FAQs",
@@ -189,6 +179,11 @@
             "title": "Release Notes",
             "href": "/docs/kagent/resources/release-notes",
             "description": "Review the release notes for kagent."
+          },
+          {
+            "title": "Troubleshooting",
+            "href": "/docs/kagent/resources/troubleshooting",
+            "description": "Find solutions to common issues and troubleshooting tips for kagent."
           }
         ]
       }
@@ -254,6 +249,11 @@
         "href": "/docs/kmcp/reference",
         "description": "",
         "items": [
+          {
+            "title": "API docs",
+            "href": "/docs/kmcp/reference/api-ref",
+            "description": "kmcp API reference docs"
+          },
           {
             "title": "kmcp add-tool",
             "href": "/docs/kmcp/reference/kmcp-add-tool",
