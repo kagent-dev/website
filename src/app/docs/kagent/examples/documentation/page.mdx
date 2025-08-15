@@ -79,13 +79,32 @@ docker build -t <your docker repository> .
 docker push <your docker repository> .
 ```
 
+> **� Important: Dockerfile Modifications Required**
+> 
+> Make sure you add these essential lines to the Dockerfile before building:
+> 
+> ```dockerfile
+> # Add this environment variable
+> ENV SQLITE_DB_DIR=/data
+> 
+> # Create the data directory and copy your database
+> RUN mkdir -p /data
+> COPY mcp.db /data/mcp.db
+> 
+> # Update the ownership to include /data
+> RUN chown -R kagent:nodejs /app /data
+> ```
+> 
+> These changes ensure the MCP server can locate your custom documentation database in the `/data` directory.
+
 ## Deploy the MCP server
 
 Create a Secret for the OpenAI API Key which is going to be used to create the embeddings:
 
 ```bash
 kubectl create secret generic mcp-secrets \
-  --from-literal=OPENAI_API_KEY=<your_openai_api_key>
+  --from-literal=OPENAI_API_KEY=<your_openai_api_key> \
+  -n kagent
 ```
 
 Create a ConfigMap for the Database Configuration:
@@ -93,7 +112,8 @@ Create a ConfigMap for the Database Configuration:
 ```bash
 kubectl create configmap mcp-config \
   --from-literal=SQLITE_DB_DIR=/data \
-  --from-literal=PORT=3001
+  --from-literal=PORT=3001 \
+  -n kagent
 ```
 
 Create a file named `deployment.yaml`:
@@ -103,6 +123,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mcp-sqlite-vec
+  namespace: kagent
   labels:
     app: mcp-sqlite-vec
 spec:
@@ -151,6 +172,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mcp-sqlite-vec
+  namespace: kagent
 spec:
   selector:
     app: mcp-sqlite-vec
@@ -167,15 +189,15 @@ kubectl apply -f service.yaml
 
 ## Use the MCP server in kagent
 
-In the kagent UI, click on `Tools` and then on `Manage tool servers`.
+You can configure the MCP server in kagent using either the web UI or YAML manifests.
 
 ![manage tool servers](/images/manage-tool-servers.png "Manage tool servers")
 
-Click on `Add Server`.
+In the kagent UI, click on the `Create` dropdown menu and select `New Tool Server`.
 
 Call it `sqlite-vec`.
 
-Select `URL` and use `http://mcp-sqlite-vec.default:3001/sse`.
+Select `URL` and use `http://mcp-sqlite-vec.kagent:3001/mcp`.
 
 ![add tool server](/images/add-tool-server.png "Add tool server")
 
@@ -185,9 +207,39 @@ After refreshing the page, you should see the `query-documentation` tool being d
 
 ![list tool servers](/images/list-tool-servers.png "List tool servers")
 
+### Option 2: Using YAML CRDs
+
+Create a `toolserver.yaml` file:
+
+```yaml
+# Kagent ToolServer Configuration
+# This connects agents to the MCP documentation query server
+apiVersion: kagent.dev/v1alpha1
+kind: ToolServer
+metadata:
+  name: sqlite-vec              # Name referenced by agents (in toolServer field)
+  namespace: kagent             # Must match your Kagent installation namespace
+spec:
+  config:
+    streamableHttp:             # Configuration for HTTP-based MCP connection
+      sseReadTimeout: 5m0s      # Timeout for server-sent events
+      timeout: 5s               # General connection timeout
+      url: http://mcp-sqlite-vec.kagent:3001/mcp  # MCP server endpoint
+    type: ''                    # Auto-detected based on config
+  description: 'SQLite vector search MCP server for documentation queries'
+```
+
+Apply the ToolServer:
+
+```bash
+kubectl apply -f toolserver.yaml
+```
+
 ## Create the MCP agent
 
-Click on `New Agent`
+### Option 1: Using the Web UI
+
+Click on the `Create` dropdown menu and select `New Agent`.
 
 Use the following information:
 
@@ -198,6 +250,39 @@ Use the following information:
 Click on `Add Tools`.
 
 Select the `query-documentation` tool.
+
+### Option 2: Using YAML CRDs
+
+Create an `agent.yaml` file:
+
+```yaml
+# Kagent Agent Configuration
+# This defines an AI agent that can answer questions about MCP documentation
+apiVersion: kagent.dev/v1alpha1
+kind: Agent
+metadata:
+  name: oswaldo                    # Agent name - change to your preference
+  namespace: kagent               # Must match your Kagent installation namespace
+spec:
+  description: >-
+    The MCP agent is answering questions about MCP, using the MCP documentation
+  modelConfig: default-model-config  # References a ModelConfig resource for AI model settings
+  systemMessage: >-
+    Use your tool to answer any question about the Model Context Protocol (MCP).
+    Use mcp for the product and latest for the version.
+  tools:
+    - mcpServer:
+        toolNames:
+          - query_documentation   # The specific tool from the MCP server to use
+        toolServer: kagent/sqlite-vec  # References the ToolServer resource (namespace/name)
+      type: McpServer             # Indicates this is an MCP-based tool
+```
+
+Apply the Agent:
+
+```bash
+kubectl apply -f agent.yaml
+```
 
 ![list agents](/images/list-agents.png "List agents")
 
