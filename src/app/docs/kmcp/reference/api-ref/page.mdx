@@ -1,0 +1,280 @@
+---
+title: "API docs"
+pageOrder: 5
+description: "kmcp API reference docs"
+---
+
+export const metadata = {
+  title: "API docs",
+  description: "kmcp API reference docs",
+  author: "kagent.dev"
+};
+
+# API Reference
+
+## Packages
+- [kagent.dev/v1alpha1](#kagentdevv1alpha1)
+
+
+## kagent.dev/v1alpha1
+
+Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group.
+
+### Resource Types
+- [MCPServer](#mcpserver)
+
+
+
+#### HTTPTransport
+
+
+
+HTTPTransport defines the configuration for a Streamable HTTP transport.
+
+
+
+_Appears in:_
+- [MCPServerSpec](#mcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `targetPort` _integer_ | target port is the HTTP port that serves the MCP server.over HTTP |  |  |
+| `path` _string_ | the target path where MCP is served |  |  |
+
+
+#### KeycloakProvider
+
+
+
+
+
+
+
+_Appears in:_
+- [MCPClientProvider](#mcpclientprovider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `realm` _string_ |  |  |  |
+
+
+#### MCPAuthorizationServer
+
+
+
+MCPAuthorizationServer represents the configuration for the MCP authorization server
+
+
+
+_Appears in:_
+- [MCPServerAuthorization](#mcpserverauthorization)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `issuer` _string_ |  |  |  |
+| `audience` _string_ |  |  |  |
+| `jwksUrl` _string_ |  |  |  |
+| `provider` _[MCPClientProvider](#mcpclientprovider)_ |  |  |  |
+| `resourceMetadata` _[MCPClientResourceMetadata](#mcpclientresourcemetadata)_ |  |  |  |
+
+
+#### MCPClientProvider
+
+
+
+MCPClientProvider represents the support identity providers currently only keycloak is supported
+
+
+
+_Appears in:_
+- [MCPAuthorizationServer](#mcpauthorizationserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `keycloak` _[KeycloakProvider](#keycloakprovider)_ |  |  |  |
+
+
+#### MCPClientResourceMetadata
+
+
+
+MCPClientResourceMetadata represents resource metadata for MCP client authentication
+
+
+
+_Appears in:_
+- [MCPAuthorizationServer](#mcpauthorizationserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `baseUrl` _string_ | BaseURL denotes the protected base url of the protected resource ie: http://localhost:3000 |  |  |
+| `scopesSupported` _string array_ | Scopes supported by this resource |  |  |
+| `bearerMethodsSupported` _string array_ | Bearer methods supported by this resource |  |  |
+| `additionalFields` _object (keys:string, values:string)_ | Additional resource metadata fields |  |  |
+
+
+#### MCPServer
+
+
+
+MCPServer is the Schema for the mcpservers API.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha1` | | |
+| `kind` _string_ | `MCPServer` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[MCPServerSpec](#mcpserverspec)_ |  |  |  |
+| `status` _[MCPServerStatus](#mcpserverstatus)_ |  |  |  |
+
+
+#### MCPServerAuthentication
+
+
+
+MCPServerAuthentication defines the authentication configuration for the MCP server.
+
+
+
+_Appears in:_
+- [MCPServerSpec](#mcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `jwt` _[MCPServerJWTAuthentication](#mcpserverjwtauthentication)_ | JWT defines the JWT authentication configuration. |  |  |
+
+
+#### MCPServerAuthorization
+
+
+
+MCPServerAuthorization defines the authorization configuration for the MCP server.
+
+
+
+_Appears in:_
+- [MCPServerSpec](#mcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `server` _[MCPAuthorizationServer](#mcpauthorizationserver)_ | Server defines the configuration for the MCP authorization server that protects the MCP server.<br />Setting this field will configure agentgateway to use the authorization server<br />to protect the MCP server and its resources as well as adapt traffic to the MCP client to comply with the<br />MCP authorization spec before forwarding traffic to the MCP client. |  |  |
+| `rules` _string_ | Rules defines the CEL-based authorization rules that control access to the MCP server resources. |  |  |
+
+
+
+
+
+
+#### MCPServerDeployment
+
+
+
+MCPServerDeployment
+
+
+
+_Appears in:_
+- [MCPServerSpec](#mcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `image` _string_ | Image defines the container image to to deploy the MCP server. |  |  |
+| `port` _integer_ | Port defines the port on which the MCP server will listen. |  |  |
+| `cmd` _string_ | Cmd defines the command to run in the container to start the mcp server. |  |  |
+| `args` _string array_ | Args defines the arguments to pass to the command. |  |  |
+| `env` _object (keys:string, values:string)_ | Env defines the environment variables to set in the container. |  |  |
+| `secretRefs` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | SecretRefs defines the list of Kubernetes secrets to reference.<br />These secrets will be mounted as volumes to the MCP server container. |  |  |
+
+
+#### MCPServerJWTAuthentication
+
+
+
+MCPServerJWTAuthentication defines the JWT authentication configuration for the MCP server.
+
+
+
+_Appears in:_
+- [MCPServerAuthentication](#mcpserverauthentication)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `issuer` _string_ | Issuer is the JWT issuer URL. |  |  |
+| `audiences` _string array_ | Audiences is a list of audiences that the JWT must match. |  |  |
+| `jwks` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core)_ | JWKS references a secret containing the JSON Web Key Set.<br />The secret must contain a key with the JWKS content. |  |  |
+
+
+#### MCPServerSpec
+
+
+
+MCPServerSpec defines the desired state of MCPServer.
+
+
+
+_Appears in:_
+- [MCPServer](#mcpserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `deployment` _[MCPServerDeployment](#mcpserverdeployment)_ | Configuration to Deploy the MCP Server using a docker container |  |  |
+| `transportType` _[TransportType](#transporttype)_ | TransportType defines the type of mcp server being run |  | Enum: [stdio http] <br /> |
+| `stdioTransport` _[StdioTransport](#stdiotransport)_ | StdioTransport defines the configuration for a standard input/output transport. |  |  |
+| `httpTransport` _[HTTPTransport](#httptransport)_ | HTTPTransport defines the configuration for a Streamable HTTP transport. |  |  |
+| `authn` _[MCPServerAuthentication](#mcpserverauthentication)_ | Authn defines the authentication configuration for the MCP server.<br />This field is optional and can be used to configure JWT authentication.<br />If not specified, the MCP server will not require authentication. |  |  |
+| `authz` _[MCPServerAuthorization](#mcpserverauthorization)_ | Authz defines the authorization rule configuration for the MCP server.<br />This field is optional and can be used to configure authorization rules<br />for access to the MCP server and specific tools. If not specified, the MCP server will not enforce<br />any authorization rules. |  |  |
+
+
+#### MCPServerStatus
+
+
+
+MCPServerStatus defines the observed state of MCPServer.
+
+
+
+_Appears in:_
+- [MCPServer](#mcpserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions describe the current conditions of the MCPServer.<br />Implementations should prefer to express MCPServer conditions<br />using the `MCPServerConditionType` and `MCPServerConditionReason`<br />constants so that operators and tools can converge on a common<br />vocabulary to describe MCPServer state.<br /><br />Known condition types are:<br /><br />* "Accepted"<br />* "ResolvedRefs"<br />* "Programmed"<br />* "Ready" |  | MaxItems: 8 <br /> |
+| `observedGeneration` _integer_ | ObservedGeneration is the most recent generation observed for this MCPServer.<br />It corresponds to the MCPServer's generation, which is updated on mutation by the API Server. |  |  |
+
+
+#### StdioTransport
+
+
+
+StdioTransport defines the configuration for a standard input/output transport.
+
+
+
+_Appears in:_
+- [MCPServerSpec](#mcpserverspec)
+
+
+
+#### TransportType
+
+_Underlying type:_ _string_
+
+MCPServerTransportType defines the type of transport for the MCP server.
+
+
+
+_Appears in:_
+- [MCPServerSpec](#mcpserverspec)
+
+| Field | Description |
+| --- | --- |
+| `stdio` | TransportTypeStdio indicates that the MCP server uses standard input/output for communication.<br /> |
+| `http` | TransportTypeHTTP indicates that the MCP server uses Streamable HTTP for communication.<br /> |
+
+

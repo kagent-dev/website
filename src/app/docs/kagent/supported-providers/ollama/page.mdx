@@ -72,14 +72,14 @@ Once the pod has started, you can port-forward to the Ollama service and use `ol
 Let's assume we've downloaded the `llama3` model, you can then use the following ModelConfig to configure the model:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: llama3-model-config
   namespace: kagent
 spec:
   apiKeySecretKey: OPENAI_API_KEY
-  apiKeySecretRef: kagent-openai
+  apiKeySecret: kagent-openai
   model: llama3
   provider: Ollama
   ollama:

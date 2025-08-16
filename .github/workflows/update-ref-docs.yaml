@@ -1,0 +1,192 @@
+name: Update Reference Documentation
+
+on:
+  workflow_dispatch:  # Allow manual triggers for now
+  # Later we can add:
+  # push:
+  #   paths:
+  #     - 'api/v1alpha2/**'
+  #   branches:
+  #     - main
+
+jobs:
+  generate-api-docs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout kagent repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/kagent
+          path: kagent
+
+      - name: Checkout docs repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/website
+          path: website
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+          cache: false
+
+      - name: Set kagent commit SHA
+        run: echo "KAGENT_COMMIT=$(cd kagent && git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Verify API directory exists
+        run: |
+          if [ ! -d "$GITHUB_WORKSPACE/kagent/go/controller/api/v1alpha2" ]; then
+            echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/go/controller/api/v1alpha2"
+            ls -la "$GITHUB_WORKSPACE/kagent/go/controller/api/"
+            exit 1
+          fi
+          echo "API directory found and verified"
+
+      - name: Read max Kubernetes version
+        run: |
+          if [ ! -f "website/public/docs/versions/max-kube.md" ]; then
+            echo "Error: max-kube.md file not found"
+            exit 1
+          fi
+          KUBE_VERSION=$(cat website/public/docs/versions/max-kube.md | tr -d '\n')
+          echo "KUBE_VERSION=$KUBE_VERSION" >> $GITHUB_ENV
+          echo "Using Kubernetes version: $KUBE_VERSION"
+
+      - name: Generate API Reference
+        run: |
+          # Substitute KUBE_VERSION in the config template and write to a temp file
+          cd "$GITHUB_WORKSPACE/website"
+          if [ ! -f "scripts/crd-ref-docs-config.yaml" ]; then
+            echo "Error: crd-ref-docs-config.yaml not found in scripts directory"
+            exit 1
+          fi
+          
+          envsubst < scripts/crd-ref-docs-config.yaml > crd-ref-docs-config.yaml
+
+          echo "Changed to docs repository: $PWD"
+          echo "Using config file:"
+          cat crd-ref-docs-config.yaml
+
+          # Generate API docs
+          go run github.com/elastic/crd-ref-docs@v0.1.0 \
+            --source-path="$GITHUB_WORKSPACE/kagent/go/controller/api/v1alpha2/" \
+            --renderer=markdown \
+            --output-path ./ \
+            --config=crd-ref-docs-config.yaml
+
+          # Check if generation was successful
+          if [ ! -f "./out.md" ]; then
+            echo "Error: API docs generation failed - out.md not created"
+            exit 1
+          fi
+
+          # Remove the temporary config file so it is not included in the PR
+          rm -f crd-ref-docs-config.yaml
+
+          # Create index file with frontmatter
+          echo '---' > src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'title: "API Reference"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'sectionOrder: 1' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'description: "kagent API reference documentation"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '---' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'export const metadata = {' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  title: "API Reference",' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  description: "kagent API reference documentation",' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  author: "kagent.dev"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '};' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          cat "./out.md" >> src/app/docs/kagent/resources/api-ref/page.mdx
+
+          # Remove temporary file
+          rm -f "./out.md"
+
+          # Verify the output file was created
+          if [ ! -f "src/app/docs/kagent/resources/api-ref/page.mdx" ]; then
+            echo "Error: Failed to create API docs page"
+            exit 1
+          fi
+
+          echo "API docs generated successfully"
+
+      - name: Generate Helm Chart Reference
+        run: |
+            echo "Looking for Helm directory:"
+            ls -la "$GITHUB_WORKSPACE/kagent/helm" || echo "Helm directory not found!"
+  
+            # Update docs repository
+            cd "$GITHUB_WORKSPACE/website"
+            echo "Changed to docs repository: $PWD"
+
+            # Create directory for Helm docs
+            mkdir -p src/app/docs/kagent/resources/helm/
+            
+            # Generate Helm Docs for kagent chart
+            if [ ! -d "$GITHUB_WORKSPACE/kagent/helm/kagent" ]; then
+              echo "Error: kagent Helm chart directory not found"
+              exit 1
+            fi
+            
+            echo "Processing kagent Helm chart..."
+            
+            # Generate the helm documentation
+            go run github.com/norwoodj/helm-docs/cmd/helm-docs@v1.14.2 \
+              --chart-search-root "$GITHUB_WORKSPACE/kagent/helm/kagent" \
+              --dry-run > "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            # Remove badge line and following empty line 
+            # (might be replaced by helm docs template in the future)
+            sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            # Remove backticks from the Default column in the table
+            sed -i 's/| `\([^`]*\)` |/| \1 |/g' "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            # Add frontmatter
+            echo '---' > "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'title: "Helm Chart Configuration"' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'sectionOrder: 2' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'description: "kagent Helm chart configuration reference"' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '---' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'export const metadata = {' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '  title: "Helm Chart Configuration",' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '  description: "kagent Helm chart configuration reference",' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '  author: "kagent.dev"' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '};' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '' >> "src/app/docs/kagent/resources/helm/page.mdx"
+
+            # Append the processed helm documentation
+            cat "src/app/docs/kagent/resources/helm/temp.mdx" >> "src/app/docs/kagent/resources/helm/page.mdx"
+
+            # Clean up temporary file
+            rm -f "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            echo "=== Debug: After creating index file ==="
+            echo "Content directory structure:"
+            ls -la src/app/docs/kagent/resources/helm/
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: website
+          commit-message: "docs: Update API and kagent Helm reference docs"
+          signoff: true
+          title: "Update API and kagent Helm reference docs"
+          body: |
+            Automated API and kagent Helm chart documentation update based on the latest commit [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }}) to `main` in the **kagent** repository.
+            
+            This PR was automatically generated by the [**Update Reference documentation** workflow](https://github.com/kagent-dev/website/actions/workflows/update-ref-docs.yaml).
+          branch: api-gen-update
+          branch-suffix: timestamp
+          delete-branch: true
+          base: main
+          labels: |
+            documentation
+            automated pr
