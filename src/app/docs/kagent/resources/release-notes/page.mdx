@@ -1,6 +1,6 @@
 ---
 title: "Release Notes"
-pageOrder: 3
+pageOrder: 5
 description: "Review the release notes for kagent."
 ---
 
@@ -20,11 +20,17 @@ The kagent documentation shows information only for the latest release. If you r
 
 Review the main changes from kagent version 0.5 to v0.6, then continue reading for more detailed information.
 
+* The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 * A new Helm chart for kmcp CRDs is available.
 * API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
 * The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
 * The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
-* The ModelConfig APIs rename the secret name field from `apiKeySecretRef` to `apiKeySecret`.
+* The ModelConfig APIs rename the secret name field from `apiKeySecret` to `apiKeySecret`.
+* Memory APIs are not supported in ADK.
+
+## Upgraded API version
+
+The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 
 ## New! Helm chart for kmcp CRDs
 
@@ -57,9 +63,11 @@ Previously, the kagent installation included only one CRD Helm chart. Now, you i
   ```
 </div>
 
-## General API changes
+## General changes
 
-API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+**`namespace/name` references**: API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+
+**Local development `buildx` access**: The `make helm-install` command now creates a local Docker registry to push development images to. As part of the build process, you might need to allow the buildx builder to access your host network. For more information, see the [developer docs in the kagent repo](https://github.com/kagent-dev/kagent/blob/main/DEVELOPMENT.md#troubleshooting).
 
 ## Tools APIs
 
@@ -83,7 +91,7 @@ Flip through the following tabs to understand the API differences between the ol
   * The `stdio` config section includes the Grafana deployment details.
   * The Grafana details, including the API key, are loaded as environment settings directly in the ToolServer.
   ```yaml
-  apiVersion: kagent.dev/v1alpha1
+  apiVersion: kagent.dev/v1alpha2
   kind: ToolServer
   metadata:
     name: mcp-grafana
@@ -122,7 +130,7 @@ Flip through the following tabs to understand the API differences between the ol
   data:
     GRAFANA_API_KEY: my-base-64-ikey
   ---
-  apiVersion: kagent.dev/v1alpha1
+  apiVersion: kagent.dev/v1alpha2
   kind: MCPServer
   metadata:
     name: grafana
@@ -157,7 +165,7 @@ ToolServer resources that used `type: streamableHttp` are now configured as Remo
 <div id="old-http-tab">
   Old ToolServer API:
   ```yaml
-  apiVersion: kagent.dev/v1alpha1
+  apiVersion: kagent.dev/v1alpha2
   kind: ToolServer
   metadata:
     name: kagent-tool-server
@@ -211,7 +219,7 @@ spec:
       protocol: TCP
       targetPort: http
 ---
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ToolServer
 metadata:
   name: kagent-querydoc
@@ -355,8 +363,8 @@ This change supports the new type for BYO agents.
     namespace: kagent
   spec:
     description: An Kubernetes Expert AI Agent specializing in cluster operations, troubleshooting, and maintenance.
-    type: Inline
-    inline:
+    type: Declarative
+    declarative:
       systemMessage: |
         # Kubernetes AI Agent System Prompt
 
@@ -365,7 +373,7 @@ This change supports the new type for BYO agents.
   ```
   
   **Key Changes:**
-  * Added `type: Inline` field to specify agent type
+  * Added `type: Declarative` field to specify agent type
   * Agent configuration now under `inline` section
   * Supports new BYO deployment model
 </div>
@@ -374,13 +382,14 @@ This change supports the new type for BYO agents.
 
 A new agent type has been added to the Agents API so that you can bring your own (BYO) agent. The agent must be written in ADK, with other frameworks under development.
 
-BYO Agent example configuration:
+BYO Agent example configuration. For more information, see the [BYO Agent](/docs/kagent/examples/a2a-byo) guide.
   
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: basic-agent
+  namespace: kagent
 spec:
   description: This agent can do anything.
   type: BYO
@@ -397,4 +406,8 @@ spec:
 
 ## ModelConfig API
 
-The secret name field is renamed from `apiKeySecretRef` to `apiKeySecret`.
+The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.
+
+## Memory API
+
+The Memory API is not supported in ADK. The [agent development kit](https://google.github.io/adk-docs/) is required to bring your own agents. As such, the Memory docs are removed.

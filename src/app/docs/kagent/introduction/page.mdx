@@ -10,13 +10,18 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Introduction
+import QuickLink from '@/components/quick-link';
 
-This section provides an overview of kagent, including installation instructions, our feature roadmap, and guidelines for contributing to the project.
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Introduction</h1>
+    <p className="text-xl text-gray-400 mb-8">Welcome to kagent! Start here to understand what kagent is, how to install it, and how to contribute.</p>
+    </div>
 
-Explore the following pages to get started:
-
-- **[What is kagent?](/docs/kagent/introduction/what-is-kagent)**: Learn about the core concepts and capabilities of kagent.
-- **[Installation](/docs/kagent/introduction/installation)**: Follow our guide to set up kagent.
-- **[Feature Roadmap](https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap)**: See what we're planning for the future.
-- **[Contributing](https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md)**: Find out how you can help improve kagent. 
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="What is kagent?" description="Learn about the core concepts and capabilities of kagent." href="/docs/kagent/introduction/what-is-kagent" />
+    <QuickLink title="Installation" description="Follow our guide to set up kagent." href="/docs/kagent/introduction/installation" />
+    <QuickLink title="Feature Roadmap" description="See what we're planning for the future." href="https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap" />
+    <QuickLink title="Contributing" description="Find out how you can help improve kagent." href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" />
+    </div>
+</div> 

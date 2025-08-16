@@ -35,16 +35,3 @@ MCP stands for [Model Context Protocol](https://modelcontextprotocol.io/introduc
 ## HTTP Tools
 
 HTTP tools are another way to bring external tools into kagent. Simply put, given a URL and a schema, kagent will send the user query to the URL and return the response. Kagent has the ability to discovery HTTP tools from services running in the cluster, assuming they are OpenAPI Compliant.
-
-## Tool Discovery
-
-Tool Discovery is one of the most powerful features of kagent. It allows you to discover tools from the cluster and make them available to your agents automatically. 
-
-Simply annotate a service with the following annotation:
-
-```yaml
-annotations:
-  kagent.dev/tool.type: "openapi" | "mcp"
-```
-
-Once annotated, kagent will automatically discover all tools from the service and make them available to your agents.

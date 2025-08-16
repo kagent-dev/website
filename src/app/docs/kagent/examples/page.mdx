@@ -10,6 +10,19 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Examples
+import QuickLink from '@/components/quick-link';
 
-This section provides concrete examples of how to use kagent to build various AI-powered applications and workflows. 
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Examples</h1>
+    <p className="text-xl text-gray-400 mb-8">Explore practical examples of using kagent to build AI-powered apps.</p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="A2A Agents" description="Each agent implements the A2A protocol so that A2A clients can invoke the agent." href="/docs/kagent/examples/a2a-agents" />
+    <QuickLink title="BYO Agent" description="Bring your own agent that implements the A2A protocol." href="/docs/kagent/examples/a2a-byo" />
+    <QuickLink title="Documentation Agent" description="Crawl a documentation site so agents can use it to answer questions." href="/docs/kagent/examples/documentation" />
+    <QuickLink title="Slack and A2A" description="Manage Kubernetes resources in your cluster by chatting with kagent in Slack." href="/docs/kagent/examples/slack-a2a" />
+    <QuickLink title="Discord and A2A" description="Manage Kubernetes resources in your cluster by chatting with kagent in Discord." href="/docs/kagent/examples/discord-a2a" />
+    </div>
+</div>

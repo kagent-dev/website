@@ -10,12 +10,17 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Develop MCP servers
+import QuickLink from '@/components/quick-link';
 
-Use kmcp to quickly create and initialize an MCP project on your local machine. kmcp automatically generates all the necessary files and dependencies so that you can get started with developing your MCP server and tools. 
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Develop MCP servers</h1>
+    <p className="text-xl text-gray-400 mb-8">Use kmcp to quickly create and initialize an MCP project on your local machine. kmcp automatically generates all the necessary files and dependencies so that you can get started with developing your MCP server and tools.</p>
+    </div>
 
-Select one of the following MCP frameworks to get started: 
-
-* [FastMCP Python](/docs/kmcp/develop/fastmcp-python)
-* [MCP Go](/docs/kmcp/develop/mcp-go)
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="FastMCP Python" description="Get started with Python-based MCP server development using FastMCP." href="/docs/kmcp/develop/fastmcp-python" />
+    <QuickLink title="MCP Go" description="Get started with Go-based MCP server development." href="/docs/kmcp/develop/mcp-go" />
+    </div>
+</div>
 
