@@ -18,13 +18,13 @@ This guide covers ways to install and configure kagent in your Kubernetes enviro
 
 ### Using kagent CLI (Recommended)
 
-1. Set the OpenAI API key as an environment variable:
+1. Set the OpenAI API key as an environment variable.
 
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. Download the kagent CLI:
+2. Download the kagent CLI.
 
    ```bash
    # Download/run the install script
@@ -33,7 +33,7 @@ This guide covers ways to install and configure kagent in your Kubernetes enviro
 
 3. Install the kmcp CRDs so that you can create MCP servers.
 
-   ```sh
+   ```bash
    helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
      --namespace kmcp-system \
      --create-namespace

@@ -26,22 +26,21 @@ To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. Y
 
 ## Installing kagent
 
-1. Set the OpenAI API key as an environment variable:
+1. Set the OpenAI API key as an environment variable.
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
 
-2. Download the kagent CLI:
+2. Download the kagent CLI.
 
-```bash
-# Download/run the install script
-curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
-```
+   ```bash
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+   ```
 
 3. Install the kmcp CRDs so that you can create MCP servers.
 
-   ```sh
+   ```bash
    helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
      --namespace kmcp-system \
      --create-namespace
