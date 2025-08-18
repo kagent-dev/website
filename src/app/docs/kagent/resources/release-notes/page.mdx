@@ -37,11 +37,11 @@ The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 Previously, the kagent installation included only one CRD Helm chart. Now, you install two CRD Helm charts: one for kagent CRDs and one for kmcp CRDs.
 
 <Tabs tabs={[
-  { id: 'kagent', label: 'kagent CRD Helm chart' },
-  { id: 'kmcp', label: 'kmcp CRD Helm chart' }
+  { id: 'kagent-crds', label: 'kagent CRD Helm chart' },
+  { id: 'kmcp-crds', label: 'kmcp CRD Helm chart' }
 ]} />
 
-<div id="kagent-tab">
+<div id="kagent-crds-tab">
   kagent CRD Helm chart location (no change): `oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds`
 
   Example installation command:
@@ -52,7 +52,7 @@ Previously, the kagent installation included only one CRD Helm chart. Now, you i
   ```
 </div>
 
-<div id="kmcp-tab">
+<div id="kmcp-crds-tab">
   kmcp CRD Helm chart location: `oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds`
 
   Example installation command:
@@ -120,17 +120,8 @@ Flip through the following tabs to understand the API differences between the ol
 <div id="kmcp-tab">
   kmcp example:
   * The kagent MCPServer includes the Grafana deployment details, with `stdio` as the transport type.
-  * The Grafana API key is loaded separately in a Secret, which is more secure.
   ```yaml
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: grafana-api-key
-  type: Opaque
-  data:
-    GRAFANA_API_KEY: my-base-64-ikey
-  ---
-  apiVersion: kagent.dev/v1alpha2
+  apiVersion: kagent.dev/v1alpha1
   kind: MCPServer
   metadata:
     name: grafana
@@ -147,6 +138,16 @@ Flip through the following tabs to understand the API differences between the ol
       secretRefs:
         - name: grafana-api-key
     transportType: "stdio"
+  ```  
+  * The Grafana API key is loaded separately in a Secret, which is more secure.
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: grafana-api-key
+  type: Opaque
+  data:
+    GRAFANA_API_KEY: my-base-64-ikey
   ```
 </div>
 
