@@ -20,7 +20,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
 
 1. Get your API key from [Google AI Studio](https://ai.google.dev/).
 
-2. Create a Kubernetes Secret that stores the API key:
+2. Create a Kubernetes Secret that stores the API key.
 
    ```shell
    kubectl create secret generic kagent-gemini -n kagent --from-literal GOOGLE_API_KEY=<your_api_key>
