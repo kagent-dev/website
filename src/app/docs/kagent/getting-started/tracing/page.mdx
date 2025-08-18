@@ -71,12 +71,15 @@ The following steps include commands to install or upgrade the kagent Helm relea
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. If you did not already, install the kagent CRDs.
+2. If you did not already, install the kagent and kmcp CRDs.
 
    ```bash
    helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
        --namespace kagent \
        --create-namespace
+
+   helm upgrade --install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kagent
    ```
 
 3. If you already installed kagent, get your current Helm release values.

@@ -38,26 +38,21 @@ To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. Y
    curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
    ```
 
-3. Install the kagent CRDs.
+3. Install the kmcp CRDs so that you can create MCP servers.
 
    ```bash
-   helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
      --namespace kagent \
      --create-namespace
    ```
 
-4. Install the kmcp CRDs so that you can create MCP servers.
-
-   ```bash
-   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
-     --namespace kagent
-   ```
-
-5. Install kagent to the cluster by using the CLI.
+4. Install kagent to the cluster by using the CLI.
 
    ```bash
    kagent install
    ```
+   
+   Example output:
 
    ```console
    kagent installed successfully
