@@ -102,6 +102,11 @@
             "description": "Learn how to configure Azure OpenAI models in kagent."
           },
           {
+            "title": "Gemini",
+            "href": "/docs/kagent/supported-providers/gemini",
+            "description": "Learn how to configure Gemini models in kagent."
+          },
+          {
             "title": "Google Vertex AI",
             "href": "/docs/kagent/supported-providers/google-vertexai",
             "description": "Learn how to configure Google Vertex AI models in kagent."
