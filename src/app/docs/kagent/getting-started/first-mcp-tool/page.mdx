@@ -39,8 +39,8 @@ kubectl get agent my-first-k8s-agent -n kagent -o yaml
 
 Example output: Pay attention to the following details:
 
-* The `type` field is set to `Inline`. This means that the agent is using an inline model configuration and system message, as opposed to `BYO` where you can bring your own agent configuration separately.
-* The `inline` field contains the model configuration and system message.
+* The `type` field is set to `Declarative`. This means that the agent is using a declarative model configuration and system message, as opposed to `BYO` where you can bring your own agent configuration separately.
+* The `declarative` field contains the model configuration and system message.
 * The `systemMessage` field contains the system message that the agent will use. Note that the way you structure your instructions is up to you. You can add more details, or simplify them as needed. It's important to make sure the instructions are clear and easy to follow.
 * The `tools` field contains the tools that the agent can run to interact with the environment. The tools refer to a RemoteMCPServer, because these tools are built in to kagent. However, you can also create your own MCPServer or regular Kubernetes Service and designate the Service as for MCP use.
 * The `status` shows that the agent is accepted and ready.
@@ -159,7 +159,7 @@ The following example creates an agent that can retrieve information from a webs
    * Annotations: You can use the following annotations to further configure the your MCP Service.
      * `kagent.dev/mcp-service-path`: Set the path on which the MCP server lives. The default value is `/mcp`.
      * `kagent.dev/mcp-service-port`: Set the port number to be used. No port is set by default.
-     * `kagent.dev/mcp-service-port`: Set the protocol to use. Accepted values are SSE or STREAMABLE_HTTP. The default value is STREAMABLE_HTTP.
+     * `kagent.dev/mcp-service-protocol`: Set the protocol to use. Accepted values are SSE or STREAMABLE_HTTP. The default value is STREAMABLE_HTTP.
 
    ```yaml
    kubectl apply -f - <<EOF
@@ -172,7 +172,7 @@ The following example creates an agent that can retrieve information from a webs
        kagent.dev/mcp-service: "true"
      annotations:
        kagent.dev/mcp-service-path: /sse
-       kagent.dev/mcp-service-port: 8000
+       kagent.dev/mcp-service-port: "8000"
        kagent.dev/mcp-service-protocol: SSE
    spec:
      selector:
