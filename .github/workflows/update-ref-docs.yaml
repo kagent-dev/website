@@ -187,6 +187,22 @@ jobs:
             echo "Total lines generated:"
             wc -l "src/app/docs/kagent/resources/helm/temp.mdx"
 
+            # Check if the temp file contains meaningful content
+            if [ ! -s "src/app/docs/kagent/resources/helm/temp.mdx" ]; then
+              echo "Error: Generated temp.mdx file is empty or missing"
+              exit 1
+            fi
+            
+            # Check if the file contains the expected Helm documentation content
+            if ! grep -q "## Values" "src/app/docs/kagent/resources/helm/temp.mdx"; then
+              echo "Error: Generated temp.mdx file does not contain expected Helm documentation structure"
+              echo "File contents:"
+              cat "src/app/docs/kagent/resources/helm/temp.mdx"
+              exit 1
+            fi
+            
+            echo "Helm documentation generation successful - temp file contains expected content"
+
             # Remove badge line and following empty line 
             # (might be replaced by helm docs template in the future)
             sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
