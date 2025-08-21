@@ -36,13 +36,29 @@ The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 
 Previously, the kagent installation included only one CRD Helm chart. Now, the MCPServer CRD is part of a separate kmcp Helm subchart. This kmcp subchart is installed for you when you install the kagent CRD Helm chart.
 
-Example installation command:
+1. Check for an existing MCPServer CRD. If you have one, delete it.
 
-```shell
-helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
-  --namespace kagent \
-  --create-namespace
-```
+   ```shell
+   kubectl get crds | grep mcpserver
+   kubectl delete crd mcpservers.kagent.dev
+   ```
+
+   Example output:
+   ```
+   NAME                           CREATED AT
+   mcpservers.kagent.dev          2025-08-20T18:22:10Z
+   ...
+   customresourcedefinition.apiextensions.k8s.io "mcpservers.kagent.dev" deleted
+
+   ```
+
+2. Install the kagent CRD Helm chart.
+
+   ```shell
+   helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --namespace kagent \
+     --create-namespace
+   ```
 
 ## General changes
 
