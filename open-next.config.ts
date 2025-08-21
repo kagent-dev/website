@@ -1,23 +1,25 @@
-// default open-next.config.ts file created by @opennextjs/cloudflare
-
-
+// OpenNext configuration for Cloudflare Workers (v1.6.5+)
 const config = {
   default: {
     override: {
       wrapper: "cloudflare-node",
-      incrementalCache: "dummy",
       converter: "edge",
+      proxyExternalRequest: "fetch",
+      incrementalCache: "dummy",
       tagCache: "dummy",
       queue: "dummy",
     },
   },
-
+  edgeExternals: ["node:crypto"],
   middleware: {
     external: true,
     override: {
       wrapper: "cloudflare-edge",
       converter: "edge",
       proxyExternalRequest: "fetch",
+      incrementalCache: "dummy",
+      tagCache: "dummy",
+      queue: "dummy",
     },
   },
 };

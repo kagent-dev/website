@@ -10,7 +10,7 @@
     "build": "npm run generate-nav && npm run check-links && npm run generate-sitemap && next build",
     "start": "next start",
     "lint": "next lint",
-    "build:worker": "npm run generate-nav && npm run check-links && npm run generate-sitemap && npx opennextjs-cloudflare",
+    "build:worker": "npm run generate-nav && npm run check-links && npm run generate-sitemap && npx opennextjs-cloudflare build",
     "dev:worker": "wrangler dev --port 3000",
     "preview:worker": "npm run build:worker && npm run dev:worker",
     "deploy:worker": "npm run build:worker && wrangler deploy --minify",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@opennextjs/cloudflare": "^0.5.3",
+    "@opennextjs/cloudflare": "^1.6.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -59,7 +59,10 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "wrangler": "^4.8.0",
+    "wrangler": "^4.32.0",
     "yaml-loader": "^0.8.1"
+  },
+  "overrides": {
+    "@ast-grep/napi": "^0.39.4"
   }
 }
