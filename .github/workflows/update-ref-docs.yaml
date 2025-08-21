@@ -91,13 +91,13 @@ jobs:
 
           # Create index file with frontmatter
           echo '---' > src/app/docs/kagent/resources/api-ref/page.mdx
-          echo 'title: "API Reference"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'title: "API docs"' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo 'pageOrder: 1' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo 'description: "kagent API reference documentation"' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '---' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo 'export const metadata = {' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '  title: "API Reference",' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  title: "API docs",' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '  description: "kagent API reference documentation",' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '  author: "kagent.dev"' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '};' >> src/app/docs/kagent/resources/api-ref/page.mdx
