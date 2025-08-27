@@ -1,12 +1,12 @@
 ---
 title: "API docs"
-pageOrder: 5
-description: "kagent API reference docs"
+pageOrder: 1
+description: "kagent API reference documentation"
 ---
 
 export const metadata = {
   title: "API docs",
-  description: "kagent API reference docs",
+  description: "kagent API reference documentation",
   author: "kagent.dev"
 };
 
@@ -57,6 +57,8 @@ Agent is the Schema for the agents API.
 | --- | --- | --- | --- |
 | `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
 | `kind` _string_ | `Agent` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AgentSpec](#agentspec)_ |  |  |  |
 | `status` _[AgentStatus](#agentstatus)_ |  |  |  |
@@ -117,7 +119,6 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ |  |  |  |
-| `configHash` _integer array_ | This is used to determine if the agent config has changed.<br />If it has changed, the agent will be restarted. |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
 
 
@@ -284,7 +285,7 @@ _Appears in:_
 | `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
 | `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is true. |  |  |
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
-| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
+| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br /><kagent-controller-ip>:8083/api/a2a/<agent-namespace>/<agent-name><br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
 
 
@@ -399,6 +400,7 @@ ModelConfig is the Schema for the modelconfigs API.
 | --- | --- | --- | --- |
 | `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
 | `kind` _string_ | `ModelConfig` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[ModelConfigSpec](#modelconfigspec)_ |  |  |  |
@@ -528,6 +530,7 @@ RemoteMCPServer is the Schema for the RemoteMCPServers API.
 | --- | --- | --- | --- |
 | `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
 | `kind` _string_ | `RemoteMCPServer` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[RemoteMCPServerSpec](#remotemcpserverspec)_ |  |  |  |
