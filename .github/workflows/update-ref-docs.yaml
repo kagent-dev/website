@@ -41,8 +41,8 @@ jobs:
 
       - name: Verify API directory exists
         run: |
-          if [ ! -d "$GITHUB_WORKSPACE/kagent/go/controller/api/v1alpha2" ]; then
-            echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/go/controller/api/v1alpha2"
+          if [ ! -d "$GITHUB_WORKSPACE/kagent/go/api/v1alpha2" ]; then
+            echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/go/api/v1alpha2"
             ls -la "$GITHUB_WORKSPACE/kagent/go/controller/api/"
             exit 1
           fi
@@ -75,7 +75,7 @@ jobs:
 
           # Generate API docs
           go run github.com/elastic/crd-ref-docs@v0.1.0 \
-            --source-path="$GITHUB_WORKSPACE/kagent/go/controller/api/v1alpha2/" \
+            --source-path="$GITHUB_WORKSPACE/kagent/go/api/v1alpha2/" \
             --renderer=markdown \
             --output-path ./ \
             --config=crd-ref-docs-config.yaml
