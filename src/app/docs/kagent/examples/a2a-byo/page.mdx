@@ -39,19 +39,19 @@ The following example builds a simple agent from the [kagent code repository](ht
    Example output:
 
    ```console
-   => => pushing manifest for localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5-9-g7c3a48c@sha256:084280184b398d56c787e51d1fef33002402364
+   => => pushing manifest for localhost:5001/kagent-dev/kagent/kagent-adk:v0.6.5-9-g7c3a48c@sha256:084280184b398d56c787e51d1fef33002402364
    ```
 
-3. From the output of the previous step, get the image repo and tag, `localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5` and pull the image. 
+3. From the output of the previous step, get the image repo and tag, `localhost:5001/kagent-dev/kagent/kagent-adk:v0.6.5` and pull the image. 
 
    ```bash
-   docker pull localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5
+   docker pull localhost:5001/kagent-dev/kagent/kagent-adk:v0.6.5
    ```
 
 4. Tag and push the image as latest.
 
    ```bash
-   docker tag localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5 localhost:5001/kagent-dev/kagent/kagent-adk:latest
+   docker tag localhost:5001/kagent-dev/kagent/kagent-adk:v0.6.5 localhost:5001/kagent-dev/kagent/kagent-adk:latest
    docker push localhost:5001/kagent-dev/kagent/kagent-adk:latest
    ```
 
