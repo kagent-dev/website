@@ -43,7 +43,7 @@ jobs:
         run: |
           if [ ! -d "$GITHUB_WORKSPACE/kagent/go/api/v1alpha2" ]; then
             echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/go/api/v1alpha2"
-            ls -la "$GITHUB_WORKSPACE/kagent/go/controller/api/"
+            ls -la "$GITHUB_WORKSPACE/kagent/go/api/"
             exit 1
           fi
           echo "API directory found and verified"
@@ -91,13 +91,13 @@ jobs:
 
           # Create index file with frontmatter
           echo '---' > src/app/docs/kagent/resources/api-ref/page.mdx
-          echo 'title: "API Reference"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'title: "API docs"' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo 'pageOrder: 1' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo 'description: "kagent API reference documentation"' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '---' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo 'export const metadata = {' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '  title: "API Reference",' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  title: "API docs",' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '  description: "kagent API reference documentation",' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '  author: "kagent.dev"' >> src/app/docs/kagent/resources/api-ref/page.mdx
           echo '};' >> src/app/docs/kagent/resources/api-ref/page.mdx
@@ -137,6 +137,24 @@ jobs:
             
             echo "Chart directory contents:"
             ls -la "$GITHUB_WORKSPACE/kagent/helm/kagent/"
+            
+            # Generate Chart.yaml from template for helm-docs to work
+            echo "Generating Chart.yaml from template..."
+            cd "$GITHUB_WORKSPACE/kagent/helm/kagent"
+            
+            # Get the version from git or use a default
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.5.5")
+            echo "Using version: $VERSION"
+            
+            # Copy template and substitute version
+            cp Chart-template.yaml Chart.yaml
+            sed -i "s/\${VERSION}/$VERSION/g" Chart.yaml
+            
+            echo "Generated Chart.yaml contents:"
+            cat Chart.yaml
+            
+            # Go back to website directory
+            cd "$GITHUB_WORKSPACE/website"
             
             echo "Chart.yaml contents:"
             cat "$GITHUB_WORKSPACE/kagent/helm/kagent/Chart.yaml" || echo "Chart.yaml not found!"
