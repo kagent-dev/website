@@ -1,0 +1,140 @@
+# Kagent Custom Resource Definitions (CRDs)
+
+## What are CRDs?
+
+Custom Resource Definitions (CRDs) in Kubernetes provide a mechanism to extend the Kubernetes API by defining new, custom resource types. These custom resources behave similarly to built-in Kubernetes objects like **Pods** or **Deployments**, but are tailored to specific application or organizational needs.
+
+---
+
+### Installing Kagent CRDs
+
+> ⚠️ Skip this step if already done in **Quick Start**.
+
+```bash
+kagent install
+```
+To access the list of CRDs:
+```bash
+kubectl get crd -n kagent
+```
+### List of CRDs
+1. agents.kagent.dev
+2. mcpservers.kagent.dev
+3. memories.kagent.dev
+4. modelconfigs.kagent.dev
+5. remotemcpservers.kagent.dev
+6. teams.kagent.dev
+7. toolservers.kagent.dev
+
+### You can describe any CRD using
+```bash
+kubectl describe crd "name-of-crd" -o yaml
+```
+### CRD Definitions
+1. agents.kagent.dev
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: agents.kagent.dev
+spec:
+  group: kagent.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                replicas:
+                  type: integer
+                image:
+                  type: string
+                resources:
+                  type: object
+  scope: Namespaced
+  names:
+    plural: agents
+    kind: Agent
+```
+2. mcpservers.kagent.dev
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: MCPServer
+metadata:
+  name: example-mcp
+spec:
+  endpoint: "http://mcp.example.com"
+  replicas: 1
+  config:
+    maxConnections: 50
+```
+3. memories.kagent.dev
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Memory
+metadata:
+  name: example-memory
+spec:
+  type: in-memory
+  size: 512Mi
+  retention: 24h
+```
+4. modelconfigs.kagent.dev
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ModelConfig
+metadata:
+  name: gpt-model
+spec:
+  modelName: gpt-4
+  parameters:
+    temperature: 0.7
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+```
+5. remotemcpservers.kagent.dev
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: RemoteMCPServer
+metadata:
+  name: remote-mcp
+spec:
+  url: "https://remote-mcp.example.com"
+  auth:
+    token: secret-token
+  replicas: 1
+```
+6. teams.kagent.dev
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: Team
+metadata:
+  name: example-team
+spec:
+  members:
+    - agent1
+    - agent2
+  roles:
+    - leader
+    - worker
+```
+7. toolservers.kagent.dev
+```yaml
+apiVersion: kagent.dev/v1alpha1
+kind: ToolServer
+metadata:
+  name: example-toolserver
+spec:
+  endpoint: "http://toolserver.example.com"
+  tools:
+    - name: calculator
+      version: v1
+    - name: translator
+      version: v2
+  replicas: 1
+```
