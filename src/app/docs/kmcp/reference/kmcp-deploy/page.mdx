@@ -12,6 +12,15 @@ Deploy an MCP server to Kubernetes by generating the MCPServer CRDs. The command
 kmcp deploy [name] [flags]
 ```
 
+**Subcommands**: 
+
+* `package [flags]` - Deploys an MCP server instance from an existing npm package. 
+
+**Package flags**: 
+- `--args` - Arguments to pass to the package manager, such as package names (required)
+- `--deployment-name` - Name of the MCP server deployment 
+- `--manager` - Package manager to use (`npx` or `uvx`) (required)
+
 **Flags:**
 - `--args` - Command arguments
 - `--command` - Command to run (overrides project config)
