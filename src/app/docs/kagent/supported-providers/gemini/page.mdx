@@ -1,0 +1,46 @@
+---
+title: "Gemini"
+pageOrder: 4
+description: "Learn how to configure Gemini models in kagent."
+---
+
+export const metadata = {
+  title: "Configuring Gemini models in kagent",
+  description: "Learn how to configure Gemini models in kagent.",
+  author: "kagent.dev"
+};
+
+Gemini is Google's AI model family that can be accessed directly through the Google AI Studio API.
+
+## Before you begin
+
+Make sure that your Google Cloud account has a project with the Gemini API enabled.
+
+## Configuring Gemini
+
+1. Get your API key from [Google AI Studio](https://ai.google.dev/).
+
+2. Create a Kubernetes Secret that stores the API key.
+
+   ```shell
+   kubectl create secret generic kagent-gemini -n kagent --from-literal GOOGLE_API_KEY=<your_api_key>
+   ```
+
+3. Create a ModelConfig resource using the `Gemini` provider. The following Gemini models are supported:
+
+   - **gemini-pro** - Text generation with function calling support
+   - **gemini-pro-vision** - Multimodal model for text and image processing
+
+   ```yaml
+   apiVersion: kagent.dev/v1alpha2
+   kind: ModelConfig
+   metadata:
+     name: gemini-model-config
+     namespace: kagent
+   spec:
+     apiKeySecret: kagent-gemini
+     apiKeySecretKey: GOOGLE_API_KEY
+     model: gemini-pro
+     provider: Gemini
+     gemini: {}
+   ```

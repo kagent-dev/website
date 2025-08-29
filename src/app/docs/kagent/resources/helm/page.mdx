@@ -1,6 +1,6 @@
 ---
 title: "Helm Chart Configuration"
-pageOrder: 5
+pageOrder: 2
 description: "kagent Helm chart configuration reference"
 ---
 
@@ -18,17 +18,17 @@ A Helm chart for kagent, built with Autogen
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../agents/argo-rollouts | argo-rollouts-agent | v0.5.5-115-g698e705 |
-| file://../agents/cilium-debug | cilium-debug-agent | v0.5.5-115-g698e705 |
-| file://../agents/cilium-manager | cilium-manager-agent | v0.5.5-115-g698e705 |
-| file://../agents/cilium-policy | cilium-policy-agent | v0.5.5-115-g698e705 |
-| file://../agents/helm | helm-agent | v0.5.5-115-g698e705 |
-| file://../agents/istio | istio-agent | v0.5.5-115-g698e705 |
-| file://../agents/k8s | k8s-agent | v0.5.5-115-g698e705 |
-| file://../agents/kgateway | kgateway-agent | v0.5.5-115-g698e705 |
-| file://../agents/observability | observability-agent | v0.5.5-115-g698e705 |
-| file://../agents/promql | promql-agent | v0.5.5-115-g698e705 |
-| file://../tools/querydoc | querydoc | v0.5.5-115-g698e705 |
+| file://../agents/argo-rollouts | argo-rollouts-agent | v0.6.5-115-g698e705 |
+| file://../agents/cilium-debug | cilium-debug-agent | v0.6.5-115-g698e705 |
+| file://../agents/cilium-manager | cilium-manager-agent | v0.6.5-115-g698e705 |
+| file://../agents/cilium-policy | cilium-policy-agent | v0.6.5-115-g698e705 |
+| file://../agents/helm | helm-agent | v0.6.5-115-g698e705 |
+| file://../agents/istio | istio-agent | v0.6.5-115-g698e705 |
+| file://../agents/k8s | k8s-agent | v0.6.5-115-g698e705 |
+| file://../agents/kgateway | kgateway-agent | v0.6.5-115-g698e705 |
+| file://../agents/observability | observability-agent | v0.6.5-115-g698e705 |
+| file://../agents/promql | promql-agent | v0.6.5-115-g698e705 |
+| file://../tools/querydoc | querydoc | v0.6.5-115-g698e705 |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.0.11 |
 
 ## Values
@@ -66,6 +66,7 @@ A Helm chart for kagent, built with Autogen
 | controller.service.type | string | "ClusterIP" |  |
 | controller.streaming.initialBufSize | string | "4Ki" |  |
 | controller.streaming.maxBufSize | string | "1Mi" |  |
+| controller.streaming.timeout | string | "60s" |  |
 | controller.tolerations | list | [] | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
 | database.postgres.url | string | "postgres://postgres:kagent@pgsql-postgresql.kagent.svc.cluster.local:5432/postgres" |  |
@@ -78,6 +79,7 @@ A Helm chart for kagent, built with Autogen
 | kagent-tools.fullnameOverride | string | "kagent-tools" |  |
 | kagent-tools.replicaCount | int | 1 |  |
 | kagent-tools.tools.loglevel | string | "debug" |  |
+| labels | object | {} | Additional labels to add to all Kubernetes resources |
 | nameOverride | string | "" |  |
 | namespaceOverride | string | .Release.Namespace | Override the namespace |
 | nodeSelector | object | {} | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
@@ -91,12 +93,10 @@ A Helm chart for kagent, built with Autogen
 | otel.tracing.exporter.otlp.timeout | int | 15 |  |
 | podAnnotations | object | {} |  |
 | podSecurityContext | object | {} |  |
-| providers.anthropic.apiKey | string | "" |  |
 | providers.anthropic.apiKeySecretKey | string | "ANTHROPIC_API_KEY" |  |
 | providers.anthropic.apiKeySecretRef | string | "kagent-anthropic" |  |
 | providers.anthropic.model | string | "claude-3-sonnet-20240229" |  |
 | providers.anthropic.provider | string | "Anthropic" |  |
-| providers.azureOpenAI.apiKey | string | "" |  |
 | providers.azureOpenAI.apiKeySecretKey | string | "AZUREOPENAI_API_KEY" |  |
 | providers.azureOpenAI.apiKeySecretRef | string | "kagent-azure-openai" |  |
 | providers.azureOpenAI.config.apiVersion | string | "2023-05-15" |  |
@@ -109,7 +109,6 @@ A Helm chart for kagent, built with Autogen
 | providers.ollama.config.host | string | "host.docker.internal:11434" |  |
 | providers.ollama.model | string | "llama3.2" |  |
 | providers.ollama.provider | string | "Ollama" |  |
-| providers.openAI.apiKey | string | "" |  |
 | providers.openAI.apiKeySecretKey | string | "OPENAI_API_KEY" |  |
 | providers.openAI.apiKeySecretRef | string | "kagent-openai" |  |
 | providers.openAI.model | string | "gpt-4.1-mini" |  |

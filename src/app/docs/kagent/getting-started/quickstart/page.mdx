@@ -26,32 +26,25 @@ To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. Y
 
 ## Installing kagent
 
-1. Set the OpenAI API key as an environment variable:
+1. Set the OpenAI API key as an environment variable.
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
-
-2. Download the kagent CLI:
-
-```bash
-# Download/run the install script
-curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
-```
-
-3. Install the kmcp CRDs so that you can create MCP servers.
-
-   ```sh
-   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
-     --namespace kmcp-system \
-     --create-namespace
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
    ```
 
-4. Install kagent to the cluster by using the CLI.
+2. Download the kagent CLI.
+
+   ```bash
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+   ```
+
+3. Install kagent to the cluster by using the CLI.
 
    ```bash
    kagent install
    ```
+   
+   Example output:
 
    ```console
    kagent installed successfully
@@ -74,7 +67,7 @@ curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts
 
    ![kagent welcome wizard](/images/kagent-wizard.png "Kagent welcome wizard")
 
-3. Walk through the wizard screen by screen to set up your first agent. At any time, you can exist out of the wizard by clicking **Skip wizard**.
+3. Walk through the wizard screen by screen to set up your first agent. At any time, you can exit out of the wizard by clicking **Skip wizard**.
 
    * **Step 1: Configure AI Model**: Choose an existing model such as `gpt-4.1-mini`.
    * **Step 2: Set up the AI Agent**: Review the default details for a basic Kubernetes agent.
@@ -129,7 +122,7 @@ Interact with kagent in your terminal.
 2. List the current agents.
 
    ```shell
-   kagent get agents
+   kagent get agent
    +---+---------------------+----+----------------------------+
    | # | NAME                | ID | CREATED                    |
    +---+---------------------+----+----------------------------+

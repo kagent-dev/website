@@ -39,8 +39,8 @@ kubectl get agent my-first-k8s-agent -n kagent -o yaml
 
 Example output: Pay attention to the following details:
 
-* The `type` field is set to `Inline`. This means that the agent is using an inline model configuration and system message, as opposed to `BYO` where you can bring your own agent configuration separately.
-* The `inline` field contains the model configuration and system message.
+* The `type` field is set to `Declarative`. This means that the agent is using a declarative model configuration and system message, as opposed to `BYO` where you can bring your own agent configuration separately.
+* The `declarative` field contains the model configuration and system message.
 * The `systemMessage` field contains the system message that the agent will use. Note that the way you structure your instructions is up to you. You can add more details, or simplify them as needed. It's important to make sure the instructions are clear and easy to follow.
 * The `tools` field contains the tools that the agent can run to interact with the environment. The tools refer to a RemoteMCPServer, because these tools are built in to kagent. However, you can also create your own MCPServer or regular Kubernetes Service and designate the Service as for MCP use.
 * The `status` shows that the agent is accepted and ready.
@@ -107,84 +107,29 @@ status:
 
 Now that you've reviewed an existing agent that uses MCP tools, let's create our own from scratch.
 
-The following example creates an agent that can retrieve information from a website. You create a [simple MCP example server](https://github.com/peterj/mcp-website-fetcher/pkgs/container/mcp-website-fetcher) that only has one tool, the fetch tool. The fetch tool takes a URL as input and returns the contents of the page.
+The following example creates an agent that can retrieve information from a website. You create a [simple MCP example server](https://modelcontextprotocol.io/examples) that only has one tool, the fetch tool. The fetch tool takes a URL as input and returns the contents of the page.
 
-1. Create a Deployment for the MCP server.
-
-   ```yaml 
-   kubectl apply -f - <<EOF
-   apiVersion: apps/v1
-   kind: Deployment
-   metadata:
-     name: mcp-website-fetcher
-     namespace: kagent
-     labels:
-       app: mcp-website-fetcher
-   spec:
-     replicas: 1
-     selector:
-       matchLabels:
-         app: mcp-website-fetcher
-     template:
-       metadata:
-         labels:
-           app: mcp-website-fetcher
-       spec:
-         containers:
-           - name: mcp-website-fetcher
-             image: ghcr.io/peterj/mcp-website-fetcher:sha-d2db5b3
-             imagePullPolicy: IfNotPresent
-             ports:
-               - containerPort: 8000
-             resources:
-               limits:
-                 cpu: "500m"
-                 memory: "256Mi"
-               requests:
-                 cpu: "100m"
-                 memory: "128Mi"
-             livenessProbe:
-               httpGet:
-                 path: /sse
-                 port: 8000
-               initialDelaySeconds: 10
-               periodSeconds: 30
-   EOF
-   ```
-
-2. Create a Service with special configuration that designates the Service as an MCP server for kagent to process.
-
-   * Label: Add the `kagent.dev/mcp-service: "true"` label to the Service so that kagent can discover the tools for the Service.
-   * App protocol: In the `spec.ports` section, set the `appProtocol: mcp`. You must set this field for kagent to pick up the Service as an MCP server.
-   * Annotations: You can use the following annotations to further configure the your MCP Service.
-     * `kagent.dev/mcp-service-path`: Set the path on which the MCP server lives. The default value is `/mcp`.
-     * `kagent.dev/mcp-service-port`: Set the port number to be used. No port is set by default.
-     * `kagent.dev/mcp-service-port`: Set the protocol to use. Accepted values are SSE or STREAMABLE_HTTP. The default value is STREAMABLE_HTTP.
+1. Create an MCPServer resource with kmcp for the fetch tool.
 
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: v1
-   kind: Service
+   apiVersion: kagent.dev/v1alpha1
+   kind: MCPServer
    metadata:
      name: mcp-website-fetcher
      namespace: kagent
-     labels:
-       kagent.dev/mcp-service: "true"
-     annotations:
-       kagent.dev/mcp-service-path: /sse
-       kagent.dev/mcp-service-port: 8000
-       kagent.dev/mcp-service-protocol: SSE
    spec:
-     selector:
-       app: mcp-website-fetcher
-     ports:
-       - port: 80
-         targetPort: 8000
-     type: ClusterIP
+     deployment:
+       args:
+       - mcp-server-fetch
+       cmd: uvx
+       port: 3000
+     stdioTransport: {}
+     transportType: stdio
    EOF
    ```
 
-3. Create an Agent resource. Note that in the `tools` section, you refer to the MCP Service that you just created. One tool is included, the fetch tool. Even if the MCP server has multiple tools, you can decide which tools to include for this particular agent. The tool takes a single input parameter: the URL to fetch. You do not have to include the input schema, however. Kagent automatically discovers the input schema from the tool itself.
+2. Create an Agent resource. Note that in the `tools` section, you refer to the MCPServer that you just created. One tool is included, the fetch tool. Even if the MCP server has multiple tools, you can decide which tools to include for this particular agent. The tool takes a single input parameter: the URL to fetch. You do not have to include the input schema, however. Kagent automatically discovers the input schema from the tool itself.
 
    ```yaml
    kubectl apply -f - <<EOF
@@ -215,7 +160,7 @@ The following example creates an agent that can retrieve information from a webs
        - type: McpServer
          mcpServer:
            name: mcp-website-fetcher
-           kind: Service
+           kind: MCPServer
            toolNames:
            - fetch
    EOF

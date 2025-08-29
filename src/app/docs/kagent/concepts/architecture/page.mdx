@@ -28,15 +28,15 @@ In the future, we envision more features for the controller, such as:
 
 ## App/Engine
 
-The kagent engine is the core component of kagent. It is a Python application that is responsible for running the agent's conversation loop. It is built on top of the [AutoGen](https://github.com/microsoft/autogen) framework. Currently, we are running the autogenstudio backend, but likely in the near future we will switch to running our own backend as the use-cases begin to diverge.
+The kagent engine is the core component of kagent. It is a Python application that is responsible for running the agent's conversation loop. It is built on top of the [ADK](https://google.github.io/adk-docs/) framework.
 
-The autogen team did a wonderful job of creating a flexible, powerful, and most importantly extensible framework for building AI agents. We take full advantage of this by using the framework by adding our own `Teams`, `Agents`, and `Tools`.
+The ADK team did a wonderful job of creating a flexible, powerful, and most importantly extensible framework for building AI agents. We take full advantage of this by using the framework by adding our own `Agents`, and `Tools`.
 
-Please see the following links for more information on the AutoGen framework:
+Please see the following links for more information on the ADK framework:
 
-- [Serializing Components](https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/serialize-components.html)
-- [Component Config](https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/component-config.html)
-- [Autogen Agentchat](https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/index.html)
+- [Agents](https://google.github.io/adk-docs/agents/)
+- [Tools](https://google.github.io/adk-docs/tools/)
+- [Context](https://google.github.io/adk-docs/context/)
 
 ## CLI
 

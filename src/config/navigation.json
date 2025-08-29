@@ -107,6 +107,11 @@
             "description": "Learn how to configure Google Vertex AI models in kagent."
           },
           {
+            "title": "Gemini",
+            "href": "/docs/kagent/supported-providers/gemini",
+            "description": "Learn how to configure Gemini models in kagent."
+          },
+          {
             "title": "Ollama",
             "href": "/docs/kagent/supported-providers/ollama",
             "description": "Learn how to configure Ollama models in kagent."

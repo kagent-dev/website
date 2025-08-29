@@ -65,13 +65,13 @@ helm upgrade --install jaeger jaegertracing/jaeger \
 
 The following steps include commands to install or upgrade the kagent Helm release.
 
-1. Set the OpenAI API key as an environment variable:
+1. Set the OpenAI API key as an environment variable.
 
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. If you did not already, install the kagent CRDs.
+2. If you did not already, install the kagent and kmcp CRDs.
 
    ```bash
    helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
@@ -85,7 +85,7 @@ The following steps include commands to install or upgrade the kagent Helm relea
    helm get values kagent -n kagent > values.yaml
    ```
 
-3. Create or update your values file to include the following settings to enable tracing.
+4. Create or update your values file to include the following settings to enable tracing.
 
    ```yaml
    otel:
@@ -96,7 +96,7 @@ The following steps include commands to install or upgrade the kagent Helm relea
            endpoint: http://jaeger-collector.jaeger.svc.cluster.local:4317
    ```
 
-4. Install or upgrade the kagent Helm chart with the tracing details.
+5. Install or upgrade the kagent Helm chart with the tracing details.
 
    ```bash
    helm upgrade -i kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \

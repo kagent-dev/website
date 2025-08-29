@@ -28,28 +28,12 @@ The following example builds a simple agent from the [kagent code repository](ht
 
    ```bash
    git clone https://github.com/kagent-dev/kagent.git
+   cd kagent
    ```
 
-2. From the root directory, build the kagent-adk image and push it to your local Docker registry. If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+2. Optional: If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
 
-   ```bash
-   make build-kagent-adk
-   ```
-
-   Example output:
-
-   ```console
-   => => pushing manifest for localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5-9-g7c3a48c@sha256:084280184b398d56c787e51d1fef33002402364
-   ```
-
-3. From the output of the previous step, tag and push the image as `latest`.
-
-   ```bash
-   docker tag localhost:5001/kagent-dev/kagent/kagent-adk:v0.5.5-9-g7c3a48c@sha256:084280184b398d56c787e51d1fef33002402364 localhost:5001/kagent-dev/kagent/kagent-adk:latest
-   docker push localhost:5001/kagent-dev/kagent/kagent-adk:latest
-   ```
-
-4. Build the custom agent image and push it to your local Docker registry.
+3. Build the custom agent image and push it to your local Docker registry.
 
    ```bash
    cd python/samples/adk/basic
