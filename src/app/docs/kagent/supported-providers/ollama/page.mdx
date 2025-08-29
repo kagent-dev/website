@@ -84,14 +84,4 @@ spec:
   provider: Ollama
   ollama:
     host: http://ollama.ollama.svc.cluster.local
-  # Required: Specify model capabilities
-  modelInfo:
-    vision: false
-    functionCalling: true
-    jsonOutput: true
-    family: "unknown"
-    structuredOutput: true
-    multipleSystemMessages: false
 ```
-
-Since Ollama supports various models with different capabilities, you must specify the model's capabilities using the `modelInfo` field. For detailed information about model capabilities and how to configure them, see [Custom Models](/docs/kagent/supported-providers/custom-models). Make sure to set `functionCalling: true` if your model supports it, as this is required for using tools with the agent.
