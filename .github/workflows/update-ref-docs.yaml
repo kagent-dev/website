@@ -107,13 +107,28 @@ jobs:
           # Remove temporary file
           rm -f "./out.md"
 
+          # Fix problematic angle brackets in the generated MDX file
+          # Convert literal angle brackets to HTML entities to prevent MDX parsing errors
+          # But preserve legitimate HTML tags like <br />, <kagent-controller-ip>, etc.
+          echo "Fixing problematic angle brackets in generated MDX..."
+          
+          # First, temporarily replace legitimate HTML tags with placeholders
+          sed -i 's/<br \/>/__BR_TAG__/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          
+          # Convert remaining angle brackets to HTML entities
+          sed -i 's/</\&lt;/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          sed -i 's/>/\&gt;/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          
+          # Restore legitimate HTML tags
+          sed -i 's/__BR_TAG__/<br \/>/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          
           # Verify the output file was created
           if [ ! -f "src/app/docs/kagent/resources/api-ref/page.mdx" ]; then
             echo "Error: Failed to create API docs page"
             exit 1
           fi
 
-          echo "API docs generated successfully"
+          echo "API docs generated and processed successfully"
 
       - name: Generate Helm Chart Reference
         run: |
