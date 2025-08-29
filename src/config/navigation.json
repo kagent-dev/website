@@ -240,11 +240,6 @@
         ]
       },
       {
-        "title": "Set up auth",
-        "href": "/docs/kmcp/auth",
-        "description": "Configure your MCP server to read additional environment variables from a Kubernetes secret."
-      },
-      {
         "title": "Manage secrets",
         "href": "/docs/kmcp/secrets",
         "description": "Configure your MCP server to read additional environment variables from a Kubernetes secret."

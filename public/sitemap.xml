@@ -253,13 +253,6 @@
     </url>
     
     <url>
-        <loc>https://kagent.dev/docs/kmcp/auth</loc>
-        <lastmod>2025-08-29</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
         <loc>https://kagent.dev/docs/kmcp/deploy/install-controller</loc>
         <lastmod>2025-08-29</lastmod>
         <changefreq>weekly</changefreq>
