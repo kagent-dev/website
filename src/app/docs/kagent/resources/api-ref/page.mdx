@@ -285,7 +285,7 @@ _Appears in:_
 | `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
 | `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is true. |  |  |
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
-| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br /><kagent-controller-ip>:8083/api/a2a/<agent-namespace>/<agent-name><br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
+| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
 
 
