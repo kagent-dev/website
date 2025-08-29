@@ -396,6 +396,12 @@ spec:
 
 The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.
 
+### ModelInfo removed
+
+The `modelInfo` setting is removed from the ModelConfig API. 
+
+Supported LLM providers are pre-configured by the [kagent-dev/autogen project fork](https://github.com/kagent-dev/autogen/tree/main/python/packages/autogen-ext/src/autogen_ext/models) for you by default. Trying to override these default settings, such as to enable vision for image recognition, could cause unexpected behavior in models that do not support these settings. Therefore, the `modelInfo` field is removed.
+
 ## Memory API
 
 The Memory API is not supported in ADK. The [agent development kit](https://google.github.io/adk-docs/) is required to bring your own agents. As such, the Memory docs are removed.
