@@ -1,0 +1,1443 @@
+# API Reference
+
+Packages:
+
+- [kagent.dev/v1alpha1](#kagentdevv1alpha1)
+- [kagent.dev/v1alpha2](#kagentdevv1alpha2)
+
+# kagent.dev/v1alpha1
+
+Resource Types:
+
+- [ModelConfig](#modelconfig)
+
+
+
+
+## ModelConfig
+<sup><sup>[↩ Parent](#kagentdevv1alpha1 )</sup></sup>
+
+
+
+
+
+
+ModelConfig is the Schema for the modelconfigs API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>kagent.dev/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ModelConfig</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ModelConfigSpec defines the desired state of ModelConfig.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ModelConfigStatus defines the observed state of ModelConfig.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec
+<sup><sup>[↩ Parent](#modelconfig)</sup></sup>
+
+
+
+ModelConfigSpec defines the desired state of ModelConfig.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>model</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>provider</b></td>
+        <td>enum</td>
+        <td>
+          The provider of the model<br/>
+          <br/>
+            <i>Enum</i>: Anthropic, OpenAI, AzureOpenAI, Ollama, Gemini, GeminiVertexAI, AnthropicVertexAI<br/>
+            <i>Default</i>: OpenAI<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecanthropic">anthropic</a></b></td>
+        <td>object</td>
+        <td>
+          Anthropic-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecanthropicvertexai">anthropicVertexAI</a></b></td>
+        <td>object</td>
+        <td>
+          Anthropic-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>apiKeySecretKey</b></td>
+        <td>string</td>
+        <td>
+          The key in the secret that contains the API key<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>apiKeySecretRef</b></td>
+        <td>string</td>
+        <td>
+          The reference to the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecazureopenai">azureOpenAI</a></b></td>
+        <td>object</td>
+        <td>
+          Azure OpenAI-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>defaultHeaders</b></td>
+        <td>map[string]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>gemini</b></td>
+        <td>object</td>
+        <td>
+          Gemini-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecgeminivertexai">geminiVertexAI</a></b></td>
+        <td>object</td>
+        <td>
+          Gemini Vertex AI-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecmodelinfo">modelInfo</a></b></td>
+        <td>object</td>
+        <td>
+          ModelInfo contains information about the model.
+This field is required if the model is not one of the
+pre-defined autogen models. That list can be found here:<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecollama">ollama</a></b></td>
+        <td>object</td>
+        <td>
+          Ollama-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecopenai">openAI</a></b></td>
+        <td>object</td>
+        <td>
+          OpenAI-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.anthropic
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+Anthropic-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          Base URL for the Anthropic API (overrides default)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature for sampling<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topK</b></td>
+        <td>integer</td>
+        <td>
+          Top-k sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.anthropicVertexAI
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+Anthropic-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>location</b></td>
+        <td>string</td>
+        <td>
+          The project location<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>projectID</b></td>
+        <td>string</td>
+        <td>
+          The project ID<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>stopSequences</b></td>
+        <td>[]string</td>
+        <td>
+          Stop sequences<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topK</b></td>
+        <td>string</td>
+        <td>
+          Top-k sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.azureOpenAI
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+Azure OpenAI-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>apiVersion</b></td>
+        <td>string</td>
+        <td>
+          API version for the Azure OpenAI API<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>azureEndpoint</b></td>
+        <td>string</td>
+        <td>
+          Endpoint for the Azure OpenAI API<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>azureAdToken</b></td>
+        <td>string</td>
+        <td>
+          Azure AD token for authentication<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>azureDeployment</b></td>
+        <td>string</td>
+        <td>
+          Deployment name for the Azure OpenAI API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature for sampling<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.geminiVertexAI
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+Gemini Vertex AI-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>location</b></td>
+        <td>string</td>
+        <td>
+          The project location<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>projectID</b></td>
+        <td>string</td>
+        <td>
+          The project ID<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>candidateCount</b></td>
+        <td>integer</td>
+        <td>
+          Candidate count<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxOutputTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum output tokens<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>responseMimeType</b></td>
+        <td>string</td>
+        <td>
+          Response mime type<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>stopSequences</b></td>
+        <td>[]string</td>
+        <td>
+          Stop sequences<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topK</b></td>
+        <td>string</td>
+        <td>
+          Top-k sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.modelInfo
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+ModelInfo contains information about the model.
+This field is required if the model is not one of the
+pre-defined autogen models. That list can be found here:
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>family</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>functionCalling</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>jsonOutput</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>multipleSystemMessages</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>structuredOutput</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>vision</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.ollama
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+Ollama-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>host</b></td>
+        <td>string</td>
+        <td>
+          Host for the Ollama API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>options</b></td>
+        <td>map[string]string</td>
+        <td>
+          Options for the Ollama API<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.openAI
+<sup><sup>[↩ Parent](#modelconfigspec)</sup></sup>
+
+
+
+OpenAI-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          Base URL for the OpenAI API (overrides default)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>frequencyPenalty</b></td>
+        <td>string</td>
+        <td>
+          Frequency penalty<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>n</b></td>
+        <td>integer</td>
+        <td>
+          N value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>organization</b></td>
+        <td>string</td>
+        <td>
+          Organization ID for the OpenAI API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>presencePenalty</b></td>
+        <td>string</td>
+        <td>
+          Presence penalty<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>seed</b></td>
+        <td>integer</td>
+        <td>
+          Seed value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature for sampling<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>timeout</b></td>
+        <td>integer</td>
+        <td>
+          Timeout<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.status
+<sup><sup>[↩ Parent](#modelconfig)</sup></sup>
+
+
+
+ModelConfigStatus defines the observed state of ModelConfig.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#modelconfigstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.status.conditions[index]
+<sup><sup>[↩ Parent](#modelconfigstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+# kagent.dev/v1alpha2
+
+Resource Types:
+
+- [ModelConfig](#modelconfig)
+
+
+
+
+## ModelConfig
+<sup><sup>[↩ Parent](#kagentdevv1alpha2 )</sup></sup>
+
+
+
+
+
+
+ModelConfig is the Schema for the modelconfigs API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>kagent.dev/v1alpha2</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ModelConfig</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspec-1">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ModelConfigSpec defines the desired state of ModelConfig.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigstatus-1">status</a></b></td>
+        <td>object</td>
+        <td>
+          ModelConfigStatus defines the observed state of ModelConfig.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec
+<sup><sup>[↩ Parent](#modelconfig-1)</sup></sup>
+
+
+
+ModelConfigSpec defines the desired state of ModelConfig.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>model</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>provider</b></td>
+        <td>enum</td>
+        <td>
+          The provider of the model<br/>
+          <br/>
+            <i>Enum</i>: Anthropic, OpenAI, AzureOpenAI, Ollama, Gemini, GeminiVertexAI, AnthropicVertexAI<br/>
+            <i>Default</i>: OpenAI<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecanthropic-1">anthropic</a></b></td>
+        <td>object</td>
+        <td>
+          Anthropic-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecanthropicvertexai-1">anthropicVertexAI</a></b></td>
+        <td>object</td>
+        <td>
+          Anthropic-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>apiKeySecret</b></td>
+        <td>string</td>
+        <td>
+          The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>apiKeySecretKey</b></td>
+        <td>string</td>
+        <td>
+          The key in the secret that contains the API key<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecazureopenai-1">azureOpenAI</a></b></td>
+        <td>object</td>
+        <td>
+          Azure OpenAI-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>defaultHeaders</b></td>
+        <td>map[string]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>gemini</b></td>
+        <td>object</td>
+        <td>
+          Gemini-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecgeminivertexai-1">geminiVertexAI</a></b></td>
+        <td>object</td>
+        <td>
+          Gemini Vertex AI-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecollama-1">ollama</a></b></td>
+        <td>object</td>
+        <td>
+          Ollama-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#modelconfigspecopenai-1">openAI</a></b></td>
+        <td>object</td>
+        <td>
+          OpenAI-specific configuration<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.anthropic
+<sup><sup>[↩ Parent](#modelconfigspec-1)</sup></sup>
+
+
+
+Anthropic-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          Base URL for the Anthropic API (overrides default)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature for sampling<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topK</b></td>
+        <td>integer</td>
+        <td>
+          Top-k sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.anthropicVertexAI
+<sup><sup>[↩ Parent](#modelconfigspec-1)</sup></sup>
+
+
+
+Anthropic-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>location</b></td>
+        <td>string</td>
+        <td>
+          The project location<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>projectID</b></td>
+        <td>string</td>
+        <td>
+          The project ID<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>stopSequences</b></td>
+        <td>[]string</td>
+        <td>
+          Stop sequences<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topK</b></td>
+        <td>string</td>
+        <td>
+          Top-k sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.azureOpenAI
+<sup><sup>[↩ Parent](#modelconfigspec-1)</sup></sup>
+
+
+
+Azure OpenAI-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>apiVersion</b></td>
+        <td>string</td>
+        <td>
+          API version for the Azure OpenAI API<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>azureEndpoint</b></td>
+        <td>string</td>
+        <td>
+          Endpoint for the Azure OpenAI API<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>azureAdToken</b></td>
+        <td>string</td>
+        <td>
+          Azure AD token for authentication<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>azureDeployment</b></td>
+        <td>string</td>
+        <td>
+          Deployment name for the Azure OpenAI API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature for sampling<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.geminiVertexAI
+<sup><sup>[↩ Parent](#modelconfigspec-1)</sup></sup>
+
+
+
+Gemini Vertex AI-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>location</b></td>
+        <td>string</td>
+        <td>
+          The project location<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>projectID</b></td>
+        <td>string</td>
+        <td>
+          The project ID<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>candidateCount</b></td>
+        <td>integer</td>
+        <td>
+          Candidate count<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxOutputTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum output tokens<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>responseMimeType</b></td>
+        <td>string</td>
+        <td>
+          Response mime type<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>stopSequences</b></td>
+        <td>[]string</td>
+        <td>
+          Stop sequences<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topK</b></td>
+        <td>string</td>
+        <td>
+          Top-k sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.ollama
+<sup><sup>[↩ Parent](#modelconfigspec-1)</sup></sup>
+
+
+
+Ollama-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>host</b></td>
+        <td>string</td>
+        <td>
+          Host for the Ollama API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>options</b></td>
+        <td>map[string]string</td>
+        <td>
+          Options for the Ollama API<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.spec.openAI
+<sup><sup>[↩ Parent](#modelconfigspec-1)</sup></sup>
+
+
+
+OpenAI-specific configuration
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          Base URL for the OpenAI API (overrides default)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>frequencyPenalty</b></td>
+        <td>string</td>
+        <td>
+          Frequency penalty<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxTokens</b></td>
+        <td>integer</td>
+        <td>
+          Maximum tokens to generate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>n</b></td>
+        <td>integer</td>
+        <td>
+          N value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>organization</b></td>
+        <td>string</td>
+        <td>
+          Organization ID for the OpenAI API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>presencePenalty</b></td>
+        <td>string</td>
+        <td>
+          Presence penalty<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>seed</b></td>
+        <td>integer</td>
+        <td>
+          Seed value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>temperature</b></td>
+        <td>string</td>
+        <td>
+          Temperature for sampling<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>timeout</b></td>
+        <td>integer</td>
+        <td>
+          Timeout<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topP</b></td>
+        <td>string</td>
+        <td>
+          Top-p sampling parameter<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.status
+<sup><sup>[↩ Parent](#modelconfig-1)</sup></sup>
+
+
+
+ModelConfigStatus defines the observed state of ModelConfig.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#modelconfigstatusconditionsindex-1">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ModelConfig.status.conditions[index]
+<sup><sup>[↩ Parent](#modelconfigstatus-1)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
