@@ -113,7 +113,7 @@ export default function Navbar() {
                     <ChevronDown className="ml-1 w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white shadow-md rounded-md py-2" align="start">
+                <DropdownMenuContent className="w-56 shadow-md rounded-md py-2" align="start">
                   <DropdownMenuItem 
                     onClick={() => window.location.href = '/docs/kagent'}
                     className="flex items-center space-x-2 hover:bg-primary/10 cursor-pointer transition-colors group"
