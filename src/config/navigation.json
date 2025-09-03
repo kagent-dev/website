@@ -120,11 +120,6 @@
             "title": "OpenAI",
             "href": "/docs/kagent/supported-providers/openai",
             "description": "Learn how to configure OpenAI models in kagent."
-          },
-          {
-            "title": "Custom Models",
-            "href": "/docs/kagent/supported-providers/custom-models",
-            "description": "Learn how to configure custom AI models in kagent."
           }
         ]
       },
