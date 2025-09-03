@@ -5,6 +5,7 @@ import { Tabs } from "./components/mdx/tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
 import Image from "next/image";
+import { generateAnchorId } from "@/lib/utils";
 
 function YouTube ({ id } : { id : string }){
   return (
@@ -23,26 +24,78 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
   return useMemo(
     () => ({
       // Headings
-      h1: ({ children, ...props }) => (
-        <h1 className="scroll-m-20 text-4xl font-bold tracking-tight mb-8 mt-12 first:mt-0 text-foreground" {...props}>
-          {children}
-        </h1>
-      ),
-      h2: ({ children, ...props }) => (
-        <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight mb-6 mt-10 text-foreground" {...props}>
-          {children}
-        </h2>
-      ),
-      h3: ({ children, ...props }) => (
-        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight mb-4 mt-8 text-foreground" {...props}>
-          {children}
-        </h3>
-      ),
-      h4: ({ children, ...props }) => (
-        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mb-4 mt-6 text-foreground" {...props}>
-          {children}
-        </h4>
-      ),
+      h1: ({ children, ...props }) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateAnchorId(text);
+        return (
+          <h1 id={id} className="scroll-m-20 text-4xl font-bold tracking-tight mb-8 mt-12 first:mt-0 text-foreground group" {...props}>
+            {children}
+            <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+              #
+            </a>
+          </h1>
+        );
+      },
+      h2: ({ children, ...props }) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateAnchorId(text);
+        return (
+          <h2 id={id} className="scroll-m-20 text-3xl font-semibold tracking-tight mb-6 mt-10 text-foreground group" {...props}>
+            {children}
+            <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+              #
+            </a>
+          </h2>
+        );
+      },
+      h3: ({ children, ...props }) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateAnchorId(text);
+        return (
+          <h3 id={id} className="scroll-m-20 text-2xl font-semibold tracking-tight mb-4 mt-8 text-foreground group" {...props}>
+            {children}
+            <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+              #
+            </a>
+          </h3>
+        );
+      },
+      h4: ({ children, ...props }) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateAnchorId(text);
+        return (
+          <h4 id={id} className="scroll-m-20 text-xl font-semibold tracking-tight mb-4 mt-6 text-foreground group" {...props}>
+            {children}
+            <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+              #
+            </a>
+          </h4>
+        );
+      },
+      h5: ({ children, ...props }) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateAnchorId(text);
+        return (
+          <h5 id={id} className="scroll-m-20 text-lg font-semibold tracking-tight mb-3 mt-6 text-foreground group" {...props}>
+            {children}
+            <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+              #
+            </a>
+          </h5>
+        );
+      },
+      h6: ({ children, ...props }) => {
+        const text = typeof children === 'string' ? children : '';
+        const id = generateAnchorId(text);
+        return (
+          <h6 id={id} className="scroll-m-20 text-base font-semibold tracking-tight mb-3 mt-6 text-foreground group" {...props}>
+            {children}
+            <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+              #
+            </a>
+          </h6>
+        );
+      },
       // Paragraph
       p: ({ children, ...props }) => (
         <p className="leading-7 mb-6 text-muted-foreground" {...props}>
