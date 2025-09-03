@@ -120,11 +120,6 @@
             "title": "OpenAI",
             "href": "/docs/kagent/supported-providers/openai",
             "description": "Learn how to configure OpenAI models in kagent."
-          },
-          {
-            "title": "Custom Models",
-            "href": "/docs/kagent/supported-providers/custom-models",
-            "description": "Learn how to configure custom AI models in kagent."
           }
         ]
       },
@@ -168,17 +163,17 @@
           {
             "title": "API docs",
             "href": "/docs/kagent/resources/api-ref",
-            "description": "kagent API reference docs"
-          },
-          {
-            "title": "FAQs",
-            "href": "/docs/kagent/resources/faq",
-            "description": "Find answers to frequently asked questions about kagent."
+            "description": "kagent API reference documentation"
           },
           {
             "title": "Helm Chart Configuration",
             "href": "/docs/kagent/resources/helm",
             "description": "kagent Helm chart configuration reference"
+          },
+          {
+            "title": "FAQs",
+            "href": "/docs/kagent/resources/faq",
+            "description": "Find answers to frequently asked questions about kagent."
           },
           {
             "title": "Release Notes",
