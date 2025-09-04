@@ -127,3 +127,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+:root {
+  --docsearch-modal-background: #ffffff; 
+}
+
+.dark {
+
+  --docsearch-modal-background: #1e293b; 
+
+  --docsearch-searchbox-background: #1e293b; 
+  --docsearch-searchbox-focus-background: #334155; 
+  --docsearch-text-color: #f8fafc; 
+
+  --docsearch-hit-background: #334155; 
+  --docsearch-hit-color: #f1f5f9;     
+  --docsearch-hit-shadow: none;
+
+  --docsearch-footer-background: #1e293b;
+}
+
