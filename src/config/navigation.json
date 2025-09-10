@@ -120,6 +120,11 @@
             "title": "OpenAI",
             "href": "/docs/kagent/supported-providers/openai",
             "description": "Learn how to configure OpenAI models in kagent."
+          },
+          {
+            "title": "BYO OpenAI-compatible model",
+            "href": "/docs/kagent/supported-providers/byo-openai",
+            "description": "Bring your own OpenAI-compatible model to kagent."
           }
         ]
       },

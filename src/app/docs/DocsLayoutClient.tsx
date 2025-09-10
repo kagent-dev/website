@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Background } from "@/components/background";
+import { LabCTA } from "@/components/mdx/lab-cta";
+import { LabsCarousel } from "@/components/mdx/labs-carousel";
+import labs from "@/data/labs.yaml";
 
 interface NavItem {
   title: string;
@@ -190,6 +193,16 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
           {/* Main content */}
           <div className="prose-lg p-4 md:p-8 lg:p-16 flex-1 prose-li:marker:text-muted-foreground prose-ol:list-decimal prose-ul:list-disc prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:italic overflow-x-hidden">
             {children}
+
+            {labs?.labs && labs.labs.length > 1 ? (
+              <LabsCarousel labs={labs.labs} />
+            ) : labs?.labs?.length === 1 ? (
+              <LabCTA
+                title={labs.labs[0].title}
+                description={labs.labs[0].description}
+                href={labs.labs[0].href}
+              />
+            ) : null}
           </div>
         </div>
       </div>
