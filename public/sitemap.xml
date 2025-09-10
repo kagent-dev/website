@@ -212,7 +212,14 @@
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/azure-openai</loc>
-        <lastmod>2025-09-10</lastmod>
+        <lastmod>2025-09-09</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kagent/supported-providers/byo-openai</loc>
+        <lastmod>2025-09-09</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
