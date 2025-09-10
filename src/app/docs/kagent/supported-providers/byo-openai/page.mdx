@@ -10,12 +10,12 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-You can bring your own model from an [OpenAI API-compatible](https://platform.openai.com/docs/api-reference/introduction) LLM provider.
+You can bring your own model from an [OpenAI API-compatible](https://platform.openai.com/docs/api-reference/introduction) LLM provider. The example integrates with [Cohere AI](https://cohere.com/).
 
-1. Save your API key from the OpenAI-compatible provider as an environment variable.
+1. Save your API key from the OpenAI-compatible provider as an environment variable. For example, navigate to the [Cohere AI dashboard](https://dashboard.cohere.com/api-keys).
 
    ```bash
-   export PROVIDER_API_KEY=sk-...
+   export PROVIDER_API_KEY=Dgs...
    ```
 
 2. Create a Kubernetes secret that stores your API key. Make sure to create the secret in the same namespace as you plan to create your agent, such as `kagent`.
@@ -39,7 +39,7 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
      model: command-a-03-2025
      provider: OpenAI
      openAI:
-       baseUrl: api.cohere.ai
+       baseUrl: "https://api.cohere.ai/compatibility/v1"
    EOF
    ```
 
@@ -52,6 +52,6 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
    | `model` | The OpenAI API-compatible model to use. For more information about the model, consult your LLM provider's documentation. For example, you might use `command-a-03-2025` for [Cohere AI](https://docs.cohere.com/v1/docs/models). |
    | `provider` | To use an OpenAI API-compatible model, set the provider to `OpenAI`. |
    | `openAI` | Additional provider details. For available settings, consult your LLM provider's documentation. At the least, you must configure the `baseUrl` setting to point to the endpoint of your LLM provider. |
-   | `baseUrl` | The base URL of your LLM provider, such as `api.cohere.ai` for [Cohere AI](https://cohere.com/). |
+   | `baseUrl` | The base URL of your LLM provider. Note that the LLM provider might have a special base URL for OpenAI compatibility, such as `"https://api.cohere.ai/compatibility/v1"` for [Cohere AI](https://cohere.com/). |
 
 Good job! You added a model to kagent. Next, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model.
