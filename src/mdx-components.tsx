@@ -4,6 +4,7 @@ import { PlatformTabs } from "./components/mdx/platform-tabs";
 import { Tabs } from "./components/mdx/tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
+import { LabCTA } from "./components/mdx/lab-cta";
 import Image from "next/image";
 import { generateAnchorId } from "@/lib/utils";
 
@@ -167,6 +168,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       PlatformTabs,
       Tabs,
       YouTube,
+      LabCTA,
       ...components,
     }),
     [components]
