@@ -8,13 +8,6 @@ export interface Author {
 
 export const authors: Author[] = [
   {
-    id: 'antweiss',
-    name: 'Ant Weiss',
-    title: 'Cluster Whisperer',
-    photo: '/images/authors/antweiss.jpg',
-    bio: 'Ant Weiss is a Cluster Whisperer at PerfectScale.io, focusing on cloud-native technologies and open-source projects.Software delivery optimization expert and Kubernetes fanboy.',
-  }
-  {
     id: 'christianposta',
     name: 'Christian Posta',
     title: 'VP, Global Field CTO',
