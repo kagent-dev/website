@@ -14,7 +14,7 @@ Want an easy fully cloud-native way to run your agentic software?
 Time to discover [Kagent](https://kagent.dev)! 
 It’s a fairly young OSS project started by the folks at [Solo.io](https://Solo.io) which aims at making the building and running of AI Agents on Kubernetes easy and fun. With all the bells and whistles one would expect - authz and authn, security, visualization, governance and audit, optimization, you name it. Some of it on the roadmap, some of it being built as we speak.
 
-![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/d0tw6oe2omamz4u4x5ty.png)
+![Kagent logo](/images/blog/reactive-agents-khook/kagent-logo.png)
 # Joining the Community
 I started playing with Kagent a couple of months ago, loved its ergonomics and decided to build a workshop around it - meanwhile fixing some docs, submitting PRs and joining the community meetings. If you’re looking for a great OSS community to join - look no further - it’s a warm and welcoming bunch of very smart folks. And there’s a lot of work to be done!
 
@@ -26,7 +26,7 @@ And that’s exactly what Kagent didn’t have. Until now in order to summon an 
 
 # Introducing Khook
 
-![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/n8mzxcg00nd8jaybew8o.png)
+![khook logo](/images/blog/reactive-agents-khook/khook-logo.png)
 
 Enter Khook - a Kubernetes controller that allows defining:
 - Kubernetes events to listen to
@@ -37,12 +37,14 @@ Khook assumes autonomous remediation and incident response. Finally - the ops pe
 
 The following diagram shows how Khook works:
 
-![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/74c60roop2xdyui3skl5.png) 
+![khook diagram](/images/blog/reactive-agents-khook/khook-diagram.png) 
 
 It’s been a while since I’ve developed a full-blown Kubernetes controller from scratch and I have to thank Kiro and Cursor (and specifically Sonnet 3.7) for taking care of all the boilerplate for me. This definitely  made me more productive.
 
 # A Hook to the Future
 Last Monday I presented Khook to the Kagent community and it makes me happy that it was met with a lot of excitement. In fact - since Friday - the [khook repository](https://github.com/kagent-dev/khook) (with the gracious help from Eitan Yarmush) has been transferred in the kagent-dev org on Github and we’re actively looking for early users and contributors to take the hooks for test drives and find interesting bugs. Oh, and if you clicked on the link - make sure to star the repo. It will make my day brighter 🙏
+
+Here's a demo of Khook triggering a Kagent agent: <YouTube id="cYXLKAXZnso" />
 
 While building this project I realized it can be of much wider use - becoming the connecting tissue between virtually any type of event (think task queues, DB transactions, webhooks) and any type of A2A-compatible agent (all agent communication in Kagent is based on the [A2A protocol](https://github.com/a2aproject/A2A)). Especially now with [Kagent supporting BYO agents](https://kagent.dev/docs/kagent/examples/a2a-byo). So yes - a lot of space for improvement, innovation, experimentation. 
 
