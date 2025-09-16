@@ -11,8 +11,8 @@ export const authors: Author[] = [
     id: 'antweiss',
     name: 'Ant Weiss',
     title: 'Cluster Whisperer',
-    photo: '/images/authors/antweiss.jpg',
-    bio: 'Ant Weiss is a Cluster Whisperer at PerfectScale.io, focusing on cloud-native technologies and open-source projects.Software delivery optimization expert and Kubernetes fanboy.',
+    photo: '/images/authors/antweiss.png',
+    bio: 'Ant Weiss (@antweiss) is a Cluster Whisperer at PerfectScale.io, focusing on cloud-native technologies and open-source projects.Software delivery optimization expert and Kubernetes fanboy.',
   },
   {
     id: 'christianposta',
