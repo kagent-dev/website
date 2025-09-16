@@ -8,7 +8,7 @@ function shortDate(date: string) {
 
 const posts = [
     {
-        slug: 'khook4reactive-agents',
+        slug: 'reactive-agents-khook',
         publishDate: '2025-09-09',
         title: "Truly Reactive Cloud Native AI Agents with Kagent and Khook",
         description: "Khook makes Kagent Agents Reactive",
