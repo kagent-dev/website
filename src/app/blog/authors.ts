@@ -13,7 +13,7 @@ export const authors: Author[] = [
     title: 'Cluster Whisperer',
     photo: '/images/authors/antweiss.jpg',
     bio: 'Ant Weiss is a Cluster Whisperer at PerfectScale.io, focusing on cloud-native technologies and open-source projects.Software delivery optimization expert and Kubernetes fanboy.',
-  }
+  },
   {
     id: 'christianposta',
     name: 'Christian Posta',
