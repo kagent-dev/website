@@ -76,77 +76,82 @@ Agent is the Schema for the agents API.
 AgentSpec defines the desired state of Agent.
 
 <table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#agentspeca2aconfig">a2aConfig</a></b></td>
-        <td>object</td>
-        <td>
-          A2AConfig instantiates an A2A server for this agent,
-served on the HTTP port of the kagent kubernetes
-controller (default 8083).
-The A2A server URL will be served at
-<kagent-controller-ip>:8083/api/a2a/<agent-namespace>/<agent-name>
-Read more about the A2A protocol here: https://github.com/google/A2A<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#agentspecdeployment">deployment</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>memory</b></td>
-        <td>[]string</td>
-        <td>
-          Can either be a reference to the name of a Memory in the same namespace as the referencing Agent, or a reference to the name of a Memory in a different namespace in the form <namespace>/<name><br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>modelConfig</b></td>
-        <td>string</td>
-        <td>
-          Can either be a reference to the name of a ModelConfig in the same namespace as the referencing Agent, or a reference to the name of a ModelConfig in a different namespace in the form <namespace>/<name><br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>stream</b></td>
-        <td>boolean</td>
-        <td>
-          Whether to stream the response from the model.
-If not specified, the default value is true.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>systemMessage</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#agentspectoolsindex">tools</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b><a href="#agentspeca2aconfig">a2aConfig</a></b></td>
+      <td>object</td>
+      <td>
+        A2AConfig instantiates an A2A server for this agent,
+        served on the HTTP port of the kagent kubernetes
+        controller (default 8083).
+        The A2A server URL will be served at
+        &lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;
+        Read more about the A2A protocol here: https://github.com/google/A2A<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b><a href="#agentspecdeployment">deployment</a></b></td>
+      <td>object</td>
+      <td><br/></td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b>description</b></td>
+      <td>string</td>
+      <td><br/></td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b>memory</b></td>
+      <td>[]string</td>
+      <td>
+        Can either be a reference to the name of a Memory in the same namespace as the referencing Agent, 
+        or a reference to the name of a Memory in a different namespace in the form 
+        &lt;namespace&gt;/&lt;name&gt;<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b>modelConfig</b></td>
+      <td>string</td>
+      <td>
+        Can either be a reference to the name of a ModelConfig in the same namespace as the referencing Agent, 
+        or a reference to the name of a ModelConfig in a different namespace in the form 
+        &lt;namespace&gt;/&lt;name&gt;<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b>stream</b></td>
+      <td>boolean</td>
+      <td>
+        Whether to stream the response from the model.  
+        If not specified, the default value is true.<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b>systemMessage</b></td>
+      <td>string</td>
+      <td><br/></td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b><a href="#agentspectoolsindex">tools</a></b></td>
+      <td>[]object</td>
+      <td><br/></td>
+      <td>false</td>
+    </tr>
+  </tbody>
 </table>
 
 
@@ -158,8 +163,8 @@ If not specified, the default value is true.<br/>
 A2AConfig instantiates an A2A server for this agent,
 served on the HTTP port of the kagent kubernetes
 controller (default 8083).
-The A2A server URL will be served at
-<kagent-controller-ip>:8083/api/a2a/<agent-namespace>/<agent-name>
+The A2A server URL will be served at  
+&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;  
 Read more about the A2A protocol here: https://github.com/google/A2A
 
 <table>
@@ -171,14 +176,14 @@ Read more about the A2A protocol here: https://github.com/google/A2A
             <th>Required</th>
         </tr>
     </thead>
-    <tbody><tr>
+    <tbody>
+      <tr>
         <td><b><a href="#agentspeca2aconfigskillsindex">skills</a></b></td>
         <td>[]object</td>
-        <td>
-          <br/>
-        </td>
+        <td><br/></td>
         <td>false</td>
-      </tr></tbody>
+      </tr>
+    </tbody>
 </table>
 
 
@@ -373,45 +378,51 @@ Defaults to "".<br/>
 Source for the environment variable's value. Cannot be used if value is not empty.
 
 <table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#agentspecdeploymentenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
-        <td>object</td>
-        <td>
-          Selects a key of a ConfigMap.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#agentspecdeploymentenvindexvaluefromfieldref">fieldRef</a></b></td>
-        <td>object</td>
-        <td>
-          Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
-spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#agentspecdeploymentenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
-        <td>object</td>
-        <td>
-          Selects a resource of the container: only resources limits and requests
-(limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#agentspecdeploymentenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
-        <td>object</td>
-        <td>
-          Selects a key of a secret in the pod's namespace<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b><a href="#agentspecdeploymentenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
+      <td>object</td>
+      <td>
+        Selects a key of a ConfigMap.<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b><a href="#agentspecdeploymentenvindexvaluefromfieldref">fieldRef</a></b></td>
+      <td>object</td>
+      <td>
+        Selects a field of the pod: supports metadata.name, metadata.namespace, 
+        <code>metadata.labels['&lt;KEY&gt;']</code>, <code>metadata.annotations['&lt;KEY&gt;']</code>, 
+        spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b><a href="#agentspecdeploymentenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
+      <td>object</td>
+      <td>
+        Selects a resource of the container: only resources limits and requests
+        (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.<br/>
+      </td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><b><a href="#agentspecdeploymentenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
+      <td>object</td>
+      <td>
+        Selects a key of a secret in the pod's namespace<br/>
+      </td>
+      <td>false</td>
+    </tr>
+  </tbody>
 </table>
 
 
@@ -467,7 +478,8 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+Selects a field of the pod: supports metadata.name, metadata.namespace, 
+`metadata.labels['&lt;KEY&gt;']`, `metadata.annotations['&lt;KEY&gt;']`,
 spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
 
 <table>
@@ -1911,44 +1923,48 @@ More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access
         <td><b><a href="#agentspecdeploymentvolumesindexephemeralvolumeclaimtemplatespecdatasource">dataSource</a></b></td>
         <td>object</td>
         <td>
-          dataSource field can be used to specify either:
-* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
-* An existing PVC (PersistentVolumeClaim)
-If the provisioner or an external controller can support the specified data source,
-it will create a new volume based on the contents of the specified data source.
-When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
-If the namespace is specified, then dataSourceRef will not be copied to dataSource.<br/>
-        </td>
+  dataSource field can be used to specify either:
+  <ul>
+    <li>An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)</li>
+    <li>An existing PVC (PersistentVolumeClaim)</li>
+  </ul>
+  If the provisioner or an external controller can support the specified data source,
+  it will create a new volume based on the contents of the specified data source.
+  When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
+  and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+  If the namespace is specified, then dataSourceRef will not be copied to dataSource.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecdeploymentvolumesindexephemeralvolumeclaimtemplatespecdatasourceref">dataSourceRef</a></b></td>
         <td>object</td>
         <td>
-          dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
-volume is desired. This may be any object from a non-empty API group (non
-core object) or a PersistentVolumeClaim object.
-When this field is specified, volume binding will only succeed if the type of
-the specified object matches some installed volume populator or dynamic
-provisioner.
-This field will replace the functionality of the dataSource field and as such
-if both fields are non-empty, they must have the same value. For backwards
-compatibility, when namespace isn't specified in dataSourceRef,
-both fields (dataSource and dataSourceRef) will be set to the same
-value automatically if one of them is empty and the other is non-empty.
-When namespace is specified in dataSourceRef,
-dataSource isn't set to the same value and must be empty.
-There are three important differences between dataSource and dataSourceRef:
-* While dataSource only allows two specific types of objects, dataSourceRef
-  allows any non-core object, as well as PersistentVolumeClaim objects.
-* While dataSource ignores disallowed values (dropping them), dataSourceRef
-  preserves all values, and generates an error if a disallowed value is
-  specified.
-* While dataSource only allows local objects, dataSourceRef allows objects
-  in any namespaces.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
-(Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.<br/>
-        </td>
+  dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
+  volume is desired. This may be any object from a non-empty API group (non
+  core object) or a PersistentVolumeClaim object.
+  When this field is specified, volume binding will only succeed if the type of
+  the specified object matches some installed volume populator or dynamic
+  provisioner.
+  This field will replace the functionality of the dataSource field and as such
+  if both fields are non-empty, they must have the same value. For backwards
+  compatibility, when namespace isn't specified in dataSourceRef,
+  both fields (dataSource and dataSourceRef) will be set to the same
+  value automatically if one of them is empty and the other is non-empty.
+  When namespace is specified in dataSourceRef,
+  dataSource isn't set to the same value and must be empty.
+  There are three important differences between dataSource and dataSourceRef:
+  <ul>
+    <li>While dataSource only allows two specific types of objects, dataSourceRef
+      allows any non-core object, as well as PersistentVolumeClaim objects.</li>
+    <li>While dataSource ignores disallowed values (dropping them), dataSourceRef
+      preserves all values, and generates an error if a disallowed value is
+      specified.</li>
+    <li>While dataSource only allows local objects, dataSourceRef allows objects
+      in any namespaces.</li>
+  </ul>
+  (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+  (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecdeploymentvolumesindexephemeralvolumeclaimtemplatespecresources">resources</a></b></td>
@@ -2206,10 +2222,12 @@ selector is a label query over volumes to consider for binding.
         <td><b>matchLabels</b></td>
         <td>map[string]string</td>
         <td>
-          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-map is equivalent to an element of matchExpressions, whose key field is "key", the
-operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
-        </td>
+  matchLabels is a map of &#123;key,value&#125; pairs. 
+  A single &#123;key,value&#125; in the matchLabels map is equivalent to an element of matchExpressions, 
+  whose key field is "key", the operator is "In", and the values array contains only "value". 
+  The requirements are ANDed.<br/>
+</td>
+
         <td>false</td>
       </tr></tbody>
 </table>
@@ -2785,10 +2803,10 @@ More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi<br/>
         <td><b>initiatorName</b></td>
         <td>string</td>
         <td>
-          initiatorName is the custom iSCSI Initiator Name.
-If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
-<target portal>:<volume name> will be created for the connection.<br/>
-        </td>
+  initiatorName is the custom iSCSI Initiator Name.
+  If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
+  &lt;target portal&gt;:&lt;volume name&gt; will be created for the connection.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b>iscsiInterface</b></td>
@@ -3245,10 +3263,11 @@ everything".
         <td><b>matchLabels</b></td>
         <td>map[string]string</td>
         <td>
-          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-map is equivalent to an element of matchExpressions, whose key field is "key", the
-operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
-        </td>
+  matchLabels is a map of &#123;key,value&#125; pairs. 
+  A single &#123;key,value&#125; in the matchLabels map is equivalent to an element of matchExpressions, 
+  whose key field is "key", the operator is "In", and the values array contains only "value". 
+  The requirements are ANDed.<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
@@ -4388,9 +4407,10 @@ Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.<br/>
         <td><b>ref</b></td>
         <td>string</td>
         <td>
-          Reference to the Agent resource to use as a tool.
-Can either be a reference to the name of an Agent in the same namespace as the referencing Agent, or a reference to the name of an Agent in a different namespace in the form <namespace>/<name><br/>
-        </td>
+  Reference to the Agent resource to use as a tool.
+  Can either be a reference to the name of an Agent in the same namespace as the referencing Agent, 
+  or a reference to the name of an Agent in a different namespace in the form &lt;namespace&gt;/&lt;name&gt;<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
@@ -4425,8 +4445,10 @@ the client can query the status of the ToolServer object after it has been creat
         <td><b>toolServer</b></td>
         <td>string</td>
         <td>
-          the name of the ToolServer that provides the tool. can either be a reference to the name of a ToolServer in the same namespace as the referencing Agent, or a reference to the name of an ToolServer in a different namespace in the form <namespace>/<name><br/>
-        </td>
+  the name of the ToolServer that provides the tool. 
+  can either be a reference to the name of a ToolServer in the same namespace as the referencing Agent, 
+  or a reference to the name of a ToolServer in a different namespace in the form &lt;namespace&gt;/&lt;name&gt;<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
@@ -6485,44 +6507,48 @@ More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access
         <td><b><a href="#agentspecbyodeploymentvolumesindexephemeralvolumeclaimtemplatespecdatasource">dataSource</a></b></td>
         <td>object</td>
         <td>
-          dataSource field can be used to specify either:
-* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
-* An existing PVC (PersistentVolumeClaim)
-If the provisioner or an external controller can support the specified data source,
-it will create a new volume based on the contents of the specified data source.
-When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
-If the namespace is specified, then dataSourceRef will not be copied to dataSource.<br/>
-        </td>
+  dataSource field can be used to specify either:
+  <ul>
+    <li>An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)</li>
+    <li>An existing PVC (PersistentVolumeClaim)</li>
+  </ul>
+  If the provisioner or an external controller can support the specified data source,
+  it will create a new volume based on the contents of the specified data source.
+  When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
+  and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+  If the namespace is specified, then dataSourceRef will not be copied to dataSource.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecbyodeploymentvolumesindexephemeralvolumeclaimtemplatespecdatasourceref">dataSourceRef</a></b></td>
         <td>object</td>
         <td>
-          dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
-volume is desired. This may be any object from a non-empty API group (non
-core object) or a PersistentVolumeClaim object.
-When this field is specified, volume binding will only succeed if the type of
-the specified object matches some installed volume populator or dynamic
-provisioner.
-This field will replace the functionality of the dataSource field and as such
-if both fields are non-empty, they must have the same value. For backwards
-compatibility, when namespace isn't specified in dataSourceRef,
-both fields (dataSource and dataSourceRef) will be set to the same
-value automatically if one of them is empty and the other is non-empty.
-When namespace is specified in dataSourceRef,
-dataSource isn't set to the same value and must be empty.
-There are three important differences between dataSource and dataSourceRef:
-* While dataSource only allows two specific types of objects, dataSourceRef
-  allows any non-core object, as well as PersistentVolumeClaim objects.
-* While dataSource ignores disallowed values (dropping them), dataSourceRef
-  preserves all values, and generates an error if a disallowed value is
-  specified.
-* While dataSource only allows local objects, dataSourceRef allows objects
-  in any namespaces.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
-(Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.<br/>
-        </td>
+  dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
+  volume is desired. This may be any object from a non-empty API group (non
+  core object) or a PersistentVolumeClaim object.
+  When this field is specified, volume binding will only succeed if the type of
+  the specified object matches some installed volume populator or dynamic
+  provisioner.
+  This field will replace the functionality of the dataSource field and as such
+  if both fields are non-empty, they must have the same value. For backwards
+  compatibility, when namespace isn't specified in dataSourceRef,
+  both fields (dataSource and dataSourceRef) will be set to the same
+  value automatically if one of them is empty and the other is non-empty.
+  When namespace is specified in dataSourceRef,
+  dataSource isn't set to the same value and must be empty.
+  There are three important differences between dataSource and dataSourceRef:
+  <ul>
+    <li>While dataSource only allows two specific types of objects, dataSourceRef
+      allows any non-core object, as well as PersistentVolumeClaim objects.</li>
+    <li>While dataSource ignores disallowed values (dropping them), dataSourceRef
+      preserves all values, and generates an error if a disallowed value is
+      specified.</li>
+    <li>While dataSource only allows local objects, dataSourceRef allows objects
+      in any namespaces.</li>
+  </ul>
+  (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+  (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecbyodeploymentvolumesindexephemeralvolumeclaimtemplatespecresources">resources</a></b></td>
@@ -6780,10 +6806,11 @@ selector is a label query over volumes to consider for binding.
         <td><b>matchLabels</b></td>
         <td>map[string]string</td>
         <td>
-          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-map is equivalent to an element of matchExpressions, whose key field is "key", the
-operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
-        </td>
+  matchLabels is a map of &#123;key,value&#125; pairs. 
+  A single &#123;key,value&#125; in the matchLabels map is equivalent to an element of matchExpressions, 
+  whose key field is "key", the operator is "In", and the values array contains only "value". 
+  The requirements are ANDed.<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
@@ -7359,10 +7386,10 @@ More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi<br/>
         <td><b>initiatorName</b></td>
         <td>string</td>
         <td>
-          initiatorName is the custom iSCSI Initiator Name.
-If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
-<target portal>:<volume name> will be created for the connection.<br/>
-        </td>
+  initiatorName is the custom iSCSI Initiator Name.
+  If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
+  &lt;target portal&gt;:&lt;volume name&gt; will be created for the connection.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b>iscsiInterface</b></td>
@@ -7819,10 +7846,11 @@ everything".
         <td><b>matchLabels</b></td>
         <td>map[string]string</td>
         <td>
-          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-map is equivalent to an element of matchExpressions, whose key field is "key", the
-operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
-        </td>
+  matchLabels is a map of &#123;key,value&#125; pairs. 
+  A single &#123;key,value&#125; in the matchLabels map is equivalent to an element of matchExpressions, 
+  whose key field is "key", the operator is "In", and the values array contains only "value". 
+  The requirements are ANDed.<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
@@ -8921,13 +8949,13 @@ Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.<br/>
         <td><b><a href="#agentspecdeclarativea2aconfig">a2aConfig</a></b></td>
         <td>object</td>
         <td>
-          A2AConfig instantiates an A2A server for this agent,
-served on the HTTP port of the kagent kubernetes
-controller (default 8083).
-The A2A server URL will be served at
-<kagent-controller-ip>:8083/api/a2a/<agent-namespace>/<agent-name>
-Read more about the A2A protocol here: https://github.com/google/A2A<br/>
-        </td>
+  A2AConfig instantiates an A2A server for this agent,
+  served on the HTTP port of the kagent kubernetes
+  controller (default 8083).
+  The A2A server URL will be served at
+  &lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;
+  Read more about the A2A protocol here: https://github.com/google/A2A<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecdeclarativedeployment">deployment</a></b></td>
@@ -8980,7 +9008,7 @@ A2AConfig instantiates an A2A server for this agent,
 served on the HTTP port of the kagent kubernetes
 controller (default 8083).
 The A2A server URL will be served at
-<kagent-controller-ip>:8083/api/a2a/<agent-namespace>/<agent-name>
+&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;
 Read more about the A2A protocol here: https://github.com/google/A2A
 
 <table>
@@ -10849,44 +10877,48 @@ More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access
         <td><b><a href="#agentspecdeclarativedeploymentvolumesindexephemeralvolumeclaimtemplatespecdatasource">dataSource</a></b></td>
         <td>object</td>
         <td>
-          dataSource field can be used to specify either:
-* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
-* An existing PVC (PersistentVolumeClaim)
-If the provisioner or an external controller can support the specified data source,
-it will create a new volume based on the contents of the specified data source.
-When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
-If the namespace is specified, then dataSourceRef will not be copied to dataSource.<br/>
-        </td>
+  dataSource field can be used to specify either:
+  <ul>
+    <li>An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)</li>
+    <li>An existing PVC (PersistentVolumeClaim)</li>
+  </ul>
+  If the provisioner or an external controller can support the specified data source,
+  it will create a new volume based on the contents of the specified data source.
+  When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
+  and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+  If the namespace is specified, then dataSourceRef will not be copied to dataSource.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecdeclarativedeploymentvolumesindexephemeralvolumeclaimtemplatespecdatasourceref">dataSourceRef</a></b></td>
         <td>object</td>
         <td>
-          dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
-volume is desired. This may be any object from a non-empty API group (non
-core object) or a PersistentVolumeClaim object.
-When this field is specified, volume binding will only succeed if the type of
-the specified object matches some installed volume populator or dynamic
-provisioner.
-This field will replace the functionality of the dataSource field and as such
-if both fields are non-empty, they must have the same value. For backwards
-compatibility, when namespace isn't specified in dataSourceRef,
-both fields (dataSource and dataSourceRef) will be set to the same
-value automatically if one of them is empty and the other is non-empty.
-When namespace is specified in dataSourceRef,
-dataSource isn't set to the same value and must be empty.
-There are three important differences between dataSource and dataSourceRef:
-* While dataSource only allows two specific types of objects, dataSourceRef
-  allows any non-core object, as well as PersistentVolumeClaim objects.
-* While dataSource ignores disallowed values (dropping them), dataSourceRef
-  preserves all values, and generates an error if a disallowed value is
-  specified.
-* While dataSource only allows local objects, dataSourceRef allows objects
-  in any namespaces.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
-(Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.<br/>
-        </td>
+  dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
+  volume is desired. This may be any object from a non-empty API group (non
+  core object) or a PersistentVolumeClaim object.
+  When this field is specified, volume binding will only succeed if the type of
+  the specified object matches some installed volume populator or dynamic
+  provisioner.
+  This field will replace the functionality of the dataSource field and as such
+  if both fields are non-empty, they must have the same value. For backwards
+  compatibility, when namespace isn't specified in dataSourceRef,
+  both fields (dataSource and dataSourceRef) will be set to the same
+  value automatically if one of them is empty and the other is non-empty.
+  When namespace is specified in dataSourceRef,
+  dataSource isn't set to the same value and must be empty.
+  There are three important differences between dataSource and dataSourceRef:
+  <ul>
+    <li>While dataSource only allows two specific types of objects, dataSourceRef
+      allows any non-core object, as well as PersistentVolumeClaim objects.</li>
+    <li>While dataSource ignores disallowed values (dropping them), dataSourceRef
+      preserves all values, and generates an error if a disallowed value is
+      specified.</li>
+    <li>While dataSource only allows local objects, dataSourceRef allows objects
+      in any namespaces.</li>
+  </ul>
+  (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+  (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#agentspecdeclarativedeploymentvolumesindexephemeralvolumeclaimtemplatespecresources">resources</a></b></td>
@@ -11144,10 +11176,11 @@ selector is a label query over volumes to consider for binding.
         <td><b>matchLabels</b></td>
         <td>map[string]string</td>
         <td>
-          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-map is equivalent to an element of matchExpressions, whose key field is "key", the
-operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
-        </td>
+  matchLabels is a map of &#123;key,value&#125; pairs. 
+  A single &#123;key,value&#125; in the matchLabels map is equivalent to an element of matchExpressions, 
+  whose key field is "key", the operator is "In", and the values array contains only "value". 
+  The requirements are ANDed.<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
@@ -11723,10 +11756,10 @@ More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi<br/>
         <td><b>initiatorName</b></td>
         <td>string</td>
         <td>
-          initiatorName is the custom iSCSI Initiator Name.
-If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
-<target portal>:<volume name> will be created for the connection.<br/>
-        </td>
+  initiatorName is the custom iSCSI Initiator Name.
+  If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface
+  &lt;target portal&gt;:&lt;volume name&gt; will be created for the connection.<br/>
+</td>
         <td>false</td>
       </tr><tr>
         <td><b>iscsiInterface</b></td>
@@ -12183,10 +12216,11 @@ everything".
         <td><b>matchLabels</b></td>
         <td>map[string]string</td>
         <td>
-          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-map is equivalent to an element of matchExpressions, whose key field is "key", the
-operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
-        </td>
+  matchLabels is a map of &#123;key,value&#125; pairs. 
+  A single &#123;key,value&#125; in the matchLabels map is equivalent to an element of matchExpressions, 
+  whose key field is "key", the operator is "In", and the values array contains only "value". 
+  The requirements are ANDed.<br/>
+</td>
         <td>false</td>
       </tr></tbody>
 </table>
