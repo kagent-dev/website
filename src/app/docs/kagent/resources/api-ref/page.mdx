@@ -266,6 +266,7 @@ _Appears in:_
 | `annotations` _object (keys:string, values:string)_ |  |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 
 
 #### DeclarativeAgentSpec
@@ -281,7 +282,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `systemMessage` _string_ |  |  | MinLength: 1 <br /> |
+| `systemMessage` _string_ | SystemMessage is a string specifying the system message for the agent |  |  |
+| `systemMessageFrom` _[ValueSource](#valuesource)_ | SystemMessageFrom is a reference to a ConfigMap or Secret containing the system message. |  |  |
 | `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
 | `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is true. |  |  |
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
@@ -311,6 +313,7 @@ _Appears in:_
 | `annotations` _object (keys:string, values:string)_ |  |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 
 
 #### GeminiConfig
@@ -617,6 +620,7 @@ _Appears in:_
 | `annotations` _object (keys:string, values:string)_ |  |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 
 
 #### Tool
@@ -635,6 +639,7 @@ _Appears in:_
 | `type` _[ToolProviderType](#toolprovidertype)_ |  |  | Enum: [McpServer Agent] <br /> |
 | `mcpServer` _[McpServerTool](#mcpservertool)_ |  |  |  |
 | `agent` _[TypedLocalReference](#typedlocalreference)_ |  |  |  |
+| `headersFrom` _[ValueRef](#valueref) array_ | HeadersFrom specifies a list of configuration values to be added as<br />headers to requests sent to the Tool from this agent. The value of<br />each header is resolved from either a Secret or ConfigMap in the same<br />namespace as the Agent. Headers specified here will override any<br />headers of the same name/key specified on the tool. |  |  |
 
 
 #### ToolProviderType
@@ -684,6 +689,7 @@ ValueRef represents a configuration value
 
 _Appears in:_
 - [RemoteMCPServerSpec](#remotemcpserverspec)
+- [Tool](#tool)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -701,6 +707,7 @@ ValueSource defines a source for configuration values from a Secret or ConfigMap
 
 
 _Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
 - [ValueRef](#valueref)
 
 | Field | Description | Default | Validation |
