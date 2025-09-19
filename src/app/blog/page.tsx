@@ -26,7 +26,7 @@ const posts = [
         publishDate: '2025-05-14',
         title: 'AI Reliability Engineering For More Dependable Humans',
         description: 'AI Reliability Engineering (AIRE) brings AI agents to SRE and Platform Engineering workflows for dependable humans.',
-        authorId: "linsun",
+        authorId: "christianposta",
     },
     {
         slug: 'kgateway-guardrails',
@@ -40,7 +40,7 @@ const posts = [
         publishDate: '2025-07-01',
         title: 'Celebrating 100 Days of Kagent',
         description: '100+ contributors, 1000+ GitHub stars and more!',
-        authorId: "christianposta",
+        authorId: "linsun",
     },
     {
         slug: 'kmcp',
