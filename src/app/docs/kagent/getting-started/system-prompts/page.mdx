@@ -161,6 +161,40 @@ Notice how much information we've added to the prompt. We've added a detailed op
 
 The last trick I'd like to mention is using another model to aid in this process. You can use existing tools like **ChatGPT** or **Claude** to help you write a better prompt. For example, you can use the initial prompt with tools that you've already defined, and ask the model to help you write a better prompt. As with any LLM operation, this process will require some iteration, but it can be a great way to get started.
 
+## Using ConfigMap and Secrets to store prompts
+
+If you wish to reuse prompts across multiple agents or decouple the prompt from the agent definition, you can use a `ConfigMap` or `Secret` to store the prompt. An example is shown below:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-agent-config
+  namespace: kagent
+data:
+  system-message: "You are an expert Kubernetes agent that uses tools to help users."
+```
+
+When creating the agent, you can reference the ConfigMap or Secret that contains the prompt. Note that `systemMessageFrom` (reference) and `systemMessage` (inline) are mutually exclusive, and you can only use one of them.
+
+```yaml
+...
+    declarative:
+      systemMessageFrom:
+        type: ConfigMap
+        name: my-agent-config
+        key: system-message
+```
+
+```yaml
+...
+  declarative:
+    systemMessageFrom:
+      type: Secret
+      name: my-agent-secret
+      key: system-message
+```
+
 ## Reference
 
 There are many resources available online that can help you write better prompts. Here are some of the most useful ones:
