@@ -18,17 +18,18 @@ A Helm chart for kagent, built with Autogen
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../agents/argo-rollouts | argo-rollouts-agent | v0.6.5-115-g698e705 |
-| file://../agents/cilium-debug | cilium-debug-agent | v0.6.5-115-g698e705 |
-| file://../agents/cilium-manager | cilium-manager-agent | v0.6.5-115-g698e705 |
-| file://../agents/cilium-policy | cilium-policy-agent | v0.6.5-115-g698e705 |
-| file://../agents/helm | helm-agent | v0.6.5-115-g698e705 |
-| file://../agents/istio | istio-agent | v0.6.5-115-g698e705 |
-| file://../agents/k8s | k8s-agent | v0.6.5-115-g698e705 |
-| file://../agents/kgateway | kgateway-agent | v0.6.5-115-g698e705 |
-| file://../agents/observability | observability-agent | v0.6.5-115-g698e705 |
-| file://../agents/promql | promql-agent | v0.6.5-115-g698e705 |
-| file://../tools/querydoc | querydoc | v0.6.5-115-g698e705 |
+| file://../agents/argo-rollouts | argo-rollouts-agent |  |
+| file://../agents/cilium-debug | cilium-debug-agent |  |
+| file://../agents/cilium-manager | cilium-manager-agent |  |
+| file://../agents/cilium-policy | cilium-policy-agent |  |
+| file://../agents/helm | helm-agent |  |
+| file://../agents/istio | istio-agent |  |
+| file://../agents/k8s | k8s-agent |  |
+| file://../agents/kgateway | kgateway-agent |  |
+| file://../agents/observability | observability-agent |  |
+| file://../agents/promql | promql-agent |  |
+| file://../tools/grafana-mcp | grafana-mcp |  |
+| file://../tools/querydoc | querydoc |  |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.0.11 |
 
 ## Values
@@ -36,20 +37,60 @@ A Helm chart for kagent, built with Autogen
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | agents.argo-rollouts-agent.enabled | bool | true |  |
+| agents.argo-rollouts-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.argo-rollouts-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.argo-rollouts-agent.resources.requests.cpu | string | "100m" |  |
+| agents.argo-rollouts-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.cilium-debug-agent.enabled | bool | true |  |
+| agents.cilium-debug-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.cilium-debug-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.cilium-debug-agent.resources.requests.cpu | string | "100m" |  |
+| agents.cilium-debug-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.cilium-manager-agent.enabled | bool | true |  |
+| agents.cilium-manager-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.cilium-manager-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.cilium-manager-agent.resources.requests.cpu | string | "100m" |  |
+| agents.cilium-manager-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.cilium-policy-agent.enabled | bool | true |  |
+| agents.cilium-policy-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.cilium-policy-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.cilium-policy-agent.resources.requests.cpu | string | "100m" |  |
+| agents.cilium-policy-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.helm-agent.enabled | bool | true |  |
+| agents.helm-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.helm-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.helm-agent.resources.requests.cpu | string | "100m" |  |
+| agents.helm-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.istio-agent.enabled | bool | true |  |
+| agents.istio-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.istio-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.istio-agent.resources.requests.cpu | string | "100m" |  |
+| agents.istio-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.k8s-agent.enabled | bool | true |  |
+| agents.k8s-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.k8s-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.k8s-agent.resources.requests.cpu | string | "100m" |  |
+| agents.k8s-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.kgateway-agent.enabled | bool | true |  |
+| agents.kgateway-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.kgateway-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.kgateway-agent.resources.requests.cpu | string | "100m" |  |
+| agents.kgateway-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.observability-agent.enabled | bool | true |  |
+| agents.observability-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.observability-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.observability-agent.resources.requests.cpu | string | "100m" |  |
+| agents.observability-agent.resources.requests.memory | string | "256Mi" |  |
 | agents.promql-agent.enabled | bool | true |  |
+| agents.promql-agent.resources.limits.cpu | string | "1000m" |  |
+| agents.promql-agent.resources.limits.memory | string | "1Gi" |  |
+| agents.promql-agent.resources.requests.cpu | string | "100m" |  |
+| agents.promql-agent.resources.requests.memory | string | "256Mi" |  |
 | controller.agentImage.pullPolicy | string | "" |  |
 | controller.agentImage.registry | string | "" |  |
 | controller.agentImage.repository | string | "kagent-dev/kagent/app" |  |
 | controller.agentImage.tag | string | "" |  |
-| controller.env | object | {} |  |
+| controller.env | list | [] |  |
 | controller.image.pullPolicy | string | "" |  |
 | controller.image.registry | string | "" |  |
 | controller.image.repository | string | "kagent-dev/kagent/controller" |  |
@@ -66,18 +107,28 @@ A Helm chart for kagent, built with Autogen
 | controller.service.type | string | "ClusterIP" |  |
 | controller.streaming.initialBufSize | string | "4Ki" |  |
 | controller.streaming.maxBufSize | string | "1Mi" |  |
-| controller.streaming.timeout | string | "60s" |  |
+| controller.streaming.timeout | string | "600s" |  |
 | controller.tolerations | list | [] | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
 | database.postgres.url | string | "postgres://postgres:kagent@pgsql-postgresql.kagent.svc.cluster.local:5432/postgres" |  |
 | database.sqlite.databaseName | string | "kagent.db" |  |
 | database.type | string | "sqlite" |  |
 | fullnameOverride | string | "" |  |
+| grafana-mcp.grafana.apiKey | string | "-" |  |
+| grafana-mcp.grafana.url | string | "grafana.kagent:3000/api" |  |
+| grafana-mcp.resources.limits.cpu | string | "500m" |  |
+| grafana-mcp.resources.limits.memory | string | "512Mi" |  |
+| grafana-mcp.resources.requests.cpu | string | "100m" |  |
+| grafana-mcp.resources.requests.memory | string | "128Mi" |  |
 | imagePullPolicy | string | "IfNotPresent" |  |
 | imagePullSecrets | list | [] |  |
 | kagent-tools.enabled | bool | true |  |
 | kagent-tools.fullnameOverride | string | "kagent-tools" |  |
 | kagent-tools.replicaCount | int | 1 |  |
+| kagent-tools.resources.limits.cpu | string | "1000m" |  |
+| kagent-tools.resources.limits.memory | string | "1Gi" |  |
+| kagent-tools.resources.requests.cpu | string | "100m" |  |
+| kagent-tools.resources.requests.memory | string | "256Mi" |  |
 | kagent-tools.tools.loglevel | string | "debug" |  |
 | labels | object | {} | Additional labels to add to all Kubernetes resources |
 | nameOverride | string | "" |  |
@@ -106,6 +157,10 @@ A Helm chart for kagent, built with Autogen
 | providers.azureOpenAI.model | string | "gpt-4.1-mini" |  |
 | providers.azureOpenAI.provider | string | "AzureOpenAI" |  |
 | providers.default | string | "openAI" |  |
+| providers.gemini.apiKeySecretKey | string | "GOOGLE_API_KEY" |  |
+| providers.gemini.apiKeySecretRef | string | "kagent-gemini" |  |
+| providers.gemini.model | string | "gemini-1.5-pro" |  |
+| providers.gemini.provider | string | "Gemini" |  |
 | providers.ollama.config.host | string | "host.docker.internal:11434" |  |
 | providers.ollama.model | string | "llama3.2" |  |
 | providers.ollama.provider | string | "Ollama" |  |
@@ -113,11 +168,10 @@ A Helm chart for kagent, built with Autogen
 | providers.openAI.apiKeySecretRef | string | "kagent-openai" |  |
 | providers.openAI.model | string | "gpt-4.1-mini" |  |
 | providers.openAI.provider | string | "OpenAI" |  |
-| querydoc.enabled | bool | true |  |
 | querydoc.image.pullPolicy | string | "IfNotPresent" |  |
 | querydoc.image.registry | string | "ghcr.io" |  |
 | querydoc.image.repository | string | "kagent-dev/doc2vec/mcp" |  |
-| querydoc.image.tag | string | "1.1.12" |  |
+| querydoc.image.tag | string | "1.1.13" |  |
 | querydoc.openai.apiKey | string | "" |  |
 | querydoc.replicas | int | 1 |  |
 | querydoc.resources.limits.cpu | string | "500m" |  |
@@ -128,6 +182,8 @@ A Helm chart for kagent, built with Autogen
 | securityContext | object | {} |  |
 | tag | string | "" |  |
 | tolerations | list | [] | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| tools.grafana-mcp.enabled | bool | true |  |
+| tools.querydoc.enabled | bool | true |  |
 | ui.env | object | {} |  |
 | ui.image.pullPolicy | string | "" |  |
 | ui.image.registry | string | "" |  |
