@@ -211,24 +211,22 @@ After refreshing the page, you should see the `query-documentation` tool being d
 
 ### Option 2: Using YAML CRDs
 
-Create a `toolserver.yaml` file:
+Create a `remote-mcpserver.yaml` file:
 
 ```yaml
-# Kagent ToolServer Configuration
-# This connects agents to the MCP documentation query server
-apiVersion: kagent.dev/v1alpha1
-kind: ToolServer
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
 metadata:
-  name: sqlite-vec              # Name referenced by agents (in toolServer field)
-  namespace: kagent             # Must match your Kagent installation namespace
+  name: live-demo
+  namespace: kagent
+status:
 spec:
-  config:
-    streamableHttp:             # Configuration for HTTP-based MCP connection
-      sseReadTimeout: 5m0s      # Timeout for server-sent events
-      timeout: 5s               # General connection timeout
-      url: http://mcp-sqlite-vec.kagent:3001/mcp  # MCP server endpoint
-    type: ''                    # Auto-detected based on config
-  description: 'SQLite vector search MCP server for documentation queries'
+  description: ''
+  protocol: STREAMABLE_HTTP
+  sseReadTimeout: 5m0s
+  terminateOnClose: true
+  timeout: 5s
+  url: http://mcp-sqlite-vec.kagent:3001/mcp
 ```
 
 Apply the ToolServer:
@@ -260,24 +258,27 @@ Create an `agent.yaml` file:
 ```yaml
 # Kagent Agent Configuration
 # This defines an AI agent that can answer questions about MCP documentation
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
-  name: oswaldo                    # Agent name - change to your preference
-  namespace: kagent               # Must match your Kagent installation namespace
+  name: sqlite-vec
+  namespace: kagent
 spec:
-  description: >-
+  declarative:
+    modelConfig: default-model-config
+    stream: true
+    systemMessage: ' Use your tool to answer any question about the Model Context Protocol (MCP). Use mcp for the product and latest for the version'
+    tools:
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: live-demo
+          toolNames:
+            - query_documentation
+        type: McpServer
+  description: |
     The MCP agent is answering questions about MCP, using the MCP documentation
-  modelConfig: default-model-config  # References a ModelConfig resource for AI model settings
-  systemMessage: >-
-    Use your tool to answer any question about the Model Context Protocol (MCP).
-    Use mcp for the product and latest for the version.
-  tools:
-    - mcpServer:
-        toolNames:
-          - query_documentation   # The specific tool from the MCP server to use
-        toolServer: kagent/sqlite-vec  # References the ToolServer resource (namespace/name)
-      type: McpServer             # Indicates this is an MCP-based tool
+  type: Declarative
 ```
 
 Apply the Agent:
