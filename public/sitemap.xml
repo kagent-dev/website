@@ -2,832 +2,539 @@
     
     <url>
         <loc>https://kagent.dev/agents</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/blog</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/community</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts/agents</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts/architecture</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts/tools</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/a2a-agents</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/a2a-byo</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/discord-a2a</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/documentation</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kagent/examples/langchain-byo</loc>
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/slack-a2a</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/first-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/first-mcp-tool</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/quickstart</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/system-prompts</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/tracing</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/introduction/installation</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/introduction</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/introduction/what-is-kagent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/api-ref</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/faq</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/helm</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/release-notes</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/troubleshooting</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/anthropic</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/azure-openai</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-09</lastmod>
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/byo-openai</loc>
-        <lastmod>2025-09-09</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/gemini</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/google-vertexai</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/ollama</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/openai</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/deploy/install-controller</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/deploy</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/deploy/server</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/develop/fastmcp-python</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/develop/mcp-go</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/develop</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/introduction</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/quickstart</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/api-ref</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-add-tool</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-build</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-deploy</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-init</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-install</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-run</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-secrets</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/secrets</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/page.tsx</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/argo-rollouts-conversion-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/cilium-crd-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/helm-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/istio-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/k8s-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/kgateway-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/observability-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/promql-agent</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/istio</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/kubernetes</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/prometheus</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/documentation</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/helm</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/argo</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/grafana</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/other</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/cilium</loc>
-<<<<<<< HEAD
-        <lastmod>2025-09-10</lastmod>
-=======
-        <lastmod>2025-09-16</lastmod>
->>>>>>> e2a05df (Khook blog post fixes)
+        <lastmod>2025-09-24</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>

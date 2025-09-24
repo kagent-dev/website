@@ -144,6 +144,11 @@
             "description": "Bring your own A2A agent to kagent"
           },
           {
+            "title": "BYO LangGraph Agents",
+            "href": "/docs/kagent/examples/langchain-byo",
+            "description": "Bring your own LangGraph agent to kagent"
+          },
+          {
             "title": "Documentation Agent",
             "href": "/docs/kagent/examples/documentation",
             "description": "See an example of a kagent agent built to help with documentation-related tasks."
