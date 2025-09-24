@@ -20,7 +20,7 @@
     "@docsearch/react": "^3.9.0",
     "@heroicons/react": "^2.2.0",
     "@mdx-js/loader": "^3.1.0",
-    "@mdx-js/react": "^3.1.0",
+    "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^15.5.2",
     "@next/third-parties": "^15.5.2",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
