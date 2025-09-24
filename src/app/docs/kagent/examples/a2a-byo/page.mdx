@@ -1,18 +1,18 @@
 ---
-title: "BYO A2A Agents"
+title: "BYO ADK Agents"
 pageOrder: 1
-description: "Bring your own A2A agent to kagent"
+description: "Bring your own ADK agent to kagent"
 ---
 
 export const metadata = {
-  title: "Bringing your own A2A agent to kagent",
-  description: "Learn how to bring your own A2A agent to kagent",
+  title: "Bringing your own ADK agent to kagent",
+  description: "Learn how to bring your own ADK agent to kagent",
   author: "kagent.dev"
 };
 
-# Bringing your own A2A agent to kagent with ADK
+# Bringing your own ADK agent to kagent
 
-Bring your own custom agents. Currently, custom agents must be built with the [Agent Development Kit (ADK)](https://google.github.io/adk-docs/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
+Bring your own custom agents. This example uses the [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), but you can also try out the [LangGraph guide](/docs/kagent/examples/langchain-byo/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
 
 Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. Kagent can invoke your agent directly through the A2A protocol.
 
@@ -56,7 +56,7 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
 2. Create a secret with the API key.
 
    ```bash
-   kubectl create secret generic kagent-google -n kagent  --from-literal=GOOGLE_API_KEY=$GOOGLE_API_KEY   --dry-run=client -oyaml | k apply -f -
+   kubectl create secret generic kagent-google -n kagent  --from-literal=GOOGLE_API_KEY=$GOOGLE_API_KEY   --dry-run=client -oyaml | kubectl apply -f -
    ```
 
 3. Create a BYO Agent resource.
