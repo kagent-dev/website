@@ -83,7 +83,7 @@ const EnterprisePage = () => {
                 transition={{ duration: 0.8 }}
                 className="text-4xl md:text-5xl font-medium tracking-tight mb-6"
               >
-                Kagent <span className="text-primary">Enterprise</span> Distributions & Training
+                Enterprise Distributions & Training
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
