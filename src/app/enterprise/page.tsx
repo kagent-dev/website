@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { ExternalLink, Users, BookOpen, Building2, Code, Briefcase } from "lucide-react";
+import { ExternalLink, Users, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import Link from "next/link";
