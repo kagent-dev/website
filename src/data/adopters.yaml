@@ -25,3 +25,7 @@ adopters:
     logo_dark: "/images/adopters/krateo-dark.svg"
     logo_light: "/images/adopters/krateo-light.svg"
     website: "https://krateo.io/"
+  - name: "CloudRaft"
+    logo_dark: "/images/adopters/cloudraft.svg"
+    logo_light: "/images/adopters/cloudraft.svg"
+    website: "https://www.cloudraft.io/"
