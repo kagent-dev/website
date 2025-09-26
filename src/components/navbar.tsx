@@ -139,6 +139,18 @@ export default function Navbar() {
               <Link href="/community">Community</Link>
             </Button>
 
+            <Button
+              variant="link"
+              className={`${
+                isActive("/enterprise")
+                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
+                  : "text-secondary-foreground"
+              }`}
+              asChild
+            >
+              <Link href="/enterprise">Enterprise</Link>
+            </Button>
+
             <DocSearch
               appId="0Q0AZY5UR3"
               indexName="kagent"
@@ -272,6 +284,18 @@ export default function Navbar() {
                 asChild
               >
                 <Link href="/community">Community</Link>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className={`justify-start ${
+                  isActive("/enterprise")
+                    ? "font-bold text-primary underline decoration-white underline-offset-4"
+                    : ""
+                }`}
+                asChild
+              >
+                <Link href="/enterprise">Enterprise</Link>
               </Button>
 
               <Button variant="secondary" className="mt-4" asChild>

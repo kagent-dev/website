@@ -139,9 +139,9 @@
             "description": "Discover how to implement Agent-to-Agent (A2A) communication and collaboration with kagent."
           },
           {
-            "title": "BYO A2A Agents",
+            "title": "BYO ADK Agents",
             "href": "/docs/kagent/examples/a2a-byo",
-            "description": "Bring your own A2A agent to kagent"
+            "description": "Bring your own ADK agent to kagent"
           },
           {
             "title": "BYO LangGraph Agents",

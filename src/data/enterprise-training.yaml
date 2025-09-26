@@ -1,0 +1,8 @@
+# Training programs and educational content for kagent
+# This file contains information about available training programs,
+# workshops, and educational resources
+
+training:
+  - title: "Discover kagent and MCP servers"
+    description: "In this free, on-demand technical lab, explore the kagent open-source project and learn how to create custom AI agents that use MCP servers in a cloud-native environment."
+    url: "https://www.solo.io/resources/lab/kagent-lab-discover-kagent-kmcp"
