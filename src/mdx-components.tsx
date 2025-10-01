@@ -1,6 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import { useMemo } from "react";
-import { PlatformTabs } from "./components/mdx/platform-tabs";
+import { PlatformTabs, GenericTabs, LLMProviderTabs } from "./components/mdx/platform-tabs";
 import { Tabs } from "./components/mdx/tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
@@ -166,6 +166,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       // Pre (for code blocks)
       pre: ({ children }) => <>{children}</>,
       PlatformTabs,
+      GenericTabs,
+      LLMProviderTabs,
       Tabs,
       YouTube,
       LabCTA,
