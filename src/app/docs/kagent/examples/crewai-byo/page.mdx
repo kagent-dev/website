@@ -1,0 +1,257 @@
+---
+title: "BYO CrewAI Agents"
+pageOrder: 1
+description: "Bring your own CrewAI agent to kagent"
+---
+
+export const metadata = {
+  title: "Bringing your own CrewAI agent to kagent",
+  description: "Learn how to bring your own CrewAI agent to kagent",
+  author: "kagent.dev",
+};
+
+# Bringing your own CrewAI agent to kagent
+
+Bring your own custom agents. This example uses [CrewAI](https://www.crewai.com/), but you can also try out the [ADK guide](/docs/kagent/examples/a2a-byo/) or [LangGraph guide](/docs/kagent/examples/langchain-byo/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
+
+Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. Kagent can invoke your agent directly through the A2A protocol.
+
+## Prerequisites
+
+Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+## Building a custom agent
+
+The following example builds a research crew agent from the [kagent code repository](https://github.com/kagent-dev/kagent). The sample app is built with CrewAI framework and performs research tasks using web search capabilities. It uses OpenAI's GPT models as the underlying LLM provider and Serper for web search.
+
+1. Clone the kagent code repository.
+
+   ```bash
+   git clone https://github.com/kagent-dev/kagent.git
+   cd kagent
+   ```
+
+2. Optional: If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+
+3. Build the custom agent image and push it to your local Docker registry.
+
+   ```bash
+   cd python/samples/crewai/research-crew
+   docker build . -t localhost:5001/research-crew:latest --push
+   ```
+
+### Adapting your own CrewAI agent
+
+A quickstart and detailed guide for adapting existing CrewAI crews and flows to work with KAgent is available in the [package's README](https://github.com/kagent-dev/kagent/tree/main/python/packages/kagent-crewai).
+This provides a simple way to setup A2A server, tracing, and session-aware memory and state persistence.
+
+Two complete examples are available in the `python/samples/crewai/` directory:
+
+- [**Crew Example**](https://github.com/kagent-dev/kagent/tree/main/python/samples/crewai/research-crew): A multi-agent crew for web research and analysis
+- [**Flow Example**](https://github.com/kagent-dev/kagent/tree/main/python/samples/crewai/poem_flow): A CrewAI flow that generates and continues poems
+
+## Creating a BYO Agent resource
+
+Now that you have your own custom agent image, you can create a BYO Agent resource for kagent to manage.
+You will need a Serper API Key that you can get for free [from their website](https://serper.dev). Serper is a Google Search API used by most CrewAI examples and tutorials, but you can also plug in your own tools.
+
+1. Save the API keys for your LLM provider and web search service in environment variables.
+
+   ```bash
+   export OPENAI_API_KEY=your-openai-api-key-here
+   export SERPER_API_KEY=your-serper-api-key-here
+   ```
+
+2. Create secrets with the API keys.
+
+   ```bash
+   kubectl create secret generic kagent-openai -n kagent \
+     --from-literal=OPENAI_API_KEY=$OPENAI_API_KEY \
+     --dry-run=client -o yaml | kubectl apply -f -
+
+   kubectl create secret generic kagent-serper -n kagent \
+     --from-literal=SERPER_API_KEY=$SERPER_API_KEY \
+     --dry-run=client -o yaml | kubectl apply -f -
+   ```
+
+3. Create a BYO Agent resource.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: research-crew
+     namespace: kagent
+   spec:
+     description: A research crew with multiple specialized agents for web research and analysis.
+     type: BYO
+     byo:
+       deployment:
+         image: localhost:5001/research-crew:latest
+         env:
+           - name: OPENAI_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-openai
+                 key: OPENAI_API_KEY
+           - name: SERPER_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-serper
+                 key: SERPER_API_KEY
+   EOF
+   ```
+
+## Testing the A2A endpoint
+
+The A2A endpoint is exposed on the port `8083` of the kagent controller service.
+
+1. Enable port-forwarding on the `kagent-controller` service.
+
+   > Note that you could also expose the A2A endpoint publicly by using a gateway.
+
+   ```bash
+   kubectl port-forward svc/kagent-controller 8083:8083 -n kagent
+   ```
+
+2. To test that the agent is available and has an agent card, send a request to the `.well-known/agent.json` endpoint. Note the API endpoint follows the pattern `/api/a2a/{namespace}/{agent-name}/.well-known/agent.json`.
+
+   ```bash
+   curl localhost:8083/api/a2a/kagent/research-crew/.well-known/agent.json
+   ```
+
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+
+   ```json
+   {
+     "name": "research_crew",
+     "description": "A research crew with multiple specialized agents for web research and analysis.",
+     "url": "http://127.0.0.1:8083/api/a2a/kagent/research-crew/",
+     "version": "",
+     "capabilities": {
+       "streaming": true,
+       "pushNotifications": false,
+       "stateTransitionHistory": true
+     },
+     "defaultInputModes": ["text"],
+     "defaultOutputModes": ["text"],
+     "skills": []
+   }
+   ```
+
+## Invoking the agent
+
+You can invoke the agent in several ways, including the kagent dashboard, kagent CLI, and the A2A host CLI.
+
+### Dashboard
+
+Launch the dashboard with `kagent dashboard`, find your `research-crew`, and start chatting. For complete steps, see the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
+
+### kagent CLI
+
+To use the kagent CLI, make sure that the controller is still being port-forwarded.
+
+Then, use the invoke command. For more options, run `kagent help invoke`.
+
+```shell
+kagent invoke --agent research-crew --task "Research topics on AI reliability and provide a summary."
+```
+
+Example output: The output includes both the response as well as the details of the response. The formatting is in JSON but can be quite long, depending on the call and the agent configuration.
+
+```json
+{
+  "artifacts": [
+    {
+      "artifactId": "2d44a62e-d079-4dae-8ee8-f8759add9ffe",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "After researching AI reliability, I found that it encompasses aspects like robustness, safety, and trustworthiness..."
+        }
+      ]
+    }
+  ],
+...
+}
+```
+
+### A2A host CLI
+
+You can use the A2A host CLI to invoke the agent. This CLI is part of the [A2A samples repository](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/cli).
+
+1. Clone the A2A samples repository.
+
+   ```bash
+   git clone https://github.com/a2aproject/a2a-samples.git
+   ```
+
+2. From the `a2a-samples/samples/python/hosts/cli` directory, point the CLI to the kagent endpoint.
+
+   ```bash
+   cd a2a-samples/samples/python/hosts/cli
+   uv run . --agent http://127.0.0.1:8083/api/a2a/kagent/research-crew
+   ```
+
+   Example output: The CLI connects to the kagent, displays the agent card and prompts you for input.
+
+   ```console
+   ======= Agent Card ========
+   {"capabilities":{"pushNotifications":false,"stateTransitionHistory":true,"streaming":true},"defaultInputModes":["text"],"defaultOutputModes":["text"],"description":"A research crew with multiple specialized agents for web research and analysis.","name":"research_crew","protocolVersion":"0.2.6","skills":[],"url":"http://127.0.0.1:8083/api/a2a/kagent/research-crew/","version":""}
+   =========  starting a new task ========
+
+   What do you want to send to the agent? (:q or quit to exit):
+   ```
+
+3. Send the task `"Research topics on AI reliability and provide a summary."` to the agent. You'll be also prompted to optionally attach a file to the request, but just hit enter to skip this step.
+
+   Example output: You get a stream of events that include the prompt and the agent's response, such as the following.
+
+   ```json
+   {
+     "contextId": "157a0834df2c459d9cee45316ffbfb5b",
+     "final": false,
+     "kind": "status-update",
+     "metadata": {
+       "crewai_app_name": "kagent__NS__research_crew",
+       "crewai_author": "research_agent",
+       "crewai_invocation_id": "e-8619b200-2f0a-4257-bd6b-b08bd1b139fd",
+       "crewai_session_id": "157a0834df2c459d9cee45316ffbfb5b",
+       "crewai_usage_metadata": {
+         "candidatesTokenCount": 150,
+         "candidatesTokensDetails": [
+           {
+             "modality": "TEXT",
+             "tokenCount": 150
+           }
+         ],
+         "promptTokenCount": 500,
+         "promptTokensDetails": [
+           {
+             "modality": "TEXT",
+             "tokenCount": 500
+           }
+         ],
+         "totalTokenCount": 650
+       },
+       "crewai_user_id": "admin@kagent.dev"
+     },
+     "status": {
+       "message": {
+         "kind": "message",
+         "messageId": "dd05c3cd-2dc3-4efd-9791-d7124be6dd52",
+         "parts": [
+           {
+             "kind": "text",
+             "text": "After researching AI reliability, I found that it encompasses aspects like robustness, safety, and trustworthiness..."
+           }
+         ],
+         "role": "agent"
+       },
+       "state": "working",
+       "timestamp": "2025-08-14T22:15:04.276358+00:00"
+     },
+     "taskId": "59d2b071-04e9-4fef-a0dd-e925dd13cceb"
+   }
+   ```
