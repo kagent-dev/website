@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
+import KubeConAnnouncementBar from "@/components/kubecon-announcement-bar";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import '@docsearch/css';
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Navbar />
+          <KubeConAnnouncementBar />
           <main className="flex-1">{children}</main>
           <Footer />
         </ThemeProvider>
