@@ -63,7 +63,7 @@ const KubeConAnnouncement = () => {
               
               <Button size="lg" asChild className="hover:scale-105 transition-transform w-fit">
                 <Link 
-                  href="https://pages.solo.io/kubecon-kagent-community-party.html?&utm_source=website&utm_medium=direct&utm_content=kagent-dev&utm_content=kagent-dev"
+                  href="https://pages.solo.io/kubecon-kagent-community-party.html?&utm_source=website&utm_medium=direct&utm_content=kagent-dev"
                   target="_blank" 
                   rel="noopener noreferrer"
                 >
