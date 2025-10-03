@@ -144,6 +144,11 @@
             "description": "Bring your own ADK agent to kagent"
           },
           {
+            "title": "BYO CrewAI Agents",
+            "href": "/docs/kagent/examples/crewai-byo",
+            "description": "Bring your own CrewAI agent to kagent"
+          },
+          {
             "title": "BYO LangGraph Agents",
             "href": "/docs/kagent/examples/langchain-byo",
             "description": "Bring your own LangGraph agent to kagent"
