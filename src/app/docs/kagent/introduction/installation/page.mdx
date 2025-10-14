@@ -102,7 +102,7 @@ Another way to install kagent is using Helm.
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
        --namespace kagent \
-       --set providers.default=openAI \
+       --set providers.default=azureOpenAI \
        --set providers.azureOpenAI.apiKey=$OPENAI_API_KEY
    ```
 
