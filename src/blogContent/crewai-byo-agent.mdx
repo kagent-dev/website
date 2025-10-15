@@ -52,28 +52,49 @@ cd crewAI-examples/self_evaluation_loop_flow
 crewai flow kickoff
 ```
 
-Now you can use this example to follow along with the steps below.
+We will use this example to illustrate some steps below, but you can apply the same principles to your own CrewAI agents.
 
-## Step 1: Agent Card and User Input
+## Step 1: Prepare Your Agent for A2A
 
-User inputs will be passed in as the `{input}` field in tasks and agent system prompts. For example, for the `self_evaluation_loop_flow`, you can write the task definition as:
+Most often when running CrewAI locally, you would directly pass user inputs to `kickoff()` by hard coding some values required by your task or agent definition. This is a great way to test locally as CrewAI tutorials suggest, but in production you will want to accept user inputs dynamically through A2A protocol.
+
+User inputs come from an A2A task and will be passed in under the `input` key when invoking the crew or flow with `kickoff()`. For flows, the best practice is to manage the input by storing it in the flow state and then using it to kickoff the crew or functions. Here's our example:
+
+```python
+class ShakespeareXPostFlowState(BaseModel):
+    # the user provided inputs from A2A task will be used to initialize this "input" field in the state
+    input: str = "Flying cars"
+    ... # other state fields such as feedback, iteration count, etc.
+
+
+class ShakespeareXPostFlow(Flow[ShakespeareXPostFlowState]):
+    @start("retry")
+    def generate_shakespeare_x_post(self):
+        print("Generating Shakespearean X post")
+        result = (
+            ShakespeareanXPostCrew()
+            .crew()
+            .kickoff(
+                # use the input from the flow state
+                inputs={"topic": self.state.input, "feedback": self.state.feedback}
+            )
+        )
+
+    ... # Other flow functions such as evaluate_posts(), routing logics, etc.
+```
+
+For crews, you can directly add the `{input}` template variable to the task definition, for example:
 
 ```yaml
-# src/self_evaluation_loop_flow/crews/shakespeare_crew/config/tasks.yaml
 write_x_post:
   description: >
-    Given the topic '{input}', compose a humorous hot take in the style of Shakespeare. 
-    The tone should be sarcastic and playful. The final short form social media post 
-    must be over 200 characters and not exceed 280 characters, and emojis are strictly forbidden.
-
-    Please incorporate the following feedback if present: 
-    {feedback}
+    Given the topic '{input}', compose a humorous hot take in the style of Shakespeare. ...
   expected_output: >
-    A witty, Shakespearean hot take between 200 and 280 characters [Inclusive].
+    A witty, Shakespearean hot take between 200 and 280 characters ...
   agent: shakespearean_bard
 ```
 
-If you haven't already, write the agent card for your crew or flow. This is a JSON file that describes your agent's capabilities, inputs, and outputs. This is exposed at the `/.well-known/agent.json` endpoint and used by KAgent to understand how to interact with your agent. Here is an example for the `self_evaluation_loop_flow`:
+Then, write the A2A agent card which is a JSON file that describes your agent's capabilities, inputs, and outputs. This is exposed at the `/.well-known/agent.json` endpoint and used by KAgent to understand how to interact with your agent. Here's our example:
 
 ```json
 {
@@ -89,9 +110,11 @@ If you haven't already, write the agent card for your crew or flow. This is a JS
     {
       "id": "generate_post",
       "name": "Generate a post",
-      "description": "Can generate a post by providing a topic and content as input"
+      "description": "Can generate a post by providing a topic as input",
+      "tags": ["text generation", "Shakespearean"]
     }
-  ]
+  ],
+  "url": "http://localhost:8080"
 }
 ```
 
@@ -113,6 +136,7 @@ def main():
         agent_card = json.load(f)
 
     app = KAgentApp(crew=YourCrew(), agent_card=agent_card)
+    # app = KAgentApp(flow=YourFlow(), agent_card=agent_card)  # if using a flow instead
 
     server = app.build()
 
@@ -242,7 +266,7 @@ You should see your agent's metadata. Now try invoking it through the KAgent CLI
 kagent invoke --agent my-crew-name --task "Research the latest developments in quantum computing"
 ```
 
-You can also access the agent through the dashboard UI or the CLI.
+You can also access the agent through the dashboard UI or the CLI (reference the quickstart tutorial if needed).
 
 ## Note on Session-aware Memory
 
