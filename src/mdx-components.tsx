@@ -130,7 +130,15 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           {children}
         </em>
       ),
-      code: ({ children, ...props }) => <CodeBlock {...props}>{children}</CodeBlock>,
+      code: ({ children, className = "", ...props }) => {
+        // Extract language from className if present
+        const language = className?.replace("language-", "") || "";
+        return (
+          <CodeBlock language={language} className={className} {...props}>
+            {children}
+          </CodeBlock>
+        );
+      },
       // Block elements
       blockquote: ({ children, ...props }) => <blockquote {...props}>{children}</blockquote>,
       hr: (props) => <hr className="my-8 border-muted" {...props} />,
