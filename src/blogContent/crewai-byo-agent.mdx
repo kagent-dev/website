@@ -1,0 +1,253 @@
+export const metadata = {
+  title: "From CrewAI to KAgent: Deploying Your Custom AI Agents",
+  publishDate: "2025-10-14T00:00:00Z",
+  description:
+    "Learn how to take your existing CrewAI agents and deploy them as Bring-Your-Own (BYO) agents in KAgent.",
+  author: "Jet Chiang",
+  authorIds: ["jetchiang"],
+};
+
+# From CrewAI to KAgent: Deploying Your Custom AI Agents
+
+If you've been working with [CrewAI](https://www.crewai.com/) and love how it lets you orchestrate multiple AI agents for complex tasks, you might be wondering how to take those agents from your local development environment to a production-ready deployment.
+That's where KAgent's Bring-Your-Own (BYO) agent feature comes in. With our latest support for CrewAI BYO agents, this process is now seamless and straightforward.
+
+In this post, we'll walk through transforming your existing CrewAI crew into a KAgent BYO agent. We'll assume you already have a working CrewAI agent and focus on deployment steps.
+If you don't have a CrewAI agent yet, consider following one of their [getting started guides](https://docs.crewai.com/getting-started) or cloning one of the [examples](https://github.com/crewAIInc/crewAI-examples).
+
+## Why Deploy to KAgent?
+
+Before we dive into the how, let's talk about the why. KAgent provides several advantages over running CrewAI agents locally:
+
+- **Enterprise-grade deployment** with Kubernetes
+- **Session-aware memory** that persists across conversations
+- **Built-in tracing** with OpenTelemetry
+- **A2A protocol compatibility** for agent-to-agent communication
+- **Web dashboard** for easy management and testing
+- **Production monitoring** and scaling capabilities
+
+Furthermore, your agent will be able to interact with other agents and MCP servers already deployed in your KAgent environment, enabling more complex workflows and integrations.
+
+## Prerequisites
+
+Make sure you have:
+
+- A working CrewAI agent
+- KAgent installed in your Kubernetes cluster ([quick start guide](/docs/kagent/getting-started/quickstart))
+- Docker for building container images
+- kubectl for Kubernetes operations
+- Tracing configured if desired, see the [tracing guide](/docs/kagent/getting-started/tracing)
+
+## Step 0: Test Your Agent Locally
+
+Ensure that you have a CrewAI agent ready and tested locally, for example using `crewai run, crewai flow kickoff`. Check what input your agent requires since that will be needed to kickoff the agent from Kagent.
+
+If you want to follow the example below but don't have a CrewAI agent, a simple one to start is the `self_evaluation_loop_flow` agent from the CrewAI examples repository.
+This example shows a flow with 2 agents that generates X posts in Shakespearean style and then evaluates them to iteratively improve the quality. It doesn't require any tool API keys.
+
+```bash
+git clone https://github.com/crewAIInc/crewAI-examples.git
+cd crewAI-examples/self_evaluation_loop_flow
+# setup your OpenAI API key in .env or export OPENAI_API_KEY=...
+crewai flow kickoff
+```
+
+Now you can use this example to follow along with the steps below.
+
+## Step 1: Agent Card and User Input
+
+User inputs will be passed in as the `{input}` field in tasks and agent system prompts. For example, for the `self_evaluation_loop_flow`, you can write the task definition as:
+
+```yaml
+# src/self_evaluation_loop_flow/crews/shakespeare_crew/config/tasks.yaml
+write_x_post:
+  description: >
+    Given the topic '{input}', compose a humorous hot take in the style of Shakespeare. 
+    The tone should be sarcastic and playful. The final short form social media post 
+    must be over 200 characters and not exceed 280 characters, and emojis are strictly forbidden.
+
+    Please incorporate the following feedback if present: 
+    {feedback}
+  expected_output: >
+    A witty, Shakespearean hot take between 200 and 280 characters [Inclusive].
+  agent: shakespearean_bard
+```
+
+If you haven't already, write the agent card for your crew or flow. This is a JSON file that describes your agent's capabilities, inputs, and outputs. This is exposed at the `/.well-known/agent.json` endpoint and used by KAgent to understand how to interact with your agent. Here is an example for the `self_evaluation_loop_flow`:
+
+```json
+{
+  "name": "self-evaluation-loop-flow",
+  "description": "A CrewAI flow that generates and iteratively improves Shakespearean-style posts.",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": true
+  },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text"],
+  "skills": [
+    {
+      "id": "generate_post",
+      "name": "Generate a post",
+      "description": "Can generate a post by providing a topic and content as input"
+    }
+  ]
+}
+```
+
+## Step 2: Setting Up the KAgent A2A Server
+
+Now you can wrap your crew with KAgent's integration layer, usually in `main.py` created by CrewAI.
+
+```python
+# main.py
+from kagent.crewai import KAgentApp
+from your_crew import YourCrew  # Import your existing crew, similarly for flow
+
+# Your flow / crew definition if any
+# Other CrewAI functions such as kickoff() and plot()
+
+def main():
+    # Either write the agent card inline or load from a JSON file
+    with open("agent-card.json", "r") as f:
+        agent_card = json.load(f)
+
+    app = KAgentApp(crew=YourCrew(), agent_card=agent_card)
+
+    server = app.build()
+
+    port = int(os.getenv("PORT", "8080"))
+    host = os.getenv("HOST", "0.0.0.0")
+    logger.info(f"Starting server on {host}:{port}")
+
+    uvicorn.run(
+        server,
+        host=host,
+        port=port,
+        log_level="info",
+    )
+
+if __name__ == "__main__":
+    main()
+```
+
+## Step 3: Containerizing Your Agent
+
+Create a `Dockerfile` in your project root:
+
+```dockerfile
+### 1. Choose a base image, here we use python 3.13 with uv
+ARG DOCKER_REGISTRY=ghcr.io
+ARG VERSION=latest
+FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim
+
+WORKDIR /app
+
+# Install system dependencies, git is required for installing from git
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ./ .
+
+# Install dependencies
+RUN uv venv && uv sync --locked --no-dev
+# install kagent-crewai package from kagent-dev GitHub repository
+RUN uv pip install git+https://github.com/kagent-dev/kagent.git#subdirectory=python/packages/kagent-crewai
+
+# Set environment variables
+ENV PORT=8080
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Run the application
+CMD ["python", "path/to/your/main.py"]
+```
+
+If needed create a `.dockerignore` file to exclude unnecessary files from the Docker build context. Then build and push your image:
+
+```bash
+docker build -t your-registry.com/your-crew:latest . --push
+```
+
+## Step 4: Setting Up Secrets
+
+Your CrewAI agent likely needs API keys. For our example, we only need OpenAI API key.
+
+```bash
+# Set your API keys
+export OPENAI_API_KEY="your-openai-key"
+
+# Create secrets
+kubectl create secret generic kagent-openai \
+  --from-literal=OPENAI_API_KEY=$OPENAI_API_KEY \
+  -n kagent
+```
+
+Here is where you can add other secrets or credentials for tools and external integrations.
+
+## Step 5: Creating the BYO Agent Resource
+
+Now create the KAgent BYO agent resource:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: my-crew-name
+  namespace: kagent
+spec:
+  description: Some description
+  type: BYO
+  byo:
+    deployment:
+      image: your-registry.com/your-crew:latest
+      env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kagent-openai
+              key: OPENAI_API_KEY
+```
+
+Apply it:
+
+```bash
+kubectl apply -f agent.yaml
+```
+
+## Step 6: Testing Your Deployed Agent
+
+Let's test that everything works:
+
+```bash
+# Port forward to access the agent
+kubectl port-forward svc/kagent-controller 8083:8083 -n kagent
+
+# Check the agent card
+curl localhost:8083/api/a2a/kagent/my-crew-name/.well-known/agent.json
+```
+
+You should see your agent's metadata. Now try invoking it through the KAgent CLI:
+
+```bash
+kagent invoke --agent my-crew-name --task "Research the latest developments in quantum computing"
+```
+
+You can also access the agent through the dashboard UI or the CLI.
+
+## Note on Session-aware Memory
+
+If your CrewAI agent needs to maintain state or memory across sessions, you can leverage KAgent's session-aware memory feature. **No additional change is needed at all in your CrewAI code!** This means if you have already enabled `memory=True` or `@persist` on your Crew or Flow, they will automatically use the Kagent backend! You don't need to define any storage interface or connect to any database, `KAgentApp` handles that!
+
+## Conclusion
+
+Congratulations! You've successfully transformed your CrewAI agent into a production-ready KAgent BYO agent. You can now take advantage of KAgent's robust features to manage, scale, and monitor your AI agents in a Kubernetes environment.
