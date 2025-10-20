@@ -12,7 +12,7 @@ export const metadata = {
 
 # Installing kagent
 
-This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterpise offerings, check out [kagent enterprise](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
+This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterpise offerings, check out [Solo Enterprise for kagent](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
 
 ## Installation Methods
 
@@ -54,6 +54,9 @@ Another way to install kagent is using Helm.
        --create-namespace
    ```
 
+<LLMProviderTabs/>
+
+<div id="openai-tab">
 2. Set the `OPENAI_API_KEY` environment variable:
 
    ```bash
@@ -65,8 +68,73 @@ Another way to install kagent is using Helm.
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
        --namespace kagent \
+       --set providers.default=openAI \
        --set providers.openAI.apiKey=$OPENAI_API_KEY
    ```
+</div>
+
+<div id="anthropic-tab">
+2. Set the `ANTHROPIC_API_KEY` environment variable:
+
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   ```
+
+3. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=anthropic \
+       --set providers.anthropic.apiKey=$ANTHROPIC_API_KEY
+   ```
+</div>
+
+<div id="azure-tab">
+2. Set the `OPENAI_API_KEY` environment variable:
+
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+3. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=azureOpenAI \
+       --set providers.azureOpenAI.apiKey=$OPENAI_API_KEY
+   ```
+
+</div>
+
+<div id="gemini-tab">
+2. Set the `GEMINI_API_KEY` environment variable:
+
+   ```bash
+   export GEMINI_API_KEY="your-api-key-here"
+   ```
+
+3. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=gemini \
+       --set providers.gemini.apiKey=$GEMINI_API_KEY
+   ```
+</div>
+
+<div id="ollama-tab">
+
+2. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=ollama
+   ```
+</div>
 
 ## Uninstallation
 

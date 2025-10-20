@@ -1,0 +1,164 @@
+---
+title: "BYO LangGraph Agents"
+pageOrder: 1
+description: "Bring your own LangGraph agent to kagent"
+---
+
+export const metadata = {
+  title: "Bringing your own LangGraph agent to kagent",
+  description: "Learn how to bring your own LangGraph agent to kagent",
+  author: "kagent.dev"
+};
+
+# Bringing your own LangGraph agent to kagent
+
+You can bring your own LangGraph agent to kagent by configuring the KAgentCheckpointer in your LangGraph agent code. The [KAgentCheckpointer](https://github.com/kagent-dev/kagent/blob/main/python/samples/langgraph/currency/currency/agent.py#L13) stores the LangGraph state in kagent and enables distributed execution and session recovery.
+
+## Prerequisites
+
+Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+## Building a LangGraph agent
+
+The following example builds a simple LangGraph agent from the [kagent code repository](https://github.com/kagent-dev/kagent). The sample app is built with [LangGraph SDK](https://docs.langchain.com/langgraph-platform/sdk) and performs a currency exchange lookup task. It uses Google's Gemini model as the underlying LLM provider.
+
+1. Clone the kagent code repository.
+
+   ```bash
+   git clone https://github.com/kagent-dev/kagent.git
+   cd kagent
+   ```
+
+2. Optional: If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+
+3. Build the custom agent image and push it to your local Docker registry.
+
+   ```bash
+   cd python
+   docker build . -f samples/langgraph/currency/Dockerfile\
+     -t localhost:5001/langgraph-currency:latest \
+     --build-arg DOCKER_REGISTRY=localhost:5001 \
+     --build-arg VERSION=latest \
+     --push
+   ```
+
+## Creating a BYO Agent resource
+
+Now that you have your own custom agent image, you can create a BYO Agent resource for kagent to manage.
+
+1. Save the API key for your LLM provider, such as Gemini, in an environment variable.
+
+   ```bash
+   export GOOGLE_API_KEY=your-api-key-here
+   ```
+
+2. Create a secret with the API key.
+
+   ```bash
+   kubectl create secret generic kagent-google -n kagent \
+            --from-literal=GOOGLE_API_KEY=$GOOGLE_API_KEY \
+            --dry-run=client -oyaml | kubectl apply -f -
+   ```
+
+3. Create a BYO Agent resource.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: langgraph-agent
+     namespace: kagent
+   spec:
+     description: This is LangGraph currency agent.
+     type: BYO
+     byo:
+       deployment:
+         image: localhost:5001/langgraph-currency:latest
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+
+## Testing the A2A endpoint
+
+The A2A endpoint is exposed on the port `8083` of the kagent controller service.
+
+1. Enable port-forwarding on the `kagent-controller` service.
+
+   >Note that you could also expose the A2A endpoint publicly by using a gateway.
+
+   ```bash
+   kubectl port-forward svc/kagent-controller 8083:8083 -n kagent
+   ```
+
+2. To test that the agent is available and has an agent card, send a request to the `.well-known/agent.json` endpoint. Note the API endpoint follows the pattern `/api/a2a/{namespace}/{agent-name}/.well-known/agent.json`.
+
+   ```bash
+   curl localhost:8083/api/a2a/kagent/langgraph-agent/.well-known/agent.json
+   ```
+
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+
+   ```json
+   {
+        "name": "langgraph_agent",
+        "description": "This is Langgraph currency agent.",
+        "url": "http://127.0.0.1:8083/api/a2a/kagent/langgraph-agent/",
+        "version": "",
+        "capabilities": {
+            "streaming": true,
+            "pushNotifications": false,
+            "stateTransitionHistory": true
+        },
+        "defaultInputModes": [
+            "text"
+        ],
+        "defaultOutputModes": [
+            "text"
+        ],
+        "skills": []
+   }
+   ```
+
+## Invoking the agent
+
+You can invoke the agent through the kagent dashboard or kagent CLI.
+
+### Dashboard
+
+Launch the dashboard with `kagent dashboard`, find your `langgraph-agent`, and start chatting. For complete steps, see the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
+
+![BYO Agent](/images/byo-langgraph.png "Chat with your LangGraph agent")
+
+### kagent CLI
+
+To use the kagent CLI, make sure that the controller is still being port-forwarded.
+
+Then, use the invoke command. For more options, run `kagent help invoke`.
+
+```shell
+kagent invoke --agent langgraph-agent --task "Show me latest exchange rate between EUR and USD"
+```
+
+Example output: The output includes both the response as well as the details of the response. The formatting is in JSON but can be quite long, depending on the call and the agent configuration.
+
+```json
+{
+  "artifacts": [
+      {
+          "artifactId": "4d8a78c8-7e15-41c2-9b00-6bd27a156663",
+          "parts": [
+              {
+                  "kind": "text",
+                  "text": "The latest exchange rate between EUR and USD is 1 EUR = 1.1793 USD."
+              }
+          ]
+      }
+  ],
+...
+```
