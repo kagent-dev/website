@@ -15,6 +15,14 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: "crewai-byo-agent",
+        publishDate: "2025-10-14",
+        title: "From CrewAI to KAgent: Deploying Your Custom AI Agents",
+        description:
+        "Learn how to take your existing CrewAI agents and deploy them as Bring-Your-Own (BYO) agents in KAgent.",
+        authorId: "jetchiang",
+    },
+    {
         slug: 'reactive-agents-khook',
         publishDate: '2025-09-09',
         title: "Truly Reactive Cloud Native AI Agents with Kagent and Khook",
