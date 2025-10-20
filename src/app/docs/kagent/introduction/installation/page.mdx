@@ -12,7 +12,7 @@ export const metadata = {
 
 # Installing kagent
 
-This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterpise offerings, check out [kagent enterprise](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
+This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterpise offerings, check out [Solo Enterprise for kagent](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
 
 ## Installation Methods
 
@@ -102,7 +102,7 @@ Another way to install kagent is using Helm.
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
        --namespace kagent \
-       --set providers.default=openAI \
+       --set providers.default=azureOpenAI \
        --set providers.azureOpenAI.apiKey=$OPENAI_API_KEY
    ```
 
