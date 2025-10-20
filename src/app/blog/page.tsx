@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'community-nginx-khook-kagent',
+        publishDate: '2025-10-15',
+        title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
+        description: 'How the community is using Kagent and Khook to automate Nginx troubleshooting tasks.',
+        authorId: "antweiss",
+    },
+    {
         slug: 'reactive-agents-khook',
         publishDate: '2025-09-09',
         title: "Truly Reactive Cloud Native AI Agents with Kagent and Khook",
