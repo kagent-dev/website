@@ -19,7 +19,7 @@
   "dependencies": {
     "@docsearch/react": "^3.9.0",
     "@heroicons/react": "^2.2.0",
-    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^15.5.3",
     "@next/third-parties": "^15.5.3",
