@@ -28,7 +28,7 @@ export default function Navbar() {
 
   return (
     <nav className="py-4 md:py-8">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+      <div className="w-full mx-auto px-4 md:px-6">
         <div className="flex justify-between items-center">
           <Link href="/">
             <KAgentLogoWithText className="h-5" />

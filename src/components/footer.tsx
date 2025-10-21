@@ -11,7 +11,7 @@ import Youtube from "./icons/youtube";
 export default function Footer() {
   return (
     <footer className="mt-auto py-16 border-t border-white/10">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Getting Started Section */}
           <div>

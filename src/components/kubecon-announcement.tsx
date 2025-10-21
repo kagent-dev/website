@@ -24,7 +24,7 @@ const KubeConAnnouncement = () => {
             <div className="relative h-64 lg:h-full min-h-[300px]">
               <Image
                 src="/images/events/kagent-kubecon-atl-1.png"
-                alt="kagent Community Party at KubeCon Atlanta"
+                alt="MCP and Agents Community Party at KubeCon Atlanta"
                 fill
                 className="object-cover"
               />
@@ -34,7 +34,7 @@ const KubeConAnnouncement = () => {
             <div className="p-8 lg:p-12 flex flex-col justify-center">
               <div className="mb-6">
                 <h3 className="text-3xl font-semibold text-foreground mb-4">
-                  kagent Community Party
+                  MCP and Agents Community Party
                 </h3>
                 <div className="space-y-2 text-muted-foreground mb-6">
                   <div className="flex items-center">
@@ -57,7 +57,7 @@ const KubeConAnnouncement = () => {
                     Are you attending KubeCon+CloudNativeCon Atlanta?
                 </p>
                 <p className="text-lg text-foreground leading-relaxed mb-8">
-                    Join us at Skyline Park for retro games, rooftop views, delicious food, craft drinks, and serious fun with the kagent community.
+                    Join us at Skyline Park for retro games, rooftop views, delicious food, craft drinks, and serious fun with the MCP and Agents communities, including kagent.
                 </p>
               </div>
               
