@@ -218,6 +218,13 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/docs/kagent/supported-providers/amazon-bedrock</loc>
+        <lastmod>2025-10-21</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/anthropic</loc>
         <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
