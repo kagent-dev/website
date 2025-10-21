@@ -25,7 +25,7 @@ const KubeConAnnouncementBar = () => {
         >
           <div className="flex items-center justify-center space-x-2 text-sm font-medium">
             <span className="drop-shadow-sm">
-              🎉 Join us at the kagent Community Party at KubeCon Atlanta on Nov 12
+              🎉 Join us at the MCP and Agents Community Party at KubeCon Atlanta on Nov 12
             </span>
             <ChevronDown className="w-4 h-4 drop-shadow-sm" />
           </div>
