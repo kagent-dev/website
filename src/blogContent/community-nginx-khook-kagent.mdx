@@ -1,0 +1,125 @@
+export const metadata = {
+  title: "Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook",
+  author: "Ant Weiss",
+  publishDate: "2025-10-20T15:00:00Z",
+  tags: ["kagent", "khook", "community", "nginx", "kubernetes", "automation"],
+  description: "Highlighting an impressive community implementation that showcases the power of reactive AI agents for Kubernetes operations",
+  authorIds: ["antweiss"],
+}
+
+
+# Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook
+
+It's moments like these that make working on open source projects truly rewarding. Just weeks after we introduced [Khook - the reactive event hook for Kagent](/blog/reactive-agents-khook), the community has already started building amazing implementations that showcase the real-world power of reactive AI agents in Kubernetes.
+
+## From Vision to Reality
+
+When we built Khook, we envisioned a world where AI agents would autonomously monitor, diagnose, and remediate issues in Kubernetes clusters. The idea was simple yet powerful: instead of waiting for human operators to invoke them, agents should react to events and spring into action when needed. True cloud-native agents should be as reactive as the operators and controllers that power Kubernetes itself.
+
+Today, I'm thrilled to share how [**Maryam Naveed**](https://www.linkedin.com/in/maryam-naveed-7a0760116/) has taken this vision and turned it into a comprehensive solution that every DevOps engineer dreams of - a self-healing nginx infrastructure that automatically detects and fixes configuration issues before they impact end users.
+
+## The Problem Solved
+
+Maryam's implementation tackles a pain point that many Kubernetes administrators know too well: nginx configuration drift and the manual overhead of troubleshooting application failures. Her solution demonstrates how Kagent and Khook work together to create an intelligent automation system that:
+
+- **Detects** pod crashes and configuration issues in real-time
+- **Analyzes** nginx configurations and error logs automatically
+- **Remediates** syntax errors, SSL certificate issues, and configuration problems
+- **Validates** fixes and ensures services are restored
+- **Eliminates** hours of manual troubleshooting
+
+What previously took hours of manual SSH sessions, log parsing, and ConfigMap editing now happens automatically in just 30 seconds. This isn't just automation - it's intelligent, context-aware remediation that understands nginx-specific issues and applies targeted fixes.
+
+![Nginx troubleshooting with khook and kagent](/images/blog/community-nginx-khook-kagent/diagram.png)
+
+## The Technical Achievement
+
+What makes Maryam's implementation particularly impressive is the comprehensive validation framework she's built. The system implements:
+
+- **Path validation** for nginx directories
+- **Content validation** with nginx syntax checking
+- **RBAC controls** for namespace isolation
+- **Security protection** against sensitive path access
+- **End-to-end verification** of remediation success
+
+This isn't just a proof of concept - it's a production-ready solution that demonstrates best practices for building secure, reliable autonomous agents.
+
+## What This Means for the Community
+
+This implementation perfectly illustrates what's possible when we combine:
+- Kagent's powerful agent framework
+- Khook's reactive event monitoring
+- Community creativity and real-world expertise
+
+Maryam's work shows that the future of DevOps isn't just about better tools - it's about systems that think, learn, and heal themselves. And the best part? This is just the beginning. As more community members build on Kagent and Khook, we're seeing a new paradigm emerge for Kubernetes operations.
+
+## Dive Deeper
+
+I highly encourage you to read Maryam's comprehensive article where she walks through the complete implementation, including:
+- Detailed architecture overview
+- Step-by-step troubleshooting workflow
+- Tool suite configuration
+- Security and validation frameworks
+- Real-world examples with actual remediation scenarios
+
+<div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-6">
+  <div className="flex">
+    <div className="ml-3">
+      <p className="text-lg font-semibold text-blue-900">
+        📖 Read the Full Article
+      </p>
+      <p className="text-blue-700 mt-2">
+        <a href="https://medium.com/kotaicode/revolutionizing-kubernetes-configuration-management-with-khook-and-kagent-a-comprehensive-solution-8113880335ec" className="underline font-medium hover:text-blue-900">
+          Revolutionizing Kubernetes Configuration Management with KHook and KAgent: A Comprehensive Solution for Automated Nginx Troubleshooting and Remediation
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+
+## Join the Movement
+
+Inspired by what you've seen? The Kagent and Khook projects are actively looking for contributors and early adopters. Whether you want to build your own reactive agents, contribute to the core projects, or just experiment with autonomous Kubernetes operations, there's a place for you in our community.
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+  <div className="bg-gray-50 p-4 rounded-lg">
+    <h3 className="font-bold text-lg mb-2">🎯 Get Started</h3>
+    <ul className="space-y-2">
+      <li>
+        <a href="https://discord.com/invite/Fu3k65f2k3">
+          <a className="text-blue-600 hover:underline">Join our Discord community</a>
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/kagent-dev/khook">
+          <a className="text-blue-600 hover:underline">Star the Khook repository</a>
+        </a>
+      </li>
+      <li>
+        <a href="https://kagent.dev/docs">
+          <a className="text-blue-600 hover:underline">Check out the Kagent docs</a>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <div className="bg-gray-50 p-4 rounded-lg">
+    <h3 className="font-bold text-lg mb-2">🚀 Contribute</h3>
+    <ul className="space-y-2">
+      <li>Share your own implementations</li>
+      <li>Submit bug reports and feature requests</li>
+      <li>Help improve documentation</li>
+      <li>Spread the word about reactive agents</li>
+    </ul>
+  </div>
+</div>
+
+## Looking Forward
+
+Maryam's nginx troubleshooting solution is a perfect example of what happens when powerful tools meet creative minds. It's implementations like these that validate our vision for reactive, autonomous agents in Kubernetes and inspire us to keep pushing the boundaries of what's possible.
+
+To Maryam and all our community members building with Kagent and Khook - thank you for turning our shared vision of agentic cloud-native operations into reality. The future is reactive, autonomous, and incredibly exciting!
+
+---
+
+*Have you built something interesting with Kagent or Khook? We'd love to hear about it! Reach out on Discord or submit a PR to share your story.*
