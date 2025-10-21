@@ -122,6 +122,11 @@
             "description": "Learn how to configure OpenAI models in kagent."
           },
           {
+            "title": "Amazon Bedrock",
+            "href": "/docs/kagent/supported-providers/amazon-bedrock",
+            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
+          },
+          {
             "title": "BYO OpenAI-compatible model",
             "href": "/docs/kagent/supported-providers/byo-openai",
             "description": "Bring your own OpenAI-compatible model to kagent."

@@ -2,553 +2,560 @@
     
     <url>
         <loc>https://kagent.dev/agents</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/blog</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/community</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts/agents</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts/architecture</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/concepts/tools</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/a2a-agents</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/a2a-byo</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/crewai-byo</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/discord-a2a</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/documentation</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/langchain-byo</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/examples/slack-a2a</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/first-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/first-mcp-tool</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/quickstart</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/system-prompts</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/getting-started/tracing</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/introduction/installation</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/introduction</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/introduction/what-is-kagent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/api-ref</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/faq</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/helm</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/release-notes</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/troubleshooting</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kagent/supported-providers/amazon-bedrock</loc>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/anthropic</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/azure-openai</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/byo-openai</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/gemini</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/google-vertexai</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/ollama</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers/openai</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/deploy/install-controller</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/deploy</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/deploy/server</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/develop/fastmcp-python</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/develop/mcp-go</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/develop</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/introduction</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/quickstart</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/api-ref</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-add-tool</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-build</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-deploy</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-init</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-install</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-run</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-secrets</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/reference</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs/kmcp/secrets</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/docs</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/enterprise</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/page.tsx</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/argo-rollouts-conversion-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/cilium-crd-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/helm-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/istio-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/k8s-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/kgateway-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/observability-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/promql-agent</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/istio</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/kubernetes</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/prometheus</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/documentation</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/helm</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/argo</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/grafana</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/other</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/cilium</loc>
-        <lastmod>2025-10-20</lastmod>
+        <lastmod>2025-10-21</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
