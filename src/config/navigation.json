@@ -53,6 +53,11 @@
             "description": "Learn how to add an MCP (Model Context Protocol) tool to your kagent agent."
           },
           {
+            "title": "Local Development",
+            "href": "/docs/kagent/getting-started/local-development",
+            "description": "Build, test and run agents locally."
+          },
+          {
             "title": "Writing System Prompts",
             "href": "/docs/kagent/getting-started/system-prompts",
             "description": "Learn the art and science of writing effective system prompts for your kagent agents."
@@ -92,6 +97,11 @@
         "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent.",
         "items": [
           {
+            "title": "Amazon Bedrock",
+            "href": "/docs/kagent/supported-providers/amazon-bedrock",
+            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
+          },
+          {
             "title": "Anthropic",
             "href": "/docs/kagent/supported-providers/anthropic",
             "description": "Learn how to configure Anthropic models for kagent."
@@ -102,14 +112,14 @@
             "description": "Learn how to configure Azure OpenAI models in kagent."
           },
           {
-            "title": "Google Vertex AI",
-            "href": "/docs/kagent/supported-providers/google-vertexai",
-            "description": "Learn how to configure Google Vertex AI models in kagent."
-          },
-          {
             "title": "Gemini",
             "href": "/docs/kagent/supported-providers/gemini",
             "description": "Learn how to configure Gemini models in kagent."
+          },
+          {
+            "title": "Google Vertex AI",
+            "href": "/docs/kagent/supported-providers/google-vertexai",
+            "description": "Learn how to configure Google Vertex AI models in kagent."
           },
           {
             "title": "Ollama",
@@ -120,11 +130,6 @@
             "title": "OpenAI",
             "href": "/docs/kagent/supported-providers/openai",
             "description": "Learn how to configure OpenAI models in kagent."
-          },
-          {
-            "title": "Amazon Bedrock",
-            "href": "/docs/kagent/supported-providers/amazon-bedrock",
-            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
           },
           {
             "title": "BYO OpenAI-compatible model",
