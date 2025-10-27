@@ -2,7 +2,7 @@ export const metadata = {
   title: "From CrewAI to KAgent: Deploying Your Custom AI Agents",
   publishDate: "2025-10-14T00:00:00Z",
   description:
-    "Learn how to take your existing CrewAI agents and deploy them as Bring-Your-Own (BYO) agents in KAgent.",
+    "Learn how to deploy your CrewAI agents as production-ready KAgent BYO agents in just minutes.",
   author: "Jet Chiang",
   authorIds: ["jetchiang"],
 };
@@ -43,7 +43,9 @@ Make sure you have:
 Ensure that you have a CrewAI agent ready and tested locally, for example using `crewai run, crewai flow kickoff`. Check what input your agent requires since that will be needed to kickoff the agent from Kagent.
 
 If you want to follow the example below but don't have a CrewAI agent, a simple one to start is the `self_evaluation_loop_flow` agent from the CrewAI examples repository.
-This example shows a flow with 2 agents that generates X posts in Shakespearean style and then evaluates them to iteratively improve the quality. It doesn't require any tool API keys.
+This example shows a flow with 2 agents that generates X posts in Shakespearean style and then evaluates them to iteratively improve the quality. It doesn't require any tool API keys. Here's an diagram illustrating the flow:
+
+![Shakespearean X Post Flow Diagram](images/blog/crewai-byo/shakespeare-flow.png)
 
 ```bash
 git clone https://github.com/crewAIInc/crewAI-examples.git
@@ -125,18 +127,18 @@ Now you can wrap your crew with KAgent's integration layer, usually in `main.py`
 ```python
 # main.py
 from kagent.crewai import KAgentApp
-from your_crew import YourCrew  # Import your existing crew, similarly for flow
 
-# Your flow / crew definition if any
-# Other CrewAI functions such as kickoff() and plot()
+# you can also import the crew or flow from another file if needed
+class ShakespeareXPostFlow(Flow[ShakespeareXPostFlowState]):
+    ...
 
 def main():
     # Either write the agent card inline or load from a JSON file
     with open("agent-card.json", "r") as f:
         agent_card = json.load(f)
 
-    app = KAgentApp(crew=YourCrew(), agent_card=agent_card)
-    # app = KAgentApp(flow=YourFlow(), agent_card=agent_card)  # if using a flow instead
+    # crew accepts both Crew and Flow instances
+    app = KAgentApp(crew=ShakespeareXPostFlow(), agent_card=agent_card)
 
     server = app.build()
 
@@ -268,9 +270,11 @@ kagent invoke --agent my-crew-name --task "Research the latest developments in q
 
 You can also access the agent through the dashboard UI or the CLI (reference the quickstart tutorial if needed).
 
-## Note on Session-aware Memory
+## Note on persistance and tracing
 
 If your CrewAI agent needs to maintain state or memory across sessions, you can leverage KAgent's session-aware memory feature. **No additional change is needed at all in your CrewAI code!** This means if you have already enabled `memory=True` or `@persist` on your Crew or Flow, they will automatically use the Kagent backend! You don't need to define any storage interface or connect to any database, `KAgentApp` handles that!
+
+For tracing, if you have already enabled tracing for KAgent following the [tracing guide](/docs/kagent/getting-started/tracing), your CrewAI agent's operations will automatically be traced as well without any additional effort.
 
 ## Conclusion
 
