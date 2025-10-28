@@ -58,7 +58,7 @@ kagent init adk python myagent --model-name gpt-4 --model-provider OpenAI
       kagent deploy myagent --env-file .env.local
 ```
 
-The main agent code will be be in the `agent.py` file. The sample agent has access two two tools - `roll_die` and `check_prime` - the first tool rools a die an returns the rolled result, while the second one checks if a given list of numbers is prime and returns the string indicating which numbers are prime.
+The main agent code will be be in the `agent.py` file. The sample agent has access to two tools, `roll_die` and `check_prime`. The first tool rolls a die and returns the rolled result. The second tool checks if a given list of numbers is prime and returns the string indicating which numbers are prime.
 
 Before you run the agent, you must set the OpenAI API key as an environment variable. You can do this by running the following command:
 
