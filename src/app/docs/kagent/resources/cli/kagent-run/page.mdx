@@ -1,0 +1,45 @@
+---
+title: "kagent run"
+pageOrder: 10
+description: "kagent run command"
+---
+
+# `kagent run`
+
+Run an agent project locally with docker-compose and launch an interactive chat interface.
+
+```bash
+kagent run [project-directory] [flags]
+```
+
+**Arguments:**
+- `project-directory` - The directory containing the agent project (default: current directory)
+
+**Flags:**
+- `--project-dir` - Project directory (default: current directory)
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent run`
+
+The `kagent run` command runs an agent project locally using docker-compose and launches an interactive chat session. This allows you to test and interact with your agent before deploying it to Kubernetes.
+
+## Example
+
+Run an agent project from the current directory:
+
+```bash
+kagent run
+```
+
+Run an agent project from a specific directory:
+
+```bash
+kagent run ./my-agent
+```
+
