@@ -16,6 +16,10 @@ This guide covers ways to install and configure kagent in your Kubernetes enviro
 
 ## Installation Methods
 
+Install kagent by using the kagent CLI or Helm.
+
+> Note: As of version 0.7, the [kmcp](/docs/kmcp/introduction) subproject is included by default with kagent. To use an existing kmcp installation that you already set up separately, install kagent with the `kmcp.enabled=false` flag set for both the `kagent` and `kagent-crds` charts.
+
 ### Using kagent CLI (Recommended)
 
 1. Set the OpenAI API key as an environment variable.
