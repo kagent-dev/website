@@ -96,7 +96,7 @@ Now let's add an MCP server to the agent. We'll use the `sum` tool from the `@mo
 kagent add-mcp server-everything --command npx --arg @modelcontextprotocol/server-everything 
 ```
 
-This command adds an entry to the `kagent.yaml` file and creates a new directory in the `myagent` project directory called `server-everything`. The directory contains the agentgateway configuration file and a  `Dockerfile` for building the MCP server image.
+This command adds an entry to the `kagent.yaml` file and creates a new directory in the `myagent` project directory called `server-everything`. The directory has an agentgateway configuration file for serving the MCP tool locally and a `Dockerfile` for building the MCP server image.
 
 >The configuration file and Dockerfile are only used for local development - when deploying the agent and MCP servers to a Kubernetes cluster, the MCP server will be deployed as a separate Kubernetes resource.
 
