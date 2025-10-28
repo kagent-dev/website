@@ -30,12 +30,11 @@ kagent deploy [project-directory] [flags]
 
 ## About `kagent deploy`
 
-The `kagent deploy` command deploys an agent to Kubernetes. It reads the `kagent.yaml` file from the specified project directory, creates or references a Kubernetes secret with the API key, and creates an Agent CRD.
+The `kagent deploy` command deploys an agent to Kubernetes by performing the following steps:
 
-**What the command does:**
 1. Loads the agent configuration from `kagent.yaml`
 2. Either creates a new secret with the provided API key or verifies an existing secret
-3. Creates an Agent CRD with the appropriate configuration
+3. Creates an `Agent` Custom Resource Definition (CRD) with the appropriate configuration
 
 **API Key Options:**
 - `--api-key`: Convenience option to create a new secret with the provided API key
