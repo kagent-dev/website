@@ -142,31 +142,7 @@ Another way to install kagent is using Helm.
 
 ## Uninstallation
 
-To remove kagent from your cluster:
-
-```bash
-$ kagent uninstall
-```
-
-```console
-kagent uninstalled successfully
-```
-
-Or, if you used Helm:
-
-1. Uninstall kagent chart:
-
-```bash
-helm uninstall kagent -n kagent
-```
-
-2. Optionally, remove all kagent CRDs and resources:
-
-```bash
-helm uninstall kagent-crds -n kagent
-```
-
->Note that uninstalling the `kagent-crds` chart deletes all kagent resources across all namespaces.
+Refer to the [Uninstall](/docs/kagent/operations/uninstall) guide.
 
 ## Next Steps
 
