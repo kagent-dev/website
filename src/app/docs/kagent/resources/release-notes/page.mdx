@@ -31,11 +31,24 @@ This change is enabled by the new default values of `kmcp.enabled=true` in both 
 
 ### Existing kmcp installations
 
-If you already have kmcp installed separately, disable the kmcp installation to avoid conflicts. Set `kmcp.enabled=false` in your Helm values for both the `kagent` and `kagent-crds` charts.
+If you already have kmcp installed separately, upgrade your existing Helm releases with the `kmcp.enabled=false` flag set for both the kagent and kagent-crds charts.
 
-```yaml
-kmcp:
-  enabled: false
+Example commands:
+
+`kagent-crds` Helm release:
+
+```bash
+helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+`kagent` Helm release:
+
+```bash
+helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set kmcp.enabled=false
 ```
 
 ## Local agent development
