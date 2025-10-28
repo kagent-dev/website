@@ -188,7 +188,7 @@
           {
             "title": "CLI docs",
             "href": "/docs/kagent/resources/cli",
-            "description": "Complete reference for the kagent CLI commands"
+            "description": "Complete reference docs for the kagent CLI commands"
           },
           {
             "title": "Helm Chart Configuration",
