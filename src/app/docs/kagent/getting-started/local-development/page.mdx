@@ -66,18 +66,23 @@ Before you run the agent, you must set the OpenAI API key as an environment vari
 export OPENAI_API_KEY=<your-api-key>
 ```
 
+Then, let's change into the project directory. If you skip this step, just remember to add the project directory in each `kagent` command later, like `kagent build myagent`.
+
+```shell
+cd myagent
+```
+
 Let's build the agent:
 
 ```shell
-kagent build myagent
+kagent build
 ```
 
 >Note the agent is automatically tagged with the `localhost:5001` registry, so make sure your Kubernetes cluster later on is configured to use this registry or push the image to a remote registry.
 
-Now you can run the agent locally and test it out by running the following command from the `myagent` project directory:
+Now you can run the agent locally and test it out by running the following command with the `myagent` project directory:
 
 ```shell
-cd myagent
 kagent run
 ```
 
@@ -102,6 +107,11 @@ This command adds an entry to the `kagent.yaml` file and creates a new directory
 
 Whenever you add a new MCP server to the agent, the `docker-compose.yaml` file is updated to include the new MCP server. For example, after adding the above MCP server, the entry for it in the `docker-compose.yaml` file will look like this:
 
+```bash
+cat docker-compose.yaml 
+```
+
+Example output:
 ```yaml
   server-everything:
     image: localhost:5001/myagent-server-everything:latest
@@ -112,15 +122,39 @@ Whenever you add a new MCP server to the agent, the `docker-compose.yaml` file i
       - "3000"
 ```
 
-By default, all tools from the MCP server will be automatically available and added to the agent. You can also filter the tools by name or by using a predicate. For example, to only add the `add` tool, you can modify the `agent.py` file like this:
+By default, all tools from the MCP server will be automatically available and added to the agent. You can also filter the tools by name or by using a predicate. 
 
+The `mcp_tools.py` file is automatically generated when you add an MCP server that has the `get_mcp_tools` function. 
+
+The generated `agent.py` file already includes the import statement:
 
 ```python
-mcp_tools = get_mcp_tools(server_filters={"server-everything": ["add"]})
+from .mcp_tools import get_mcp_tools
 ```
 
-This will only include the `add` tool from the `server-everything` MCP server. Let's rebuild the project using `kagent build` and then run the agent again using `kagent run`:
+Open the `agent.py` file and find the line where `mcp_tools` is defined (usually near the bottom of the file) to filter specific tools. 
 
+For example, to only add the `add` tool from the `server-everything` MCP server:
+* Replace this line:
+  ```python
+  mcp_tools = get_mcp_tools()
+  ```
+
+* with this line:
+
+  ```python
+  mcp_tools = get_mcp_tools(server_filters={"server-everything": ["add"]})
+  ```
+
+This filter only includes the `add` tool from the `server-everything` MCP server. 
+
+After updating your code, rebuild and run the project with
+
+```
+kagent build && kagent run
+```
+
+Then repeat your question to check that the agent has access to the `add` tool.
 ```console
 You: what can you do?                                                                                                                   
                                                                                                                                         
