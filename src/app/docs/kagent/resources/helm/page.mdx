@@ -12,7 +12,7 @@ export const metadata = {
 
 # kagent
 
-A Helm chart for kagent, built with Autogen
+A Helm chart for kagent, built with Google ADK
 
 ## Requirements
 
@@ -30,7 +30,8 @@ A Helm chart for kagent, built with Autogen
 | file://../agents/promql | promql-agent |  |
 | file://../tools/grafana-mcp | grafana-mcp |  |
 | file://../tools/querydoc | querydoc |  |
-| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.0.11 |
+| oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | ${KMCP_VERSION} |
+| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.0.12 |
 
 ## Values
 
@@ -130,6 +131,11 @@ A Helm chart for kagent, built with Autogen
 | kagent-tools.resources.requests.cpu | string | "100m" |  |
 | kagent-tools.resources.requests.memory | string | "256Mi" |  |
 | kagent-tools.tools.loglevel | string | "debug" |  |
+| kmcp.enabled | bool | true |  |
+| kmcp.fullnameOverride | string | "" |  |
+| kmcp.image.tag | string | "v0.1.9" |  |
+| kmcp.nameOverride | string | "kmcp" |  |
+| kmcp.namespaceOverride | string | "" |  |
 | labels | object | {} | Additional labels to add to all Kubernetes resources |
 | nameOverride | string | "" |  |
 | namespaceOverride | string | .Release.Namespace | Override the namespace |
@@ -146,7 +152,7 @@ A Helm chart for kagent, built with Autogen
 | podSecurityContext | object | {} |  |
 | providers.anthropic.apiKeySecretKey | string | "ANTHROPIC_API_KEY" |  |
 | providers.anthropic.apiKeySecretRef | string | "kagent-anthropic" |  |
-| providers.anthropic.model | string | "claude-3-sonnet-20240229" |  |
+| providers.anthropic.model | string | "claude-3-5-haiku-20241022" |  |
 | providers.anthropic.provider | string | "Anthropic" |  |
 | providers.azureOpenAI.apiKeySecretKey | string | "AZUREOPENAI_API_KEY" |  |
 | providers.azureOpenAI.apiKeySecretRef | string | "kagent-azure-openai" |  |
@@ -159,7 +165,7 @@ A Helm chart for kagent, built with Autogen
 | providers.default | string | "openAI" |  |
 | providers.gemini.apiKeySecretKey | string | "GOOGLE_API_KEY" |  |
 | providers.gemini.apiKeySecretRef | string | "kagent-gemini" |  |
-| providers.gemini.model | string | "gemini-1.5-pro" |  |
+| providers.gemini.model | string | "gemini-2.0-flash-lite" |  |
 | providers.gemini.provider | string | "Gemini" |  |
 | providers.ollama.config.host | string | "host.docker.internal:11434" |  |
 | providers.ollama.model | string | "llama3.2" |  |
@@ -195,7 +201,7 @@ A Helm chart for kagent, built with Autogen
 | ui.resources.limits.memory | string | "1Gi" |  |
 | ui.resources.requests.cpu | string | "100m" |  |
 | ui.resources.requests.memory | string | "256Mi" |  |
-| ui.service.ports.port | int | 80 |  |
+| ui.service.ports.port | int | 8080 |  |
 | ui.service.ports.targetPort | int | 8080 |  |
 | ui.service.type | string | "ClusterIP" |  |
 | ui.tolerations | list | [] | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
