@@ -517,6 +517,21 @@ _Appears in:_
 | `seed` _integer_ | Seed value |  |  |
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
+| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [minimal low medium high] <br /> |
+
+
+#### OpenAIReasoningEffort
+
+_Underlying type:_ _string_
+
+OpenAIReasoningEffort represents how many reasoning tokens the model generates before producing a response.
+
+_Validation:_
+- Enum: [minimal low medium high]
+
+_Appears in:_
+- [OpenAIConfig](#openaiconfig)
+
 
 
 #### RemoteMCPServer
