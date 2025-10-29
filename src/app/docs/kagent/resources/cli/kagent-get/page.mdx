@@ -1,0 +1,58 @@
+---
+title: "kagent get"
+pageOrder: 10
+description: "kagent get command"
+---
+
+# `kagent get`
+
+Get kagent resources.
+
+```bash
+kagent get [resource-type] [resource-name] [flags]
+```
+
+**Subcommands:**
+- `agent [agent_name]` - Get an agent by name or list all agents
+- `session [session_id]` - Get a session by ID or list all sessions
+- `tool` - List all available tools
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## Example
+
+List all agents:
+
+```bash
+kagent get agent
+```
+
+Get a specific agent:
+
+```bash
+kagent get agent k8s-agent
+```
+
+List all sessions:
+
+```bash
+kagent get session
+```
+
+Get a specific session:
+
+```bash
+kagent get session abc123
+```
+
+List all tools:
+
+```bash
+kagent get tool
+```
+

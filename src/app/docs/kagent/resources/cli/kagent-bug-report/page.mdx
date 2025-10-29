@@ -1,0 +1,38 @@
+---
+title: "kagent bug-report"
+pageOrder: 10
+description: "kagent bug-report command"
+---
+
+# `kagent bug-report`
+
+Generate a bug report for troubleshooting.
+
+```bash
+kagent bug-report [flags]
+```
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent bug-report`
+
+This command generates a comprehensive bug report that includes:
+- kagent CLI version
+- kagent server version
+- Kubernetes cluster information
+- Resource status and logs
+- Configuration details
+
+## Example
+
+Generate a bug report:
+
+```bash
+kagent bug-report
+```
+

@@ -1,0 +1,78 @@
+---
+title: "Upgrade kagent"
+pageOrder: 1
+description: "Learn how to upgrade kagent to the latest version."
+---
+
+export const metadata = {
+  title: "Upgrade kagent",
+  description: "Learn how to upgrade kagent to the latest version.",
+  author: "kagent.dev"
+};
+
+Follow these steps to upgrade kagent to the latest version and keep your cluster up to date with new features and bug fixes.
+
+## Before you begin
+
+1. Save the version that you want to upgrade to in an environment variable. For available versions, refer to the [kagent releases](https://github.com/kagent-dev/kagent/releases).
+
+   ```bash
+   export NEW_VERSION=<version-number>
+   ```
+
+2. Read the [release notes](/docs/kagent/resources/release-notes) for the version you are upgrading to. Pay attention to any breaking changes or deprecations that might affect your configuration.
+
+3. Back up your current configuration, including agent definitions and custom settings.
+
+## Upgrade kagent
+
+1. Get the Helm values file for your current kagent release.
+
+   ```bash
+   helm get values kagent -n kagent -o yaml > values.yaml
+   ```
+
+2. Compare your current Helm chart values with the version that you want to upgrade to. 
+
+   * **Show all values**:
+
+     ```bash
+     helm show values oci://ghcr.io/kagent-dev/kagent/helm/kagent --version $NEW_VERSION
+     ```
+
+   * **Get a file with all values**
+
+     ```bash
+     helm pull oci://ghcr.io/kagent-dev/kagent/helm/kagent --version $NEW_VERSION
+     tar -xvf kagent-$NEW_VERSION.tgz
+     open kagent/values.yaml
+     ```
+
+3. Make any changes that you want by editing your `values.yaml` Helm values file or preparing `--set` flags for the upgrade commands.
+
+   > **Note**: As of [version 0.7](/docs/kagent/resources/release-notes#kmcp-installed-by-default), the kmcp subproject is included by default with kagent. To use an existing kmcp installation that you already set up separately, set `kmcp.enabled=false` in your `values.yaml` file or `--set` commands for both the `kagent` and `kagent-crds` charts.
+
+4. Upgrade the kagent-crds chart.
+
+   ```bash
+   helm upgrade kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --namespace kagent \
+     --version $NEW_VERSION
+   ```
+
+5. Upgrade the kagent chart. If you made changes to your values, add them with `--set` flags or `-f values.yaml`.
+
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     -f values.yaml \
+     --version $NEW_VERSION
+   ```
+
+## Verify the upgrade
+
+After upgrading, verify that kagent is running.
+
+```bash
+kubectl get pods -n kagent
+```

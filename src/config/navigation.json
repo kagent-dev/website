@@ -181,14 +181,41 @@
         ]
       },
       {
+        "title": "Operations",
+        "href": "/docs/kagent/operations",
+        "description": "Manage your kagent installation with upgrade, uninstall, and operational tasks.",
+        "items": [
+          {
+            "title": "Debug kagent",
+            "href": "/docs/kagent/operations/debug",
+            "description": "Find solutions to common issues and troubleshooting tips for kagent."
+          },
+          {
+            "title": "Upgrade kagent",
+            "href": "/docs/kagent/operations/upgrade",
+            "description": "Learn how to upgrade kagent to the latest version."
+          },
+          {
+            "title": "Uninstall kagent",
+            "href": "/docs/kagent/operations/uninstall",
+            "description": "Learn how to uninstall kagent from your Kubernetes cluster."
+          }
+        ]
+      },
+      {
         "title": "Resources",
         "href": "/docs/kagent/resources",
-        "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.",
+        "description": "Find helpful resources and FAQs for kagent. Access guides, community links, and more.",
         "items": [
           {
             "title": "API docs",
             "href": "/docs/kagent/resources/api-ref",
             "description": "kagent API reference documentation"
+          },
+          {
+            "title": "CLI docs",
+            "href": "/docs/kagent/resources/cli",
+            "description": "Complete reference docs for the kagent CLI commands"
           },
           {
             "title": "Helm Chart Configuration",
@@ -204,11 +231,6 @@
             "title": "Release Notes",
             "href": "/docs/kagent/resources/release-notes",
             "description": "Review the release notes for kagent."
-          },
-          {
-            "title": "Troubleshooting",
-            "href": "/docs/kagent/resources/troubleshooting",
-            "description": "Find solutions to common issues and troubleshooting tips for kagent."
           }
         ]
       }

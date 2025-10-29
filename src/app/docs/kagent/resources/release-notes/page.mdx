@@ -16,6 +16,47 @@ export const metadata = {
 
 The kagent documentation shows information only for the latest release. If you run an older version, review the release notes to understand the main changes from version to version.
 
+# v0.7
+
+Review the main changes from kagent version 0.6 to v0.7, then continue reading for more detailed information.
+
+* kmcp is installed by default when you install kagent
+* New! Develop agents locally without a Kubernetes cluster
+
+## kmcp installed by default
+
+Now, kmcp is installed automatically with kagent, so you can use kmcp functionality out of the box.
+
+This change is enabled by the new default values of `kmcp.enabled=true` in both the `kagent` and `kagent-crds` Helm charts.
+
+### Existing kmcp installations
+
+If you already have kmcp installed separately, upgrade your existing Helm releases with the `kmcp.enabled=false` flag set for both the kagent and kagent-crds charts.
+
+Example commands:
+
+`kagent-crds` Helm release:
+
+```bash
+helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+`kagent` Helm release:
+
+```bash
+helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+## Local agent development
+
+Develop and test agents locally on your machine without needing a Kubernetes cluster. As part of this feature, the `kagent` CLI includes new commands to scaffold, build, run, and deploy agents.
+
+For more information, see the [local development](/docs/kagent/getting-started/local-development) guide.
+
 # v0.6
 
 Review the main changes from kagent version 0.5 to v0.6, then continue reading for more detailed information.
@@ -164,7 +205,7 @@ ToolServer resources that used `type: streamableHttp` are now configured as Remo
         url: "http://kagent-tools.kagent:8084/mcp"
         timeout: 30s
         sseReadTimeout: 5m0s
-    description: "Official KAgent tool server"
+    description: "Official kagent tool server"
   ```
 </div>
 
@@ -179,7 +220,7 @@ ToolServer resources that used `type: streamableHttp` are now configured as Remo
     url: "http://kagent-tools.kagent:8084/mcp"
     timeout: 30s
     sseReadTimeout: 5m0s
-    description: "Official KAgent tool server"
+    description: "Official kagent tool server"
   ```
 </div>
 
