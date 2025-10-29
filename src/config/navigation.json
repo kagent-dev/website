@@ -53,6 +53,11 @@
             "description": "Learn how to add an MCP (Model Context Protocol) tool to your kagent agent."
           },
           {
+            "title": "Local Development",
+            "href": "/docs/kagent/getting-started/local-development",
+            "description": "Build, test and run agents locally."
+          },
+          {
             "title": "Writing System Prompts",
             "href": "/docs/kagent/getting-started/system-prompts",
             "description": "Learn the art and science of writing effective system prompts for your kagent agents."
