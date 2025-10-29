@@ -99,7 +99,9 @@ The following example assumes that you created a [FastMCP](/docs/kmcp/develop/fa
    kmcp build --project-dir my-mcp-server -t my-mcp-server:latest --kind-load-cluster kind
    ```
 
-2. Deploy your MCP server. Choose between the kmcp CLI or manually creating an MCPServer resource. 
+2. Deploy your MCP server. Choose between the kmcp CLI or manually creating an MCPServer resource.
+
+   > **Note**: Planning to use your kmcp resources later with kagent and agentgateway? Add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.
      
    <Tabs tabs={[
    { id: 'cli', label: 'kmcp CLI' },
