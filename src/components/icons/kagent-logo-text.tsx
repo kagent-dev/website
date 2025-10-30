@@ -2,7 +2,7 @@
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
-export default function kagentLogoWithText({ className } : { className?: string }) {
+export default function KagentLogoWithText({ className } : { className?: string }) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
