@@ -3,7 +3,7 @@ import Link from "next/link";
 import { GITHUB_LINK } from "@/data/links";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import kagentLogoWithText from "./icons/kagent-logo-text";
+import KagentLogoWithText from "./icons/kagent-logo-text";
 import KagentLogo from "./icons/kagent-logo";
 import KMCPIcon from "./icons/kmcpicon";
 import { ThemeToggle } from "./theme-toggle";
@@ -31,7 +31,7 @@ export default function Navbar() {
       <div className="w-full mx-auto px-4 md:px-6">
         <div className="flex justify-between items-center">
           <Link href="/">
-            <kagentLogoWithText className="h-5" />
+            <KagentLogoWithText className="h-5" />
           </Link>
 
           {/* Desktop Navigation */}
