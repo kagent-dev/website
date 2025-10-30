@@ -28,6 +28,13 @@ export const authors: Author[] = [
     photo: '/images/authors/linsun.jpg',
     bio: 'Lin is the Head of Open Source at Solo.io, and a CNCF TOC member and ambassador. She has worked on the Istio service mesh since the beginning of the project in 2017 and serves on the Istio Technical Oversight Committee. Previously, she was a Senior Technical Staff Member and Master Inventor at IBM for 15+ years. She is the author of the book "Sidecar-less Istio Explained" and has more than 200 patents to her name.',
   },
+  {
+    id: "jetchiang",
+    name: "Jet Chiang",
+    title: "Linux Foundation Mentee",
+    photo: "/images/authors/jetchiang.png",
+    bio: "Jet is an aspiring machine learning engineer + researcher studying at the University of Toronto. He is the Linux Foundation Mentee at Kagent for 2025.",
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
