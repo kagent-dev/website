@@ -23,7 +23,7 @@ const posts = [
     },
     {
         slug: "crewai-byo-agent",
-        publishDate: "2025-10-14",
+        publishDate: "2025-10-30",
         title: "From CrewAI to KAgent: Deploying Your Custom AI Agents",
         description:
         "Learn how to take your existing CrewAI agents and deploy them as Bring-Your-Own (BYO) agents in KAgent.",
