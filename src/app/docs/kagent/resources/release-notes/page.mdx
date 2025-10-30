@@ -16,12 +16,16 @@ export const metadata = {
 
 The kagent documentation shows information only for the latest release. If you run an older version, review the release notes to understand the main changes from version to version.
 
+For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
+
 # v0.7
 
 Review the main changes from kagent version 0.6 to v0.7, then continue reading for more detailed information.
 
 * kmcp is installed by default when you install kagent
-* New! Develop agents locally without a Kubernetes cluster
+* New feature to develop agents locally without a Kubernetes cluster
+* New `kgateway.dev/discovery` label
+* Installation profiles
 
 ## kmcp installed by default
 
@@ -56,6 +60,20 @@ helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
 Develop and test agents locally on your machine without needing a Kubernetes cluster. As part of this feature, the `kagent` CLI includes new commands to scaffold, build, run, and deploy agents.
 
 For more information, see the [local development](/docs/kagent/getting-started/local-development) guide.
+
+## Discovery label
+
+Now, you can add a discovery label to MCPServer kmcp resources. By default, discovery is enabled.
+
+If you plan to use your kmcp resources later with kagent and agentgateway, add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.
+
+## Installation profiles
+
+By default, kagent installs a `demo` profile with agents and MCP tools preloaded for you. If you don't want these default agents, you can disable them with the `minimal` profile. 
+
+For the CLI: `kagent install --profile minimal`
+
+For Helm installations: Individually disable the default agents with Helm values or `--set` flags, such as `--set agents.argo-rollouts-agent.enabled=false`. You can also use Helm to update the resource limits and requests for each agent.
 
 # v0.6
 

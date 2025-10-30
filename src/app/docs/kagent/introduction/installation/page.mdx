@@ -35,7 +35,7 @@ Install kagent by using the kagent CLI or Helm.
    curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
    ```
 
-3. Install kagent to the cluster by using the CLI.
+3. Install kagent to the cluster by using the CLI. By default, kagent installs a demo profile with agents and MCP tools preloaded for you. If you don't want these default agents, include the `--profile minimal` flag.
 
    ```bash
    kagent install
@@ -58,16 +58,18 @@ Another way to install kagent is using Helm.
        --create-namespace
    ```
 
+2. Optionally prepare a Helm values file or `--set` flags to use for your installation. For example, you might set up your default LLM provider, or configure resource requests and limits or disable the default agents. For options, refer to the [Helm reference docs](/docs/kagent/resources/helm).
+
 <LLMProviderTabs/>
 
 <div id="openai-tab">
-2. Set the `OPENAI_API_KEY` environment variable:
+3. Set the `OPENAI_API_KEY` environment variable:
 
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-3. Install the kagent Helm chart:
+4. Install the kagent Helm chart:
 
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
@@ -78,13 +80,13 @@ Another way to install kagent is using Helm.
 </div>
 
 <div id="anthropic-tab">
-2. Set the `ANTHROPIC_API_KEY` environment variable:
+3. Set the `ANTHROPIC_API_KEY` environment variable:
 
    ```bash
    export ANTHROPIC_API_KEY="your-api-key-here"
    ```
 
-3. Install the kagent Helm chart:
+4. Install the kagent Helm chart:
 
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
@@ -95,13 +97,13 @@ Another way to install kagent is using Helm.
 </div>
 
 <div id="azure-tab">
-2. Set the `OPENAI_API_KEY` environment variable:
+3. Set the `OPENAI_API_KEY` environment variable:
 
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-3. Install the kagent Helm chart:
+4. Install the kagent Helm chart:
 
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
@@ -113,13 +115,13 @@ Another way to install kagent is using Helm.
 </div>
 
 <div id="gemini-tab">
-2. Set the `GEMINI_API_KEY` environment variable:
+3. Set the `GEMINI_API_KEY` environment variable:
 
    ```bash
    export GEMINI_API_KEY="your-api-key-here"
    ```
 
-3. Install the kagent Helm chart:
+4. Install the kagent Helm chart:
 
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
@@ -131,7 +133,7 @@ Another way to install kagent is using Helm.
 
 <div id="ollama-tab">
 
-2. Install the kagent Helm chart:
+3. Install the kagent Helm chart:
 
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
