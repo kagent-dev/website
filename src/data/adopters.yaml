@@ -25,3 +25,6 @@ adopters:
     logo_dark: "/images/adopters/krateo-dark.svg"
     logo_light: "/images/adopters/krateo-light.svg"
     website: "https://krateo.io/"
+  - name: "Welzin"
+    logo: "/images/adopters/welzin.png"
+    website: "https://welzin.ai/"
