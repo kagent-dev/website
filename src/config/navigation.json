@@ -181,6 +181,23 @@
         ]
       },
       {
+        "title": "Observability",
+        "href": "/docs/kagent/observability",
+        "description": "Monitor and observe your kagent installation with dashboards and audit logs.",
+        "items": [
+          {
+            "title": "Launch the UI",
+            "href": "/docs/kagent/observability/launch-ui",
+            "description": "Open the kagent dashboard using the CLI or port-forwarding."
+          },
+          {
+            "title": "Audit kagent prompts",
+            "href": "/docs/kagent/observability/audit-prompts",
+            "description": "Review and audit prompts used by kagent agents."
+          }
+        ]
+      },
+      {
         "title": "Operations",
         "href": "/docs/kagent/operations",
         "description": "Manage your kagent installation with upgrade, uninstall, and operational tasks.",

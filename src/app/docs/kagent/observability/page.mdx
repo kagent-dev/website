@@ -1,0 +1,26 @@
+---
+title: "Observability"
+sectionOrder: 6
+description: "Monitor and observe your kagent installation with dashboards and audit logs."
+---
+
+export const metadata = {
+  title: "Observability",
+  description: "Monitor and observe your kagent installation with dashboards and audit logs.",
+  author: "kagent.dev"
+};
+
+import QuickLink from '@/components/quick-link';
+
+<div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+    <h1 className="text-4xl font-bold mb-4">Observability</h1>
+    <p className="text-xl text-gray-400 mb-8">Monitor and observe your kagent installation with dashboards and audit logs.</p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <QuickLink title="Launch the UI" description="Open the kagent dashboard using the CLI or port-forwarding." href="/docs/kagent/observability/launch-ui" />
+    <QuickLink title="Audit kagent prompts" description="Review and audit prompts used by kagent agents." href="/docs/kagent/observability/audit-prompts" />
+    </div>
+</div>
+
