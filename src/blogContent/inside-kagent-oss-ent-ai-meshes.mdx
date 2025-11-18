@@ -7,6 +7,52 @@ export const metadata = {
     "Learn how to deploy your CrewAI agents as production-ready KAgent BYO agents in just minutes.",
   author: "Michael Levan",
   authorIds: ["michaellevan"],
+  jsonLd: {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does an agent mesh differ from a traditional service mesh?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "While foundational concepts are shared, agent meshes emphasize dynamic discovery, policy-driven connectivity, and AI/ML workload support—including protocol flexibility and observability for autonomous \"agentic\" workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I start with open source and move to enterprise features as I grow?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Projects like Istio or Gloo Mesh enable this; start with OSS, then add enterprise controls for zero trust, compliance, and multi-cluster federation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does mesh improve business resilience and innovation?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "By automating failover, security, and observability, meshes reduce downtime, accelerate onboarding, and free teams to focus on AI value—not infrastructure firefighting."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is mesh only for Kubernetes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Leading meshes support VM-based, legacy, and hybrid workloads—enabling gradual migrations and broad coverage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are the cost implications?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Meshes can dramatically reduce infrastructure and operational costs as agent volumes scale, especially with ambient/sidecarless modes and centralized controls."
+        }
+      }
+    ]
+  }
 };
 
 # Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026
