@@ -22,7 +22,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Navbar />
-          <KubeConAnnouncementBar />
           <main className="flex-1">{children}</main>
           <Footer />
         </ThemeProvider>
