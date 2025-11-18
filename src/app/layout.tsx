@@ -4,7 +4,6 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
-import KubeConAnnouncementBar from "@/components/kubecon-announcement-bar";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import '@docsearch/css';

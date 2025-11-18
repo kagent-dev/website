@@ -63,6 +63,13 @@ const posts = [
         title: 'From MCP Servers to Services: Introducing kmcp for Enterprise-Grade MCP Development',
         description: 'Discover kmcp, the lightweight toolkit that takes MCP servers from prototype to production. Learn how to scaffold, build, and deploy enterprise-grade MCP services to Kubernetes in minutes—no Dockerfiles or complex manifests required. Includes demo video and complete getting started guide.',
         authorId: "christianposta",
+    },
+    {
+        slug: 'inside-kagent-oss-ent-ai-meshes',
+        publishDate: '2025-11-18',
+        title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
+        description: 'Learn how to architect open source and enterprise AI agent meshes for 2026.',
+        authorId: "michaellevan",
     }
 ]
 
