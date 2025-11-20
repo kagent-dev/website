@@ -335,6 +335,16 @@
             "title": "kmcp secrets",
             "href": "/docs/kmcp/reference/kmcp-secrets",
             "description": "kmcp secrets command"
+          },
+          {
+            "title": "kmcp completion",
+            "href": "/docs/kmcp/reference/kmcp-completion",
+            "description": "kmcp completion command"
+          },
+          {
+            "title": "kmcp help",
+            "href": "/docs/kmcp/reference/kmcp-help",
+            "description": "kmcp help command"
           }
         ]
       }

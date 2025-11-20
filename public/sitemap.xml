@@ -239,6 +239,13 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/docs/kagent/resources/cli/kagent-completion</loc>
+        <lastmod>2025-11-20</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://kagent.dev/docs/kagent/resources/cli/kagent-dashboard</loc>
         <lastmod>2025-11-20</lastmod>
         <changefreq>weekly</changefreq>
@@ -254,6 +261,13 @@
     
     <url>
         <loc>https://kagent.dev/docs/kagent/resources/cli/kagent-get</loc>
+        <lastmod>2025-11-20</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kagent/resources/cli/kagent-help</loc>
         <lastmod>2025-11-20</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
@@ -491,7 +505,21 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/docs/kmcp/reference/kmcp-completion</loc>
+        <lastmod>2025-11-20</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://kagent.dev/docs/kmcp/reference/kmcp-deploy</loc>
+        <lastmod>2025-11-20</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kmcp/reference/kmcp-help</loc>
         <lastmod>2025-11-20</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
