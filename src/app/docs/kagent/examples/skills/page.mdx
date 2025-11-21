@@ -1,0 +1,276 @@
+---
+title: "Skills"
+pageOrder: 6
+description: "Learn how to add skills to your agents to guide their behavior and tool usage."
+---
+
+export const metadata = {
+  title: "Add skills to agents",
+  description: "Learn how to add skills to your agents to guide their behavior and tool usage.",
+  author: "kagent.dev"
+};
+
+# Add skills to agents
+
+Skills are descriptions of capabilities that help agents act more autonomously. They guide the agent's tool usage and planning by orienting responses toward goals rather than just reacting to prompts.
+
+In this guide, you learn how to add skills to your agents in kagent. Kagent supports two types of skills:
+
+1. **A2A skills** (metadata): Structured descriptions of capabilities defined inline the agent specification in the `a2aConfig.skills` field.
+2. **Container-based skills**: Executable skills packaged as container images and loaded from registries, for reuse across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
+
+## Before you begin
+
+1. Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+2. Review the concepts of [agents and skills](/docs/kagent/concepts/agents) in kagent.
+
+## Inline A2A skills metadata
+
+Create an agent that uses skills to guide its behavior. This example creates a Kubernetes troubleshooting agent with skills for diagnosing and fixing issues.
+
+Skills are defined under `a2aConfig` in the agent specification. Even if you're not exposing your agent via the A2A protocol, defining skills under `a2aConfig` helps guide the agent's behavior and tool usage in all conversations.
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-troubleshooting-agent
+  namespace: kagent
+spec:
+  description: A Kubernetes agent specialized in troubleshooting cluster issues
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |-
+      You are a Kubernetes troubleshooting expert. Use your skills to diagnose
+      and resolve issues in the cluster. When investigating problems, follow a
+      systematic approach: gather information, identify root causes, and propose
+      solutions.
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_get_logs
+            - k8s_get_events
+    a2aConfig:
+      skills:
+      - id: diagnose-pod-issues
+        name: Diagnose Pod Issues
+        description: Investigate and diagnose problems with Kubernetes pods, including crashes, restarts, and resource constraints
+        inputModes:
+          - text
+        outputModes:
+          - text
+        tags:
+          - troubleshooting
+          - pods
+          - diagnostics
+        examples:
+          - "Why is my pod crashing?"
+          - "Investigate the pod restarts in the production namespace"
+          - "Check why the pod is not starting"
+          - "Diagnose resource issues with my deployment"
+      - id: analyze-cluster-health
+        name: Analyze Cluster Health
+        description: Assess the overall health and status of the Kubernetes cluster
+        inputModes:
+          - text
+        outputModes:
+          - text
+        tags:
+          - cluster
+          - health
+          - monitoring
+        examples:
+          - "What's the health status of my cluster?"
+          - "Check if there are any issues in the cluster"
+          - "Analyze cluster resource usage"
+          - "Review cluster events for problems"
+EOF
+```
+
+### Understand the A2A skills metadata configuration
+
+Review the following table to understand the A2A skills metadata configuration.
+
+| Field | Description | `diagnose-pod-issues` skill | `analyze-cluster-health` skill |
+|-------|------------|----------------------|-------------------------|
+| **id** | A unique identifier for the skill | `diagnose-pod-issues` | `analyze-cluster-health` |
+| **name** | A human-readable name for the skill | Diagnose Pod Issues | Analyze Cluster Health |
+| **description** | What the skill enables the agent to do | Investigate and diagnose problems with Kubernetes pods, including crashes, restarts, and resource constraints | Assess the overall health and status of the Kubernetes cluster |
+| **inputModes** | The data types that the skill accepts as input | `text` | `text` |
+| **outputModes** | The data types that the skill produces as output | `text` | `text` |
+| **tags** | Categories for organizing and filtering skills | `troubleshooting`, `pods`, `diagnostics` | `cluster`, `health`, `monitoring` |
+| **examples** | Sample queries that trigger this skill | "Why is my pod crashing?"<br/>"Investigate the pod restarts in the production namespace"<br/>"Check why the pod is not starting"<br/>"Diagnose resource issues with my deployment" | "What's the health status of my cluster?"<br/>"Check if there are any issues in the cluster"<br/>"Analyze cluster resource usage"<br/>"Review cluster events for problems" |
+
+## Container-based skills
+
+Container-based skills are executable skill implementations packaged as container images. These skills contain instructions, scripts, and other resources that the agent can discover and use at runtime. This way, you can reuse skills across agents. You might pair the inline metadata skills with more general purpose, container-based skills depending on your agent's needs.
+
+<Aside type="tip">
+You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
+</Aside>
+
+### Build a skill container
+
+To create a container-based skill, package your skill files into a container image. This example creates a skill that deploys simple applications to Kubernetes.
+
+1. Create a skill directory with your skill files.
+
+   ```bash
+   mkdir k8s-deploy-skill
+   cd k8s-deploy-skill
+   ```
+
+2. Create a `SKILL.md` file with skill metadata and instructions. The file should include YAML frontmatter with the skill name and description, followed by detailed instructions for the agent.
+
+   ```markdown
+   # Kubernetes simple deploy skill
+   
+   Use this skill when users want to deploy a basic app on the Kubernetes cluster.
+   
+   ## Instructions
+   
+   - Expect the user to provide the name for an app they wish to deploy, along with a docker image reference.
+     Optionally they may supply number of replicas and port number, but these are not required, and have defaults.
+   - Call the script `scripts/deploy-app.py` passing the supplied name, image, and optional parameters (# of replicas and port number) if supplied, in that order.
+   - The script generates a correct two-resource manifest (Deployment + Service) and writes it to the file `temp-manifest.yaml`.
+   
+   You, the **agent**, are expected to apply the generated manifest `temp-manifest.yaml` against the current Kubernetes context.
+   
+   ## Example
+   
+   User: Deploy an app called "nginx" using image "docker/nginx" with 2 replicas on port 8080.
+   Agent: Invokes `scripts/deploy-app.py nginx docker/nginx 2 8080`
+   
+   The skill creates a manifest named `temp-manifest.yaml` consisting of a Deployment + Service in one shot.
+   The agent in turn applies the generated temp-manifest.yaml to the cluster.
+   ```
+
+   The agent learns how to use the skill by reading this file. The instructions tell the agent when to use the skill, what parameters to expect, and how to invoke the scripts.
+
+3. Add any scripts or resources your skill needs.
+
+   ```bash
+   mkdir scripts
+   # Add your Python scripts, configs, etc.
+   # For example: scripts/deploy-app.py
+   ```
+
+   The scripts perform the actual work. In this example, `deploy-app.py` generates Kubernetes manifests based on the parameters provided.
+
+4. Create a Dockerfile.
+
+   ```dockerfile
+   FROM scratch
+   COPY . /
+   ```
+
+5. Build and push the image to a container registry. You can push skill containers to any container registry:
+
+   - Docker Hub: `docker.io/username/skill-name:tag`
+   - GitHub Container Registry: `ghcr.io/username/skill-name:tag`
+   - Google Container Registry: `gcr.io/project/skill-name:tag`
+   - Amazon ECR: `123456789012.dkr.ecr.region.amazonaws.com/skill-name:tag`
+   - Any private registry: `registry.example.com/skill-name:tag`
+
+   ```bash 
+   docker build -t your-registry/k8s-deploy-skill:latest .
+   docker push your-registry/k8s-deploy-skill:latest
+   ```
+
+### Use container-based skills in an agent
+
+To load container-based skills into your agent, reference them in the `spec.skills.refs` field.
+
+<Aside type="tip">
+For development and testing such as in a localhost Docker registry, you can use the `insecureSkipVerify` option.
+</Aside>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-assistant-with-skills
+  namespace: kagent
+spec:
+  description: A Kubernetes AI agent with deployment skills
+  type: Declarative
+  skills:
+    # Only for development/testing (e.g., localhost registry)
+    # insecureSkipVerify: true
+    refs:
+      - your-registry/k8s-deploy-skill:latest
+  declarative:
+    modelConfig: default-model-config
+    stream: true
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_apply_manifest
+            - k8s_get_resources
+            - k8s_describe_resource
+    systemMessage: |
+      You are a Kubernetes assistant that helps users deploy and manage applications.
+      You have access to skills that can help automate common tasks.
+EOF
+```
+
+When the agent starts, kagent automatically:
+
+1. Pulls the skill images using an init container.
+2. Extracts the skill files to `/skills` in the agent container.
+3. Makes them available to the agent through the SkillsTool.
+
+The agent can then discover and load skills using the SkillsTool, which reads the `SKILL.md` files and makes the skill instructions available to the LLM.
+
+## Test the agent's skills
+
+After creating the agent, test it with queries that match your skills.
+
+### Test A2A skills
+
+For agents with A2A skills metadata, test with queries that match the skill examples.
+
+```bash
+kagent invoke --agent k8s-troubleshooting-agent --task "Why is my pod in the default namespace restarting?"
+```
+
+The agent should use its "Diagnose Pod Issues" skill to systematically investigate the problem.
+
+### Test container-based skills
+
+For agents with container-based skills, you can ask the agent what skills it has.
+
+```bash
+kagent invoke --agent agent-with-container-skills --task "What skills do you have?"
+```
+
+The agent will list its available skills. Then you can invoke a skill.
+
+```bash
+kagent invoke --agent agent-with-container-skills --task "Use your skill to deploy an app named 'httpbin' using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080"
+```
+
+The agent:
+1. Reviews the instructions in the skill's `SKILL.md` file.
+2. Invokes the appropriate script with the correct parameters.
+3. Uses its tools to apply the generated resources (in this case, applying the Kubernetes manifest).
+
+You can verify the results by checking that the resources were created successfully.
+
+## Next steps
+
+- Learn more about [agents](/docs/kagent/concepts/agents) and their components
+- Explore [tools](/docs/kagent/concepts/tools) available in kagent
+- Check out other [examples](/docs/kagent/examples) to see different agent configurations
