@@ -109,6 +109,21 @@ Review the following table to understand the A2A skills metadata configuration.
 | **tags** | Categories for organizing and filtering skills | `troubleshooting`, `pods`, `diagnostics` | `cluster`, `health`, `monitoring` |
 | **examples** | Sample queries that trigger this skill | "Why is my pod crashing?"<br/>"Investigate the pod restarts in the production namespace"<br/>"Check why the pod is not starting"<br/>"Diagnose resource issues with my deployment" | "What's the health status of my cluster?"<br/>"Check if there are any issues in the cluster"<br/>"Analyze cluster resource usage"<br/>"Review cluster events for problems" |
 
+### Test A2A skills
+
+For agents with A2A skills metadata, test with queries that match the skill examples.
+
+```bash
+kagent invoke --agent k8s-troubleshooting-agent --task "Can you find any unhealthy pods in the kagent namespace?"
+```
+
+Example output: The agent uses its "Diagnose Pod Issues" skill to systematically investigate the problem.
+
+```json
+{"artifacts":[{"artifactId":"b626f5ea-1994-48e0-8266-0141bda3322d","parts":[{"kind":"text","text":"All the pods in the kagent namespace appear to be healthy. They are all in the \"Running\" status with all containers ready (1/1) and no restarts reported. There are no unhealthy pods in the kagent namespace at this time. Is there anything specific you would like me to check or troubleshoot further?"}]}],
+...
+```
+
 ## Container-based skills
 
 Container-based skills are executable skill implementations packaged as container images. These skills contain instructions, scripts, and other resources that the agent can discover and use at runtime. This way, you can reuse skills across agents. You might pair the inline metadata skills with more general purpose, container-based skills depending on your agent's needs.
@@ -117,7 +132,7 @@ Container-based skills are executable skill implementations packaged as containe
 You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
 </Aside>
 
-### Build a skill container
+### Step 1: Build a skill container
 
 To create a container-based skill, package your skill files into a container image. This example creates a skill that deploys simple applications to Kubernetes.
 
@@ -130,7 +145,8 @@ To create a container-based skill, package your skill files into a container ima
 
 2. Create a `SKILL.md` file with skill metadata and instructions. The file should include YAML frontmatter with the skill name and description, followed by detailed instructions for the agent.
 
-   ```markdown
+   ```bash
+   cat > SKILL.md <<'EOF'
    # Kubernetes simple deploy skill
    
    Use this skill when users want to deploy a basic app on the Kubernetes cluster.
@@ -151,6 +167,7 @@ To create a container-based skill, package your skill files into a container ima
    
    The skill creates a manifest named `temp-manifest.yaml` consisting of a Deployment + Service in one shot.
    The agent in turn applies the generated temp-manifest.yaml to the cluster.
+   EOF
    ```
 
    The agent learns how to use the skill by reading this file. The instructions tell the agent when to use the skill, what parameters to expect, and how to invoke the scripts.
@@ -159,38 +176,186 @@ To create a container-based skill, package your skill files into a container ima
 
    ```bash
    mkdir scripts
-   # Add your Python scripts, configs, etc.
-   # For example: scripts/deploy-app.py
+   cat > scripts/deploy-app.py <<'EOF'
+   #!/usr/bin/env python3
+
+   # deploy-app.py
+
+   import sys
+   from pathlib import Path
+   from textwrap import dedent
+
+   def generate_manifest(app_name, image, replicas=1, port=80):
+       """Generate valid Kubernetes YAML using only built-in Python"""
+       
+       manifest = f"""\
+           apiVersion: apps/v1
+           kind: Deployment
+           metadata:
+             name: {app_name}
+             labels:
+               app: {app_name}
+           spec:
+             replicas: {replicas}
+             selector:
+               matchLabels:
+                 app: {app_name}
+             template:
+               metadata:
+                 labels:
+                   app: {app_name}
+               spec:
+                 containers:
+                 - name: {app_name}
+                   image: {image}
+                   ports:
+                   - containerPort: {port}
+           ---
+           apiVersion: v1
+           kind: Service
+           metadata:
+             name: {app_name}
+             labels:
+               app: {app_name}
+           spec:
+             type: ClusterIP
+             selector:
+               app: {app_name}
+             ports:
+             - port: 80
+               targetPort: {port}
+               protocol: TCP
+           """
+
+       # Clean dedent + write
+       clean_yaml = dedent(manifest).strip() + "\n"
+       file_path = Path("temp-manifest.yaml")
+       file_path.write_text(clean_yaml, encoding="utf-8")
+       return str(file_path)
+
+   def print_usage():
+       print("""Kubernetes Zero-Dependency Deploy
+
+   Usage:
+     python deploy-app.py <name> <image> [replicas] [port]
+
+   Examples:
+     python deploy-app.py web nginx:latest
+     python deploy-app.py api ghcr.io/myorg/api:v2 3 5000
+     python deploy-app.py redis redis:7.2 1 6379
+
+   No pip, no yaml, no problem.
+
+   """)
+
+   if __name__ == "__main__":
+       args = sys.argv[1:]
+       
+       if not args or "-h" in args or "--help" in args:
+           print_usage()
+           sys.exit(0)
+       
+       if len(args) < 2:
+           print("Error: Need <name> <image>")
+           print_usage()
+           sys.exit(1)
+       
+       app_name = args[0]
+       image = args[1]
+       
+       replicas = 1
+       port = 80
+       
+       # Parse optional positional numeric args: [replicas] [port]
+       if len(args) > 2:
+           if args[2].isdigit():
+               replicas = int(args[2])
+           else:
+               print(f"Error: replicas must be a number, got '{args[2]}'")
+               sys.exit(1)
+       
+       if len(args) > 3:
+           if args[3].isdigit():
+               port = int(args[3])
+           else:
+               print(f"Error: port must be a number, got '{args[3]}'")
+               sys.exit(1)
+       
+       if len(args) > 4:
+           print("Error: Too many arguments")
+           print_usage()
+           sys.exit(1)
+       
+       # Optional: validate reasonable ranges
+       if replicas < 1:
+           print("Error: replicas must be >= 1")
+           sys.exit(1)
+       if not (1 <= port <= 65535):
+           print("Error: port must be between 1 and 65535")
+           sys.exit(1)
+       
+       print(f"Deploying {app_name}")
+       print(f" Image: {image}")
+       print(f" Replicas: {replicas}")
+       print(f" Container port: {port} → Service port: 80")
+       print()
+
+       path = generate_manifest(app_name, image, replicas, port)
+       print(f"Manifest saved → {path}")
+       print()
+       print("Next:")
+       print(f"   kubectl apply -f {path}")
+   EOF
+   chmod +x scripts/deploy-app.py
    ```
 
    The scripts perform the actual work. In this example, `deploy-app.py` generates Kubernetes manifests based on the parameters provided.
 
 4. Create a Dockerfile.
 
-   ```dockerfile
+   ```bash
+   cat > Dockerfile <<'EOF'
    FROM scratch
    COPY . /
+   EOF
    ```
 
-5. Build and push the image to a container registry. You can push skill containers to any container registry:
+5. For local testing, start a Docker registry on your local host. Before building and pushing to a localhost registry, check if you already have one running.
 
+   ```bash
+   docker ps | grep registry
+   ```
+
+   - If you see a registry container, note the port mapping (for example, `127.0.0.1:5001->5000/tcp` means the registry is accessible on port 5001). 
+   - If no registry is running, start one.
+
+   ```bash
+   docker run -d -p 5000:5000 --restart=always --name local-registry registry:2
+   ```
+
+   If your registry is on a different port (like 5001), use that port in the following commands instead of 5000.
+
+6. Build and push the image to a container registry. You can push skill containers to any container registry:
+
+   - Localhost registry: `localhost:PORT/skill-name:tag`
    - Docker Hub: `docker.io/username/skill-name:tag`
    - GitHub Container Registry: `ghcr.io/username/skill-name:tag`
    - Google Container Registry: `gcr.io/project/skill-name:tag`
    - Amazon ECR: `123456789012.dkr.ecr.region.amazonaws.com/skill-name:tag`
    - Any private registry: `registry.example.com/skill-name:tag`
 
+
    ```bash 
-   docker build -t your-registry/k8s-deploy-skill:latest .
-   docker push your-registry/k8s-deploy-skill:latest
+   docker build -t localhost:5000/k8s-deploy-skill:latest .
+   docker push localhost:5000/k8s-deploy-skill:latest
    ```
 
-### Use container-based skills in an agent
+### Step 2: Use container-based skills in an agent
 
 To load container-based skills into your agent, reference them in the `spec.skills.refs` field.
 
 <Aside type="tip">
-For development and testing such as in a localhost Docker registry, you can use the `insecureSkipVerify` option.
+For development and testing such as in a local Docker registry, you can use the `insecureSkipVerify` option. Note that for Kind clusters, use `kind-registry:5000` instead of `localhost:5000`.
 </Aside>
 
 ```yaml
@@ -205,9 +370,10 @@ spec:
   type: Declarative
   skills:
     # Only for development/testing (e.g., localhost registry)
-    # insecureSkipVerify: true
+    insecureSkipVerify: true
     refs:
-      - your-registry/k8s-deploy-skill:latest
+      # For Kind clusters, use kind-registry:5000 instead of localhost:5000
+      - kind-registry:5000/k8s-deploy-skill:latest
   declarative:
     modelConfig: default-model-config
     stream: true
@@ -234,40 +400,84 @@ When the agent starts, kagent automatically:
 
 The agent can then discover and load skills using the SkillsTool, which reads the `SKILL.md` files and makes the skill instructions available to the LLM.
 
-## Test the agent's skills
+
+### Step 3: Test container-based skills
 
 After creating the agent, test it with queries that match your skills.
 
-### Test A2A skills
+1. Ask the agent what skills it has.
 
-For agents with A2A skills metadata, test with queries that match the skill examples.
+   ```bash
+   kagent invoke --agent k8s-assistant-with-skills --task "What skills do you have?"
+   ```
 
-```bash
-kagent invoke --agent k8s-troubleshooting-agent --task "Why is my pod in the default namespace restarting?"
-```
+   Example output:
 
-The agent should use its "Diagnose Pod Issues" skill to systematically investigate the problem.
+   ```json
+   {"artifacts":[{"artifactId":"91afd732-3fa5-4e25-8f0e-07a4968050e5","parts":[{"kind":"text","text":"I am a Kubernetes AI agent with deployment skills. I can help you deploy and manage Kubernetes applications by working with manifests, describing resources, getting resource details, and applying configurations to your Kubernetes cluster. However, currently, I do not have any additional specialized skills loaded beyond these core Kubernetes capabilities. If you have any Kubernetes-related tasks or questions, feel free to ask!"}]}],"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","history":[{"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","kind":"message","messageId":"msg-cd691a32-c0d8-471d-b8eb-e4e3265621ce","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"b7ee2804-b15e-4dee-b6e9-ca2901383a10"},{"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","kind":"message","messageId":"msg-cd691a32-c0d8-471d-b8eb-e4e3265621ce","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"b7ee2804-b15e-4dee-b6e9-ca2901383a10"},{"kind":"message","messageId":"e22926e1-50d2-4571-a039-a3dcf8dfb2b8","parts":[{"kind":"text","text":"I am a Kubernetes AI agent with deployment skills. I can help you deploy and manage Kubernetes applications by working with manifests, describing resources, getting resource details, and applying configurations to your Kubernetes cluster. However, currently, I do not have any additional specialized skills loaded beyond these core Kubernetes capabilities. If you have any Kubernetes-related tasks or questions, feel free to ask!"}],"role":"agent"}],"id":"b7ee2804-b15e-4dee-b6e9-ca2901383a10","kind":"task","metadata":{"kagent_app_name":"kagent__NS__k8s_assistant_with_skills","kagent_author":"k8s_assistant_with_skills","kagent_invocation_id":"e-ceaee83e-40a1-4088-b545-89e96f71608e","kagent_session_id":"f130122c-06e1-467c-9eb3-fe3704988b4d","kagent_usage_metadata":{"candidatesTokenCount":74,"promptTokenCount":1236,"totalTokenCount":1310},"kagent_user_id":"admin@kagent.dev"},"status":{"state":"completed","timestamp":"2025-11-21T22:13:16.484468+00:00"}}
+   ```
 
-### Test container-based skills
+2. Invoke a skill, such as by asking it to deploy an app.
 
-For agents with container-based skills, you can ask the agent what skills it has.
+   ```bash
+   kagent invoke --agent k8s-assistant-with-skills --task "Use your skill to deploy an app named 'httpbin' using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080"
+   ```
 
-```bash
-kagent invoke --agent agent-with-container-skills --task "What skills do you have?"
-```
+   The agent:
+   1. Reviews the instructions in the skill's `SKILL.md` file.
+   2. Invokes the appropriate script with the correct parameters.
+   3. Uses its tools to apply the generated resources (in this case, applying the Kubernetes manifest).
 
-The agent will list its available skills. Then you can invoke a skill.
+   Example output:
 
-```bash
-kagent invoke --agent agent-with-container-skills --task "Use your skill to deploy an app named 'httpbin' using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080"
-```
+   ```json
+   {"artifacts":[{"artifactId":"9f7ad622-9e1a-4b6e-8c59-7b33846e6245","parts":[{"kind":"text","text":"The app named 'httpbin' has been deployed using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080. A deployment and a corresponding service have been created. Let me know if you need any other assistance with this deployment."}]}],"contextId":"6d25b097-ab63-4f9b-8c37-7481fe9a1098","history":[{"contextId":"6d25b097-ab63-4f9b-8c37-7481fe9a1098","kind":"message","messageId":"msg-7e6a6435-997b-4afa-9f63-2777ad44a154","parts":[{"kind":"text","text":"Use your skill to deploy an app named 'httpbin' using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080"}],"role":"user","taskId":"3020e09e-3e9b-4840-a805-feb9817d20a2"},{"contextId":"6d25b097-ab63-4f9b-8c37-7481fe9a1098","kind":"message","messageId":"msg-7e6a6435-997b-4afa-9f63-2777ad44a154","parts":[{"kind":"text","text":"Use your skill to deploy an app named 'httpbin' using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080"}],"role":"user","taskId":"3020e09e-3e9b-4840-a805-feb9817d20a2"},{"kind":"message","messageId":"114436b5-1b9e-4191-aabc-cc4f1db6f6a0","parts":[{"kind":"data","data":{"args":{"manifest":"apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: httpbin\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: httpbin\n  template:\n    metadata:\n      labels:\n        app: httpbin\n    spec:\n      containers:\n      - name: httpbin\n        image: docker.io/mccutchen/go-httpbin:v2.15.0\n        ports:\n        - containerPort: 8080\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: httpbin\nspec:\n  selector:\n    app: httpbin\n  ports:\n  - protocol: TCP\n    port: 8080\n    targetPort: 8080\n  type: ClusterIP\n"},"id":"call_PdIQF51hPu1iBcOt3v1DkOzC","name":"k8s_apply_manifest"},"metadata":{"kagent_type":"function_call"}}],"role":"agent"},{"kind":"message","messageId":"1279457b-137b-4730-a1be-5dbe2985973b","parts":[{"kind":"data","data":{"id":"call_PdIQF51hPu1iBcOt3v1DkOzC","name":"k8s_apply_manifest","response":{"result":{"content":[{"text":"deployment.apps/httpbin created\nservice/httpbin created\n","type":"text"}],"isError":false}}},"metadata":{"kagent_type":"function_response"}}],"role":"agent"},{"kind":"message","messageId":"aefb1f07-3258-46bb-b078-515a9a6f08e5","parts":[{"kind":"text","text":"The app named 'httpbin' has been deployed using the image 'docker.io/mccutchen/go-httpbin:v2.15.0' on port 8080. A deployment and a corresponding service have been created. Let me know if you need any other assistance with this deployment."}],"role":"agent"}],"id":"3020e09e-3e9b-4840-a805-feb9817d20a2","kind":"task","metadata":{"kagent_app_name":"kagent__NS__k8s_assistant_with_skills","kagent_author":"k8s_assistant_with_skills","kagent_invocation_id":"e-b8f3e41b-a741-4338-b19b-f3a46ca33826","kagent_session_id":"6d25b097-ab63-4f9b-8c37-7481fe9a1098","kagent_usage_metadata":{"candidatesTokenCount":60,"promptTokenCount":1505,"totalTokenCount":1565},"kagent_user_id":"admin@kagent.dev"},"status":{"state":"completed","timestamp":"2025-11-21T22:14:33.755060+00:00"}}
+   ```
 
-The agent:
-1. Reviews the instructions in the skill's `SKILL.md` file.
-2. Invokes the appropriate script with the correct parameters.
-3. Uses its tools to apply the generated resources (in this case, applying the Kubernetes manifest).
+3. Check that the `httpbin` app was deployed successfully.
 
-You can verify the results by checking that the resources were created successfully.
+   ```bash
+   kubectl get pods --namespace kagent | grep httpbin
+   ```
+
+   Example output:
+
+   ```
+   httpbin-b8b86ff46-rn7mf   1/1     Running   0   2m16s
+   ```
+
+## Cleanup
+
+When you're done, you can clean up the resources that you created.
+
+1. Delete the agents that you created.
+
+   ```bash
+   kubectl delete agent k8s-troubleshooting-agent -n kagent
+   kubectl delete agent k8s-assistant-with-skills -n kagent
+   ```
+
+2. Clean up any applications that were deployed during testing, such as the `httpbin` app.
+
+   ```bash
+   kubectl delete deployment httpbin -n kagent
+   kubectl delete service httpbin -n kagent
+   ```
+
+3. Remove the skill directory and files that you created.
+
+   ```bash
+   cd ..
+   rm -rf k8s-deploy-skill
+   ```
+
+4. Optionally, remove the Docker image and registry that you used for local testing.
+
+   ```bash
+   docker rmi localhost:5000/k8s-deploy-skill:latest
+   docker stop local-registry
+   docker rm local-registry
+   ```
 
 ## Next steps
 
