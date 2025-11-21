@@ -82,7 +82,7 @@
           {
             "title": "Agents",
             "href": "/docs/kagent/concepts/agents",
-            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools."
+            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools, skills), and how they can even use other agents as tools."
           },
           {
             "title": "Tools",
@@ -177,6 +177,11 @@
             "title": "Discord and A2A",
             "href": "/docs/kagent/examples/discord-a2a",
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
+          },
+          {
+            "title": "Skills",
+            "href": "/docs/kagent/examples/skills",
+            "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
           }
         ]
       },
