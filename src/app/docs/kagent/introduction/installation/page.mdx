@@ -147,6 +147,32 @@ Another way to install kagent is using Helm.
    ```
 </div>
 
+## Advanced Configuration
+
+Review the following advanced configuration options that you might want to set up for your kagent installation.
+
+### Configure the controller service name
+
+By default, kagent uses `kagent-controller` as the controller service name when constructing URLs for agent deployments. If you need to customize this name, set the `KAGENT_CONTROLLER_NAME` environment variable on the controller pod.
+
+**Helm `--set` flag:**
+
+```bash
+helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+    --namespace kagent \
+    --set controller.env[0].name=KAGENT_CONTROLLER_NAME \
+    --set controller.env[0].value=my-kagent
+```
+
+**Helm values file:**
+
+```yaml
+controller:
+  env:
+    - name: KAGENT_CONTROLLER_NAME
+      value: my-kagent
+```
+
 ## Uninstallation
 
 Refer to the [Uninstall](/docs/kagent/operations/uninstall) guide.

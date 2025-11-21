@@ -91,7 +91,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentImage.registry | string | "" |  |
 | controller.agentImage.repository | string | "kagent-dev/kagent/app" |  |
 | controller.agentImage.tag | string | "" |  |
-| controller.env | list | [] |  |
+| controller.env | list | [] | Additional environment variables to set on the controller pod. For example, set `KAGENT_CONTROLLER_NAME` to customize the controller service name used for the kagent controller deployments. |
 | controller.image.pullPolicy | string | "" |  |
 | controller.image.registry | string | "" |  |
 | controller.image.repository | string | "kagent-dev/kagent/controller" |  |
