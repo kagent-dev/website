@@ -14,10 +14,11 @@ export const metadata = {
 
 Skills are descriptions of capabilities that help agents act more autonomously. They guide the agent's tool usage and planning by orienting responses toward goals rather than just reacting to prompts.
 
-In this guide, you learn how to add skills to your agents in kagent. Kagent supports two types of skills:
+In this guide, you learn how to add container-based skills to your agents in kagent. 
 
-1. **A2A skills** (metadata): Structured descriptions of capabilities defined inline the agent specification in the `a2aConfig.skills` field.
-2. **Container-based skills**: Executable skills packaged as container images and loaded from registries, for reuse across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
+<Aside type="tip">
+Want to containerize and manage your skills? Try out the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a secure, AI-first container registry. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
+</Aside>
 
 ## Before you begin
 
@@ -25,112 +26,9 @@ In this guide, you learn how to add skills to your agents in kagent. Kagent supp
 
 2. Review the concepts of [agents and skills](/docs/kagent/concepts/agents) in kagent.
 
-## Inline A2A skills metadata
-
-Create an agent that uses skills to guide its behavior. This example creates a Kubernetes troubleshooting agent with skills for diagnosing and fixing issues.
-
-Skills are defined under `a2aConfig` in the agent specification. Even if you're not exposing your agent via the A2A protocol, defining skills under `a2aConfig` helps guide the agent's behavior and tool usage in all conversations.
-
-```yaml
-kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha2
-kind: Agent
-metadata:
-  name: k8s-troubleshooting-agent
-  namespace: kagent
-spec:
-  description: A Kubernetes agent specialized in troubleshooting cluster issues
-  type: Declarative
-  declarative:
-    modelConfig: default-model-config
-    systemMessage: |-
-      You are a Kubernetes troubleshooting expert. Use your skills to diagnose
-      and resolve issues in the cluster. When investigating problems, follow a
-      systematic approach: gather information, identify root causes, and propose
-      solutions.
-    tools:
-      - type: McpServer
-        mcpServer:
-          name: kagent-tool-server
-          kind: RemoteMCPServer
-          toolNames:
-            - k8s_get_resources
-            - k8s_describe_resource
-            - k8s_get_logs
-            - k8s_get_events
-    a2aConfig:
-      skills:
-      - id: diagnose-pod-issues
-        name: Diagnose Pod Issues
-        description: Investigate and diagnose problems with Kubernetes pods, including crashes, restarts, and resource constraints
-        inputModes:
-          - text
-        outputModes:
-          - text
-        tags:
-          - troubleshooting
-          - pods
-          - diagnostics
-        examples:
-          - "Why is my pod crashing?"
-          - "Investigate the pod restarts in the production namespace"
-          - "Check why the pod is not starting"
-          - "Diagnose resource issues with my deployment"
-      - id: analyze-cluster-health
-        name: Analyze Cluster Health
-        description: Assess the overall health and status of the Kubernetes cluster
-        inputModes:
-          - text
-        outputModes:
-          - text
-        tags:
-          - cluster
-          - health
-          - monitoring
-        examples:
-          - "What's the health status of my cluster?"
-          - "Check if there are any issues in the cluster"
-          - "Analyze cluster resource usage"
-          - "Review cluster events for problems"
-EOF
-```
-
-### Understand the A2A skills metadata configuration
-
-Review the following table to understand the A2A skills metadata configuration.
-
-| Field | Description | `diagnose-pod-issues` skill | `analyze-cluster-health` skill |
-|-------|------------|----------------------|-------------------------|
-| **id** | A unique identifier for the skill | `diagnose-pod-issues` | `analyze-cluster-health` |
-| **name** | A human-readable name for the skill | Diagnose Pod Issues | Analyze Cluster Health |
-| **description** | What the skill enables the agent to do | Investigate and diagnose problems with Kubernetes pods, including crashes, restarts, and resource constraints | Assess the overall health and status of the Kubernetes cluster |
-| **inputModes** | The data types that the skill accepts as input | `text` | `text` |
-| **outputModes** | The data types that the skill produces as output | `text` | `text` |
-| **tags** | Categories for organizing and filtering skills | `troubleshooting`, `pods`, `diagnostics` | `cluster`, `health`, `monitoring` |
-| **examples** | Sample queries that trigger this skill | "Why is my pod crashing?"<br/>"Investigate the pod restarts in the production namespace"<br/>"Check why the pod is not starting"<br/>"Diagnose resource issues with my deployment" | "What's the health status of my cluster?"<br/>"Check if there are any issues in the cluster"<br/>"Analyze cluster resource usage"<br/>"Review cluster events for problems" |
-
-### Test A2A skills
-
-For agents with A2A skills metadata, test with queries that match the skill examples.
-
-```bash
-kagent invoke --agent k8s-troubleshooting-agent --task "Can you find any unhealthy pods in the kagent namespace?"
-```
-
-Example output: The agent uses its "Diagnose Pod Issues" skill to systematically investigate the problem.
-
-```json
-{"artifacts":[{"artifactId":"b626f5ea-1994-48e0-8266-0141bda3322d","parts":[{"kind":"text","text":"All the pods in the kagent namespace appear to be healthy. They are all in the \"Running\" status with all containers ready (1/1) and no restarts reported. There are no unhealthy pods in the kagent namespace at this time. Is there anything specific you would like me to check or troubleshoot further?"}]}],
-...
-```
-
 ## Container-based skills
 
-Container-based skills are executable skill implementations packaged as container images. These skills contain instructions, scripts, and other resources that the agent can discover and use at runtime. This way, you can reuse skills across agents. You might pair the inline metadata skills with more general purpose, container-based skills depending on your agent's needs.
-
-<Aside type="tip">
-You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
-</Aside>
+Container-based skills are executable skill implementations packaged as container images. These skills contain instructions, scripts, and other resources that the agent can discover and use at runtime. This way, you can reuse skills across agents.
 
 ### Step 1: Build a skill container
 

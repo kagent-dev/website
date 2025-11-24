@@ -50,11 +50,11 @@ Kagent comes with a set of built-in tools that you can use to interact with your
 
 ## Skills
 
-Skills are descriptions of the capabilities that an agent has to act more autonomously. They make the LLM's responses more than just reactions to prompts by orienting them toward goals.
+Skills are descriptions or even executable implementations of the capabilities that an agent has to act more autonomously. They make the LLM's responses more than just reactions to prompts by orienting them toward goals.
 
 In some frameworks, skills are expressed as wrapped functions, reusable prompt templates, or even a synonym for a tool.
 
-In kagent, think of skills like a catalog that expresses what the agent is capable of doing for a user. Unlike tools, skills are not a specific function that produces an output, like "fetch a website" or "tell the weather." Unlike system instructions, they are not rules that apply to all interactions, such as "Follow my company's style guide."
+Think of skills like a catalog that expresses what the agent is capable of doing for a user. Unlike tools, skills are not a specific function that produces an output, like "fetch a website" or "tell the weather." Unlike system instructions, they are not rules that apply to all interactions, such as "Follow my company's style guide."
 
 Instead, skills are building blocks that guide the agent's tool usage and planning. They help the agent understand what its goals are, and when and how to use tools effectively.
 
@@ -63,13 +63,50 @@ For example, two agents may share the same tools but use them differently based 
 - A troubleshooting agent might use a `describe` tool to check the events of a crashing pod before taking a recovery action, such as restarting the pod.
 - A research agent might use the same `describe` tool to gather details about a pod in order to answer a user's question.
 
-Kagent supports two types of skills:
+Skills can refer to two broad types:
 
-1. **A2A skills** (metadata): Structured descriptions of capabilities defined in `a2aConfig.skills`. These consist of a description, examples, ID, and tags that help guide the agent's behavior. The description and examples provide context for both humans and the agent itself, often incorporated into system instructions. The ID and tags help you manage skills, such as by making it simpler to compare and reuse them across agents.
+* **A2A skills**: Metadata-based skills that are defined inline in the agent specification.
+* **Kagent's container-based skills**: Executable skills packaged as container images and loaded from registries, for reuse across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
 
-2. **Container-based skills**: Executable skill implementations packaged as container images. These skills contain instructions, scripts, and resources that are loaded from container registries and made available to the agent at runtime. You can build and push skills as container images, then reference them in `spec.skills.refs` to load them into your agents.
+### A2A skills metadata
 
-Skills in kagent are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: any agent can use skills, regardless of the LLM provider. You're not limited to Anthropic Claude. You can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
+Actions-to-actions (A2A) skills are metadata—structured descriptions of capabilities, not executable code. Think of A2A skills as a machine-readable catalog entry about what a tool can do.
+
+A2A skills metadata describes:
+
+- What a capability is
+- What the capability can do
+- The inputs and outputs
+- Safety requirements
+- How a model should think about the capability
+
+A2A skills metadata does not:
+
+- Provide runtime code
+- Execute actions
+- Bundle actual logic for performing the skill
+
+In kagent, you define A2A skills in `a2aConfig.skills`. These consist of a description, examples, ID, and tags that help guide the agent's behavior. The description and examples provide context for both humans and the agent itself, often incorporated into system instructions. The ID and tags help you manage skills, such as by making it simpler to compare and reuse them across agents.
+
+A2A skills are instructions about capabilities, not the capabilities themselves. That is why A2A is sometimes described as "just metadata"—it's descriptive information, not executable code.
+
+### Container-based skills
+
+Kagent's container-based skills are executable skill implementations packaged as container images. These are runnable procedural logic that the agent can use as an extension of itself.
+
+Container-based skills include:
+
+- Executable code snippets or procedures
+- Behavior modules that the agent can call at inference time
+- Validation and step-by-step behaviors
+- Reusable functions
+- Direct execution capabilities
+
+These skills contain instructions, scripts, and resources that are loaded from container registries and made available to the agent at runtime. You can build and push skills as container images, then reference them in `spec.skills.refs` to load them into your agents.
+
+Container-based skills are actual, callable capabilities—not just descriptions of capabilities.
+
+Kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: any agent can use skills, regardless of the LLM provider. You're not limited to Anthropic Claude. You can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
 
 ### Best practices for skills
 
