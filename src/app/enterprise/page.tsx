@@ -127,48 +127,75 @@ const EnterprisePage = () => {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-            {distributions.distributions.map((distribution: Distribution, index: number) => (
-              <motion.div
-                key={distribution.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
-              >
-                <Card className="bg-muted/50 border-border p-8 hover:shadow-lg transition-shadow">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-                      <div className="flex-shrink-0">
-                        {getDistributionLogo(distribution) && (
-                          <Image
-                            src={getDistributionLogo(distribution)}
-                            alt={distribution.name}
-                            width={120}
-                            height={60}
-                            className="object-contain"
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-semibold text-foreground mb-2">
-                          {distribution.title}
-                        </h3>
-                        <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                          {distribution.description}
-                        </p>
-                        <Button asChild className="hover:scale-105 transition-transform">
-                          <Link href={distribution.website} target="_blank" rel="noopener noreferrer">
-                            {distribution.cta_text}
-                            <ExternalLink className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+           <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+             {distributions.distributions.map((distribution: Distribution, index: number) => (
+               <motion.div
+                 key={distribution.name}
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
+               >
+                 <Card className="bg-muted/50 border-border p-8 hover:shadow-lg transition-shadow">
+                   <CardContent className="p-0">
+                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
+                       <div className="flex-shrink-0">
+                         {getDistributionLogo(distribution) && (
+                           <Image
+                             src={getDistributionLogo(distribution)}
+                             alt={distribution.name}
+                             width={120}
+                             height={60}
+                             className="object-contain"
+                           />
+                         )}
+                       </div>
+                       <div className="flex-1">
+                         <h3 className="text-2xl font-semibold text-foreground mb-2">
+                           {distribution.title}
+                         </h3>
+                         <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                           {distribution.description}
+                         </p>
+                         <Button asChild className="hover:scale-105 transition-transform">
+                           <Link href={distribution.website} target="_blank" rel="noopener noreferrer">
+                             {distribution.cta_text}
+                             <ExternalLink className="ml-2 h-4 w-4" />
+                           </Link>
+                         </Button>
+                       </div>
+                     </div>
+                   </CardContent>
+                 </Card>
+               </motion.div>
+             ))}
+           </div>
+
+           {/* Production-ready support CTA */}
+           <motion.div
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.6, delay: 0.3 }}
+             className="mt-12"
+           >
+             <Card className="bg-primary/5 border-primary/20 p-8 hover:shadow-lg transition-shadow">
+               <CardContent className="p-0">
+                 <div>
+                   <h3 className="text-2xl font-semibold text-foreground mb-4">
+                     Production-ready support for kagent
+                   </h3>
+                   <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                     Get expert support for kagent, designed for teams running agentic workloads on Kubernetes. With global SLAs, upstream partnership, and architecture guidance from the maintainers, you can bring your agent-on-Kubernetes environment from POC to production with reliability and clarity.
+                   </p>
+                   <Button asChild size="lg" className="hover:scale-105 transition-transform">
+                     <Link href="https://www.solo.io/request-support-agentgateway-kagent-agentregistry" target="_blank" rel="noopener noreferrer">
+                       Learn more
+                       <ExternalLink className="ml-2 h-4 w-4" />
+                     </Link>
+                   </Button>
+                 </div>
+               </CardContent>
+             </Card>
+           </motion.div>
         </div>
       </div>
 
