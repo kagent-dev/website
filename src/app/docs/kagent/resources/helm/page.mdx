@@ -30,7 +30,7 @@ A Helm chart for kagent, built with Google ADK
 | file://../agents/promql | promql-agent |  |
 | file://../tools/grafana-mcp | grafana-mcp |  |
 | file://../tools/querydoc | querydoc |  |
-| oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | $KMCP_VERSION |
+| oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | ${KMCP_VERSION} |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.0.12 |
 
 ## Values
@@ -91,7 +91,8 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentImage.registry | string | "" |  |
 | controller.agentImage.repository | string | "kagent-dev/kagent/app" |  |
 | controller.agentImage.tag | string | "" |  |
-| controller.env | list | [] | Additional environment variables to set on the controller pod. For example, set `KAGENT_CONTROLLER_NAME` to customize the controller service name used for the kagent controller deployments. |
+| controller.env | list | [] |  |
+| controller.envFrom | list | [] |  |
 | controller.image.pullPolicy | string | "" |  |
 | controller.image.registry | string | "" |  |
 | controller.image.repository | string | "kagent-dev/kagent/controller" |  |
@@ -110,6 +111,8 @@ A Helm chart for kagent, built with Google ADK
 | controller.streaming.maxBufSize | string | "1Mi" |  |
 | controller.streaming.timeout | string | "600s" |  |
 | controller.tolerations | list | [] | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| controller.volumeMounts | list | [] |  |
+| controller.volumes | list | [] |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
 | database.postgres.url | string | "postgres://postgres:kagent@pgsql-postgresql.kagent.svc.cluster.local:5432/postgres" |  |
 | database.sqlite.databaseName | string | "kagent.db" |  |
@@ -133,7 +136,7 @@ A Helm chart for kagent, built with Google ADK
 | kagent-tools.tools.loglevel | string | "debug" |  |
 | kmcp.enabled | bool | true |  |
 | kmcp.fullnameOverride | string | "" |  |
-| kmcp.image.tag | string | "v0.1.9" |  |
+| kmcp.image.tag | string | "0.1.9" |  |
 | kmcp.nameOverride | string | "kmcp" |  |
 | kmcp.namespaceOverride | string | "" |  |
 | labels | object | {} | Additional labels to add to all Kubernetes resources |
@@ -177,7 +180,7 @@ A Helm chart for kagent, built with Google ADK
 | querydoc.image.pullPolicy | string | "IfNotPresent" |  |
 | querydoc.image.registry | string | "ghcr.io" |  |
 | querydoc.image.repository | string | "kagent-dev/doc2vec/mcp" |  |
-| querydoc.image.tag | string | "1.1.13" |  |
+| querydoc.image.tag | string | "1.1.14" |  |
 | querydoc.openai.apiKey | string | "" |  |
 | querydoc.replicas | int | 1 |  |
 | querydoc.resources.limits.cpu | string | "500m" |  |
