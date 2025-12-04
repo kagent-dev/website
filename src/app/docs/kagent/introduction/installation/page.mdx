@@ -40,10 +40,10 @@ Install kagent by using the kagent CLI or Helm.
    curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
    ```
 
-3. Install kagent to the cluster by using the CLI. By default, kagent installs a demo profile with agents and MCP tools preloaded for you. If you don't want these default agents, include the `--profile minimal` flag.
+3. Install kagent to the cluster by using the CLI. The following command installs a demo profile with agents and MCP tools preloaded for you. If you don't want these default agents, include the `--profile minimal` flag.
 
    ```bash
-   kagent install
+   kagent install --profile demo
    ```
    
    ```console
