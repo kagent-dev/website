@@ -37,7 +37,7 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
      namespace: kagent
    spec:
      apiKeySecret: kagent-my-provider
-     apiKeySecretKey: PROVIDER_API_KEY
+     apiKeySecretKey: ${PROVIDER_API_KEY}
      model: command-a-03-2025
      provider: OpenAI
      openAI:
@@ -86,8 +86,8 @@ When your LLM server uses custom certificates (for example, internal or company 
      name: internal-llm-model-config
      namespace: kagent
    spec:
-     apiKeySecret: llm-secret
-     apiKeySecretKey: api-key
+     apiKeySecret: kagent-my-provider
+     apiKeySecretKey: ${PROVIDER_API_KEY}
      provider: OpenAI
      model: ${MODEL_NAME}
      openAI:
@@ -110,8 +110,8 @@ metadata:
   name: internal-llm-model-config
   namespace: kagent
 spec:
-  apiKeySecret: llm-secret
-  apiKeySecretKey: api-key
+  apiKeySecret: kagent-my-provider
+  apiKeySecretKey: ${PROVIDER_API_KEY}
   provider: OpenAI
   model: ${MODEL_NAME}
   openAI:
