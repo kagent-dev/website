@@ -57,3 +57,75 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
    | `baseUrl` | The base URL of your LLM provider. Note that the LLM provider might have a special base URL for OpenAI compatibility, such as `"https://api.cohere.ai/compatibility/v1"` for [Cohere AI](https://cohere.com/). |
 
 Good job! You added a model to kagent. Next, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model.
+
+## TLS Configuration
+
+kagent supports TLS CA configuration for `ModelConfig`s to enable secure communication with LLMs using custom certificates. This feature allows for `Agent`s to communicate with an LLM using custom certificates, which is useful for internal or company-managed LLM servers.
+
+**Note:** TLS configuration only supports OpenAI-compatible providers.
+
+### Use Case: Custom CA Certificates
+
+When your LLM server uses custom certificates (for example, internal or company certificates), you'll need to configure the CA certificate in your `ModelConfig`.
+
+1. You'll need a `Secret` containing the relevant CA certificate. For example, you could create a Kubernetes secret that stores the certificate.
+
+   ```bash
+   kubectl -n kagent create secret generic llm-certs \
+     --from-file=ca.crt=ca.crt
+   ```
+   
+   **Note:** The secret must be created in the same namespace as your `ModelConfig`.
+
+2. Create a `ModelConfig` resource with TLS configuration that references the CA certificate `Secret`.
+
+   ```yaml
+   apiVersion: kagent.dev/v1alpha2
+   kind: ModelConfig
+   metadata:
+     name: internal-llm-model-config
+     namespace: kagent
+   spec:
+     apiKeySecret: llm-secret
+     apiKeySecretKey: api-key
+     provider: OpenAI
+     model: ${MODEL_NAME}
+     openAI:
+       baseUrl: ${COMPATIBLE_PROVIDER_URL}
+     tls:
+       caCertSecretRef: llm-certs
+       caCertSecretKey: ca.crt
+   ```
+
+### Use Case: Insecure Communication
+
+> **Warning:** This configuration should **only** be used for demo purposes. It is not intended for production use.
+
+For development or testing scenarios where you need to disable TLS verification, you can configure the `ModelConfig` to skip certificate verification.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: internal-llm-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: llm-secret
+  apiKeySecretKey: api-key
+  provider: OpenAI
+  model: ${MODEL_NAME}
+  openAI:
+    baseUrl: ${COMPATIBLE_PROVIDER_URL}
+  tls:
+    disableVerify: true
+```
+
+### TLS Configuration Settings
+
+Review the following table to understand the TLS configuration options. For more information, see the [API docs](https://kagent.dev/docs/kagent/resources/api-ref#modelconfigspec).
+
+| Setting | Description |
+| --- | --- |
+| `tls.caCertSecretRef` | The name of the Kubernetes secret that contains the CA certificate. The secret must be in the same namespace as the `ModelConfig`. |
+| `tls.caCertSecretKey` | The key in the secret that stores the CA certificate file. |
+| `tls.disableVerify` | When set to `true`, disables TLS certificate verification. **Warning:** Only use this for demo purposes, not in production. |
