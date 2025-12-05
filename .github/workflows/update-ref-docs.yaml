@@ -224,9 +224,6 @@ jobs:
             # (might be replaced by helm docs template in the future)
             sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
 
-            # Remove backticks from the Default column in the table
-            sed -i 's/| `\([^`]*\)` |/| \1 |/g' "src/app/docs/kagent/resources/helm/temp.mdx"
-
             # Add frontmatter
             echo '---' > "src/app/docs/kagent/resources/helm/page.mdx"
             echo 'title: "Helm Chart Configuration"' >> "src/app/docs/kagent/resources/helm/page.mdx"
