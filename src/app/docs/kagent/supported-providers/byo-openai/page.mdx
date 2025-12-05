@@ -60,22 +60,20 @@ Good job! You added a model to kagent. Next, you can [create or update an agent]
 
 ## TLS Configuration
 
-kagent supports TLS CA configuration for `ModelConfig`s to enable secure communication with LLMs using custom certificates. This feature allows for `Agent`s to communicate with an LLM using custom certificates, which is useful for internal or company-managed LLM servers.
+To secure communication to LLMs with your own custom certificates, configure the TLS CA details in the `ModelConfig`. Then, your agents communicate with the LLM with those custom certificates. This feature is useful for internal or company-managed LLM servers.
 
-**Note:** TLS configuration only supports OpenAI-compatible providers.
+> **Note:** TLS configuration only supports OpenAI-compatible providers.
 
 ### Use Case: Custom CA Certificates
 
-When your LLM server uses custom certificates (for example, internal or company certificates), you'll need to configure the CA certificate in your `ModelConfig`.
+Configure the CA certificate of your LLM server in the `ModelConfig` resource. 
 
-1. You'll need a `Secret` containing the relevant CA certificate. For example, you could create a Kubernetes secret that stores the certificate.
+1. Create a `Secret` with the relevant CA certificate in the same namespace as the `ModelConfig`.
 
    ```bash
    kubectl -n kagent create secret generic llm-certs \
      --from-file=ca.crt=ca.crt
    ```
-   
-   **Note:** The secret must be created in the same namespace as your `ModelConfig`.
 
 2. Create a `ModelConfig` resource with TLS configuration that references the CA certificate `Secret`.
 
@@ -99,9 +97,9 @@ When your LLM server uses custom certificates (for example, internal or company 
 
 ### Use Case: Insecure Communication
 
-> **Warning:** This configuration should **only** be used for demo purposes. It is not intended for production use.
+> **Warning:** Insecure communication is for **demo purposes only**. Do not use insecure communication in production environments.
 
-For development or testing scenarios where you need to disable TLS verification, you can configure the `ModelConfig` to skip certificate verification.
+For development or testing scenarios where you need to disable TLS verification, configure the `ModelConfig` to skip certificate verification.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
