@@ -10,7 +10,7 @@ export const metadata = {
   author: "kagent.dev"
 };
 
-# Local developmeent with kagent CLI
+# Local development with kagent CLI
 
 In this guide, you'll learn how to develop, build and run an AI agent locally using kagent CLI, without a Kubernetes cluster. This guide is meant for developers familiar with Python. You can also create declarative agents without writing a single line of code, by following the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
 
@@ -262,6 +262,52 @@ mcpserver.kagent.dev/server-everything   True    112s
 ```
 
 You can now test the deployed agent and the MCP server through kagent UI.
+
+## Using PostgreSQL for local development
+
+By default, kagent uses SQLite for local development. For most local development, SQLite is sufficient and simpler to set up. However, you can also use PostgreSQL for local development, which is useful if you want to test with the same database backend that you use in production.
+
+The following steps show how to set up PostgreSQL with `docker-compose`.
+
+1. Add PostgreSQL service to your `docker-compose.yaml`.
+
+   ```yaml
+   services:
+     postgres:
+       image: postgres:15-alpine
+       environment:
+         POSTGRES_USER: kagent
+         POSTGRES_PASSWORD: kagent
+         POSTGRES_DB: kagent
+       ports:
+         - "5432:5432"
+       volumes:
+         - postgres-data:/var/lib/postgresql/data
+   
+   volumes:
+     postgres-data:
+   ```
+
+2. Configure your agent to use PostgreSQL by setting the database URL environment variable.
+
+   * Using the `export` command:
+   
+   ```bash
+   export DATABASE_URL=postgres://kagent:kagent@localhost:5432/kagent
+   ```
+   
+   * Adding it to your `.env` file:
+
+   ```bash
+   echo "DATABASE_URL=postgres://kagent:kagent@localhost:5432/kagent" >> .env
+   ```
+
+3. Start PostgreSQL and your agent.
+
+   ```bash
+   docker-compose up -d postgres
+   kagent run
+   ```
 
 ## Troubleshooting
 

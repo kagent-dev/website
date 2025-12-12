@@ -1,0 +1,137 @@
+---
+title: "Operational considerations"
+pageOrder: 1
+description: "Important operational considerations when running kagent in production."
+---
+
+export const metadata = {
+  title: "Operational Considerations",
+  description: "Important operational considerations when running kagent in production.",
+  author: "kagent.dev"
+};
+
+# Operational considerations
+
+Review the following operational considerations when running kagent in production environments, including database configuration, high availability, and secret management.
+
+## Automatic agent restart on secret updates
+
+Kagent automatically restarts agents when you update the secrets that the agents reference. This restart ensures that agents pick up new API keys, TLS certificates, and other secret values without manual intervention.
+
+The following secret updates trigger automatic agent restarts:
+
+- **API keys**: Secrets referenced in `ModelConfig` resources (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
+- **TLS certificates**: Secrets referenced in `ModelConfig` TLS configuration (e.g., CA certificates)
+- **Environment variables**: Any secrets referenced via `secretKeyRef` in agent deployment specifications
+
+## Leader election when controller is scaled
+
+When you scale the kagent controller to multiple replicas for high availability, leader election is automatically enabled. This ensures that only one controller instance actively reconciles resources at a time, preventing conflicts and duplicate operations.
+
+### Leader election scenarios
+
+- **Single replica**: No leader election needed; the single controller instance handles all operations
+- **Multiple replicas**: Leader election is automatically enabled when `controller.replicas > 1`
+- **Active leader**: Only the elected leader performs reconciliation operations
+- **Standby replicas**: Other replicas remain ready but do not perform reconciliation until they become the leader
+
+### Enable high availability
+
+You can set the number of controller replicas to enable high availability.
+
+**Helm `--set` flag:**
+
+```bash
+helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set controller.replicas=3
+```
+
+**Helm values file:**
+
+```yaml
+controller:
+  replicas: 3
+```
+
+### More considerations for HA
+
+- **Database requirement**: When using multiple controller replicas, you must use PostgreSQL as the database backend. SQLite cannot be used with multiple replicas (see [SQLite database scaling limitation](#sqlite-database-scaling-limitation)).
+- **Leader election**: Leader election uses Kubernetes leases and is handled automatically.
+- **Failover**: If the leader fails, another replica automatically becomes the leader.
+
+## SQLite database scaling limitation
+
+SQLite is the default database for kagent and works well for single-replica controller deployments. However, SQLite cannot be used when scaling the controller to multiple replicas.
+
+SQLite is a file-based database that does not support concurrent writes from multiple processes. When you scale the controller to multiple replicas, each replica would try to access the same SQLite database file, causing conflicts and potential data corruption.
+
+If you try to scale the controller with SQLite enabled, you see an error during Helm installation or upgrade:
+
+```bash
+Error: cannot scale controller with SQLite database
+```
+
+### Use PostgreSQL for scaling
+
+To scale the controller to multiple replicas, you must configure PostgreSQL as the database backend. You can enable PostgreSQL by using the Helm `--set` flag or values file.
+
+**Helm `--set` flag:**
+
+```bash
+helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set database.type=postgres \
+  --set database.postgres.url=postgres://user:password@postgres-host:5432/kagent \
+  --set controller.replicas=3
+```
+
+**Helm values file:**
+
+```yaml
+database:
+  type: postgres
+  postgres:
+    url: postgres://user:password@postgres-host:5432/kagent
+
+controller:
+  replicas: 3
+```
+
+### Migrate from SQLite to PostgreSQL
+
+If you're currently using SQLite and want to scale the controller, consider the following steps.
+
+1. Backup your data as needed, such as by copying the SQLite database file to a backup location.
+
+   ```bash
+   kubectl exec -n kagent deployment/kagent-controller -c controller -- \
+     sqlite3 /var/lib/kagent/kagent.db .dump > backup.sql
+   ```
+
+2. Set up PostgreSQL by:
+   - Installing PostgreSQL in your cluster; or
+   - Using a managed PostgreSQL service.
+
+3. Update your Helm values to use PostgreSQL.
+   ```yaml
+   database:
+     type: postgres
+     postgres:
+       url: postgres://user:password@postgres-host:5432/kagent
+   ```
+
+4. Upgrade the Helm release.
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     -f values.yaml
+   ```
+
+5. Scale the controller.
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     -f values.yaml \
+     --set controller.replicas=3
+   ```
