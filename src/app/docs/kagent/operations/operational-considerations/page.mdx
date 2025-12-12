@@ -30,10 +30,10 @@ When you scale the kagent controller to multiple replicas for high availability,
 
 ### Leader election scenarios
 
-- **Single replica**: No leader election needed; the single controller instance handles all operations
-- **Multiple replicas**: Leader election is automatically enabled when `controller.replicas > 1`
-- **Active leader**: Only the elected leader performs reconciliation operations
-- **Standby replicas**: Other replicas remain ready but do not perform reconciliation until they become the leader
+- **Single replica**: No leader election needed; the single controller instance handles all operations.
+- **Multiple replicas**: Leader election is automatically enabled when `controller.replicas > 1`.
+- **Active leader**: Only the elected leader performs reconciliation operations.
+- **Standby replicas**: Other replicas remain ready but do not perform reconciliation until they become the leader.
 
 ### Enable high availability
 
@@ -64,7 +64,7 @@ controller:
 
 SQLite is the default database for kagent and works well for single-replica controller deployments. However, SQLite cannot be used when scaling the controller to multiple replicas.
 
-SQLite is a file-based database that does not support concurrent writes from multiple processes. When you scale the controller to multiple replicas, each replica would try to access the same SQLite database file, causing conflicts and potential data corruption.
+SQLite is a file-based database that does not support concurrent writes from multiple processes. When you scale the controller to multiple replicas, each replica tries to access the same SQLite database file, causing conflicts and potential data corruption.
 
 If you try to scale the controller with SQLite enabled, you see an error during Helm installation or upgrade:
 
@@ -93,7 +93,6 @@ database:
   type: postgres
   postgres:
     url: postgres://user:password@postgres-host:5432/kagent
-
 controller:
   replicas: 3
 ```

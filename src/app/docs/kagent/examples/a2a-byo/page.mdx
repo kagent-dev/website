@@ -251,7 +251,7 @@ Lifespan hooks initialize or clean up tasks when your BYO agent starts up or shu
 
 To use lifespan hooks in your ADK agent, create a lifespan function and pass it to `KAgentApp`.
 
-1. Create a lifespan function in your agent code, such as the following python example. The lifespan function is an async context manager that runs in either startup and shutdown code.
+1. Create a lifespan function in your agent code, such as the following python example. The lifespan function is an async context manager that runs in either startup or shutdown code.
    
    - **Startup code** (before `yield`): Executes when the agent container starts.
    
