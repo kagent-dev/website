@@ -240,3 +240,57 @@ You can use the A2A host CLI to invoke the agent. This CLI is part of the [A2A s
      "taskId": "59d2b071-04e9-4fef-a0dd-e925dd13cceb"
    }
    ```
+
+## More options
+
+Review more options that you might want to configure for your BYO ADK agents.
+
+### Lifespan hooks
+
+Lifespan hooks initialize or clean up tasks when your BYO agent starts up or shuts down. This feature is useful for tasks like connecting to external services, loading configuration, or cleaning up resources.
+
+To use lifespan hooks in your ADK agent, create a lifespan function and pass it to `KAgentApp`.
+
+1. Create a lifespan function in your agent code, such as the following python example. The lifespan function is an async context manager that runs in either startup or shutdown code.
+   
+   - **Startup code** (before `yield`): Executes when the agent container starts.
+   
+   - **Shutdown code** (after `yield`): Executes when the agent container stops.
+
+   ```python
+   # basic/lifespan.py
+   import logging
+   from contextlib import asynccontextmanager
+   from typing import Any
+
+   @asynccontextmanager
+   async def lifespan(app: Any):
+       # Startup: runs when the agent starts
+       logging.info("Lifespan: setup - initializing resources")
+       # Perform initialization tasks here
+       # For example: connect to databases, load configuration, etc.
+       
+       try:
+           yield  # Agent is running
+       finally:
+           # Shutdown: runs when the agent stops
+           logging.info("Lifespan: teardown - cleaning up resources")
+           # Perform cleanup tasks here
+           # For example: close connections, save state, etc.
+   ```
+
+2. Import and pass the lifespan to `KAgentApp`.
+
+   ```python
+   # main.py or similar
+   from kagent.adk import KAgentApp
+   from basic import agent, lifespan  # Import your agent and lifespan
+
+   app = KAgentApp(
+       root_agent=agent.root_agent,
+       agent_card=agent.agent_card,
+       kagent_url=os.getenv("KAGENT_URL", "http://kagent-controller.kagent.svc.cluster.local:8083"),
+       app_name="basic_agent",
+       lifespan=lifespan.lifespan  # Pass the lifespan function
+   )
+   ```

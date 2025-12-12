@@ -196,6 +196,11 @@
             "description": "Find solutions to common issues and troubleshooting tips for kagent."
           },
           {
+            "title": "Operational considerations",
+            "href": "/docs/kagent/operations/operational-considerations",
+            "description": "Important operational considerations when running kagent in production."
+          },
+          {
             "title": "Upgrade kagent",
             "href": "/docs/kagent/operations/upgrade",
             "description": "Learn how to upgrade kagent to the latest version."
