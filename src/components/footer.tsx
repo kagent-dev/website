@@ -124,7 +124,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   Contributing
                 </Link>
               </li>
