@@ -224,6 +224,16 @@ jobs:
             # (might be replaced by helm docs template in the future)
             sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
 
+            # Wrap the KMCP version placeholder in inline code so it shows literally in MDX
+            python - <<'PY'
+            from pathlib import Path
+            
+            path = Path("src/app/docs/kagent/resources/helm/temp.mdx")
+            text = path.read_text()
+            text = text.replace("${KMCP_VERSION}", "`" + "${KMCP_VERSION}" + "`")
+            path.write_text(text)
+            PY
+
             # Add frontmatter
             echo '---' > "src/app/docs/kagent/resources/helm/page.mdx"
             echo 'title: "Helm Chart Configuration"' >> "src/app/docs/kagent/resources/helm/page.mdx"
