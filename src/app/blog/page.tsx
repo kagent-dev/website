@@ -22,6 +22,14 @@ const posts = [
         authorId: "antweiss",
     },
     {
+        slug: "crewai-byo-agent",
+        publishDate: "2025-10-30",
+        title: "From CrewAI to KAgent: Deploying Your Custom AI Agents",
+        description:
+        "Learn how to take your existing CrewAI agents and deploy them as Bring-Your-Own (BYO) agents in KAgent.",
+        authorId: "jetchiang",
+    },
+    {
         slug: 'reactive-agents-khook',
         publishDate: '2025-09-09',
         title: "Truly Reactive Cloud Native AI Agents with Kagent and Khook",
@@ -55,6 +63,13 @@ const posts = [
         title: 'From MCP Servers to Services: Introducing kmcp for Enterprise-Grade MCP Development',
         description: 'Discover kmcp, the lightweight toolkit that takes MCP servers from prototype to production. Learn how to scaffold, build, and deploy enterprise-grade MCP services to Kubernetes in minutes—no Dockerfiles or complex manifests required. Includes demo video and complete getting started guide.',
         authorId: "christianposta",
+    },
+    {
+        slug: 'inside-kagent-oss-ent-ai-meshes',
+        publishDate: '2025-11-18',
+        title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
+        description: 'Learn how to architect open source and enterprise AI agent meshes for 2026.',
+        authorId: "michaellevan",
     }
 ]
 

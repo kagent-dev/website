@@ -35,3 +35,11 @@ MCP stands for [Model Context Protocol](https://modelcontextprotocol.io/introduc
 ## HTTP Tools
 
 HTTP tools are another way to bring external tools into kagent. Simply put, given a URL and a schema, kagent will send the user query to the URL and return the response. Kagent has the ability to discovery HTTP tools from services running in the cluster, assuming they are OpenAPI Compliant.
+
+## Build your own tools with kmcp
+
+A subproject of kagent, kmcp provides a powerful CLI tool with built-in boilerplates to speed up the local development of MCP servers and MCP tools. Then, you can use the kmcp control plane to quickly spin up and deploy your MCP servers in your cloud-native environment, such as Kubernetes.
+
+By default, kmcp is installed with kagent. If you already installed kmcp separately, you can set `kmcp.enabled=false` in your `values.yaml` file or `--set` commands for both the `kagent` and `kagent-crds` charts.
+
+Planning to use your kmcp resources later with kagent and agentgateway? Add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.

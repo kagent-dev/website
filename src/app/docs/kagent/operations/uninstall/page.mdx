@@ -1,0 +1,51 @@
+---
+title: "Uninstall kagent"
+pageOrder: 2
+description: "Learn how to uninstall kagent from your Kubernetes cluster."
+---
+
+export const metadata = {
+  title: "Uninstall kagent",
+  description: "Learn how to uninstall kagent from your Kubernetes cluster.",
+  author: "kagent.dev"
+};
+
+Remove kagent from your Kubernetes cluster using the kagent CLI or Helm.
+
+> **Warning**: Uninstalling kagent deletes all kagent resources across all namespaces in your cluster, including agents, tools, and configurations. This action cannot be undone.
+
+## Before you begin
+
+- Ensure that you have administrative access to your cluster.
+- Back up any agent configurations or data that you want to preserve.
+- Review any agents or tools that depend on kagent before uninstalling.
+
+## Uninstall with the kagent CLI
+
+Remove kagent by using the CLI. For more options, see the [`kagent uninstall` command reference](/docs/kagent/resources/cli/kagent-uninstall).
+
+```bash
+kagent uninstall
+```
+
+Example output:
+
+```console
+kagent uninstalled successfully
+```
+
+## Uninstall with Helm
+
+To uninstall kagent using Helm, remove the Helm releases in the correct order.
+
+1. Uninstall the kagent chart.
+
+   ```bash
+   helm uninstall kagent -n kagent
+   ```
+
+2. Remove all kagent CRDs and resources across your cluster.
+
+   ```bash
+   helm uninstall kagent-crds -n kagent
+   ```

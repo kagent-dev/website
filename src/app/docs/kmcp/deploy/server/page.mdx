@@ -19,7 +19,7 @@ Use the kmcp controller to automatically spin up your MCP server in a Kubernetes
 ## Prerequisites
 
 - Create a [FastMCP](/docs/kmcp/develop/fastmcp-python) or [MCP Go](/docs/kmcp/develop/mcp-go) project with a sample MCP server and tool. 
-- [Install the KMCP controller](/docs/kmcp/deploy/server) in a local kind cluster to manage the lifecycle of MCP servers in your cluster. 
+- [Install the KMCP controller](/docs/kmcp/deploy/install-controller) in a local kind cluster to manage the lifecycle of MCP servers in your cluster.
    
 ## Deploy the MCP server
 
@@ -91,15 +91,17 @@ Choose between using the kmcp CLI or creating the MCPServer resource yourself.
 
 ### Option 2: Build and deploy an MCP server 
 
-Learn how to use the kmcp CLI to build an image for your MCP server and to deploy the server to your Kubernetes cluster. 
+Learn how to use the kmcp CLI to build an image for your MCP server and to deploy the server to your Kubernetes cluster.
 The following example assumes that you created a [FastMCP](/docs/kmcp/develop/fastmcp-python) or [MCP Go](/docs/kmcp/develop/mcp-go) project with a sample MCP server and tool, and that your kind cluster is named `kind`.
 
-1. Build a Docker image for your MCP server and load it to your kind cluster. 
+1. Build a Docker image for your MCP server and load it to your kind cluster.
    ```sh
    kmcp build --project-dir my-mcp-server -t my-mcp-server:latest --kind-load-cluster kind
    ```
 
-2. Deploy your MCP server. Choose between the kmcp CLI or manually creating an MCPServer resource. 
+2. Deploy your MCP server. Choose between the kmcp CLI or manually creating an MCPServer resource.
+
+   > **Note**: Planning to use your kmcp resources later with kagent and agentgateway? Add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.
      
    <Tabs tabs={[
    { id: 'cli', label: 'kmcp CLI' },

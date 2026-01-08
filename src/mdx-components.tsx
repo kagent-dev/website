@@ -5,6 +5,7 @@ import { Tabs } from "./components/mdx/tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
 import { LabCTA } from "./components/mdx/lab-cta";
+import { Aside } from "./components/mdx/aside";
 import Image from "next/image";
 import { generateAnchorId } from "@/lib/utils";
 
@@ -130,7 +131,15 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           {children}
         </em>
       ),
-      code: ({ children, ...props }) => <CodeBlock {...props}>{children}</CodeBlock>,
+      code: ({ children, className = "", ...props }) => {
+        // Extract language from className if present
+        const language = className?.replace("language-", "") || "";
+        return (
+          <CodeBlock language={language} className={className} {...props}>
+            {children}
+          </CodeBlock>
+        );
+      },
       // Block elements
       blockquote: ({ children, ...props }) => <blockquote {...props}>{children}</blockquote>,
       hr: (props) => <hr className="my-8 border-muted" {...props} />,
@@ -171,6 +180,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       Tabs,
       YouTube,
       LabCTA,
+      Aside,
       ...components,
     }),
     [components]

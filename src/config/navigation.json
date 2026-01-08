@@ -27,7 +27,7 @@
           },
           {
             "title": "Contributing",
-            "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md",
+            "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md",
             "external": true
           }
         ]
@@ -51,6 +51,11 @@
             "title": "Your First MCP tool",
             "href": "/docs/kagent/getting-started/first-mcp-tool",
             "description": "Learn how to add an MCP (Model Context Protocol) tool to your kagent agent."
+          },
+          {
+            "title": "Local Development",
+            "href": "/docs/kagent/getting-started/local-development",
+            "description": "Build, test and run agents locally."
           },
           {
             "title": "Writing System Prompts",
@@ -77,7 +82,7 @@
           {
             "title": "Agents",
             "href": "/docs/kagent/concepts/agents",
-            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools."
+            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools, skills), and how they can even use other agents as tools."
           },
           {
             "title": "Tools",
@@ -92,6 +97,11 @@
         "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent.",
         "items": [
           {
+            "title": "Amazon Bedrock",
+            "href": "/docs/kagent/supported-providers/amazon-bedrock",
+            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
+          },
+          {
             "title": "Anthropic",
             "href": "/docs/kagent/supported-providers/anthropic",
             "description": "Learn how to configure Anthropic models for kagent."
@@ -102,14 +112,14 @@
             "description": "Learn how to configure Azure OpenAI models in kagent."
           },
           {
-            "title": "Google Vertex AI",
-            "href": "/docs/kagent/supported-providers/google-vertexai",
-            "description": "Learn how to configure Google Vertex AI models in kagent."
-          },
-          {
             "title": "Gemini",
             "href": "/docs/kagent/supported-providers/gemini",
             "description": "Learn how to configure Gemini models in kagent."
+          },
+          {
+            "title": "Google Vertex AI",
+            "href": "/docs/kagent/supported-providers/google-vertexai",
+            "description": "Learn how to configure Google Vertex AI models in kagent."
           },
           {
             "title": "Ollama",
@@ -120,11 +130,6 @@
             "title": "OpenAI",
             "href": "/docs/kagent/supported-providers/openai",
             "description": "Learn how to configure OpenAI models in kagent."
-          },
-          {
-            "title": "Amazon Bedrock",
-            "href": "/docs/kagent/supported-providers/amazon-bedrock",
-            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
           },
           {
             "title": "BYO OpenAI-compatible model",
@@ -172,18 +177,55 @@
             "title": "Discord and A2A",
             "href": "/docs/kagent/examples/discord-a2a",
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
+          },
+          {
+            "title": "Skills",
+            "href": "/docs/kagent/examples/skills",
+            "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
+          }
+        ]
+      },
+      {
+        "title": "Operations",
+        "href": "/docs/kagent/operations",
+        "description": "Manage your kagent installation with upgrade, uninstall, and operational tasks.",
+        "items": [
+          {
+            "title": "Debug kagent",
+            "href": "/docs/kagent/operations/debug",
+            "description": "Find solutions to common issues and troubleshooting tips for kagent."
+          },
+          {
+            "title": "Operational considerations",
+            "href": "/docs/kagent/operations/operational-considerations",
+            "description": "Important operational considerations when running kagent in production."
+          },
+          {
+            "title": "Upgrade kagent",
+            "href": "/docs/kagent/operations/upgrade",
+            "description": "Learn how to upgrade kagent to the latest version."
+          },
+          {
+            "title": "Uninstall kagent",
+            "href": "/docs/kagent/operations/uninstall",
+            "description": "Learn how to uninstall kagent from your Kubernetes cluster."
           }
         ]
       },
       {
         "title": "Resources",
         "href": "/docs/kagent/resources",
-        "description": "Find helpful resources, troubleshooting tips, and FAQs for kagent. Access guides, community links, and more.",
+        "description": "Find helpful resources and FAQs for kagent. Access guides, community links, and more.",
         "items": [
           {
             "title": "API docs",
             "href": "/docs/kagent/resources/api-ref",
             "description": "kagent API reference documentation"
+          },
+          {
+            "title": "CLI docs",
+            "href": "/docs/kagent/resources/cli",
+            "description": "Complete reference docs for the kagent CLI commands"
           },
           {
             "title": "Helm Chart Configuration",
@@ -199,11 +241,6 @@
             "title": "Release Notes",
             "href": "/docs/kagent/resources/release-notes",
             "description": "Review the release notes for kagent."
-          },
-          {
-            "title": "Troubleshooting",
-            "href": "/docs/kagent/resources/troubleshooting",
-            "description": "Find solutions to common issues and troubleshooting tips for kagent."
           }
         ]
       }
@@ -308,6 +345,16 @@
             "title": "kmcp secrets",
             "href": "/docs/kmcp/reference/kmcp-secrets",
             "description": "kmcp secrets command"
+          },
+          {
+            "title": "kmcp completion",
+            "href": "/docs/kmcp/reference/kmcp-completion",
+            "description": "kmcp completion command"
+          },
+          {
+            "title": "kmcp help",
+            "href": "/docs/kmcp/reference/kmcp-help",
+            "description": "kmcp help command"
           }
         ]
       }

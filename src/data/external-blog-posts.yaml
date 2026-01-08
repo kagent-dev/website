@@ -1,8 +1,8 @@
 # External blog posts displayed on the blog index alongside internal posts
 # Fields: title, description, publishDate (YYYY-MM-DD), url, author
 externalPosts:
-  - title: "KAgent: Open-Source Agentic AI Framework for Autonomous Systems"
-    description: "KAgent is an open-source framework for building autonomous AI agents that can make decisions and perform tasks with minimal human oversight. Donated by Solo.io, it enables developers to create intelligent systems for virtual assistance, data processing, and workflow automation by leveraging generative AI and external API integrations."
+  - title: "Kagent: Open-Source Agentic AI Framework for Autonomous Systems"
+    description: "Kagent is an open-source framework for building autonomous AI agents that can make decisions and perform tasks with minimal human oversight. Donated by Solo.io, it enables developers to create intelligent systems for virtual assistance, data processing, and workflow automation by leveraging generative AI and external API integrations."
     publishDate: "2025-05-19"
     url: "https://medium.com/@godhanipayal/kagent-open-source-agentic-ai-framework-for-autonomous-systems-cfde34a80742"
     author: "Payal Godhani"
