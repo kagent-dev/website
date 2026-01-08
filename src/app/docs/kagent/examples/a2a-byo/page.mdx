@@ -31,17 +31,18 @@ The following example builds a simple agent from the [kagent code repository](ht
    cd kagent
    ```
 
-2. Optional: If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
-
-3. Build the custom agent image and push it to your local Docker registry.
-
+2. Build the custom agent image and push it to your Docker registry. This example assumes that you want to push the image to the ghcr.io registry. 
    ```bash
    cd python/samples/adk/basic
-   docker build . -t localhost:5001/my-byo:latest \
-     --build-arg DOCKER_REGISTRY=localhost:5001 \
-     --build-arg VERSION=latest \
-     --push
+   docker build . -t ghcr.io/my-org:$latest \
+    --build-arg DOCKER_REGISTRY=ghcr.io \
+    --build-arg VERSION=latest \
+    --push
    ```
+
+   If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+Then, change `ghcr.io` to `localhost:5001`. 
+
 
 ## Creating a BYO Agent resource 
 
@@ -73,7 +74,7 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
      type: BYO
      byo:
        deployment:
-         image: localhost:5001/my-byo:latest
+         image: ghcr.io/my-org:latest
          env:
            - name: GOOGLE_API_KEY
              valueFrom:
