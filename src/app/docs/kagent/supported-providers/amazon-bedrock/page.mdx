@@ -1,0 +1,68 @@
+---
+title: "Amazon Bedrock"
+pageOrder: 1
+description: "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
+---
+
+export const metadata = {
+  title: "Amazon Bedrock",
+  description: "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API.",
+  author: "kagent.dev"
+};
+
+# Amazon Bedrock
+
+You can use Amazon Bedrock models with kagent by leveraging AWS Bedrock's [OpenAI Chat Completions API](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html).
+
+## Step 1: Prepare your AWS details
+
+1. Follow the [AWS Bedrock API keys guide](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html) to create the API key needed for authentication.
+
+2. Choose the AWS region and Bedrock model you want to use. Refer to the [AWS Bedrock supported models documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html).
+   - Example Regions: `us-west-2` or `us-east-1`
+   - Example model IDs: `amazon.titan-text-express-v1` or `openai.gpt-oss-20b-1:0`. Ensure your AWS account has access to the chosen model. Some models, like Anthropic models, may require additional access controls. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
+
+3. Save your AWS API key as an environment variable.
+
+   ```bash
+   export AWS_API_KEY=<your-aws-api-key>
+   ```
+
+4. Create a Kubernetes secret that stores your AWS API key in the same namespace as your agent, typically `kagent`.
+
+   ```bash
+   kubectl create secret generic kagent-bedrock -n kagent --from-literal AWS_API_KEY=$AWS_API_KEY
+   ```
+
+## Step 2: Create the ModelConfig
+
+1. Create a ModelConfig resource that uses the OpenAI-compatible API interface.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: ModelConfig
+   metadata:
+     name: bedrock-config
+     namespace: kagent
+   spec:
+     apiKeySecret: kagent-bedrock
+     apiKeySecretKey: AWS_API_KEY
+     model: amazon.titan-text-express-v1
+     provider: OpenAI
+     openAI:
+       baseUrl: "https://bedrock-runtime.us-west-2.amazonaws.com/openai/v1"
+   EOF
+   ```
+
+   | Setting | Description |
+   | --- | --- |
+   | `apiKeySecret` | The name of the Kubernetes secret storing your AWS API key. |
+   | `apiKeySecretKey` | The key in the secret that stores your AWS API key. |
+   | `model` | The Bedrock model ID to use, such as `amazon.titan-text-express-v1` or `openai.gpt-oss-20b-1:0`. |
+   | `provider` | Set to `OpenAI` to use the OpenAI-compatible API interface. |
+   | `openAI.baseUrl` | The Bedrock OpenAI-compatible endpoint URL for your chosen region. The `baseUrl` format is: `https://bedrock-runtime.<region>.amazonaws.com/openai/v1`. |
+
+## Next Steps
+
+ Now that you configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.

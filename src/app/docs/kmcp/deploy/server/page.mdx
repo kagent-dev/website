@@ -4,6 +4,8 @@ pageOrder: 20
 description:
 ---
 
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
 export const metadata = {
   title: "Deploy MCP servers",
   description: "Deploy MCP servers using kmcp",
@@ -17,63 +19,143 @@ Use the kmcp controller to automatically spin up your MCP server in a Kubernetes
 ## Prerequisites
 
 - Create a [FastMCP](/docs/kmcp/develop/fastmcp-python) or [MCP Go](/docs/kmcp/develop/mcp-go) project with a sample MCP server and tool. 
-- [Install the KMCP controller](/docs/kmcp/deploy/server) in a local kind cluster to manage the lifecycle of MCP servers in your cluster. 
+- [Install the KMCP controller](/docs/kmcp/deploy/install-controller) in a local kind cluster to manage the lifecycle of MCP servers in your cluster.
    
 ## Deploy the MCP server
 
-1. Build a Docker image for your MCP server and load it to your kind cluster. The following command assumes that your kind cluster is named `kind`.
+Learn how you can deploy an MCP server in a Kubernetes cluster. Choose between the following options: 
+
+* [Option 1: Deploy an MCP server with `npx` or `uvx`](#option-1-deploy-an-mcp-server-with-npx-or-uvx): Use an existing npm package to spin up an MCP server instance with `npx` or `uvx`.  
+* [Option 2: Build and deploy an MCP server](#option-2-build-and-deploy-an-mcp-server): Build a Docker image for your MCP server project. Then, load this image to your Kubernetes cluster and deploy an MCP server from it. 
+
+
+### Option 1: Deploy an MCP server with `npx` or `uvx` 
+
+Deploy an instance of the [`server-everything`](https://github.com/modelcontextprotocol/servers/tree/main/src/everything) MCP server by using the `npx` or `uvx` command. This server provides simple tools, such as an echo tool, that you can use for testing. 
+Choose between using the kmcp CLI or creating the MCPServer resource yourself. 
+  
+  <Tabs tabs={[
+  { id: 'cli2', label: 'kmcp CLI' },
+  { id: 'mcpserver2', label: 'MCPServer resource' }
+  ]} />
+  
+  <div id="cli2-tab">
+  
+  1. Deploy the MCP server. 
+     ```sh
+     kmcp deploy package --deployment-name my-mcp-server \
+     --manager npx --args @modelcontextprotocol/server-everything
+     ```
+  2. Verify that the MCP server is up and running. 
+     ```sh
+     kubectl get pods
+     ```
+   
+     Example output: 
+     ```sh
+     NAME                             READY   STATUS    RESTARTS   AGE
+     my-mcp-server-669bcb5d6f-zv5dn   1/1     Running   0          27h
+     ```
+  </div>
+  <div id="mcpserver2-tab">
+  1. Create the MCPServer resource.
+     ```yaml
+     kubectl apply -f- <<EOF  
+     apiVersion: kagent.dev/v1alpha1
+     kind: MCPServer
+     metadata:
+       name: my-mcp-server
+       namespace: default
+     spec:
+       deployment:
+         args:
+         - '@modelcontextprotocol/server-everything'
+         cmd: npx
+         port: 3000
+       stdioTransport: {}
+       transportType: stdio
+     EOF
+     ```
+
+  2. Verify that the MCP server is up and running. 
+     ```sh
+     kubectl get pods
+     ```
+   
+     Example output: 
+     ```sh
+     NAME                             READY   STATUS    RESTARTS   AGE
+     my-mcp-server-669bcb5d6f-zv5dn   1/1     Running   0          27h
+     ```
+  </div>
+
+### Option 2: Build and deploy an MCP server 
+
+Learn how to use the kmcp CLI to build an image for your MCP server and to deploy the server to your Kubernetes cluster.
+The following example assumes that you created a [FastMCP](/docs/kmcp/develop/fastmcp-python) or [MCP Go](/docs/kmcp/develop/mcp-go) project with a sample MCP server and tool, and that your kind cluster is named `kind`.
+
+1. Build a Docker image for your MCP server and load it to your kind cluster.
    ```sh
    kmcp build --project-dir my-mcp-server -t my-mcp-server:latest --kind-load-cluster kind
    ```
 
-2. Deploy your MCP server. Choose between the following options: 
-   
-   * **Option 1: Use the kmcp deploy command**
+2. Deploy your MCP server. Choose between the kmcp CLI or manually creating an MCPServer resource.
+
+   > **Note**: Planning to use your kmcp resources later with kagent and agentgateway? Add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.
      
+   <Tabs tabs={[
+   { id: 'cli', label: 'kmcp CLI' },
+   { id: 'mcpserver', label: 'MCPServer resource' }
+   ]} />
+     
+   <div id="cli-tab">
+   
      The `kmcp deploy` command automatically creates an MCPServer resource in your cluster that contains the MCP server configuration that is defined in the `kmcp.yaml` file in your MCP project. The kmcp controller then uses this resource to spin up and manage the lifecycle of your MCP server. After the MCP server is deployed, the command automatically starts the MCP inspector tool so that you can test your server. 
      
-     **Tip**: If you do not want to start the MCP inspector tool, add the `--no-inspector` flag to the command. 
+       **Tip**: If you do not want to start the MCP inspector tool, add the `--no-inspector` flag to the command. 
      
-     ```sh
-     kmcp deploy --file my-mcp-server/kmcp.yaml --image my-mcp-server:latest
-     ```
-   
-   * **Option 2: Create an MCPServer resource**
+       ```sh
+       kmcp deploy --file my-mcp-server/kmcp.yaml --image my-mcp-server:latest
+       ```
+       
+   </div>
+   <div id="mcpserver-tab">
    
      You can manually create an MCPServer resource yourself as shown in the following examples. 
    
-     * FastMCP example
-     ```yaml
-     kubectl apply -f- <<EOF
-     apiVersion: kagent.dev/v1alpha2
-     kind: MCPServer
-     metadata:
-       name: my-mcp-server
-     spec:
-       deployment:
-         image: "my-mcp-server:latest"
-         port: 3000
-         cmd: "python"
-         args: ["src/main.py"]
-       transportType: "stdio"
-     EOF
-     ```
+       * FastMCP example
+       ```yaml
+       kubectl apply -f- <<EOF
+       apiVersion: kagent.dev/v1alpha1
+       kind: MCPServer
+       metadata:
+         name: my-mcp-server
+       spec:
+         deployment:
+           image: "my-mcp-server:latest"
+           port: 3000
+           cmd: "python"
+           args: ["src/main.py"]
+         transportType: "stdio"
+       EOF
+       ```
    
-     * MCP Go example: 
-     ```yaml
-     kubectl apply -f- <<EOF
-     apiVersion: kagent.dev/v1alpha2
-     kind: MCPServer
-     metadata:
-       name: my-mcp-server
-     spec:
-       deployment:
-         image: "my-mcp-server:latest"
-         port: 3000
-         cmd: "./server"
-       transportType: "stdio"
-     EOF
-     ```
+       * MCP Go example: 
+       ```yaml
+       kubectl apply -f- <<EOF
+       apiVersion: kagent.dev/v1alpha1
+       kind: MCPServer
+       metadata:
+         name: my-mcp-server
+       spec:
+         deployment:
+           image: "my-mcp-server:latest"
+           port: 3000
+           cmd: "./server"
+         transportType: "stdio"
+       EOF
+       ```
+   </div>
 
 3. Verify that the MCP server is up and running. 
    ```sh
@@ -85,6 +167,7 @@ Use the kmcp controller to automatically spin up your MCP server in a Kubernetes
    NAME                             READY   STATUS    RESTARTS   AGE
    my-mcp-server-669bcb5d6f-zv5dn   1/1     Running   0          27h
    ```
+
 
 ## Test access to the MCP server
 

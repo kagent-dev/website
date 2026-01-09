@@ -1,0 +1,59 @@
+---
+title: "kagent add-mcp"
+pageOrder: 10
+description: "kagent add-mcp command"
+---
+
+# `kagent add-mcp`
+
+Add an MCP server entry to `kagent.yaml`.
+
+```bash
+kagent add-mcp [name] [args...] [flags]
+```
+
+**Arguments:**
+- `name` - Name of the MCP server
+- `args` - Command arguments (optional)
+
+**Flags:**
+- `--arg` - Command argument (repeatable)
+- `--build` - Construct image specification (e.g., `docker build`)
+- `--command` - Command to run MCP server (e.g., `npx`, `uvx`, `kmcp`)
+- `--env` - Environment variable in KEY=VALUE format (repeatable)
+- `--header` - HTTP header for remote MCP in KEY=VALUE format (repeatable, supports `${VAR}` for env vars)
+- `--image` - Container image (optional; mutually exclusive with `--build`)
+- `--project-dir` - Project directory (default: current directory)
+- `--remote` - Remote MCP server URL (`http://` or `https://`)
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent add-mcp`
+
+Adds an MCP server entry to your `kagent.yaml` file. Use flags for non-interactive setup or run without flags to open the wizard.
+
+## Example
+
+Add a remote MCP server:
+
+```bash
+kagent add-mcp my-mcp-server --remote https://mcp.example.com
+```
+
+Add an MCP server with a command:
+
+```bash
+kagent add-mcp my-mcp-server --command npx --arg @modelcontextprotocol/server-filesystem
+```
+
+Add an MCP server with custom environment variables:
+
+```bash
+kagent add-mcp my-mcp-server --command my-server --env API_KEY=secret --env LOG_LEVEL=debug
+```
+

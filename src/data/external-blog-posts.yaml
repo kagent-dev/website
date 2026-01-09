@@ -1,0 +1,21 @@
+# External blog posts displayed on the blog index alongside internal posts
+# Fields: title, description, publishDate (YYYY-MM-DD), url, author
+externalPosts:
+  - title: "Kagent: Open-Source Agentic AI Framework for Autonomous Systems"
+    description: "Kagent is an open-source framework for building autonomous AI agents that can make decisions and perform tasks with minimal human oversight. Donated by Solo.io, it enables developers to create intelligent systems for virtual assistance, data processing, and workflow automation by leveraging generative AI and external API integrations."
+    publishDate: "2025-05-19"
+    url: "https://medium.com/@godhanipayal/kagent-open-source-agentic-ai-framework-for-autonomous-systems-cfde34a80742"
+    author: "Payal Godhani"
+  - title: "An Introduction to Kagent: The Open-Source Framework for AI Agents on Kubernetes"
+    description: "The article talks about how kagent democratizes cloud-native expertise by packaging expert knowledge into AI agents that can troubleshoot, diagnose, and automatically fix Kubernetes issues, demonstrated through a real-world example where an agent identified and resolved a misconfigured service routing problem by creating a GitHub pull request."
+    publishDate: "2025-08-15"
+    url: "https://www.platformers.community/post/an-introduction-to-kagent-the-open-source-framework-for-ai-agents-on-kubernetes"
+    author: "Guy Menahem"
+  - title: "Exploring Argocd’s New Mcp Server With Kagent"
+    description: "This technical walkthrough demonstrates how to integrate ArgoCD's new MCP (Model Context Protocol) Server with kagent, an AI agent framework for Kubernetes. The author shows step-by-step how to deploy kagent via ArgoCD, configure it with OpenAI integration, add ArgoCD's MCP server as a tool, and create an AI agent that can directly query and interact with ArgoCD applications - showcasing the potential for intelligent Kubernetes operations through AI-powered automation."
+    publishDate: "2025-05-08"
+    url: "https://chrismatcham.dev/Exploring-ArgoCD-s-New-MCP-Server-with-Kagent/"
+    author: "Chris Matcham"
+
+
+

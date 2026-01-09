@@ -12,41 +12,53 @@ export const metadata = {
 
 # Installing kagent
 
-This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart).
+This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterpise offerings, check out [Solo Enterprise for kagent](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
 
 ## Installation Methods
 
+Install kagent by using the kagent CLI or Helm.
+
+> **Note**: As of [version 0.7](/docs/kagent/resources/release-notes#kmcp-installed-by-default), the kmcp subproject is included by default with kagent. To use an existing kmcp installation that you already set up separately, set `kmcp.enabled=false` in your `values.yaml` file or `--set` commands for both the `kagent` and `kagent-crds` charts.
+
 ### Using kagent CLI (Recommended)
 
-1. Set the OpenAI API key as an environment variable:
+1. Set the OpenAI API key as an environment variable.
 
    ```bash
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. Download the kagent CLI:
+2. Download the kagent CLI.
 
    ```bash
-   # Download/run the install script
+   brew install kagent
+   ```
+
+   or 
+
+   ```bash
    curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
    ```
 
-3. Install the kmcp CRDs so that you can create MCP servers.
-
-   ```sh
-   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
-     --namespace kmcp-system \
-     --create-namespace
-   ```
-
-4. Install kagent to the cluster by using the CLI.
+3. Install kagent to the cluster by using the CLI. The following command installs a demo profile with agents and MCP tools preloaded for you. If you don't want these default agents, include the `--profile minimal` flag.
 
    ```bash
-   kagent install
+   kagent install --profile demo
    ```
    
    ```console
    kagent installed successfully
+   ```
+
+4. Optionally: Open the kagent dashboard.
+   ```bash
+   kagent dashboard
+   ```
+
+   Example output: 
+   ```console
+   kagent dashboard is available at http://localhost:8082
+   Press Enter to stop the port-forward...
    ```
 
 ### Using Helm
@@ -57,19 +69,16 @@ Another way to install kagent is using Helm.
 1. Install the kagent Helm chart with CRDs.
 
    ```bash
-   helm install kagent-crds oci://ghcr.io/kagent-dev/   kagent/helm/kagent-crds \
+   helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
        --namespace kagent \
        --create-namespace
    ```
 
-2. Install the kmcp CRDs so that you can create MCP servers.
+2. Optionally prepare a Helm values file or `--set` flags to use for your installation. For example, you might set up your default LLM provider, or configure resource requests and limits or disable the default agents. For options, refer to the [Helm reference docs](/docs/kagent/resources/helm).
 
-   ```sh
-   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
-     --namespace kmcp-system \
-     --create-namespace
-   ```
+<LLMProviderTabs/>
 
+<div id="openai-tab">
 3. Set the `OPENAI_API_KEY` environment variable:
 
    ```bash
@@ -81,36 +90,183 @@ Another way to install kagent is using Helm.
    ```bash
    helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
        --namespace kagent \
+       --set providers.default=openAI \
        --set providers.openAI.apiKey=$OPENAI_API_KEY
    ```
 
+5. Optionally: Port-forward the kagent UI on port 8080. 
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-ui 8080:8080
+   ```
+
+6. Open the [kagent UI](http://localhost:8080). 
+</div>
+
+<div id="anthropic-tab">
+3. Set the `ANTHROPIC_API_KEY` environment variable:
+
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   ```
+
+4. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=anthropic \
+       --set providers.anthropic.apiKey=$ANTHROPIC_API_KEY
+   ```
+
+5. Optionally: Port-forward the kagent UI on port 8080. 
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-ui 8080:8080
+   ```
+
+6. Open the [kagent UI](http://localhost:8080). 
+</div>
+
+<div id="azure-tab">
+3. Set the `OPENAI_API_KEY` environment variable:
+
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+4. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=azureOpenAI \
+       --set providers.azureOpenAI.apiKey=$OPENAI_API_KEY
+   ```
+
+5. Optionally: Port-forward the kagent UI on port 8080. 
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-ui 8080:8080
+   ```
+
+6. Open the [kagent UI](http://localhost:8080). 
+
+</div>
+
+<div id="gemini-tab">
+3. Set the `GEMINI_API_KEY` environment variable:
+
+   ```bash
+   export GEMINI_API_KEY="your-api-key-here"
+   ```
+
+4. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=gemini \
+       --set providers.gemini.apiKey=$GEMINI_API_KEY
+   ```
+
+5. Optionally: Port-forward the kagent UI on port 8080. 
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-ui 8080:8080
+   ```
+
+6. Open the [kagent UI](http://localhost:8080). 
+</div>
+
+<div id="ollama-tab">
+
+3. Install the kagent Helm chart:
+
+   ```bash
+   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+       --namespace kagent \
+       --set providers.default=ollama
+   ```
+
+4. Optionally: Port-forward the kagent UI on port 8080. 
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-ui 8080:8080
+   ```
+
+5. Open the [kagent UI](http://localhost:8080). 
+</div>
+
+## Advanced Configuration
+
+Review the following advanced configuration options that you might want to set up for your kagent installation.
+
+### Configure controller environment variables
+
+You can configure the controller by using environment variables for settings such as service names, connection details, and more.
+
+#### Configure the controller service name
+
+By default, kagent uses `kagent-controller` as the controller service name when constructing URLs for agent deployments. If you need to customize this name, set the `KAGENT_CONTROLLER_NAME` environment variable on the controller pod.
+
+**Helm `--set` flag:**
+
+```bash
+helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+    --namespace kagent \
+    --set controller.env[0].name=KAGENT_CONTROLLER_NAME \
+    --set controller.env[0].value=my-kagent
+```
+
+**Helm values file:**
+
+```yaml
+controller:
+  env:
+    - name: KAGENT_CONTROLLER_NAME
+      value: my-kagent
+```
+
+#### More environment variables
+
+You can add custom environment variables to the controller by using the `controller.env` field.
+
+**Helm `--set` flag:**
+
+```bash
+helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+    --namespace kagent \
+    --set controller.env[0].name=KAGENT_CONTROLLER_NAME \
+    --set controller.env[0].value=my-kagent \
+    --set controller.env[1].name=LOG_LEVEL \
+    --set controller.env[1].value=debug
+```
+
+**Helm values file:**
+
+```yaml
+controller:
+  env:
+    - name: KAGENT_CONTROLLER_NAME
+      value: my-kagent
+    - name: LOG_LEVEL
+      value: debug
+    - name: CUSTOM_VAR
+      value: custom-value
+```
+
+#### Using secrets for environment variables
+
+You can also reference Kubernetes secrets for environment variables by using the `envFrom` field in Helm.
+
+```yaml
+controller:
+  envFrom:
+    - secretRef:
+        name: controller-secrets
+```
+
+This example loads all key-value pairs from the `controller-secrets` secret as environment variables in the controller pod.
+
 ## Uninstallation
 
-To remove kagent from your cluster:
-
-```bash
-$ kagent uninstall
-```
-
-```console
-kagent uninstalled successfully
-```
-
-Or, if you used Helm:
-
-1. Uninstall kagent chart:
-
-```bash
-helm uninstall kagent -n kagent
-```
-
-2. Optionally, remove all kagent CRDs and resources:
-
-```bash
-helm uninstall kagent-crds -n kagent
-```
-
->Note that uninstalling the `kagent-crds` chart deletes all kagent resources across all namespaces.
+Refer to the [Uninstall](/docs/kagent/operations/uninstall) guide.
 
 ## Next Steps
 

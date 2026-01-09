@@ -29,3 +29,7 @@ adopters:
     logo_dark: "/images/adopters/codewizard.png"
     logo_light: "/images/adopters/codewizard.png"
     website: "https://codewizard.co.il/"
+  - name: "CloudRaft"
+    logo_dark: "/images/adopters/cloudraft.svg"
+    logo_light: "/images/adopters/cloudraft.svg"
+    website: "https://www.cloudraft.io/"

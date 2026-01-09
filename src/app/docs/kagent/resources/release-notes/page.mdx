@@ -1,6 +1,6 @@
 ---
 title: "Release Notes"
-pageOrder: 3
+pageOrder: 5
 description: "Review the release notes for kagent."
 ---
 
@@ -15,6 +15,65 @@ export const metadata = {
 # Release Notes
 
 The kagent documentation shows information only for the latest release. If you run an older version, review the release notes to understand the main changes from version to version.
+
+For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
+
+# v0.7
+
+Review the main changes from kagent version 0.6 to v0.7, then continue reading for more detailed information.
+
+* kmcp is installed by default when you install kagent
+* New feature to develop agents locally without a Kubernetes cluster
+* New `kgateway.dev/discovery` label
+* Installation profiles
+
+## kmcp installed by default
+
+Now, kmcp is installed automatically with kagent, so you can use kmcp functionality out of the box.
+
+This change is enabled by the new default values of `kmcp.enabled=true` in both the `kagent` and `kagent-crds` Helm charts.
+
+### Existing kmcp installations
+
+If you already have kmcp installed separately, upgrade your existing Helm releases with the `kmcp.enabled=false` flag set for both the kagent and kagent-crds charts.
+
+Example commands:
+
+`kagent-crds` Helm release:
+
+```bash
+helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+`kagent` Helm release:
+
+```bash
+helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+## Local agent development
+
+Develop and test agents locally on your machine without needing a Kubernetes cluster. As part of this feature, the `kagent` CLI includes new commands to scaffold, build, run, and deploy agents.
+
+For more information, see the [local development](/docs/kagent/getting-started/local-development) guide.
+
+## Discovery label
+
+Now, you can add a discovery label to MCPServer kmcp resources. By default, discovery is enabled.
+
+If you plan to use your kmcp resources later with kagent and agentgateway, add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.
+
+## Installation profiles
+
+By default, kagent installs a `demo` profile with agents and MCP tools preloaded for you. If you don't want these default agents, you can disable them with the `minimal` profile. 
+
+For the CLI: `kagent install --profile minimal`
+
+For Helm installations: Individually disable the default agents with Helm values or `--set` flags, such as `--set agents.argo-rollouts-agent.enabled=false`. You can also use Helm to update the resource limits and requests for each agent.
 
 # v0.6
 
@@ -34,34 +93,21 @@ The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
 
 ## New! Helm chart for kmcp CRDs
 
-Previously, the kagent installation included only one CRD Helm chart. Now, you install two CRD Helm charts: one for kagent CRDs and one for kmcp CRDs.
+Previously, the kagent installation included only one CRD Helm chart. As of v0.6.3, the MCPServer CRD is part of a separate kmcp Helm subchart. This kmcp subchart is installed for you when you install the kagent CRD Helm chart.
 
-<Tabs tabs={[
-  { id: 'kagent', label: 'kagent CRD Helm chart' },
-  { id: 'kmcp', label: 'kmcp CRD Helm chart' }
-]} />
+1. If you installed the separate kmcp CRD Helm in earlier versions of v0.6, uninstall the Helm chart.
 
-<div id="kagent-tab">
-  kagent CRD Helm chart location (no change): `oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds`
+   ```shell
+   helm uninstall kmcp-crds -n kagent
+   ```
 
-  Example installation command:
-  ```shell
-  helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
-    --namespace kagent \
-    --create-namespace
-  ```
-</div>
+2. Install the kagent CRD Helm chart that includes the kmcp subchart.
 
-<div id="kmcp-tab">
-  kmcp CRD Helm chart location: `oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds`
-
-  Example installation command:
-  ```shell
-  helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
-    --namespace kmcp-system \
-    --create-namespace
-  ```
-</div>
+   ```shell
+   helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --namespace kagent \
+     --create-namespace
+   ```
 
 ## General changes
 
@@ -120,17 +166,8 @@ Flip through the following tabs to understand the API differences between the ol
 <div id="kmcp-tab">
   kmcp example:
   * The kagent MCPServer includes the Grafana deployment details, with `stdio` as the transport type.
-  * The Grafana API key is loaded separately in a Secret, which is more secure.
   ```yaml
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: grafana-api-key
-  type: Opaque
-  data:
-    GRAFANA_API_KEY: my-base-64-ikey
-  ---
-  apiVersion: kagent.dev/v1alpha2
+  apiVersion: kagent.dev/v1alpha1
   kind: MCPServer
   metadata:
     name: grafana
@@ -147,6 +184,16 @@ Flip through the following tabs to understand the API differences between the ol
       secretRefs:
         - name: grafana-api-key
     transportType: "stdio"
+  ```  
+  * The Grafana API key is stored separately in a Secret, which is more secure.
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: grafana-api-key
+  type: Opaque
+  data:
+    GRAFANA_API_KEY: my-base-64-ikey
   ```
 </div>
 
@@ -176,7 +223,7 @@ ToolServer resources that used `type: streamableHttp` are now configured as Remo
         url: "http://kagent-tools.kagent:8084/mcp"
         timeout: 30s
         sseReadTimeout: 5m0s
-    description: "Official KAgent tool server"
+    description: "Official kagent tool server"
   ```
 </div>
 
@@ -191,7 +238,7 @@ ToolServer resources that used `type: streamableHttp` are now configured as Remo
     url: "http://kagent-tools.kagent:8084/mcp"
     timeout: 30s
     sseReadTimeout: 5m0s
-    description: "Official KAgent tool server"
+    description: "Official kagent tool server"
   ```
 </div>
 
@@ -252,7 +299,7 @@ metadata:
   labels:
     kagent.dev/mcp-service: "true"
   annotations:
-    kagent.dev:mcp-service-path: /sse
+    kagent.dev/mcp-service-path: /sse
     kagent.dev/mcp-service-port: 8080
     kagent.dev/mcp-service-protocol: SSE
   name: kagent-querydoc
@@ -322,7 +369,7 @@ Here are the 2 api defs:
 
 ### Top-level field for Agent APIs
 
-A new top-level `type` field is added to the Agents API. For existing Agents, set the `type` to `Inline`, and then nest the previous Agent configuration under the `inline` setting.
+A new top-level `type` field is added to the Agents API. For existing Agents, set the `type` to `Declarative`, and then nest the previous Agent configuration inline under the `declarative` setting.
 
 This change supports the new type for BYO agents.
 
@@ -407,6 +454,12 @@ spec:
 ## ModelConfig API
 
 The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.
+
+### ModelInfo removed
+
+The `modelInfo` setting is removed from the ModelConfig API. 
+
+Supported LLM providers are pre-configured by the [kagent-dev/autogen project fork](https://github.com/kagent-dev/autogen/tree/main/python/packages/autogen-ext/src/autogen_ext/models) for you by default. Trying to override these default settings, such as to enable vision for image recognition, could cause unexpected behavior in models that do not support these settings. Therefore, the `modelInfo` field is removed.
 
 ## Memory API
 

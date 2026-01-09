@@ -1,6 +1,6 @@
 ---
 title: "Writing System Prompts"
-pageOrder: 4
+pageOrder: 5
 description: "Learn the art and science of writing effective system prompts for your kagent agents."
 ---
 
@@ -89,9 +89,9 @@ This will work with any resource yaml manifest, or link to a file containing the
 It will also work with individual resource names, or a list of resource names.
 ```
 
-Ok, now we have a much better prompt. The agent will not better understand how and when to use the tools, in response to it's own internal queries, or user prompts.
+Ok, now we have a much better prompt. The agent will now better understand how and when to use the tools, in response to it's own internal queries, or user prompts.
 
-We can still do better. One major thing that was left out of the above prompt is the agent's behavior. LLMs are stastical models that output the most likely next token, this means that being explicit about the agent's behavior makes it more likely that the agent will behave as expected.
+We can still do better. One major thing that was left out of the above prompt is the agent's behavior. LLMs are statistical models that output the most likely next token, this means that being explicit about the agent's behavior makes it more likely that the agent will behave as expected.
 
 Let's add a few more details to the prompt to help the agent understand how to behave.
 
@@ -160,6 +160,40 @@ It will also work with individual resource names, or a list of resource names.
 Notice how much information we've added to the prompt. We've added a detailed operational protocol, and safety guidelines. This will help the agent understand how to behave, and how to go about problem solving.
 
 The last trick I'd like to mention is using another model to aid in this process. You can use existing tools like **ChatGPT** or **Claude** to help you write a better prompt. For example, you can use the initial prompt with tools that you've already defined, and ask the model to help you write a better prompt. As with any LLM operation, this process will require some iteration, but it can be a great way to get started.
+
+## Using ConfigMap and Secrets to store prompts
+
+If you wish to reuse prompts across multiple agents or decouple the prompt from the agent definition, you can use a `ConfigMap` or `Secret` to store the prompt. An example is shown below:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-agent-config
+  namespace: kagent
+data:
+  system-message: "You are an expert Kubernetes agent that uses tools to help users."
+```
+
+When creating the agent, you can reference the ConfigMap or Secret that contains the prompt. Note that `systemMessageFrom` (reference) and `systemMessage` (inline) are mutually exclusive, and you can only use one of them.
+
+```yaml
+...
+    declarative:
+      systemMessageFrom:
+        type: ConfigMap
+        name: my-agent-config
+        key: system-message
+```
+
+```yaml
+...
+  declarative:
+    systemMessageFrom:
+      type: Secret
+      name: my-agent-secret
+      key: system-message
+```
 
 ## Reference
 

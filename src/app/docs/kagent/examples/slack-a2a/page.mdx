@@ -99,6 +99,7 @@ Armed with two tokens, we can now go and write some code! We'll be using Bolt fo
 
 ```shell
 git clone https://github.com/kagent-dev/a2a-slack-template.git
+cd a2a-slack-template
 ```
 
 2. Copy the `.env.example` file to `.env`:
@@ -143,7 +144,7 @@ If you go to the Slack channel where you installed the app, you should see the b
 
 ## Deploying an agent
 
-Before deploying an agent, make sure you have installed kagent in your cluster. If you haven't, you can install it by following the instructions [here](https://kagent.dev/docs/kagent/getting-started/quickstart).
+Before deploying an agent, make sure you have installed kagent in your cluster. If you haven't, you can install it by following the instructions [here](https://kagent.dev/docs/kagent/getting-started/quickstart). Make sure that you also install the `kmcp` CRDs as shown in that guide so that you can create an MCPServer.
 
 Next, we'll deploy a sample agent to the cluster that will be exposed through the A2A protocol and then we'll be able to call it from the Slack bot. The agent is a simple Kubernetes agent that has access to a couple of tools and is configured to answer questions about Kubernetes.
 
@@ -187,12 +188,12 @@ spec:
 EOF
 ```
 
-We're using the builtin tools here, however, you can also deploy a ToolServer resource and use tools from any MCP server.
+We're using the builtin tools here. However, you can also use `kmcp` to create your own MCPServer resource to use your own tools.
 
-To access the agent through A2A, we'll need to port-forward the kagent service to our local machine:
+To access the agent through A2A, we'll need to port-forward the kagent controller service to our local machine:
 
 ```shell
-kubectl port-forward -n kagent svc/kagent-service 8083:8083
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083
 ```
 
 (Note: This command needs to be kept running in a separate terminal window for the duration you need to access the agent locally.)
@@ -250,10 +251,12 @@ In the `invoke_a2a_agent` function in the `handler.py` file, we already have a w
 Open the `.env` file and set the `KAGENT_A2A_URL` environment variable to the agent's A2A URL:
 
 ```shell
-KAGENT_A2A_URL=http://127.0.0.1:8083/api/a2a/kagent/my-k8s-agent
+KAGENT_A2A_URL=http://127.0.0.1:8083/api/a2a/kagent/my-k8s-agent/
 ```
 
-Now restart the bot with `uv run main.py` and try the `/mykagent` command in Slack. For example, you can ask the agent to list the pods in the cluster:
+Now restart the bot with `uv run main.py`.
+
+In Slack, add the kagent app to your channel. Then, try the `/mykagent` command to chat with the agent in the channel. For example, you can ask the agent to list the pods in the cluster:
 
 ```console
 /mykagent show me the pods in the cluster
@@ -267,7 +270,7 @@ You can try asking other questions and the agent will use the tools to answer yo
 
 ## Sending messages to Slack from kagent
 
-Let's see how we can do the reverse - sending messages to Slack from kagent. We'll use an existing [Slack MCP server](https://github.com/modelcontextprotocol/servers/blob/main/src/slack/README.md) that will allow us to send messages to Slack channels.
+Let's see how we can do the reverse - sending messages to Slack from kagent. We'll use an existing [Slack MCP server](https://github.com/modelcontextprotocol/servers/blob/2025.5.12/src/slack/README.md) that will allow us to send messages to Slack channels.
 
 Before we configure the MCP server, you'll need to gather the following information:
 
@@ -286,13 +289,20 @@ export SLACK_TEAM_ID="your_slack_team_id"
 export SLACK_CHANNEL_IDS="your_slack_channel_id"
 ```
 
-**Important:** These `export` commands set environment variables only for the current terminal session. Ensure you run the `kubectl apply` command below in the **same terminal session** where you ran the exports. For production or more robust setups, consider using Kubernetes Secrets to manage these values.
+Create a Kubernetes secret with the Slack credentials:
+
+```shell
+kubectl create secret generic slack-credentials -n kagent \
+  --from-literal=SLACK_BOT_TOKEN="$SLACK_BOT_TOKEN" \
+  --from-literal=SLACK_TEAM_ID="$SLACK_TEAM_ID" \
+  --from-literal=SLACK_CHANNEL_IDS="$SLACK_CHANNEL_IDS"
+```
 
 Now we can deploy the MCP server:
 
 ```shell
 kubectl apply -f- <<EOF
-apiVersion: kagent.dev/v1alpha2
+apiVersion: kagent.dev/v1alpha1
 kind: MCPServer
 metadata:
   name: slack-mcp
@@ -305,10 +315,8 @@ spec:
     args:
     - -y
     - '@modelcontextprotocol/server-slack'
-    env:
-      SLACK_BOT_TOKEN: $SLACK_BOT_TOKEN
-      SLACK_TEAM_ID: $SLACK_TEAM_ID
-      SLACK_CHANNEL_IDS: $SLACK_CHANNEL_IDS
+    secretRefs:
+    - name: slack-credentials
   transportType: "stdio"
 EOF
 ```
@@ -350,13 +358,13 @@ spec:
           - k8s_get_resource_yaml
           - k8s_get_cluster_configuration
           - k8s_get_pod_logs
-    # Adding the MCP server and the tool
-    - mcpServer:
-        toolNames:
-        - send_message_to_slack
-        name: slack-mcp
-        kind: MCPServer
-      type: McpServer
+      # Adding the MCP server and the tool
+      - type: McpServer
+        mcpServer:
+          toolNames:
+          - send_message_to_slack
+          name: slack-mcp
+          kind: MCPServer     
 EOF
 ```
 
