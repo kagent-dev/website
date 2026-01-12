@@ -27,7 +27,7 @@ Kagent supports logging input/output messages for the following LLM providers:
 
 ## Before you begin
 
-1. Install kagent in your cluster.
+1. [Install kagent](/docs/kagent/introduction/installation) in your cluster.
 
 2. Add the OpenTelemetry Helm repository.
 
@@ -131,12 +131,21 @@ Kagent supports logging input/output messages for the following LLM providers:
 
 For production environments, use an OpenTelemetry collector as an intermediary between kagent and your logging backend. The collector provides more control over what metadata and content you send to your logging systems.
 
-1. Create a Helm values file for the OpenTelemetry collector with an OTLP receiver for logs and an OTLP exporter that you can point to your logging backend. Replace `<your-logging-backend-endpoint>` with the endpoint of your logging backend. For example:
-   - Grafana Loki in the same cluster: `http://loki.telemetry.svc.cluster.local:3100`
-   - Datadog: `https://api.datadoghq.com`
-   - A custom OTLP endpoint: `https://your-otel-endpoint.com:4317`
+1. Create a Helm values file for the OpenTelemetry collector with the following configuration.
 
-   ```bash
+   - **Debug exporter** to view detailed logs for testing and verification purposes.
+   - **Logging OTLP receiver, exporter, and pipeline** that you can point to your logging backend. Replace `<your-logging-backend-endpoint>` with the endpoint of your logging backend. For example:
+     - Grafana Loki in the same cluster: `http://loki.telemetry.svc.cluster.local:3100`
+     - Datadog: `https://api.datadoghq.com`
+     - A custom OTLP endpoint: `https://your-otel-endpoint.com:4317`
+
+   - **Tracing OTLP receiver, exporter, and pipeline** that you can point to your tracing backend. Replace `<your-tracing-backend-endpoint>` with the endpoint of your tracing backend. For example:
+     - Tempo in the same cluster: `http://tempo.telemetry.svc.cluster.local:4317`
+     - Jaeger: `http://jaeger.telemetry.svc.cluster.local:6831`
+     - Zipkin: `http://zipkin.telemetry.svc.cluster.local:9411`
+     - A custom OTLP endpoint: `https://your-otel-endpoint.com:4317`
+
+   ```yaml
    cat > otel-collector-audit.yaml <<EOF
    mode: deployment
    
@@ -156,36 +165,33 @@ For production environments, use an OpenTelemetry collector as an intermediary b
        batch:
          timeout: 10s
          send_batch_size: 1024
-       # Optional: Add k8sattributes processor to enrich logs with Kubernetes metadata
-       # k8sattributes:
-       #   auth_type: serviceAccount
-       #   passthrough: false
-       #   extract:
-       #     metadata:
-       #       - k8s.pod.name
-       #       - k8s.pod.uid
-       #       - k8s.namespace.name
-       #       - k8s.node.name
-       #       - k8s.pod.start_time
-       #   pod_association:
-       #     - from: resource_attribute
-       #       name: k8s.pod.ip
    
      exporters:
-       otlp/logs:
-         endpoint: <your-logging-backend-endpoint>
+       
+       debug:
+         verbosity: detailed
+
+       otlphttp:
+         endpoint: "http://loki.telemetry.svc.cluster.local:3100/otlp"
          tls:
-           insecure: false
-         # If your backend requires authentication, uncomment and configure:
-         # headers:
-         #   Authorization: "Bearer <your-token>"
+           insecure: true
+   
+       otlp/tempo:
+         endpoint: "http://tempo.telemetry.svc.cluster.local:4317"
+         tls:
+           insecure: true
    
      service:
        pipelines:
          logs:
            receivers: [otlp]
            processors: [batch]
-           exporters: [otlp/logs]
+           exporters: [debug, otlphttp]
+   
+         traces:
+           receivers: [otlp]
+           processors: [batch]
+           exporters: [otlp/tempo]
    EOF
    ```
 
@@ -221,27 +227,29 @@ After the OpenTelemetry collector is running, configure kagent to send logs.
    helm get values kagent -n kagent -o yaml > values.yaml
    ```
 
-2. Update the Helm values file to including the following endpoints.
-
-   - Replace the logging endpoint with your logging backend, such as `http://loki.telemetry.svc.cluster.local:3100`.
-   - Replace the tracing endpoint with your tracing backend, such as `http://tempo.telemetry.svc.cluster.local:4317`.
+2. Update the Helm values file to including the following endpoints. Replace the logging and tracing endpoint with the OTel collector endpoints that you previously set up. Make sure that you use a supported LLM provider, such as OpenAI or Anthropic.
 
    > **Note**: If you find the traces emitted by default too verbose, you can disable them by setting `otel.tracing.enabled=false`. Logging still works even if tracing is disabled.
 
    ```yaml
+   providers:
+    # OpenAI or Anthropic are supported for auditing 
+    default: openAI
+    openAI:
+      apiKey: $OPENAI_API_KEY
    otel:
      tracing:
        enabled: true
        exporter:
          otlp:
-           endpoint: http://tempo.telemetry.svc.cluster.local:4317
+           endpoint: http://opentelemetry-collector-audit.telemetry.svc.cluster.local:4317
            timeout: 15
            insecure: true
      logging:
        enabled: true
        exporter:
          otlp:
-           endpoint: http://loki.telemetry.svc.cluster.local:3100
+           endpoint: http://opentelemetry-collector-audit.telemetry.svc.cluster.local:4317
            timeout: 15
            insecure: true
    ```
@@ -257,19 +265,56 @@ After the OpenTelemetry collector is running, configure kagent to send logs.
 
 ## Verify the setup
 
-1. Generate some traffic by invoking a kagent agent that uses OpenAI or Anthropic.
+1. Generate some traffic by invoking a kagent agent that uses OpenAI or Anthropic. For example, you might as the Helm agent how many Helm releases are currently deployed in your cluster.
 
-2. Check that logs are being collected by the OpenTelemetry collector:
-
-   ```bash
-   kubectl -n telemetry logs -l app.kubernetes.io/name=opentelemetry-collector --tail=50
-   ```
-
-3. Verify that logs are being exported to your logging backend by checking your backend's interface or querying it directly. The following example queries Loki for logs containing the word "prompt".
+2. Check that logs are being collected by the OpenTelemetry collector.
 
    ```bash
-   kubectl -n telemetry logs -l app.kubernetes.io/name=loki --tail=50
+   kubectl -n telemetry logs -l app.kubernetes.io/name=opentelemetry-collector
    ```
+
+   Example output:
+
+   ```console
+   Trace ID: c421bc11e93daaceee59b9e5ff8aa6d0
+   Span ID: 02552aea76988990
+   Flags: 1
+   LogRecord #115
+   ObservedTimestamp: 2026-01-12 16:02:13.278948633 +0000 UTC
+   Timestamp: 2026-01-12 16:02:13.278943258 +0000 UTC
+   SeverityText: 
+   SeverityNumber: Info(9)
+   Body: Map({"content":"NAME       \tNAMESPACE\tREVISION\tUPDATED                               \tSTATUS  \tCHART            \tAPP VERSION\nkagent     \tkagent   \t3       \t2026-01-12 09:40:29.568344 -0500 -0500\tdeployed\tkagent-0.7.8     \t           \nkagent-crds\tkagent   \t1       \t2026-01-09 11:31:00.362347 -0500 -0500\tdeployed\tkagent-crds-0.7.8\t           \n"})
+   Attributes:
+        -> gen_ai.system: Str(openai)
+        -> event.name: Str(gen_ai.tool.message)
+   Trace ID: c421bc11e93daaceee59b9e5ff8aa6d0
+   Span ID: 02552aea76988990
+   Flags: 1
+   LogRecord #116
+   ObservedTimestamp: 2026-01-12 16:02:13.278959716 +0000 UTC
+   Timestamp: 2026-01-12 16:02:13.278954424 +0000 UTC
+   SeverityText: 
+   SeverityNumber: Info(9)
+   Body: Map({"content":"NAME                         \tNAMESPACE\tREVISION\tUPDATED                               \tSTATUS  \tCHART                          \tAPP VERSION\nloki                         \ttelemetry\t1       \t2026-01-09 11:08:29.179771 -0500 -0500\tdeployed\tloki-6.24.0                    \t3.3.2      \nopentelemetry-collector-audit\ttelemetry\t2       \t2026-01-12 09:40:18.82713 -0500 -0500 \tdeployed\topentelemetry-collector-0.143.0\t0.143.0    \ntempo                        \ttelemetry\t1       \t2026-01-09 11:24:31.685855 -0500 -0500\tdeployed\ttempo-1.16.0                   \t2.6.1      \n"})
+   Attributes:
+        -> gen_ai.system: Str(openai)
+        -> event.name: Str(gen_ai.tool.message)
+   Trace ID: c421bc11e93daaceee59b9e5ff8aa6d0
+   Span ID: 02552aea76988990
+   Flags: 1
+   LogRecord #117
+   ObservedTimestamp: 2026-01-12 16:02:13.278976383 +0000 UTC
+   Timestamp: 2026-01-12 16:02:13.278964341 +0000 UTC
+   SeverityText: 
+   SeverityNumber: Info(9)
+   Body: Map({"content":"In the kagent and telemetry namespaces."})
+   Attributes:
+        -> gen_ai.system: Str(openai)
+        -> event.name: Str(gen_ai.user.message)
+   ...
+   ```
+
 
 ## Cleanup
 
@@ -280,12 +325,13 @@ helm uninstall opentelemetry-collector-audit -n telemetry
 kubectl delete namespace telemetry
 ```
 
-To disable logging in kagent:
+To disable logging and tracing in kagent:
 
 ```bash
 helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --namespace kagent \
   --reuse-values \
   --version $VERSION \
-  --set otel.logging.enabled=false
+  --set otel.logging.enabled=false \
+  --set otel.tracing.enabled=false
 ```
