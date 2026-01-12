@@ -1,0 +1,63 @@
+---
+title: "Launch the UI"
+pageOrder: 0
+description: "Open the kagent dashboard using the CLI or port-forwarding."
+---
+
+export const metadata = {
+  title: "Launch the UI",
+  description: "Open the kagent dashboard using the CLI or port-forwarding.",
+  author: "kagent.dev"
+};
+
+# Launch the UI
+
+Access the kagent dashboard to manage your agents, tools, and models. You can open the dashboard by using the kagent CLI command or by port-forwarding the kagent UI service.
+
+## Before you begin
+
+Make sure that kagent is installed in your cluster and the kagent UI service is running.
+
+```bash
+kubectl get svc -n kagent kagent-ui
+```
+
+## Launch the UI with the CLI
+
+The easiest way to launch the kagent dashboard is by using the `kagent dashboard` command. This command automatically sets up port-forwarding and opens the dashboard in your browser.
+
+> **Note**: The `kagent dashboard` command is currently available on macOS. On other platforms, use the port-forwarding method described in the next section.
+
+1. Run the dashboard command:
+
+   ```bash
+   kagent dashboard
+   ```
+
+   The command port-forwards the `kagent-ui` service to `localhost:8082` and opens the dashboard in your default browser.
+
+2. Access the dashboard at `http://localhost:8082`.
+
+3. When you're done, press `Enter` in the terminal to stop the port-forward.
+
+## Launch the UI with port-forwarding
+
+If you prefer to manually set up port-forwarding, or if you're on a platform where the `kagent` CLI isn't available, you can port-forward the service yourself.
+
+1. Port-forward the `kagent-ui` service to your local machine. The following command forwards port 8080 from the service to port 8082 on your local machine.
+
+   ```bash
+   kubectl port-forward -n kagent service/kagent-ui 8082:8080
+   ```   
+
+2. In your browser, open the dashboard at [http://localhost:8082](http://localhost:8082).
+
+3. When you're done, stop the port-forward by pressing `Ctrl+C` in the terminal where the port-forward is running.
+
+## Next steps
+
+You can use the UI to view and manage your agents, tools, and models. For more information, see the following guides:
+
+- [Create your first agent](/docs/kagent/getting-started/first-agent)
+- [Add MCP tools to your agents](/docs/kagent/getting-started/first-mcp-tool)
+- [Configure LLM providers](/docs/kagent/supported-providers)
