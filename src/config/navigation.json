@@ -27,7 +27,7 @@
           },
           {
             "title": "Contributing",
-            "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md",
+            "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md",
             "external": true
           }
         ]
@@ -82,7 +82,7 @@
           {
             "title": "Agents",
             "href": "/docs/kagent/concepts/agents",
-            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools."
+            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools, skills), and how they can even use other agents as tools."
           },
           {
             "title": "Tools",
@@ -177,6 +177,11 @@
             "title": "Discord and A2A",
             "href": "/docs/kagent/examples/discord-a2a",
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
+          },
+          {
+            "title": "Skills",
+            "href": "/docs/kagent/examples/skills",
+            "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
           }
         ]
       },
@@ -206,6 +211,11 @@
             "title": "Debug kagent",
             "href": "/docs/kagent/operations/debug",
             "description": "Find solutions to common issues and troubleshooting tips for kagent."
+          },
+          {
+            "title": "Operational considerations",
+            "href": "/docs/kagent/operations/operational-considerations",
+            "description": "Important operational considerations when running kagent in production."
           },
           {
             "title": "Upgrade kagent",
@@ -352,6 +362,16 @@
             "title": "kmcp secrets",
             "href": "/docs/kmcp/reference/kmcp-secrets",
             "description": "kmcp secrets command"
+          },
+          {
+            "title": "kmcp completion",
+            "href": "/docs/kmcp/reference/kmcp-completion",
+            "description": "kmcp completion command"
+          },
+          {
+            "title": "kmcp help",
+            "href": "/docs/kmcp/reference/kmcp-help",
+            "description": "kmcp help command"
           }
         ]
       }

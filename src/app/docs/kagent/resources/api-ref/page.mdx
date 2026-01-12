@@ -103,6 +103,7 @@ _Appears in:_
 | `byo` _[BYOAgentSpec](#byoagentspec)_ |  |  |  |
 | `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ |  |  |  |
 | `description` _string_ |  |  |  |
+| `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
 
 
 #### AgentStatus
@@ -258,7 +259,7 @@ _Appears in:_
 | `image` _string_ |  |  | MinLength: 1 <br /> |
 | `cmd` _string_ |  |  |  |
 | `args` _string array_ |  |  |  |
-| `replicas` _integer_ | If not specified, the default value is 1. | 1 | Minimum: 1 <br /> |
+| `replicas` _integer_ |  |  |  |
 | `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
@@ -267,6 +268,11 @@ _Appears in:_
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ |  |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 
 
 #### DeclarativeAgentSpec
@@ -289,6 +295,7 @@ _Appears in:_
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
 | `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
+| `executeCodeBlocks` _boolean_ | Allow code execution for python code blocks with this agent.<br />If true, the agent will automatically execute python code blocks in the LLM responses.<br />Code will be executed in a sandboxed environment.<br />due to a bug in adk (https://github.com/google/adk-python/issues/3921), this field is ignored for now. |  |  |
 
 
 #### DeclarativeDeploymentSpec
@@ -305,7 +312,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `imageRegistry` _string_ |  |  |  |
-| `replicas` _integer_ | If not specified, the default value is 1. | 1 | Minimum: 1 <br /> |
+| `replicas` _integer_ |  |  |  |
 | `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
@@ -314,6 +321,11 @@ _Appears in:_
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ |  |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 
 
 #### GeminiConfig
@@ -435,6 +447,7 @@ _Appears in:_
 | `gemini` _[GeminiConfig](#geminiconfig)_ | Gemini-specific configuration |  |  |
 | `geminiVertexAI` _[GeminiVertexAIConfig](#geminivertexaiconfig)_ | Gemini Vertex AI-specific configuration |  |  |
 | `anthropicVertexAI` _[AnthropicVertexAIConfig](#anthropicvertexaiconfig)_ | Anthropic-specific configuration |  |  |
+| `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for provider connections.<br />Enables agents to connect to internal LiteLLM gateways or other providers<br />that use self-signed certificates or custom certificate authorities. |  |  |
 
 
 #### ModelConfigStatus
@@ -452,6 +465,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
 | `observedGeneration` _integer_ |  |  |  |
+| `secretHash` _string_ | The secret hash stores a hash of any secrets required by the model config (i.e. api key, tls cert) to ensure agents referencing this model config detect changes to these secrets and restart if necessary. |  |  |
 
 
 #### ModelProvider
@@ -627,7 +641,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ | If not specified, the default value is 1. | 1 | Minimum: 1 <br /> |
+| `replicas` _integer_ |  |  |  |
 | `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
@@ -636,6 +650,49 @@ _Appears in:_
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ |  |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+
+
+#### SkillForAgent
+
+
+
+
+
+
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `insecureSkipVerify` _boolean_ | Fetch images insecurely from registries (allowing HTTP and skipping TLS verification).<br />Meant for development and testing purposes only. |  |  |
+| `refs` _string array_ | The list of skill images to fetch. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
+
+
+#### TLSConfig
+
+
+
+TLSConfig contains TLS/SSL configuration options for model provider connections.
+This enables agents to connect to internal LiteLLM gateways or other providers
+that use self-signed certificates or custom certificate authorities.
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `disableVerify` _boolean_ | DisableVerify disables SSL certificate verification entirely.<br />When false (default), SSL certificates are verified.<br />When true, SSL certificate verification is disabled.<br />WARNING: This should ONLY be used in development/testing environments.<br />Production deployments MUST use proper certificates. | false |  |
+| `caCertSecretRef` _string_ | CACertSecretRef is a reference to a Kubernetes Secret containing<br />CA certificate(s) in PEM format. The Secret must be in the same<br />namespace as the ModelConfig.<br />When set, the certificate will be used to verify the provider's SSL certificate.<br />This field follows the same pattern as APIKeySecret. |  |  |
+| `caCertSecretKey` _string_ | CACertSecretKey is the key within the Secret that contains the CA certificate data.<br />This field follows the same pattern as APIKeySecretKey.<br />Required when CACertSecretRef is set (unless DisableVerify is true). |  |  |
+| `disableSystemCAs` _boolean_ | DisableSystemCAs disables the use of system CA certificates.<br />When false (default), system CA certificates are used for verification (safe behavior).<br />When true, only the custom CA from CACertSecretRef is trusted.<br />This allows strict security policies where only corporate CAs should be trusted. | false |  |
 
 
 #### Tool

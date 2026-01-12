@@ -31,19 +31,27 @@ The following example builds a research crew agent from the [kagent code reposit
    cd kagent
    ```
 
-2. Optional: If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
-
-3. Build the custom agent image and push it to your local Docker registry.
-
+2. Build the custom agent image and push it to your Docker registry. This example assumes that you want to push the image to the ghcr.io registry. 
    ```bash
    cd python/samples/crewai/research-crew
-   docker build . -t localhost:5001/research-crew:latest --push
+   docker build . -t ghcr.io/research-crew:latest --push
    ```
+
+    If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+Then, change `ghcr.io` to `localhost:5001`. 
 
 ### Adapting your own CrewAI agent
 
 A quickstart and detailed guide for adapting existing CrewAI crews and flows to work with kagent is available in the [package's README](https://github.com/kagent-dev/kagent/tree/main/python/packages/kagent-crewai).
 This provides a simple way to setup A2A server, tracing, and session-aware memory and state persistence.
+
+The `kagent-crewai` package is published and available on PyPI. 
+
+To install in your CrewAI project:
+
+```bash
+pip install kagent-crewai
+```
 
 Two complete examples are available in the `python/samples/crewai/` directory:
 
@@ -88,7 +96,7 @@ You will need a Serper API Key that you can get for free [from their website](ht
      type: BYO
      byo:
        deployment:
-         image: localhost:5001/research-crew:latest
+         image: ghcr.io/research-crew:latest
          env:
            - name: OPENAI_API_KEY
              valueFrom:

@@ -15,7 +15,6 @@ import KMCPIcon from "@/components/icons/kmcpicon";
 import adopters from "@/data/adopters.yaml";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
-import KubeConAnnouncement from "@/components/kubecon-announcement";
 
 interface Adopter {
   name: string;
@@ -138,8 +137,6 @@ const MarketingPage = () => {
           <Image src="/images/hero.png" alt="kagent Architecture" width={800} height={600} className="rounded-lg shadow-2xl" />
         </motion.div>
       </div>
-
-      <KubeConAnnouncement />
 
       {/* Projects Section */}
       <div className="py-20 border-t border-border">
