@@ -34,6 +34,6 @@ adopters:
     logo_light: "/images/adopters/cloudraft.svg"
     website: "https://www.cloudraft.io/"
   - name: "Sopra Steria"
-    logo_dark: "/images/adopters/sopra-steria-dark.png"
-    logo_light: "/images/adopters/sopra-steria-light.png"
+    logo_dark: "/images/adopters/sopra-steria-light.png"
+    logo_light: "/images/adopters/sopra-steria-dark.png"
     website: "https://www.soprasteria.no/"
