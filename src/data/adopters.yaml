@@ -33,3 +33,7 @@ adopters:
     logo_dark: "/images/adopters/cloudraft.svg"
     logo_light: "/images/adopters/cloudraft.svg"
     website: "https://www.cloudraft.io/"
+  - name: "Consonant"
+    logo_dark: "/images/adopters/consonant-dark.png"
+    logo_light: "/images/adopters/consonant-light.png"
+    website: "https://consonantlabs.xyz/"
