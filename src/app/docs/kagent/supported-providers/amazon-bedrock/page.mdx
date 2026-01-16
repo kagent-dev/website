@@ -12,9 +12,53 @@ export const metadata = {
 
 # Amazon Bedrock
 
-You can use Amazon Bedrock models with kagent by leveraging AWS Bedrock's [OpenAI Chat Completions API](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html).
+You can access any Foundation Model available on AWS Bedrock with kagent.
 
-## Step 1: Prepare your AWS details
+1. Obtain your AWS credentials from the AWS Console. You will need the AWS Access Key ID and the AWS Secret Access Key.
+
+2. Create a Kubernetes secret that stores your AWS credentials in the same namespace as your agent, typically `kagent`.
+
+   ```bash
+   export AWS_ACCESS_KEY_ID=<aws-access-key-id>
+   export AWS_SECRET_ACCESS_KEY=<aws-secret-access-key>
+   kubectl create secret generic kagent-bedrock -n kagent --from-literal AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+   ```
+
+   If you are using [temporary credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html), you will also need to set the `AWS_SESSION_TOKEN` variable in the secret.
+
+   The above method uses Boto3 to authenticate with AWS. Alternatively, you can also use the Bedrock API key. You can create it with the [AWS Bedrock API keys guide](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html).
+
+   ```bash
+   export AWS_BEARER_TOKEN_BEDROCK=<bedrock-api-key-xxxx>
+   kubectl create secret generic kagent-bedrock -n kagent --from-literal AWS_BEARER_TOKEN_BEDROCK=$AWS_BEARER_TOKEN_BEDROCK
+   ```
+
+3. Create a ModelConfig resource that uses the AWS credentials secret.
+
+   ```yaml
+   apiVersion: kagent.dev/v1alpha2
+   kind: ModelConfig
+   metadata:
+      name: bedrock-claude
+      namespace: kagent
+   spec:
+      // Choose any valid model ID from AWS Bedrock
+      model: anthropic.claude-3-sonnet-20240229-v1:0
+      provider: Bedrock
+      
+      // This will use bearer token if it's available in the secret, otherwise the IAM credentials will be used.
+      apiKeySecret: kagent-bedrock
+      
+      bedrock:
+         region: us-east-1
+   ```
+
+## Alternative: Using the OpenAI Chat Completions API
+
+You can use Amazon Bedrock models with kagent by leveraging AWS Bedrock's [OpenAI Chat Completions API](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html).
+Note that this method might not work for all models, especially for models that are not OpenAI-compatible.
+
+### Step 1: Prepare your AWS details
 
 1. Follow the [AWS Bedrock API keys guide](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html) to create the API key needed for authentication.
 
@@ -34,7 +78,7 @@ You can use Amazon Bedrock models with kagent by leveraging AWS Bedrock's [OpenA
    kubectl create secret generic kagent-bedrock -n kagent --from-literal AWS_API_KEY=$AWS_API_KEY
    ```
 
-## Step 2: Create the ModelConfig
+### Step 2: Create the ModelConfig
 
 1. Create a ModelConfig resource that uses the OpenAI-compatible API interface.
 
@@ -65,4 +109,4 @@ You can use Amazon Bedrock models with kagent by leveraging AWS Bedrock's [OpenA
 
 ## Next Steps
 
- Now that you configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.
+Now that you configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.
