@@ -1,12 +1,12 @@
 ---
 title: "API docs"
 pageOrder: 5
-description: "kmcp API reference docs"
+description: "kmcp API reference documentation"
 ---
 
 export const metadata = {
   title: "API docs",
-  description: "kmcp API reference docs",
+  description: "kmcp API reference documentation",
   author: "kagent.dev"
 };
 
@@ -42,75 +42,21 @@ _Appears in:_
 | `path` _string_ | the target path where MCP is served |  |  |
 
 
-#### KeycloakProvider
+#### InitContainerConfig
 
 
 
-
-
-
-
-_Appears in:_
-- [MCPClientProvider](#mcpclientprovider)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `realm` _string_ |  |  |  |
-
-
-#### MCPAuthorizationServer
-
-
-
-MCPAuthorizationServer represents the configuration for the MCP authorization server
+InitContainerConfig defines the configuration for the init container.
 
 
 
 _Appears in:_
-- [MCPServerAuthorization](#mcpserverauthorization)
+- [MCPServerDeployment](#mcpserverdeployment)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `issuer` _string_ |  |  |  |
-| `audience` _string_ |  |  |  |
-| `jwksUrl` _string_ |  |  |  |
-| `provider` _[MCPClientProvider](#mcpclientprovider)_ |  |  |  |
-| `resourceMetadata` _[MCPClientResourceMetadata](#mcpclientresourcemetadata)_ |  |  |  |
-
-
-#### MCPClientProvider
-
-
-
-MCPClientProvider represents the support identity providers currently only keycloak is supported
-
-
-
-_Appears in:_
-- [MCPAuthorizationServer](#mcpauthorizationserver)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `keycloak` _[KeycloakProvider](#keycloakprovider)_ |  |  |  |
-
-
-#### MCPClientResourceMetadata
-
-
-
-MCPClientResourceMetadata represents resource metadata for MCP client authentication
-
-
-
-_Appears in:_
-- [MCPAuthorizationServer](#mcpauthorizationserver)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `baseUrl` _string_ | BaseURL denotes the protected base url of the protected resource ie: http://localhost:3000 |  |  |
-| `scopesSupported` _string array_ | Scopes supported by this resource |  |  |
-| `bearerMethodsSupported` _string array_ | Bearer methods supported by this resource |  |  |
-| `additionalFields` _object (keys:string, values:string)_ | Additional resource metadata fields |  |  |
+| `image` _string_ | Image defines the full image reference for the init container.<br />If specified, this overrides the default transport adapter image.<br />Example: "myregistry.com/agentgateway/agentgateway:0.9.0-musl" |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ | ImagePullPolicy defines the pull policy for the init container image. |  | Enum: [Always Never IfNotPresent] <br /> |
 
 
 #### MCPServer
@@ -134,39 +80,6 @@ MCPServer is the Schema for the mcpservers API.
 | `status` _[MCPServerStatus](#mcpserverstatus)_ |  |  |  |
 
 
-#### MCPServerAuthentication
-
-
-
-MCPServerAuthentication defines the authentication configuration for the MCP server.
-
-
-
-_Appears in:_
-- [MCPServerSpec](#mcpserverspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `jwt` _[MCPServerJWTAuthentication](#mcpserverjwtauthentication)_ | JWT defines the JWT authentication configuration. |  |  |
-
-
-#### MCPServerAuthorization
-
-
-
-MCPServerAuthorization defines the authorization configuration for the MCP server.
-
-
-
-_Appears in:_
-- [MCPServerSpec](#mcpserverspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `server` _[MCPAuthorizationServer](#mcpauthorizationserver)_ | Server defines the configuration for the MCP authorization server that protects the MCP server.<br />Setting this field will configure agentgateway to use the authorization server<br />to protect the MCP server and its resources as well as adapt traffic to the MCP client to comply with the<br />MCP authorization spec before forwarding traffic to the MCP client. |  |  |
-| `rules` _string_ | Rules defines the CEL-based authorization rules that control access to the MCP server resources. |  |  |
-
-
 
 
 
@@ -185,29 +98,18 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `image` _string_ | Image defines the container image to to deploy the MCP server. |  |  |
-| `port` _integer_ | Port defines the port on which the MCP server will listen. |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ | ImagePullPolicy defines the pull policy for the container image. |  | Enum: [Always Never IfNotPresent] <br /> |
+| `port` _integer_ | Port defines the port on which the MCP server will listen. | 3000 |  |
 | `cmd` _string_ | Cmd defines the command to run in the container to start the mcp server. |  |  |
 | `args` _string array_ | Args defines the arguments to pass to the command. |  |  |
 | `env` _object (keys:string, values:string)_ | Env defines the environment variables to set in the container. |  |  |
 | `secretRefs` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | SecretRefs defines the list of Kubernetes secrets to reference.<br />These secrets will be mounted as volumes to the MCP server container. |  |  |
-
-
-#### MCPServerJWTAuthentication
-
-
-
-MCPServerJWTAuthentication defines the JWT authentication configuration for the MCP server.
-
-
-
-_Appears in:_
-- [MCPServerAuthentication](#mcpserverauthentication)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `issuer` _string_ | Issuer is the JWT issuer URL. |  |  |
-| `audiences` _string array_ | Audiences is a list of audiences that the JWT must match. |  |  |
-| `jwks` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core)_ | JWKS references a secret containing the JSON Web Key Set.<br />The secret must contain a key with the JWKS content. |  |  |
+| `configMapRefs` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ConfigMapRefs defines the list of Kubernetes configmaps to reference.<br />These configmaps will be mounted as volumes to the MCP server container. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts defines the list of volume mounts for the MCP server container.<br />This allows for more flexible volume mounting configurations. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes defines the list of volumes that can be mounted by containers.<br />This allows for custom volume configurations beyond just secrets and configmaps. |  |  |
+| `initContainer` _[InitContainerConfig](#initcontainerconfig)_ | InitContainer defines the configuration for the init container that copies<br />the transport adapter binary. This is used for stdio transport type. |  |  |
+| `serviceAccount` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccount defines the configuration for the ServiceAccount. |  |  |
+| `sidecars` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | Sidecars defines additional containers to run alongside the MCP server container.<br />These containers will share the same pod and can share volumes with the main container. |  |  |
 
 
 #### MCPServerSpec
@@ -227,8 +129,6 @@ _Appears in:_
 | `transportType` _[TransportType](#transporttype)_ | TransportType defines the type of mcp server being run |  | Enum: [stdio http] <br /> |
 | `stdioTransport` _[StdioTransport](#stdiotransport)_ | StdioTransport defines the configuration for a standard input/output transport. |  |  |
 | `httpTransport` _[HTTPTransport](#httptransport)_ | HTTPTransport defines the configuration for a Streamable HTTP transport. |  |  |
-| `authn` _[MCPServerAuthentication](#mcpserverauthentication)_ | Authn defines the authentication configuration for the MCP server.<br />This field is optional and can be used to configure JWT authentication.<br />If not specified, the MCP server will not require authentication. |  |  |
-| `authz` _[MCPServerAuthorization](#mcpserverauthorization)_ | Authz defines the authorization rule configuration for the MCP server.<br />This field is optional and can be used to configure authorization rules<br />for access to the MCP server and specific tools. If not specified, the MCP server will not enforce<br />any authorization rules. |  |  |
 
 
 #### MCPServerStatus
@@ -246,6 +146,23 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions describe the current conditions of the MCPServer.<br />Implementations should prefer to express MCPServer conditions<br />using the `MCPServerConditionType` and `MCPServerConditionReason`<br />constants so that operators and tools can converge on a common<br />vocabulary to describe MCPServer state.<br /><br />Known condition types are:<br /><br />* "Accepted"<br />* "ResolvedRefs"<br />* "Programmed"<br />* "Ready" |  | MaxItems: 8 <br /> |
 | `observedGeneration` _integer_ | ObservedGeneration is the most recent generation observed for this MCPServer.<br />It corresponds to the MCPServer's generation, which is updated on mutation by the API Server. |  |  |
+
+
+#### ServiceAccountConfig
+
+
+
+ServiceAccountConfig defines the configuration for the ServiceAccount.
+
+
+
+_Appears in:_
+- [MCPServerDeployment](#mcpserverdeployment)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `annotations` _object (keys:string, values:string)_ | Annotations to add to the ServiceAccount.<br />This is useful for configuring AWS IRSA (IAM Roles for Service Accounts)<br />or other cloud provider integrations.<br />Example: \{"eks.amazonaws.com/role-arn": "arn:aws:iam::123456789012:role/my-role"\} |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels to add to the ServiceAccount. |  |  |
 
 
 #### StdioTransport
