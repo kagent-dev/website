@@ -243,6 +243,22 @@ _Appears in:_
 | `stopSequences` _string array_ | Stop sequences |  |  |
 
 
+#### BedrockConfig
+
+
+
+BedrockConfig contains AWS Bedrock-specific configuration options.
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  |  |
+
+
 #### ByoDeploymentSpec
 
 
@@ -291,7 +307,7 @@ _Appears in:_
 | `systemMessage` _string_ | SystemMessage is a string specifying the system message for the agent |  |  |
 | `systemMessageFrom` _[ValueSource](#valuesource)_ | SystemMessageFrom is a reference to a ConfigMap or Secret containing the system message. |  |  |
 | `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
-| `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is true. |  |  |
+| `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is false. |  |  |
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
 | `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
@@ -439,7 +455,7 @@ _Appears in:_
 | `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig |  |  |
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
-| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI] <br /> |
+| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock] <br /> |
 | `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
 | `anthropic` _[AnthropicConfig](#anthropicconfig)_ | Anthropic-specific configuration |  |  |
 | `azureOpenAI` _[AzureOpenAIConfig](#azureopenaiconfig)_ | Azure OpenAI-specific configuration |  |  |
@@ -447,6 +463,7 @@ _Appears in:_
 | `gemini` _[GeminiConfig](#geminiconfig)_ | Gemini-specific configuration |  |  |
 | `geminiVertexAI` _[GeminiVertexAIConfig](#geminivertexaiconfig)_ | Gemini Vertex AI-specific configuration |  |  |
 | `anthropicVertexAI` _[AnthropicVertexAIConfig](#anthropicvertexaiconfig)_ | Anthropic-specific configuration |  |  |
+| `bedrock` _[BedrockConfig](#bedrockconfig)_ | AWS Bedrock-specific configuration |  |  |
 | `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for provider connections.<br />Enables agents to connect to internal LiteLLM gateways or other providers<br />that use self-signed certificates or custom certificate authorities. |  |  |
 
 
@@ -475,7 +492,7 @@ _Underlying type:_ _string_
 ModelProvider represents the model provider type
 
 _Validation:_
-- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI]
+- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock]
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
@@ -489,6 +506,7 @@ _Appears in:_
 | `Gemini` |  |
 | `GeminiVertexAI` |  |
 | `AnthropicVertexAI` |  |
+| `Bedrock` |  |
 
 
 #### OllamaConfig
