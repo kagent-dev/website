@@ -24,6 +24,12 @@ jobs:
           repository: ${{ github.repository_owner }}/kagent
           path: kagent
 
+      - name: Checkout kmcp repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/kmcp
+          path: kmcp
+
       - name: Checkout docs repository
         uses: actions/checkout@v4
         with:
@@ -38,6 +44,9 @@ jobs:
 
       - name: Set kagent commit SHA
         run: echo "KAGENT_COMMIT=$(cd kagent && git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Set kmcp commit SHA
+        run: echo "KMCP_COMMIT=$(cd kmcp && git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Verify API directory exists
         run: |
@@ -129,6 +138,87 @@ jobs:
           fi
 
           echo "API docs generated and processed successfully"
+
+      - name: Verify KMCP API directory exists
+        run: |
+          if [ ! -d "$GITHUB_WORKSPACE/kmcp/api/v1alpha1" ]; then
+            echo "Error: KMCP API directory not found at $GITHUB_WORKSPACE/kmcp/api/v1alpha1"
+            ls -la "$GITHUB_WORKSPACE/kmcp/api/" || echo "kmcp/api directory not found"
+            exit 1
+          fi
+          echo "KMCP API directory found and verified"
+
+      - name: Generate KMCP API Reference
+        run: |
+          # Substitute KUBE_VERSION in the config template and write to a temp file
+          cd "$GITHUB_WORKSPACE/website"
+          if [ ! -f "scripts/crd-ref-docs-config.yaml" ]; then
+            echo "Error: crd-ref-docs-config.yaml not found in scripts directory"
+            exit 1
+          fi
+          
+          envsubst < scripts/crd-ref-docs-config.yaml > crd-ref-docs-config.yaml
+
+          echo "Changed to docs repository: $PWD"
+          echo "Using config file:"
+          cat crd-ref-docs-config.yaml
+
+          # Generate KMCP API docs
+          go run github.com/elastic/crd-ref-docs@v0.1.0 \
+            --source-path="$GITHUB_WORKSPACE/kmcp/api/v1alpha1/" \
+            --renderer=markdown \
+            --output-path ./ \
+            --config=crd-ref-docs-config.yaml
+
+          # Check if generation was successful
+          if [ ! -f "./out.md" ]; then
+            echo "Error: KMCP API docs generation failed - out.md not created"
+            exit 1
+          fi
+
+          # Remove the temporary config file so it is not included in the PR
+          rm -f crd-ref-docs-config.yaml
+
+          # Create index file with frontmatter
+          echo '---' > src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'title: "API docs"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'pageOrder: 5' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'description: "kmcp API reference documentation"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '---' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'export const metadata = {' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '  title: "API docs",' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '  description: "kmcp API reference documentation",' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '  author: "kagent.dev"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '};' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          cat "./out.md" >> src/app/docs/kmcp/reference/api-ref/page.mdx
+
+          # Remove temporary file
+          rm -f "./out.md"
+
+          # Fix problematic angle brackets in the generated MDX file
+          # Convert literal angle brackets to HTML entities to prevent MDX parsing errors
+          # But preserve legitimate HTML tags like <br />, <kmcp-controller-ip>, etc.
+          echo "Fixing problematic angle brackets in generated MDX..."
+          
+          # First, temporarily replace legitimate HTML tags with placeholders
+          sed -i 's/<br \/>/__BR_TAG__/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          
+          # Convert remaining angle brackets to HTML entities
+          sed -i 's/</\&lt;/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          sed -i 's/>/\&gt;/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          
+          # Restore legitimate HTML tags
+          sed -i 's/__BR_TAG__/<br \/>/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          
+          # Verify the output file was created
+          if [ ! -f "src/app/docs/kmcp/reference/api-ref/page.mdx" ]; then
+            echo "Error: Failed to create KMCP API docs page"
+            exit 1
+          fi
+
+          echo "KMCP API docs generated and processed successfully"
 
       - name: Generate Helm Chart Reference
         run: |
@@ -266,11 +356,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website
-          commit-message: "docs: Update API and kagent Helm reference docs"
+          commit-message: "docs: Update kagent and kmcp API reference docs"
           signoff: true
-          title: "Update API and kagent Helm reference docs"
+          title: "Update kagent and kmcp API reference docs"
           body: |
-            Automated API and kagent Helm chart documentation update based on the latest commit [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }}) to `main` in the **kagent** repository.
+            Automated API and kagent Helm chart documentation update based on the latest commits:
+            - **kagent**: [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }})
+            - **kmcp**: [`${{ env.KMCP_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kmcp/commit/${{ env.KMCP_COMMIT }})
             
             This PR was automatically generated by the [**Update Reference documentation** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/update-ref-docs.yaml).
           branch: api-gen-update
