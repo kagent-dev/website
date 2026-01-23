@@ -1,0 +1,193 @@
+export const metadata = {
+  title: "I Built an AI That Does My 2 AM Firewall Troubleshooting (And You Can Too)",
+  publishDate: "2026-01-23T16:00:00Z",
+  description: "How I turned 20 years of firewall expertise into an AI agent that never sleeps",
+  author: "Sebastian Maniak",
+  authorIds: ["maniakseb"],
+}
+
+# I Built an AI That Does My 2 AM Firewall Troubleshooting (And You Can Too)
+
+*After 20+ years of late-night SSH sessions, I finally automated the one thing I never thought I could: my own expertise.*
+
+![Sebastian Maniak](/images/blog/fortigate-ai-agent/sebastian-maniak-profile.jpg)
+
+## The Call That Started Everything
+
+It was 2:47 AM on a Tuesday. My phone buzzed with that familiar Slack notification sound—the one that immediately spikes your heart rate because nothing good ever comes at 2:47 AM.
+
+> **"Production is down. Network team says it's the firewall. Can you check?"**
+
+I've received this exact message probably a thousand times over my career. And every single time, I go through the same ritual:
+
+1. Roll out of bed
+2. Fire up the laptop
+3. SSH into the FortiGate
+4. Run `diagnose debug flow`
+5. Check `show firewall policy`
+6. Correlate with address objects
+7. Check the routing table
+8. *Thirty minutes later*... "Ah, someone deleted the address object for the database server."
+
+That night, as I fixed the issue (it was a missing firewall policy, again), I couldn't stop thinking: **Why am I the only one who can do this?**
+
+I've spent 20 years accumulating this knowledge. I've worked with FortiGates at BlackBerry, Sun Life, HashiCorp. I've taught network security at Sheridan College. I've consulted for companies across every industry. All that expertise—and it only works when I'm awake.
+
+What if it didn't have to be that way?
+
+## The Lightbulb Moment
+
+I've been deep in the AI agent space lately. Working at Solo.io, I've watched [Kagent](https://kagent.dev) evolve from an interesting project to something genuinely transformative. For those who haven't discovered it yet—Kagent makes building and running AI agents on Kubernetes easy and fun. It's cloud-native, it's got all the enterprise bells and whistles (auth, security, audit), and the community is incredible.
+
+But here's the thing I realized: **My firewall troubleshooting workflow isn't magic. It's a pattern.**
+
+Every time I diagnose a blocked connection, I follow the same steps:
+1. Check if the firewall is healthy
+2. Look for matching policies
+3. Verify the address objects exist
+4. Confirm the service definitions
+5. Check interface status
+6. Review the routing table
+7. Correlate everything and find the gap
+
+If I can write down those steps, an AI can follow them. The question was: how do I give an AI access to my FortiGate?
+
+Enter MCP—the Model Context Protocol.
+
+## What I Built
+
+I created something I'm calling the **FortiGate MCP Server**. It's a bridge between AI agents and FortiGate firewalls. Think of it as giving your AI assistant a direct line to query your firewall—but read-only, secure, and fast.
+
+The server exposes 8 tools:
+
+| Tool | What It Does |
+|------|--------------|
+| `get_system_status` | Is the firewall healthy? |
+| `list_firewall_policies` | What rules exist? |
+| `list_firewall_addresses` | What IP objects are defined? |
+| `list_firewall_services` | What port definitions exist? |
+| `list_interfaces` | Are interfaces up? |
+| `list_static_routes` | Where does traffic go? |
+| `list_virtual_ips` | What NAT rules exist? |
+| `discover_vdoms` | What VDOMs are configured? |
+
+But here's where it gets interesting. Tools are just tools. What makes this powerful is the **agent** that uses them.
+
+## Teaching an AI to Think Like Me
+
+The FortiGate Troubleshooting Agent isn't just a chatbot with API access. I encoded my actual troubleshooting workflows into its system prompt. When someone says "traffic is blocked," it doesn't just randomly call tools—it follows the same diagnostic path I would:
+
+```
+## Workflow for "traffic being blocked":
+1. Check system status first (is the firewall even healthy?)
+2. Review firewall policies for matching rules
+3. Verify source/destination address objects exist
+4. Check service definitions for the port in question
+5. Review interface status
+6. Analyze routing to destination
+7. Identify which policy should allow traffic
+8. Provide specific recommendations
+```
+
+This is 20 years of experience distilled into a prompt. And it works.
+
+## The First Real Test
+
+Three weeks after deploying this to our Kagent cluster, I got another one of those late-night Slack messages. But this time, something different happened.
+
+Before I could even open my laptop, someone had already asked the agent:
+
+> **User:** "The app team says they can't connect to the database at 10.0.1.50 on port 3306. What's wrong?"
+
+And the agent responded:
+
+> **AI Agent:** I've analyzed the FortiGate configuration. Here's what I found:
+>
+> **ISSUE IDENTIFIED:** No firewall policy allows traffic to 10.0.1.50:3306
+>
+> ✅ System Status: FortiGate is healthy (uptime: 45 days)  
+> ❌ Firewall Policies: No matching policy found  
+> ✅ Address Objects: "db-server" exists (10.0.1.50/32)  
+> ✅ Service Objects: "mysql" exists (TCP 3306)  
+> ✅ Interfaces: All up  
+> ✅ Routing: Route exists to 10.0.1.0/24
+>
+> **ROOT CAUSE:** Missing firewall policy between app subnet and database server.
+>
+> **RECOMMENDATION:** Create a policy from internal → dmz allowing mysql traffic to db-server.
+
+I just sat there staring at my phone. That was exactly what I would have done. That was exactly what I would have concluded. And it took **23 seconds** instead of 30 minutes.
+
+The best part? I stayed in bed.
+
+## Why This Matters (Beyond My Sleep Schedule)
+
+Here's what I've realized about expertise: **it doesn't scale**.
+
+I can train people, sure. I've done it for years. But there's always a gap between what I know and what I can transfer. The nuances, the patterns, the "I've seen this before" moments—those take years to develop.
+
+But when I encode that knowledge into an AI agent, suddenly it's available 24/7. It's consistent. It doesn't get tired. It doesn't forget steps. And it works for anyone on the team, not just the network specialists.
+
+For my students at Sheridan College, this is the future I want them to understand. The goal isn't to replace network engineers—it's to **amplify** them. To take the repetitive, pattern-matching work and automate it, so humans can focus on the creative, strategic decisions.
+
+## The Architecture (For My Fellow Nerds)
+
+Since I know you're curious, here's how it all fits together:
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    User     │────▶│  AI Agent   │────▶│ MCP Server  │────▶│  FortiGate  │
+│   (Slack,   │     │  (Kagent)   │     │  (Python)   │     │  REST API   │
+│  CLI, API)  │     │             │     │             │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+- **Kagent** orchestrates the AI agent in Kubernetes
+- **FastMCP** powers the MCP server (seriously, this framework is amazing)
+- **FortiGate REST API** provides the data
+- Everything runs as Kubernetes resources—stateless, scalable, GitOps-ready
+
+The whole thing deploys with:
+
+```bash
+git clone https://github.com/your-org/fortinet-mcp-kagent
+cd fortinet-mcp-kagent/k8s
+./deploy.sh
+```
+
+## What's Next?
+
+This is just the beginning. Right now the agent is read-only—it diagnoses, but doesn't fix. That's intentional. I'm not ready to let an AI modify firewall rules without human approval (and you shouldn't be either).
+
+But I'm working on Phase 2: **Change Management**. Imagine the agent diagnosing an issue, drafting the fix, creating a GitHub issue for approval, and then—once a human signs off—applying the change automatically.
+
+I'm also building a **Network Team Lead Agent** that orchestrates between FortiGate troubleshooting, GitHub tickets, and Slack notifications. One prompt like "traffic to 10.0.1.50 is blocked, investigate and create a ticket" triggers a whole workflow.
+
+## Join the Journey
+
+If you've made it this far, you're probably someone who's felt the pain of 2 AM firewall calls. Someone who's accumulated years of expertise and wondered if there's a better way to share it.
+
+There is. And it's open source.
+
+Check out the [FortiGate MCP Server on GitHub](https://github.com/your-org/fortinet-mcp-kagent). Star the repo. Try it in your environment. And if you build something cool with it, let me know—I'd love to see what you create.
+
+If you're new to Kagent, the [community is incredibly welcoming](https://discord.com/invite/Fu3k65f2k3). It's where I've been spending a lot of my time lately, and the things being built there are genuinely exciting.
+
+Oh, and if you're one of my students reading this—yes, this will probably be a lab exercise next semester. 😄
+
+## The Bottom Line
+
+After 20 years of building, securing, and automating infrastructure, I've finally automated the one thing I never thought I could: **my own expertise**.
+
+And honestly? That 2:47 AM call doesn't scare me anymore.
+
+---
+
+*Sebastian Maniak is a Technology Evangelist, HashiCorp Ambassador, and F5 DevCentral MVP. He builds, secures, and automates infrastructure at Solo.io. You can follow him for daily updates and code examples on [LinkedIn](https://www.linkedin.com/in/sebastianmaniak/) or check out his work at [maniak.io](https://maniak.io).*
+
+**Find this interesting? Let's connect:**
+- 🐙 [GitHub](https://github.com/your-org/fortinet-mcp-kagent)
+- 💼 [LinkedIn](https://www.linkedin.com/in/sebastianmaniak/)
+- 🌐 [maniak.io](https://maniak.io)
+
+*#AI #FortiGate #Kagent #Kubernetes #Automation #DevOps #NetworkSecurity*
