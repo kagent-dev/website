@@ -7,6 +7,7 @@ import Navbar from "@/components/navbar";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import '@docsearch/css';
+import HackathonBanner from "@/components/hackathon-banner";
 
 export const metadata: Metadata = {
   title: "kagent | Bringing Agentic AI to cloud native",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+          <HackathonBanner />
         </ThemeProvider>
       </body>
       <Script src="https://cdn.jsdelivr.net/npm/@docsearch/react@3" />
