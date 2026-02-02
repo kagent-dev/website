@@ -41,28 +41,33 @@ To create a container-based skill, package your skill files into a container ima
    cd k8s-deploy-skill
    ```
 
-2. Create a `SKILL.md` file with skill metadata and instructions. The file should include YAML frontmatter with the skill name and description, followed by detailed instructions for the agent.
+2. Create a `SKILL.md` file with skill metadata and instructions. The file must start with `---` and include YAML frontmatter with the skill name and description, followed by `---`, then detailed instructions for the agent.
 
    ```bash
    cat > SKILL.md <<'EOF'
+   ---
+   name: k8s-deploy-skill
+   description: Deploy simple applications to Kubernetes with customizable replicas and port
+   ---
+
    # Kubernetes simple deploy skill
-   
+
    Use this skill when users want to deploy a basic app on the Kubernetes cluster.
-   
+
    ## Instructions
-   
+
    - Expect the user to provide the name for an app they wish to deploy, along with a docker image reference.
      Optionally they may supply number of replicas and port number, but these are not required, and have defaults.
    - Call the script `scripts/deploy-app.py` passing the supplied name, image, and optional parameters (# of replicas and port number) if supplied, in that order.
    - The script generates a correct two-resource manifest (Deployment + Service) and writes it to the file `temp-manifest.yaml`.
-   
+
    You, the **agent**, are expected to apply the generated manifest `temp-manifest.yaml` against the current Kubernetes context.
-   
+
    ## Example
-   
+
    User: Deploy an app called "nginx" using image "docker/nginx" with 2 replicas on port 8080.
    Agent: Invokes `scripts/deploy-app.py nginx docker/nginx 2 8080`
-   
+
    The skill creates a manifest named `temp-manifest.yaml` consisting of a Deployment + Service in one shot.
    The agent in turn applies the generated temp-manifest.yaml to the cluster.
    EOF
@@ -312,7 +317,7 @@ After creating the agent, test it with queries that match your skills.
    Example output:
 
    ```json
-   {"artifacts":[{"artifactId":"91afd732-3fa5-4e25-8f0e-07a4968050e5","parts":[{"kind":"text","text":"I am a Kubernetes AI agent with deployment skills. I can help you deploy and manage Kubernetes applications by working with manifests, describing resources, getting resource details, and applying configurations to your Kubernetes cluster. However, currently, I do not have any additional specialized skills loaded beyond these core Kubernetes capabilities. If you have any Kubernetes-related tasks or questions, feel free to ask!"}]}],"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","history":[{"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","kind":"message","messageId":"msg-cd691a32-c0d8-471d-b8eb-e4e3265621ce","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"b7ee2804-b15e-4dee-b6e9-ca2901383a10"},{"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","kind":"message","messageId":"msg-cd691a32-c0d8-471d-b8eb-e4e3265621ce","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"b7ee2804-b15e-4dee-b6e9-ca2901383a10"},{"kind":"message","messageId":"e22926e1-50d2-4571-a039-a3dcf8dfb2b8","parts":[{"kind":"text","text":"I am a Kubernetes AI agent with deployment skills. I can help you deploy and manage Kubernetes applications by working with manifests, describing resources, getting resource details, and applying configurations to your Kubernetes cluster. However, currently, I do not have any additional specialized skills loaded beyond these core Kubernetes capabilities. If you have any Kubernetes-related tasks or questions, feel free to ask!"}],"role":"agent"}],"id":"b7ee2804-b15e-4dee-b6e9-ca2901383a10","kind":"task","metadata":{"kagent_app_name":"kagent__NS__k8s_assistant_with_skills","kagent_author":"k8s_assistant_with_skills","kagent_invocation_id":"e-ceaee83e-40a1-4088-b545-89e96f71608e","kagent_session_id":"f130122c-06e1-467c-9eb3-fe3704988b4d","kagent_usage_metadata":{"candidatesTokenCount":74,"promptTokenCount":1236,"totalTokenCount":1310},"kagent_user_id":"admin@kagent.dev"},"status":{"state":"completed","timestamp":"2025-11-21T22:13:16.484468+00:00"}}
+   {"artifacts":[{"artifactId":"e6c480b4-244c-425a-a601-f6b1d8c6c556","parts":[{"kind":"text","text":"I have access to the following skill:\n\n**k8s-deploy-skill** - A skill that helps deploy basic apps on Kubernetes cluster with generated manifests\n\nThis skill provides specialized capabilities for deploying applications to Kubernetes clusters. It can help generate and apply Kubernetes manifests to get your apps up and running.\n\nAdditionally, I have access to several Kubernetes management tools that allow me to:\n- **Get Kubernetes resources** - Query and list pods, services, deployments, and other resources\n- **Describe Kubernetes resources** - Get detailed information about specific resources\n- **Apply manifests** - Deploy YAML manifests to the cluster\n\nWould you like me to help you deploy an application or manage your Kubernetes cluster?"}]}],"contextId":"6d26a8e8-897c-41f3-a95b-09f48a83250c","history":[{"contextId":"6d26a8e8-897c-41f3-a95b-09f48a83250c","kind":"message","messageId":"msg-669637fe-432c-499f-8ed4-f702c6c0eb7a","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"f074f718-4d79-4546-a6d7-546d40f7a2ea"},{"contextId":"6d26a8e8-897c-41f3-a95b-09f48a83250c","kind":"message","messageId":"msg-669637fe-432c-499f-8ed4-f702c6c0eb7a","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"f074f718-4d79-4546-a6d7-546d40f7a2ea"},{"kind":"message","messageId":"c8e68a8c-196d-4f4c-a26a-05f05f351eb7","metadata":{"adk_partial":false},"parts":[{"kind":"text","text":"I have access to the following skill:\n\n**k8s-deploy-skill** - A skill that helps deploy basic apps on Kubernetes cluster with generated manifests\n\nThis skill provides specialized capabilities for deploying applications to Kubernetes clusters. It can help generate and apply Kubernetes manifests to get your apps up and running.\n\nAdditionally, I have access to several Kubernetes management tools that allow me to:\n- **Get Kubernetes resources** - Query and list pods, services, deployments, and other resources\n- **Describe Kubernetes resources** - Get detailed information about specific resources\n- **Apply manifests** - Deploy YAML manifests to the cluster\n\nWould you like me to help you deploy an application or manage your Kubernetes cluster?"}],"role":"agent"}],"id":"f074f718-4d79-4546-a6d7-546d40f7a2ea","kind":"task","metadata":{"kagent_app_name":"kagent__NS__k8s_assistant_with_skills","kagent_author":"k8s_assistant_with_skills","kagent_invocation_id":"e-be6fb35c-b768-4581-89ad-97874582553e","kagent_session_id":"6d26a8e8-897c-41f3-a95b-09f48a83250c","kagent_usage_metadata":{"candidatesTokenCount":159,"promptTokenCount":2358,"totalTokenCount":2517},"kagent_user_id":"admin@kagent.dev"},"status":{"state":"completed","timestamp":"2026-02-02T20:37:55.041398+00:00"}}
    ```
 
 2. Invoke a skill, such as by asking it to deploy an app.
