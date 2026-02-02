@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Bring your own ADK agent to kagent"
 ---
 
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
 export const metadata = {
   title: "Bringing your own ADK agent to kagent",
   description: "Learn how to bring your own ADK agent to kagent",
@@ -63,6 +65,40 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
 
 3. Create a BYO Agent resource.
 
+   <Tabs tabs={[
+     { id: 'with-secrets', label: 'With imagePullSecrets' },
+     { id: 'without-secrets', label: 'Without imagePullSecrets' }
+   ]} />
+
+   <div id="with-secrets-tab">
+   For private container registries, add `imagePullSecrets` to reference a Secret that contains credentials for pulling the agent image. Create the secret with `kubectl create secret docker-registry my-registry-secret --docker-server=<registry> --docker-username=<user> --docker-password=<password> -n kagent`.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: basic-agent
+     namespace: kagent
+   spec:
+     description: This agent can do anything.
+     type: BYO
+     byo:
+       deployment:
+         image: ghcr.io/my-org:latest
+         imagePullSecrets:
+           - name: my-registry-secret
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+   </div>
+
+   <div id="without-secrets-tab">
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: kagent.dev/v1alpha2
@@ -84,6 +120,7 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
                  key: GOOGLE_API_KEY
    EOF
    ```
+   </div>
 
 ## Testing the A2A endpoint
 
@@ -296,3 +333,22 @@ To use lifespan hooks in your ADK agent, create a lifespan function and pass it 
        lifespan=lifespan.lifespan  # Pass the lifespan function
    )
    ```
+
+### A2A max payload size
+
+BYO agents accept A2A requests with a default maximum payload size of 10 MB. For agents that need to handle larger payloads (for example, when processing large file attachments), set the `A2A_MAX_CONTENT_LENGTH` environment variable in the agent deployment.
+
+Example: Allow 50 MB payloads:
+
+```yaml
+spec:
+  type: BYO
+  byo:
+    deployment:
+      image: ghcr.io/my-org:latest
+      env:
+        - name: A2A_MAX_CONTENT_LENGTH
+          value: "52428800"  # 50 MB in bytes
+```
+
+Set to `0`, `none`, or `unlimited` for no limit (use with caution).

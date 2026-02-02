@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Important operational considerations when running kagent in production."
 ---
 
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
 export const metadata = {
   title: "Operational Considerations",
   description: "Important operational considerations when running kagent in production.",
@@ -13,6 +15,57 @@ export const metadata = {
 # Operational considerations
 
 Review the following operational considerations when running kagent in production environments, including database configuration, high availability, and secret management.
+
+## Secure execution environment
+
+Kagent supports Kubernetes security contexts to run agents and tool servers with reduced privileges. Configure `securityContext` and `podSecurityContext` on your Agent or ToolServer resources to enforce secure execution.
+
+Common settings include:
+
+- **`runAsNonRoot: true`**: Ensures the container does not run as root.
+- **`runAsUser`**: Specifies the user ID for the container process.
+- **`readOnlyRootFilesystem`**: Mounts the root filesystem as read-only when possible.
+
+<Tabs tabs={[
+  { id: 'declarative', label: 'Declarative agents' },
+  { id: 'byo', label: 'BYO agents' }
+]} />
+
+<div id="declarative-tab">
+Set these in `spec.declarative.deployment.podSecurityContext` and `spec.declarative.deployment.securityContext`.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    deployment:
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: false
+```
+</div>
+
+<div id="byo-tab">
+Set these in `spec.byo.deployment.podSecurityContext` and `spec.byo.deployment.securityContext`.
+
+```yaml
+spec:
+  type: BYO
+  byo:
+    deployment:
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: false
+```
+</div>
+
+At the Helm chart level, you can set global defaults with `podSecurityContext` and `securityContext` in your values. For more information, see the [Kubernetes SecurityContext documentation](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
 
 ## Automatic agent restart on secret updates
 
@@ -59,6 +112,24 @@ controller:
 - **Database requirement**: When using multiple controller replicas, use PostgreSQL as the database backend. The default in-memory database does not support multiple replicas.
 - **Leader election**: Leader election uses Kubernetes leases and is handled automatically.
 - **Failover**: If the leader fails, another replica automatically becomes the leader.
+
+## Proxy configuration for agent traffic
+
+When agents and MCP servers run behind an API gateway or proxy, you can configure kagent to route agent-to-agent and agent-to-MCP traffic through that proxy. Set `proxy.url` in your Helm values to the proxy endpoint.
+
+The proxy applies to:
+
+- Agent-to-agent traffic (when one agent invokes another as a tool)
+- Agent-to-MCP-server traffic (when agents call ToolServers, Services, or RemoteMCPServers with internal Kubernetes URLs)
+
+Example Helm configuration:
+
+```yaml
+proxy:
+  url: "http://proxy.kagent.svc.cluster.local:8080"
+```
+
+The controller rewrites internal URLs to use the proxy and sets the `x-kagent-host` header so the proxy can route requests to the correct backend. External URLs (for example, RemoteMCPServers pointing to `https://external.example.com`) are not rewritten.
 
 ### Use PostgreSQL for scaling
 
