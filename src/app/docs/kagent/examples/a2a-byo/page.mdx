@@ -66,37 +66,9 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
 3. Create a BYO Agent resource.
 
    <Tabs tabs={[
-     { id: 'with-secrets', label: 'With imagePullSecrets' },
-     { id: 'without-secrets', label: 'Without imagePullSecrets' }
+     { id: 'without-secrets', label: 'Without imagePullSecrets' },
+     { id: 'with-secrets', label: 'With imagePullSecrets' }
    ]} />
-
-   <div id="with-secrets-tab">
-   For private container registries, add `imagePullSecrets` to reference a Secret that contains credentials for pulling the agent image. Create the secret with `kubectl create secret docker-registry my-registry-secret --docker-server=<registry> --docker-username=<user> --docker-password=<password> -n kagent`.
-
-   ```yaml
-   kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha2
-   kind: Agent
-   metadata:
-     name: basic-agent
-     namespace: kagent
-   spec:
-     description: This agent can do anything.
-     type: BYO
-     byo:
-       deployment:
-         image: ghcr.io/my-org:latest
-         imagePullSecrets:
-           - name: my-registry-secret
-         env:
-           - name: GOOGLE_API_KEY
-             valueFrom:
-               secretKeyRef:
-                 name: kagent-google
-                 key: GOOGLE_API_KEY
-   EOF
-   ```
-   </div>
 
    <div id="without-secrets-tab">
    ```yaml
@@ -112,6 +84,40 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
      byo:
        deployment:
          image: ghcr.io/my-org:latest
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+   </div>
+
+   <div id="with-secrets-tab">
+   For agent images that are in private container registries, you can use an image pull secret with the credentials to the registry. 
+   
+   First, create the Secret.
+   ```sh
+   kubectl create secret docker-registry my-registry-secret --docker-server=<registry> --docker-username=<user> --docker-password=<password> -n kagent
+   ```
+
+   Then, add `imagePullSecrets` to refer to the Secret that you just created.
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: basic-agent
+     namespace: kagent
+   spec:
+     description: This agent can do anything.
+     type: BYO
+     byo:
+       deployment:
+         image: ghcr.io/my-org:latest
+         imagePullSecrets:
+           - name: my-registry-secret
          env:
            - name: GOOGLE_API_KEY
              valueFrom:
