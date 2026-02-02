@@ -45,6 +45,10 @@ To create a container-based skill, package your skill files into a container ima
 
    ```bash
    cat > SKILL.md <<'EOF'
+   ---
+   name: k8s-deploy-skill
+   description: Use this skill when users want to deploy a basic app on the Kubernetes cluster.
+   ---
    # Kubernetes simple deploy skill
    
    Use this skill when users want to deploy a basic app on the Kubernetes cluster.
@@ -56,7 +60,7 @@ To create a container-based skill, package your skill files into a container ima
    - Call the script `scripts/deploy-app.py` passing the supplied name, image, and optional parameters (# of replicas and port number) if supplied, in that order.
    - The script generates a correct two-resource manifest (Deployment + Service) and writes it to the file `temp-manifest.yaml`.
    
-   You, the **agent**, are expected to apply the generated manifest `temp-manifest.yaml` against the current Kubernetes context.
+   You, the **agent**, are expected to apply the generated manifest `temp-manifest.yaml` against the current Kubernetes context using the `k8s_apply_manifest` tool.
    
    ## Example
    
@@ -281,9 +285,9 @@ spec:
           name: kagent-tool-server
           kind: RemoteMCPServer
           toolNames:
-            - k8s_apply_manifest
             - k8s_get_resources
             - k8s_describe_resource
+            - k8s_apply_manifest
     systemMessage: |
       You are a Kubernetes assistant that helps users deploy and manage applications.
       You have access to skills that can help automate common tasks.
@@ -312,7 +316,7 @@ After creating the agent, test it with queries that match your skills.
    Example output:
 
    ```json
-   {"artifacts":[{"artifactId":"91afd732-3fa5-4e25-8f0e-07a4968050e5","parts":[{"kind":"text","text":"I am a Kubernetes AI agent with deployment skills. I can help you deploy and manage Kubernetes applications by working with manifests, describing resources, getting resource details, and applying configurations to your Kubernetes cluster. However, currently, I do not have any additional specialized skills loaded beyond these core Kubernetes capabilities. If you have any Kubernetes-related tasks or questions, feel free to ask!"}]}],"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","history":[{"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","kind":"message","messageId":"msg-cd691a32-c0d8-471d-b8eb-e4e3265621ce","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"b7ee2804-b15e-4dee-b6e9-ca2901383a10"},{"contextId":"f130122c-06e1-467c-9eb3-fe3704988b4d","kind":"message","messageId":"msg-cd691a32-c0d8-471d-b8eb-e4e3265621ce","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"b7ee2804-b15e-4dee-b6e9-ca2901383a10"},{"kind":"message","messageId":"e22926e1-50d2-4571-a039-a3dcf8dfb2b8","parts":[{"kind":"text","text":"I am a Kubernetes AI agent with deployment skills. I can help you deploy and manage Kubernetes applications by working with manifests, describing resources, getting resource details, and applying configurations to your Kubernetes cluster. However, currently, I do not have any additional specialized skills loaded beyond these core Kubernetes capabilities. If you have any Kubernetes-related tasks or questions, feel free to ask!"}],"role":"agent"}],"id":"b7ee2804-b15e-4dee-b6e9-ca2901383a10","kind":"task","metadata":{"kagent_app_name":"kagent__NS__k8s_assistant_with_skills","kagent_author":"k8s_assistant_with_skills","kagent_invocation_id":"e-ceaee83e-40a1-4088-b545-89e96f71608e","kagent_session_id":"f130122c-06e1-467c-9eb3-fe3704988b4d","kagent_usage_metadata":{"candidatesTokenCount":74,"promptTokenCount":1236,"totalTokenCount":1310},"kagent_user_id":"admin@kagent.dev"},"status":{"state":"completed","timestamp":"2025-11-21T22:13:16.484468+00:00"}}
+   {"artifacts":[{"artifactId":"983693f3-dfc3-4169-9ceb-831c3b7f5218","parts":[{"kind":"text","text":"I am a Kubernetes AI agent equipped with deployment skills. I can help you deploy, manage, and troubleshoot Kubernetes applications and resources. Additionally, I have access to functions for describing, getting, and managing Kubernetes resources, as well as executing bash commands within the Kubernetes environment.\n\nCurrently, no additional specialized skills are loaded in this conversation, but I can assist with a wide range of Kubernetes-related tasks such as:\n\n- Creating and managing deployments, services, and pods\n- Describing Kubernetes objects\n- Executing commands and scripts in the Kubernetes cluster\n- Retrieving detailed information about namespaces, nodes, and other resources\n- Helping with troubleshooting and debugging Kubernetes issues\n\nIf you have a specific Kubernetes task or question, just let me know!"}]}],"contextId":"02ca4e85-6084-4621-9407-245bdc69ebc3","history":[{"contextId":"02ca4e85-6084-4621-9407-245bdc69ebc3","kind":"message","messageId":"msg-be65549d-7819-404d-8b46-68a382da0415","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"85a44549-3b0e-448d-964f-37190fdcebd2"},{"contextId":"02ca4e85-6084-4621-9407-245bdc69ebc3","kind":"message","messageId":"msg-be65549d-7819-404d-8b46-68a382da0415","parts":[{"kind":"text","text":"What skills do you have?"}],"role":"user","taskId":"85a44549-3b0e-448d-964f-37190fdcebd2"},{"kind":"message","messageId":"fcbf0b5c-5ff7-48c1-acaa-3b190ce185d7","metadata":{"adk_partial":false},"parts":[{"kind":"text","text":"I am a Kubernetes AI agent equipped with deployment skills. I can help you deploy, manage, and troubleshoot Kubernetes applications and resources. Additionally, I have access to functions for describing, getting, and managing Kubernetes resources, as well as executing bash commands within the Kubernetes environment.\n\nCurrently, no additional specialized skills are loaded in this conversation, but I can assist with a wide range of Kubernetes-related tasks such as:\n\n- Creating and managing deployments, services, and pods\n- Describing Kubernetes objects\n- Executing commands and scripts in the Kubernetes cluster\n- Retrieving detailed information about namespaces, nodes, and other resources\n- Helping with troubleshooting and debugging Kubernetes issues\n\nIf you have a specific Kubernetes task or question, just let me know!"}],"role":"agent"}],"id":"85a44549-3b0e-448d-964f-37190fdcebd2","kind":"task","metadata":{"kagent_app_name":"kagent__NS__k8s_assistant_with_skills","kagent_author":"k8s_assistant_with_skills","kagent_invocation_id":"e-7d0dc60a-ffab-4941-ac10-9ad8df07e55a","kagent_session_id":"02ca4e85-6084-4621-9407-245bdc69ebc3","kagent_user_id":"A2A_USER_02ca4e85-6084-4621-9407-245bdc69ebc3"},"status":{"state":"completed","timestamp":"2026-02-02T16:23:57.588472+00:00"}}
    ```
 
 2. Invoke a skill, such as by asking it to deploy an app.
