@@ -32,7 +32,8 @@ Example: Reference to a RemoteMCPServer in the `tools` namespace.
 tools:
   - type: McpServer
     mcpServer:
-      name: tools/kagent-tool-server
+      name: kagent-tool-server
+      namespace: tools
       kind: RemoteMCPServer
       toolNames:
         - k8s_get_resources
@@ -72,7 +73,8 @@ You also have an option of using agents as tools. Any agent you create can be re
 tools:
   - type: Agent
     agent:
-      ref: other-namespace/promql-agent
+      name: promql-agent
+      namespace: other-namespace
 ```
 
 ## MCP Tools

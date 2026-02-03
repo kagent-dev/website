@@ -144,11 +144,12 @@ Here's how you could reference an existing agent (`promql-agent`) as a tool:
     # Referencing an existing agent as a tool (same namespace)
     - type: Agent
       agent:
-        ref: promql-agent
+        name: promql-agent
     # Referencing an agent in another namespace
     - type: Agent
       agent:
-        ref: other-namespace/promql-agent
+        name: promql-agent
+        namespace: other-namespace
 ```
 
 ### MCP server endpoint
