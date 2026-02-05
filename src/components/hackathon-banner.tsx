@@ -94,7 +94,7 @@ export default function HackathonBanner() {
             className="text-[10px] uppercase tracking-[0.3em] mb-2"
             style={{ color: 'rgba(0, 255, 255, 0.6)' }}
           >
-            // Virtual Hackathon
+            {"//"} Virtual Hackathon
           </div>
           <div
             className="hackathon-title text-xl font-bold mb-2 font-mono"
