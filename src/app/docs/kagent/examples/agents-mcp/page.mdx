@@ -1,0 +1,81 @@
+---
+title: "Using Kagent agents via MCP"
+pageOrder: 1
+description: "Connect external clients like Cursor and Claude to interact with Kagent agents using the Model Context Protocol."
+---
+
+export const metadata = {
+  title: "Using Kagent agents via MCP",
+  description:
+    "Connect external clients like Cursor and Claude to interact with Kagent agents using the Model Context Protocol.",
+  author: "kagent.dev",
+};
+
+# Using Kagent agents via MCP
+
+Kagent exposes all running agents via a Model Context Protocol (MCP) server embedded in the control plane HTTP server. This allows you to interact with your Kagent agents using any MCP-compliant client at `http://<IP_ADDRESS>/mcp`.
+
+## Setting up
+
+Connect your MCP client to the Kagent MCP endpoint using the Streamable HTTP transport.
+
+### Local Development
+
+If you are running Kagent locally, you can port-forward the control plane service:
+
+```bash
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083
+```
+
+Then use `http://localhost:8080/mcp` as your MCP endpoint. Otherwise, use the IP address of your kagent control plane.
+
+### Example: Cursor Configuration
+
+Add the following to your Cursor MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "kagent-agents": {
+      "url": "http://localhost:8083/mcp"
+    }
+  }
+}
+```
+
+_Note: Ensure the port matches your local setup (e.g., 8083)._
+
+### Example: Claude Code
+
+To add Kagent to Claude Code:
+
+```bash
+claude mcp add --transport http kagent http://localhost:8083/mcp
+```
+
+Add `--scope project` to limit the configuration to the current project.
+
+> SSE (Server-Sent Events) is currently not supported. You must use Streamable HTTP. Future updates will include stdio support via the CLI.
+
+## Using the MCP Server
+
+The MCP server exposes two core tools:
+
+1. `list_agents`: Lists all available agents.
+2. `invoke_agent`: Runs a specific agent by name with a given input. Supports `sessionID` for continuing conversations.
+
+This architecture enables MCP clients (like Cursor or other agents) to discover and orchestrate Kagent agents as "sub-agents," delegating specialized tasks or cluster actions securely.
+
+### Tools Overview
+
+![List Tools](/images/agent-mcp-tools.png "List tools")
+
+### Example Usage
+
+Here is an example of asking Claude about a Kubernetes cluster:
+
+![Ask Claude](/images/agent-mcp-claude.png "Ask Claude")
+
+In this workflow, the client first calls `list_agents` to discover capabilities, then calls `invoke_agent` to execute the `k8s-agent` with the user's query.
+
+Try it out and see what you can do! Feel free to open issues for feedback or suggestions.
