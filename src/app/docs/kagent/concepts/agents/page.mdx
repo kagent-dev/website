@@ -156,15 +156,4 @@ Here's how you could reference an existing agent (`promql-agent`) as a tool:
 
 A2A-enabled agents are automatically exposed as an MCP server on the kagent controller. The MCP endpoint is available at `/mcp` on the same port as the A2A endpoint (default 8083).
 
-This MCP server provides two tools:
-
-- **`list_agents`**: Lists invokable kagent agents that are accepted and deployment-ready.
-- **`invoke_agent`**: Invokes a kagent agent via A2A. The agent reference uses the format `namespace/name`.
-
-You can connect MCP clients (such as Cursor, Claude Desktop, or other MCP-compatible tools) to the kagent controller to use your agents as MCP tools, such as when port-forwarding the controller:
-
-```
-http://localhost:8083/mcp
-```
-
-The MCP server uses the same authentication as the A2A endpoints.
+For more information, see the [MCP tools](/docs/kagent/examples/agents-mcp) guide.
