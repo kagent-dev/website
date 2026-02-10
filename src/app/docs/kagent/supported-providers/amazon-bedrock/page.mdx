@@ -71,13 +71,13 @@ You can also use Bedrock models via the [OpenAI Chat Completions API](https://do
    - Example regions: `us-west-2` or `us-east-1`
    - Example model IDs: `amazon.titan-text-express-v1` or `openai.gpt-oss-20b-1:0`. Ensure your AWS account has access to the chosen model. Some models, like Anthropic models, may require additional access controls. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
 
-3. Save your AWS API key as an environment variable:
+3. Save your AWS API key as an environment variable.
 
    ```bash
    export AWS_API_KEY=<your-aws-api-key>
    ```
 
-4. Create a Kubernetes secret that stores your AWS API key in the same namespace as your agent, typically `kagent`:
+4. Create a Kubernetes secret that stores your AWS API key in the same namespace as your agent, typically `kagent`.
 
    ```bash
    kubectl create secret generic kagent-bedrock -n kagent --from-literal AWS_API_KEY=$AWS_API_KEY
@@ -112,4 +112,4 @@ EOF
 
 ## Next steps
 
-Now that you have configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.
+Now that you configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.
