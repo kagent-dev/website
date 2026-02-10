@@ -154,6 +154,11 @@
             "description": "Bring your own ADK agent to kagent"
           },
           {
+            "title": "Using Kagent agents via MCP",
+            "href": "/docs/kagent/examples/agents-mcp",
+            "description": "Connect external clients like Cursor and Claude to interact with Kagent agents using the Model Context Protocol."
+          },
+          {
             "title": "BYO CrewAI Agents",
             "href": "/docs/kagent/examples/crewai-byo",
             "description": "Bring your own CrewAI agent to kagent"
