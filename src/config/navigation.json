@@ -99,7 +99,7 @@
           {
             "title": "Amazon Bedrock",
             "href": "/docs/kagent/supported-providers/amazon-bedrock",
-            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
+            "description": "Use Amazon Bedrock models with kagent via the native Bedrock provider or the OpenAI Chat Completions API."
           },
           {
             "title": "Anthropic",

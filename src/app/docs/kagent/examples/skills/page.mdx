@@ -49,7 +49,6 @@ To create a container-based skill, package your skill files into a container ima
    name: k8s-deploy-skill
    description: Deploy simple applications to Kubernetes with customizable replicas and port
    ---
-
    # Kubernetes simple deploy skill
 
    Use this skill when users want to deploy a basic app on the Kubernetes cluster.
@@ -286,9 +285,9 @@ spec:
           name: kagent-tool-server
           kind: RemoteMCPServer
           toolNames:
-            - k8s_apply_manifest
             - k8s_get_resources
             - k8s_describe_resource
+            - k8s_apply_manifest
     systemMessage: |
       You are a Kubernetes assistant that helps users deploy and manage applications.
       You have access to skills that can help automate common tasks.

@@ -108,9 +108,9 @@ A Helm chart for kagent, built with Google ADK
 | controller.service.ports.port | int | `8083` |  |
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
-| controller.streaming.initialBufSize | string | `"4Ki"` |  |
-| controller.streaming.maxBufSize | string | `"1Mi"` |  |
-| controller.streaming.timeout | string | `"600s"` |  |
+| controller.streaming.initialBufSize | string | `"4Ki"` | Initial size of the A2A streaming buffer. |
+| controller.streaming.maxBufSize | string | `"1Mi"` | Maximum size of the A2A streaming buffer. |
+| controller.streaming.timeout | string | `"600s"` | Timeout for A2A streaming connections. |
 | controller.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
@@ -126,7 +126,7 @@ A Helm chart for kagent, built with Google ADK
 | grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
 | grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
-| imagePullSecrets | list | `[]` |  |
+| imagePullSecrets | list | `[]` | Image pull secrets for pulling agent and tool images from private registries. You can also set `imagePullSecrets` per agent in the Agent `deployment` spec. |
 | kagent-tools.enabled | bool | `true` |  |
 | kagent-tools.fullnameOverride | string | `"kagent-tools"` |  |
 | kagent-tools.replicaCount | int | `1` |  |
@@ -178,7 +178,7 @@ A Helm chart for kagent, built with Google ADK
 | providers.openAI.apiKeySecretRef | string | `"kagent-openai"` |  |
 | providers.openAI.model | string | `"gpt-4.1-mini"` |  |
 | providers.openAI.provider | string | `"OpenAI"` |  |
-| proxy.url | string | `""` |  |
+| proxy.url | string | `""` | Proxy URL for routing agent-to-agent and agent-to-MCP traffic through a gateway (for example, `http://proxy.kagent.svc.cluster.local:8080`). When set, the controller routes internal Kubernetes URLs (agents, MCP servers, services) through this proxy. The proxy uses the `x-kagent-host` header for routing. Omit for direct connections. |
 | querydoc.image.pullPolicy | string | `"IfNotPresent"` |  |
 | querydoc.image.registry | string | `"ghcr.io"` |  |
 | querydoc.image.repository | string | `"kagent-dev/doc2vec/mcp"` |  |

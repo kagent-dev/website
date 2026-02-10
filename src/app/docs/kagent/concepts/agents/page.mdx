@@ -141,8 +141,19 @@ Here's how you could reference an existing agent (`promql-agent`) as a tool:
         toolNames:
         - k8s_get_resources
         - k8s_get_available_api_resources
-    # Referencing an existing agent as a tool
+    # Referencing an existing agent as a tool (same namespace)
     - type: Agent
       agent:
-        ref: promql-agent
+        name: promql-agent
+    # Referencing an agent in another namespace
+    - type: Agent
+      agent:
+        name: promql-agent
+        namespace: other-namespace
 ```
+
+### MCP server endpoint
+
+A2A-enabled agents are automatically exposed as an MCP server on the kagent controller. The MCP endpoint is available at `/mcp` on the same port as the A2A endpoint (default 8083).
+
+For more information, see the [MCP tools](/docs/kagent/examples/agents-mcp) guide.

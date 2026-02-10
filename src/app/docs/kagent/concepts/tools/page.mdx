@@ -22,9 +22,60 @@ You can check out the full list of built-in tools [here](/tools).
 
 The built-in tools are meant as a good starting point for any agents running in kubernetes, however we don't envision them covering all possible use-cases, so we support multiple tool extension points to allow you to bring in your own tools.
 
+### Cross-namespace tool references
+
+You can refer to tools from MCP servers in other namespaces by using the `namespace/name` format. This way, you can share tool servers across namespaces without duplicating them.
+
+Example: Reference to a RemoteMCPServer in the `tools` namespace.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      namespace: tools
+      kind: RemoteMCPServer
+      toolNames:
+        - k8s_get_resources
+```
+
+The same format applies when referring to Services or MCPServers in other namespaces.
+
+### Headers for tool calls
+
+You can add headers to requests sent from an agent to a tool using `headersFrom`. This ability is useful for passing API keys, authentication tokens, or other per-request metadata to MCP servers. Header values are resolved from Secrets or ConfigMaps in the same namespace as the Agent.
+
+Example: Add an API key header when calling a tool.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      toolNames:
+        - k8s_get_resources
+    headersFrom:
+      - name: Authorization
+        valueFrom:
+          type: Secret
+          name: tool-api-secret
+          key: api-key
+```
+
+Headers specified in `headersFrom` override any headers of the same name configured on the tool itself.
+
 ## Agents as Tools
 
-You also have an option of using agents as tools. Any agent you create can be referenced and used by other agents you have.
+You also have an option of using agents as tools. Any agent you create can be referenced and used by other agents you have. You can refer to agents in other namespaces by using the `namespace/name` format.
+
+```yaml
+tools:
+  - type: Agent
+    agent:
+      name: promql-agent
+      namespace: other-namespace
+```
 
 ## MCP Tools
 
