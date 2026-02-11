@@ -275,15 +275,15 @@ const MarketingPage = () => {
             Whether you&apos;re a platform engineer, DevOps professional, or CNCF project maintainer, help us build and shape the future of AI-driven cloud-native operations.
           </p>
           <div className="flex justify-center space-x-8">
-            <Button size="lg" className="text-lg px-8 py-4">
-              <Discord className="mr-3" />
+            <Button size="lg" asChild className="text-lg px-8 py-4">
               <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer">
+                <Discord className="mr-3" />
                 Discord
               </Link>
             </Button>
-            <Button size="lg" className="text-lg px-8 py-4">
-              <Github className="mr-3" />
+            <Button size="lg" asChild className="text-lg px-8 py-4">
               <Link href="https://github.com/kagent-dev" target="_blank" rel="noopener noreferrer">
+                <Github className="mr-3" />
                 GitHub
               </Link>
             </Button>
