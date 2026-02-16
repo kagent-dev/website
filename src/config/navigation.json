@@ -61,11 +61,6 @@
             "title": "Writing System Prompts",
             "href": "/docs/kagent/getting-started/system-prompts",
             "description": "Learn the art and science of writing effective system prompts for your kagent agents."
-          },
-          {
-            "title": "Tracing",
-            "href": "/docs/kagent/getting-started/tracing",
-            "description": "A guide to tracing your kagent agents."
           }
         ]
       },
@@ -204,6 +199,11 @@
             "title": "Audit kagent prompts",
             "href": "/docs/kagent/observability/audit-prompts",
             "description": "Review and audit prompts used by kagent agents."
+          },
+          {
+            "title": "Tracing",
+            "href": "/docs/kagent/observability/tracing",
+            "description": "A guide to tracing your kagent agents."
           }
         ]
       },

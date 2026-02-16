@@ -14,6 +14,11 @@ const nextConfig = {
         destination: '/docs/kagent/supported-providers',
         permanent: true,
       },
+      {
+        source: '/docs/kagent/getting-started/tracing',
+        destination: '/docs/kagent/observability/tracing',
+        permanent: true,
+      },
     ];
   },
   webpack: (config) => {
