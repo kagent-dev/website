@@ -26,7 +26,7 @@ const AgentsRegistry = () => {
       <div className="min-h-screen">
         <div className="border-b border-white/10">
           <div className="max-w-6xl mx-auto px-6 py-8">
-            <h1 className="text-3xl font-medium mb-4">Agents Registry</h1>
+            <h1 className="text-3xl font-medium mb-4 font-heading">Agents Registry</h1>
             <p className="text-muted-foreground text-lg mb-8">
               Discover and use AI agents to automate your work
             </p>
@@ -54,7 +54,7 @@ const AgentsRegistry = () => {
           </div>
           {/* Bottom CTA Section */}
           <div className="mt-20 py-12 px-8 border border-white/10 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 text-center">
-            <h2 className="text-2xl font-medium mb-3">
+            <h2 className="text-2xl font-medium mb-3 font-heading">
               Can&apos;t find what you&apos;re looking for?
             </h2>
             <p className="text-muted-foreground text-lg mb-6 max-w-2xl mx-auto">

@@ -8,6 +8,19 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import '@docsearch/css';
 import HackathonBanner from "@/components/hackathon-banner";
+import { Outfit, DM_Sans } from "next/font/google";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "kagent | Bringing Agentic AI to cloud native",
@@ -17,9 +30,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${outfit.variable} ${dmSans.variable}`}>
       <GoogleTagManager gtmId="GTM-KNRGVQPF" />
-      <body className="min-h-screen bg-background flex flex-col">
+      <body className="min-h-screen bg-background flex flex-col font-body">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Navbar />
           <main className="flex-1">{children}</main>

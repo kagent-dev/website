@@ -10,30 +10,30 @@ import Youtube from "./icons/youtube";
 
 export default function Footer() {
   return (
-    <footer className="mt-auto py-16 border-t border-white/10">
+    <footer className="mt-auto py-16 footer-gradient-border">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Getting Started Section */}
           <div>
-            <h3 className="text-sm font-semibold mb-4">Getting Started</h3>
+            <h3 className="text-sm font-semibold mb-4 font-heading">Getting Started</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/docs/kagent/introduction/installation" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/introduction/installation" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Installing kagent
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/getting-started/quickstart" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/getting-started/quickstart" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Quick Start
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/getting-started/first-agent" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/getting-started/first-agent" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   First Agent Guide
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/getting-started/first-mcp-tool" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/getting-started/first-mcp-tool" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   First MCP Tool
                 </Link>
               </li>
@@ -42,25 +42,25 @@ export default function Footer() {
 
           {/* Documentation Section */}
           <div>
-            <h3 className="text-sm font-semibold mb-4">Documentation</h3>
+            <h3 className="text-sm font-semibold mb-4 font-heading">Documentation</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/docs/kagent/introduction/what-is-kagent" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/introduction/what-is-kagent" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   What is kagent
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/concepts/architecture" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/concepts/architecture" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Architecture
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/concepts" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/concepts" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Core Concepts
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/supported-providers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/supported-providers" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Configuring LLM Providers
                 </Link>
               </li>
@@ -69,35 +69,35 @@ export default function Footer() {
 
           {/* Examples Section */}
           <div>
-            <h3 className="text-sm font-semibold mb-4">Examples</h3>
+            <h3 className="text-sm font-semibold mb-4 font-heading">Examples</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/tools" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/tools" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Tools
                 </Link>
               </li>
               <li>
-                <Link href="/agents" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/agents" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Agents
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/examples/a2a-agents" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/examples/a2a-agents" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   A2A Agents
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/examples/documentation" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/examples/documentation" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Documentation Agent
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/examples/slack-a2a" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/examples/slack-a2a" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Slack and A2A
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/examples/discord-a2a" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/examples/discord-a2a" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Discord and A2A
                 </Link>
               </li>
@@ -106,35 +106,35 @@ export default function Footer() {
 
           {/* Community Section */}
           <div>
-            <h3 className="text-sm font-semibold mb-4">Community</h3>
+            <h3 className="text-sm font-semibold mb-4 font-heading">Community</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/blog" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/blog" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Discord
                 </Link>
               </li>
               <li>
-                <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   GitHub
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Contributing
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/resources/faq" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/resources/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/orgs/kagent-dev/projects/3" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/orgs/kagent-dev/projects/3" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                   Roadmap
                 </Link>
               </li>
@@ -159,19 +159,19 @@ export default function Footer() {
           </div>
           <div className="flex flex-col items-center md:items-end gap-4">
             <div className="flex items-center gap-4">
-              <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 <Github className="h-5 w-5" />
               </Link>
-              <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 <DiscordIcon className="h-5 w-5" />
               </Link>
-              <Link href={X_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={X_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 <Twitter className="h-5 w-5" />
               </Link>
-              <Link href={LINKEDIN_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={LINKEDIN_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 <LinkedIn className="h-5 w-5" />
               </Link>
-              <Link href={YOUTUBE_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+              <Link href={YOUTUBE_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 <Youtube className="h-5 w-5" />
               </Link>
             </div>
