@@ -1,0 +1,104 @@
+---
+title: "Multi-Runtime Support"
+pageOrder: 7
+description: "Choose between Go and Python ADK runtimes for your agents."
+---
+
+export const metadata = {
+  title: "Multi-Runtime Support",
+  description: "Choose between Go and Python ADK runtimes for your agents.",
+  author: "kagent.dev"
+};
+
+# Multi-Runtime Support (Go / Python ADK)
+
+kagent supports two Agent Development Kit (ADK) runtimes for declarative agents.
+
+## Overview
+
+| Feature | Python ADK | Go ADK |
+|---------|-----------|--------|
+| Startup time | ~15 seconds | ~2 seconds |
+| Ecosystem | Google ADK, LangGraph, CrewAI integrations | Native Go implementation |
+| Resource usage | Higher (Python runtime) | Lower (compiled binary) |
+| Default | Yes | No |
+| Memory support | Yes | Yes |
+| MCP support | Yes | Yes |
+| HITL support | Yes | Yes |
+
+## Configuration
+
+### Python Runtime (Default)
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: python-agent
+spec:
+  type: Declarative
+  declarative:
+    runtime: python
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent."
+```
+
+### Go Runtime
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: go-agent
+spec:
+  type: Declarative
+  declarative:
+    runtime: go
+    modelConfig: default-model-config
+    systemMessage: "You are a fast-starting agent."
+```
+
+## When to Use Which
+
+**Choose Go when:**
+- Fast startup matters (autoscaling, cold starts)
+- Lower resource consumption is important
+- You don't need Python-specific framework integrations
+
+**Choose Python when:**
+- You need Google ADK-native features
+- You want to use CrewAI, LangGraph, or OpenAI framework integrations
+- You need Python-based custom tools or skills
+
+## Go ADK Built-in Tools
+
+| Tool | Description |
+|------|-------------|
+| `SkillsTool` | Discover and load skills from the skills directory |
+| `BashTool` | Execute shell commands with timeout handling |
+| `ReadFile` | Read file contents with line numbers and pagination |
+| `WriteFile` | Write content to files (creates directories as needed) |
+| `EditFile` | String replacement with ambiguity detection |
+
+## BYO (Bring Your Own) Agents
+
+For maximum flexibility, bring your own agent container:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: custom-agent
+spec:
+  type: BYO
+  byo:
+    image: myregistry/my-custom-agent:v1.0
+    deployment:
+      replicas: 1
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+```
+
+BYO agents must implement the A2A protocol endpoint for communication with the kagent platform.

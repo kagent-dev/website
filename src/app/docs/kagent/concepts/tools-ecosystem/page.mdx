@@ -1,0 +1,204 @@
+---
+title: "Tools Ecosystem"
+pageOrder: 3
+description: "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
+---
+
+export const metadata = {
+  title: "Tools Ecosystem",
+  description: "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts.",
+  author: "kagent.dev"
+};
+
+# Tools Ecosystem
+
+kagent provides a rich set of built-in tools through MCP (Model Context Protocol) servers, plus the ability to add custom tools. All tools are integrated via the kagent-tools package.
+
+## Built-in Tool Categories
+
+### Kubernetes
+
+Comprehensive cluster management tools:
+
+| Tool | Description |
+|------|-------------|
+| `kubectl_get` | Query resources (pods, deployments, services, etc.) |
+| `kubectl_describe` | Detailed resource information |
+| `kubectl_scale` | Scale deployments and statefulsets |
+| `kubectl_patch` | Patch resources with strategic merge |
+| `kubectl_label` | Add/remove labels |
+| `kubectl_annotate` | Add/remove annotations |
+| `kubectl_delete` | Delete resources |
+| `kubectl_apply` | Apply YAML manifests |
+| `kubectl_exec` | Execute commands in pods |
+| `kubectl_logs` | Retrieve pod logs |
+| `kubectl_events` | Get cluster events |
+| `kubectl_connectivity_test` | Test service connectivity |
+
+### Helm
+
+| Tool | Description |
+|------|-------------|
+| `helm_list` | List installed releases |
+| `helm_install` | Install a chart |
+| `helm_upgrade` | Upgrade a release |
+| `helm_uninstall` | Remove a release |
+| `helm_repo_add` | Add chart repository |
+| `helm_repo_update` | Update chart repositories |
+
+### Istio
+
+| Tool | Description |
+|------|-------------|
+| `istio_proxy_status` | Check proxy synchronization status |
+| `istio_proxy_config` | Inspect proxy configuration |
+| `istio_install` | Install Istio |
+| `istio_manifest_generate` | Generate installation manifests |
+| `istio_analyze` | Analyze Istio configuration for issues |
+| `istio_version` | Get Istio version info |
+| `istio_remote_clusters` | Manage remote cluster configuration |
+| `istio_waypoint` | Manage waypoint proxies |
+
+### Argo Rollouts
+
+| Tool | Description |
+|------|-------------|
+| `argo_rollouts_verify` | Verify controller is running |
+| `argo_rollouts_check_plugins` | Check installed plugins |
+| `argo_rollouts_promote` | Promote a rollout |
+| `argo_rollouts_pause` | Pause a rollout |
+| `argo_rollouts_set_image` | Update rollout image |
+
+### Cilium
+
+| Tool | Description |
+|------|-------------|
+| `cilium_status` | Check Cilium status |
+| `cilium_install` | Install Cilium |
+| `cilium_upgrade` | Upgrade Cilium |
+| `cilium_clustermesh` | Manage cluster mesh |
+| `cilium_bgp_peers` | View BGP peers |
+| `cilium_bgp_routes` | View BGP routes |
+
+### Prometheus
+
+| Tool | Description |
+|------|-------------|
+| `prometheus_query` | Execute instant PromQL queries |
+| `prometheus_query_range` | Execute range PromQL queries |
+| `prometheus_labels` | Discover available labels |
+| `prometheus_targets` | List scrape targets and status |
+
+### Grafana
+
+| Tool | Description |
+|------|-------------|
+| `grafana_orgs` | Manage organizations |
+| `grafana_dashboards` | List/manage dashboards |
+| `grafana_alerts` | View/manage alerts |
+| `grafana_datasources` | Manage data sources |
+
+### Utilities
+
+| Tool | Description |
+|------|-------------|
+| `datetime_format` | Format timestamps |
+| `datetime_parse` | Parse date strings |
+| `shell_execute` | Run shell commands |
+| `docs_query` | Query product documentation |
+
+## Agent Built-in Tools
+
+These tools are automatically available to every agent (no configuration needed):
+
+| Tool | Description |
+|------|-------------|
+| `ask_user` | Pose questions to users with optional choices |
+| `SkillsTool` | Discover and load skills |
+| `BashTool` | Execute shell commands (Go ADK) |
+| `ReadFile` | Read files with pagination (Go ADK) |
+| `WriteFile` | Write file content (Go ADK) |
+| `EditFile` | Edit files via string replacement (Go ADK) |
+
+## Configuring Tools on an Agent
+
+### Single MCP Server
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You manage Kubernetes clusters."
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - kubectl_get
+            - kubectl_describe
+            - kubectl_logs
+            - kubectl_events
+```
+
+### With Tool Approval
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      toolNames:
+        - kubectl_get
+        - kubectl_describe
+        - kubectl_delete
+        - kubectl_apply
+      requireApproval:
+        - kubectl_delete
+        - kubectl_apply
+```
+
+### Agent as Tool (A2A)
+
+Use another agent as a tool via the A2A protocol:
+
+```yaml
+tools:
+  - type: Agent
+    agent:
+      name: specialist-agent
+      namespace: default
+```
+
+## Community / Contrib MCP Servers
+
+Additional MCP servers available in `contrib/tools/`:
+
+| Server | Description |
+|--------|-------------|
+| **GitHub MCP Server** | GitHub Copilot MCP server with tools for issues, PRs, repos, actions, and more |
+| **k8sgpt MCP Server** | K8sGPT integration for AI-powered Kubernetes diagnostics |
+| **Grafana MCP** | Extended Grafana integration |
+
+## Read-Only Mode
+
+kagent-tools supports a read-only mode for safer operation:
+
+```yaml
+# In Helm values
+kagentTools:
+  readOnly: true  # Disables all write/mutating operations
+```
+
+## Observability
+
+kagent-tools exposes Prometheus metrics for monitoring:
+- Tool invocation counts
+- Tool execution duration
+- Error rates by tool

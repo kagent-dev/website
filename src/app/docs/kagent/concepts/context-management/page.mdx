@@ -1,0 +1,57 @@
+---
+title: "Context Management"
+pageOrder: 9
+description: "Automatically summarize older messages to stay within LLM context windows during long conversations."
+---
+
+export const metadata = {
+  title: "Context Management",
+  description: "Automatically summarize older messages to stay within LLM context windows during long conversations.",
+  author: "kagent.dev"
+};
+
+# Context Management
+
+Long conversations can exceed LLM context windows. kagent provides **event compaction** to automatically summarize older messages, preserving key information while reducing token count.
+
+## Configuration
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: long-conversation-agent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent for extended sessions."
+    context:
+      eventsCompaction:
+        enabled: true
+```
+
+## How It Works
+
+1. As the conversation progresses, events accumulate in the session history
+2. When the history approaches the model's context limit, compaction triggers
+3. Older events are summarized while preserving:
+   - Key decisions and outcomes
+   - Important tool results
+   - Critical context from earlier in the conversation
+4. The agent continues with the compacted history seamlessly
+
+## When to Use
+
+Enable event compaction when:
+- Agents handle long-running conversations (debugging sessions, investigations)
+- Agents call many tools that generate large outputs
+- You want to support extended interactions without hitting context limits
+
+You may not need it for:
+- Short, single-turn interactions
+- Agents with small tool sets that generate compact outputs
+
+## Context Caching Note
+
+Prompt caching (a separate optimization that caches the prompt prefix for faster responses) is **not** configured at the agent level. Most LLM providers enable prompt caching by default.
