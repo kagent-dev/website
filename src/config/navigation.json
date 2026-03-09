@@ -289,12 +289,7 @@
             "href": "/docs/kagent/resources/helm",
             "description": "kagent Helm chart configuration reference"
           },
-          {
-            "title": "Agent CRD Reference",
-            "href": "/docs/kagent/resources/agent-crd-reference",
-            "description": "Complete reference for the Agent, ModelConfig, RemoteMCPServer, MCPServer, and ModelProviderConfig CRDs."
-          },
-          {
+{
             "title": "FAQs",
             "href": "/docs/kagent/resources/faq",
             "description": "Find answers to frequently asked questions about kagent."
@@ -303,53 +298,6 @@
             "title": "Release Notes",
             "href": "/docs/kagent/resources/release-notes",
             "description": "Review the release notes for kagent."
-          }
-        ]
-      }
-      {
-        "title": "Solo Enterprise",
-        "href": "/docs/kagent/enterprise",
-        "description": "Production-ready enterprise distribution with multicluster federation, advanced security, and built-in observability.",
-        "items": [
-          {
-            "title": "Installation & Operations",
-            "href": "/docs/kagent/enterprise/installation",
-            "description": "Install, upgrade, and manage Solo Enterprise for kagent."
-          },
-          {
-            "title": "Security & Access Control",
-            "href": "/docs/kagent/enterprise/security",
-            "description": "OIDC authentication, OBO tokens, AccessPolicy, and agentgateway enforcement."
-          },
-          {
-            "title": "Multicluster Federation",
-            "href": "/docs/kagent/enterprise/multicluster",
-            "description": "Management-agent relay architecture for federated agent management."
-          },
-          {
-            "title": "Observability",
-            "href": "/docs/kagent/enterprise/observability",
-            "description": "Built-in OTel pipeline, distributed tracing, metrics, and ClickHouse storage."
-          },
-          {
-            "title": "Enterprise UI",
-            "href": "/docs/kagent/enterprise/enterprise-ui",
-            "description": "Interactive dashboard for agents, tools, models, tracing, and cluster management."
-          },
-          {
-            "title": "Agent Frameworks (BYO)",
-            "href": "/docs/kagent/enterprise/agent-frameworks",
-            "description": "Bring your own agents with Google ADK, CrewAI, or LangGraph."
-          },
-          {
-            "title": "Model Providers",
-            "href": "/docs/kagent/enterprise/model-providers",
-            "description": "Configure LLM providers across clusters."
-          },
-          {
-            "title": "Tools & MCP Servers",
-            "href": "/docs/kagent/enterprise/tools-mcp-servers",
-            "description": "Built-in tools, remote MCP servers, and agents as tools."
           }
         ]
       }
