@@ -1,0 +1,113 @@
+---
+title: "Installation & Operations"
+pageOrder: 1
+description: "Install, upgrade, and manage Solo Enterprise for kagent across management and workload clusters."
+---
+
+export const metadata = {
+  title: "Installation & Operations",
+  description: "Install, upgrade, and manage Solo Enterprise for kagent across management and workload clusters.",
+  author: "kagent.dev"
+};
+
+# Installation & Operations
+
+Solo Enterprise for kagent provides a comprehensive installation process covering the management plane, workload clusters, Istio ambient mesh, and agentgateway.
+
+## Prerequisites
+
+- A Solo Enterprise for kagent license key (contact your Solo account representative)
+- Kubernetes clusters for management and workload roles
+- `helm` and `kubectl` CLI installed
+- `kagent` CLI installed (optional, for agent invocation)
+
+## Installation Components
+
+The full installation includes these components in order:
+
+| Step | Component | Description |
+|------|-----------|-------------|
+| 1 | **Istio ambient mesh** | Service mesh for mTLS, policy enforcement, and multicluster connectivity |
+| 2 | **Solo Enterprise for agentgateway** | Waypoint proxy for agent traffic policy enforcement |
+| 3 | **Solo Enterprise for kagent** | Management plane (UI, OTel, ClickHouse) and workload plane (controller, agents, tools) |
+
+### Helm Charts
+
+| Chart | Registry | Purpose |
+|-------|----------|---------|
+| `kagent-enterprise` | `oci://us-docker.pkg.dev/solo-public/kagent-enterprise-helm/charts/kagent-enterprise` | Core kagent enterprise |
+| `management` | Solo Enterprise Helm registry | Management plane components |
+| `relay` | Solo Enterprise Helm registry | Workload cluster relay |
+| Gloo Operator | Solo Enterprise Helm registry | Lifecycle operator |
+
+## Quick Start
+
+### Environment Setup
+
+```bash
+export MGMT_CONTEXT=<mgmt-cluster-context>
+export REMOTE_CONTEXT=<workload-cluster-context>
+```
+
+### Install kagent-enterprise
+
+```bash
+helm upgrade -i kagent \
+  oci://us-docker.pkg.dev/solo-public/kagent-enterprise-helm/charts/kagent-enterprise \
+  --kube-context ${REMOTE_CONTEXT} \
+  -n kagent --version 0.3.4 \
+  -f workload-values.yaml
+```
+
+## Upgrade
+
+To upgrade Solo Enterprise for kagent:
+
+1. Review the changelog for the target version
+2. Update Helm chart versions in your values files
+3. Upgrade each component in order:
+   - Istio ambient mesh
+   - Solo Enterprise for agentgateway
+   - Solo Enterprise for kagent (management cluster first, then workload clusters)
+
+## Debugging
+
+### Check Pod Status
+
+```bash
+kubectl get pods -n kagent --context $MGMT_CONTEXT
+kubectl get pods -n kagent --context $REMOTE_CONTEXT
+```
+
+### Check Tunnel Connectivity
+
+```bash
+# Management cluster - tunnel server
+kubectl -n kagent port-forward deployment/solo-enterprise-ui 8080 --context $MGMT_CONTEXT
+# Check http://localhost:8080/metrics for kagent_tunnel_server_tunnel_up
+
+# Workload cluster - tunnel client
+kubectl -n kagent port-forward deployment/kagent-enterprise-agent 8080 --context $REMOTE_CONTEXT
+# Check http://localhost:8080/metrics for kagent_tunnel_client_tunnel_up
+```
+
+### Check OTel Pipeline
+
+```bash
+kubectl get cm kagent-enterprise-otel-config -n kagent -o yaml --context $MGMT_CONTEXT
+```
+
+## Uninstall
+
+Remove components in reverse order:
+
+1. Solo Enterprise for kagent (workload clusters, then management cluster)
+2. Solo Enterprise for agentgateway
+3. Istio ambient mesh
+
+## Key Namespaces
+
+| Namespace | Purpose |
+|-----------|---------|
+| `kagent` | Main namespace for kagent controller, agents, tools, OTel config |
+| `agentgateway-system` | Agentgateway components |

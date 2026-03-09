@@ -1,0 +1,93 @@
+---
+title: "Security & Access Control"
+pageOrder: 2
+description: "OIDC authentication, OBO token identity propagation, AccessPolicy authorization, and agentgateway enforcement."
+---
+
+export const metadata = {
+  title: "Security & Access Control",
+  description: "OIDC authentication, OBO token identity propagation, AccessPolicy authorization, and agentgateway enforcement.",
+  author: "kagent.dev"
+};
+
+# Security & Access Control
+
+Solo Enterprise for kagent provides a complete security stack: OIDC-based authentication, on-behalf-of (OBO) token identity propagation, fine-grained authorization via AccessPolicies, and network-level enforcement through agentgateway and Istio ambient mesh.
+
+## Security Architecture
+
+The security flow consists of three phases:
+
+```
+User --> IdP (OIDC) --> kagent controller --> agentgateway --> Agent/MCP Tool
+         |                    |                    |
+    1. Authenticate     2. Generate OBO       3. Enforce
+       with IdP            token                AccessPolicy
+```
+
+### Phase 1: User Authentication (OIDC)
+
+Users authenticate through an OpenID Connect (OIDC) identity provider. The kagent controller validates the user's token using the IdP's public key.
+
+### Phase 2: Identity Propagation (OBO Tokens)
+
+After validating the user's OIDC token, the kagent controller generates an on-behalf-of (OBO) token. This token represents the agent's identity acting on behalf of the user, and is used for all downstream requests.
+
+Key details:
+- The OBO token is signed by a private RSA signing key (2048-bit) provided via a `jwt` Kubernetes Secret
+- Agentgateway validates via the JWKS endpoint (`/jwks.json`) on the kagent controller
+- Standard JWT claims are validated: issuer, audience, expiration, not-before
+- The `X-User-ID` header is set automatically on forwarded requests
+
+### Phase 3: Authorization (AccessPolicy)
+
+After OBO token validation, agentgateway evaluates `AccessPolicy` resources to determine whether the request should be allowed based on:
+- **Subjects** — users and agents making requests
+- **Targets** — agents and MCP servers being accessed
+
+## Supported Identity Providers
+
+| Provider | Description |
+|----------|-------------|
+| **Auto** | Default sample IdP for getting started |
+| **Generic OIDC** | Any OpenID Connect-compliant provider |
+| **Keycloak** | Open-source identity and access management |
+| **Microsoft Entra ID** | Azure Active Directory |
+| **Okta** | Enterprise identity management |
+
+## RBAC Roles
+
+| Role | Permissions |
+|------|-------------|
+| **Admin** | Full access to all features, user management, and configuration |
+| **Writer** | Create, modify, and delete agents, tools, and models |
+| **Reader** | View-only access to agents, tools, traces, and dashboards |
+
+Roles are mapped from IdP groups via the `rbac-config` ConfigMap using CEL expressions.
+
+## Network Enforcement with Agentgateway
+
+Because Solo Enterprise for agentgateway proxies traffic to agentic resources, you can set up:
+
+- **Timeouts** — Request timeouts for agent and tool calls
+- **Retries** — Retry policies for resilience
+- **mTLS** — Automatic mutual TLS via Istio ambient mesh
+- **Policy enforcement** — Agentgateway acts as a waypoint proxy in the ambient mesh
+
+## Complete Security Flow
+
+```
+1.  User --> IdP --> Login with credentials
+2.  IdP --> User --> Return user's OIDC token (signed by IdP key)
+3.  User --> kagent controller --> API request with OIDC token
+4.  kagent controller --> Validate OIDC token (using IdP public key)
+5.  kagent controller --> Generate OBO token (signed by kagent RSA key)
+6.  kagent controller --> agentgateway --> Forward request with OBO token
+7.  agentgateway --> kagent controller --> Fetch JWKS from /jwks.json
+8.  kagent controller --> agentgateway --> Return kagent's public key
+9.  agentgateway --> Verify JWT signature & validate claims
+10. agentgateway --> Check AccessPolicy
+11. agentgateway --> Agent/MCP Tool --> Forward request (if authorized)
+12. Agent/MCP Tool --> agentgateway --> Response
+13. agentgateway --> User --> Return response
+```
