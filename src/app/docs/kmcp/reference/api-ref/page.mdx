@@ -40,6 +40,24 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `targetPort` _integer_ | target port is the HTTP port that serves the MCP server.over HTTP |  |  |
 | `path` _string_ | the target path where MCP is served |  |  |
+| `tls` _[HTTPTransportTLS](#httptransporttls)_ | TLS defines the TLS configuration for HTTPS access to the MCP server. |  |  |
+
+
+#### HTTPTransportTLS
+
+
+
+HTTPTransportTLS defines the TLS configuration for HTTP transport.
+
+
+
+_Appears in:_
+- [HTTPTransport](#httptransport)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `secretRef` _string_ | SecretRef is a reference to a Kubernetes Secret containing<br />the client certificate (tls.crt), key (tls.key), and optionally<br />the CA certificate (ca.crt) for mTLS authentication.<br />The Secret must be in the same namespace as the MCPServer. |  |  |
+| `insecureSkipVerify` _boolean_ | InsecureSkipVerify disables SSL certificate verification.<br />WARNING: This should ONLY be used in development/testing environments.<br />Production deployments MUST use proper certificates. | false |  |
 
 
 #### InitContainerConfig
@@ -57,6 +75,8 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `image` _string_ | Image defines the full image reference for the init container.<br />If specified, this overrides the default transport adapter image.<br />Example: "myregistry.com/agentgateway/agentgateway:0.9.0-musl" |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ | ImagePullPolicy defines the pull policy for the init container image. |  | Enum: [Always Never IfNotPresent] <br /> |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ | Resources defines the compute resource requirements for the init container.<br />Use this to specify CPU and memory requests and limits for the init container. |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ | SecurityContext defines the security context for the init container.<br />If not specified, the main container's security context will be used. |  |  |
 
 
 #### MCPServer
@@ -108,8 +128,19 @@ _Appears in:_
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts defines the list of volume mounts for the MCP server container.<br />This allows for more flexible volume mounting configurations. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes defines the list of volumes that can be mounted by containers.<br />This allows for custom volume configurations beyond just secrets and configmaps. |  |  |
 | `initContainer` _[InitContainerConfig](#initcontainerconfig)_ | InitContainer defines the configuration for the init container that copies<br />the transport adapter binary. This is used for stdio transport type. |  |  |
-| `serviceAccount` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccount defines the configuration for the ServiceAccount. |  |  |
+| `serviceAccount` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccount defines the configuration for the ServiceAccount to be created. |  |  |
+| `serviceAccountName` _string_ | ServiceAccountName is the name of an existing ServiceAccount to use. |  |  |
 | `sidecars` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | Sidecars defines additional containers to run alongside the MCP server container.<br />These containers will share the same pod and can share volumes with the main container. |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels defines additional labels to add to the pod template.<br />These labels will be merged with the default labels. |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations defines additional annotations to add to the pod template.<br />These annotations will be merged with the default annotations. |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ | Resources defines the compute resource requirements for the main MCP server container.<br />Use this to specify CPU and memory requests and limits.<br />Example:<br />  resources:<br />    requests:<br />      cpu: "100m"<br />      memory: "128Mi"<br />    limits:<br />      cpu: "500m"<br />      memory: "512Mi" |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ | SecurityContext defines the security context for the main MCP server container.<br />Use this to configure container-level security settings such as:<br />- runAsUser/runAsGroup: Run as specific user/group<br />- runAsNonRoot: Ensure container doesn't run as root<br />- readOnlyRootFilesystem: Make root filesystem read-only<br />- allowPrivilegeEscalation: Prevent privilege escalation<br />- capabilities: Add or drop Linux capabilities |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ | PodSecurityContext defines the security context for the entire pod.<br />Use this to configure pod-level security settings such as:<br />- runAsUser/runAsGroup: Default user/group for all containers<br />- fsGroup: Group ownership of mounted volumes<br />- seccompProfile: Seccomp profile for the pod<br />- sysctls: Kernel parameters to set |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations defines the tolerations for the pod.<br />Use this to schedule pods on nodes with matching taints. |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ | Affinity defines the affinity rules for the pod.<br />Use this to control pod placement based on node labels, pod labels,<br />or other scheduling constraints. |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ | NodeSelector defines the node selector for the pod.<br />Use this to constrain pods to nodes with specific labels. |  |  |
+| `replicas` _integer_ | Replicas defines the number of desired pod replicas.<br />Defaults to 1 if not specified. | 1 |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets defines the list of secrets to use for pulling container images. |  |  |
 
 
 #### MCPServerSpec
@@ -129,6 +160,7 @@ _Appears in:_
 | `transportType` _[TransportType](#transporttype)_ | TransportType defines the type of mcp server being run |  | Enum: [stdio http] <br /> |
 | `stdioTransport` _[StdioTransport](#stdiotransport)_ | StdioTransport defines the configuration for a standard input/output transport. |  |  |
 | `httpTransport` _[HTTPTransport](#httptransport)_ | HTTPTransport defines the configuration for a Streamable HTTP transport. |  |  |
+| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ | Timeout defines the default connection timeout for clients connecting<br />to this MCP server. MCP servers deployed via the MCPServer CRD use a<br />sidecar gateway that spawns a new stdio process (e.g. via uvx/npx)<br />for each session. Process startup can take 2-8 seconds depending on<br />package cache state, which may exceed the default timeout used by some<br />clients. This value is propagated to the generated RemoteMCPServer<br />resources when they do not specify an explicit timeout. | 30s |  |
 
 
 #### MCPServerStatus

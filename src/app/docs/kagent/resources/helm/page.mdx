@@ -31,7 +31,7 @@ A Helm chart for kagent, built with Google ADK
 | file://../tools/grafana-mcp | grafana-mcp |  |
 | file://../tools/querydoc | querydoc |  |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
-| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.0.12 |
+| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.1.1 |
 
 ## Values
 
@@ -88,6 +88,8 @@ A Helm chart for kagent, built with Google ADK
 | agents.promql-agent.resources.requests.cpu | string | `"100m"` |  |
 | agents.promql-agent.resources.requests.memory | string | `"256Mi"` |  |
 | controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc.cluster.local:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
+| controller.agentDeployment | object | `{"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
+| controller.agentDeployment.serviceAccountName | string | "" (auto-create per-agent ServiceAccount) | Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA. |
 | controller.agentImage.pullPolicy | string | `""` |  |
 | controller.agentImage.registry | string | `""` |  |
 | controller.agentImage.repository | string | `"kagent-dev/kagent/app"` |  |
@@ -108,36 +110,40 @@ A Helm chart for kagent, built with Google ADK
 | controller.service.ports.port | int | `8083` |  |
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
-| controller.streaming.initialBufSize | string | `"4Ki"` | Initial size of the A2A streaming buffer. |
-| controller.streaming.maxBufSize | string | `"1Mi"` | Maximum size of the A2A streaming buffer. |
-| controller.streaming.timeout | string | `"600s"` | Timeout for A2A streaming connections. |
+| controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
+| controller.streaming.initialBufSize | string | `"4Ki"` |  |
+| controller.streaming.maxBufSize | string | `"1Mi"` |  |
+| controller.streaming.timeout | string | `"600s"` |  |
 | controller.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
 | database.postgres.url | string | `"postgres://postgres:kagent@pgsql-postgresql.kagent.svc.cluster.local:5432/postgres"` |  |
+| database.postgres.urlFile | string | `""` |  |
+| database.postgres.vectorEnabled | bool | `true` |  |
 | database.sqlite.databaseName | string | `"kagent.db"` |  |
+| database.sqlite.vectorEnabled | bool | `true` |  |
 | database.type | string | `"sqlite"` |  |
 | fullnameOverride | string | `""` |  |
-| grafana-mcp.grafana.apiKey | string | `"-"` |  |
+| grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
 | grafana-mcp.grafana.url | string | `"grafana.kagent:3000/api"` |  |
 | grafana-mcp.resources.limits.cpu | string | `"500m"` |  |
 | grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
 | grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
 | grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
-| imagePullSecrets | list | `[]` | Image pull secrets for pulling agent and tool images from private registries. You can also set `imagePullSecrets` per agent in the Agent `deployment` spec. |
+| imagePullSecrets | list | `[]` |  |
 | kagent-tools.enabled | bool | `true` |  |
-| kagent-tools.fullnameOverride | string | `"kagent-tools"` |  |
+| kagent-tools.nameOverride | string | `"tools"` |  |
 | kagent-tools.replicaCount | int | `1` |  |
 | kagent-tools.resources.limits.cpu | string | `"1000m"` |  |
 | kagent-tools.resources.limits.memory | string | `"1Gi"` |  |
 | kagent-tools.resources.requests.cpu | string | `"100m"` |  |
 | kagent-tools.resources.requests.memory | string | `"256Mi"` |  |
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
+| kagent-tools.tools.metrics.port | int | `8085` |  |
 | kmcp.enabled | bool | `true` |  |
 | kmcp.fullnameOverride | string | `""` |  |
-| kmcp.image.tag | string | `"0.2.2"` |  |
 | kmcp.nameOverride | string | `"kmcp"` |  |
 | kmcp.namespaceOverride | string | `""` |  |
 | labels | object | `{}` | Additional labels to add to all Kubernetes resources |
@@ -145,12 +151,13 @@ A Helm chart for kagent, built with Google ADK
 | namespaceOverride | string | `.Release.Namespace` | Override the namespace |
 | nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | otel.logging.enabled | bool | `false` |  |
-| otel.logging.exporter.otlp.endpoint | string | `"http://host.docker.internal:4317"` |  |
+| otel.logging.exporter.otlp.endpoint | string | `""` |  |
 | otel.logging.exporter.otlp.insecure | bool | `true` |  |
 | otel.logging.exporter.otlp.timeout | int | `15` |  |
 | otel.tracing.enabled | bool | `false` |  |
-| otel.tracing.exporter.otlp.endpoint | string | `"http://host.docker.internal:4317"` |  |
+| otel.tracing.exporter.otlp.endpoint | string | `""` |  |
 | otel.tracing.exporter.otlp.insecure | bool | `true` |  |
+| otel.tracing.exporter.otlp.protocol | string | `"grpc"` |  |
 | otel.tracing.exporter.otlp.timeout | int | `15` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
@@ -172,13 +179,14 @@ A Helm chart for kagent, built with Google ADK
 | providers.gemini.model | string | `"gemini-2.0-flash-lite"` |  |
 | providers.gemini.provider | string | `"Gemini"` |  |
 | providers.ollama.config.host | string | `"host.docker.internal:11434"` |  |
+| providers.ollama.config.options.num_ctx | string | `"64000"` |  |
 | providers.ollama.model | string | `"llama3.2"` |  |
 | providers.ollama.provider | string | `"Ollama"` |  |
 | providers.openAI.apiKeySecretKey | string | `"OPENAI_API_KEY"` |  |
 | providers.openAI.apiKeySecretRef | string | `"kagent-openai"` |  |
 | providers.openAI.model | string | `"gpt-4.1-mini"` |  |
 | providers.openAI.provider | string | `"OpenAI"` |  |
-| proxy.url | string | `""` | Proxy URL for routing agent-to-agent and agent-to-MCP traffic through a gateway (for example, `http://proxy.kagent.svc.cluster.local:8080`). When set, the controller routes internal Kubernetes URLs (agents, MCP servers, services) through this proxy. The proxy uses the `x-kagent-host` header for routing. Omit for direct connections. |
+| proxy.url | string | `""` |  |
 | querydoc.image.pullPolicy | string | `"IfNotPresent"` |  |
 | querydoc.image.registry | string | `"ghcr.io"` |  |
 | querydoc.image.repository | string | `"kagent-dev/doc2vec/mcp"` |  |
