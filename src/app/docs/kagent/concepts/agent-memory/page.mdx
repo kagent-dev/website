@@ -12,28 +12,24 @@ export const metadata = {
 
 # Agent Memory
 
-kagent provides long-term memory for agents using vector similarity search. Agents can automatically save and retrieve relevant context across conversations.
+kagent provides long-term memory for agents using vector similarity search. Built on top of the Google ADK memory implementation, agents can automatically save and retrieve relevant context across conversations.
 
 ## Overview
 
 Memory in kagent is:
-- **Vector-backed** — Uses embedding models to encode memories as 768-dimensional vectors
+- **Vector-backed** — A basic vector store that uses embedding models to encode memories as 768-dimensional vectors
 - **Searchable** — Retrieves relevant memories via cosine similarity
-- **Automatic** — Extracts and saves memories periodically without explicit user action
+- **Automatic** — Extracts and saves user intent, key learnings, and preferences without explicit user action
 - **Time-bounded** — Memories expire after a configurable TTL (default 15 days)
-
-## Supported Storage Backends
-
-| Backend | Description |
-|---------|-------------|
-| **pgvector** (PostgreSQL) | Full-featured vector search using the pgvector extension |
-| **Turso/libSQL** (SQLite) | Lightweight alternative using SQLite-compatible storage |
+- **Shared storage** — Memory uses the same kagent database (PostgreSQL or SQLite/Turso), not a separate database
 
 ## Configuration
 
 ### Enable Memory on an Agent
 
 Memory is enabled by setting the `memory` field on the declarative agent spec. The `modelConfig` field references a `ModelConfig` object whose embedding provider will be used to generate memory vectors.
+
+In the kagent UI, you can configure memory when creating or editing an agent by selecting an embedding model and setting the memory TTL.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -62,7 +58,7 @@ memory:
 ### Automatic Save Cycle
 
 1. The agent processes user messages normally
-2. Every 5th user message, the agent automatically extracts key information
+2. Every 5th user message, the agent automatically extracts key information such as user intent, key learnings, and preferences
 3. Extracted memories are summarized and encoded as embedding vectors
 4. Vectors are stored in the database with metadata and timestamps
 
@@ -83,6 +79,12 @@ When memory is enabled, three tools are injected into the agent:
 | `load_memory` | Search for relevant memories by query |
 | `prefetch_memory` | Automatically run before response generation |
 
+You can also instruct the agent to use `save_memory` or `load_memory` explicitly during a conversation.
+
+### Viewing Memories
+
+In the kagent UI, you can view the memories an agent has saved. This lets you inspect what the agent has learned and retained from past interactions.
+
 ## Memory Management via API
 
 ```
@@ -90,12 +92,17 @@ POST   /api/memories/sessions         # Add a memory
 POST   /api/memories/sessions/batch   # Add memories in batch
 POST   /api/memories/search           # Search memories by cosine similarity
 GET    /api/memories?agent_name=X&user_id=Y   # List memories
-DELETE /api/memories?agent_name=X&user_id=Y   # Clear all memories
+DELETE /api/memories?agent_name=X&user_id=Y   # Clear all memories for an agent
 ```
+
+## Limitations
+
+- **No per-memory deletion** — You can clear all memories for an agent, but cannot delete individual memory entries
+- **No cross-agent memory sharing** — Each agent has its own isolated memory store; memories cannot be shared across agents
+- **Not pluggable** — Memory is built on the Google ADK memory implementation and cannot be swapped for an alternative memory solution (such as Cognee). However, if an alternative memory solution exposes an MCP server, you can add it as a tool and instruct the agent to use it instead of the built-in memory
 
 ## Technical Details
 
 - Embedding vectors are normalized to 768 dimensions
 - Background TTL pruning runs periodically (default retention: 15 days)
-- Memory is per-agent — each agent has its own isolated memory store
 - Memories include timestamps and source session references
