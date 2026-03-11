@@ -12,15 +12,16 @@ export const metadata = {
 
 # Git-Based Skills
 
-Skills are markdown-based knowledge documents that agents load at startup. They provide domain-specific instructions, best practices, and procedures that guide agent behavior.
+Skills are markdown-based knowledge documents that agents load at startup. You can use skills to provide domain-specific instructions, best practices, and procedures that guide agent behavior.
 
-kagent supports two sources for skills:
-- **OCI images** — Container images containing skill files (original approach)
-- **Git repositories** — Clone skills directly from Git repos
+You can load skills from two sources.
+
+- **OCI images.** Container images containing skill files (original approach).
+- **Git repositories.** Clone skills directly from Git repos.
 
 ## Skill File Format
 
-Each skill is a directory containing a `SKILL.md` file with YAML frontmatter:
+Each skill is a directory containing a `SKILL.md` file with YAML frontmatter.
 
 ```markdown
 ---
@@ -48,6 +49,7 @@ apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: my-agent
+  namespace: kagent
 spec:
   type: Declarative
   declarative:
@@ -61,17 +63,19 @@ spec:
 
 ### With Subdirectory
 
+You can specify a subdirectory within the repository to use as the skill root.
+
 ```yaml
 skills:
   gitRefs:
     - url: https://github.com/myorg/monorepo.git
       ref: main
-      path: skills/kubernetes
+      path: skills/kubernetes  # Only use this subdirectory
 ```
 
 ### Multiple Sources
 
-Combine Git and OCI skills:
+You can combine Git and OCI skills in the same agent.
 
 ```yaml
 skills:
@@ -94,6 +98,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: git-credentials
+  namespace: kagent
 type: Opaque
 stringData:
   token: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -123,15 +128,15 @@ skills:
 
 ## How It Works
 
-Under the hood, kagent uses a lightweight init container (~30MB) containing Git and krane tools:
+Under the hood, a lightweight init container (~30MB) containing Git and krane tools runs before the agent pod starts.
 
-1. Before the agent pod starts, the `skills-init` container runs
-2. It clones each Git repository to the skills volume
-3. It also pulls any OCI skill images
-4. The agent runtime discovers skills from the mounted volume at startup
+1. The `skills-init` container clones each Git repository to the skills volume.
+2. The container pulls any OCI skill images.
+3. The agent runtime discovers skills from the mounted volume at startup.
 
 ## Skill Discovery at Runtime
 
-Once loaded, skills are available through the built-in `SkillsTool`:
-- **List skills:** The agent calls the tool with no arguments to see available skills
-- **Load skill:** The agent calls the tool with a skill name to get the full content
+Once loaded, skills are available through the built-in `SkillsTool`.
+
+- **List skills.** The agent calls the tool with no arguments to see available skills.
+- **Load skill.** The agent calls the tool with a skill name to get the full content.

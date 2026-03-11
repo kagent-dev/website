@@ -22,21 +22,21 @@ For more details on the changes between versions, review the [kagent GitHub rele
 
 Review the main changes from kagent version 0.7 to v0.8, then continue reading for more detailed information.
 
-* Human-in-the-Loop (HITL) — tool approval gates and interactive `ask_user` tool
-* Agent Memory — vector-backed long-term memory for agents
-* Go ADK runtime — new Go-based agent runtime for faster startup and lower resource usage
-* Agents as MCP servers — expose A2A agents via MCP for cross-tool interoperability
-* Skills — markdown knowledge documents loaded from OCI images or Git repositories
-* Go workspace restructure — the Go codebase is split into `api`, `core`, and `adk` modules for composability
-* Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax
-* Context management — automatic event compaction for long conversations
-* AWS Bedrock support — new model provider for AWS Bedrock
+* Human-in-the-Loop (HITL) — tool approval gates and interactive `ask_user` tool.
+* Agent Memory — vector-backed long-term memory for agents.
+* Go ADK runtime — new Go-based agent runtime for faster startup and lower resource usage.
+* Agents as MCP servers — expose A2A agents via MCP for cross-tool interoperability.
+* Skills — markdown knowledge documents loaded from OCI images or Git repositories.
+* Go workspace restructure — the Go codebase is split into `api`, `core`, and `adk` modules for composability.
+* Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax.
+* Context management — automatic event compaction for long conversations.
+* AWS Bedrock support — new model provider for AWS Bedrock.
 
 ## Human-in-the-Loop (HITL)
 
-kagent now supports two Human-in-the-Loop mechanisms that pause agent execution and wait for user input:
+You can now use two Human-in-the-Loop mechanisms that pause agent execution and wait for user input.
 
-**Tool Approval** — Mark specific tools as requiring user confirmation before execution using the `requireApproval` field in the Agent CR. When the agent tries to call an approval-required tool, the UI presents Approve/Reject buttons. Rejected tool calls include the rejection reason as context for the LLM.
+**Tool Approval** — You can mark specific tools as requiring user confirmation before execution by using the `requireApproval` field in the Agent CR. When the agent tries to call an approval-required tool, the UI presents Approve/Reject buttons. Rejected tool calls include the rejection reason as context for the LLM.
 
 **Ask User** — A built-in `ask_user` tool is automatically added to every agent. Agents can pose questions to users with predefined choices (single-select, multi-select) or free-text input during execution.
 
@@ -44,19 +44,19 @@ For more information, see the [Human-in-the-Loop](/docs/kagent/concepts/human-in
 
 ## Agent Memory
 
-Agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL or SQLite/Turso).
+Your agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL or SQLite/Turso).
 
-When memory is enabled on an agent, three tools are injected: `save_memory`, `load_memory`, and `prefetch_memory`. The agent automatically extracts key information (user intent, key learnings, preferences) every 5th user message.
+When you enable memory on an agent, it receives three additional tools: `save_memory`, `load_memory`, and `prefetch_memory`. The agent automatically extracts key information (user intent, key learnings, preferences) every 5th user message.
 
-Configure memory in the Agent CR or through the UI when creating/editing an agent by selecting an embedding model and TTL.
+You can configure memory in the Agent CR or through the UI when you create or edit an agent by selecting an embedding model and TTL.
 
 For more information, see the [Agent Memory](/docs/kagent/concepts/agent-memory) concept guide.
 
 ## Go ADK Runtime
 
-kagent now supports two Agent Development Kit runtimes: **Python** (default) and **Go**. The Go ADK provides significantly faster startup (~2 seconds vs ~15 seconds for Python) and lower resource consumption.
+You can now choose between two Agent Development Kit runtimes: **Python** (default) and **Go**. The Go ADK provides significantly faster startup (~2 seconds vs ~15 seconds for Python) and lower resource consumption.
 
-Select the runtime via the `runtime` field in the declarative agent spec:
+Select the runtime via the `runtime` field in the declarative agent spec.
 
 ```yaml
 spec:
@@ -71,54 +71,55 @@ For more information, see the [Multi-Runtime Support](/docs/kagent/concepts/mult
 
 ## Agents as MCP Servers
 
-A2A agents are now exposed as MCP servers via the kagent controller HTTP server. This enables cross-tool interoperability — agents can be consumed by any MCP-compatible client, not just through the A2A protocol.
+A2A agents are now exposed as MCP servers via the kagent controller HTTP server. This enables cross-tool interoperability — any MCP-compatible client can consume agents, not just the A2A protocol.
 
 ## Skills
 
-Agents can now load markdown-based knowledge documents (skills) that provide domain-specific instructions, best practices, and procedures. Skills are loaded at agent startup and discoverable through the built-in `SkillsTool`.
+Your agents can now load markdown-based knowledge documents (skills) that provide domain-specific instructions, best practices, and procedures. Skills load at agent startup and are discoverable through the built-in `SkillsTool`.
 
-kagent supports two skill sources:
-- **OCI images** — Container images containing skill files
-- **Git repositories** — Clone skills directly from Git repos, with support for private repos via HTTPS token or SSH key authentication
+You can load skills from two sources.
+
+- **OCI images.** Container images containing skill files.
+- **Git repositories.** Clone skills directly from Git repos, with support for private repos via HTTPS token or SSH key authentication.
 
 For more information, see the [Git-Based Skills](/docs/kagent/concepts/git-based-skills) concept guide.
 
 ## Go Workspace Restructure
 
-The Go code is restructured into a Go workspace with three modules: `api`, `core`, and `adk`. This makes the codebase more composable for users who want to pull in parts of kagent (such as the API types or ADK) without importing all dependencies.
+The Go code now uses a Go workspace with three modules: `api`, `core`, and `adk`. This makes the codebase more composable for you if you want to pull in parts of kagent (such as the API types or ADK) without importing all dependencies.
 
 | Module | Purpose |
 |--------|---------|
-| `go/api` | Shared types: CRDs, ADK config types, database models, HTTP client |
-| `go/core` | Infrastructure: controllers, HTTP server, CLI |
-| `go/adk` | Go Agent Development Kit runtime |
+| `go/api` | Shared types: CRDs, ADK config types, database models, HTTP client. |
+| `go/core` | Infrastructure: controllers, HTTP server, CLI. |
+| `go/adk` | Go Agent Development Kit runtime. |
 
 ## Prompt Templates
 
-Agent system messages now support Go `text/template` syntax. Store common prompt fragments (safety guardrails, tool usage best practices) in ConfigMaps and reference them with `{{include "alias/key"}}` syntax.
+Agent system messages now support Go `text/template` syntax. You can store common prompt fragments (safety guardrails, tool usage best practices) in ConfigMaps and reference them with `{{include "alias/key"}}` syntax.
 
-kagent ships a `kagent-builtin-prompts` ConfigMap with five reusable templates: `skills-usage`, `tool-usage-best-practices`, `safety-guardrails`, `kubernetes-context`, and `a2a-communication`.
+The `kagent-builtin-prompts` ConfigMap ships with five reusable templates: `skills-usage`, `tool-usage-best-practices`, `safety-guardrails`, `kubernetes-context`, and `a2a-communication`.
 
 For more information, see the [Prompt Templates](/docs/kagent/concepts/prompt-templates) concept guide.
 
 ## Context Management
 
-Long conversations can now be automatically compacted to stay within LLM context windows. Configure the `context.compaction` field to enable periodic summarization of older events while preserving key information.
+Long conversations can now be automatically compacted to stay within LLM context windows. You can configure the `context.compaction` field to enable periodic summarization of older events while preserving key information.
 
 For more information, see the [Context Management](/docs/kagent/concepts/context-management) concept guide.
 
 ## AWS Bedrock Support
 
-A new model provider for AWS Bedrock has been added, allowing agents to use Bedrock-hosted models.
+You can now use AWS Bedrock as a model provider, allowing your agents to use Bedrock-hosted models.
 
 ## Additional Changes
 
-- **API key passthrough** for ModelConfig
-- **Custom service account** override in agent CRDs
-- **Voice support** for agents
-- **UI dynamic provider model discovery** for easier model configuration
-- **CLI `--token` flag** for `kagent invoke` API key passthrough
-- **CVE fixes** across Go, Python, and container images
+- **API key passthrough** for ModelConfig.
+- **Custom service account** override in agent CRDs.
+- **Voice support** for agents.
+- **UI dynamic provider model discovery** for easier model configuration.
+- **CLI `--token` flag** for `kagent invoke` API key passthrough.
+- **CVE fixes** across Go, Python, and container images.
 
 # v0.7
 

@@ -12,38 +12,40 @@ export const metadata = {
 
 # Prompt Templates
 
-kagent supports Go `text/template` syntax in Agent system messages, enabling composition from reusable fragments stored in ConfigMaps.
+You can use Go `text/template` syntax in Agent system messages to compose reusable fragments stored in ConfigMaps.
 
 ## Overview
 
-Instead of duplicating safety guidelines and tool usage instructions in every agent, you can:
-1. Store common prompt fragments in ConfigMaps
-2. Reference them using `&#123;&#123;include "source/key"&#125;&#125;` syntax
-3. Use agent context variables for dynamic interpolation
+Instead of duplicating safety guidelines and tool usage instructions in every agent, you can take the following approach.
 
-Template resolution happens during controller reconciliation — the final system message is fully expanded before reaching the agent runtime.
+1. Store common prompt fragments in ConfigMaps.
+2. Reference them using `&#123;&#123;include "source/key"&#125;&#125;` syntax.
+3. Use agent context variables for dynamic interpolation.
+
+The controller resolves templates during reconciliation. The final system message is fully expanded before reaching the agent runtime.
 
 ## Built-in Prompt Templates
 
-kagent ships a `kagent-builtin-prompts` ConfigMap with five reusable templates:
+The `kagent-builtin-prompts` ConfigMap ships with five reusable templates.
 
 | Template Key | Description |
 |-------------|-------------|
-| `skills-usage` | Instructions for discovering and using skills |
-| `tool-usage-best-practices` | Best practices for tool invocation |
-| `safety-guardrails` | Safety and operational guardrails |
-| `kubernetes-context` | Kubernetes-specific operational context |
-| `a2a-communication` | Agent-to-agent communication guidelines |
+| `skills-usage` | Instructions for discovering and using skills. |
+| `tool-usage-best-practices` | Best practices for tool invocation. |
+| `safety-guardrails` | Safety and operational guardrails. |
+| `kubernetes-context` | Kubernetes-specific operational context. |
+| `a2a-communication` | Agent-to-agent communication guidelines. |
 
 ## Usage
 
-Each data source in `promptTemplate.dataSources` references a ConfigMap by `name` and `kind`, with an optional `alias` for shorter include directives:
+Each data source in `promptTemplate.dataSources` references a ConfigMap by `name` and `kind`, with an optional `alias` for shorter include directives.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: k8s-agent
+  namespace: kagent
 spec:
   type: Declarative
   declarative:
@@ -52,7 +54,7 @@ spec:
       dataSources:
         - kind: ConfigMap
           name: kagent-builtin-prompts
-          alias: builtin
+          alias: builtin  # Use "builtin/key" in include directives
         - kind: ConfigMap
           name: my-custom-prompts
     systemMessage: |
@@ -66,25 +68,28 @@ spec:
       Your skills: {{.SkillNames}}
 ```
 
-When an `alias` is set, use `include("alias/key")`. Otherwise, use `include("name/key")`.
+When you set an `alias`, use `include("alias/key")`. Otherwise, use `include("name/key")`.
 
 ### Available Template Variables
 
 | Variable | Description |
 |----------|-------------|
-| `{{.AgentName}}` | Name of the Agent resource |
-| `{{.AgentNamespace}}` | Namespace of the Agent resource |
-| `{{.Description}}` | Agent description |
-| `{{.ToolNames}}` | Comma-separated list of tool names |
-| `{{.SkillNames}}` | Comma-separated list of skill names |
+| `{{.AgentName}}` | Name of the Agent resource. |
+| `{{.AgentNamespace}}` | Namespace of the Agent resource. |
+| `{{.Description}}` | Agent description. |
+| `{{.ToolNames}}` | Comma-separated list of tool names. |
+| `{{.SkillNames}}` | Comma-separated list of skill names. |
 
 ### Creating Custom Prompt Templates
+
+You can create your own prompt templates by adding keys to a ConfigMap.
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: my-custom-prompts
+  namespace: kagent
 data:
   incident-response: |
     ## Incident Response Guidelines
@@ -98,10 +103,10 @@ data:
 
 ## How It Works
 
-1. The controller watches ConfigMaps referenced in `promptTemplate.dataSources`
-2. During reconciliation, `{{include "alias/key"}}` directives are resolved
-3. Template variables are interpolated
-4. The fully expanded system message is written to the ADK config
-5. ConfigMap changes trigger automatic re-reconciliation
+1. The controller watches ConfigMaps referenced in `promptTemplate.dataSources`.
+2. During reconciliation, the controller resolves `{{include "alias/key"}}` directives.
+3. The controller interpolates template variables.
+4. The controller writes the fully expanded system message to the ADK config.
+5. ConfigMap changes trigger automatic re-reconciliation.
 
-> **Security Note:** Only ConfigMaps are supported as data sources — Secret references were intentionally excluded to avoid leaking sensitive data into prompts sent to LLM providers.
+> **Security Note:** Only ConfigMaps are supported as data sources. Secret references were intentionally excluded to avoid leaking sensitive data into prompts sent to LLM providers.
