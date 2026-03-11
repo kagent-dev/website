@@ -117,22 +117,16 @@ The `ask_user` tool is added unconditionally to every agent as a built-in tool. 
 
 ## Architecture Summary
 
-```
-User --> UI --> A2A Message --> Executor --> ADK --> Tool
-                                                      |
-                                             request_confirmation()
-                                                      |
-                                             <-- input_required -->
-                                                      |
-User <-- UI <-- A2A Event <-- Executor <---- ADK <----+
-  |
-  v (Approve/Reject/Answer)
-  |
-User --> UI --> A2A Message --> Executor --> ADK --> Tool (resumes)
-```
+Both tool approval and `ask_user` share the same underlying flow through the ADK `request_confirmation` mechanism.
 
-Key design principles include the following.
+### Request flow
+
+1. **User → UI → Executor → ADK → Tool.** The user sends a message. The UI forwards it as an A2A message to the executor, which invokes the ADK, which calls the tool.
+2. **Tool → ADK → Executor → UI → User.** The tool calls `request_confirmation()`. The ADK emits an `input_required` event. The executor sends an A2A event to the UI, which displays approval controls or questions to the user.
+3. **User → UI → Executor → ADK → Tool (resumes).** The user approves, rejects, or answers. The UI sends the response back through the same chain. The ADK resumes the tool with the result.
+
+### Design principles
 
 - **Deterministic replay.** Approved calls re-invoke via ADK preprocessor without additional LLM calls.
 - **Minimal custom logic.** The executor only handles the resume path.
-- **Unified mechanism.** Both tool approval and ask_user share the same `request_confirmation` infrastructure.
+- **Unified mechanism.** Both tool approval and `ask_user` share the same `request_confirmation` infrastructure.
