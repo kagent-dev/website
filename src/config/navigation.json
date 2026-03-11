@@ -87,22 +87,22 @@
           {
             "title": "Tools Ecosystem",
             "href": "/docs/kagent/concepts/tools-ecosystem",
-            "description": "Comprehensive catalog of built-in tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
+            "description": "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
           },
           {
             "title": "Human-in-the-Loop",
             "href": "/docs/kagent/concepts/human-in-the-loop",
-            "description": "Configure tool approval gates and interactive user prompts for agent oversight."
+            "description": "Configure tool approval workflows and the Ask User interactive tool for human oversight of agent actions."
           },
           {
             "title": "Agent Memory",
             "href": "/docs/kagent/concepts/agent-memory",
-            "description": "Enable vector-backed long-term memory for agents using pgvector or Turso."
+            "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
           },
           {
             "title": "Prompt Templates",
             "href": "/docs/kagent/concepts/prompt-templates",
-            "description": "Compose reusable prompt fragments from ConfigMaps using Go template syntax."
+            "description": "Use Go template syntax to compose reusable prompt fragments from ConfigMaps."
           },
           {
             "title": "Multi-Runtime Support",
@@ -117,7 +117,7 @@
           {
             "title": "Context Management",
             "href": "/docs/kagent/concepts/context-management",
-            "description": "Automatically summarize older messages to stay within LLM context windows."
+            "description": "Automatically summarize older messages to stay within LLM context windows during long conversations."
           }
         ]
       },
