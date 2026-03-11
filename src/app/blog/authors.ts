@@ -39,7 +39,7 @@ export const authors: Author[] = [
     id: "sebastianmaniak",
     name: "Sebastian Maniak",
     title: "Field CTO",
-    photo: "/images/authors/sebastianmaniak.png",
+    photo: "/images/authors/sebastianmaniak.jpg",
     bio: "Sebastian Maniak is a Field CTO at Solo.io, helping organizations adopt cloud-native technologies and AI-powered infrastructure.",
   },
   {
