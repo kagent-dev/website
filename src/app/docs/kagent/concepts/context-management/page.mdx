@@ -41,12 +41,31 @@ spec:
 | `compactionInterval` | `5` | Number of new user invocations before triggering a compaction. |
 | `overlapSize` | `2` | Number of preceding invocations to include for context overlap. |
 | `eventRetentionSize` | — | Number of most recent events to always retain. |
+| `tokenThreshold` | — | Post-invocation token threshold. When the prompt token count meets or exceeds this value, compaction triggers. |
+| `summarizer` | — | Optional LLM-based summarizer configuration (see below). |
+
+### Summarizer
+
+By default, compacted events are dropped from the context without summarization. To preserve a summary of compacted events, configure the `summarizer` field.
+
+```yaml
+context:
+  compaction:
+    compactionInterval: 5
+    summarizer:
+      modelConfig: summarizer-model-config  # Optional: uses agent's own model if omitted
+```
+
+| Field | Description |
+|-------|-------------|
+| `summarizer.modelConfig` | Name of a `ModelConfig` resource to use for summarization. If omitted, the agent's own model is used. |
+| `summarizer.promptTemplate` | Custom prompt template for the summarizer. |
 
 ## How It Works
 
 1. As the conversation progresses, events accumulate in the session history.
-2. When the history approaches the model's context limit, the agent triggers compaction.
-3. The agent summarizes older events while preserving key decisions, important tool results, and critical context from earlier in the conversation.
+2. Compaction triggers when one of two conditions is met: the number of new user invocations reaches the `compactionInterval`, or the prompt token count exceeds the `tokenThreshold` (if set).
+3. If a `summarizer` is configured, older events are summarized by an LLM. Otherwise, compacted events are dropped from the context.
 4. The agent continues with the compacted history seamlessly.
 
 ## When to Use
