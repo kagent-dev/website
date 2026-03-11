@@ -33,7 +33,7 @@ This is useful for destructive or sensitive operations like:
 
 ### Configuration
 
-Add `requireApproval` to your Agent's tool specification. The values must be a subset of `toolNames`:
+Tool approval is configured in the Agent CR (not in the UI). Add `requireApproval` to your Agent's tool specification. The values must be a subset of `toolNames`:
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -52,15 +52,16 @@ spec:
           name: kagent-tool-server
           kind: RemoteMCPServer
           toolNames:
-            - read_file
-            - write_file
-            - delete_file
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_delete_resource
+            - k8s_apply_manifest
           requireApproval:
-            - delete_file
-            - write_file
+            - k8s_delete_resource
+            - k8s_apply_manifest
 ```
 
-In this example, `read_file` executes immediately, but `write_file` and `delete_file` will pause for user approval.
+In this example, `k8s_get_resources` and `k8s_describe_resource` execute immediately, but `k8s_delete_resource` and `k8s_apply_manifest` will pause for user approval.
 
 ### How It Works
 
@@ -90,6 +91,8 @@ When rejecting a tool call, users can provide a free-text explanation. This reas
 ## Ask User Tool
 
 The `ask_user` tool is a built-in tool automatically added to every agent. It allows agents to pose questions to users with optional predefined choices during execution.
+
+For example, an agent might ask "Which types of Kubernetes resources should I check?" and present options like Pods, Deployments, and Services as selectable choices.
 
 Use cases:
 - Clarifying ambiguous user requests
