@@ -12,7 +12,7 @@ export const metadata = {
 
 # Multi-Runtime Support (Go / Python ADK)
 
-kagent supports two Agent Development Kit (ADK) runtimes for declarative agents.
+You can choose between two **Agent Development Kit (ADK)** runtimes for your declarative agents.
 
 ## Overview
 
@@ -35,10 +35,11 @@ apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: python-agent
+  namespace: kagent
 spec:
   type: Declarative
   declarative:
-    runtime: python
+    runtime: python  # Default runtime
     modelConfig: default-model-config
     systemMessage: "You are a helpful agent."
 ```
@@ -50,10 +51,11 @@ apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: go-agent
+  namespace: kagent
 spec:
   type: Declarative
   declarative:
-    runtime: go
+    runtime: go  # Faster startup, lower resource usage
     modelConfig: default-model-config
     systemMessage: "You are a fast-starting agent."
 ```
@@ -61,34 +63,35 @@ spec:
 ## When to Use Which
 
 **Choose Go when:**
-- Fast startup matters (autoscaling, cold starts)
-- Lower resource consumption is important
-- You don't need Python-specific framework integrations
+- Fast startup matters (autoscaling, cold starts).
+- Lower resource consumption is important.
+- You don't need Python-specific framework integrations.
 
 **Choose Python when:**
-- You need Google ADK-native features
-- You want to use CrewAI, LangGraph, or OpenAI framework integrations
-- You need Python-based custom tools or skills
+- You need Google ADK-native features.
+- You want to use CrewAI, LangGraph, or OpenAI framework integrations.
+- You need Python-based custom tools or skills.
 
 ## Go ADK Built-in Tools
 
 | Tool | Description |
 |------|-------------|
-| `SkillsTool` | Discover and load skills from the skills directory |
-| `BashTool` | Execute shell commands with timeout handling |
-| `ReadFile` | Read file contents with line numbers and pagination |
-| `WriteFile` | Write content to files (creates directories as needed) |
-| `EditFile` | String replacement with ambiguity detection |
+| `SkillsTool` | Discover and load skills from the skills directory. |
+| `BashTool` | Execute shell commands with timeout handling. |
+| `ReadFile` | Read file contents with line numbers and pagination. |
+| `WriteFile` | Write content to files (creates directories as needed). |
+| `EditFile` | String replacement with ambiguity detection. |
 
 ## BYO (Bring Your Own) Agents
 
-For maximum flexibility, bring your own agent container:
+For maximum flexibility, you can bring your own agent container.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: custom-agent
+  namespace: kagent
 spec:
   type: BYO
   byo:
