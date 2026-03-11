@@ -119,6 +119,8 @@ The `ask_user` tool is added unconditionally to every agent as a built-in tool. 
 
 Both tool approval and `ask_user` share the same underlying flow through the ADK `request_confirmation` mechanism.
 
+![HITL architecture diagram](/images/kagent-hitl.svg)
+
 ### Request flow
 
 1. **User → UI → Executor → ADK → Tool.** The user sends a message. The UI forwards it as an A2A message to the executor, which invokes the ADK, which calls the tool.
