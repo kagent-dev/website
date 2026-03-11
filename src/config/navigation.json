@@ -289,7 +289,7 @@
             "href": "/docs/kagent/resources/helm",
             "description": "kagent Helm chart configuration reference"
           },
-{
+          {
             "title": "FAQs",
             "href": "/docs/kagent/resources/faq",
             "description": "Find answers to frequently asked questions about kagent."

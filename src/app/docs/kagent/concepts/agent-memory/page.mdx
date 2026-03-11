@@ -33,6 +33,8 @@ Memory in kagent is:
 
 ### Enable Memory on an Agent
 
+Memory is enabled by setting the `memory` field on the declarative agent spec. The `modelConfig` field references a `ModelConfig` object whose embedding provider will be used to generate memory vectors.
+
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
@@ -44,22 +46,15 @@ spec:
     modelConfig: default-model-config
     systemMessage: "You are a helpful assistant with long-term memory."
     memory:
-      enabled: true
-      embeddingProvider:
-        type: OpenAI
-        model: text-embedding-3-small
+      modelConfig: default-model-config
 ```
 
-### Memory with Separate Embedding Provider
+### Custom TTL
 
 ```yaml
 memory:
-  enabled: true
-  embeddingProvider:
-    type: OpenAI
-    model: text-embedding-3-small
-    secretRef:
-      name: openai-embedding-key
+  modelConfig: default-model-config
+  ttlDays: 30
 ```
 
 ## How Memory Works
@@ -91,9 +86,11 @@ When memory is enabled, three tools are injected into the agent:
 ## Memory Management via API
 
 ```
-GET    /api/memories/{agentId}         # List memories
-DELETE /api/memories/{agentId}         # Clear all memories
-DELETE /api/memories/{agentId}/{id}    # Delete specific memory
+POST   /api/memories/sessions         # Add a memory
+POST   /api/memories/sessions/batch   # Add memories in batch
+POST   /api/memories/search           # Search memories by cosine similarity
+GET    /api/memories?agent_name=X&user_id=Y   # List memories
+DELETE /api/memories?agent_name=X&user_id=Y   # Clear all memories
 ```
 
 ## Technical Details
