@@ -16,6 +16,8 @@ Long conversations can exceed LLM context windows. kagent provides **event compa
 
 ## Configuration
 
+Compaction is enabled by setting the `context.compaction` field on the declarative agent spec:
+
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
@@ -27,9 +29,17 @@ spec:
     modelConfig: default-model-config
     systemMessage: "You are a helpful agent for extended sessions."
     context:
-      eventsCompaction:
-        enabled: true
+      compaction:
+        compactionInterval: 5
 ```
+
+### Configuration Options
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `compactionInterval` | `5` | Number of new user invocations before triggering a compaction |
+| `overlapSize` | `2` | Number of preceding invocations to include for context overlap |
+| `eventRetentionSize` | — | Number of most recent events to always retain |
 
 ## How It Works
 

@@ -37,6 +37,8 @@ kagent ships a `kagent-builtin-prompts` ConfigMap with five reusable templates:
 
 ## Usage
 
+Each data source in `promptTemplate.dataSources` references a ConfigMap by `name` and `kind`, with an optional `alias` for shorter include directives:
+
 ```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
@@ -48,20 +50,23 @@ spec:
     modelConfig: default-model-config
     promptTemplate:
       dataSources:
-        - configMapRef:
-            name: kagent-builtin-prompts
-        - configMapRef:
-            name: my-custom-prompts
+        - kind: ConfigMap
+          name: kagent-builtin-prompts
+          alias: builtin
+        - kind: ConfigMap
+          name: my-custom-prompts
     systemMessage: |
       You are a Kubernetes management agent named {{.AgentName}}.
 
-      {{include "kagent-builtin-prompts/safety-guardrails"}}
-      {{include "kagent-builtin-prompts/tool-usage-best-practices"}}
+      {{include "builtin/safety-guardrails"}}
+      {{include "builtin/tool-usage-best-practices"}}
       {{include "my-custom-prompts/k8s-specific-rules"}}
 
       Your tools: {{.ToolNames}}
       Your skills: {{.SkillNames}}
 ```
+
+When an `alias` is set, use `include("alias/key")`. Otherwise, use `include("name/key")`.
 
 ### Available Template Variables
 
@@ -94,7 +99,7 @@ data:
 ## How It Works
 
 1. The controller watches ConfigMaps referenced in `promptTemplate.dataSources`
-2. During reconciliation, `{{include "configmap-name/key"}}` directives are resolved
+2. During reconciliation, `{{include "alias/key"}}` directives are resolved
 3. Template variables are interpolated
 4. The fully expanded system message is written to the ADK config
 5. ConfigMap changes trigger automatic re-reconciliation
