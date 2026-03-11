@@ -23,6 +23,7 @@ Package v1alpha1 contains API Schema definitions for the agent v1alpha1 API grou
 ### Resource Types
 - [Agent](#agent)
 - [ModelConfig](#modelconfig)
+- [ModelProviderConfig](#modelproviderconfig)
 - [RemoteMCPServer](#remotemcpserver)
 
 
@@ -104,6 +105,7 @@ _Appears in:_
 | `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ |  |  |  |
 | `description` _string_ |  |  |  |
 | `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing |  |  |
 
 
 #### AgentStatus
@@ -139,6 +141,29 @@ _Appears in:_
 | --- | --- |
 | `Declarative` |  |
 | `BYO` |  |
+
+
+#### AllowedNamespaces
+
+
+
+AllowedNamespaces defines which namespaces are allowed to reference this resource.
+This mechanism provides a bidirectional handshake for cross-namespace references,
+following the pattern used by Gateway API for cross-namespace route attachments.
+
+
+By default (when not specified), only references from the same namespace are allowed.
+
+
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+- [RemoteMCPServerSpec](#remotemcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `from` _[FromNamespaces](#fromnamespaces)_ | From indicates where references to this resource can originate.<br />Possible values are:<br />* All: References from all namespaces are allowed.<br />* Same: Only references from the same namespace are allowed (default).<br />* Selector: References from namespaces matching the selector are allowed. | Same | Enum: [All Same Selector] <br /> |
+| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta)_ | Selector is a label selector for namespaces that are allowed to reference this resource.<br />Only used when From is set to "Selector". |  |  |
 
 
 #### AnthropicConfig
@@ -289,6 +314,61 @@ _Appears in:_
 | `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+| `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
+| `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
+
+
+#### ContextCompressionConfig
+
+
+
+ContextCompressionConfig configures event history compaction/compression.
+
+
+
+_Appears in:_
+- [ContextConfig](#contextconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `compactionInterval` _integer_ | The number of *new* user-initiated invocations that, once fully represented in the session's events, will trigger a compaction. | 5 | Minimum: 1 <br /> |
+| `overlapSize` _integer_ | The number of preceding invocations to include from the end of the last compacted range. This creates an overlap between consecutive compacted summaries, maintaining context. | 2 | Minimum: 0 <br /> |
+| `summarizer` _[ContextSummarizerConfig](#contextsummarizerconfig)_ | Summarizer configures an LLM-based summarizer for event compaction.<br />If not specified, compacted events are dropped from the context without summarization. |  |  |
+| `tokenThreshold` _integer_ | Post-invocation token threshold trigger. If set, ADK will attempt a post-invocation compaction when the most recently<br />observed prompt token count meets or exceeds this threshold. |  |  |
+| `eventRetentionSize` _integer_ | EventRetentionSize is the number of most recent events to always retain. |  |  |
+
+
+#### ContextConfig
+
+
+
+ContextConfig configures context management for an agent.
+
+
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `compaction` _[ContextCompressionConfig](#contextcompressionconfig)_ | Compaction configures event history compaction.<br />When enabled, older events in the conversation are compacted (compressed/summarized)<br />to reduce context size while preserving key information. |  |  |
+
+
+#### ContextSummarizerConfig
+
+
+
+ContextSummarizerConfig configures the LLM-based event summarizer.
+
+
+
+_Appears in:_
+- [ContextCompressionConfig](#contextcompressionconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `modelConfig` _string_ | ModelConfig is the name of a ModelConfig resource to use for summarization.<br />Must be in the same namespace as the Agent.<br />If not specified, uses the agent's own model. |  |  |
+| `promptTemplate` _string_ | PromptTemplate is a custom prompt template for the summarizer.<br />See the ADK LlmEventSummarizer for template details:<br />https://github.com/google/adk-python/blob/main/src/google/adk/apps/llm_event_summarizer.py |  |  |
 
 
 #### DeclarativeAgentSpec
@@ -304,14 +384,18 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `systemMessage` _string_ | SystemMessage is a string specifying the system message for the agent |  |  |
-| `systemMessageFrom` _[ValueSource](#valuesource)_ | SystemMessageFrom is a reference to a ConfigMap or Secret containing the system message. |  |  |
+| `runtime` _[DeclarativeRuntime](#declarativeruntime)_ | Runtime specifies which ADK implementation to use for this agent.<br />- "python": Uses the Python ADK (default, slower startup, full feature set)<br />- "go": Uses the Go ADK (faster startup, most features supported)<br />The runtime determines both the container image and readiness probe configuration. | python | Enum: [python go] <br /> |
+| `systemMessage` _string_ | SystemMessage is a string specifying the system message for the agent.<br />When PromptTemplate is set, this field is treated as a Go text/template<br />with access to an include("source/key") function and agent context variables<br />such as .AgentName, .AgentNamespace, .Description, .ToolNames, and .SkillNames. |  |  |
+| `systemMessageFrom` _[ValueSource](#valuesource)_ | SystemMessageFrom is a reference to a ConfigMap or Secret containing the system message.<br />When PromptTemplate is set, the resolved value is treated as a Go text/template. |  |  |
+| `promptTemplate` _[PromptTemplateSpec](#prompttemplatespec)_ | PromptTemplate enables Go text/template processing on the systemMessage field.<br />When set, systemMessage is treated as a Go template with access to the include function<br />and agent context variables. |  |  |
 | `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
 | `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is false. |  |  |
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
 | `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
 | `executeCodeBlocks` _boolean_ | Allow code execution for python code blocks with this agent.<br />If true, the agent will automatically execute python code blocks in the LLM responses.<br />Code will be executed in a sandboxed environment.<br />due to a bug in adk (https://github.com/google/adk-python/issues/3921), this field is ignored for now. |  |  |
+| `memory` _[MemorySpec](#memoryspec)_ | Memory configuration for the agent. |  |  |
+| `context` _[ContextConfig](#contextconfig)_ | Context configures context management for this agent.<br />This includes event compaction (compression) and context caching. |  |  |
 
 
 #### DeclarativeDeploymentSpec
@@ -342,6 +426,47 @@ _Appears in:_
 | `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+| `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
+| `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
+
+
+#### DeclarativeRuntime
+
+_Underlying type:_ _string_
+
+DeclarativeRuntime represents the runtime implementation for declarative agents
+
+_Validation:_
+- Enum: [python go]
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description |
+| --- | --- |
+| `python` |  |
+| `go` |  |
+
+
+#### FromNamespaces
+
+_Underlying type:_ _string_
+
+FromNamespaces specifies namespace from which references to this resource are allowed.
+This follows the same pattern as Gateway API's cross-namespace route attachment.
+See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing
+
+_Validation:_
+- Enum: [All Same Selector]
+
+_Appears in:_
+- [AllowedNamespaces](#allowednamespaces)
+
+| Field | Description |
+| --- | --- |
+| `All` | NamespacesFromAll allows references from all namespaces.<br /> |
+| `Same` | NamespacesFromSame only allows references from the same namespace as the target resource (default).<br /> |
+| `Selector` | NamespacesFromSelector allows references from namespaces matching the selector.<br /> |
 
 
 #### GeminiConfig
@@ -381,6 +506,25 @@ _Appears in:_
 | `responseMimeType` _string_ | Response mime type |  |  |
 
 
+#### GitRepo
+
+
+
+GitRepo specifies a single Git repository to fetch skills from.
+
+
+
+_Appears in:_
+- [SkillForAgent](#skillforagent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `url` _string_ | URL of the git repository (HTTPS or SSH). |  | Required: \{\} <br /> |
+| `ref` _string_ | Git reference: branch name, tag, or commit SHA. | main |  |
+| `path` _string_ | Subdirectory within the repo to use as the skill root. |  |  |
+| `name` _string_ | Name for the skill directory under /skills. Defaults to the repo name. |  |  |
+
+
 #### MCPTool
 
 
@@ -414,7 +558,27 @@ _Appears in:_
 | `kind` _string_ |  |  |  |
 | `apiGroup` _string_ |  |  |  |
 | `name` _string_ |  |  |  |
-| `toolNames` _string array_ | The names of the tools to be provided by the ToolServer<br />For a list of all the tools provided by the server,<br />the client can query the status of the ToolServer object after it has been created |  |  |
+| `namespace` _string_ |  |  |  |
+| `toolNames` _string array_ | The names of the tools to be provided by the ToolServer<br />For a list of all the tools provided by the server,<br />the client can query the status of the ToolServer object after it has been created |  | MaxItems: 50 <br /> |
+| `requireApproval` _string array_ | RequireApproval lists tool names that require human approval before<br />execution. Each name must also appear in ToolNames. When a tool in<br />this list is invoked by the agent, execution pauses and the user is<br />prompted to approve or reject the call. |  | MaxItems: 50 <br /> |
+| `allowedHeaders` _string array_ | AllowedHeaders specifies which headers from the A2A request should be<br />propagated to MCP tool calls. Header names are case-insensitive.<br /><br />Authorization header behavior:<br />- Authorization headers CAN be propagated if explicitly listed in allowedHeaders<br />- When STS token propagation is enabled, STS-generated Authorization headers<br />  will take precedence and replace any Authorization header from the A2A request<br />- This is a security measure to prevent request headers from overwriting<br />  authentication tokens generated by the STS integration<br /><br />Example: ["x-user-email", "x-tenant-id"] |  |  |
+
+
+#### MemorySpec
+
+
+
+MemorySpec enables long-term memory for an agent.
+
+
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `modelConfig` _string_ | ModelConfig is the name of the ModelConfig object whose embedding<br />provider will be used to generate memory vectors. |  | Required: \{\} <br /> |
+| `ttlDays` _integer_ | TTLDays controls how many days a stored memory entry remains valid before<br />it is eligible for pruning. Defaults to 15 days when unset or zero. |  | Minimum: 1 <br /> |
 
 
 #### ModelConfig
@@ -454,6 +618,7 @@ _Appears in:_
 | `model` _string_ |  |  |  |
 | `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig |  |  |
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key |  |  |
+| `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
 | `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock] <br /> |
 | `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
@@ -496,6 +661,7 @@ _Validation:_
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
+- [ModelProviderConfigSpec](#modelproviderconfigspec)
 
 | Field | Description |
 | --- | --- |
@@ -507,6 +673,67 @@ _Appears in:_
 | `GeminiVertexAI` |  |
 | `AnthropicVertexAI` |  |
 | `Bedrock` |  |
+
+
+#### ModelProviderConfig
+
+
+
+ModelProviderConfig is the Schema for the modelproviderconfigs API.
+It represents a model provider configuration with automatic model discovery.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
+| `kind` _string_ | `ModelProviderConfig` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[ModelProviderConfigSpec](#modelproviderconfigspec)_ |  |  |  |
+| `status` _[ModelProviderConfigStatus](#modelproviderconfigstatus)_ |  |  |  |
+
+
+#### ModelProviderConfigSpec
+
+
+
+ModelProviderConfigSpec defines the desired state of ModelProviderConfig.
+
+
+
+_Appears in:_
+- [ModelProviderConfig](#modelproviderconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock] <br />Required: \{\} <br /> |
+| `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
+| `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
+
+
+#### ModelProviderConfigStatus
+
+
+
+ModelProviderConfigStatus defines the observed state of ModelProviderConfig.
+
+
+
+_Appears in:_
+- [ModelProviderConfig](#modelproviderconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `observedGeneration` _integer_ | ObservedGeneration reflects the generation of the most recently observed ModelProviderConfig spec |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions represent the latest available observations of the ModelProviderConfig's state |  |  |
+| `discoveredModels` _string array_ | DiscoveredModels is the cached list of model IDs available from this model provider |  |  |
+| `modelCount` _integer_ | ModelCount is the number of discovered models (for kubectl display) |  |  |
+| `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
+| `secretHash` _string_ | SecretHash is a hash of the referenced secret data, used to detect secret changes |  |  |
 
 
 #### OllamaConfig
@@ -564,6 +791,43 @@ _Validation:_
 _Appears in:_
 - [OpenAIConfig](#openaiconfig)
 
+
+
+#### PromptSource
+
+
+
+PromptSource references a ConfigMap whose keys are available as prompt fragments.
+In systemMessage templates, use include("alias/key") (or include("name/key") if no alias is set)
+to insert the value of a specific key from this source.
+
+
+
+_Appears in:_
+- [PromptTemplateSpec](#prompttemplatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `kind` _string_ |  |  |  |
+| `apiGroup` _string_ |  |  |  |
+| `name` _string_ |  |  |  |
+| `alias` _string_ | Alias is an optional short identifier for use in include directives.<br />If set, use include("alias/key") instead of include("name/key"). |  |  |
+
+
+#### PromptTemplateSpec
+
+
+
+PromptTemplateSpec configures prompt template processing for an agent's system message.
+
+
+
+_Appears in:_
+- [DeclarativeAgentSpec](#declarativeagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `dataSources` _[PromptSource](#promptsource) array_ | DataSources defines the ConfigMaps whose keys can be included in the systemMessage<br />using Go template syntax, e.g. include("alias/key") or include("name/key"). |  | MaxItems: 20 <br /> |
 
 
 #### RemoteMCPServer
@@ -625,6 +889,7 @@ _Appears in:_
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing |  |  |
 
 
 #### RemoteMCPServerStatus
@@ -643,6 +908,42 @@ _Appears in:_
 | `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  | Optional: \{\} <br /> |
+
+
+#### SecretReference
+
+
+
+SecretReference references a Kubernetes Secret that must contain exactly one data key
+holding the API key or credential.
+
+
+
+_Appears in:_
+- [ModelProviderConfigSpec](#modelproviderconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name is the name of the secret in the same namespace as the ModelProviderConfig. |  |  |
+
+
+#### ServiceAccountConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [ByoDeploymentSpec](#byodeploymentspec)
+- [DeclarativeDeploymentSpec](#declarativedeploymentspec)
+- [SharedDeploymentSpec](#shareddeploymentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `labels` _object (keys:string, values:string)_ |  |  |  |
+| `annotations` _object (keys:string, values:string)_ |  |  |  |
 
 
 #### SharedDeploymentSpec
@@ -673,6 +974,8 @@ _Appears in:_
 | `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+| `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
+| `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
 
 
 #### SkillForAgent
@@ -690,6 +993,8 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `insecureSkipVerify` _boolean_ | Fetch images insecurely from registries (allowing HTTP and skipping TLS verification).<br />Meant for development and testing purposes only. |  |  |
 | `refs` _string array_ | The list of skill images to fetch. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
+| `gitAuthSecretRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | Reference to a Secret containing git credentials.<br />Applied to all gitRefs entries.<br />The secret should contain a `token` key for HTTPS auth,<br />or `ssh-privatekey` for SSH auth. |  |  |
+| `gitRefs` _[GitRepo](#gitrepo) array_ | Git repositories to fetch skills from. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
 
 
 #### TLSConfig
@@ -728,7 +1033,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `type` _[ToolProviderType](#toolprovidertype)_ |  |  | Enum: [McpServer Agent] <br /> |
 | `mcpServer` _[McpServerTool](#mcpservertool)_ |  |  |  |
-| `agent` _[TypedLocalReference](#typedlocalreference)_ |  |  |  |
+| `agent` _[TypedReference](#typedreference)_ |  |  |  |
 | `headersFrom` _[ValueRef](#valueref) array_ | HeadersFrom specifies a list of configuration values to be added as<br />headers to requests sent to the Tool from this agent. The value of<br />each header is resolved from either a Secret or ConfigMap in the same<br />namespace as the Agent. Headers specified here will override any<br />headers of the same name/key specified on the tool. |  |  |
 
 
@@ -759,6 +1064,24 @@ _Appears in:_
 
 
 _Appears in:_
+- [PromptSource](#promptsource)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `kind` _string_ |  |  |  |
+| `apiGroup` _string_ |  |  |  |
+| `name` _string_ |  |  |  |
+
+
+#### TypedReference
+
+
+
+
+
+
+
+_Appears in:_
 - [McpServerTool](#mcpservertool)
 - [Tool](#tool)
 
@@ -767,6 +1090,7 @@ _Appears in:_
 | `kind` _string_ |  |  |  |
 | `apiGroup` _string_ |  |  |  |
 | `name` _string_ |  |  |  |
+| `namespace` _string_ |  |  |  |
 
 
 #### ValueRef
