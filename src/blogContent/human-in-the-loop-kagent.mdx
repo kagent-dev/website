@@ -1,0 +1,316 @@
+export const metadata = {
+  title: "Human-in-the-Loop with kagent: Keeping Humans in Control of AI Agents",
+  publishDate: "2026-03-11T00:00:00Z",
+  description:
+    "How to build Kubernetes-native AI agents that pause and ask for approval before taking destructive actions, using kagent's human-in-the-loop capabilities.",
+  author: "Sebastian Maniak",
+  authorIds: ["sebastianmaniak"],
+};
+
+AI agents are getting good — really good — at taking autonomous action. They can inspect your Kubernetes cluster, diagnose problems, create resources, and even clean up after themselves. But here's the uncomfortable question most teams are quietly asking:
+
+*"Do I actually want an AI agent deleting things in my production cluster without asking me first?"*
+
+The answer, almost universally, is no.
+
+This is where **Human-in-the-Loop (HITL)** comes in. It's the pattern that lets you give an AI agent real tools and real capabilities, while keeping a human in the decision loop for anything that matters. Not everything — just the operations where a mistake could ruin your afternoon.
+
+In this post, I'll walk through how HITL works in [kagent](https://kagent.dev), an open-source project for building Kubernetes-native AI agents. We'll go from concept to a working agent that pauses, asks for approval, and respects your answer — all running on a local Kind cluster.
+
+---
+
+## The Problem with Fully Autonomous Agents
+
+Let's set the scene. You build an AI agent that can manage Kubernetes resources. You give it tools to list pods, apply manifests, delete deployments. It works great in a demo.
+
+Then someone on your team asks it to "clean up the old staging resources" and it deletes the wrong namespace. Or it misinterprets "scale down the database" and sets replicas to zero on your production PostgreSQL StatefulSet.
+
+The issue isn't that the agent is dumb — it's that there was no checkpoint between "the agent decided to do something" and "the thing got done." There was no moment where a human could look at the plan and say, "Wait, no. Not that."
+
+Fully autonomous agents are fine for read-only operations. For anything that changes state, you need a gate.
+
+---
+
+## What Human-in-the-Loop Actually Means
+
+HITL isn't a single feature — it's a design pattern with a few distinct mechanisms:
+
+### 1. Tool Approval
+
+The agent decides to call a tool (like deleting a resource), but instead of executing immediately, the system **pauses** and presents the action to a human. The human reviews it and either:
+
+- **Approves** — the tool executes normally
+- **Rejects** — the agent receives the rejection (with an optional reason) and adapts its approach
+
+This is the core HITL mechanism. It's simple, explicit, and gives you exactly the control you need.
+
+### 2. Ask User
+
+Sometimes the agent doesn't need approval — it needs **information**. The request is ambiguous, or there are multiple valid paths, and the agent needs you to make a choice.
+
+For example:
+- "Which namespace should I create this in?"
+- "Do you want to use PostgreSQL or MySQL?"
+- "Should I apply this to staging or production?"
+
+The `ask_user` tool lets the agent pause execution, ask a question, and wait for your answer before continuing. It's not a safety gate — it's a collaboration mechanism.
+
+### 3. The Combination
+
+The real power is when both mechanisms work together. An agent that can:
+- Read your cluster freely (no interruptions)
+- Ask you for clarification when your request is vague
+- Show you exactly what it's about to change and wait for your approval
+- Accept your rejection gracefully and try a different approach
+
+That's an agent you can actually put in front of a team.
+
+---
+
+## How kagent Implements HITL
+
+[kagent](https://kagent.dev) is an open-source project for building AI agents that run natively on Kubernetes. Agents are defined as Custom Resources (CRDs), tools are served via MCP (Model Context Protocol) servers, and everything runs inside your cluster.
+
+HITL in kagent works through two mechanisms, both built on the same underlying infrastructure:
+
+### The `requireApproval` Field
+
+When you define an agent, you list the tools it can use. For any tool that should require human approval, you add it to the `requireApproval` list:
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      apiGroup: kagent.dev
+      toolNames:
+        - k8s_get_resources      # read-only, runs freely
+        - k8s_describe_resource  # read-only, runs freely
+        - k8s_apply_manifest     # destructive, needs approval
+        - k8s_delete_resource    # destructive, needs approval
+      requireApproval:
+        - k8s_apply_manifest
+        - k8s_delete_resource
+```
+
+That's it. Two lines to add a safety gate. The tools in `requireApproval` must also appear in `toolNames` — the CRD validates this at creation time, so you can't accidentally gate a tool that isn't assigned to the agent.
+
+### The `ask_user` Tool
+
+Every kagent agent automatically has access to `ask_user`. You don't need to configure it — it's built-in. When the agent encounters an ambiguous request, it can call `ask_user` to pause and ask the human a question.
+
+The question can be:
+- **Free-text** — the user types their answer
+- **Single-select** — the user picks from a list of choices
+- **Multi-select** — the user picks multiple options
+
+The agent gets back structured data, not just a raw string, which makes it easier to act on the answer.
+
+### Under the Hood
+
+Both mechanisms share the same infrastructure:
+
+1. The agent calls a tool that requires confirmation (either via `requireApproval` or `ask_user`)
+2. The executor calls `request_confirmation()` and **blocks**
+3. An event is generated and sent to the UI via A2A (Agent-to-Agent protocol)
+4. The UI renders the approval controls or question
+5. The human responds
+6. Their response is sent back as an A2A message
+7. The executor unblocks and the agent continues
+
+This shared architecture means HITL is not a bolted-on feature — it's a core part of how kagent agents communicate. Adding approval to a new tool is a one-line YAML change, not a code change.
+
+---
+
+## Building a HITL Agent: Step by Step
+
+Let's build one. We'll create an agent with access to Kubernetes tools — read-only tools run freely, destructive tools require approval.
+
+### Prerequisites
+
+- Docker, Kind, kubectl, Helm installed
+- An OpenAI API key
+
+### 1. Create a Cluster
+
+```bash
+kind create cluster --name kagent-hitl
+```
+
+### 2. Install kagent
+
+```bash
+# Install CRDs
+helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+    --namespace kagent \
+    --create-namespace
+
+# Set your API key
+export OPENAI_API_KEY="your-api-key-here"
+
+# Install kagent
+helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+    --namespace kagent \
+    --set providers.default=openAI \
+    --set providers.openAI.apiKey=$OPENAI_API_KEY
+
+# Wait for pods
+kubectl wait --for=condition=ready pod --all -n kagent --timeout=120s
+```
+
+### 3. Define the Agent
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: hitl-agent
+  namespace: kagent
+spec:
+  description: A Kubernetes agent with human-in-the-loop approval for destructive operations.
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |
+      You are a Kubernetes management agent. You help users inspect and manage
+      resources in the cluster. Before making any changes, explain what you
+      plan to do. If the user's request is ambiguous, use the ask_user tool
+      to clarify before proceeding.
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          apiGroup: kagent.dev
+          toolNames:
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_get_pod_logs
+            - k8s_get_events
+            - k8s_get_resource_yaml
+            - k8s_apply_manifest
+            - k8s_delete_resource
+            - k8s_patch_resource
+          requireApproval:
+            - k8s_apply_manifest
+            - k8s_delete_resource
+            - k8s_patch_resource
+```
+
+```bash
+kubectl apply -f hitl-agent.yaml
+```
+
+### 4. Open the UI
+
+```bash
+kubectl port-forward -n kagent svc/kagent-ui 8080:8080
+```
+
+Open [http://localhost:8080](http://localhost:8080).
+
+---
+
+## Seeing It in Action
+
+### Scenario 1: Reading is Free
+
+You ask the agent: *"List all pods in the kagent namespace."*
+
+The agent calls `k8s_get_resources`. Since this tool is **not** in `requireApproval`, it runs immediately. You see the results with no interruption.
+
+This is the right UX. You don't want to click "Approve" every time you ask the agent to read something. Only destructive operations should have gates.
+
+### Scenario 2: Writes Need Approval
+
+You ask: *"Create a ConfigMap called test-config in the default namespace with the key message set to 'hello from kagent'."*
+
+The agent calls `k8s_apply_manifest`. Since this tool **is** in `requireApproval`, execution pauses. In the UI, you see:
+
+- The tool the agent wants to call
+- The arguments it wants to pass (including the full YAML manifest)
+- **Approve** and **Reject** buttons
+
+You review the manifest. It looks correct. You click **Approve**. The agent applies the ConfigMap and confirms success.
+
+### Scenario 3: Rejection with Reason
+
+You ask: *"Delete the ConfigMap test-config in the default namespace."*
+
+The agent calls `k8s_delete_resource`. Execution pauses. But this time, you click **Reject** and enter a reason: *"I want to keep this ConfigMap for now."*
+
+The agent receives your rejection reason. Instead of failing or retrying, it acknowledges your decision and responds: *"Understood — I'll leave the ConfigMap in place. Let me know if you change your mind."*
+
+This is a key detail. The rejection reason isn't just logged — it's sent back to the LLM as context. The agent can adapt its behavior based on **why** you said no.
+
+### Scenario 4: Agent Asks for Clarification
+
+You ask: *"Set up a namespace for my application."*
+
+The agent doesn't know what to call the namespace. Instead of guessing, it calls `ask_user`: *"What should the namespace be called?"*
+
+You type "staging-app" and the agent continues, creating the namespace with the name you specified.
+
+This is the difference between an agent that guesses wrong and an agent that gets it right. The cost of asking is a few seconds. The cost of guessing wrong is rolling back a mistake.
+
+---
+
+## Design Principles
+
+A few things about kagent's HITL implementation that I think are worth highlighting:
+
+### 1. Opt-In, Not Opt-Out
+
+Tools run freely by default. You explicitly list which ones need approval. This means adding a new read-only tool to an agent doesn't require updating any approval configuration — it just works.
+
+### 2. Declarative, Not Procedural
+
+You don't write approval logic in code. You add a tool name to a YAML list. This keeps agent definitions readable and auditable. A security reviewer can look at the agent YAML and immediately see which tools require human approval.
+
+### 3. Rejection Is Contextual
+
+When you reject a tool call, you can provide a reason. That reason is returned to the LLM as part of the conversation context. This means the agent can learn from your rejection in the current conversation and adjust its approach.
+
+### 4. ask_user Is Always Available
+
+You don't need to configure `ask_user`. It's built-in on every agent. This encourages agent builders to write system prompts that tell the agent to ask when things are ambiguous, rather than assuming.
+
+---
+
+## When to Use HITL (and When Not To)
+
+**Use HITL for:**
+- Any operation that changes cluster state (create, update, delete)
+- Operations that are hard to reverse (deleting PVCs, removing finalizers)
+- Multi-step workflows where early decisions affect later steps
+- Any agent that will be used by people who aren't the agent's author
+
+**Skip HITL for:**
+- Read-only operations (listing, describing, reading logs)
+- Internal agent reasoning (tool calls that don't affect external state)
+- Fully automated pipelines where latency matters and rollback is cheap
+
+The goal isn't to make every action require approval — it's to put gates where they matter.
+
+---
+
+## Cleanup
+
+```bash
+kind delete cluster --name kagent-hitl
+```
+
+---
+
+## What's Next
+
+HITL is one piece of the puzzle. kagent also supports:
+
+- **[A2A protocol](/docs/kagent/examples/a2a-agents)** for agent-to-agent communication
+- **MCP servers** for extending agent capabilities with custom tools
+- **Skills** for packaging reusable agent behaviors
+
+If you want to try it yourself, the full step-by-step tutorial is available in the [Human-in-the-Loop example](/docs/kagent/examples/human-in-the-loop).
+
+kagent is open source: [github.com/kagent-dev/kagent](https://github.com/kagent-dev/kagent)

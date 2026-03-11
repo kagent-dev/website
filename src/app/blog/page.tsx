@@ -65,6 +65,13 @@ const posts = [
         authorId: "christianposta",
     },
     {
+        slug: 'human-in-the-loop-kagent',
+        publishDate: '2026-03-11',
+        title: 'Human-in-the-Loop with kagent: Keeping Humans in Control of AI Agents',
+        description: 'How to build Kubernetes-native AI agents that pause and ask for approval before taking destructive actions, using kagent\'s human-in-the-loop capabilities.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'inside-kagent-oss-ent-ai-meshes',
         publishDate: '2025-11-18',
         title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
