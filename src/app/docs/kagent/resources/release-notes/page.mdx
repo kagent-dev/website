@@ -187,7 +187,7 @@ Review the main changes from kagent version 0.5 to v0.6, then continue reading f
 * API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
 * The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
 * The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
-* The ModelConfig APIs rename the secret name field from `apiKeySecret` to `apiKeySecret`.
+* The ModelConfig APIs rename the secret name field from `apiKeySecretRef` to `apiKeySecret`.
 * Memory APIs are not supported in ADK.
 
 ## Upgraded API version
@@ -503,7 +503,7 @@ This change supports the new type for BYO agents.
 </div>
 
 <div id="new-agent-tab">
-[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `inline` setting.
+[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `declarative` setting.
   
   ```yaml
   apiVersion: kagent.dev/v1alpha2
@@ -524,7 +524,7 @@ This change supports the new type for BYO agents.
   
   **Key Changes:**
   * Added `type: Declarative` field to specify agent type
-  * Agent configuration now under `inline` section
+  * Agent configuration now under `declarative` section
   * Supports new BYO deployment model
 </div>
 
@@ -556,7 +556,7 @@ spec:
 
 ## ModelConfig API
 
-The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.
+The secret name field is renamed from `apiKeySecretRef` to `apiKeySecret`.
 
 ### ModelInfo removed
 
