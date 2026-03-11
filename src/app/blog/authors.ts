@@ -36,6 +36,13 @@ export const authors: Author[] = [
     bio: "Jet is an aspiring machine learning engineer + researcher studying at the University of Toronto. He is the Linux Foundation Mentee at Kagent for 2025.",
   },
   {
+    id: "sebastianmaniak",
+    name: "Sebastian Maniak",
+    title: "Field CTO",
+    photo: "/images/authors/sebastianmaniak.png",
+    bio: "Sebastian Maniak is a Field CTO at Solo.io, helping organizations adopt cloud-native technologies and AI-powered infrastructure.",
+  },
+  {
     id: "michaellevan",
     name: "Michael Levan",
     title: "Principal Solutions Engineer",
