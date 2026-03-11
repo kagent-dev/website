@@ -108,7 +108,7 @@ export default function HackathonBanner() {
           >
             Build with <span style={{ color: '#00ffff' }}>MCP</span> &amp;{' '}
             <span style={{ color: '#ff00ff' }}>AI Agents</span>.<br />
-            $5,000 in prizes. Feb 2 &ndash; Mar 1, 2026.
+            $5,000 in prizes.
           </p>
           <a
             href="https://aihackathon.dev/"
