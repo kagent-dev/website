@@ -52,9 +52,9 @@ export const authors: Author[] = [
   {
     id: "eitanya",
     name: "Eitan Yarmush",
-    title: "TODO",
+    title: "Senior Architect",
     photo: "/images/authors/eitanya.png",
-    bio: "TODO",
+    bio: "Professional tinkerer and problem solver",
   },
 ];
 
