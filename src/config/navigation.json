@@ -184,14 +184,14 @@
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
           },
           {
-            "title": "Human-in-the-Loop",
-            "href": "/docs/kagent/examples/human-in-the-loop",
-            "description": "Build a Kubernetes-native AI agent that pauses for approval before taking destructive actions."
-          },
-          {
             "title": "Skills",
             "href": "/docs/kagent/examples/skills",
             "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
+          },
+          {
+            "title": "Human-in-the-Loop",
+            "href": "/docs/kagent/examples/human-in-the-loop",
+            "description": "Build a Kubernetes-native AI agent that pauses and asks for your approval before taking destructive actions."
           }
         ]
       },
@@ -267,7 +267,7 @@
           {
             "title": "Tools Ecosystem",
             "href": "/docs/kagent/resources/tools-ecosystem",
-            "description": "Catalog of built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
+            "description": "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
           },
           {
             "title": "FAQs",
