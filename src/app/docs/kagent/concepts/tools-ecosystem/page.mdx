@@ -1,0 +1,297 @@
+---
+title: "Tools Ecosystem"
+pageOrder: 3
+description: "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
+---
+
+export const metadata = {
+  title: "Tools Ecosystem",
+  description: "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts.",
+  author: "kagent.dev"
+};
+
+# Tools Ecosystem
+
+kagent provides a rich set of built-in tools through MCP (Model Context Protocol) servers, plus the ability to add custom tools. Most tools are served by the `kagent-tool-server`.
+
+## Built-in Tool Categories
+
+### Kubernetes
+
+Comprehensive cluster management tools:
+
+| Tool | Description |
+|------|-------------|
+| `k8s_get_resources` | Query resources (pods, deployments, services, etc.) |
+| `k8s_describe_resource` | Detailed resource information |
+| `k8s_get_resource_yaml` | Get resource definition as YAML |
+| `k8s_get_pod_logs` | Retrieve pod logs |
+| `k8s_get_events` | Get cluster events |
+| `k8s_get_available_api_resources` | List available API resource types |
+| `k8s_get_cluster_configuration` | Get cluster configuration |
+| `k8s_check_service_connectivity` | Test service connectivity |
+| `k8s_create_resource` | Create a resource |
+| `k8s_create_resource_from_url` | Create a resource from a URL |
+| `k8s_apply_manifest` | Apply YAML manifests |
+| `k8s_patch_resource` | Patch resources with strategic merge |
+| `k8s_delete_resource` | Delete resources |
+| `k8s_label_resource` | Add labels to resources |
+| `k8s_remove_label` | Remove labels from resources |
+| `k8s_annotate_resource` | Add annotations to resources |
+| `k8s_remove_annotation` | Remove annotations from resources |
+| `k8s_execute_command` | Execute commands in pods |
+| `k8s_generate_resource` | Generate resource YAML |
+
+### Helm
+
+| Tool | Description |
+|------|-------------|
+| `helm_list_releases` | List installed releases |
+| `helm_get_release` | Get details of a release |
+| `helm_upgrade` | Install or upgrade a release |
+| `helm_uninstall` | Remove a release |
+| `helm_repo_add` | Add chart repository |
+| `helm_repo_update` | Update chart repositories |
+
+### Istio
+
+| Tool | Description |
+|------|-------------|
+| `istio_proxy_status` | Check proxy synchronization status |
+| `istio_proxy_config` | Inspect proxy configuration |
+| `istio_install_istio` | Install Istio |
+| `istio_generate_manifest` | Generate installation manifests |
+| `istio_analyze_cluster_configuration` | Analyze Istio configuration for issues |
+| `istio_version` | Get Istio version info |
+| `istio_remote_clusters` | Manage remote cluster configuration |
+| `istio_ztunnel_config` | Inspect ztunnel configuration |
+| `istio_waypoint_status` | Check waypoint proxy status |
+| `istio_list_waypoints` | List waypoint proxies |
+| `istio_generate_waypoint` | Generate waypoint configuration |
+| `istio_apply_waypoint` | Apply waypoint configuration |
+| `istio_delete_waypoint` | Delete waypoint proxies |
+
+### Argo Rollouts
+
+| Tool | Description |
+|------|-------------|
+| `argo_verify_argo_rollouts_controller_install` | Verify controller is running |
+
+The Argo Rollouts agent uses standard Kubernetes tools (`k8s_get_resources`, `k8s_describe_resource`, `k8s_apply_manifest`, etc.) for managing rollouts, combined with this verification tool.
+
+### Cilium
+
+Cilium tools are organized across three specialized agents:
+
+#### Cilium Manager
+
+| Tool | Description |
+|------|-------------|
+| `cilium_status_and_version` | Check Cilium status and version |
+| `cilium_get_daemon_status` | Get daemon status |
+| `cilium_install_cilium` | Install Cilium |
+| `cilium_upgrade_cilium` | Upgrade Cilium |
+| `cilium_show_features_status` | Show enabled features |
+| `cilium_toggle_hubble` | Enable/disable Hubble |
+| `cilium_connect_to_remote_cluster` | Connect to remote cluster |
+| `cilium_toggle_cluster_mesh` | Enable/disable cluster mesh |
+| `cilium_show_cluster_mesh_status` | Show cluster mesh status |
+| `cilium_list_bgp_peers` | View BGP peers |
+| `cilium_list_bgp_routes` | View BGP routes |
+| `cilium_get_endpoints_list` | List endpoints |
+| `cilium_get_endpoint_details` | Get endpoint details |
+| `cilium_show_configuration_options` | Show configuration options |
+| `cilium_toggle_configuration_option` | Toggle a configuration option |
+| `cilium_list_services` | List services |
+| `cilium_get_service_information` | Get service information |
+| `cilium_update_service` | Update a service |
+
+#### Cilium Debug
+
+| Tool | Description |
+|------|-------------|
+| `cilium_manage_endpoint_config` | Manage endpoint configuration |
+| `cilium_get_endpoint_health` | Check endpoint health |
+| `cilium_get_endpoint_logs` | Get endpoint logs |
+| `cilium_list_identities` | List security identities |
+| `cilium_get_identity_details` | Get identity details |
+| `cilium_request_debugging_information` | Request debugging info |
+| `cilium_display_encryption_state` | Display encryption state |
+| `cilium_flush_ipsec_state` | Flush IPsec state |
+| `cilium_list_envoy_config` | List Envoy configuration |
+| `cilium_fqdn_cache` | View FQDN cache |
+| `cilium_list_ip_addresses` | List IP addresses |
+| `cilium_show_ip_cache_information` | Show IP cache info |
+| `cilium_list_bpf_map_events` | List BPF map events |
+| `cilium_list_metrics` | List metrics |
+| `cilium_list_cluster_nodes` | List cluster nodes |
+| `cilium_list_node_ids` | List node IDs |
+| `cilium_list_pcap_recorders` | List pcap recorders |
+| `cilium_get_pcap_recorder` | Get pcap recorder details |
+| `cilium_update_pcap_recorder` | Update pcap recorder |
+| `cilium_delete_pcap_recorder` | Delete pcap recorder |
+
+#### Cilium Policy
+
+| Tool | Description |
+|------|-------------|
+| `cilium_display_policy_node_information` | Display policy node info |
+| `cilium_validate_cilium_network_policies` | Validate network policies |
+
+## Observability (Grafana MCP Server)
+
+Observability tools are provided by the **Grafana MCP server** (`kagent-grafana-mcp`), a separate MCP server deployed alongside kagent.
+
+### Dashboards
+
+| Tool | Description |
+|------|-------------|
+| `search_dashboards` | Search for dashboards |
+| `get_dashboard_by_uid` | Get dashboard by UID |
+| `get_dashboard_panel_queries` | Get panel queries from a dashboard |
+| `update_dashboard` | Update a dashboard |
+
+### Prometheus
+
+| Tool | Description |
+|------|-------------|
+| `query_prometheus` | Execute PromQL queries |
+| `list_prometheus_metric_names` | List available metric names |
+| `list_prometheus_metric_metadata` | Get metric metadata |
+| `list_prometheus_label_values` | List label values |
+| `list_prometheus_label_names` | List label names |
+
+### Loki
+
+| Tool | Description |
+|------|-------------|
+| `query_loki_logs` | Query logs from Loki |
+| `query_loki_stats` | Get Loki query statistics |
+| `list_loki_label_names` | List Loki label names |
+| `list_loki_label_values` | List Loki label values |
+
+### Alerting
+
+| Tool | Description |
+|------|-------------|
+| `list_alert_rules` | List alert rules |
+| `get_alert_rule_by_uid` | Get alert rule by UID |
+| `list_contact_points` | List notification contact points |
+
+### Data Sources
+
+| Tool | Description |
+|------|-------------|
+| `list_datasources` | List configured data sources |
+| `get_datasource_by_uid` | Get data source by UID |
+| `get_datasource_by_name` | Get data source by name |
+
+### Incidents & OnCall
+
+| Tool | Description |
+|------|-------------|
+| `list_incidents` | List incidents |
+| `get_incident` | Get incident details |
+| `create_incident` | Create an incident |
+| `add_activity_to_incident` | Add activity to an incident |
+| `list_oncall_users` | List on-call users |
+| `list_oncall_teams` | List on-call teams |
+| `list_oncall_schedules` | List on-call schedules |
+| `get_oncall_shift` | Get on-call shift details |
+| `get_current_oncall_users` | Get currently on-call users |
+
+### SRE Analysis (Sift)
+
+| Tool | Description |
+|------|-------------|
+| `list_sift_investigations` | List Sift investigations |
+| `get_sift_investigation` | Get investigation details |
+| `get_sift_analysis` | Get Sift analysis results |
+| `get_assertions` | Get assertions |
+| `find_slow_requests` | Find slow requests |
+| `find_error_pattern_logs` | Find error pattern logs |
+
+### Other
+
+| Tool | Description |
+|------|-------------|
+| `list_teams` | List Grafana teams |
+
+## Agent Built-in Tools
+
+These tools are automatically available to every agent (no configuration needed):
+
+| Tool | Description |
+|------|-------------|
+| `ask_user` | Pose questions to users with optional choices |
+| `SkillsTool` | Discover and load skills |
+| `BashTool` | Execute shell commands (Go ADK) |
+| `ReadFile` | Read files with pagination (Go ADK) |
+| `WriteFile` | Write file content (Go ADK) |
+| `EditFile` | Edit files via string replacement (Go ADK) |
+
+## Configuring Tools on an Agent
+
+### Single MCP Server
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You manage Kubernetes clusters."
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_get_pod_logs
+            - k8s_get_events
+```
+
+### With Tool Approval
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      toolNames:
+        - k8s_get_resources
+        - k8s_describe_resource
+        - k8s_delete_resource
+        - k8s_apply_manifest
+      requireApproval:
+        - k8s_delete_resource
+        - k8s_apply_manifest
+```
+
+### Agent as Tool (A2A)
+
+Use another agent as a tool via the A2A protocol:
+
+```yaml
+tools:
+  - type: Agent
+    agent:
+      name: specialist-agent
+      namespace: default
+```
+
+## Community / Contrib MCP Servers
+
+Additional MCP servers available in `contrib/tools/`:
+
+| Server | Description |
+|--------|-------------|
+| **GitHub MCP Server** | GitHub Copilot MCP server with tools for issues, PRs, repos, actions, and more |
+| **k8sgpt MCP Server** | K8sGPT integration for AI-powered Kubernetes diagnostics |
+| **Grafana MCP** | Extended Grafana integration |
