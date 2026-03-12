@@ -48,6 +48,39 @@ Some tools support additional configuration that can be set in when adding the t
 
 Kagent comes with a set of built-in tools that you can use to interact with your environment. Kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
 
+## Human-in-the-Loop
+
+Kagent supports Human-in-the-Loop (HITL) to keep humans in control of agent actions. You can require user approval before an agent executes sensitive tools, and agents can ask users questions when they need clarification.
+
+For a hands-on tutorial that walks through setting up HITL with tool approval and the `ask_user` tool, see the [Human-in-the-Loop example](/docs/kagent/examples/human-in-the-loop).
+
+### Tool approval
+
+Add `requireApproval` to your agent's tool specification to gate destructive operations. Tools listed in `requireApproval` pause execution and present Approve/Reject buttons in the UI. Tools not listed run immediately.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      apiGroup: kagent.dev
+      toolNames:
+        - k8s_get_resources       # runs immediately
+        - k8s_describe_resource   # runs immediately
+        - k8s_delete_resource     # pauses for approval
+        - k8s_apply_manifest      # pauses for approval
+      requireApproval:
+        - k8s_delete_resource
+        - k8s_apply_manifest
+```
+
+When you reject a tool call, you can provide a reason. This reason is passed back to the LLM as context, so the agent can adjust its approach.
+
+### Ask User
+
+Every agent automatically has the built-in `ask_user` tool. It allows agents to pause and ask users questions with optional predefined choices — useful for clarifying ambiguous requests or collecting configuration preferences. No configuration is required.
+
 ## Skills
 
 Skills are descriptions or even executable implementations of the capabilities that an agent has to act more autonomously. They make the LLM's responses more than just reactions to prompts by orienting them toward goals.

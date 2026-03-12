@@ -90,11 +90,6 @@
             "description": "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
           },
           {
-            "title": "Human-in-the-Loop",
-            "href": "/docs/kagent/concepts/human-in-the-loop",
-            "description": "Configure tool approval workflows and the Ask User interactive tool for human oversight of agent actions."
-          },
-          {
             "title": "Agent Memory",
             "href": "/docs/kagent/concepts/agent-memory",
             "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
@@ -212,6 +207,11 @@
             "title": "Discord and A2A",
             "href": "/docs/kagent/examples/discord-a2a",
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
+          },
+          {
+            "title": "Human-in-the-Loop",
+            "href": "/docs/kagent/examples/human-in-the-loop",
+            "description": "Build a Kubernetes-native AI agent that pauses for approval before taking destructive actions."
           },
           {
             "title": "Skills",
