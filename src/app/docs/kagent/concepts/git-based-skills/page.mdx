@@ -1,0 +1,137 @@
+---
+title: "Git-Based Skills"
+pageOrder: 8
+description: "Load markdown knowledge documents from Git repositories to guide agent behavior."
+---
+
+export const metadata = {
+  title: "Git-Based Skills",
+  description: "Load markdown knowledge documents from Git repositories to guide agent behavior.",
+  author: "kagent.dev"
+};
+
+# Git-Based Skills
+
+Skills are markdown-based knowledge documents that agents load at startup. They provide domain-specific instructions, best practices, and procedures that guide agent behavior.
+
+kagent supports two sources for skills:
+- **OCI images** — Container images containing skill files (original approach)
+- **Git repositories** — Clone skills directly from Git repos
+
+## Skill File Format
+
+Each skill is a directory containing a `SKILL.md` file with YAML frontmatter:
+
+```markdown
+---
+name: kubernetes-troubleshooting
+description: Guide for diagnosing and fixing common Kubernetes issues
+---
+
+# Kubernetes Troubleshooting
+
+## Pod Crash Loops
+
+When a pod is in CrashLoopBackOff:
+
+1. Check logs: `kubectl logs <pod> --previous`
+2. Check events: `kubectl describe pod <pod>`
+3. Verify resource limits...
+```
+
+## Git Repository Configuration
+
+### Basic Example
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: my-agent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent."
+  skills:
+    gitRefs:
+      - url: https://github.com/myorg/agent-skills.git
+        ref: main
+```
+
+### With Subdirectory
+
+```yaml
+skills:
+  gitRefs:
+    - url: https://github.com/myorg/monorepo.git
+      ref: main
+      path: skills/kubernetes
+```
+
+### Multiple Sources
+
+Combine Git and OCI skills. OCI skill references are plain image strings:
+
+```yaml
+skills:
+  refs:
+    - ghcr.io/myorg/k8s-skills:latest
+  gitRefs:
+    - url: https://github.com/myorg/skills-repo.git
+      ref: main
+    - url: https://github.com/myorg/another-repo.git
+      ref: develop
+      path: agent-skills
+```
+
+## Authentication
+
+### HTTPS Token Auth
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: git-credentials
+type: Opaque
+stringData:
+  token: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+```yaml
+skills:
+  gitAuthSecretRef:
+    name: git-credentials
+  gitRefs:
+    - url: https://github.com/myorg/private-skills.git
+      ref: main
+```
+
+### SSH Key Auth
+
+```yaml
+skills:
+  gitAuthSecretRef:
+    name: git-ssh-key
+  gitRefs:
+    - url: git@github.com:myorg/private-skills.git
+      ref: main
+```
+
+> A single `gitAuthSecretRef` applies to all Git repositories in the agent. All repos must use the same authentication method.
+
+## How It Works
+
+Under the hood, kagent uses a lightweight init container containing Git and krane tools:
+
+1. Before the agent pod starts, the `skills-init` container runs
+2. It clones each Git repository to the skills volume
+3. It also pulls any OCI skill images
+4. The agent runtime discovers skills from the mounted volume at startup
+
+## Skill Discovery at Runtime
+
+Once loaded, skills are available through the built-in `SkillsTool`:
+- **List skills:** The agent calls the tool with no arguments to see available skills
+- **Load skill:** The agent calls the tool with a skill name to get the full content

@@ -1,0 +1,130 @@
+---
+title: "Human-in-the-Loop"
+pageOrder: 4
+description: "Configure tool approval workflows and the Ask User interactive tool for human oversight of agent actions."
+---
+
+export const metadata = {
+  title: "Human-in-the-Loop",
+  description: "Configure tool approval workflows and the Ask User interactive tool for human oversight of agent actions.",
+  author: "kagent.dev"
+};
+
+# Human-in-the-Loop (HITL)
+
+kagent implements Human-in-the-Loop functionality through two mechanisms:
+
+1. **Tool Approval** — Require user confirmation before executing sensitive tools
+2. **Ask User** — Allow agents to interactively ask users questions during execution
+
+Both features pause agent execution and wait for user input before continuing.
+
+## Tool Approval
+
+### Overview
+
+Tool approval lets you mark specific tools as requiring user confirmation before execution. When an agent attempts to call an approval-required tool, execution pauses and the UI presents Approve/Reject buttons.
+
+This is useful for destructive or sensitive operations like:
+- Deleting Kubernetes resources
+- Writing files
+- Executing shell commands
+- Modifying infrastructure
+
+### Configuration
+
+Add `requireApproval` to your Agent's tool specification. The values must be a subset of `toolNames`:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a Kubernetes management agent."
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_get_resources
+            - k8s_apply_manifest
+            - k8s_delete_resource
+          requireApproval:
+            - k8s_delete_resource
+            - k8s_apply_manifest
+```
+
+In this example, `k8s_get_resources` executes immediately, but `k8s_apply_manifest` and `k8s_delete_resource` will pause for user approval.
+
+### How It Works
+
+**Interrupt Phase:**
+1. The agent calls a tool marked for approval
+2. The ADK generates an `adk_request_confirmation` event
+3. The UI receives the event and displays approval controls
+
+**Decision Phase:**
+4. The user clicks **Approve** or **Reject** in the UI
+5. Optionally, the user provides a rejection reason
+
+**Resume Phase:**
+6. **Approved** tools execute normally and return results
+7. **Rejected** tools return a rejection message — the LLM sees this and responds accordingly
+
+### Parallel Tool Approval
+
+When an agent generates multiple tool calls simultaneously, all pending approvals are presented together. Users can approve/reject individually or in batch.
+
+### Rejection Reasons
+
+When rejecting a tool call, users can provide a free-text explanation. This reason is passed back to the LLM as context, helping it understand why the tool was blocked and adjust its approach.
+
+---
+
+## Ask User Tool
+
+The `ask_user` tool is a built-in tool automatically added to every agent. It allows agents to pose questions to users with optional predefined choices during execution.
+
+Use cases:
+- Clarifying ambiguous user requests
+- Offering choices between implementation approaches
+- Collecting configuration preferences
+- Getting confirmation on proposed plans
+
+### Question Types
+
+| Type | Configuration | UI Rendering |
+|------|--------------|--------------|
+| Single-select | `choices: [...]`, `multiple: false` | Choice chips (select one) |
+| Multi-select | `choices: [...]`, `multiple: true` | Choice chips (select many) |
+| Free-text | `choices: []` | Text input field |
+
+### No Configuration Required
+
+The `ask_user` tool is added unconditionally to every agent as a built-in tool. You don't need to add it to your Agent spec — it's always available.
+
+## Architecture Summary
+
+```
+User --> UI --> A2A Message --> Executor --> ADK --> Tool
+                                                      |
+                                             request_confirmation()
+                                                      |
+                                             <-- input_required -->
+                                                      |
+User <-- UI <-- A2A Event <-- Executor <---- ADK <----+
+  |
+  v (Approve/Reject/Answer)
+  |
+User --> UI --> A2A Message --> Executor --> ADK --> Tool (resumes)
+```
+
+Key design principles:
+- **Confirmation-gated execution** — Approved calls are re-invoked by feeding the confirmation response back through the ADK runner, which re-enters the flow at the point where the tool was blocked. The `before_tool_callback` acts as the gate, allowing execution to proceed on approval.
+- **Minimal custom logic** — The executor only handles the resume path
+- **Unified mechanism** — Both tool approval and ask_user share the same `request_confirmation` infrastructure

@@ -1,0 +1,79 @@
+---
+title: "Context Management"
+pageOrder: 9
+description: "Automatically manage conversation history to stay within LLM context windows during long conversations."
+---
+
+export const metadata = {
+  title: "Context Management",
+  description: "Automatically manage conversation history to stay within LLM context windows during long conversations.",
+  author: "kagent.dev"
+};
+
+# Context Management
+
+Long conversations can exceed LLM context windows. kagent provides **event compaction** to manage older messages, reducing token count while optionally preserving key information through summarization.
+
+## Configuration
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: long-conversation-agent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent for extended sessions."
+    context:
+      compaction:
+        compactionInterval: 5
+```
+
+### Compaction Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `compactionInterval` | int | 5 | Number of agent invocations between compaction runs (minimum: 1) |
+| `overlapSize` | int | 2 | Number of recent events to preserve uncompacted (minimum: 0) |
+| `tokenThreshold` | int | — | Optional token count that triggers compaction |
+| `eventRetentionSize` | int | — | Optional max number of events to retain |
+| `summarizer` | object | — | Optional summarizer configuration (see below) |
+
+### Adding Summarization
+
+By default, compacted events are **dropped** from the context. To instead summarize them, configure a `summarizer`:
+
+```yaml
+context:
+  compaction:
+    compactionInterval: 5
+    summarizer:
+      modelConfig: summary-model-config
+      promptTemplate: "Summarize the following conversation, preserving key decisions and outcomes."
+```
+
+When a summarizer is configured, older events are replaced with an LLM-generated summary rather than being discarded.
+
+## How It Works
+
+1. As the conversation progresses, events accumulate in the session history
+2. Every N invocations (controlled by `compactionInterval`), compaction triggers
+3. Older events beyond the `overlapSize` window are either dropped or summarized
+4. The agent continues with the compacted history seamlessly
+
+## When to Use
+
+Enable event compaction when:
+- Agents handle long-running conversations (debugging sessions, investigations)
+- Agents call many tools that generate large outputs
+- You want to support extended interactions without hitting context limits
+
+You may not need it for:
+- Short, single-turn interactions
+- Agents with small tool sets that generate compact outputs
+
+## Context Caching Note
+
+Prompt caching (a separate optimization that caches the prompt prefix for faster responses) is **not** configured at the agent level. Most LLM providers enable prompt caching by default.
