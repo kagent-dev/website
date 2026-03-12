@@ -1,0 +1,81 @@
+export const metadata = {
+  title: "We Added a Go Runtime to kagent and the Numbers Are Wild",
+  publishDate: "2026-03-12T00:00:00Z",
+  description: "We benchmarked kagent's Go and Python agent runtimes on image size, startup time, and memory. The results: 11x smaller images, 6.7x faster startup, and 36x less memory.",
+  author: "Eitan Yarmush",
+  authorIds: ["eitanya"],
+}
+
+# We Added a Go Runtime to kagent and the Numbers Are Wild
+
+We've been building [kagent](https://github.com/kagent-dev/kagent) — a Kubernetes-native framework for deploying AI agents — and one thing that kept bugging us was the resource footprint. Every declarative agent we deployed was spinning up a full Python runtime: interpreter, virtual environment, the entire Google ADK dependency tree. It worked great, but it felt heavy for agents that were essentially just gluing together an LLM and some MCP tools via a CRD.
+
+So we built a Go runtime. Same agent definitions, same tools, same A2A protocol — just a different engine under the hood. Switching between them is a single line in your Agent CRD:
+
+```yaml
+spec:
+  declarative:
+    runtime: go  # that's it. change this from "python" to "go"
+```
+
+We ran some benchmarks on a Kind cluster to see how the two compare, and honestly, the results surprised even us.
+
+## The Results
+
+| Metric | Go | Python | Difference |
+|--------|-----|--------|-----------|
+| **Image Size** | 29.7 MB | 335.4 MB | **11x smaller** |
+| **Startup Time** | 2.7s | 18.2s | **6.7x faster** |
+| **Memory (idle)** | 7 Mi | 253 Mi | **36x less** |
+
+Let that memory number sink in for a second. **7 megabytes.** That's your entire agent runtime sitting idle, ready to handle requests. The Python equivalent needs 253 Mi just to exist.
+
+## Breaking Down the "Why"
+
+### Image Size: 30 MB vs 335 MB
+
+The Go runtime compiles down to a single static binary running on a `distroless` base image. No interpreter, no package manager, no virtual environment. Just the binary and a minimal OS layer.
+
+The Python side needs a full Python 3.13 installation, a UV-managed virtual environment, and all of Google ADK's transitive dependencies — gRPC, protobuf, pydantic, and friends. Each of those pulls in their own dependency trees. It adds up fast.
+
+### Startup Time: 2.7s vs 18.2s
+
+Most of the Go agent's 2.7 seconds isn't even the binary starting — it's Kubernetes doing its thing: creating the Deployment, scheduling the pod, pulling image layers from the local registry, and waiting for the readiness probe to pass. The binary itself is ready almost instantly.
+
+Python has to do all of that *plus* initialize the interpreter, import every module, and spin up a uvicorn ASGI server. This is why we configure a 15-second initial delay on the Python readiness probe versus just 1 second for Go. The runtime genuinely needs that time.
+
+### Memory: 7 Mi vs 253 Mi
+
+This is the one that really matters at scale. A compiled Go binary with no GC pressure at idle barely registers. The Python runtime carries the weight of the interpreter, every imported module, and the ASGI server in resident memory.
+
+Think about what this means for a real deployment: 20 agents on Python would consume **~5 GB** just in runtime overhead before processing a single request. The same 20 agents on Go? About **140 Mi**. That's the difference between needing a dedicated node pool and fitting comfortably on existing infrastructure.
+
+## So Should You Ditch Python?
+
+Not necessarily! The two runtimes serve different use cases:
+
+**Go is perfect when** you're running declarative agents — the kind defined entirely through CRDs with a system message, model config, and MCP tools. If your agent doesn't need custom Python logic, Go gives you the same behavior at a fraction of the cost. It's especially compelling if you care about cold start times (scaling from zero) or you're running a lot of agents.
+
+**Python is still the right choice when** you need the full Google ADK feature set, custom agent logic, code execution, or integrations with frameworks like CrewAI and LangGraph. It's also what you'll want for BYO (bring-your-own) agents where you're writing custom Python.
+
+The good news is that most kagent declarative agents — the ones people configure through CRDs and deploy without writing code — work identically on both runtimes. For those, switching to Go is basically free performance.
+
+## Try It Yourself
+
+We published the benchmark scripts so you can run this on your own cluster:
+
+```bash
+git clone https://github.com/EItanya/kagent-runtime-benchmark.git
+cd kagent-runtime-benchmark
+
+# Requires a Kind cluster with kagent v0.8.0-beta5+ installed
+./bench.sh --runs 5
+```
+
+The script creates minimal agents with a dummy API key (no real LLM calls needed), measures all three metrics, and spits out a summary table. Check out the [repo](https://github.com/EItanya/kagent-runtime-benchmark) for details on what's happening under the hood.
+
+## What's Next
+
+We think we can push Go startup well under 2 seconds — the current 2.7s is mostly Kubernetes overhead, not the binary. We're looking at pre-pulled images, agent pooling, and smarter readiness detection to get cold starts under 1 second. Stay tuned.
+
+In the meantime, if you're running kagent, give `runtime: go` a shot. One line change, 36x less memory. Not a bad trade.

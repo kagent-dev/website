@@ -72,6 +72,13 @@ const posts = [
         authorId: 'sebastianmaniak',
     },
     {
+        slug: 'go-vs-python-runtime',
+        publishDate: '2026-03-12',
+        title: 'We Added a Go Runtime to kagent and the Numbers Are Wild',
+        description: 'We benchmarked kagent\'s Go and Python agent runtimes on image size, startup time, and memory. The results: 11x smaller images, 6.7x faster startup, and 36x less memory.',
+        authorId: 'eitanya',
+    },
+    {
         slug: 'inside-kagent-oss-ent-ai-meshes',
         publishDate: '2025-11-18',
         title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',

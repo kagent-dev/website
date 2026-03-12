@@ -49,6 +49,13 @@ export const authors: Author[] = [
     photo: "/images/authors/michaellevan.jpeg",
     bio: "Michael Levan translates technical complexity into practical value. He's a seasoned engineer, consultant, trainer, and content creator in the Kubernetes and Agentic space. Michael is a Microsoft MVP (Azure), 4x published author, podcast host, international public speaker, CNCF Ambassador, and was part of the Kubernetes v1.28 and v1.31 Release Team.",
   },
+  {
+    id: "eitanya",
+    name: "Eitan Yarmush",
+    title: "TODO",
+    photo: "/images/authors/eitanya.png",
+    bio: "TODO",
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
