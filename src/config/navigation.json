@@ -83,6 +83,41 @@
             "title": "Tools",
             "href": "/docs/kagent/concepts/tools",
             "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
+          },
+          {
+            "title": "Tools Ecosystem",
+            "href": "/docs/kagent/concepts/tools-ecosystem",
+            "description": "Comprehensive catalog of built-in tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
+          },
+          {
+            "title": "Human-in-the-Loop",
+            "href": "/docs/kagent/concepts/human-in-the-loop",
+            "description": "Configure tool approval gates and interactive user prompts for agent oversight."
+          },
+          {
+            "title": "Agent Memory",
+            "href": "/docs/kagent/concepts/agent-memory",
+            "description": "Enable vector-backed long-term memory for agents using pgvector or Turso."
+          },
+          {
+            "title": "Prompt Templates",
+            "href": "/docs/kagent/concepts/prompt-templates",
+            "description": "Compose reusable prompt fragments from ConfigMaps using Go template syntax."
+          },
+          {
+            "title": "Multi-Runtime Support",
+            "href": "/docs/kagent/concepts/multi-runtime",
+            "description": "Choose between Go and Python ADK runtimes for your agents."
+          },
+          {
+            "title": "Git-Based Skills",
+            "href": "/docs/kagent/concepts/git-based-skills",
+            "description": "Load markdown knowledge documents from Git repositories to guide agent behavior."
+          },
+          {
+            "title": "Context Management",
+            "href": "/docs/kagent/concepts/context-management",
+            "description": "Automatically summarize older messages to stay within LLM context windows."
           }
         ]
       },
