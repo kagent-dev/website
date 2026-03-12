@@ -67,7 +67,7 @@ spec:
 
 The Go ADK includes built-in tools: `SkillsTool`, `BashTool`, `ReadFile`, `WriteFile`, and `EditFile`.
 
-For more information, see the [Multi-Runtime Support](/docs/kagent/concepts/multi-runtime) concept guide and the [blog post](/blog/go-vs-python-runtime).
+For more information, see the [Agents](/docs/kagent/concepts/agents#runtime) concept guide and the [blog post](/blog/go-vs-python-runtime).
 
 ## Agents as MCP Servers
 
@@ -82,7 +82,7 @@ You can load skills from two sources.
 - **OCI images.** Container images containing skill files.
 - **Git repositories.** Clone skills directly from Git repos, with support for private repos via HTTPS token or SSH key authentication.
 
-For more information, see the [Git-Based Skills](/docs/kagent/concepts/git-based-skills) concept guide.
+For more information, see the [Agents](/docs/kagent/concepts/agents#git-based-skills) concept guide.
 
 ## Go Workspace Restructure
 
@@ -100,13 +100,13 @@ Agent system messages now support Go `text/template` syntax. You can store commo
 
 The `kagent-builtin-prompts` ConfigMap ships with five reusable templates: `skills-usage`, `tool-usage-best-practices`, `safety-guardrails`, `kubernetes-context`, and `a2a-communication`.
 
-For more information, see the [Prompt Templates](/docs/kagent/concepts/prompt-templates) concept guide.
+For more information, see the [Agents](/docs/kagent/concepts/agents#prompt-templates) concept guide.
 
 ## Context Management
 
 Long conversations can now be automatically compacted to stay within LLM context windows. You can configure the `context.compaction` field to enable periodic summarization of older events while preserving key information.
 
-For more information, see the [Context Management](/docs/kagent/concepts/context-management) concept guide.
+For more information, see the [Agents](/docs/kagent/concepts/agents#context-management) concept guide.
 
 ## AWS Bedrock Support
 

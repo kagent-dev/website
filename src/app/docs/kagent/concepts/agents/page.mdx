@@ -34,6 +34,60 @@ Instructions are an important part of the agent's behavior. They define the agen
 
 Writing good instructions is an art and a science. It requires a good understanding of the task at hand, the tools available, and the user's needs. In order to make it easier to write good instructions, we've created a [system prompt tutorial](/docs/kagent/getting-started/system-prompts) that can help you get started.
 
+### Prompt templates
+
+You can use Go `text/template` syntax in system messages to compose reusable fragments stored in ConfigMaps. Instead of duplicating safety guidelines and tool usage instructions across every agent, store them once and reference them with `{{include "alias/key"}}` syntax. The controller resolves templates during reconciliation, so the final system message is fully expanded before reaching the agent runtime.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    promptTemplate:
+      dataSources:
+        - kind: ConfigMap
+          name: kagent-builtin-prompts
+          alias: builtin
+        - kind: ConfigMap
+          name: my-custom-prompts
+    systemMessage: |
+      You are a Kubernetes management agent named {{.AgentName}}.
+
+      {{include "builtin/safety-guardrails"}}
+      {{include "builtin/tool-usage-best-practices"}}
+      {{include "my-custom-prompts/k8s-specific-rules"}}
+
+      Your tools: {{.ToolNames}}
+      Your skills: {{.SkillNames}}
+```
+
+The `kagent-builtin-prompts` ConfigMap ships with five reusable templates.
+
+| Template Key | Description |
+|-------------|-------------|
+| `skills-usage` | Instructions for discovering and using skills. |
+| `tool-usage-best-practices` | Best practices for tool invocation. |
+| `safety-guardrails` | Safety and operational guardrails. |
+| `kubernetes-context` | Kubernetes-specific operational context. |
+| `a2a-communication` | Agent-to-agent communication guidelines. |
+
+The following template variables are available in system messages.
+
+| Variable | Description |
+|----------|-------------|
+| `{{.AgentName}}` | Name of the Agent resource. |
+| `{{.AgentNamespace}}` | Namespace of the Agent resource. |
+| `{{.Description}}` | Agent description. |
+| `{{.ToolNames}}` | Comma-separated list of tool names. |
+| `{{.SkillNames}}` | Comma-separated list of skill names. |
+
+> **Security Note:** Only ConfigMaps are supported as data sources. Secret references were intentionally excluded to avoid leaking sensitive data into prompts sent to LLM providers.
+
 ## Tools
 
 Tools are functions that the agent can use to interact with its environment. For example, a Kubernetes agent might have tools to list pods, get pod logs, and describe services.
@@ -141,6 +195,33 @@ Container-based skills are actual, callable capabilities—not just descriptions
 
 Kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: any agent can use skills, regardless of the LLM provider. You're not limited to Anthropic Claude. You can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
 
+### Git-based skills
+
+You can also load skills directly from Git repositories, as an alternative to OCI images.
+
+```yaml
+skills:
+  gitRefs:
+    - url: https://github.com/myorg/agent-skills.git
+      ref: main
+    - url: https://github.com/myorg/monorepo.git
+      ref: main
+      path: skills/kubernetes  # Use a subdirectory
+```
+
+For private repositories, configure authentication via HTTPS token or SSH key.
+
+```yaml
+skills:
+  gitAuthSecretRef:
+    name: git-credentials  # Secret containing a `token` key
+  gitRefs:
+    - url: https://github.com/myorg/private-skills.git
+      ref: main
+```
+
+A single `gitAuthSecretRef` applies to all Git repositories in the agent. You can combine Git and OCI skills in the same agent by specifying both `refs` and `gitRefs`.
+
 ### Best practices for skills
 
 Containerize and store your skills in a specialized registry so that you can reuse them across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
@@ -154,6 +235,68 @@ When creating skills for your agents, consider the following best practices. Age
 5. **Keep skills focused**: Each skill should have a clear, focused purpose. For example, a document-generating skill might be too broad, but a skill that focuses on creating a specific type of document, such as a `.docx` file or alternatively a genre like a getting started guide, might be more appropriate.
 
 To learn more about using skills in your agents, see the [Skills example guide](/docs/kagent/examples/skills).
+
+## Runtime
+
+You can choose between two Agent Development Kit (ADK) runtimes for declarative agents: **Python** (default) and **Go**.
+
+| Feature | Python ADK | Go ADK |
+|---------|-----------|--------|
+| Startup time | ~15 seconds | ~2 seconds |
+| Ecosystem | Google ADK, LangGraph, CrewAI integrations | Native Go implementation |
+| Resource usage | Higher (Python runtime) | Lower (compiled binary) |
+| Default | Yes | No |
+| Memory support | Yes | Yes |
+| MCP support | Yes | Yes |
+| HITL support | Yes | Yes |
+
+Select the runtime via the `runtime` field in the declarative agent spec.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    runtime: go  # or "python" (default)
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent."
+```
+
+**Choose Go when** fast startup matters (autoscaling, cold starts), lower resource consumption is important, or you don't need Python-specific framework integrations.
+
+**Choose Python when** you need Google ADK-native features, CrewAI/LangGraph/OpenAI framework integrations, or Python-based custom tools.
+
+For more benchmarks and details, see the [Go vs Python runtime blog post](/blog/go-vs-python-runtime).
+
+## Memory
+
+Your agents can save and retrieve relevant context across conversations using vector similarity search. When you enable memory on an agent, it receives three additional tools (`save_memory`, `load_memory`, `prefetch_memory`) and automatically extracts key information every 5th user message.
+
+For configuration details, supported storage backends, API endpoints, and limitations, see the [Agent Memory](/docs/kagent/concepts/agent-memory) concept guide.
+
+## Context Management
+
+Long conversations can exceed LLM context windows. You can enable **event compaction** to automatically summarize older messages while preserving key information.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent for extended sessions."
+    context:
+      compaction:
+        compactionInterval: 5  # Compact every 5 user invocations
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `compactionInterval` | `5` | Number of new user invocations before triggering a compaction. |
+| `overlapSize` | `2` | Number of preceding invocations to include for context overlap. |
+| `eventRetentionSize` | — | Number of most recent events to always retain. |
+| `tokenThreshold` | — | Post-invocation token threshold that triggers compaction. |
+| `summarizer` | — | Optional LLM-based summarizer configuration. |
+
+By default, compacted events are dropped. To preserve a summary, configure the `summarizer` field with a `modelConfig` reference. Enable compaction for agents that handle long-running conversations, call many tools with large outputs, or need to support extended interactions.
 
 ## Agents as Tools
 
