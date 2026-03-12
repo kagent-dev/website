@@ -298,9 +298,9 @@ When the agent starts, kagent automatically:
 
 1. Pulls the skill images using an init container.
 2. Extracts the skill files to `/skills` in the agent container.
-3. Makes them available to the agent through the SkillsTool.
+3. Registers a [tool](https://github.com/kagent-dev/kagent/blob/main/python/packages/kagent-openai/src/kagent/openai/tools/_tools.py) with the name of the skill, plus tools `read_file`, `write_file`, `edit_file`, `bash` which the agent can use to operate on files or run commands inside the skill folder
 
-The agent can then discover and load skills using the SkillsTool, which reads the `SKILL.md` files and makes the skill instructions available to the LLM.
+The agent can then discover and load skills using the skill's tool, which reads the `SKILL.md` files and makes the skill instructions available to the LLM.
 
 
 ### Step 3: Test container-based skills
