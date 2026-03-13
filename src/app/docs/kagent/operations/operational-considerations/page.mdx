@@ -58,20 +58,43 @@ controller:
 
 ### More considerations for HA
 
-- **Database requirement**: When using multiple controller replicas, use PostgreSQL as the database backend. The default in-memory database does not support multiple replicas.
+- **Database requirement**: PostgreSQL is the default database backend and supports multiple controller replicas. The bundled PostgreSQL instance is deployed automatically unless you configure an external PostgreSQL.
 - **Leader election**: Leader election uses Kubernetes leases and is handled automatically.
 - **Failover**: If the leader fails, another replica automatically becomes the leader.
 
-### Use PostgreSQL for scaling
+## Database configuration
 
-To scale the controller to multiple replicas, configure PostgreSQL as the database backend. You can enable PostgreSQL by using the Helm `--set` flag or values file.
+Kagent uses PostgreSQL as the database backend. By default, a bundled PostgreSQL instance with pgvector is deployed when you install kagent. This bundled instance works out of the box with no external prerequisites.
+
+### Bundled PostgreSQL
+
+The default bundled PostgreSQL instance is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty (the default). You can customize the bundled instance configuration.
+
+**Helm values file:**
+
+```yaml
+database:
+  postgres:
+    vectorEnabled: true
+    bundled:
+      image: pgvector/pgvector:pg18-trixie
+      storage: 500Mi
+      database: postgres
+      user: postgres
+      password: kagent
+```
+
+### External PostgreSQL
+
+To use an external PostgreSQL instance instead of the bundled one, set `database.postgres.url` or `database.postgres.urlFile`.
+
+> **Note**: If your external PostgreSQL does not have the `pgvector` extension installed, set `database.postgres.vectorEnabled: false` to disable vector-based memory features.
 
 **Helm `--set` flag:**
 
 ```bash
 helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --namespace kagent \
-  --set database.type=postgres \
   --set database.postgres.url=postgres://user:password@postgres-host:5432/kagent \
   --set controller.replicas=3
 ```
@@ -80,11 +103,20 @@ helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
 
 ```yaml
 database:
-  type: postgres
   postgres:
     url: postgres://user:password@postgres-host:5432/kagent
+    vectorEnabled: true  # Set to false if your external PostgreSQL doesn't have pgvector
 controller:
   replicas: 3
+```
+
+**Using a secret for the database URL:** This configuration expects a Kubernetes secret mounted at `/etc/secrets/database-url` containing the PostgreSQL connection string.
+
+```yaml
+database:
+  postgres:
+    urlFile: /etc/secrets/database-url
+    vectorEnabled: true
 ```
 
 ## Secure execution environment
