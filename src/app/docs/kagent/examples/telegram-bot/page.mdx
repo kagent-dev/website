@@ -114,11 +114,11 @@ spec:
           - helm_get_release
           - prometheus_query_tool
           - datetime_get_current_time
-    requireApproval:
-      - k8s_delete_resource
-      - k8s_apply_manifest
-      - helm_upgrade
-      - helm_uninstall
+          requireApproval:
+          - k8s_delete_resource
+          - k8s_apply_manifest
+          - helm_upgrade
+          - helm_uninstall
 EOF
 ```
 
