@@ -1,0 +1,522 @@
+---
+title: "Telegram Bot"
+pageOrder: 5
+description: "Learn how to build a Telegram bot that interacts with kagent via A2A"
+---
+
+export const metadata = {
+    title: "Building a Telegram Bot for Kubernetes with kagent and A2A",
+    description: "Learn how to build a Telegram bot that interacts with kagent via A2A",
+    author: "kagent.dev",
+};
+
+# Building a Telegram Bot for Your Kubernetes Cluster with kagent and A2A
+
+Kagent enables you to create AI agents that run inside your Kubernetes cluster. They can access a variety of [built-in tools](/docs/kagent/concepts/tools) and use other [external tools via MCP](/docs/kagent/examples/documentation).
+
+This guide shows how to build a Telegram bot that connects to a kagent agent using the A2A (Agent-to-Agent) protocol. The bot uses polling (no webhooks or public endpoints required) and forwards messages to your agent, which handles LLM orchestration, tool invocation, and response generation.
+
+We'll walk through:
+
+1. Setting up a Telegram bot with BotFather.
+2. Deploying a kagent agent with A2A enabled.
+3. Writing the bot code.
+4. Deploying and testing the integration.
+
+---
+
+## Architecture Overview
+
+```
+┌──────────────────┐
+│ Telegram Cloud   │
+│ (Bot API)        │
+└────────┬─────────┘
+         │ Long Polling
+         ▼
+┌──────────────────────────────────────────────┐
+│ Kubernetes Cluster                           │
+│                                              │
+│  ┌──────────────────┐                        │
+│  │ telegram-bot     │                        │
+│  │ (Pod)            │                        │
+│  └────────┬─────────┘                        │
+│           │ HTTP POST (A2A JSON-RPC)         │
+│           ▼                                  │
+│  ┌──────────────────┐    ┌────────────────┐  │
+│  │ kagent-controller│───▶│ Agent Pod      │  │
+│  │ :8083/api/a2a/   │    │ + LLM + Tools  │  │
+│  └──────────────────┘    └────────────────┘  │
+└──────────────────────────────────────────────┘
+```
+
+The key insight: the Telegram bot doesn't talk to the LLM directly. It sends messages to the kagent controller's A2A endpoint, which routes them to the correct agent. The agent handles LLM orchestration, tool invocation, and response generation. The bot is just a thin transport layer.
+
+---
+
+## Creating a Telegram Bot
+
+1. Open Telegram and search for **@BotFather**.
+2. Send `/newbot` and follow the prompts to choose a name and username.
+3. BotFather will give you a **bot token** — save it, you'll need it later.
+
+---
+
+## Deploying an Agent
+
+Before deploying an agent, make sure you have installed kagent in your cluster. If you haven't, you can install it by following the instructions [here](https://kagent.dev/docs/kagent/getting-started/quickstart). Make sure that you also install the `kmcp` CRDs as shown in that guide so that you can create an MCPServer.
+
+Deploy a Kubernetes agent with A2A enabled:
+
+```shell
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: telegram-k8s-agent
+  namespace: kagent
+spec:
+  description: "Kubernetes operations agent accessible via Telegram bot"
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    a2aConfig:
+      skills:
+      - id: k8s-operations
+        name: Kubernetes Operations
+        description: "Query, manage, and troubleshoot Kubernetes resources"
+        examples:
+        - "What pods are running in the default namespace?"
+        - "Show me the logs for pod X"
+        - "What Helm releases are installed?"
+        tags: [kubernetes, operations]
+      - id: cluster-monitoring
+        name: Cluster Monitoring
+        description: "Query Prometheus metrics and monitor cluster health"
+        examples:
+        - "What is the CPU usage across nodes?"
+        tags: [monitoring, prometheus]
+    systemMessage: |
+      You are a Kubernetes operations agent accessible via Telegram.
+      Keep responses concise and well-formatted for chat readability.
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: kagent-tool-server
+          toolNames:
+          - k8s_get_resources
+          - k8s_describe_resource
+          - k8s_get_pod_logs
+          - k8s_get_events
+          - helm_list_releases
+          - helm_get_release
+          - prometheus_query_tool
+          - datetime_get_current_time
+    requireApproval:
+      - k8s_delete_resource
+      - k8s_apply_manifest
+      - helm_upgrade
+      - helm_uninstall
+EOF
+```
+
+The `a2aConfig.skills` section tells A2A clients what this agent can do. The `requireApproval` list ensures destructive operations go through [Human-in-the-Loop](/docs/kagent/examples/human-in-the-loop) approval in the kagent UI before executing.
+
+To access the agent through A2A locally, port-forward the kagent controller:
+
+```shell
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083
+```
+
+Verify the agent is accessible by fetching its A2A agent card:
+
+```shell
+curl localhost:8083/api/a2a/kagent/telegram-k8s-agent/.well-known/agent.json
+```
+
+You should see a JSON response with the agent's name, description, and skills.
+
+---
+
+## The A2A Protocol
+
+A2A (Agent-to-Agent) is a Google-backed open protocol for agent interoperability. kagent implements A2A on its controller, meaning any A2A-compatible client can talk to any kagent agent.
+
+The protocol uses JSON-RPC 2.0 over HTTP. A message exchange looks like:
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "unique-task-id",
+  "method": "message/send",
+  "params": {
+    "id": "unique-task-id",
+    "message": {
+      "role": "user",
+      "parts": [{"kind": "text", "text": "list my pods"}]
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "result": {
+    "artifacts": [{
+      "parts": [{
+        "kind": "text",
+        "text": "Here are your pods: ..."
+      }]
+    }]
+  }
+}
+```
+
+> **Important notes about kagent's A2A implementation:**
+> - The method is `message/send` (not `tasks/send` as in the older A2A draft spec)
+> - Parts use `"kind": "text"` (not `"type": "text"`)
+> - The URL pattern is `/api/a2a/{namespace}/{agent-name}/` — **trailing slash required**
+> - Responses come back in `result.artifacts[].parts[]`
+
+---
+
+## Writing the Bot Code
+
+The bot is ~120 lines of Python using `python-telegram-bot` (polling mode) and `httpx` for A2A calls.
+
+### Project Structure
+
+```
+telegram-bot/
+├── main.py
+├── requirements.txt
+└── Dockerfile
+```
+
+### requirements.txt
+
+```
+python-telegram-bot>=21.0
+httpx>=0.27.0
+```
+
+### main.py
+
+```python
+"""Telegram bot that forwards messages to a kagent A2A agent."""
+
+import logging, os, uuid
+from pathlib import Path
+
+import httpx
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
+
+logging.basicConfig(level=logging.INFO)
+
+TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+KAGENT_A2A_URL = os.environ["KAGENT_A2A_URL"]
+
+
+async def send_a2a_task(message_text: str, session_id: str) -> str:
+    """Send a message to the kagent A2A endpoint and return the response."""
+    task_id = str(uuid.uuid4())
+    payload = {
+        "jsonrpc": "2.0",
+        "id": task_id,
+        "method": "message/send",
+        "params": {
+            "id": task_id,
+            "message": {
+                "role": "user",
+                "parts": [{"kind": "text", "text": message_text}],
+            },
+        },
+    }
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        resp = await client.post(
+            KAGENT_A2A_URL,
+            json=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+    result = data.get("result", {})
+    artifacts = result.get("artifacts", [])
+    if artifacts:
+        parts = artifacts[-1].get("parts", [])
+        texts = [p.get("text", "") for p in parts if p.get("kind") == "text"]
+        if texts:
+            return "\n".join(texts)
+    return "Agent returned no text response."
+
+
+# Per-user session tracking
+user_sessions: dict[int, str] = {}
+
+
+def get_session(user_id: int) -> str:
+    if user_id not in user_sessions:
+        user_sessions[user_id] = str(uuid.uuid4())
+    return user_sessions[user_id]
+
+
+async def start_command(update: Update, _) -> None:
+    await update.message.reply_text(
+        "Hello! I'm connected to a kagent Kubernetes agent.\n\n"
+        "Send me any message and I'll forward it to the agent.\n\n"
+        "Commands:\n"
+        "/start - Show this message\n"
+        "/new - Reset your conversation session"
+    )
+
+
+async def new_command(update: Update, _) -> None:
+    user_id = update.effective_user.id
+    user_sessions[user_id] = str(uuid.uuid4())
+    await update.message.reply_text("Session reset. Starting fresh conversation.")
+
+
+async def handle_message(update: Update, _) -> None:
+    user_id = update.effective_user.id
+    session_id = get_session(user_id)
+    thinking_msg = await update.message.reply_text("Thinking...")
+    try:
+        response = await send_a2a_task(update.message.text, session_id)
+        for i in range(0, len(response), 4000):  # Telegram 4096 char limit
+            chunk = response[i : i + 4000]
+            if i == 0:
+                await thinking_msg.edit_text(chunk)
+            else:
+                await update.message.reply_text(chunk)
+    except Exception as e:
+        await thinking_msg.edit_text(f"Error contacting agent: {e}")
+
+
+def main() -> None:
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("new", new_command))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    Path("/tmp/bot-healthy").touch()  # For k8s probes
+    app.run_polling(drop_pending_updates=True)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Key design decisions:
+
+- **Polling, not webhooks**: No ingress, no public endpoint, no TLS termination. The bot makes outbound connections to Telegram's API from inside the cluster.
+- **Session per user**: Each Telegram user gets their own A2A session ID, so conversations have context continuity.
+- **Chunked responses**: Telegram has a 4096-character message limit. Long agent responses are split automatically.
+- **Health file**: A simple `/tmp/bot-healthy` file is created on startup for Kubernetes liveness/readiness probes.
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY main.py .
+CMD ["python", "main.py"]
+```
+
+Build and push the image:
+
+```shell
+docker build -t your-registry/telegram-kagent-bot:latest .
+docker push your-registry/telegram-kagent-bot:latest
+```
+
+---
+
+## Running Locally (Quick Test)
+
+Before deploying to Kubernetes, you can test the bot locally:
+
+1. Create a `.env` file:
+
+```dotenv
+TELEGRAM_BOT_TOKEN=your_token_from_botfather
+KAGENT_A2A_URL=http://127.0.0.1:8083/api/a2a/kagent/telegram-k8s-agent/
+```
+
+2. Make sure the kagent controller is port-forwarded:
+
+```shell
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083
+```
+
+3. Install dependencies and run:
+
+```shell
+pip install -r requirements.txt
+export $(cat .env | xargs)
+python main.py
+```
+
+Open Telegram, find your bot, and send it a message like "What pods are running?"
+
+---
+
+## Deploying to Kubernetes
+
+### Store the Bot Token as a Secret
+
+You can create the secret directly:
+
+```shell
+kubectl create secret generic telegram-bot-token -n kagent \
+  --from-literal=TELEGRAM_BOT_TOKEN="your_token_from_botfather"
+```
+
+Or, if you use an external secrets manager like HashiCorp Vault with the External Secrets Operator:
+
+```yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: telegram-bot-token
+  namespace: kagent
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: telegram-bot-token
+    creationPolicy: Owner
+  data:
+    - secretKey: TELEGRAM_BOT_TOKEN
+      remoteRef:
+        key: telegram
+        property: api_key
+```
+
+### Deploy the Bot
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-bot
+  namespace: kagent
+  labels:
+    app: telegram-bot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # Only one poller at a time
+  selector:
+    matchLabels:
+      app: telegram-bot
+  template:
+    metadata:
+      labels:
+        app: telegram-bot
+    spec:
+      containers:
+      - name: bot
+        image: your-registry/telegram-kagent-bot:latest
+        env:
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: telegram-bot-token
+              key: TELEGRAM_BOT_TOKEN
+        - name: KAGENT_A2A_URL
+          value: "http://kagent-controller.kagent.svc.cluster.local:8083/api/a2a/kagent/telegram-k8s-agent/"
+        livenessProbe:
+          exec:
+            command: ["cat", "/tmp/bot-healthy"]
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+```
+
+> **Important:** The `Recreate` strategy is required — Telegram's polling API doesn't support multiple consumers. With `RollingUpdate`, you'd briefly have two pods pulling the same messages, causing duplicates or missed messages.
+
+Apply the deployment:
+
+```shell
+kubectl apply -f deployment.yaml
+```
+
+---
+
+## Gotchas and Tips
+
+### The trailing slash matters
+
+The kagent A2A endpoint at `/api/a2a/kagent/telegram-k8s-agent` returns a 307 redirect to `/api/a2a/kagent/telegram-k8s-agent/`. Most HTTP clients won't follow redirects on POST requests by default. Always include the trailing slash.
+
+### kagent uses `message/send`, not `tasks/send`
+
+If you're reading the A2A spec or looking at other implementations, be aware that kagent uses `message/send` as the method name. The older `tasks/send` method returns a "Method not found" error.
+
+### Parts use `kind`, not `type`
+
+The A2A spec uses `"kind": "text"` for message parts. Some implementations use `"type": "text"`. kagent expects `kind`.
+
+### Telegram message limits
+
+Telegram enforces a 4096-character limit per message. The bot code handles this automatically by chunking responses.
+
+---
+
+## Testing It
+
+Once deployed, open Telegram and find your bot:
+
+1. `/start` — Shows available commands
+2. `/new` — Resets your conversation session
+3. Send any message — It goes to the agent and comes back with a real answer
+
+Example interactions:
+
+```
+You: What pods are running in kagent namespace?
+
+Bot: Here are the running pods in the kagent namespace:
+• kagent-controller-57864fdf69-xfgmr (1/1 Running)
+• telegram-bot-5469669bf-v8h7p (1/1 Running)
+• telegram-k8s-agent-5f696bf4b9-pl7cl (1/1 Running)
+```
+
+```
+You: What helm releases are installed?
+
+Bot: Here are the Helm releases across all namespaces:
+• kagent (kagent) v0.8.0-beta6
+• vault (vault) v0.29.1
+• istio-base (istio-system) v1.25.2
+```
+
+---
+
+## What's Next
+
+From here you could:
+
+- **Add more agents**: Create separate agents for security, Istio, or monitoring and route to them from the bot.
+- **Route by command**: Use different Telegram commands (`/k8s`, `/istio`, `/security`) to route to different kagent agents.
+- **Add image support**: kagent supports multi-modal parts — you could send screenshots of dashboards and ask "what's wrong here?"
+- **Connect via AgentGateway**: Route the A2A traffic through [AgentGateway](https://agentgateway.dev) for rate limiting, authentication, and observability.
+
+The pattern works for any chat platform. Swap `python-telegram-bot` for `discord.py` or `slack-bolt` and the rest stays the same — the A2A protocol is the universal adapter.
+
+For questions or support, join our [Discord community](https://discord.gg/Fu3k65f2k3).
