@@ -31,6 +31,7 @@ Review the main changes from kagent version 0.7 to v0.8, then continue reading f
 * Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax.
 * Context management — automatic event compaction for long conversations.
 * AWS Bedrock support — new model provider for AWS Bedrock.
+* **PostgreSQL-only database backend** — SQLite support has been removed. PostgreSQL with pgvector is now the only supported database backend.
 
 ## Human-in-the-Loop (HITL)
 
@@ -44,7 +45,7 @@ For more information, see the [Human-in-the-Loop example](/docs/kagent/examples/
 
 ## Agent Memory
 
-Your agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL or SQLite/Turso).
+Your agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL).
 
 When you enable memory on an agent, it receives three additional tools: `save_memory`, `load_memory`, and `prefetch_memory`. The agent automatically extracts key information (user intent, key learnings, preferences) every 5th user message.
 
@@ -111,6 +112,27 @@ For more information, see the [Agents](/docs/kagent/concepts/agents#context-mana
 ## AWS Bedrock Support
 
 You can now use AWS Bedrock as a model provider, allowing your agents to use Bedrock-hosted models.
+
+## PostgreSQL-Only Database Backend
+
+SQLite support has been removed from kagent. PostgreSQL with pgvector is now the only supported database backend.
+
+**What changed:**
+- The `database.type` configuration option has been removed.
+- SQLite-related Helm values (`database.sqlite.*`) have been removed.
+- A PostgreSQL instance with pgvector is now bundled in the Helm chart by default.
+- The bundled PostgreSQL is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty.
+
+**Why this change:**
+- SQLite lacks pgvector support, requiring separate code paths for memory and vector search.
+- SQLite's single-writer constraint prevents horizontal scaling of the controller.
+- Divergent SQL dialects between SQLite and PostgreSQL required maintaining duplicate code paths.
+- PostgreSQL was already the recommended production backend.
+
+**Migration:**
+- If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL will be deployed automatically.
+- If you were using an external PostgreSQL instance, continue using `database.postgres.url` or `database.postgres.urlFile` as before.
+- Set `database.postgres.url` to skip the bundled PostgreSQL instance and use your own external PostgreSQL server.
 
 ## Additional Changes
 
