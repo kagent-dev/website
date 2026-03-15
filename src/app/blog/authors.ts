@@ -56,6 +56,13 @@ export const authors: Author[] = [
     photo: "/images/authors/eitan_yarmush.jpeg",
     bio: "Professional tinkerer and problem solver",
   },
+  {
+    id: "yanivmn",
+    name: "Yaniv Marom-Nachumi",
+    title: "Solutions Architect @ Amdocs",
+    photo: "/images/authors/yanivmn.jpg",
+    bio: "Passionate about cloud-native technologies and Kubernetes.",
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
