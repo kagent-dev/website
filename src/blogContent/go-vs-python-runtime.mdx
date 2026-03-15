@@ -3,7 +3,7 @@ export const metadata = {
   publishDate: "2026-03-12T00:00:00Z",
   description: "We benchmarked kagent's Go and Python agent runtimes on image size, startup time, and memory. The results: 11x smaller images, 6.7x faster startup, and 36x less memory.",
   author: "Eitan Yarmush",
-  authorIds: ["eitanya"],
+  authorIds: ["eitanya", "yanivmn"],
 }
 
 # We Added a Go Runtime to kagent and the Numbers Are Wild
@@ -49,6 +49,14 @@ Python has to do all of that *plus* initialize the interpreter, import every mod
 This is the one that really matters at scale. A compiled Go binary with no GC pressure at idle barely registers. The Python runtime carries the weight of the interpreter, every imported module, and the ASGI server in resident memory.
 
 Think about what this means for a real deployment: 20 agents on Python would consume **~5 GB** just in runtime overhead before processing a single request. The same 20 agents on Go? About **140 Mi**. That's the difference between needing a dedicated node pool and fitting comfortably on existing infrastructure.
+
+### Security Surface: Minimal Attack Vectors
+
+The Go runtime's minimal footprint isn't just about performance — it's a security win too.
+
+The distroless base image has no shell, no package manager, no unnecessary utilities. There's literally nothing for an attacker to exploit if they somehow get code execution. Compare that to a Python image with pip, a full interpreter, and hundreds of transitive dependencies — each one a potential CVE waiting to happen.
+
+Fewer dependencies also means fewer supply chain risks. The Go binary has exactly the dependencies it needs compiled in, with no runtime package resolution. No `requirements.txt` to poison, no pip installs happening at startup. For security-conscious deployments (and in Kubernetes, that should be all of them), this matters.
 
 ## So Should You Ditch Python?
 
