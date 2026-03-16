@@ -12,19 +12,19 @@ export const metadata = {
 
 # Talk to Your Kubernetes Cluster from Telegram
 
-This is what you'll have by the end of this guide:
+What if you could manage your Kubernetes cluster from Telegram? Not through a half-baked webhook that runs kubectl — but through a real AI agent that understands context, uses tools, responds intelligently, and asks for your approval before doing anything destructive?
 
-![Telegram bot listing pods in a Kubernetes cluster](/images/telegram-a2a/telegram-list-pods.png)
+In this guide, I’ll walk you through how I built exactly that: a Telegram bot that connects to a kagent AI agent running on my home lab Kubernetes cluster (Talos Linux on Proxmox), giving me full cluster operations from my phone. The entire thing is deployed via GitOps with ArgoCD, secrets come from HashiCorp Vault, and the bot uses the A2A (Agent-to-Agent) protocol to communicate with kagent.
 
-Your phone. Your cluster. No VPN, no laptop, no `kubectl`. Just a Telegram message.
+The bot maintains conversation continuity across messages (so the agent remembers what you were talking about), and supports Human-in-the-Loop (HITL) approval — when the agent wants to run a destructive operation like deleting a resource or applying a manifest, it shows you Approve/Reject buttons in Telegram before proceeding.
 
-It handles real operations too — ask it to create a namespace and it confirms before doing anything destructive:
+No webhooks. No public endpoints. Just polling from inside the cluster.
 
-![Telegram bot asking to create a namespace](/images/telegram-a2a/telegram-create-namespace.png)
+## Architecture Overview
 
-![Human-in-the-loop approval for destructive operations](/images/telegram-a2a/telegram-human-in-the-loop.png)
+Here’s what we’re building:
 
-The bot itself is ~120 lines of Python. It doesn't know anything about Kubernetes or LLMs — it's a dumb pipe between Telegram and kagent's [A2A](https://google.github.io/A2A/) endpoint. All the intelligence lives in the agent.
+![Arch](arc.png)
 
 ---
 
