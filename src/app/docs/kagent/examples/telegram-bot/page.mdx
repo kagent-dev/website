@@ -28,21 +28,22 @@ Here’s what we’re building:
 
 ---
 
-## Create Your Telegram Bot
+# Steps
+
+## Step 1: Create Your Telegram Bot
 
 1. Open Telegram, search for **@BotFather**.
 2. Send `/newbot`, pick a name and username.
 3. Copy the **bot token** it gives you.
 
-Done. 30 seconds.
 
 ---
 
-## Deploy a kagent Agent
+## Step 2: Deploy a kagent Agent
 
 > **Prerequisite:** kagent running in your cluster with `kmcp` CRDs installed. If not, hit the [quickstart](https://kagent.dev/docs/kagent/getting-started/quickstart) first.
 
-This agent has Kubernetes tools, Helm tools, and Prometheus — and it's exposed over A2A so any client (our Telegram bot, or anything else) can talk to it:
+This agent has Kubernetes tools, Helm tools, and Prometheus — and it's exposed over A2A so any client (our Telegram bot, or anything else) can talk to it. Feel free to make changes as you please:
 
 ```shell
 kubectl apply -f - <<EOF
@@ -111,9 +112,19 @@ You should get back JSON with the agent's name and skills.
 
 ---
 
-## Write the Bot
+## Step 3: Write the Bot
 
-Three files. That's the whole thing.
+The bot is ~460 lines of Python using python-telegram-bot (polling mode) and httpx for A2A calls. It handles three main concerns: A2A communication with session continuity, HITL approval flow via Telegram inline keyboards, and robust response parsing.
+
+* The critical detail: contextId goes inside the message object, not in params. On the first message, we omit it — kagent returns a contextId in the result. We store that per Telegram user and send it on every subsequent message. This is what makes “tell me about nginx” followed by “now scale it to 3” work as a coherent conversation.
+
+
+Let’s walk through it section by section.
+
+* A2A Communication: The core of the bot — sending messages to kagent and tracking contextId for session continuity:
+* Response Parsing: kagent returns text in different locations depending on the response state. The bot tries three sources in order:
+* HITL Approval Flow: When kagent returns input-required, the bot parses the adk_request_confirmation data to figure out what tool the agent wants to run, then shows Telegram inline keyboard buttons:
+
 
 ### requirements.txt
 
@@ -249,7 +260,7 @@ docker push your-registry/telegram-kagent-bot:latest
 
 ---
 
-## Test It Locally
+## Step 4: Test It Locally
 
 Before you deploy anything, make sure it actually works.
 
@@ -268,7 +279,7 @@ Open Telegram, find your bot, send "What pods are running?" — if you get a rea
 
 ---
 
-## Deploy to Kubernetes
+## Step 5: Deploy to Kubernetes
 
 Store the bot token:
 
@@ -355,16 +366,6 @@ The strategy is `Recreate` on purpose — Telegram polling doesn't support multi
 ```shell
 kubectl apply -f deployment.yaml
 ```
-
----
-
-## Things That Will Bite You
-
-**Always include the trailing slash** in the A2A URL: `/api/a2a/kagent/telegram-k8s-agent/`. Without it you get a 307 redirect. Most HTTP clients don't follow redirects on POST. You will lose time to this.
-
-**The method is `message/send`**, not `tasks/send`. If you're copying from other A2A examples, they might use the older spec. kagent uses `message/send` — `tasks/send` gives you "Method not found."
-
-**Parts use `kind`, not `type`.** The payload needs `"kind": "text"`, not `"type": "text"`. Easy to miss if you're referencing other implementations.
 
 ---
 
