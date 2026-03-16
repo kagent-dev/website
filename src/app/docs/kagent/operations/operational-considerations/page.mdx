@@ -64,7 +64,11 @@ controller:
 
 ## Database configuration
 
-Kagent uses PostgreSQL as the database backend. By default, a bundled PostgreSQL instance with pgvector is deployed when you install kagent. This bundled instance works out of the box with no external prerequisites.
+Kagent uses PostgreSQL as the database backend.
+
+By default, a bundled PostgreSQL instance with pgvector is deployed when you install kagent. This bundled instance works out of the box with no external prerequisites. It is a simple instance that is meant for demos, local development, and short proofs of concept.
+
+For production deployments, bring your own external PostgreSQL instance.
 
 ### Bundled PostgreSQL
 
@@ -86,7 +90,7 @@ database:
 
 ### External PostgreSQL
 
-To use an external PostgreSQL instance instead of the bundled one, set `database.postgres.url` or `database.postgres.urlFile`.
+For production environments, use an external PostgreSQL instance instead of the bundled one. To configure the external instance, use the `database.postgres.url` or `database.postgres.urlFile` settings.
 
 > **Note**: If your external PostgreSQL does not have the `pgvector` extension installed, set `database.postgres.vectorEnabled: false` to disable vector-based memory features.
 

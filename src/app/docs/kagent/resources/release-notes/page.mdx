@@ -118,10 +118,9 @@ You can now use AWS Bedrock as a model provider, allowing your agents to use Bed
 SQLite support has been removed from kagent. PostgreSQL with pgvector is now the only supported database backend.
 
 **What changed:**
-- The `database.type` configuration option has been removed.
-- SQLite-related Helm values (`database.sqlite.*`) have been removed.
-- A PostgreSQL instance with pgvector is now bundled in the Helm chart by default.
-- The bundled PostgreSQL is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty.
+- The `database.type` configuration option is removed.
+- SQLite-related Helm values (`database.sqlite.*`) are removed.
+- A PostgreSQL instance with pgvector is now bundled in the Helm chart by default. This bundled PostgreSQL is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty.
 - New `database.postgres.bundled.*` configuration options allow customizing the bundled PostgreSQL instance (image, storage, credentials).
 
 **Why this change:**
@@ -131,10 +130,10 @@ SQLite support has been removed from kagent. PostgreSQL with pgvector is now the
 - PostgreSQL was already the recommended production backend.
 
 **Migration:**
-- If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL will be deployed automatically.
-- If you were using an external PostgreSQL instance, continue using `database.postgres.url` or `database.postgres.urlFile` as before.
-- Set `database.postgres.url` to skip the bundled PostgreSQL instance and use your own external PostgreSQL server.
-- Customize the bundled instance via `database.postgres.bundled.*` (storage size, image, credentials) as needed. See the [Database configuration guide](/operations/operational-considerations/#database-configuration) for details.
+
+If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL will be deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image, credentials) as needed. See the [Database configuration guide](/operations/operational-considerations/#database-configuration) for details.
+
+Note that for production deployments, it is recommended to use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before the migration.
 
 ## Additional Changes
 
