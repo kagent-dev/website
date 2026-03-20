@@ -31,7 +31,7 @@ Review this summary of significant changes from kagent version 0.7 to v0.8.
 * Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax.
 * Context management — automatic event compaction for long conversations.
 * AWS Bedrock support — new model provider for AWS Bedrock.
-* **PostgreSQL-only database backend** — SQLite support has been removed. PostgreSQL with pgvector is now the only supported database backend.
+* **PostgreSQL-only database backend** — SQLite support has been removed. PostgreSQL is now the only supported database backend.
 
 ## Human-in-the-Loop (HITL)
 
@@ -115,13 +115,16 @@ You can now use AWS Bedrock as a model provider, allowing your agents to use Bed
 
 ## PostgreSQL-Only Database Backend
 
-SQLite support has been removed from kagent. PostgreSQL with pgvector is now the only supported database backend.
+SQLite support has been removed from kagent. PostgreSQL is now the only supported database backend.
 
 **What changed:**
 - The `database.type` configuration option is removed.
 - SQLite-related Helm values (`database.sqlite.*`) are removed.
-- A PostgreSQL instance with pgvector is now bundled in the Helm chart by default. This bundled PostgreSQL is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty.
-- New `database.postgres.bundled.*` configuration options allow customizing the bundled PostgreSQL instance (image, storage, credentials).
+- A bundled PostgreSQL instance is deployed by default via `database.postgres.bundled.enabled: true`. The bundled image is `postgres:18` (standard PostgreSQL without pgvector).
+- `database.postgres.vectorEnabled` now defaults to `false`. Set it to `true` only when using a PostgreSQL server that has the pgvector extension installed.
+- `database.postgres.bundled.enabled` and `url`/`urlFile` are now independent controls. You can keep the bundled pod running while pointing the controller at an external database, which is useful for migration.
+- The bundled instance database name, username, and password are hardcoded to `kagent`. Credentials are stored in a Kubernetes Secret instead of a ConfigMap.
+- The `database.postgres.bundled.database`, `bundled.user`, and `bundled.password` configuration options are removed.
 
 **Why this change:**
 - SQLite lacks pgvector support, requiring separate code paths for memory and vector search.
@@ -131,9 +134,9 @@ SQLite support has been removed from kagent. PostgreSQL with pgvector is now the
 
 **Migration:**
 
-If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL is deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image, credentials) as needed. See the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration) for details.
+If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL is deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image) as needed. See the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration) for details.
 
-Note that for production deployments, use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before the migration.
+Note that for production deployments, use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before. If your external PostgreSQL has the pgvector extension and you were using vector-based memory features, set `database.postgres.vectorEnabled: true` since the default has changed to `false`.
 
 ## Additional Changes
 

@@ -118,14 +118,20 @@ A Helm chart for kagent, built with Google ADK
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
-| database.postgres.bundled.database | string | `"postgres"` | Database name for the bundled PostgreSQL instance. |
-| database.postgres.bundled.image | string | `"pgvector/pgvector:pg18-trixie"` | Container image for the bundled PostgreSQL instance. |
-| database.postgres.bundled.password | string | `"kagent"` | Password for the bundled PostgreSQL instance. |
-| database.postgres.bundled.storage | string | `"500Mi"` | Storage size for the bundled PostgreSQL instance. |
-| database.postgres.bundled.user | string | `"postgres"` | Username for the bundled PostgreSQL instance. |
-| database.postgres.url | string | `""` | PostgreSQL connection string. Leave empty to deploy the bundled postgres instance. Set this to use an external PostgreSQL. |
-| database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over url when set. Leave empty to use the bundled postgres instance. |
-| database.postgres.vectorEnabled | bool | `true` | Enable pgvector extension and memory table migration. Requires pgvector to be installed on the PostgreSQL server. Set to `false` when using an external PostgreSQL that does not have pgvector. |
+| database.postgres.bundled.enabled | bool | `true` | Deploy the bundled PostgreSQL pod and PVC. Set to `false` to disable the bundled instance and provide your own via `url` or `urlFile`. |
+| database.postgres.bundled.image.registry | string | `"docker.io"` | Bundled PostgreSQL image registry. |
+| database.postgres.bundled.image.repository | string | `"library"` | Bundled PostgreSQL image repository (org/namespace). |
+| database.postgres.bundled.image.name | string | `"postgres"` | Bundled PostgreSQL image name. |
+| database.postgres.bundled.image.tag | string | `"18"` | Bundled PostgreSQL image tag. |
+| database.postgres.bundled.image.pullPolicy | string | `"IfNotPresent"` | Bundled PostgreSQL image pull policy. |
+| database.postgres.bundled.storage | string | `"500Mi"` | PersistentVolumeClaim size for the bundled PostgreSQL instance. |
+| database.postgres.bundled.resources.requests.cpu | string | `"250m"` | CPU request for the bundled PostgreSQL container. |
+| database.postgres.bundled.resources.requests.memory | string | `"256Mi"` | Memory request for the bundled PostgreSQL container. |
+| database.postgres.bundled.resources.limits.cpu | string | `"500m"` | CPU limit for the bundled PostgreSQL container. |
+| database.postgres.bundled.resources.limits.memory | string | `"512Mi"` | Memory limit for the bundled PostgreSQL container. |
+| database.postgres.url | string | `""` | External PostgreSQL connection string. Always used if set, regardless of `bundled.enabled`. |
+| database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over `url` when set. Always used if set, regardless of `bundled.enabled`. |
+| database.postgres.vectorEnabled | bool | `false` | Enable pgvector extension and memory table migration. Set to `true` when using a PostgreSQL server that has pgvector installed. Required for vector-based memory features. |
 | fullnameOverride | string | `""` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
 | grafana-mcp.grafana.url | string | `"grafana.kagent:3000/api"` |  |
