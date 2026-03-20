@@ -18,6 +18,135 @@ The kagent documentation shows information only for the latest release. If you r
 
 For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
 
+# v0.8
+
+Review this summary of significant changes from kagent version 0.7 to v0.8.
+
+* Human-in-the-Loop (HITL) — tool approval gates and interactive `ask_user` tool.
+* Agent Memory — vector-backed long-term memory for agents.
+* Go ADK runtime — new Go-based agent runtime for faster startup and lower resource usage.
+* Agents as MCP servers — expose A2A agents via MCP for cross-tool interoperability.
+* Skills — markdown knowledge documents loaded from OCI images or Git repositories.
+* Go workspace restructure — the Go codebase is split into `api`, `core`, and `adk` modules for composability.
+* Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax.
+* Context management — automatic event compaction for long conversations.
+* AWS Bedrock support — new model provider for AWS Bedrock.
+* **PostgreSQL-only database backend** — SQLite support has been removed. PostgreSQL is now the only supported database backend.
+
+## Human-in-the-Loop (HITL)
+
+You can now use two Human-in-the-Loop mechanisms that can pause agent execution and wait for user input.
+
+**Tool Approval** — You can mark specific tools as requiring user confirmation before execution by using the `requireApproval` field in the Agent CR. When the agent calls a tool that requires approval, the UI presents Approve/Reject buttons. The reason provided for rejection gets used as context for the LLM.
+
+**Ask User** — A built-in `ask_user` tool is automatically added to every agent. Agents can pose questions to users with predefined choices (single-select, multi-select) or free-text input during execution.
+
+For more information, see the [Human-in-the-Loop example](/docs/kagent/examples/human-in-the-loop) and the [blog post](/blog/human-in-the-loop-kagent).
+
+## Agent Memory
+
+Your agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL).
+
+When you enable memory on an agent, it receives three additional tools: `save_memory`, `load_memory`, and `prefetch_memory`. Every 5th user message, the agent automatically extracts key information, such as user intent, key learnings, preferences.
+
+You can configure memory in the Agent CR or through the UI when you create or edit an agent by selecting an embedding model and TTL.
+
+For more information, see [Agent Memory](/docs/kagent/concepts/agent-memory).
+
+## Go ADK Runtime
+
+You can now choose between two Agent Development Kit runtimes: **Python** (default) and **Go**. The Go ADK provides significantly faster startup (~2 seconds vs ~15 seconds for Python) and lower resource consumption.
+
+Select the runtime via the `runtime` field in the declarative agent spec.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    runtime: go
+```
+
+The Go ADK includes built-in tools: `SkillsTool`, `BashTool`, `ReadFile`, `WriteFile`, and `EditFile`.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#runtime) and the [blog post](/blog/go-vs-python-runtime).
+
+## Agents as MCP Servers
+
+Agent-to-Agent (A2A) agents are now exposed as MCP servers via the kagent controller HTTP server. This enables cross-tool interoperability — any MCP-compatible client can consume agents, not just the A2A protocol.
+
+## Skills
+
+Your agents can now load markdown-based knowledge documents (skills) that provide domain-specific instructions, best practices, and procedures. Skills load at agent startup and are discoverable through the built-in `SkillsTool`.
+
+You can load skills from two sources.
+
+- **OCI images.** Container images containing skill files.
+- **Git repositories.** Clone skills directly from Git repos, with support for private repos via HTTPS token or SSH key authentication.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#git-based-skills).
+
+## Go Workspace Restructure
+
+The Go code now uses a Go workspace with three modules: `api`, `core`, and `adk`. This makes the codebase more composable for you if you want to pull in parts of kagent (such as the API types or ADK) without importing all dependencies.
+
+| Module | Purpose |
+|--------|---------|
+| `go/api` | Shared types: CRDs, ADK config types, database models, HTTP client. Import this module to work with kagent's API types without pulling in the full codebase. |
+| `go/core` | Infrastructure: controllers, HTTP server, CLI. This module contains the main kagent controller logic. |
+| `go/adk` | Go Agent Development Kit runtime. Import this module to build custom Go-based agents. |
+
+## Prompt Templates
+
+Agent system messages now support Go `text/template` syntax. You can store common prompt fragments, such as safety guardrails or tool usage best practices, in ConfigMaps and reference them with `{{include "alias/key"}}` syntax.
+
+The `kagent-builtin-prompts` ConfigMap ships with five reusable templates: `skills-usage`, `tool-usage-best-practices`, `safety-guardrails`, `kubernetes-context`, and `a2a-communication`.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#prompt-templates).
+
+## Context Management
+
+Long conversations can now be automatically compacted to stay within LLM context windows. You can configure the `context.compaction` field to enable periodic summarization of older events while preserving key information.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#context-management).
+
+## AWS Bedrock Support
+
+You can now use AWS Bedrock as a model provider, allowing your agents to use Bedrock-hosted models.
+
+## PostgreSQL-Only Database Backend
+
+SQLite support has been removed from kagent. PostgreSQL is now the only supported database backend.
+
+**What changed:**
+- The `database.type` configuration option is removed.
+- SQLite-related Helm values (`database.sqlite.*`) are removed.
+- A bundled PostgreSQL instance is deployed by default via `database.postgres.bundled.enabled: true`. The bundled image is `postgres:18` (standard PostgreSQL without pgvector).
+- `database.postgres.vectorEnabled` now defaults to `false`. Set it to `true` only when using a PostgreSQL server that has the pgvector extension installed.
+- `database.postgres.bundled.enabled` and `url`/`urlFile` are now independent controls. You can keep the bundled pod running while pointing the controller at an external database, which is useful for migration.
+- The bundled instance database name, username, and password are hardcoded to `kagent`. Credentials are stored in a Kubernetes Secret instead of a ConfigMap.
+- The `database.postgres.bundled.database`, `bundled.user`, and `bundled.password` configuration options are removed.
+
+**Why this change:**
+- SQLite lacks pgvector support, requiring separate code paths for memory and vector search.
+- SQLite's single-writer constraint prevents horizontal scaling of the controller.
+- Divergent SQL dialects between SQLite and PostgreSQL required maintaining duplicate code paths.
+- PostgreSQL was already the recommended production backend.
+
+**Migration:**
+
+If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL is deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image) as needed. See the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration) for details.
+
+Note that for production deployments, use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before. If your external PostgreSQL has the pgvector extension and you were using vector-based memory features, set `database.postgres.vectorEnabled: true` since the default has changed to `false`.
+
+## Additional Changes
+
+- **API key passthrough** for ModelConfig.
+- **Custom service account** override in agent CRDs.
+- **Voice support** for agents.
+- **UI dynamic provider model discovery** for easier model configuration.
+- **CLI `--token` flag** for `kagent invoke` API key passthrough.
+- **CVE fixes** across Go, Python, and container images.
+
 # v0.7
 
 Review the main changes from kagent version 0.6 to v0.7, then continue reading for more detailed information.
@@ -84,7 +213,7 @@ Review the main changes from kagent version 0.5 to v0.6, then continue reading f
 * API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
 * The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
 * The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
-* The ModelConfig APIs rename the secret name field from `apiKeySecret` to `apiKeySecret`.
+* The ModelConfig APIs rename the secret name field from `apiKeySecretRef` to `apiKeySecret`.
 * Memory APIs are not supported in ADK.
 
 ## Upgraded API version
@@ -400,7 +529,7 @@ This change supports the new type for BYO agents.
 </div>
 
 <div id="new-agent-tab">
-[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `inline` setting.
+[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `declarative` setting.
   
   ```yaml
   apiVersion: kagent.dev/v1alpha2
@@ -421,7 +550,7 @@ This change supports the new type for BYO agents.
   
   **Key Changes:**
   * Added `type: Declarative` field to specify agent type
-  * Agent configuration now under `inline` section
+  * Agent configuration now under `declarative` section
   * Supports new BYO deployment model
 </div>
 
@@ -453,7 +582,7 @@ spec:
 
 ## ModelConfig API
 
-The secret name field is renamed from `apiKeySecret` to `apiKeySecret`.
+The secret name field is renamed from `apiKeySecretRef` to `apiKeySecret`.
 
 ### ModelInfo removed
 

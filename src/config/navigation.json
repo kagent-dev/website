@@ -83,6 +83,11 @@
             "title": "Tools",
             "href": "/docs/kagent/concepts/tools",
             "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
+          },
+          {
+            "title": "Agent Memory",
+            "href": "/docs/kagent/concepts/agent-memory",
+            "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
           }
         ]
       },
@@ -258,6 +263,11 @@
             "title": "Helm Chart Configuration",
             "href": "/docs/kagent/resources/helm",
             "description": "kagent Helm chart configuration reference"
+          },
+          {
+            "title": "Tools Ecosystem",
+            "href": "/docs/kagent/resources/tools-ecosystem",
+            "description": "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
           },
           {
             "title": "FAQs",

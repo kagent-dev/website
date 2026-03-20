@@ -28,11 +28,14 @@ In the future, we envision more features for the controller, such as:
 
 ## App/Engine
 
-The kagent engine is the core component of kagent. It is a Python application that is responsible for running the agent's conversation loop. It is built on top of the [ADK](https://google.github.io/adk-docs/) framework.
+The kagent engine is the core component of kagent. It runs the agent's conversation loop and supports two runtimes:
 
-The ADK team did a wonderful job of creating a flexible, powerful, and most importantly extensible framework for building AI agents. We take full advantage of this by using the framework by adding our own `Agents`, and `Tools`.
+- **Python ADK** (default) — Built on top of the [Google ADK](https://google.github.io/adk-docs/) framework. Supports Google ADK-native features and integrations with CrewAI, LangGraph, and OpenAI frameworks.
+- **Go ADK** — A native Go implementation that provides faster startup (~2 seconds vs ~15 seconds) and lower resource consumption.
 
-Please see the following links for more information on the ADK framework:
+Select the runtime by setting the `runtime` field in the agent spec (e.g., `runtime: go`). Both runtimes support MCP tools, HITL, and agent memory. For more details, see [Agents](/docs/kagent/concepts/agents#runtime).
+
+For more information on the Google ADK framework:
 
 - [Agents](https://google.github.io/adk-docs/agents/)
 - [Tools](https://google.github.io/adk-docs/tools/)
