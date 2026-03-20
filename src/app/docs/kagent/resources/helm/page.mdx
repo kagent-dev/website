@@ -118,14 +118,14 @@ A Helm chart for kagent, built with Google ADK
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
-| database.postgres.bundled.database | string | `"postgres"` | Database name for the bundled PostgreSQL instance |
-| database.postgres.bundled.image | string | `"pgvector/pgvector:pg18-trixie"` | Container image for the bundled PostgreSQL instance |
-| database.postgres.bundled.password | string | `"kagent"` | Password for the bundled PostgreSQL instance |
-| database.postgres.bundled.storage | string | `"500Mi"` | Storage size for the bundled PostgreSQL instance |
-| database.postgres.bundled.user | string | `"postgres"` | Username for the bundled PostgreSQL instance |
+| database.postgres.bundled.database | string | `"postgres"` | Database name for the bundled PostgreSQL instance. |
+| database.postgres.bundled.image | string | `"pgvector/pgvector:pg18-trixie"` | Container image for the bundled PostgreSQL instance. |
+| database.postgres.bundled.password | string | `"kagent"` | Password for the bundled PostgreSQL instance. |
+| database.postgres.bundled.storage | string | `"500Mi"` | Storage size for the bundled PostgreSQL instance. |
+| database.postgres.bundled.user | string | `"postgres"` | Username for the bundled PostgreSQL instance. |
 | database.postgres.url | string | `""` | PostgreSQL connection string. Leave empty to deploy the bundled postgres instance. Set this to use an external PostgreSQL. |
 | database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over url when set. Leave empty to use the bundled postgres instance. |
-| database.postgres.vectorEnabled | bool | `true` | Enable pgvector extension and memory table migration. Requires pgvector to be installed on the PostgreSQL server. Set to false when using an external PostgreSQL that does not have pgvector. |
+| database.postgres.vectorEnabled | bool | `true` | Enable pgvector extension and memory table migration. Requires pgvector to be installed on the PostgreSQL server. Set to `false` when using an external PostgreSQL that does not have pgvector. |
 | fullnameOverride | string | `""` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
 | grafana-mcp.grafana.url | string | `"grafana.kagent:3000/api"` |  |

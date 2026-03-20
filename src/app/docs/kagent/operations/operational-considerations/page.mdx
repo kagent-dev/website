@@ -66,13 +66,13 @@ controller:
 
 Kagent uses PostgreSQL as the database backend.
 
-By default, a bundled PostgreSQL instance with pgvector is deployed when you install kagent. This bundled instance works out of the box with no external prerequisites. It is a simple instance that is meant for demos, local development, and short proofs of concept.
+By default, a bundled PostgreSQL instance with pgvector is deployed when you install kagent. This bundled instance works out of the box without any external prerequisites. It is a simple instance that is meant for demos, local development, and short proofs of concept.
 
 For production deployments, bring your own external PostgreSQL instance.
 
 ### Bundled PostgreSQL
 
-The default bundled PostgreSQL instance is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty (the default). You can customize the bundled instance configuration.
+The bundled PostgreSQL instance is deployed automatically when both `database.postgres.url` and `database.postgres.urlFile` are empty, which is the default configuration. If you want to use an external PostgreSQL instead, set one of these values before installing. You can customize the bundled instance configuration.
 
 **Helm values file:**
 
@@ -114,7 +114,7 @@ controller:
   replicas: 3
 ```
 
-**Using a secret for the database URL:** This configuration expects a Kubernetes secret mounted at `/etc/secrets/database-url` containing the PostgreSQL connection string.
+**Using a secret for the database URL:** This configuration expects a Kubernetes secret mounted at `/etc/secrets/database-url` that contains the PostgreSQL connection string.
 
 ```yaml
 database:

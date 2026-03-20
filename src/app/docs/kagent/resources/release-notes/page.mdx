@@ -20,7 +20,7 @@ For more details on the changes between versions, review the [kagent GitHub rele
 
 # v0.8
 
-Review the main changes from kagent version 0.7 to v0.8, then continue reading for more detailed information.
+Review this summary of significant changes from kagent version 0.7 to v0.8.
 
 * Human-in-the-Loop (HITL) — tool approval gates and interactive `ask_user` tool.
 * Agent Memory — vector-backed long-term memory for agents.
@@ -35,9 +35,9 @@ Review the main changes from kagent version 0.7 to v0.8, then continue reading f
 
 ## Human-in-the-Loop (HITL)
 
-You can now use two Human-in-the-Loop mechanisms that pause agent execution and wait for user input.
+You can now use two Human-in-the-Loop mechanisms that can pause agent execution and wait for user input.
 
-**Tool Approval** — You can mark specific tools as requiring user confirmation before execution by using the `requireApproval` field in the Agent CR. When the agent tries to call an approval-required tool, the UI presents Approve/Reject buttons. Rejected tool calls include the rejection reason as context for the LLM.
+**Tool Approval** — You can mark specific tools as requiring user confirmation before execution by using the `requireApproval` field in the Agent CR. When the agent calls a tool that requires approval, the UI presents Approve/Reject buttons. The reason provided for rejection gets used as context for the LLM.
 
 **Ask User** — A built-in `ask_user` tool is automatically added to every agent. Agents can pose questions to users with predefined choices (single-select, multi-select) or free-text input during execution.
 
@@ -47,11 +47,11 @@ For more information, see the [Human-in-the-Loop example](/docs/kagent/examples/
 
 Your agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL).
 
-When you enable memory on an agent, it receives three additional tools: `save_memory`, `load_memory`, and `prefetch_memory`. The agent automatically extracts key information (user intent, key learnings, preferences) every 5th user message.
+When you enable memory on an agent, it receives three additional tools: `save_memory`, `load_memory`, and `prefetch_memory`. Every 5th user message, the agent automatically extracts key information, such as user intent, key learnings, preferences.
 
 You can configure memory in the Agent CR or through the UI when you create or edit an agent by selecting an embedding model and TTL.
 
-For more information, see the [Agent Memory](/docs/kagent/concepts/agent-memory) concept guide.
+For more information, see [Agent Memory](/docs/kagent/concepts/agent-memory).
 
 ## Go ADK Runtime
 
@@ -68,11 +68,11 @@ spec:
 
 The Go ADK includes built-in tools: `SkillsTool`, `BashTool`, `ReadFile`, `WriteFile`, and `EditFile`.
 
-For more information, see the [Agents](/docs/kagent/concepts/agents#runtime) concept guide and the [blog post](/blog/go-vs-python-runtime).
+For more information, see [Agents](/docs/kagent/concepts/agents#runtime) and the [blog post](/blog/go-vs-python-runtime).
 
 ## Agents as MCP Servers
 
-A2A agents are now exposed as MCP servers via the kagent controller HTTP server. This enables cross-tool interoperability — any MCP-compatible client can consume agents, not just the A2A protocol.
+Agent-to-Agent (A2A) agents are now exposed as MCP servers via the kagent controller HTTP server. This enables cross-tool interoperability — any MCP-compatible client can consume agents, not just the A2A protocol.
 
 ## Skills
 
@@ -83,7 +83,7 @@ You can load skills from two sources.
 - **OCI images.** Container images containing skill files.
 - **Git repositories.** Clone skills directly from Git repos, with support for private repos via HTTPS token or SSH key authentication.
 
-For more information, see the [Agents](/docs/kagent/concepts/agents#git-based-skills) concept guide.
+For more information, see [Agents](/docs/kagent/concepts/agents#git-based-skills).
 
 ## Go Workspace Restructure
 
@@ -91,23 +91,23 @@ The Go code now uses a Go workspace with three modules: `api`, `core`, and `adk`
 
 | Module | Purpose |
 |--------|---------|
-| `go/api` | Shared types: CRDs, ADK config types, database models, HTTP client. |
-| `go/core` | Infrastructure: controllers, HTTP server, CLI. |
-| `go/adk` | Go Agent Development Kit runtime. |
+| `go/api` | Shared types: CRDs, ADK config types, database models, HTTP client. Import this module to work with kagent's API types without pulling in the full codebase. |
+| `go/core` | Infrastructure: controllers, HTTP server, CLI. This module contains the main kagent controller logic. |
+| `go/adk` | Go Agent Development Kit runtime. Import this module to build custom Go-based agents. |
 
 ## Prompt Templates
 
-Agent system messages now support Go `text/template` syntax. You can store common prompt fragments (safety guardrails, tool usage best practices) in ConfigMaps and reference them with `{{include "alias/key"}}` syntax.
+Agent system messages now support Go `text/template` syntax. You can store common prompt fragments, such as safety guardrails or tool usage best practices, in ConfigMaps and reference them with `{{include "alias/key"}}` syntax.
 
 The `kagent-builtin-prompts` ConfigMap ships with five reusable templates: `skills-usage`, `tool-usage-best-practices`, `safety-guardrails`, `kubernetes-context`, and `a2a-communication`.
 
-For more information, see the [Agents](/docs/kagent/concepts/agents#prompt-templates) concept guide.
+For more information, see [Agents](/docs/kagent/concepts/agents#prompt-templates).
 
 ## Context Management
 
 Long conversations can now be automatically compacted to stay within LLM context windows. You can configure the `context.compaction` field to enable periodic summarization of older events while preserving key information.
 
-For more information, see the [Agents](/docs/kagent/concepts/agents#context-management) concept guide.
+For more information, see [Agents](/docs/kagent/concepts/agents#context-management).
 
 ## AWS Bedrock Support
 
@@ -131,9 +131,9 @@ SQLite support has been removed from kagent. PostgreSQL with pgvector is now the
 
 **Migration:**
 
-If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL will be deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image, credentials) as needed. See the [Database configuration guide](/operations/operational-considerations/#database-configuration) for details.
+If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL is deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image, credentials) as needed. See the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration) for details.
 
-Note that for production deployments, it is recommended to use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before the migration.
+Note that for production deployments, use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before the migration.
 
 ## Additional Changes
 

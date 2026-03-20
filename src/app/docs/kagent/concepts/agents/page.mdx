@@ -86,7 +86,7 @@ The following template variables are available in system messages.
 | `{{.ToolNames}}` | Comma-separated list of tool names. |
 | `{{.SkillNames}}` | Comma-separated list of skill names. |
 
-> **Security Note:** Only ConfigMaps are supported as data sources. Secret references were intentionally excluded to avoid leaking sensitive data into prompts sent to LLM providers.
+> **Security Note:** Only ConfigMaps are supported as data sources. Secret references are intentionally excluded to avoid leaking sensitive data into prompts sent to LLM providers.
 
 ## Tools
 
@@ -110,7 +110,7 @@ For a hands-on tutorial that walks through setting up HITL with tool approval an
 
 ### Tool approval
 
-Add `requireApproval` to your agent's tool specification to gate destructive operations. Tools listed in `requireApproval` pause execution and present Approve/Reject buttons in the UI. Tools not listed run immediately.
+Add `requireApproval` to your agent's tool specification to gate destructive operations. Tools listed in `requireApproval` pause execution and present Approve/Reject buttons in the UI. Tools not listed run without waiting for approval.
 
 ```yaml
 tools:
@@ -133,7 +133,7 @@ When you reject a tool call, you can provide a reason. This reason is passed bac
 
 ### Ask User
 
-Every agent automatically has the built-in `ask_user` tool. It allows agents to pause and ask users questions with optional predefined choices — useful for clarifying ambiguous requests or collecting configuration preferences. No configuration is required.
+Every agent automatically has the built-in `ask_user` tool. It allows agents to pause and ask users questions with optional predefined choices, which is useful for clarifying ambiguous requests or collecting configuration preferences. No configuration for the `ask_user` tool is required.
 
 ## Skills
 
@@ -193,7 +193,7 @@ These skills contain instructions, scripts, and resources that are loaded from c
 
 Container-based skills are actual, callable capabilities—not just descriptions of capabilities.
 
-Kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: any agent can use skills, regardless of the LLM provider. You're not limited to Anthropic Claude. You can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
+Kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: you can use kagent's skills with any LLM provider, not just Anthropic Claude. This means your agents can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
 
 ### Git-based skills
 
@@ -271,11 +271,11 @@ For more benchmarks and details, see the [Go vs Python runtime blog post](/blog/
 
 Your agents can save and retrieve relevant context across conversations using vector similarity search. When you enable memory on an agent, it receives three additional tools (`save_memory`, `load_memory`, `prefetch_memory`) and automatically extracts key information every 5th user message.
 
-For configuration details, supported storage backends, API endpoints, and limitations, see the [Agent Memory](/docs/kagent/concepts/agent-memory) concept guide.
+For configuration details, supported storage backends, API endpoints, and limitations, see [Agent Memory](/docs/kagent/concepts/agent-memory).
 
 ## Context Management
 
-Long conversations can exceed LLM context windows. You can enable **event compaction** to automatically summarize older messages while preserving key information.
+Long conversations can exceed LLM context windows. The context window is the maximum amount of text (tokens) that an LLM can process in a single request. You can enable **event compaction** to automatically summarize older messages while preserving key information.
 
 ```yaml
 spec:
@@ -288,15 +288,15 @@ spec:
         compactionInterval: 5  # Compact every 5 user invocations
 ```
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `compactionInterval` | `5` | Number of new user invocations before triggering a compaction. |
-| `overlapSize` | `2` | Number of preceding invocations to include for context overlap. |
-| `eventRetentionSize` | — | Number of most recent events to always retain. |
-| `tokenThreshold` | — | Post-invocation token threshold that triggers compaction. |
-| `summarizer` | — | Optional LLM-based summarizer configuration. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `compactionInterval` | integer | `5` | Number of new user invocations before triggering a compaction. |
+| `overlapSize` | integer | `2` | Number of preceding invocations to include for context overlap. |
+| `eventRetentionSize` | integer | — | Number of most recent events to always retain. |
+| `tokenThreshold` | integer | — | Post-invocation token threshold that triggers compaction. |
+| `summarizer` | object | — | Optional LLM-based summarizer configuration. When set, uses an LLM to generate a summary of compacted events instead of discarding them. Requires a `modelConfig` reference. |
 
-By default, compacted events are dropped. To preserve a summary, configure the `summarizer` field with a `modelConfig` reference. Enable compaction for agents that handle long-running conversations, call many tools with large outputs, or need to support extended interactions.
+Compaction removes older conversation events to free up space in the context window. By default, compacted events are discarded. To preserve a summary of compacted events, configure the `summarizer` field with a `modelConfig` reference. Enable compaction for agents that handle long-running conversations, call many tools with large outputs, or need to support extended interactions.
 
 ## Agents as Tools
 
