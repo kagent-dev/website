@@ -184,6 +184,11 @@
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
           },
           {
+            "title": "Telegram Bot",
+            "href": "/docs/kagent/examples/telegram-bot",
+            "description": "Build a Telegram bot that talks to your Kubernetes cluster through kagent and A2A"
+          },
+          {
             "title": "Skills",
             "href": "/docs/kagent/examples/skills",
             "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
