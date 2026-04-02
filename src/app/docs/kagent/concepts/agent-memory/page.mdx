@@ -21,12 +21,37 @@ Agent memory provides the following capabilities.
 - **Vector-backed.** A basic vector store uses embedding models to encode memories as 768-dimensional vectors.
 - **Searchable.** Agents retrieve relevant memories via cosine similarity.
 - **Automatic.** Agents extract and save user intent, key learnings, and preferences without explicit user action.
-- **Time-bounded.** Memories expire after a configurable TTL (default 15 days).
+- **Time-bounded.** Memories expire after a configurable time to live (TTL), which defaults to 15 days.
+- **Metadata.** Memories include timestamps and source session references.
 - **Shared storage.** Memory uses the kagent database (PostgreSQL), not a separate database.
 
-## Configuration
+## Configure memory
 
-### Enable Memory on an Agent
+### Install kagent with Postgres
+
+To use memory, you must install kagent with a Postgres database that has the `pgvector` extension installed and vector enabled. For more information, see the [Database configuration](/docs/kagent/operations/operational-considerations#database-configuration) section.
+
+Example Helm configuration for your own external Postgres:
+
+```yaml
+database:
+  postgres:
+    urlFile: /var/secrets/db-url
+    vectorEnabled: true
+    bundled:
+      enabled: false
+controller:
+  volumes:
+    - name: db-secret
+      secret:
+        secretName: my-postgres-url-secret
+  volumeMounts:
+    - name: db-secret
+      mountPath: /var/secrets
+      readOnly: true
+```
+
+### Enable memory on an agent
 
 To enable memory, set the `memory` field on the declarative agent spec, as shown in the following YAML example. The `modelConfig` field references a `ModelConfig` object whose embedding provider generates memory vectors.
 
@@ -47,9 +72,9 @@ spec:
       modelConfig: default-model-config  # References the embedding provider
 ```
 
-### Custom TTL
+### Optional: Custom TTL
 
-To change the default memory retention period, set the `ttlDays` field.
+To change the default memory retention period of 15 days, set the `ttlDays` field.
 
 ```yaml
 memory:
@@ -57,16 +82,18 @@ memory:
   ttlDays: 30  # Memories expire after 30 days instead of the default 15
 ```
 
-## How Memory Works
+## Work with memories
 
-### Automatic Save Cycle
+Review the following sections to understand what your agents can do with memory.
+
+### Automatic save cycle
 
 1. The agent processes user messages normally.
 2. Every 5th user message, the agent automatically extracts key information such as user intent, key learnings, and preferences.
 3. The agent summarizes extracted memories and encodes them as embedding vectors.
 4. The agent stores the vectors in the database with metadata and timestamps.
 
-### Memory Retrieval (Prefetch)
+### Memory retrieval (prefetch)
 
 Before generating a response, the agent performs the following steps.
 
@@ -74,7 +101,7 @@ Before generating a response, the agent performs the following steps.
 2. Searches stored memories by cosine similarity.
 3. Injects the most relevant memories into the agent's context.
 
-### Memory Tools
+### Memory tools
 
 When you enable memory, the agent receives three additional tools.
 
@@ -86,30 +113,48 @@ When you enable memory, the agent receives three additional tools.
 
 You can also instruct the agent to use `save_memory` or `load_memory` explicitly during a conversation.
 
-### Viewing Memories
+### View memories in the UI
 
 In the kagent UI, you can view the memories that an agent has saved. With saved memories, you can inspect what the agent has learned and retained from past interactions.
 
-## Memory Management via API
+### Manage memories via API
 
 The following API endpoints let you manage memories programmatically.
 
+Add a memory:
+
 ```
-POST   /api/memories/sessions         # Add a memory
-POST   /api/memories/sessions/batch   # Add memories in batch
-POST   /api/memories/search           # Search memories by cosine similarity
-GET    /api/memories?agent_name=X&user_id=Y   # List memories
-DELETE /api/memories?agent_name=X&user_id=Y   # Delete all memories for an agent
+POST   /api/memories/sessions
 ```
 
-## Limitations
+Add memories in batch:
+
+```
+POST   /api/memories/sessions/batch
+```
+
+Search memories by cosine similarity:
+
+```
+POST   /api/memories/search
+```
+
+List memories:
+
+```
+GET    /api/memories?agent_name=X&user_id=Y
+```
+
+Delete all memories for an agent:
+
+```
+DELETE /api/memories?agent_name=X&user_id=Y
+```
+
+
+## Known limitations
 
 - **No per-memory deletion.** You can delete all memories for an agent, but you cannot delete individual memory entries.
 - **No cross-agent memory sharing.** Each agent has its own isolated memory store. You cannot share memories across agents.
 - **Not pluggable.** Memory is built on the Google ADK memory implementation and cannot be swapped for an alternative memory solution (such as Cognee). However, if an alternative memory solution exposes an [MCP server](/docs/kagent/concepts/tools#mcp-tools), you can add it as a tool and instruct the agent to use it instead of the built-in memory.
 
-## Technical Details
-
-- Embedding vectors are normalized to 768 dimensions.
-- Background TTL pruning runs periodically with a default retention of 15 days. Memories older than the retention period are automatically deleted.
-- Memories include timestamps and source session references.
