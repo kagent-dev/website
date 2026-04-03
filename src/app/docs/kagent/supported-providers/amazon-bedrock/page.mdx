@@ -16,23 +16,29 @@ You can use Amazon Bedrock models with kagent in two ways: the native Bedrock pr
 
 ## Option 1: Native Bedrock provider
 
-The native Bedrock provider uses AWS IAM credentials and the Bedrock API directly. Use this option when you want the simplest configuration and full Bedrock feature support.
+The native Bedrock provider uses AWS IAM credentials or AWS Bedrock API key with the Bedrock API directly. Use this option when you want the simplest configuration and full Bedrock feature support.
 
 ### Step 1: Prepare your AWS credentials
 
-1. Create an IAM user or role with permissions for Bedrock. You need at least `bedrock:InvokeModel` for the models you use. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
+1. Create an IAM user/role or [API key](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html) with permissions for Bedrock. You need at least `bedrock:InvokeModel` for the models you use. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
 
 2. Choose the AWS region and Bedrock model. Refer to the [AWS Bedrock supported models documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html).
    - Example regions: `us-east-1` or `us-west-2`
    - Example model IDs: `us.anthropic.claude-sonnet-4-20250514-v1:0` or `amazon.titan-text-express-v1`
 
-3. Create a Kubernetes secret with your AWS credentials in the same namespace as your agent, typically `kagent`:
+3. Create a Kubernetes secret with your AWS credentials or API key in the same namespace as your agent, typically `kagent`:
 
-   ```bash
-   kubectl create secret generic bedrock-credentials -n kagent \
-     --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
-     --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key>
-   ```
+    - AWS IAM credentials: 
+      ```bash
+      kubectl create secret generic bedrock-credentials -n kagent \
+        --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
+        --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key>
+      ```
+    - AWS Bedrock API key:
+      ```bash
+      kubectl create secret generic bedrock-credentials -n kagent \
+        --from-literal=AWS_BEARER_TOKEN_BEDROCK=<your-api-key>
+      ```
 
 ### Step 2: Create the ModelConfig
 
