@@ -33,3 +33,7 @@ adopters:
     logo_dark: "/images/adopters/cloudraft.svg"
     logo_light: "/images/adopters/cloudraft.svg"
     website: "https://www.cloudraft.io/"
+  - name: "Wellhub"
+    logo_dark: "/images/adopters/wellhub-dark.png"
+    logo_light: "/images/adopters/wellhub-light.png"
+    website: "https://wellhub.com/"
