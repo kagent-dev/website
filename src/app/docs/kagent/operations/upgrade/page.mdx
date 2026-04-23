@@ -22,7 +22,12 @@ Follow these steps to upgrade kagent to the latest version and keep your cluster
 
 2. Read the [release notes](/docs/kagent/resources/release-notes) for the version you are upgrading to. Pay attention to any breaking changes or deprecations that might affect your configuration.
 
-3. Back up your current configuration, including agent definitions and custom settings.
+3. Back up your current configuration, including the following:
+    - Agent definitions
+    - Any custom settings
+    - PostgreSQL database
+
+4. **v0.9.0 and later**: You must be running at least v0.8.0 before upgrading to v0.9.0.
 
 ## Upgrade kagent
 

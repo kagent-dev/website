@@ -18,6 +18,92 @@ The kagent documentation shows information only for the latest release. If you r
 
 For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
 
+# v0.9
+
+Review this summary of significant changes from kagent version 0.8 to v0.9.
+
+**Before you upgrade:**
+
+* You must be running at least v0.8.0 before upgrading to v0.9.0.
+* Back up your PostgreSQL database before upgrading. For details on your database configuration, see the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration).
+* The `rbac.clusterScoped` Helm value is removed. RBAC scope is now derived from `rbac.namespaces`. If you set `rbac.clusterScoped` in your Helm values, update your configuration to use `rbac.namespaces` instead.
+
+**What's included:**
+
+* Agent Sandbox — run agents in isolated sandboxes with network controls using the Kubernetes agent-sandbox project.
+* OIDC proxy authentication — optional enterprise authentication via oauth2-proxy with support for Cognito, Okta, Dex, and other OIDC providers.
+* SAP AI Core provider — new model provider for SAP AI Core via the Orchestration Service.
+* Database migration tooling — the database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc.
+* Bedrock embedding support — native Bedrock embedding models for agent memory.
+
+## Agent Sandbox
+
+You can now run agents in isolated sandboxes using the [Kubernetes agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) project. A new `SandboxAgent` CRD creates sandboxed agent instances with restricted filesystem and network access, providing stronger isolation for untrusted or experimental workloads.
+
+Sandbox agents support configurable network allowlists for both Go and Python runtimes, so you can control which external endpoints the agent is permitted to reach.
+
+To use agent sandboxes, install the agent-sandbox controller in your cluster:
+
+```bash
+export VERSION="v0.3.10"
+kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}/manifest.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}/extensions.yaml
+```
+
+Then create a `SandboxAgent` resource with the same spec as a regular `Agent` resource.
+
+## OIDC Proxy Authentication
+
+kagent now supports optional OIDC proxy-based authentication through an [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy/) subchart. This feature enables integration with enterprise identity providers such as Cognito, Okta, and Dex.
+
+When `controller.auth.mode` is set to `"proxy"`, the controller trusts JWT tokens from the `Authorization` header injected by oauth2-proxy and extracts user identity from configurable JWT claims. The default mode remains `"unsecure"`, which preserves the existing behavior with no authentication required.
+
+This release adds authentication only. Access control is not yet implemented.
+
+**What's included:**
+
+* A `ProxyAuthenticator` backend that extracts user identity (email, name, groups) from JWT claims.
+* An `/api/me` endpoint that returns the current user's identity.
+* A login page with SSO redirect and a user menu in the UI.
+* NetworkPolicies that restrict UI and controller access to oauth2-proxy when auth is enabled.
+
+To enable OIDC authentication:
+
+```yaml
+controller:
+  auth:
+    mode: proxy
+
+oauth2-proxy:
+  enabled: true
+  extraEnv:
+    - name: OIDC_ISSUER_URL
+      value: "https://your-idp.example.com"
+    - name: OIDC_REDIRECT_URL
+      value: "https://kagent.example.com/oauth2/callback"
+```
+
+## SAP AI Core Provider
+
+You can now use [SAP AI Core](https://help.sap.com/docs/sap-ai-core) as a model provider via the Orchestration Service. Configure a ModelConfig resource with the SAP AI Core provider to use SAP-hosted models with your agents.
+
+## Additional Changes
+
+* **Default model update** — the retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
+* **Bedrock embedding support** — native Bedrock embedding models are now available for agent memory, extending the existing AWS Bedrock provider.
+* **Token exchange for model auth** — a new authentication mechanism that supports token exchange for model configurations.
+* **Prompt templates in UI** — prompt templates are now manageable directly in the UI.
+* **Require approval toggle in UI** — you can now enable or disable the `requireApproval` setting for tools directly in the UI.
+* **Enhanced Go ADK model config** — broader model and provider support in the Go runtime.
+* **RBAC scope changes** — the `rbac.clusterScoped` Helm value is removed. RBAC scope is now derived from `rbac.namespaces`.
+* **IPv6/dual-stack support** — agent bind host and UI probes now support IPv6 and dual-stack configurations.
+* **AWS LoadBalancer annotations** — the UI Service now supports AWS LoadBalancer service annotations for easier AWS deployment.
+* **Database migration tooling** — the database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc for more reliable schema migrations.
+* **SSH auth for git-based skills** — fixed SSH authentication when loading skills from private Git repositories.
+* **MCP connection error handling** — MCP connection errors are now returned to the LLM as context instead of raising exceptions.
+
+
+
 # v0.8
 
 Review this summary of significant changes from kagent version 0.7 to v0.8.
