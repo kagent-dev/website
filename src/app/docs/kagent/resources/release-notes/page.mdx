@@ -89,6 +89,7 @@ You can now use [SAP AI Core](https://help.sap.com/docs/sap-ai-core) as a model 
 
 ## Additional Changes
 
+* **Default model update** — the retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
 * **Bedrock embedding support** — native Bedrock embedding models are now available for agent memory, extending the existing AWS Bedrock provider.
 * **Token exchange for model auth** — a new authentication mechanism that supports token exchange for model configurations.
 * **Prompt templates in UI** — prompt templates are now manageable directly in the UI.
@@ -100,7 +101,7 @@ You can now use [SAP AI Core](https://help.sap.com/docs/sap-ai-core) as a model 
 * **Database migration tooling** — the database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc for more reliable schema migrations.
 * **SSH auth for git-based skills** — fixed SSH authentication when loading skills from private Git repositories.
 * **MCP connection error handling** — MCP connection errors are now returned to the LLM as context instead of raising exceptions.
-* **Default model update** — the retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
+
 
 
 # v0.8
