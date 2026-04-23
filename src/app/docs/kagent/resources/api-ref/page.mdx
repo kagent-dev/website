@@ -25,6 +25,7 @@ Package v1alpha1 contains API Schema definitions for the agent v1alpha1 API grou
 - [ModelConfig](#modelconfig)
 - [ModelProviderConfig](#modelproviderconfig)
 - [RemoteMCPServer](#remotemcpserver)
+- [SandboxAgent](#sandboxagent)
 
 
 
@@ -65,6 +66,8 @@ Agent is the Schema for the agents API.
 | `status` _[AgentStatus](#agentstatus)_ |  |  |  |
 
 
+
+
 #### AgentSkill
 
 _Underlying type:_ _AgentSkill_
@@ -97,6 +100,7 @@ AgentSpec defines the desired state of Agent.
 
 _Appears in:_
 - [Agent](#agent)
+- [SandboxAgent](#sandboxagent)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -105,6 +109,7 @@ _Appears in:_
 | `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ |  |  |  |
 | `description` _string_ |  |  |  |
 | `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
+| `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing |  |  |
 
 
@@ -118,6 +123,7 @@ AgentStatus defines the observed state of Agent.
 
 _Appears in:_
 - [Agent](#agent)
+- [SandboxAgent](#sandboxagent)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -469,6 +475,22 @@ _Appears in:_
 | `Selector` | NamespacesFromSelector allows references from namespaces matching the selector.<br /> |
 
 
+#### GDCHServiceAccountConfig
+
+
+
+GDCHServiceAccountConfig holds GDCH-specific token exchange parameters.
+
+
+
+_Appears in:_
+- [TokenExchangeConfig](#tokenexchangeconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `audience` _string_ | Audience is the token exchange audience URL (the GDC inference gateway base URL) |  |  |
+
+
 #### GeminiConfig
 
 
@@ -616,11 +638,11 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `model` _string_ |  |  |  |
-| `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig |  |  |
-| `apiKeySecretKey` _string_ | The key in the secret that contains the API key |  |  |
+| `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig.<br />For the SAPAICore provider, the secret must contain two keys: "client_id" and "client_secret"<br />(the OAuth2 client credentials for SAP AI Core). The apiKeySecretKey field is not used for SAPAICore. |  |  |
+| `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
 | `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
-| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock] <br /> |
+| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore] <br /> |
 | `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
 | `anthropic` _[AnthropicConfig](#anthropicconfig)_ | Anthropic-specific configuration |  |  |
 | `azureOpenAI` _[AzureOpenAIConfig](#azureopenaiconfig)_ | Azure OpenAI-specific configuration |  |  |
@@ -629,6 +651,7 @@ _Appears in:_
 | `geminiVertexAI` _[GeminiVertexAIConfig](#geminivertexaiconfig)_ | Gemini Vertex AI-specific configuration |  |  |
 | `anthropicVertexAI` _[AnthropicVertexAIConfig](#anthropicvertexaiconfig)_ | Anthropic-specific configuration |  |  |
 | `bedrock` _[BedrockConfig](#bedrockconfig)_ | AWS Bedrock-specific configuration |  |  |
+| `sapAICore` _[SAPAICoreConfig](#sapaicoreconfig)_ | SAP AI Core-specific configuration |  |  |
 | `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for provider connections.<br />Enables agents to connect to internal LiteLLM gateways or other providers<br />that use self-signed certificates or custom certificate authorities. |  |  |
 
 
@@ -657,7 +680,7 @@ _Underlying type:_ _string_
 ModelProvider represents the model provider type
 
 _Validation:_
-- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock]
+- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore]
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
@@ -673,6 +696,7 @@ _Appears in:_
 | `GeminiVertexAI` |  |
 | `AnthropicVertexAI` |  |
 | `Bedrock` |  |
+| `SAPAICore` |  |
 
 
 #### ModelProviderConfig
@@ -710,7 +734,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock] <br />Required: \{\} <br /> |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore] <br />Required: \{\} <br /> |
 | `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
 | `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
 
@@ -734,6 +758,22 @@ _Appears in:_
 | `modelCount` _integer_ | ModelCount is the number of discovered models (for kubectl display) |  |  |
 | `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
 | `secretHash` _string_ | SecretHash is a hash of the referenced secret data, used to detect secret changes |  |  |
+
+
+#### NetworkConfig
+
+
+
+NetworkConfig configures outbound network access for sandboxed execution paths.
+
+
+
+_Appears in:_
+- [SandboxConfig](#sandboxconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowedDomains` _string array_ | AllowedDomains lists the domains that sandboxed execution may contact.<br />Wildcards such as *.example.com are supported by the sandbox runtime. |  |  |
 
 
 #### OllamaConfig
@@ -777,6 +817,7 @@ _Appears in:_
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
 | `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [minimal low medium high] <br /> |
+| `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
 
 #### OpenAIReasoningEffort
@@ -910,6 +951,61 @@ _Appears in:_
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  | Optional: \{\} <br /> |
 
 
+#### SAPAICoreConfig
+
+
+
+SAPAICoreConfig contains SAP AI Core-specific configuration options.
+
+
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `baseUrl` _string_ | Base URL for the SAP AI Core API (e.g., https://api.ai.prod.eu-central-1.aws.ml.hana.ondemand.com) |  |  |
+| `resourceGroup` _string_ | Resource group in SAP AI Core | default |  |
+| `authUrl` _string_ | OAuth2 token endpoint URL (e.g., https://tenant.authentication.eu10.hana.ondemand.com) |  |  |
+
+
+#### SandboxAgent
+
+
+
+SandboxAgent declares an agent that runs in an isolated sandbox (agent-sandbox Sandbox CR).
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
+| `kind` _string_ | `SandboxAgent` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AgentSpec](#agentspec)_ |  |  |  |
+| `status` _[AgentStatus](#agentstatus)_ |  |  |  |
+
+
+#### SandboxConfig
+
+
+
+SandboxConfig configures sandboxed execution behavior.
+
+
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `network` _[NetworkConfig](#networkconfig)_ | Network configures outbound network access for sandboxed execution paths.<br />When unset or when allowedDomains is empty, outbound access is denied by default. |  |  |
+
+
 #### SecretReference
 
 
@@ -995,6 +1091,24 @@ _Appears in:_
 | `refs` _string array_ | The list of skill images to fetch. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
 | `gitAuthSecretRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | Reference to a Secret containing git credentials.<br />Applied to all gitRefs entries.<br />The secret should contain a `token` key for HTTPS auth,<br />or `ssh-privatekey` for SSH auth. |  |  |
 | `gitRefs` _[GitRepo](#gitrepo) array_ | Git repositories to fetch skills from. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
+| `initContainer` _[SkillsInitContainer](#skillsinitcontainer)_ | Configuration for the skills-init init container. |  |  |
+
+
+#### SkillsInitContainer
+
+
+
+SkillsInitContainer configures the skills-init init container.
+
+
+
+_Appears in:_
+- [SkillForAgent](#skillforagent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ | Resource requirements for the skills-init init container. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Additional environment variables for the skills-init init container. |  |  |
 
 
 #### TLSConfig
@@ -1016,6 +1130,40 @@ _Appears in:_
 | `caCertSecretRef` _string_ | CACertSecretRef is a reference to a Kubernetes Secret containing<br />CA certificate(s) in PEM format. The Secret must be in the same<br />namespace as the ModelConfig.<br />When set, the certificate will be used to verify the provider's SSL certificate.<br />This field follows the same pattern as APIKeySecret. |  |  |
 | `caCertSecretKey` _string_ | CACertSecretKey is the key within the Secret that contains the CA certificate data.<br />This field follows the same pattern as APIKeySecretKey.<br />Required when CACertSecretRef is set (unless DisableVerify is true). |  |  |
 | `disableSystemCAs` _boolean_ | DisableSystemCAs disables the use of system CA certificates.<br />When false (default), system CA certificates are used for verification (safe behavior).<br />When true, only the custom CA from CACertSecretRef is trusted.<br />This allows strict security policies where only corporate CAs should be trusted. | false |  |
+
+
+#### TokenExchangeConfig
+
+
+
+TokenExchangeConfig configures dynamic bearer token acquisition before model calls.
+
+
+
+_Appears in:_
+- [OpenAIConfig](#openaiconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[TokenExchangeType](#tokenexchangetype)_ |  |  | Enum: [GDCHServiceAccount] <br /> |
+| `gdchServiceAccount` _[GDCHServiceAccountConfig](#gdchserviceaccountconfig)_ |  |  |  |
+
+
+#### TokenExchangeType
+
+_Underlying type:_ _string_
+
+TokenExchangeType identifies the token exchange mechanism
+
+_Validation:_
+- Enum: [GDCHServiceAccount]
+
+_Appears in:_
+- [TokenExchangeConfig](#tokenexchangeconfig)
+
+| Field | Description |
+| --- | --- |
+| `GDCHServiceAccount` |  |
 
 
 #### Tool
@@ -1146,5 +1294,7 @@ _Appears in:_
 | --- | --- |
 | `ConfigMap` |  |
 | `Secret` |  |
+
+
 
 
