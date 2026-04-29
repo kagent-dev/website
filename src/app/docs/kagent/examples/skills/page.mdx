@@ -32,7 +32,7 @@ Container-based skills are executable skill implementations packaged as containe
 
 ### Step 1: Build a skill container
 
-To create a container-based skill, package your skill files into a container image. This example creates a skill that deploys simple applications to Kubernetes.
+To create a container-based skill, package your skill files into a container image. This example creates a skill named `k8s-deploy-skill` that can deploy simple applications to Kubernetes. The skill takes an app name and container image (and optional replica count and port) from the user, runs a Python script that generates a combined Deployment and Service manifest, and then applies the generated manifest to the cluster.
 
 1. Create a skill directory with your skill files.
 

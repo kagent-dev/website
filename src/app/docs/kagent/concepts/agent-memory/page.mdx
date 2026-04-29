@@ -72,6 +72,42 @@ spec:
       modelConfig: default-model-config  # References the embedding provider
 ```
 
+The embedding `ModelConfig` does not have to use the same provider as the agent's main LLM. Kagent supports several embedding providers, including Amazon Bedrock as shown in the following section.
+
+### ModelConfig example: Amazon Bedrock
+
+To use [Amazon Bedrock Titan embedding models](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html), create a `ModelConfig` with `provider: Bedrock`. 
+
+The Bedrock provider uses the standard AWS credential chain, so no API key secret is required. The agent's pod must have AWS credentials with the `bedrock:InvokeModel` permission for the chosen model. On Kubernetes, the recommended setup is [EKS IRSA on the agent ServiceAccount](/docs/kagent/supported-providers/amazon-bedrock#step-3-configure-the-agent-to-use-an-iam-role). 
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: bedrock-embed
+  namespace: kagent
+spec:
+  provider: Bedrock
+  model: amazon.titan-embed-text-v2:0
+  bedrock:
+    region: us-east-1
+```
+
+| Setting | Description |
+| --- | --- |
+| `provider` | Set to `Bedrock`. |
+| `model` | The Bedrock embedding model ID, such as `amazon.titan-embed-text-v2:0` or `amazon.titan-embed-text-v1`. Note that Titan v1 produces 1536-dimensional vectors and Titan v2 produces 1024-dimensional vectors. Kagent truncates and L2-normalizes both to the 768-dimensional vector store, so no model-specific dimension setting is required. |
+| `bedrock.region` | The AWS region where the model is available, for example `us-east-1`. |
+
+Reference the embedding `ModelConfig` from the agent's `memory.modelConfig` field:
+
+```yaml
+spec:
+  declarative:
+    memory:
+      modelConfig: bedrock-embed
+```
+
 ### Optional: Custom TTL
 
 To change the default memory retention period of 15 days, set the `ttlDays` field.
