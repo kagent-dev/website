@@ -96,7 +96,9 @@ Once all pods report `condition met`, move on.
 
 ## Step 3 — Deploy the Agent
 
-This is the core of the tutorial. You'll create an agent that uses kagent's **built-in Kubernetes tools** (served via the kagent tool server), with **approval gates** on the destructive ones.
+HITL is just additional configuration on the agent's tool references. You can enable HITL on a new agent, or add the `requireApproval` list to an existing agent's `spec.declarative.tools` entries to gate specific tools without changing anything else about the agent.
+
+This step is the core of the tutorial. You create an agent that uses kagent's built-in Kubernetes tools (served via the kagent tool server), with approval gates on the destructive ones.
 
 Save this as `hitl-agent.yaml`:
 

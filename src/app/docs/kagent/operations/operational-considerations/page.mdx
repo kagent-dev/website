@@ -99,22 +99,30 @@ urlFile > url > bundled connection string
 
 The bundled PostgreSQL instance is deployed by default (`database.postgres.bundled.enabled: true`). The database name, username, and password are all hardcoded to `kagent`. Credentials are stored in a Kubernetes Secret.
 
-You can customize the storage size and image:
+You can customize the storage size and image of the bundled instance when you [install](/docs/kagent/introduction/installation) or upgrade kagent.
 
-**Helm values file:**
+1. Add the bundled database settings to your Helm values file for kagent.
 
-```yaml
-database:
-  postgres:
-    bundled:
-      enabled: true    # default
-      storage: 500Mi
-      image:
-        registry: docker.io
-        repository: library
-        name: postgres
-        tag: "18"
-```
+   ```yaml
+   database:
+     postgres:
+       bundled:
+         enabled: true    # default
+         storage: 500Mi
+         image:
+           registry: docker.io
+           repository: library
+           name: postgres
+           tag: "18"
+   ```
+
+2. Apply the values to the kagent Helm release.
+
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     --values kagent.yaml
+   ```
 
 ### External PostgreSQL
 
