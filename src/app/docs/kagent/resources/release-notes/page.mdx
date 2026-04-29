@@ -97,7 +97,7 @@ Review the following before upgrading:
 - **Existing data is preserved**: Tables created by GORM are reused
 - **Back up first**: Take a snapshot or backup of your database before upgrading. A fresh install on a fresh database is the cleanest path. Restore from your backup if anything goes wrong.
 - **Automatic rollback on failure**: If a migration fails partway through, changes are rolled back before the controller exits non-zero. On the initial run from a GORM database, rollback to version 0 is skipped to protect pre-existing tables.
-- **pgvector pre-check**: When `database.postgres.vectorEnabled: true`, the migration runner verifies that the `pgvector` extension is available before running any migrations. A missing extension cannot leave core tables in a partial state.
+- **pgvector pre-check**: When `database.postgres.vectorEnabled: true` is set, the migration runner verifies that the `pgvector` extension is available before running any migrations. A missing extension cannot leave core tables in a partial state.
 - **Safe with multiple replicas**: Migrations use a PostgreSQL session-level advisory lock, so only one controller instance applies migrations at a time. The lock releases automatically if the process crashes. If a crash leaves a dirty migration state, the next startup detects it and rolls back before retrying.
 
 ## RBAC scope
