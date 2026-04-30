@@ -87,7 +87,51 @@ oauth2-proxy:
 
 You can now use [SAP AI Core](https://help.sap.com/docs/sap-ai-core) as a model provider via the Orchestration Service. Configure a ModelConfig resource with the SAP AI Core provider to use SAP-hosted models with your agents.
 
-## Additional Changes
+## Database migrations
+
+v0.9.0 replaces GORM `AutoMigrate` with versioned SQL migrations managed by [golang-migrate](https://github.com/golang-migrate/migrate) and [sqlc](https://sqlc.dev/). Migration history is tracked in two new tables, `schema_migrations` and `vector_schema_migrations`.
+
+Review the following before upgrading:
+
+- **Minimum prior version**: You must be on v0.8.0 or later. Upgrades from earlier versions are not supported.
+- **Existing data is preserved**: Tables created by GORM are reused
+- **Back up first**: Take a snapshot or backup of your database before upgrading. A fresh install on a fresh database is the cleanest path. Restore from your backup if anything goes wrong.
+- **Automatic rollback on failure**: If a migration fails partway through, changes are rolled back before the controller exits non-zero. On the initial run from a GORM database, rollback to version 0 is skipped to protect pre-existing tables.
+- **pgvector pre-check**: When `database.postgres.vectorEnabled: true` is set, the migration runner verifies that the `pgvector` extension is available before running any migrations. A missing extension cannot leave core tables in a partial state.
+- **Safe with multiple replicas**: Migrations use a PostgreSQL session-level advisory lock, so only one controller instance applies migrations at a time. The lock releases automatically if the process crashes. If a crash leaves a dirty migration state, the next startup detects it and rolls back before retrying.
+
+## RBAC scope
+
+The `rbac.clusterScoped` Helm value was removed in v0.9.0. RBAC scope is now derived from `rbac.namespaces`:
+
+| `rbac.namespaces` | Resulting RBAC | Watched namespaces |
+| --- | --- | --- |
+| `[]` (empty, default) | Cluster-scoped `ClusterRole` and `ClusterRoleBinding` | All namespaces |
+| Non-empty list | Namespaced `Role` and `RoleBinding` per listed namespace | The same list, unless `controller.watchNamespaces` is set explicitly |
+
+The empty-list default is unchanged from previous releases that used `rbac.clusterScoped: true`. When `controller.watchNamespaces` is set, it always takes precedence over the auto-derived list.
+
+The chart fails in the following cases:
+
+- You still have `rbac.clusterScoped` in your Helm values.
+- `rbac.namespaces` is non-empty but does not include the install namespace.
+
+Before you upgrade:
+
+1. Remove `rbac.clusterScoped` from your Helm values.
+2. If you previously set `rbac.clusterScoped: false` with a custom namespace list, make sure `rbac.namespaces` includes your install namespace (typically `kagent`):
+
+   ```yaml
+   rbac:
+     namespaces:
+       - kagent
+       - team-a
+       - team-b
+   ```
+
+3. To keep cluster-scoped RBAC, leave `rbac.namespaces` empty (the default). No values change is required.
+
+## Additional changes in v0.9
 
 * **Default model update** — the retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
 * **Bedrock embedding support** — native Bedrock embedding models are now available for agent memory, extending the existing AWS Bedrock provider.
@@ -95,14 +139,10 @@ You can now use [SAP AI Core](https://help.sap.com/docs/sap-ai-core) as a model 
 * **Prompt templates in UI** — prompt templates are now manageable directly in the UI.
 * **Require approval toggle in UI** — you can now enable or disable the `requireApproval` setting for tools directly in the UI.
 * **Enhanced Go ADK model config** — broader model and provider support in the Go runtime.
-* **RBAC scope changes** — the `rbac.clusterScoped` Helm value is removed. RBAC scope is now derived from `rbac.namespaces`.
 * **IPv6/dual-stack support** — agent bind host and UI probes now support IPv6 and dual-stack configurations.
 * **AWS LoadBalancer annotations** — the UI Service now supports AWS LoadBalancer service annotations for easier AWS deployment.
-* **Database migration tooling** — the database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc for more reliable schema migrations.
 * **SSH auth for git-based skills** — fixed SSH authentication when loading skills from private Git repositories.
 * **MCP connection error handling** — MCP connection errors are now returned to the LLM as context instead of raising exceptions.
-
-
 
 # v0.8
 
