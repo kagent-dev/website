@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions."
 ---
 
+import { VERSIONS } from "../../../_constants";
+
 export const metadata = {
   title: "Agent Sandbox",
   description: "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions.",
@@ -32,13 +34,13 @@ The default runtime settings are:
 
 ## Before you begin
 
-1. Install kagent v0.9.0 or later by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+1. Install kagent v{VERSIONS.kagent} or later by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
 
-2. Install the agent-sandbox controller and CRDs. The example uses version 0.3.10.
+2. Install the agent-sandbox controller and CRDs. The example uses version {VERSIONS.agentSandbox}.
 
    ```bash
-   kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v0.3.10/manifest.yaml
-   kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v0.3.10/extensions.yaml
+   kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/manifest.yaml
+   kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/extensions.yaml
    ```
 
 3. If you installed agent-sandbox after kagent was already running, restart the kagent controller so it registers the new Sandbox API.
@@ -128,6 +130,8 @@ EOF
 
 To verify the network allowlist enforces correctly, give the agent a way to make outbound HTTP requests. The simplest path is a [container-based skill](/docs/kagent/examples/skills) that runs `curl`, because skills give the agent a `bash` tool that runs through the `srt` sandbox runtime, and `srt` is what reads `srt-settings.json` and applies the allowlist.
 
+To invoke a sandboxed agent, you can use A2A requests or the kagent UI.
+
 ### Step 1: Build a curl skill
 
 1. Create a skill directory with a `SKILL.md` file that tells the agent how to use the skill.
@@ -206,7 +210,9 @@ sandbox-agent   True    True
 
 ### Step 3: Send requests to the sandbox A2A endpoint
 
-The kagent CLI does not yet support `SandboxAgent` because it looks up `Agent` resources only. To invoke a sandboxed agent, send A2A JSON-RPC requests directly to the controller's `/api/a2a-sandboxes/<namespace>/<name>/` endpoint. Sandboxed agents support exactly one chat session, so the second request must reuse the `contextId` returned by the first.
+Send A2A JSON-RPC requests directly to the controller's `/api/a2a-sandboxes/<namespace>/<name>/` endpoint. Sandboxed agents support exactly one chat session, so the second request must reuse the `contextId` returned by the first.
+
+> Alternatively, you can [open the agent in the kagent UI](/docs/kagent/getting-started/first-agent#testing-the-agent) and then send requests through the UI's chat interface to try to access allowed or denied domains.
 
 1. Port-forward the kagent controller.
 
@@ -281,8 +287,8 @@ When you are done, remove the resources that you created.
 3. Optionally, uninstall the agent-sandbox controller and CRDs if you no longer need sandboxed agents in this cluster.
 
    ```bash
-   kubectl delete -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v0.3.10/extensions.yaml
-   kubectl delete -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v0.3.10/manifest.yaml
+   kubectl delete -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/extensions.yaml
+   kubectl delete -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/manifest.yaml
    ```
 
 ## Next steps

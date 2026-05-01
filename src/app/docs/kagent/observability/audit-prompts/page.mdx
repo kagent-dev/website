@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Review and audit prompts used by kagent agents."
 ---
 
+import { VERSIONS } from "../../../_constants";
+
 export const metadata = {
   title: "Audit kagent prompts",
   description: "Review and audit prompts used by kagent agents.",
@@ -41,7 +43,7 @@ Kagent supports logging input/output messages for the following LLM providers:
    ```yaml
    helm upgrade --install loki loki \
    --repo https://grafana.github.io/helm-charts \
-   --version 6.24.0 \
+   --version {VERSIONS.loki} \
    --namespace telemetry \
    --create-namespace \
    --values - <<EOF
@@ -111,7 +113,7 @@ Kagent supports logging input/output messages for the following LLM providers:
    ```yaml
    helm upgrade --install tempo tempo \
    --repo https://grafana.github.io/helm-charts \
-   --version 1.16.0 \
+   --version {VERSIONS.tempo} \
    --namespace telemetry \
    --create-namespace \
    --values - <<EOF
