@@ -298,6 +298,12 @@ spec:
 
 Compaction removes older conversation events to free up space in the context window. By default, compacted events are discarded. To preserve a summary of compacted events, configure the `summarizer` field with a `modelConfig` reference. Enable compaction for agents that handle long-running conversations, call many tools with large outputs, or need to support extended interactions.
 
+## Sandboxed Agents
+
+You can run agents in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. The `SandboxAgent` spec is identical to the `Agent` spec, but the kagent controller creates an upstream [agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) workload instead of a Deployment. Sandboxed agents enforce process isolation, deny all outbound network access by default, and restrict filesystem writes to the working directory and `/tmp`. To allow outbound access to specific domains, set the `spec.sandbox.network.allowedDomains` field.
+
+For setup steps, see the [Agent Sandbox example](/docs/kagent/examples/agent-sandbox).
+
 ## Agents as Tools
 
 Kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
