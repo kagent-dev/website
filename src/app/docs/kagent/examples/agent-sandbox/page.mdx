@@ -1,0 +1,296 @@
+---
+title: "Agent Sandbox"
+pageOrder: 1
+description: "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions."
+---
+
+import { VERSIONS } from "../../../_constants";
+
+export const metadata = {
+  title: "Agent Sandbox",
+  description: "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions.",
+  author: "kagent.dev"
+};
+
+# Agent Sandbox
+
+Sandboxed agents run in isolated pods managed by the upstream [agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) project. Each sandbox enforces process isolation, denies all outbound network access by default, and restricts filesystem writes to the working directory and `/tmp`.
+
+## About
+
+When the kagent controller reconciles a `SandboxAgent`, it does the following.
+
+1. Generates an `srt-settings.json` file with the sandbox runtime configuration and mounts it into the pod.
+2. Creates an upstream `agents.x-k8s.io/v1alpha1` Sandbox resource instead of a Deployment.
+3. Delegates pod lifecycle to the agent-sandbox controller, which manages process-level isolation.
+
+The default runtime settings are:
+
+| Category | Default |
+| --- | --- |
+| Network | All outbound denied unless listed in `allowedDomains` |
+| Filesystem writes | Allowed in `.` (working directory) and `/tmp` |
+| Filesystem reads | Unrestricted |
+
+## Before you begin
+
+1. Install kagent v{VERSIONS.kagent} or later by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+2. Install the agent-sandbox controller and CRDs. The example uses version {VERSIONS.agentSandbox}.
+
+   ```bash
+   kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/manifest.yaml
+   kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/extensions.yaml
+   ```
+
+3. If you installed agent-sandbox after kagent was already running, restart the kagent controller so it registers the new Sandbox API.
+
+   ```bash
+   kubectl -n kagent rollout restart deploy/kagent-controller
+   ```
+
+## Create a sandboxed agent
+
+A `SandboxAgent` has the same spec as a regular `Agent`. The only difference is `kind: SandboxAgent`. Instead of creating a Deployment, the kagent controller creates an upstream `agents.x-k8s.io` Sandbox CR.
+
+1. Apply the following SandboxAgent resource.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: SandboxAgent
+   metadata:
+     name: sandbox-agent
+     namespace: kagent
+   spec:
+     type: Declarative
+     declarative:
+       modelConfig: default-model-config
+       systemMessage: "You are a helpful assistant running in a sandboxed environment."
+   EOF
+   ```
+
+2. Verify that the agent is accepted and ready.
+
+   ```bash
+   kubectl -n kagent get sandboxagents
+   ```
+   
+   Example output:
+
+   ```txt
+   NAME            READY   ACCEPTED
+   sandbox-agent   True    True
+   ```
+
+3. Confirm that the upstream Sandbox resource was created.
+
+   ```bash
+   kubectl -n kagent get sandboxes.agents.x-k8s.io
+   ```
+
+   Example output:
+
+   ```txt
+   NAME            AGE
+   sandbox-agent   30s
+   ```
+
+Because no `sandbox.network` is set, this agent has no outbound network access.
+
+## Configure network access
+
+By default, sandboxed agents cannot make outbound network requests. To allow access to specific domains, set `spec.sandbox.network.allowedDomains`.
+
+- Wildcards such as `*.example.com` are supported.
+- When empty or unset, all outbound access is denied.
+
+Re-apply `sandbox-agent` with `api.github.com` in the allowlist.
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: SandboxAgent
+metadata:
+  name: sandbox-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  sandbox:
+    network:
+      allowedDomains:
+        - api.github.com
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful assistant running in a sandboxed environment."
+EOF
+```
+
+## Test the sandboxed agent
+
+To verify the network allowlist enforces correctly, give the agent a way to make outbound HTTP requests. The simplest path is a [container-based skill](/docs/kagent/examples/skills) that runs `curl`, because skills give the agent a `bash` tool that runs through the `srt` sandbox runtime, and `srt` is what reads `srt-settings.json` and applies the allowlist.
+
+To invoke a sandboxed agent, you can use A2A requests or the kagent UI.
+
+### Step 1: Build a curl skill
+
+1. Create a skill directory with a `SKILL.md` file that tells the agent how to use the skill.
+
+   ```bash
+   mkdir fetch-url-skill
+   cd fetch-url-skill
+   cat > SKILL.md <<'EOF'
+   ---
+   name: fetch-url-skill
+   description: Fetch a URL using curl and return the HTTP status code. Use this when the user asks to fetch, get, or download a URL.
+   ---
+
+   # Fetch URL skill
+
+   Use this skill when the user asks you to fetch, GET, or test a URL.
+
+   ## Instructions
+
+   - Run the `bash` tool with the command `curl -sS -o /dev/null -w "HTTP %{http_code}\n" --max-time 10 <URL>` where `<URL>` is the URL the user wants to fetch.
+   - Report the exact HTTP status line back to the user, including any error message that curl prints.
+   EOF
+   ```
+
+2. Build the skill image and push it to a local registry. For full prerequisites and registry setup, see [Add skills to agents](/docs/kagent/examples/skills).
+
+   ```bash
+   cat > Dockerfile <<'EOF'
+   FROM scratch
+   COPY . /
+   EOF
+   docker build -t localhost:5000/fetch-url-skill:latest .
+   docker push localhost:5000/fetch-url-skill:latest
+   ```
+
+### Step 2: Add the skill to the SandboxAgent
+
+Re-apply `sandbox-agent` with the skill reference and an updated system message that points the agent at the skill.
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: SandboxAgent
+metadata:
+  name: sandbox-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  skills:
+    insecureSkipVerify: true
+    refs:
+      # For Kind clusters, use kind-registry:5000 instead of localhost:5000
+      - kind-registry:5000/fetch-url-skill:latest
+  sandbox:
+    network:
+      allowedDomains:
+        - api.github.com
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful assistant. When the user asks you to fetch a URL, use the fetch-url-skill. Always report back exactly what curl returned."
+EOF
+```
+
+Wait for the agent to become ready.
+
+```bash
+kubectl -n kagent get sandboxagents sandbox-agent
+```
+
+Example output:
+
+```txt
+NAME            READY   ACCEPTED
+sandbox-agent   True    True
+```
+
+### Step 3: Send requests to the sandbox A2A endpoint
+
+Send A2A JSON-RPC requests directly to the controller's `/api/a2a-sandboxes/<namespace>/<name>/` endpoint. Sandboxed agents support exactly one chat session, so the second request must reuse the `contextId` returned by the first.
+
+> Alternatively, you can [open the agent in the kagent UI](/docs/kagent/getting-started/first-agent#testing-the-agent) and then send requests through the UI's chat interface to try to access allowed or denied domains.
+
+1. Port-forward the kagent controller.
+
+   ```bash
+   kubectl -n kagent port-forward svc/kagent-controller 8083:8083
+   ```
+
+2. Send a request that hits an allowed domain. Capture the `contextId` from the response.
+
+   ```bash
+   UUID=$(uuidgen)
+   curl -sS -X POST 'http://localhost:8083/api/a2a-sandboxes/kagent/sandbox-agent/' \
+     -H 'Content-Type: application/json' \
+     -d "{\"jsonrpc\":\"2.0\",\"id\":\"$UUID\",\"method\":\"message/send\",\"params\":{\"message\":{\"role\":\"user\",\"parts\":[{\"kind\":\"text\",\"text\":\"Fetch https://api.github.com/zen and tell me exactly what curl returned\"}],\"messageId\":\"$UUID\",\"kind\":\"message\"}}}"
+   ```
+
+   The agent runs `curl https://api.github.com/zen` through `srt`, which lets the request through. Example response (truncated):
+
+   ```json
+   {
+     "result": {
+       "status": { "state": "completed" },
+       "contextId": "707433f6-6d11-4a4d-9756-b4e0b1d9203a",
+       "artifacts": [{
+         "parts": [{
+           "kind": "text",
+           "text": "The exact response from curl when fetching https://api.github.com/zen is: ..."
+         }]
+       }]
+     }
+   }
+   ```
+
+3. Send a second request with a denied domain, reusing the `contextId` from the first response.
+
+   ```bash
+   CTX="707433f6-6d11-4a4d-9756-b4e0b1d9203a"   # from previous response
+   UUID=$(uuidgen)
+   curl -sS -X POST 'http://localhost:8083/api/a2a-sandboxes/kagent/sandbox-agent/' \
+     -H 'Content-Type: application/json' \
+     -d "{\"jsonrpc\":\"2.0\",\"id\":\"$UUID\",\"method\":\"message/send\",\"params\":{\"message\":{\"role\":\"user\",\"parts\":[{\"kind\":\"text\",\"text\":\"Fetch https://example.com and tell me exactly what curl returned, including any error messages\"}],\"messageId\":\"$UUID\",\"contextId\":\"$CTX\",\"kind\":\"message\"}}}"
+   ```
+
+   The sandbox blocks the request because `example.com` is not in the allowlist. The agent reports the curl error verbatim:
+
+   ```txt
+   The exact response from curl when fetching https://example.com is:
+
+   curl: (56) CONNECT tunnel failed, response 403
+   ```
+
+   The `403` comes from `srt`'s outbound HTTPS proxy, which rejects connections to hosts outside `allowedDomains`. Add `example.com` to `spec.sandbox.network.allowedDomains` and reapply if you want to permit it.
+
+## Cleanup
+
+When you are done, remove the resources that you created.
+
+1. Delete the SandboxAgent. The kagent controller deletes the upstream Sandbox resource and pod with it.
+
+   ```bash
+   kubectl delete sandboxagent sandbox-agent -n kagent
+   ```
+
+2. Remove the skill image from your local registry and delete the skill directory.
+
+   ```bash
+   docker rmi localhost:5000/fetch-url-skill:latest
+   cd ..
+   rm -rf fetch-url-skill
+   ```
+
+3. Optionally, uninstall the agent-sandbox controller and CRDs if you no longer need sandboxed agents in this cluster.
+
+   ```bash
+   kubectl delete -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/extensions.yaml
+   kubectl delete -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/v{VERSIONS.agentSandbox}/manifest.yaml
+   ```
+
+## Next steps
+
+Continue configuring your sandboxed agent, such as with [skills](/docs/kagent/examples/skills), [tools](/docs/kagent/concepts/tools), or [human-in-the-loop](/docs/kagent/examples/human-in-the-loop) safeguards.

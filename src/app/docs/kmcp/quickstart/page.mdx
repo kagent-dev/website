@@ -4,6 +4,8 @@ sectionOrder: 20
 description: "Get started with kmcp"
 ---
 
+import { VERSIONS } from "../../../_constants";
+
 # Quickstart
 
 Install the kmcp CLI and quickly spin up your first FastMCP Python server in a Kubernetes cluster. 
@@ -106,7 +108,7 @@ With your first FastMCP Python server up and running, you can now deploy it to a
    Example output: 
    ```sh
    🚀 Deploying KMCP controller to cluster...
-   No version specified, using latest: v0.1.0
+   No version specified, using latest: v{VERSIONS.kmcp}
    Release "kmcp" does not exist. Installing it now.
    NAME: kmcp
    LAST DEPLOYED: Wed Jul 30 18:41:01 2025

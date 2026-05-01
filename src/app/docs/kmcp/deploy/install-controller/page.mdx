@@ -4,6 +4,8 @@ pageOrder: 10
 description: "Deploy the kmcp controller in a Kubernetes cluster."
 ---
 
+import { VERSIONS } from "../../../../_constants";
+
 export const metadata = {
   title: "Install the kmcp controller",
   description: "Deploy the kmcp controller in Kubernetes cluster.",
@@ -49,7 +51,7 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    Example output: 
    ```sh
    🚀 Deploying KMCP controller to cluster...
-   No version specified, using latest: v0.1.0
+   No version specified, using latest: v{VERSIONS.kmcp}
    Release "kmcp" does not exist. Installing it now.
    NAME: kmcp
    LAST DEPLOYED: Wed Jul 30 18:41:01 2025
