@@ -84,6 +84,13 @@ const posts = [
         title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
         description: 'Learn how to architect open source and enterprise AI agent meshes for 2026.',
         authorId: "michaellevan",
+    },
+    {
+        slug: 'kagent-v0-9-1-release',
+        publishDate: '2026-05-04',
+        title: "kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI",
+        description: 'kagent v0.9.1 brings AWS Bedrock support for Claude with extended thinking, REST API secret management, sidecar container support, Git-based skill configuration, and a configurable Helm runtime.',
+        authorId: 'sebastianmaniak',
     }
 ]
 
