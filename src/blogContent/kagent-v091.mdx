@@ -1,0 +1,126 @@
+export const metadata = {
+  title: "kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI",
+  publishDate: "2026-05-04T00:00:00Z",
+  description: "kagent v0.9.1 brings AWS Bedrock Claude support, sidecar containers, Git-based skill UI, REST API secrets, and configurable agent runtime to the Helm chart.",
+  author: "Sebastian Maniak",
+  authorIds: ["sebastianmaniak"],
+}
+
+# kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI
+
+**Published May 2026 | [kagent-dev/kagent](https://github.com/kagent-dev/kagent) v0.9.1**
+
+[kagent](https://kagent.dev/) has been making serious waves in the Kubernetes-native AI space. The project — a framework for building cloud-native agentic AI on top of Kubernetes — just shipped **v0.9.1**, and it's packed with features that make running AI agents in production significantly more practical.
+
+If you've been following the cloud-native AI conversation, you know the gap between "demo on my laptop" and "running agents reliably in Kubernetes" is huge. kagent bridges that gap. And v0.9.1 narrows it even further.
+
+Here's what's new.
+
+---
+
+## 1. AWS Bedrock Support for Claude Models with Extended Thinking
+
+The most impactful feature in this release: **full support for Claude models on AWS Bedrock with `top_k` sampling and extended thinking** modes.
+
+What this means:
+- You can now deploy Claude models through kagent on AWS Bedrock with fine-grained control over output quality (`top_k` parameter) and reasoning depth (extended thinking)
+- For complex reasoning tasks, extended thinking lets Claude models spend more compute on the problem — think of it as giving the model "more time to think" before responding
+- This is a game-changer for teams running AI agents on AWS who need the reliability and compliance posture that Bedrock provides
+
+The feature comes from contributor [mesutoezdil](https://github.com/mesutoezdil) and is documented in PR [#1732](https://github.com/kagent-dev/kagent/pull/1732).
+
+---
+
+## 2. Secret Creation via REST API with ModelConfig
+
+Managing model secrets used to be a CLI-only or manual process. v0.9.1 changes that with **secret creation directly through the REST API**.
+
+Now you can include secrets in your `ModelConfig` resource when making API calls. This means:
+- Fully programmatic secret management for model configurations
+- Seamless integration with CI/CD pipelines — no more manual `kubectl apply` for secrets
+- Better automation for multi-tenant agent deployments
+
+Again, credit to [supreme-gg-gg](https://github.com/supreme-gg-gg) via PR [#1781](https://github.com/kagent-dev/kagent/pull/1781).
+
+---
+
+## 3. Sidecar Container Support
+
+Kubernetes agents don't always run in isolation — you often need log shippers, service mesh proxies, or custom monitoring agents running alongside your AI agent.
+
+v0.9.1 introduces **`extraContainers` support in `SharedDeploymentSpec`**, letting you attach sidecar containers to agent deployments. This is essential for:
+- Enterprise observability (collecting agent metrics and logs alongside the AI workload)
+- Service mesh integration (linkerd, istio sidecars)
+- Custom data processing pipelines running in the same pod
+
+PR [#1724](https://github.com/kagent-dev/kagent/pull/1724) by [mesutoezdil](https://github.com/mesutoezdil).
+
+---
+
+## 4. Git-Based Skill Configuration via UI
+
+Skills are a core concept in kagent — they're the tools and capabilities your AI agents use. Previously, configuring skills from external repositories required YAML manipulation.
+
+v0.9.1 adds a **new UI for configuring skills directly from Git repositories**. This makes the workflow:
+- Visual and self-serve — no more fighting with manifests
+- Developer-friendly — point to a Git repo, configure the skill, done
+- GitOps-compatible — skills defined in code, version-controlled, auditable
+
+Built by [peterj](https://github.com/peterj) in PR [#1747](https://github.com/kagent-dev/kagent/pull/1747), with a UI cleanup follow-up in [#1764](https://github.com/kagent-dev/kagent/pull/1764).
+
+---
+
+## 5. Helm Chart — Configurable Agent Runtime
+
+The kagent Helm chart got a significant upgrade: you can now **configure the agent runtime directly through Helm values**, without patching manifests or writing custom overlays.
+
+This matters because:
+- Simplifies Helm-only deployments (no need for kustomize or manual patches)
+- Makes it easier to parameterize runtime settings across environments
+- Reduces the operational overhead of managing kagent at scale
+
+Contributed by [marcofranssen](https://github.com/marcofranssen) — and notably, this was his first contribution to the project (PR [#1697](https://github.com/kagent-dev/kagent/pull/1697)).
+
+---
+
+## Also Notable: Bug Fixes & Improvements
+
+Beyond the headline features, v0.9.1 includes a solid batch of bug fixes:
+
+- **Bubblewrap in CI** — fixed bubblewrap so it works correctly in CI environments (PR [#1736](https://github.com/kagent-dev/kagent/pull/1736))
+- **Image scan fixes** — resolved main image scan failures that were blocking security pipelines (PR [#1742](https://github.com/kagent-dev/kagent/pull/1742))
+- **CLI config defaults** — the CLI now properly honors configuration defaults (PR [#1746](https://github.com/kagent-dev/kagent/pull/1746))
+- **MCP tool call headers** — `allowedHeaders` from incoming requests are now correctly forwarded to MCP tool calls (PR [#1733](https://github.com/kagent-dev/kagent/pull/1733))
+- **OTLP exporter protocol** — the Python OTLP exporter now respects the `OTEL_EXPORTER_OTLP_PROTOCOL` environment variable instead of hardcoding gRPC (PR [#1681](https://github.com/kagent-dev/kagent/pull/1681))
+- **Structured logging** — replaced stdlib log with structured logr in the memory handler for better observability (PR [#1773](https://github.com/kagent-dev/kagent/pull/1773))
+
+---
+
+## Community Spotlight
+
+What stands out about this release is the **diverse and growing contributor base**:
+
+| Contributor | First-Time? | Notable PRs |
+|---|---|---|
+| [marcofranssen](https://github.com/marcofranssen) | ✅ First contribution | Helm runtime config, line-ending normalization |
+| [AkashKumar7902](https://github.com/AkashKumar7902) | ✅ First contribution | CLI config defaults fix |
+| [shmuelarditi](https://github.com/shmuelarditi) | ✅ First contribution | OTLP protocol fix |
+| [mesutoezdil](https://github.com/mesutoezdil) | | Bedrock Claude support, sidecar containers, multiple fixes |
+| [supreme-gg-gg](https://github.com/supreme-gg-gg) | | Secret creation via REST API |
+| [peterj](https://github.com/peterj) | | Git-based skill UI |
+
+12 contributors total. That's a healthy pace for a project that's still relatively early in its lifecycle.
+
+---
+
+## What's Next
+
+kagent is building the infrastructure layer for running AI agents at Kubernetes scale. With v0.9.1, the project is clearly moving from "experimental framework" toward "production-ready tooling."
+
+The features in this release — sidecar support, Git-based skill management, Bedrock integration, and API-driven secret management — are all signals of a project maturing toward real enterprise adoption.
+
+If you're running AI agents on Kubernetes and haven't looked at kagent yet, v0.9.1 is a good time to start.
+
+---
+
+*Want to try it? Check out the [kagent GitHub repo](https://github.com/kagent-dev/kagent) and join the [Discord](https://bit.ly/kagentdiscord).*
