@@ -94,6 +94,22 @@
           {
             "title": "Documentation Agent",
             "href": "/docs/kagent/examples/documentation"
+          },
+          {
+            "title": "Slack",
+            "href": "/docs/kagent/examples/slack-a2a"
+          },
+          {
+            "title": "Discord",
+            "href": "/docs/kagent/examples/discord-a2a"
+          },
+          {
+            "title": "Telegram",
+            "href": "/docs/kagent/examples/telegram-bot"
+          },
+          {
+            "title": "MCP Clients (Cursor, Claude)",
+            "href": "/docs/kagent/examples/agents-mcp"
           }
         ]
       },
@@ -204,28 +220,6 @@
             "href": "/docs/kagent/introduction/features#postgres-storage"
           }
         ]
-      }
-    ]
-  },
-  {
-    "title": "Channels",
-    "href": "/docs/kagent/channels",
-    "items": [
-      {
-        "title": "Slack",
-        "href": "/docs/kagent/examples/slack-a2a"
-      },
-      {
-        "title": "Discord",
-        "href": "/docs/kagent/examples/discord-a2a"
-      },
-      {
-        "title": "Telegram",
-        "href": "/docs/kagent/examples/telegram-bot"
-      },
-      {
-        "title": "MCP Clients (Cursor, Claude)",
-        "href": "/docs/kagent/examples/agents-mcp"
       }
     ]
   },
