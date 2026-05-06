@@ -31,23 +31,25 @@
     "items": [
       {
         "title": "Installing kagent",
-        "href": "/docs/kagent/introduction/installation"
-      },
-      {
-        "title": "Helm Chart Configuration",
-        "href": "/docs/kagent/resources/helm"
-      },
-      {
-        "title": "Upgrade kagent",
-        "href": "/docs/kagent/operations/upgrade"
-      },
-      {
-        "title": "Uninstall kagent",
-        "href": "/docs/kagent/operations/uninstall"
-      },
-      {
-        "title": "Operational Considerations",
-        "href": "/docs/kagent/operations/operational-considerations"
+        "href": "/docs/kagent/introduction/installation",
+        "items": [
+          {
+            "title": "Helm Chart Configuration",
+            "href": "/docs/kagent/resources/helm"
+          },
+          {
+            "title": "Upgrade kagent",
+            "href": "/docs/kagent/operations/upgrade"
+          },
+          {
+            "title": "Uninstall kagent",
+            "href": "/docs/kagent/operations/uninstall"
+          },
+          {
+            "title": "Operational Considerations",
+            "href": "/docs/kagent/operations/operational-considerations"
+          }
+        ]
       },
       {
         "title": "Agents",
@@ -150,80 +152,80 @@
         ]
       },
       {
-        "title": "Channels",
-        "href": "/docs/kagent/channels",
+        "title": "Features",
+        "href": "/docs/kagent/introduction/features",
         "items": [
           {
-            "title": "Slack",
-            "href": "/docs/kagent/examples/slack-a2a"
+            "title": "Agent Lifecycle via CRDs",
+            "href": "/docs/kagent/introduction/features#agent-lifecycle-via-crds"
           },
           {
-            "title": "Discord",
-            "href": "/docs/kagent/examples/discord-a2a"
+            "title": "Multi-runtime Support",
+            "href": "/docs/kagent/introduction/features#multi-runtime-support"
           },
           {
-            "title": "Telegram",
-            "href": "/docs/kagent/examples/telegram-bot"
+            "title": "BYO Frameworks",
+            "href": "/docs/kagent/introduction/features#byo-frameworks"
           },
           {
-            "title": "MCP Clients (Cursor, Claude)",
-            "href": "/docs/kagent/examples/agents-mcp"
+            "title": "Long-term Memory",
+            "href": "/docs/kagent/introduction/features#long-term-memory"
+          },
+          {
+            "title": "Human-in-the-loop",
+            "href": "/docs/kagent/introduction/features#human-in-the-loop"
+          },
+          {
+            "title": "Agent-to-Agent (A2A)",
+            "href": "/docs/kagent/introduction/features#agent-to-agent-a2a"
+          },
+          {
+            "title": "Skills from Git",
+            "href": "/docs/kagent/introduction/features#skills-from-git"
+          },
+          {
+            "title": "Prompt Templates",
+            "href": "/docs/kagent/introduction/features#prompt-templates"
+          },
+          {
+            "title": "Context Compaction",
+            "href": "/docs/kagent/introduction/features#context-compaction"
+          },
+          {
+            "title": "Sandbox & Security",
+            "href": "/docs/kagent/introduction/features#sandbox-and-security"
+          },
+          {
+            "title": "Full Observability",
+            "href": "/docs/kagent/introduction/features#full-observability"
+          },
+          {
+            "title": "Postgres Storage",
+            "href": "/docs/kagent/introduction/features#postgres-storage"
           }
         ]
       }
     ]
   },
   {
-    "title": "Features",
-    "href": "/docs/kagent/introduction/features",
+    "title": "Channels",
+    "href": "/docs/kagent/channels",
     "items": [
       {
-        "title": "Agent Lifecycle via CRDs",
-        "href": "/docs/kagent/introduction/features#agent-lifecycle-via-crds"
+        "title": "Slack",
+        "href": "/docs/kagent/examples/slack-a2a"
       },
       {
-        "title": "Multi-runtime Support",
-        "href": "/docs/kagent/introduction/features#multi-runtime-support"
+        "title": "Discord",
+        "href": "/docs/kagent/examples/discord-a2a"
       },
       {
-        "title": "BYO Frameworks",
-        "href": "/docs/kagent/introduction/features#byo-frameworks"
+        "title": "Telegram",
+        "href": "/docs/kagent/examples/telegram-bot"
       },
       {
-        "title": "Long-term Memory",
-        "href": "/docs/kagent/introduction/features#long-term-memory"
-      },
-      {
-        "title": "Human-in-the-loop",
-        "href": "/docs/kagent/introduction/features#human-in-the-loop"
-      },
-      {
-        "title": "Agent-to-Agent (A2A)",
-        "href": "/docs/kagent/introduction/features#agent-to-agent-a2a"
-      },
-      {
-        "title": "Skills from Git",
-        "href": "/docs/kagent/introduction/features#skills-from-git"
-      },
-      {
-        "title": "Prompt Templates",
-        "href": "/docs/kagent/introduction/features#prompt-templates"
-      },
-      {
-        "title": "Context Compaction",
-        "href": "/docs/kagent/introduction/features#context-compaction"
-      },
-      {
-        "title": "Sandbox & Security",
-        "href": "/docs/kagent/introduction/features#sandbox-and-security"
-      },
-      {
-        "title": "Full Observability",
-        "href": "/docs/kagent/introduction/features#full-observability"
-      },
-      {
-        "title": "Postgres Storage",
-        "href": "/docs/kagent/introduction/features#postgres-storage"
+        "title": "MCP Clients (Cursor, Claude)",
+        "href": "/docs/kagent/examples/agents-mcp"
       }
     ]
   },
@@ -233,8 +235,7 @@
     "items": [
       {
         "title": "Agents Registry",
-        "href": "/agents",
-        "external": true
+        "href": "/agents"
       }
     ]
   },
@@ -244,8 +245,7 @@
     "items": [
       {
         "title": "Tools Registry",
-        "href": "/tools",
-        "external": true
+        "href": "/tools"
       }
     ]
   },

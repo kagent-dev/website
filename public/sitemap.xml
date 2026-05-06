@@ -22,6 +22,13 @@
     </url>
     
     <url>
+        <loc>https://kagent.dev/docs/kagent/channels</loc>
+        <lastmod>2026-05-06</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://kagent.dev/docs/kagent/concepts/agent-memory</loc>
         <lastmod>2026-05-06</lastmod>
         <changefreq>weekly</changefreq>
@@ -492,6 +499,13 @@
     
     <url>
         <loc>https://kagent.dev/docs/kagent/supported-providers</loc>
+        <lastmod>2026-05-06</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
+        <loc>https://kagent.dev/docs/kagent/supported-providers/xai</loc>
         <lastmod>2026-05-06</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
