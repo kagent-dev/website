@@ -1,0 +1,45 @@
+---
+title: "Chat Channels"
+sectionOrder: 3
+description: "Connect kagent to the chat platforms your team already uses — Slack, Discord, Telegram, or MCP-compatible clients."
+---
+
+export const metadata = {
+  title: "Chat Channels",
+  description: "Connect kagent to the chat platforms your team already uses — Slack, Discord, Telegram, or MCP-compatible clients.",
+  author: "kagent.dev"
+};
+
+import QuickLink from '@/components/quick-link';
+
+# Chat Channels
+
+kagent can talk to your team on the chat platforms you already use. Each channel connects to your agents via the [A2A (Agent-to-Agent) protocol](/docs/kagent/examples/a2a-agents), so your agents respond directly in conversation threads.
+
+Text is supported on every channel. Rich formatting, media attachments, and interactive elements vary by platform.
+
+## Supported channels
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+<QuickLink title="Slack" description="Create a Slack bot that routes messages to kagent agents via A2A. Supports threads, rich formatting, and multi-channel routing." href="/docs/kagent/examples/slack-a2a" />
+<QuickLink title="Discord" description="Deploy a Discord bot that connects server channels to kagent agents. Supports slash commands and threaded replies." href="/docs/kagent/examples/discord-a2a" />
+<QuickLink title="Telegram" description="Build a Telegram bot that talks to your Kubernetes cluster through kagent. Supports inline keyboards and media replies." href="/docs/kagent/examples/telegram-bot" />
+<QuickLink title="MCP Clients (Cursor, Claude)" description="Connect MCP-compatible clients like Cursor and Claude Code directly to kagent agents running in your cluster." href="/docs/kagent/examples/agents-mcp" />
+</div>
+
+## How it works
+
+Every chat channel follows the same pattern:
+
+1. A lightweight bot or connector runs alongside your cluster (or externally)
+2. Incoming messages are forwarded to kagent agents via the A2A protocol
+3. Agents process the request using their configured tools and LLM
+4. Responses flow back through the same channel to the user
+
+Because channels use A2A, any agent you build works on any channel — no per-platform agent code required.
+
+## Delivery notes
+
+- **Slack** multi-person DMs route as group chats. Group policy, mention behavior, and session rules apply to MPIM conversations.
+- **Telegram** replies that contain markdown image syntax are converted into media replies on the outbound path when the bot supports it.
+- **MCP clients** connect directly to agent endpoints. No bot middleware is needed — the client speaks MCP natively.

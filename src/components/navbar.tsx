@@ -18,8 +18,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const [stars, setStars] = useState<string>('');
   const [version, setVersion] = useState<string>('');
-  const isDocsPage = pathname.startsWith('/docs/');
-
   useEffect(() => {
     fetch('https://api.github.com/repos/kagent-dev/kagent')
       .then(r => r.json())
@@ -49,19 +47,17 @@ export default function Navbar() {
           <KagentLogoWithText className="h-5" />
         </Link>
 
-        {!isDocsPage && (
-          <div className="navbar-site-links">
-            {SITE_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`navbar-site-link ${isActive(link.href) ? 'navbar-site-link-active' : ''}`}
-              >
-                {link.title}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="navbar-site-links">
+          {SITE_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`navbar-site-link ${isActive(link.href) ? 'navbar-site-link-active' : ''}`}
+            >
+              {link.title}
+            </Link>
+          ))}
+        </div>
 
         <div className="navbar-right">
           <DocSearch

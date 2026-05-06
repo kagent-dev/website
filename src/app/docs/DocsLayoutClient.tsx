@@ -80,7 +80,7 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
               <Link
                 key={section.title}
                 href={section.href}
-                className={`docs-section-tab ${isActive(section.href) ? 'docs-section-tab-active' : ''}`}
+                className={`docs-section-tab ${sectionContainsPage(section) ? 'docs-section-tab-active' : ''}`}
               >
                 {section.title}
               </Link>

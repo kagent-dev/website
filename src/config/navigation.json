@@ -53,7 +53,7 @@
   },
   {
     "title": "Channels",
-    "href": "/docs/kagent/examples/slack-a2a",
+    "href": "/docs/kagent/channels",
     "items": [
       {
         "title": "Slack",
@@ -210,6 +210,10 @@
         "href": "/docs/kagent/supported-providers/ollama"
       },
       {
+        "title": "xAI (Grok)",
+        "href": "/docs/kagent/supported-providers/xai"
+      },
+      {
         "title": "BYO OpenAI-Compatible",
         "href": "/docs/kagent/supported-providers/byo-openai"
       }
@@ -328,16 +332,6 @@
         "title": "Contributing",
         "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md",
         "external": true
-      }
-    ]
-  },
-  {
-    "title": "Blog",
-    "href": "/blog",
-    "items": [
-      {
-        "title": "All Posts",
-        "href": "/blog"
       }
     ]
   }

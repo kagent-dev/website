@@ -207,7 +207,7 @@ export default function RedesignPage() {
       <section className="rd-hero">
         <div className="rd-hero-wash" />
         <div className="rd-container rd-hero-inner">
-          <div className="rv" style={{ textAlign: 'center', maxWidth: 880, margin: '0 auto' }}>
+          <div className="rv rd-hero-text">
             <span className="rd-eyebrow">Kubernetes-native agent runtime</span>
             <h1 className="rd-hero-h1">
               Bring AI agents to <span className="rd-grad">every cluster you run</span>
@@ -230,11 +230,7 @@ export default function RedesignPage() {
             <div className="rd-hero-meta">
               <span>CNCF Sandbox</span>
               <span className="rd-dot" />
-              <span>Apache 2.0</span>
-              <span className="rd-dot" />
               <span>Works with any LLM</span>
-              <span className="rd-dot" />
-              <span>One-line install</span>
             </div>
           </div>
 
@@ -305,7 +301,7 @@ export default function RedesignPage() {
               ['plug', 'Bring your own everything', 'Any LLM, any framework, any tool. Native MCP, A2A, and OpenAI-compatible endpoints — no lock-in, no rewrites.'],
               ['eye', 'Observable by default', 'OpenTelemetry traces, Prometheus metrics, structured logs. See every prompt, every tool call, every token.'],
               ['shield', 'Zero-trust ready', 'Run on top of Istio or Ambient Mesh. mTLS, fine-grained RBAC, and policy-driven egress for agent traffic.'],
-              ['bolt', 'One-line install', 'helm install kagent. That\'s it. No new control plane, no separate database. Runs on any conformant cluster.'],
+              ['shield', 'NVIDIA NemoClaw', 'Built-in security and privacy guardrails via NVIDIA NemoClaw. Run Nemotron locally or route to cloud models — with policy enforcement on every call.'],
               ['book', 'Standards-based', 'Native MCP, A2A, OpenTelemetry, and Kubernetes APIs. No proprietary glue, no rewrite tax later.'],
             ].map(([icon, title, body], i) => (
               <div key={i} className="rd-value-card rv">
@@ -364,9 +360,9 @@ export default function RedesignPage() {
                   { name: 'xAI', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="#000"><path d="M16.99 6.01L17.1 22h2.45l.12-18.37zM17.01 2.4l-3.68 0L6.29 12.05l1.84 2.6zm-9.82 19.6h3.68l1.84-2.6-1.84-2.6zM2.44 6.01L10.3 22h3.68L6.12 6.01z"/></svg> },
                   { name: 'Google Gemini', icon: <svg viewBox="0 0 28 28" width="20" height="20"><path d="M14 0C14 7.73 7.73 14 0 14c7.73 0 14 6.27 14 14 0-7.73 6.27-14 14-14-7.73 0-14-6.27-14-14z" fill="#4796E3"/></svg> },
                   { name: 'Azure OpenAI', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="#0078D4"><path d="M22.379 23.343a1.62 1.62 0 0 0 1.536-2.14L17.35 1.76A1.62 1.62 0 0 0 15.816.657H8.184A1.62 1.62 0 0 0 6.65 1.76L.086 21.204a1.62 1.62 0 0 0 1.536 2.139h4.741a1.62 1.62 0 0 0 1.535-1.103l.977-2.892 4.947 3.675c.28.208.618.32.966.32m-3.084-12.531 3.624 10.739a.54.54 0 0 1-.51.713h-.03a.54.54 0 0 1-.322-.106l-9.287-6.9h4.853m6.313 7.006a1.6 1.6 0 0 0 .007-1.058L9.79 1.76a2 2 0 0 0-.007-.02h6.034a.54.54 0 0 1 .512.366l6.562 19.445a.54.54 0 0 1-.338.684"/></svg> },
-                  { name: 'AWS Bedrock', icon: <svg viewBox="0 0 24 24" width="20" height="20"><path d="M2.4 7.4l9.6-5.5 9.6 5.5v11L12 23.9 2.4 18.4v-11z" fill="none" stroke="#FF9900" strokeWidth="1.5"/><text x="12" y="15" textAnchor="middle" fontSize="7" fontWeight="700" fill="#232F3E" fontFamily="sans-serif">aws</text></svg> },
+                  { name: 'AWS', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M8.1 13.7c0 .3.03.5.08.65.06.15.13.32.22.5.04.06.05.12.05.17 0 .07-.04.15-.14.22l-.46.3c-.07.04-.13.06-.19.06-.07 0-.15-.04-.22-.1a2.3 2.3 0 0 1-.26-.34 5.3 5.3 0 0 1-.22-.43c-.57.67-1.28 1-2.14 1-.61 0-1.1-.17-1.46-.52-.36-.35-.54-.82-.54-1.4 0-.62.22-1.12.66-1.5.44-.39 1.03-.58 1.78-.58.24 0 .5.02.77.06.27.04.55.1.84.17v-.53c0-.55-.12-.94-.34-1.17-.23-.23-.63-.35-1.19-.35-.26 0-.52.03-.79.1a5.8 5.8 0 0 0-.78.25l-.12.04c-.05.02-.09.03-.11.03-.1 0-.15-.07-.15-.22v-.36c0-.12.01-.2.05-.26a.5.5 0 0 1 .21-.14c.26-.13.56-.24.92-.33a4.4 4.4 0 0 1 1.14-.14c.85 0 1.48.19 1.88.58.39.39.6.97.6 1.77v2.33zm-2.96 1.1c.24 0 .49-.05.75-.14.26-.09.5-.25.69-.47.12-.14.2-.29.26-.46.05-.18.08-.39.08-.63v-.31c-.22-.05-.45-.1-.67-.13a5.5 5.5 0 0 0-.68-.04c-.49 0-.85.1-1.09.29-.24.2-.36.47-.36.84 0 .34.09.6.27.77.17.18.43.27.75.28zm5.86.8c-.13 0-.22-.03-.27-.08-.05-.04-.1-.14-.14-.27l-1.54-5.07a1.3 1.3 0 0 1-.07-.27c0-.11.05-.17.16-.17h.72c.14 0 .23.03.28.08.05.04.09.14.13.27l1.1 4.33 1.02-4.33c.04-.14.07-.23.13-.27.05-.04.16-.08.29-.08h.58c.14 0 .23.03.28.08.05.04.1.14.13.27l1.03 4.39 1.13-4.39c.04-.14.09-.23.13-.27.06-.04.15-.08.28-.08h.68c.11 0 .17.05.17.17 0 .03-.01.07-.02.12a1 1 0 0 1-.05.16l-1.58 5.07c-.04.14-.09.23-.14.27-.05.04-.15.08-.27.08h-.63c-.14 0-.23-.03-.28-.08-.05-.05-.1-.14-.13-.27l-1.01-4.22-1 4.21c-.04.14-.08.23-.13.28-.05.05-.15.08-.28.08h-.63zm9.36.24c-.37 0-.74-.04-1.1-.13-.36-.09-.64-.18-.84-.29-.12-.07-.2-.14-.23-.21a.53.53 0 0 1-.04-.2v-.37c0-.15.06-.22.17-.22.04 0 .09.01.13.02l.17.07c.24.1.5.19.78.25.29.06.56.09.85.09.45 0 .8-.08 1.03-.24.24-.16.36-.4.36-.7 0-.2-.07-.38-.2-.52-.14-.15-.4-.28-.77-.4l-1.1-.34c-.56-.17-.97-.43-1.22-.77a1.8 1.8 0 0 1-.37-1.08c0-.31.07-.58.21-.82.14-.24.33-.44.57-.6.24-.16.51-.28.82-.36.31-.08.63-.12.98-.12.17 0 .35.01.53.03.18.03.35.06.51.1.16.04.31.08.45.13.14.05.25.1.33.15a.7.7 0 0 1 .21.18c.04.06.05.13.05.22v.34c0 .15-.06.22-.17.22a.8.8 0 0 1-.27-.08c-.37-.17-.78-.25-1.24-.25-.4 0-.72.07-.93.21-.22.14-.33.36-.33.66 0 .21.07.39.22.53.15.14.44.28.85.41l1.07.34c.55.17.95.41 1.18.72.24.3.35.65.35 1.04 0 .32-.07.6-.2.87-.14.26-.33.49-.57.68-.24.19-.53.33-.87.43-.36.11-.73.16-1.13.16z" fill="#232F3E"/><path d="M20.6 17.15c-1.48 1.03-3.63 1.58-5.48 1.58-2.6 0-4.93-.96-6.7-2.56-.14-.13-.01-.3.16-.2 1.91 1.11 4.27 1.78 6.71 1.78 1.64 0 3.45-.34 5.11-1.06.25-.1.46.17.2.46z" fill="#FF9900"/><path d="M21.14 16.51c-.19-.24-1.26-.12-1.74-.06-.15.02-.17-.11-.04-.2.85-.6 2.25-.43 2.41-.23.17.21-.04 1.62-.85 2.3-.12.1-.24.05-.18-.08.18-.45.59-1.48.4-1.73z" fill="#FF9900"/></svg> },
                   { name: 'Vertex AI', icon: <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" fill="#4285F4"/><path d="M12 6l-5 9h3l2-3.5L14 15h3L12 6z" fill="#fff"/></svg> },
-                  { name: 'Ollama', icon: <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="10" r="6" fill="none" stroke="#1F2937" strokeWidth="1.8"/><circle cx="9.5" cy="9" r="1" fill="#1F2937"/><circle cx="14.5" cy="9" r="1" fill="#1F2937"/><path d="M9.5 12.5s1 1.5 2.5 1.5 2.5-1.5 2.5-1.5" fill="none" stroke="#1F2937" strokeWidth="1.2" strokeLinecap="round"/><path d="M7 17c-1.5 1-2.5 2.5-2.5 4h15c0-1.5-1-3-2.5-4" fill="none" stroke="#1F2937" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+                  { name: 'Ollama', icon: <svg viewBox="0 0 17 25" width="16" height="22" fill="black"><path fillRule="evenodd" clipRule="evenodd" d="M4.405.102C4.621.199 4.816.358 4.993.568c.295.347.544.845.734 1.435.191.593.315 1.25.362 1.909a4.8 4.8 0 0 1 2.049-.723l.051-.005a3.8 3.8 0 0 1 2.48.539c.101.06.2.125.297.193.05-.647.172-1.289.36-1.868.19-.591.439-1.087.733-1.436.164-.202.365-.361.589-.466.257-.114.53-.134.796-.048.401.13.745.418 1.016.837.248.383.434.874.561 1.463.23 1.061.27 2.458.115 4.142l.053.045.026.022c.757.654 1.284 1.587 1.563 2.67.435 1.69.216 3.585-.534 4.646l-.018.023.002.004c.417.866.67 1.78.724 2.727l.002.034c.064 1.21-.2 2.428-.814 3.625l-.007.011.01.028a10.2 10.2 0 0 1 .438 3.961l-.006.044a.53.53 0 0 1-.263.48.47.47 0 0 1-.484-.029.5.5 0 0 1-.238-.195.55.55 0 0 1-.106-.261.6.6 0 0 1-.01-.287c.167-1.174.01-2.351-.48-3.549a.6.6 0 0 1-.06-.356.6.6 0 0 1 .1-.345l.003-.007c.605-1.05.855-2.08.801-3.091-.046-.885-.325-1.755-.8-2.583a.55.55 0 0 1-.092-.545.47.47 0 0 1 .272-.393l.009-.007c.243-.18.467-.642.58-1.272a5.3 5.3 0 0 0-.095-2.243c-.205-.796-.58-1.459-1.105-1.913-.595-.516-1.383-.765-2.38-.693a.46.46 0 0 1-.373-.1.5.5 0 0 1-.26-.321c-.313-.756-.771-1.297-1.342-1.632a2.6 2.6 0 0 0-1.772-.377c-1.245.112-2.343.91-2.67 1.916a.5.5 0 0 1-.239.35.44.44 0 0 1-.371.133c-1.067.002-1.893.286-2.497.799-.522.443-.878 1.062-1.066 1.804a5.3 5.3 0 0 0-.068 2.143c.112.634.33 1.16.581 1.442l.008.008a.54.54 0 0 1 .109.892c-.36.707-.629 1.76-.673 2.773-.05 1.157.186 2.161.719 2.882l.016.021a.56.56 0 0 1 .095.377.56.56 0 0 1-.054.408c-.576 1.404-.753 2.559-.564 3.468a.55.55 0 0 1-.09.549.46.46 0 0 1-.4.223.44.44 0 0 1-.485-.086.55.55 0 0 1-.295-.446C.165 23.248.33 21.923.881 20.43l.014-.04-.008-.014a6 6 0 0 1-.598-1.487l-.005-.022a6.7 6.7 0 0 1-.177-2.028c.044-1.034.278-2.093.622-2.943l.012-.03-.002-.002c-.293-.475-.51-1.083-.63-1.756l-.005-.027A6.5 6.5 0 0 1 .197 9.252c.262-1.04.777-1.933 1.536-2.578.06-.051.123-.102.186-.15C1.76 4.827 1.8 3.421 2.031 2.353 2.158 1.765 2.345 1.274 2.593.89c.27-.418.614-.707 1.015-.837.266-.086.54-.066.797.049M8.521 10.432c.936 0 1.8.355 2.446.971.63.599 1.005 1.404 1.005 2.205 0 1.009-.406 1.795-1.133 2.297-.62.426-1.451.633-2.403.633-.837 0-1.775-.132-2.397-.672a3.01 3.01 0 0 1-.963-1.716v-.372c0-.804.398-1.61 1.056-2.212.668-.61 1.55-.964 2.485-.964zm0 1.018a2.5 2.5 0 0 0-1.916.739c-.461.42-.722.949-.722 1.42 0 .486.21.942.61 1.288.455.394 1.124.623 1.943.623.799 0 1.473-.167 1.932-.484.463-.318.7-.78.7-1.43 0-.48-.246-1.011-.683-1.427a2.4 2.4 0 0 0-1.864-.73zM9.183 12.825l.004.004a.44.44 0 0 1-.056.557l-.292.261v.507a.47.47 0 0 1-.112.3.38.38 0 0 1-.265.124.38.38 0 0 1-.265-.124.47.47 0 0 1-.112-.3v-.523l-.271-.248a.44.44 0 0 1-.072-.557.35.35 0 0 1 .312-.144.35.35 0 0 1 .258.086l.215.196.22-.198a.35.35 0 0 1 .255-.084.35.35 0 0 1 .235.143zM4.143 10.644c.478 0 .867.443.867.99a.99.99 0 0 1-.254.7.77.77 0 0 1-.614.29.77.77 0 0 1-.613-.291.99.99 0 0 1-.254-.699c0-.262.091-.513.253-.7a.77.77 0 0 1 .615-.29zm8.706 0c.48 0 .868.443.868.99a.99.99 0 0 1-.254.7.77.77 0 0 1-.614.29.77.77 0 0 1-.613-.291.99.99 0 0 1-.254-.699c0-.262.091-.513.253-.7a.77.77 0 0 1 .614-.29zM3.94 1.477l-.003.002a.54.54 0 0 0-.288.271l-.005.007c-.138.215-.258.531-.348.946-.17.786-.216 1.853-.124 3.161.43-.145.899-.236 1.404-.27l.01-.001.019-.039c.046-.093.095-.183.148-.271.123-.876.022-1.923-.253-2.778-.134-.414-.297-.739-.453-.924a.7.7 0 0 0-.107-.103zm9.174.046-.002.001a.7.7 0 0 0-.107.102c-.156.186-.32.511-.453.926-.29.902-.387 2.018-.23 2.923l.058.11.008.016h.03c.496 0 .99.081 1.466.241.086-1.277.034-2.322-.132-3.093-.09-.415-.21-.731-.349-.946l-.004-.007a.54.54 0 0 0-.285-.273z"/></svg> },
                   { name: 'NVIDIA', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="#76B900"><path d="M8.948 8.798v-.718c.044-3.39 2.865-6.16 6.293-6.38h.326c2.489.1 4.678 1.394 5.878 3.427l-1.63 1.072a4.97 4.97 0 0 0-4.308-2.47h-.2c-2.675.137-4.81 2.313-4.87 4.937v.132zm0 6.404v.718c.044 3.39 2.865 6.16 6.293 6.38h.326c2.489-.1 4.678-1.394 5.878-3.427l-1.63-1.072a4.97 4.97 0 0 1-4.308 2.47h-.2c-2.675-.137-4.81-2.313-4.87-4.937v-.132zM2.8 9.072v5.856h2.47v-5.856zm3.832 0L9.37 12l-2.738 2.928h2.2l1.63-1.94 1.63 1.94h2.2L11.554 12l2.738-2.928h-2.2l-1.63 1.94-1.63-1.94zm8.492 0v5.856h1.986l1.222-3.524 1.222 3.524h1.986l1.66-5.856h-1.918l-.95 3.524-1.222-3.524h-1.636l-1.222 3.524-.95-3.524z"/></svg> },
                   { name: 'Hugging Face', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="#FFD21E"><path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1M8.863 7.207c.618-.337 1.338-.193 1.807.088.39.233.675.586.822.86a.29.29 0 0 1-.127.39.29.29 0 0 1-.39-.128c-.105-.196-.323-.462-.614-.636-.342-.204-.8-.3-1.2-.082-.626.341-.73 1.205-.727 1.728 0 .262.026.487.05.625a.29.29 0 0 1-.236.335.29.29 0 0 1-.335-.236 6 6 0 0 1-.055-.696c-.003-.59.098-1.678.905-2.248m7.503 2.248a6 6 0 0 0-.055-.696.29.29 0 0 0-.335-.236.29.29 0 0 0-.236.335c.024.138.05.363.05.625.004.524-.1 1.387-.726 1.728-.4.219-.859.122-1.2-.082-.292-.174-.51-.44-.615-.636a.29.29 0 0 0-.39-.127.29.29 0 0 0-.127.389c.147.274.431.627.822.86.469.281 1.189.425 1.807.088.807-.57.908-1.658.905-2.248M7.32 13.286c.086-.09.231-.092.32-.007.865.832 2.094 1.386 3.464 1.504.2.006.382.008.544.004a8.7 8.7 0 0 0 3.907-1.46.226.226 0 0 1 .316.057.23.23 0 0 1-.057.316 9.15 9.15 0 0 1-4.12 1.538c-.176.005-.37.003-.582-.003-1.49-.129-2.83-.73-3.787-1.65a.23.23 0 0 1-.006-.3m1.632 2.016c.32-.113.983-.241 1.756-.116.773.126 1.283.469 1.475.652a.226.226 0 0 1-.003.32.226.226 0 0 1-.32-.003c-.126-.12-.552-.406-1.2-.511-.648-.106-1.225-.001-1.478.088a.226.226 0 0 1-.29-.14.226.226 0 0 1 .06-.29m4.796-.116c.773-.125 1.437.003 1.756.116a.226.226 0 0 1 .14.29.226.226 0 0 1-.29.14c-.253-.09-.83-.194-1.478-.088-.648.105-1.074.39-1.2.511a.226.226 0 0 1-.32.003.226.226 0 0 1-.003-.32c.192-.183.702-.526 1.475-.652z"/></svg> },
                 ]},
@@ -402,6 +398,11 @@ export default function RedesignPage() {
                   { name: 'OpenTelemetry', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><circle cx="17" cy="17" r="2.5" stroke="#F5A800" strokeWidth="2"/><path d="M7 7l7 7" stroke="#425CC7" strokeWidth="2.5" strokeLinecap="round"/><path d="M4 10l3-3 3 3" stroke="#425CC7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
                   { name: 'Grafana', icon: <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#F15B2A"/><circle cx="12" cy="12" r="5" fill="#F9C322"/><circle cx="12" cy="12" r="2.5" fill="#F15B2A"/></svg> },
                   { name: 'GitHub Actions', icon: <svg viewBox="0 0 24 24" width="20" height="20" fill="#24292F"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg> },
+                  { name: 'Langfuse', icon: <svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="4" fill="#0F172A"/><path d="M7 17V7h2v8h5v2H7z" fill="#fff"/></svg> },
+                  { name: 'GKE', icon: <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" fill="#4285F4"/><path d="M12 8l3.5 2v4L12 16l-3.5-2v-4L12 8z" fill="#fff"/></svg> },
+                  { name: 'EKS', icon: <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" fill="#FF9900"/><path d="M12 8l3.5 2v4L12 16l-3.5-2v-4L12 8z" fill="#fff"/></svg> },
+                  { name: 'AKS', icon: <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" fill="#0078D4"/><path d="M12 8l3.5 2v4L12 16l-3.5-2v-4L12 8z" fill="#fff"/></svg> },
+                  { name: 'OCI', icon: <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" fill="#C74634"/><path d="M12 8l3.5 2v4L12 16l-3.5-2v-4L12 8z" fill="#fff"/></svg> },
                 ]},
               ].map((row, ri) => (
                 <div key={ri} className="rd-marquee-row">
@@ -529,11 +530,11 @@ export default function RedesignPage() {
       <section className="rd-editions" id="editions">
         <div className="rd-container">
           <div className="rd-section-head rv">
-            <span className="rd-eyebrow">Open core, enterprise ready</span>
-            <h2>Start free. Scale without rewriting.</h2>
-            <p>kagent is open source forever. When you&apos;re ready for production-grade operations, Solo.io has the enterprise edition with the same APIs.</p>
+            <span className="rd-eyebrow">Fully open source</span>
+            <h2>Everything included. No paywall.</h2>
+            <p>kagent is open source forever. Every feature ships in the community edition — no enterprise tier required.</p>
           </div>
-          <div className="rd-ed-grid">
+          <div className="rd-ed-grid" style={{ maxWidth: 640, margin: '0 auto' }}>
             <div className="rd-ed-card rd-ed-os rv">
               <div className="rd-ed-tag">OPEN SOURCE · APACHE 2.0</div>
               <h3>kagent</h3>
@@ -544,6 +545,8 @@ export default function RedesignPage() {
                   'Native MCP and A2A support',
                   'OpenTelemetry tracing + Prometheus metrics',
                   'CLI, dashboard, and Helm chart',
+                  'NemoClaw support',
+                  'Chat channels — Slack, Discord, Telegram, WhatsApp',
                   'Community support via Discord',
                 ].map((t, i) => <li key={i}><Icon name="check" size={16} />{t}</li>)}
               </ul>
@@ -551,27 +554,6 @@ export default function RedesignPage() {
                 <Link href={GITHUB_LINK} className="rd-btn rd-btn--ghost" target="_blank" rel="noopener noreferrer">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
                   Star on GitHub
-                </Link>
-              </div>
-            </div>
-
-            <div className="rd-ed-card rd-ed-ent rv">
-              <div className="rd-ed-tag">ENTERPRISE BY SOLO.IO</div>
-              <h3>kagent Enterprise</h3>
-              <p className="rd-ed-sub">Everything in the OSS edition, plus what platform teams need to run agents in regulated production.</p>
-              <ul className="rd-ed-list">
-                {[
-                  'Global policy + admission controls',
-                  'Hardened mTLS with Istio Ambient Mesh',
-                  'SOC 2 audit logging + SSO/SCIM',
-                  'Hardened images with FIPS + CVE SLA',
-                  '24/7 support with founding-team experts',
-                ].map((t, i) => <li key={i}><Icon name="check" size={16} />{t}</li>)}
-              </ul>
-              <div className="rd-ed-cta">
-                <Link href="/enterprise" className="rd-btn rd-btn--purple">
-                  Talk to sales
-                  <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
                 </Link>
               </div>
             </div>

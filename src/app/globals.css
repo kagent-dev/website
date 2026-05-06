@@ -229,7 +229,7 @@
 .rd-shell h3 { font-size: 22px; line-height: 1.3; letter-spacing: -0.01em; }
 .rd-shell h4 { font-size: 17px; line-height: 1.35; }
 .rd-shell p { margin: 0; color: #3F4458; text-wrap: pretty; }
-.rd-lead { font-size: 19px; line-height: 1.55; color: #3F4458; max-width: 680px; margin: 24px auto 0; text-align: center; }
+.rd-lead { font-size: 19px; line-height: 1.55; color: #3F4458; max-width: 880px; margin-left: auto !important; margin-right: auto !important; margin-top: 24px; text-align: center !important; display: block; }
 
 /* ---- Buttons ---- */
 .rd-btn {
@@ -247,7 +247,7 @@
   transition: all 200ms cubic-bezier(.2,.6,.2,1);
   white-space: nowrap;
 }
-.rd-btn--purple { background: #8A3FFC; color: #fff; }
+.rd-btn--purple { background: #8A3FFC; color: #fff !important; text-decoration: none; }
 .rd-btn--purple:hover { background: #9C55FF; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(138,63,252,0.35); }
 .rd-btn--ghost { background: transparent; color: #151927; border-color: #E1DEEC; }
 .rd-btn--ghost:hover { background: #FAFAFB; border-color: #CFCAE0; }
@@ -279,6 +279,7 @@
   z-index: 0;
 }
 .rd-hero-inner { position: relative; z-index: 1; }
+.rd-hero-text { max-width: 880px; margin-left: auto !important; margin-right: auto !important; text-align: center !important; }
 .rd-hero-h1 { margin-top: 24px; text-align: center; }
 .rd-grad {
   background: linear-gradient(120deg, #8A3FFC 0%, #5B21B6 100%);
@@ -568,8 +569,8 @@
 /* ---- Editions ---- */
 .rd-editions { padding: 120px 0; }
 .rd-ed-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  justify-content: center;
   gap: 20px;
 }
 .rd-ed-card {
@@ -769,6 +770,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-left: auto;
+  margin-right: 24px;
 }
 .navbar-site-link {
   display: flex;
@@ -876,6 +879,7 @@
 .docs-section-bar-inner {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   max-width: 80rem;
   margin: 0 auto;

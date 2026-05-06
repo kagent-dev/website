@@ -153,6 +153,36 @@ const CommunityPage = () => {
     }, 500);
   };
 
+  const [stars, setStars] = useState<string>('');
+  const [downloads, setDownloads] = useState<string>('');
+  const [contributors, setContributors] = useState<string>('');
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/kagent-dev/kagent')
+      .then(r => r.json())
+      .then(d => {
+        if (typeof d.stargazers_count === 'number') {
+          setStars(d.stargazers_count.toLocaleString());
+        }
+        if (typeof d.forks_count === 'number') {
+          setContributors(d.forks_count.toLocaleString());
+        }
+      })
+      .catch(() => {});
+
+    fetch('https://api.github.com/repos/kagent-dev/kagent/releases')
+      .then(r => r.json())
+      .then(releases => {
+        if (!Array.isArray(releases)) return;
+        const total = releases.reduce((sum: number, r: { assets?: { download_count: number }[] }) =>
+          sum + (r.assets || []).reduce((s: number, a: { download_count: number }) => s + a.download_count, 0), 0);
+        if (total > 0) {
+          setDownloads(total.toLocaleString());
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const today = new Date();
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth();
@@ -428,8 +458,43 @@ const CommunityPage = () => {
           </motion.section>
         )}
 
+        {/* Community Stats */}
+        {(stars || downloads || contributors) && (
+          <motion.section
+            className="mb-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+          >
+            <div className="flex items-center gap-2 mb-8">
+              <Github className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-medium">Project Stats</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {stars && (
+                <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="rounded-lg border bg-card p-6 shadow-sm text-center hover:border-primary/50 transition-colors">
+                  <div className="text-3xl font-bold text-primary mb-1">{stars}</div>
+                  <div className="text-sm text-muted-foreground">GitHub Stars</div>
+                </Link>
+              )}
+              {downloads && (
+                <Link href={`${GITHUB_LINK}/releases`} target="_blank" rel="noopener noreferrer" className="rounded-lg border bg-card p-6 shadow-sm text-center hover:border-primary/50 transition-colors">
+                  <div className="text-3xl font-bold text-primary mb-1">{downloads}</div>
+                  <div className="text-sm text-muted-foreground">Downloads</div>
+                </Link>
+              )}
+              {contributors && (
+                <Link href={`${GITHUB_LINK}/network/members`} target="_blank" rel="noopener noreferrer" className="rounded-lg border bg-card p-6 shadow-sm text-center hover:border-primary/50 transition-colors col-span-2 md:col-span-1">
+                  <div className="text-3xl font-bold text-primary mb-1">{contributors}</div>
+                  <div className="text-sm text-muted-foreground">Forks</div>
+                </Link>
+              )}
+            </div>
+          </motion.section>
+        )}
+
         {/* Get Involved Section */}
-        <motion.section 
+        <motion.section
           className="mb-20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
