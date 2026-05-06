@@ -160,6 +160,14 @@
           {
             "title": "Manage Secrets",
             "href": "/docs/kmcp/secrets"
+          },
+          {
+            "title": "OpenClaw",
+            "href": "/docs/kagent/tools/openclaw"
+          },
+          {
+            "title": "NemoClaw",
+            "href": "/docs/kagent/tools/nemoclaw"
           }
         ]
       },
@@ -186,6 +194,28 @@
       {
         "title": "Overview",
         "href": "/docs/kagent/channels"
+      },
+      {
+        "title": "Messaging",
+        "href": "/docs/kagent/channels/messaging/slack",
+        "items": [
+          {
+            "title": "Slack",
+            "href": "/docs/kagent/channels/messaging/slack"
+          },
+          {
+            "title": "Discord",
+            "href": "/docs/kagent/channels/messaging/discord"
+          },
+          {
+            "title": "Telegram",
+            "href": "/docs/kagent/channels/messaging/telegram"
+          },
+          {
+            "title": "WhatsApp",
+            "href": "/docs/kagent/channels/messaging/whatsapp"
+          }
+        ]
       }
     ]
   },
