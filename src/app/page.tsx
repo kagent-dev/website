@@ -324,31 +324,31 @@ export default function RedesignPage() {
 
               <div className="rd-float-chip rd-float-l">
                 <div className="rd-chip-icon" style={{ background: '#F4EEFE', color: '#8A3FFC' }}>
-                  <Icon name="sparkles" size={16} />
+                  <Icon name="workflow" size={16} />
                 </div>
                 <div>
-                  <div className="rd-chip-label">12 agents healthy</div>
-                  <div className="rd-chip-sub">Auto-scaled · 0 errors</div>
+                  <div className="rd-chip-label">Agents as CRDs</div>
+                  <div className="rd-chip-sub">GitOps · kubectl · RBAC</div>
                 </div>
               </div>
 
               <div className="rd-float-chip rd-float-r">
                 <div className="rd-chip-icon" style={{ background: '#E6F6FE', color: '#20B7F3' }}>
-                  <Icon name="plug" size={16} />
+                  <Icon name="layers" size={16} />
                 </div>
                 <div>
-                  <div className="rd-chip-label">47 MCP tools</div>
-                  <div className="rd-chip-sub">Connected · A2A enabled</div>
+                  <div className="rd-chip-label">Multi-LLM Providers</div>
+                  <div className="rd-chip-sub">OpenAI · Anthropic · Gemini · xAI</div>
                 </div>
               </div>
 
               <div className="rd-float-chip rd-float-b">
                 <div className="rd-chip-icon" style={{ background: '#E8F8EF', color: '#22C55E' }}>
-                  <Icon name="activity" size={16} />
+                  <Icon name="plug" size={16} />
                 </div>
                 <div>
-                  <div className="rd-chip-label">p95 · 184ms</div>
-                  <div className="rd-chip-sub">Last 24h</div>
+                  <div className="rd-chip-label">MCP Tool Servers</div>
+                  <div className="rd-chip-sub">OpenClaw · NemoClaw · kmcp</div>
                 </div>
               </div>
             </div>
