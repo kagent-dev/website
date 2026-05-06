@@ -312,12 +312,13 @@ export default function RedesignPage() {
                   <div style={{ width: 32 }} />
                 </div>
                 <Image
-                  src="/images/redesign/kagent-dashboard-hero.png"
+                  src="/images/kagent-agents-ui.gif"
                   alt="kagent Agents Dashboard"
                   width={1280}
                   height={900}
                   style={{ display: 'block', width: '100%', height: 'auto' }}
                   priority
+                  unoptimized
                 />
               </div>
 

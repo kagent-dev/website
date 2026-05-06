@@ -9,7 +9,6 @@ import { GITHUB_LINK } from "@/data/links";
 import Link from "next/link";
 import { agents } from "@/data/agents";
 import AgentCard from "@/components/agent-card";
-import Image from "next/image";
 
 const AgentsRegistry = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,19 +24,9 @@ const AgentsRegistry = () => {
       <div className="border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <h1 className="text-3xl font-medium mb-4">Agents Registry</h1>
-          <p className="text-muted-foreground text-lg mb-6">
+          <p className="text-muted-foreground text-lg mb-8">
             Discover and use AI agents to automate your work
           </p>
-          <div className="rounded-xl overflow-hidden border border-white/10 mb-8">
-            <Image
-              src="/images/kagent-agents-ui.gif"
-              alt="kagent Agents UI"
-              width={1140}
-              height={640}
-              className="w-full h-auto"
-              unoptimized
-            />
-          </div>
 
           <div className="relative max-w-2xl">
             <div className="relative">
