@@ -94,22 +94,6 @@
           {
             "title": "Documentation Agent",
             "href": "/docs/kagent/examples/documentation"
-          },
-          {
-            "title": "Slack",
-            "href": "/docs/kagent/examples/slack-a2a"
-          },
-          {
-            "title": "Discord",
-            "href": "/docs/kagent/examples/discord-a2a"
-          },
-          {
-            "title": "Telegram",
-            "href": "/docs/kagent/examples/telegram-bot"
-          },
-          {
-            "title": "MCP Clients (Cursor, Claude)",
-            "href": "/docs/kagent/examples/agents-mcp"
           }
         ]
       },
@@ -166,60 +150,36 @@
             "href": "/docs/kmcp/secrets"
           }
         ]
+      }
+    ]
+  },
+  {
+    "title": "Channels",
+    "href": "/docs/kagent/channels",
+    "items": [
+      {
+        "title": "Overview",
+        "href": "/docs/kagent/channels"
       },
       {
-        "title": "Features",
-        "href": "/docs/kagent/introduction/features",
-        "items": [
-          {
-            "title": "Agent Lifecycle via CRDs",
-            "href": "/docs/kagent/introduction/features#agent-lifecycle-via-crds"
-          },
-          {
-            "title": "Multi-runtime Support",
-            "href": "/docs/kagent/introduction/features#multi-runtime-support"
-          },
-          {
-            "title": "BYO Frameworks",
-            "href": "/docs/kagent/introduction/features#byo-frameworks"
-          },
-          {
-            "title": "Long-term Memory",
-            "href": "/docs/kagent/introduction/features#long-term-memory"
-          },
-          {
-            "title": "Human-in-the-loop",
-            "href": "/docs/kagent/introduction/features#human-in-the-loop"
-          },
-          {
-            "title": "Agent-to-Agent (A2A)",
-            "href": "/docs/kagent/introduction/features#agent-to-agent-a2a"
-          },
-          {
-            "title": "Skills from Git",
-            "href": "/docs/kagent/introduction/features#skills-from-git"
-          },
-          {
-            "title": "Prompt Templates",
-            "href": "/docs/kagent/introduction/features#prompt-templates"
-          },
-          {
-            "title": "Context Compaction",
-            "href": "/docs/kagent/introduction/features#context-compaction"
-          },
-          {
-            "title": "Sandbox & Security",
-            "href": "/docs/kagent/introduction/features#sandbox-and-security"
-          },
-          {
-            "title": "Full Observability",
-            "href": "/docs/kagent/introduction/features#full-observability"
-          },
-          {
-            "title": "Postgres Storage",
-            "href": "/docs/kagent/introduction/features#postgres-storage"
-          }
-        ]
+        "title": "Slack",
+        "href": "/docs/kagent/examples/slack-a2a"
+      },
+      {
+        "title": "Discord",
+        "href": "/docs/kagent/examples/discord-a2a"
+      },
+      {
+        "title": "Telegram",
+        "href": "/docs/kagent/examples/telegram-bot"
+      },
+      {
+        "title": "WhatsApp",
+        "href": "/docs/kagent/channels/whatsapp"
+      },
+      {
+        "title": "MCP Clients (Cursor, Claude)",
+        "href": "/docs/kagent/examples/agents-mcp"
       }
     ]
   },

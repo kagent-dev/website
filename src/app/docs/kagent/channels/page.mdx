@@ -1,45 +1,60 @@
 ---
-title: "Chat Channels"
+title: "Channels"
 sectionOrder: 3
-description: "Connect kagent to the chat platforms your team already uses — Slack, Discord, Telegram, or MCP-compatible clients."
+description: "Connect kagent agents to the messaging platforms your team already uses."
 ---
 
 export const metadata = {
-  title: "Chat Channels",
-  description: "Connect kagent to the chat platforms your team already uses — Slack, Discord, Telegram, or MCP-compatible clients.",
+  title: "Channels",
+  description: "Connect kagent agents to the messaging platforms your team already uses.",
   author: "kagent.dev"
 };
 
 import QuickLink from '@/components/quick-link';
 
-# Chat Channels
+# Channels
 
-kagent can talk to your team on the chat platforms you already use. Each channel connects to your agents via the [A2A (Agent-to-Agent) protocol](/docs/kagent/examples/a2a-agents), so your agents respond directly in conversation threads.
+Channels connect your kagent agents to the messaging platforms your team already uses. Instead of switching to a separate UI, your team interacts with agents directly inside Slack threads, Telegram chats, Discord servers, or any MCP-compatible client.
 
-Text is supported on every channel. Rich formatting, media attachments, and interactive elements vary by platform.
+Every channel uses the [A2A (Agent-to-Agent) protocol](/docs/kagent/examples/a2a-agents) under the hood. This means any agent you build works on any channel — no per-platform agent code required.
+
+## How channels work
+
+1. A lightweight bot or connector runs alongside your cluster
+2. Incoming messages are forwarded to kagent agents via A2A
+3. Agents process the request using their configured tools and LLM
+4. Responses flow back through the same channel to the user
+
+Text messaging is supported on every channel. Rich formatting, media attachments, interactive elements, and Human-in-the-Loop approval buttons vary by platform.
 
 ## Supported channels
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-<QuickLink title="Slack" description="Create a Slack bot that routes messages to kagent agents via A2A. Supports threads, rich formatting, and multi-channel routing." href="/docs/kagent/examples/slack-a2a" />
-<QuickLink title="Discord" description="Deploy a Discord bot that connects server channels to kagent agents. Supports slash commands and threaded replies." href="/docs/kagent/examples/discord-a2a" />
-<QuickLink title="Telegram" description="Build a Telegram bot that talks to your Kubernetes cluster through kagent. Supports inline keyboards and media replies." href="/docs/kagent/examples/telegram-bot" />
-<QuickLink title="MCP Clients (Cursor, Claude)" description="Connect MCP-compatible clients like Cursor and Claude Code directly to kagent agents running in your cluster." href="/docs/kagent/examples/agents-mcp" />
+<QuickLink title="Slack" description="Create a Slack bot powered by kagent agents. Supports threads, rich formatting, multi-channel routing, and bidirectional messaging via Bolt SDK." href="/docs/kagent/examples/slack-a2a" />
+<QuickLink title="Discord" description="Deploy a Discord bot connected to your kagent agents. Supports slash commands, threaded replies, and server channel routing via the Discord Bot API." href="/docs/kagent/examples/discord-a2a" />
+<QuickLink title="Telegram" description="Build a Telegram bot that talks to your Kubernetes cluster through kagent. Supports inline keyboards, media replies, and Human-in-the-Loop approval buttons." href="/docs/kagent/examples/telegram-bot" />
+<QuickLink title="WhatsApp" description="Connect WhatsApp to your kagent agents for mobile-first cluster operations. Coming soon." href="/docs/kagent/channels/whatsapp" />
 </div>
 
-## How it works
+## Developer & IDE integrations
 
-Every chat channel follows the same pattern:
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+<QuickLink title="MCP Clients (Cursor, Claude)" description="Connect MCP-compatible clients like Cursor and Claude Code directly to kagent agents running in your cluster. No bot middleware needed — the client speaks MCP natively." href="/docs/kagent/examples/agents-mcp" />
+</div>
 
-1. A lightweight bot or connector runs alongside your cluster (or externally)
-2. Incoming messages are forwarded to kagent agents via the A2A protocol
-3. Agents process the request using their configured tools and LLM
-4. Responses flow back through the same channel to the user
+## Platform notes
 
-Because channels use A2A, any agent you build works on any channel — no per-platform agent code required.
+| Channel | Auth method | Threading | Media | HITL buttons |
+|---------|------------|-----------|-------|-------------|
+| **Slack** | Bot token (Bolt SDK) | Native threads | Images, files | Slack actions |
+| **Discord** | Bot token (Discord API) | Thread replies | Embeds, attachments | Reactions |
+| **Telegram** | Bot token (polling) | Reply chains | Images, GIF, video | Inline keyboards |
+| **WhatsApp** | Business API | Reply quotes | Images, documents | Quick replies |
+| **MCP Clients** | Direct endpoint | Session-based | N/A | Native prompts |
 
 ## Delivery notes
 
 - **Slack** multi-person DMs route as group chats. Group policy, mention behavior, and session rules apply to MPIM conversations.
-- **Telegram** replies that contain markdown image syntax are converted into media replies on the outbound path when the bot supports it.
+- **Telegram** replies that contain markdown image syntax are converted into media replies when the bot supports it. The bot uses long-polling from inside the cluster — no public endpoints required.
+- **Discord** bots connect via the Discord gateway. Slash commands and message-based interactions are both supported.
 - **MCP clients** connect directly to agent endpoints. No bot middleware is needed — the client speaks MCP natively.

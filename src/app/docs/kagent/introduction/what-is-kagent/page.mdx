@@ -43,6 +43,58 @@ Kagent addresses the growing complexity of cloud-native operations by:
 - Enabling teams to formalize and share their operational expertise
 - Providing a platform for building and sharing custom AI agents
 
+## Platform features
+
+Everything works with a single `helm install`. No add-ons, no extra databases, no waiting for enterprise.
+
+### Agent lifecycle via CRDs
+
+Define, version, and roll out agents with kubectl and GitOps — the same workflow as every other workload. Agents are declared as Kubernetes Custom Resources, so they integrate naturally with your existing CI/CD pipelines, RBAC policies, and namespace isolation.
+
+### Multi-runtime support
+
+Go and Python ADK runtimes. Pick the language that fits, or mix both in the same cluster. Each runtime runs as a standard container, so you get the same scaling, health checks, and resource limits you use for any workload.
+
+### BYO frameworks
+
+LangGraph, CrewAI, Google ADK, or your own — bring any agent framework and kagent orchestrates it. The runtime is framework-agnostic: you write the agent logic, kagent handles lifecycle, networking, and observability.
+
+### Long-term memory
+
+Persistent vector-backed memory across sessions. Agents remember context, not just the last prompt. Memory is stored in Postgres, so it benefits from the same backup, replication, and access controls as the rest of your data.
+
+### Human-in-the-loop
+
+Tool approval gates, agent-initiated questions, and cascading HITL — humans stay in control. Define which actions require explicit approval and which can run autonomously, with full audit trails for every decision.
+
+### Agent-to-Agent (A2A)
+
+Agents discover and invoke each other via the A2A protocol. Compose multi-agent workflows with first-class delegation, load balancing, and circuit breaking — all running over your service mesh.
+
+### Skills from Git
+
+Load markdown knowledge from Git repos at startup. Agents learn your runbooks, ADRs, and internal docs — not just generic training data. Skills are versioned alongside your code and update automatically on deploy.
+
+### Prompt templates
+
+Reusable prompt fragments stored as ConfigMaps. DRY your system prompts across agents, manage them with GitOps, and roll out prompt changes without redeploying the agent.
+
+### Context compaction
+
+Auto-summarization of long conversation histories. Agents stay coherent in extended conversations without blowing token budgets. Compaction runs transparently and preserves the key context from earlier turns.
+
+### Sandbox and security
+
+Agent sandboxing, RBAC, and security hardening out of the box. Run untrusted code safely with network policies, resource limits, and isolated execution environments.
+
+### Full observability
+
+OpenTelemetry tracing, Prometheus metrics, and structured logs. See every prompt, every tool call, every token — with traces that connect agent decisions to the downstream API calls they triggered.
+
+### Postgres storage
+
+Production-grade Postgres-backed storage with reviewable migrations. No proprietary database lock-in. Session state, agent memory, and audit logs all live in a database your team already knows how to operate.
+
 ## Enterprise distributions
 
 Check out [Solo Enterprise for kagent](https://www.solo.io/products/kagent-enterprise), a comprehensive agent management interface for creating, validating, debugging, deploying, and monitoring AI agents across federated Kubernetes clusters. Solo Enterprise for kagent adds enterprise-grade capabilities on top of the kagent open source project, including advanced management features, observability tools, and multicluster federation support.
