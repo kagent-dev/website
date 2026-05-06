@@ -758,26 +758,42 @@
 /* ---- Community ---- */
 /* ---- Adopters ---- */
 .rd-adopters { padding: 100px 0; }
-.rd-adopters-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 40px 56px;
-  max-width: 900px;
+.rd-adopters-track {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
   margin: 0 auto;
 }
-.rd-adopter-logo {
+.rd-adopters-scroll {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeScroll 30s linear infinite;
+}
+.rd-adopters-scroll:hover {
+  animation-play-state: paused;
+}
+.rd-adopter-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  opacity: 0.6;
-  transition: opacity 200ms;
-  filter: grayscale(100%);
+  gap: 12px;
+  padding: 14px 24px;
+  background: #fff;
+  border: 1px solid #ECEAF2;
+  border-radius: 14px;
+  white-space: nowrap;
+  font-family: 'Figtree', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: #151927;
+  flex-shrink: 0;
+  transition: box-shadow 200ms, border-color 200ms, transform 200ms;
 }
-.rd-adopter-logo:hover {
-  opacity: 1;
-  filter: grayscale(0%);
+.rd-adopter-item:hover {
+  box-shadow: 0 4px 16px rgba(15,19,35,0.08);
+  border-color: #D1CCE4;
+  transform: translateY(-2px);
 }
 .rd-adopters-add {
   text-align: center;

@@ -603,9 +603,11 @@ export default function RedesignPage() {
             <span className="rd-eyebrow">Adopters</span>
             <h2>Who uses our <span className="rd-grad">projects</span></h2>
           </div>
-          <div className="rd-adopters-grid rv">
-            {(adopters as { adopters: { name: string; logo?: string; logo_light?: string; logo_dark?: string; website: string }[] }).adopters.map((adopter, i) => (
-              <a key={i} href={adopter.website} target="_blank" rel="noopener noreferrer" className="rd-adopter-logo">
+        </div>
+        <div className="rd-adopters-track">
+          <div className="rd-adopters-scroll">
+            {[...(adopters as { adopters: { name: string; logo?: string; logo_light?: string; logo_dark?: string; website: string }[] }).adopters, ...(adopters as { adopters: { name: string; logo?: string; logo_light?: string; logo_dark?: string; website: string }[] }).adopters].map((adopter, i) => (
+              <a key={i} href={adopter.website} target="_blank" rel="noopener noreferrer" className="rd-adopter-item">
                 <Image
                   src={adopter.logo || adopter.logo_light || ''}
                   alt={adopter.name}
@@ -613,9 +615,12 @@ export default function RedesignPage() {
                   height={60}
                   style={{ objectFit: 'contain', maxHeight: 48 }}
                 />
+                <span>{adopter.name}</span>
               </a>
             ))}
           </div>
+        </div>
+        <div className="rd-container">
           <div className="rd-adopters-add rv">
             <a href="https://github.com/kagent-dev/website?tab=readme-ov-file#adopters" target="_blank" rel="noopener noreferrer">
               Add your logo here
