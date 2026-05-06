@@ -8,7 +8,6 @@ import { ThemeToggle } from "./theme-toggle";
 import { DocSearch } from "@docsearch/react";
 
 const SITE_LINKS = [
-  { title: 'Features', href: '/docs/kagent/introduction/features' },
   { title: 'Docs', href: '/docs/kagent' },
   { title: 'Blog', href: '/blog' },
   { title: 'Community', href: '/community' },
