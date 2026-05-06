@@ -1155,6 +1155,24 @@
   color: #6B7289;
   line-height: 1.55;
 }
+.dark .rd-cap-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.dark .rd-cap-item:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-color: rgba(138, 63, 252, 0.4);
+}
+.dark .rd-cap-check {
+  background: rgba(138, 63, 252, 0.15);
+  color: #A78BFA;
+}
+.dark .rd-cap-item strong {
+  color: #F0F0F5;
+}
+.dark .rd-cap-item span {
+  color: #9CA3AF;
+}
 
 /* =============================================
    Integrations — scrolling icon marquees
