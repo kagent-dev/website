@@ -52,72 +52,6 @@
         ]
       },
       {
-        "title": "Agents",
-        "href": "/docs/kagent/concepts/agents",
-        "items": [
-          {
-            "title": "Agent Concepts",
-            "href": "/docs/kagent/concepts/agents"
-          },
-          {
-            "title": "A2A Agents",
-            "href": "/docs/kagent/examples/a2a-agents"
-          },
-          {
-            "title": "BYO ADK Agents",
-            "href": "/docs/kagent/examples/a2a-byo"
-          },
-          {
-            "title": "BYO CrewAI Agents",
-            "href": "/docs/kagent/examples/crewai-byo"
-          },
-          {
-            "title": "BYO LangGraph Agents",
-            "href": "/docs/kagent/examples/langchain-byo"
-          },
-          {
-            "title": "Agent Sandbox",
-            "href": "/docs/kagent/examples/agent-sandbox"
-          },
-          {
-            "title": "Agent Memory",
-            "href": "/docs/kagent/concepts/agent-memory"
-          },
-          {
-            "title": "Skills",
-            "href": "/docs/kagent/examples/skills"
-          },
-          {
-            "title": "Human-in-the-Loop",
-            "href": "/docs/kagent/examples/human-in-the-loop"
-          },
-          {
-            "title": "Documentation Agent",
-            "href": "/docs/kagent/examples/documentation"
-          },
-          {
-            "title": "Slack",
-            "href": "/docs/kagent/examples/slack-a2a"
-          },
-          {
-            "title": "Discord",
-            "href": "/docs/kagent/examples/discord-a2a"
-          },
-          {
-            "title": "Telegram",
-            "href": "/docs/kagent/examples/telegram-bot"
-          },
-          {
-            "title": "WhatsApp",
-            "href": "/docs/kagent/channels/whatsapp"
-          },
-          {
-            "title": "MCP Clients (Cursor, Claude)",
-            "href": "/docs/kagent/examples/agents-mcp"
-          }
-        ]
-      },
-      {
         "title": "Tools & Plugins",
         "href": "/docs/kagent/concepts/tools",
         "items": [
@@ -226,6 +160,66 @@
       {
         "title": "Agents Registry",
         "href": "/agents"
+      },
+      {
+        "title": "Agent Concepts",
+        "href": "/docs/kagent/concepts/agents"
+      },
+      {
+        "title": "A2A Agents",
+        "href": "/docs/kagent/examples/a2a-agents"
+      },
+      {
+        "title": "BYO ADK Agents",
+        "href": "/docs/kagent/examples/a2a-byo"
+      },
+      {
+        "title": "BYO CrewAI Agents",
+        "href": "/docs/kagent/examples/crewai-byo"
+      },
+      {
+        "title": "BYO LangGraph Agents",
+        "href": "/docs/kagent/examples/langchain-byo"
+      },
+      {
+        "title": "Agent Sandbox",
+        "href": "/docs/kagent/examples/agent-sandbox"
+      },
+      {
+        "title": "Agent Memory",
+        "href": "/docs/kagent/concepts/agent-memory"
+      },
+      {
+        "title": "Skills",
+        "href": "/docs/kagent/examples/skills"
+      },
+      {
+        "title": "Human-in-the-Loop",
+        "href": "/docs/kagent/examples/human-in-the-loop"
+      },
+      {
+        "title": "Documentation Agent",
+        "href": "/docs/kagent/examples/documentation"
+      },
+      {
+        "title": "Slack",
+        "href": "/docs/kagent/examples/slack-a2a"
+      },
+      {
+        "title": "Discord",
+        "href": "/docs/kagent/examples/discord-a2a"
+      },
+      {
+        "title": "Telegram",
+        "href": "/docs/kagent/examples/telegram-bot"
+      },
+      {
+        "title": "WhatsApp",
+        "href": "/docs/kagent/channels/whatsapp"
+      },
+      {
+        "title": "MCP Clients (Cursor, Claude)",
+        "href": "/docs/kagent/examples/agents-mcp"
       }
     ]
   },
