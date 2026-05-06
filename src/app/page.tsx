@@ -390,17 +390,11 @@ export default function RedesignPage() {
             <div className="rd-cap-grid">
               {[
                 ['workflow', 'Agent lifecycle via CRDs', 'Define, version, and roll out agents with kubectl and GitOps — the same workflow as every other workload.'],
-                ['layers', 'Multi-runtime support', 'Go and Python ADK runtimes. Pick the language that fits, or mix both in the same cluster.'],
                 ['plug', 'BYO frameworks', 'LangGraph, CrewAI, Google ADK, or your own — bring any agent framework and kagent orchestrates it.'],
-                ['brain', 'Long-term memory', 'Persistent vector-backed memory across sessions. Agents remember context, not just the last prompt.'],
                 ['handshake', 'Human-in-the-loop', 'Tool approval gates, agent-initiated questions, and cascading HITL — humans stay in control.'],
                 ['users', 'Agent-to-Agent (A2A)', 'Agents discover and invoke each other. Compose multi-agent workflows with first-class delegation.'],
-                ['book', 'Skills from Git', 'Load markdown knowledge from Git repos at startup. Agents learn your runbooks, not just generic docs.'],
-                ['cog', 'Prompt templates', 'Reusable prompt fragments from ConfigMaps. DRY your system prompts across agents.'],
-                ['activity', 'Context compaction', 'Auto-summarization of long histories. Agents stay coherent in extended conversations without blowing token budgets.'],
-                ['lock', 'Sandbox & security', 'Agent sandboxing, RBAC, and security hardening out of the box. Run untrusted code safely.'],
                 ['eye', 'Full observability', 'OTel tracing, Prometheus metrics, structured logs. See every prompt, every tool call, every token.'],
-                ['cube', 'Postgres storage', 'Production-grade Postgres-backed storage with reviewable migrations. No proprietary database lock-in.'],
+                ['lock', 'Sandbox & security', 'Agent sandboxing, RBAC, and security hardening out of the box. Run untrusted code safely.'],
               ].map(([icon, title, desc], i) => (
                 <div key={i} className="rd-cap-item rv">
                   <div className="rd-cap-check"><Icon name={icon} size={18} /></div>
@@ -410,6 +404,12 @@ export default function RedesignPage() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 24 }}>
+              <Link href="/docs/kagent/introduction/features" className="rd-btn rd-btn--ghost">
+                See all features
+                <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+              </Link>
             </div>
           </div>
 
