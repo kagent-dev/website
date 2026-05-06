@@ -142,6 +142,20 @@
             "href": "/docs/kmcp/secrets"
           }
         ]
+      },
+      {
+        "title": "Concepts",
+        "href": "/docs/kagent/concepts/architecture",
+        "items": [
+          {
+            "title": "Architecture",
+            "href": "/docs/kagent/concepts/architecture"
+          },
+          {
+            "title": "Core Concepts",
+            "href": "/docs/kagent/concepts"
+          }
+        ]
       }
     ]
   },
@@ -253,14 +267,6 @@
     "title": "Reference",
     "href": "/docs/kagent/resources/api-ref",
     "items": [
-      {
-        "title": "Architecture",
-        "href": "/docs/kagent/concepts/architecture"
-      },
-      {
-        "title": "Core Concepts",
-        "href": "/docs/kagent/concepts"
-      },
       {
         "title": "Writing System Prompts",
         "href": "/docs/kagent/getting-started/system-prompts"
