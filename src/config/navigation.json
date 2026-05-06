@@ -1,409 +1,343 @@
 [
   {
-    "title": "kagent",
+    "title": "Get Started",
     "href": "/docs/kagent",
-    "order": 1,
-    "description": "Complete documentation for kagent - the AI agent platform for Kubernetes.",
     "items": [
       {
-        "title": "Introduction",
-        "href": "/docs/kagent/introduction",
-        "description": "Welcome to kagent! Start here to understand what kagent is, how to install it, and how to contribute.",
-        "items": [
-          {
-            "title": "Installing kagent",
-            "href": "/docs/kagent/introduction/installation",
-            "description": "Learn how to install kagent"
-          },
-          {
-            "title": "What is kagent",
-            "href": "/docs/kagent/introduction/what-is-kagent",
-            "description": "Understand what kagent is and its core purpose."
-          },
-          {
-            "title": "Feature Roadmap",
-            "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
-            "external": true
-          },
-          {
-            "title": "Contributing",
-            "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md",
-            "external": true
-          }
-        ]
+        "title": "What is kagent",
+        "href": "/docs/kagent/introduction/what-is-kagent"
       },
       {
-        "title": "Getting Started",
-        "href": "/docs/kagent/getting-started",
-        "description": "Guides to help you get started with kagent, from quick setup to your first agent and tool.",
-        "items": [
-          {
-            "title": "Quick Start",
-            "href": "/docs/kagent/getting-started/quickstart",
-            "description": "A quick guide to get kagent installed and running with your first AI agent."
-          },
-          {
-            "title": "Your First Agent",
-            "href": "/docs/kagent/getting-started/first-agent",
-            "description": "Learn how to create your first AI agent using the kagent dashboard."
-          },
-          {
-            "title": "Your First MCP tool",
-            "href": "/docs/kagent/getting-started/first-mcp-tool",
-            "description": "Learn how to add an MCP (Model Context Protocol) tool to your kagent agent."
-          },
-          {
-            "title": "Local Development",
-            "href": "/docs/kagent/getting-started/local-development",
-            "description": "Build, test and run agents locally."
-          },
-          {
-            "title": "Writing System Prompts",
-            "href": "/docs/kagent/getting-started/system-prompts",
-            "description": "Learn the art and science of writing effective system prompts for your kagent agents."
-          }
-        ]
+        "title": "Quick Start",
+        "href": "/docs/kagent/getting-started/quickstart"
       },
       {
-        "title": "Core Concepts",
-        "href": "/docs/kagent/concepts",
-        "description": "Understand the fundamental concepts and architecture of kagent.",
-        "items": [
-          {
-            "title": "Architecture",
-            "href": "/docs/kagent/concepts/architecture",
-            "description": "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard."
-          },
-          {
-            "title": "Agents",
-            "href": "/docs/kagent/concepts/agents",
-            "description": "Dive into the concept of AI agents in kagent, their components (instructions, tools, skills), and how they can even use other agents as tools."
-          },
-          {
-            "title": "Tools",
-            "href": "/docs/kagent/concepts/tools",
-            "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
-          },
-          {
-            "title": "Agent Memory",
-            "href": "/docs/kagent/concepts/agent-memory",
-            "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
-          }
-        ]
+        "title": "Your First Agent",
+        "href": "/docs/kagent/getting-started/first-agent"
       },
       {
-        "title": "Supported Providers",
-        "href": "/docs/kagent/supported-providers",
-        "description": "Learn how to configure various LLM providers like OpenAI, Azure OpenAI, Anthropic, and Ollama for kagent.",
-        "items": [
-          {
-            "title": "Amazon Bedrock",
-            "href": "/docs/kagent/supported-providers/amazon-bedrock",
-            "description": "Use Amazon Bedrock models with kagent via the native Bedrock provider or the OpenAI Chat Completions API."
-          },
-          {
-            "title": "Anthropic",
-            "href": "/docs/kagent/supported-providers/anthropic",
-            "description": "Learn how to configure Anthropic models for kagent."
-          },
-          {
-            "title": "Azure OpenAI",
-            "href": "/docs/kagent/supported-providers/azure-openai",
-            "description": "Learn how to configure Azure OpenAI models in kagent."
-          },
-          {
-            "title": "Gemini",
-            "href": "/docs/kagent/supported-providers/gemini",
-            "description": "Learn how to configure Gemini models in kagent."
-          },
-          {
-            "title": "Google Vertex AI",
-            "href": "/docs/kagent/supported-providers/google-vertexai",
-            "description": "Learn how to configure Google Vertex AI models in kagent."
-          },
-          {
-            "title": "Ollama",
-            "href": "/docs/kagent/supported-providers/ollama",
-            "description": "Learn how to configure Ollama models in kagent."
-          },
-          {
-            "title": "OpenAI",
-            "href": "/docs/kagent/supported-providers/openai",
-            "description": "Learn how to configure OpenAI models in kagent."
-          },
-          {
-            "title": "BYO OpenAI-compatible model",
-            "href": "/docs/kagent/supported-providers/byo-openai",
-            "description": "Bring your own OpenAI-compatible model to kagent."
-          }
-        ]
+        "title": "Your First MCP Tool",
+        "href": "/docs/kagent/getting-started/first-mcp-tool"
       },
       {
-        "title": "Examples",
-        "href": "/docs/kagent/examples",
-        "description": "Explore practical examples and use cases for kagent.",
-        "items": [
-          {
-            "title": "A2A Agents",
-            "href": "/docs/kagent/examples/a2a-agents",
-            "description": "Discover how to implement Agent-to-Agent (A2A) communication and collaboration with kagent."
-          },
-          {
-            "title": "BYO ADK Agents",
-            "href": "/docs/kagent/examples/a2a-byo",
-            "description": "Bring your own ADK agent to kagent"
-          },
-          {
-            "title": "Agent Sandbox",
-            "href": "/docs/kagent/examples/agent-sandbox",
-            "description": "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions."
-          },
-          {
-            "title": "Using Kagent agents via MCP",
-            "href": "/docs/kagent/examples/agents-mcp",
-            "description": "Connect external clients like Cursor and Claude to interact with Kagent agents using the Model Context Protocol."
-          },
-          {
-            "title": "BYO CrewAI Agents",
-            "href": "/docs/kagent/examples/crewai-byo",
-            "description": "Bring your own CrewAI agent to kagent"
-          },
-          {
-            "title": "BYO LangGraph Agents",
-            "href": "/docs/kagent/examples/langchain-byo",
-            "description": "Bring your own LangGraph agent to kagent"
-          },
-          {
-            "title": "Documentation Agent",
-            "href": "/docs/kagent/examples/documentation",
-            "description": "See an example of a kagent agent built to help with documentation-related tasks."
-          },
-          {
-            "title": "Slack and A2A",
-            "href": "/docs/kagent/examples/slack-a2a",
-            "description": "Learn how to create a Slack bot that interacts with kagent via A2A"
-          },
-          {
-            "title": "Discord and A2A",
-            "href": "/docs/kagent/examples/discord-a2a",
-            "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
-          },
-          {
-            "title": "Telegram Bot",
-            "href": "/docs/kagent/examples/telegram-bot",
-            "description": "Build a Telegram bot that talks to your Kubernetes cluster through kagent and A2A"
-          },
-          {
-            "title": "Skills",
-            "href": "/docs/kagent/examples/skills",
-            "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
-          },
-          {
-            "title": "Human-in-the-Loop",
-            "href": "/docs/kagent/examples/human-in-the-loop",
-            "description": "Build a Kubernetes-native AI agent that pauses and asks for your approval before taking destructive actions."
-          }
-        ]
-      },
-      {
-        "title": "Observability",
-        "href": "/docs/kagent/observability",
-        "description": "Monitor and observe your kagent installation with dashboards and audit logs.",
-        "items": [
-          {
-            "title": "Launch the UI",
-            "href": "/docs/kagent/observability/launch-ui",
-            "description": "Open the kagent dashboard using the CLI or port-forwarding."
-          },
-          {
-            "title": "Audit kagent prompts",
-            "href": "/docs/kagent/observability/audit-prompts",
-            "description": "Review and audit prompts used by kagent agents."
-          },
-          {
-            "title": "Tracing",
-            "href": "/docs/kagent/observability/tracing",
-            "description": "A guide to tracing your kagent agents."
-          }
-        ]
-      },
-      {
-        "title": "Operations",
-        "href": "/docs/kagent/operations",
-        "description": "Manage your kagent installation with upgrade, uninstall, and operational tasks.",
-        "items": [
-          {
-            "title": "Debug kagent",
-            "href": "/docs/kagent/operations/debug",
-            "description": "Find solutions to common issues and troubleshooting tips for kagent."
-          },
-          {
-            "title": "Operational considerations",
-            "href": "/docs/kagent/operations/operational-considerations",
-            "description": "Important operational considerations when running kagent in production."
-          },
-          {
-            "title": "Upgrade kagent",
-            "href": "/docs/kagent/operations/upgrade",
-            "description": "Learn how to upgrade kagent to the latest version."
-          },
-          {
-            "title": "Uninstall kagent",
-            "href": "/docs/kagent/operations/uninstall",
-            "description": "Learn how to uninstall kagent from your Kubernetes cluster."
-          }
-        ]
-      },
-      {
-        "title": "Resources",
-        "href": "/docs/kagent/resources",
-        "description": "Find helpful resources and FAQs for kagent. Access guides, community links, and more.",
-        "items": [
-          {
-            "title": "API docs",
-            "href": "/docs/kagent/resources/api-ref",
-            "description": "kagent API reference documentation"
-          },
-          {
-            "title": "CLI docs",
-            "href": "/docs/kagent/resources/cli",
-            "description": "Complete reference docs for the kagent CLI commands"
-          },
-          {
-            "title": "Helm Chart Configuration",
-            "href": "/docs/kagent/resources/helm",
-            "description": "kagent Helm chart configuration reference"
-          },
-          {
-            "title": "Tools Ecosystem",
-            "href": "/docs/kagent/resources/tools-ecosystem",
-            "description": "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
-          },
-          {
-            "title": "FAQs",
-            "href": "/docs/kagent/resources/faq",
-            "description": "Find answers to frequently asked questions about kagent."
-          },
-          {
-            "title": "Release Notes",
-            "href": "/docs/kagent/resources/release-notes",
-            "description": "Review the release notes for kagent."
-          }
-        ]
+        "title": "Local Development",
+        "href": "/docs/kagent/getting-started/local-development"
       }
     ]
   },
   {
-    "title": "kmcp",
-    "href": "/docs/kmcp",
-    "order": 1,
-    "description": "",
+    "title": "Install",
+    "href": "/docs/kagent/introduction/installation",
     "items": [
       {
-        "title": "Introduction",
-        "href": "/docs/kmcp/introduction",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers."
+        "title": "Installing kagent",
+        "href": "/docs/kagent/introduction/installation"
       },
       {
-        "title": "Quickstart",
-        "href": "/docs/kmcp/quickstart",
-        "description": "Get started with kmcp"
+        "title": "Helm Chart Configuration",
+        "href": "/docs/kagent/resources/helm"
       },
       {
-        "title": "Develop MCP servers",
+        "title": "Upgrade kagent",
+        "href": "/docs/kagent/operations/upgrade"
+      },
+      {
+        "title": "Uninstall kagent",
+        "href": "/docs/kagent/operations/uninstall"
+      },
+      {
+        "title": "Operational Considerations",
+        "href": "/docs/kagent/operations/operational-considerations"
+      }
+    ]
+  },
+  {
+    "title": "Channels",
+    "href": "/docs/kagent/examples/slack-a2a",
+    "items": [
+      {
+        "title": "Slack",
+        "href": "/docs/kagent/examples/slack-a2a"
+      },
+      {
+        "title": "Discord",
+        "href": "/docs/kagent/examples/discord-a2a"
+      },
+      {
+        "title": "Telegram",
+        "href": "/docs/kagent/examples/telegram-bot"
+      },
+      {
+        "title": "MCP Clients (Cursor, Claude)",
+        "href": "/docs/kagent/examples/agents-mcp"
+      }
+    ]
+  },
+  {
+    "title": "Agents",
+    "href": "/docs/kagent/concepts/agents",
+    "items": [
+      {
+        "title": "Agent Concepts",
+        "href": "/docs/kagent/concepts/agents"
+      },
+      {
+        "title": "A2A Agents",
+        "href": "/docs/kagent/examples/a2a-agents"
+      },
+      {
+        "title": "BYO ADK Agents",
+        "href": "/docs/kagent/examples/a2a-byo"
+      },
+      {
+        "title": "BYO CrewAI Agents",
+        "href": "/docs/kagent/examples/crewai-byo"
+      },
+      {
+        "title": "BYO LangGraph Agents",
+        "href": "/docs/kagent/examples/langchain-byo"
+      },
+      {
+        "title": "Agent Sandbox",
+        "href": "/docs/kagent/examples/agent-sandbox"
+      },
+      {
+        "title": "Agent Memory",
+        "href": "/docs/kagent/concepts/agent-memory"
+      },
+      {
+        "title": "Skills",
+        "href": "/docs/kagent/examples/skills"
+      },
+      {
+        "title": "Human-in-the-Loop",
+        "href": "/docs/kagent/examples/human-in-the-loop"
+      },
+      {
+        "title": "Documentation Agent",
+        "href": "/docs/kagent/examples/documentation"
+      }
+    ]
+  },
+  {
+    "title": "Tools & Plugins",
+    "href": "/docs/kagent/concepts/tools",
+    "items": [
+      {
+        "title": "Tool Concepts",
+        "href": "/docs/kagent/concepts/tools"
+      },
+      {
+        "title": "Tools Ecosystem",
+        "href": "/docs/kagent/resources/tools-ecosystem"
+      },
+      {
+        "title": "kmcp Overview",
+        "href": "/docs/kmcp/introduction"
+      },
+      {
+        "title": "kmcp Quickstart",
+        "href": "/docs/kmcp/quickstart"
+      },
+      {
+        "title": "Develop MCP Servers",
         "href": "/docs/kmcp/develop",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers.",
         "items": [
           {
             "title": "FastMCP Python",
-            "href": "/docs/kmcp/develop/fastmcp-python",
-            "description": "Create the MCP server with kmcp"
+            "href": "/docs/kmcp/develop/fastmcp-python"
           },
           {
             "title": "MCP Go",
-            "href": "/docs/kmcp/develop/mcp-go",
-            "description": ""
+            "href": "/docs/kmcp/develop/mcp-go"
           }
         ]
       },
       {
         "title": "Deploy to Kubernetes",
         "href": "/docs/kmcp/deploy",
-        "description": "Quickly develop and deploy Model Context Protocol (MCP) servers.",
         "items": [
           {
-            "title": "Install the kmcp controller",
-            "href": "/docs/kmcp/deploy/install-controller",
-            "description": "Deploy the kmcp controller in a Kubernetes cluster."
+            "title": "Install kmcp Controller",
+            "href": "/docs/kmcp/deploy/install-controller"
           },
           {
-            "title": "Deploy MCP servers",
-            "href": "/docs/kmcp/deploy/server",
-            "description": ""
+            "title": "Deploy MCP Servers",
+            "href": "/docs/kmcp/deploy/server"
           }
         ]
       },
       {
-        "title": "Manage secrets",
-        "href": "/docs/kmcp/secrets",
-        "description": "Configure your MCP server to read additional environment variables from a Kubernetes secret."
+        "title": "Manage Secrets",
+        "href": "/docs/kmcp/secrets"
+      }
+    ]
+  },
+  {
+    "title": "Models",
+    "href": "/docs/kagent/supported-providers",
+    "items": [
+      {
+        "title": "Overview",
+        "href": "/docs/kagent/supported-providers"
       },
       {
-        "title": "Reference",
+        "title": "OpenAI",
+        "href": "/docs/kagent/supported-providers/openai"
+      },
+      {
+        "title": "Anthropic",
+        "href": "/docs/kagent/supported-providers/anthropic"
+      },
+      {
+        "title": "Azure OpenAI",
+        "href": "/docs/kagent/supported-providers/azure-openai"
+      },
+      {
+        "title": "Gemini",
+        "href": "/docs/kagent/supported-providers/gemini"
+      },
+      {
+        "title": "Google Vertex AI",
+        "href": "/docs/kagent/supported-providers/google-vertexai"
+      },
+      {
+        "title": "Amazon Bedrock",
+        "href": "/docs/kagent/supported-providers/amazon-bedrock"
+      },
+      {
+        "title": "Ollama",
+        "href": "/docs/kagent/supported-providers/ollama"
+      },
+      {
+        "title": "BYO OpenAI-Compatible",
+        "href": "/docs/kagent/supported-providers/byo-openai"
+      }
+    ]
+  },
+  {
+    "title": "Reference",
+    "href": "/docs/kagent/resources/api-ref",
+    "items": [
+      {
+        "title": "Architecture",
+        "href": "/docs/kagent/concepts/architecture"
+      },
+      {
+        "title": "Core Concepts",
+        "href": "/docs/kagent/concepts"
+      },
+      {
+        "title": "Writing System Prompts",
+        "href": "/docs/kagent/getting-started/system-prompts"
+      },
+      {
+        "title": "Observability",
+        "href": "/docs/kagent/observability",
+        "items": [
+          {
+            "title": "Launch the UI",
+            "href": "/docs/kagent/observability/launch-ui"
+          },
+          {
+            "title": "Audit Prompts",
+            "href": "/docs/kagent/observability/audit-prompts"
+          },
+          {
+            "title": "Tracing",
+            "href": "/docs/kagent/observability/tracing"
+          }
+        ]
+      },
+      {
+        "title": "Debug kagent",
+        "href": "/docs/kagent/operations/debug"
+      },
+      {
+        "title": "Operational Considerations",
+        "href": "/docs/kagent/operations/operational-considerations"
+      },
+      {
+        "title": "kagent API",
+        "href": "/docs/kagent/resources/api-ref"
+      },
+      {
+        "title": "kagent CLI",
+        "href": "/docs/kagent/resources/cli",
+        "items": [
+          { "title": "kagent install", "href": "/docs/kagent/resources/cli/kagent-install" },
+          { "title": "kagent init", "href": "/docs/kagent/resources/cli/kagent-init" },
+          { "title": "kagent get", "href": "/docs/kagent/resources/cli/kagent-get" },
+          { "title": "kagent run", "href": "/docs/kagent/resources/cli/kagent-run" },
+          { "title": "kagent invoke", "href": "/docs/kagent/resources/cli/kagent-invoke" },
+          { "title": "kagent deploy", "href": "/docs/kagent/resources/cli/kagent-deploy" },
+          { "title": "kagent build", "href": "/docs/kagent/resources/cli/kagent-build" },
+          { "title": "kagent dashboard", "href": "/docs/kagent/resources/cli/kagent-dashboard" },
+          { "title": "kagent mcp", "href": "/docs/kagent/resources/cli/kagent-mcp" },
+          { "title": "kagent add-mcp", "href": "/docs/kagent/resources/cli/kagent-add-mcp" },
+          { "title": "kagent uninstall", "href": "/docs/kagent/resources/cli/kagent-uninstall" },
+          { "title": "kagent version", "href": "/docs/kagent/resources/cli/kagent-version" },
+          { "title": "kagent completion", "href": "/docs/kagent/resources/cli/kagent-completion" },
+          { "title": "kagent bug-report", "href": "/docs/kagent/resources/cli/kagent-bug-report" },
+          { "title": "kagent help", "href": "/docs/kagent/resources/cli/kagent-help" }
+        ]
+      },
+      {
+        "title": "Helm Chart",
+        "href": "/docs/kagent/resources/helm"
+      },
+      {
+        "title": "kmcp API",
+        "href": "/docs/kmcp/reference/api-ref"
+      },
+      {
+        "title": "kmcp CLI",
         "href": "/docs/kmcp/reference",
-        "description": "",
         "items": [
-          {
-            "title": "API docs",
-            "href": "/docs/kmcp/reference/api-ref",
-            "description": "kmcp API reference documentation"
-          },
-          {
-            "title": "kmcp add-tool",
-            "href": "/docs/kmcp/reference/kmcp-add-tool",
-            "description": "kmcp add-tool command"
-          },
-          {
-            "title": "kmcp build",
-            "href": "/docs/kmcp/reference/kmcp-build",
-            "description": "kmcp build command"
-          },
-          {
-            "title": "kmcp deploy",
-            "href": "/docs/kmcp/reference/kmcp-deploy",
-            "description": "kmcp deploy command"
-          },
-          {
-            "title": "kmcp init",
-            "href": "/docs/kmcp/reference/kmcp-init",
-            "description": "kmcp init command"
-          },
-          {
-            "title": "kmcp install",
-            "href": "/docs/kmcp/reference/kmcp-install",
-            "description": "kmcp install command"
-          },
-          {
-            "title": "kmcp run",
-            "href": "/docs/kmcp/reference/kmcp-run",
-            "description": "kmcp run command"
-          },
-          {
-            "title": "kmcp secrets",
-            "href": "/docs/kmcp/reference/kmcp-secrets",
-            "description": "kmcp secrets command"
-          },
-          {
-            "title": "kmcp completion",
-            "href": "/docs/kmcp/reference/kmcp-completion",
-            "description": "kmcp completion command"
-          },
-          {
-            "title": "kmcp help",
-            "href": "/docs/kmcp/reference/kmcp-help",
-            "description": "kmcp help command"
-          }
+          { "title": "kmcp init", "href": "/docs/kmcp/reference/kmcp-init" },
+          { "title": "kmcp add-tool", "href": "/docs/kmcp/reference/kmcp-add-tool" },
+          { "title": "kmcp build", "href": "/docs/kmcp/reference/kmcp-build" },
+          { "title": "kmcp deploy", "href": "/docs/kmcp/reference/kmcp-deploy" },
+          { "title": "kmcp install", "href": "/docs/kmcp/reference/kmcp-install" },
+          { "title": "kmcp run", "href": "/docs/kmcp/reference/kmcp-run" },
+          { "title": "kmcp secrets", "href": "/docs/kmcp/reference/kmcp-secrets" },
+          { "title": "kmcp completion", "href": "/docs/kmcp/reference/kmcp-completion" },
+          { "title": "kmcp help", "href": "/docs/kmcp/reference/kmcp-help" }
         ]
+      }
+    ]
+  },
+  {
+    "title": "Help",
+    "href": "/docs/kagent/resources/faq",
+    "items": [
+      {
+        "title": "FAQ",
+        "href": "/docs/kagent/resources/faq"
+      },
+      {
+        "title": "Release Notes",
+        "href": "/docs/kagent/resources/release-notes"
+      },
+      {
+        "title": "Feature Roadmap",
+        "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
+        "external": true
+      },
+      {
+        "title": "Contributing",
+        "href": "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md",
+        "external": true
+      }
+    ]
+  },
+  {
+    "title": "Blog",
+    "href": "/blog",
+    "items": [
+      {
+        "title": "All Posts",
+        "href": "/blog"
       }
     ]
   }

@@ -1,311 +1,106 @@
 'use client'
 import Link from "next/link";
 import { GITHUB_LINK } from "@/data/links";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import KagentLogoWithText from "./icons/kagent-logo-text";
-import KagentLogo from "./icons/kagent-logo";
-import KMCPIcon from "./icons/kmcpicon";
 import { ThemeToggle } from "./theme-toggle";
-import { Button } from "./ui/button";
-import { Menu, X, ChevronDown } from "lucide-react";
 import { DocSearch } from "@docsearch/react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import docsNavigation from "@/config/navigation.json";
+
+const SITE_LINKS = [
+  { title: 'Docs', href: '/docs/kagent' },
+  { title: 'Blog', href: '/blog' },
+  { title: 'Community', href: '/community' },
+  { title: 'Enterprise', href: '/enterprise' },
+];
+
+const DOCS_LINKS = docsNavigation.map((section: { title: string; href: string }) => ({
+  title: section.title,
+  href: section.href,
+}));
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const [stars, setStars] = useState<string>('');
+  const [version, setVersion] = useState<string>('');
+  const isDocsPage = pathname.startsWith('/docs/');
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/kagent-dev/kagent')
+      .then(r => r.json())
+      .then(d => {
+        if (d.stargazers_count) {
+          const c = d.stargazers_count;
+          setStars(c >= 1000 ? `${(c / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(c));
+        }
+      })
+      .catch(() => {});
+
+    fetch('https://api.github.com/repos/kagent-dev/kagent/releases/latest')
+      .then(r => r.json())
+      .then(d => { if (d.tag_name) setVersion(d.tag_name); })
+      .catch(() => {});
+  }, []);
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(href + '/');
   };
 
   return (
-    <nav className="py-4 md:py-8">
-      <div className="w-full mx-auto px-4 md:px-6">
-        <div className="flex justify-between items-center">
-          <Link href="/">
-            <KagentLogoWithText className="h-5" />
-          </Link>
+    <nav className="navbar-new">
+      <div className="navbar-inner">
+        <Link href="/" className="navbar-logo">
+          <KagentLogoWithText className="h-5" />
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
-            <Button
-              variant="link"
-              className={`${
-                isActive("/blog")
-                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                  : "text-secondary-foreground"
-              }`}
-              asChild
-            >
-              <Link href="/blog">Blog</Link>
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="link"
-                  className={`flex items-center ${
-                    pathname.startsWith("/docs")
-                      ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                      : "text-secondary-foreground"
-                  }`}
-                >
-                  Docs
-                  <ChevronDown className="ml-1 w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56 shadow-md rounded-md py-2"
-                align="start"
+        {!isDocsPage && (
+          <div className="navbar-site-links">
+            {SITE_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`navbar-site-link ${isActive(link.href) ? 'navbar-site-link-active' : ''}`}
               >
-                <DropdownMenuItem
-                  onClick={() => (window.location.href = "/docs/kagent")}
-                  className={`flex items-center space-x-2 cursor-pointer transition-colors group ${
-                    pathname.startsWith("/docs/kagent")
-                      ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                      : "hover:bg-primary/10"
-                  }`}
-                >
-                  <KagentLogo className="w-4 h-4 transition-colors group-hover:text-primary" />
-                  <span>kagent</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => (window.location.href = "/docs/kmcp")}
-                  className={`flex items-center space-x-2 cursor-pointer transition-colors group ${
-                    pathname.startsWith("/docs/kmcp")
-                      ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                      : "hover:bg-primary/10"
-                  }`}
-                >
-                  <KMCPIcon className="w-4 h-4 transition-colors group-hover:text-primary" />
-                  <span>kMCP</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button
-              variant="link"
-              className={`${
-                isActive("/tools")
-                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                  : "text-secondary-foreground"
-              }`}
-              asChild
-            >
-              <Link href="/tools">Tools</Link>
-            </Button>
-
-            <Button
-              variant="link"
-              className={`${
-                isActive("/agents")
-                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                  : "text-secondary-foreground"
-              }`}
-              asChild
-            >
-              <Link href="/agents">Agents</Link>
-            </Button>
-
-            <Button
-              variant="link"
-              className={`${
-                isActive(GITHUB_LINK)
-                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                  : "text-secondary-foreground"
-              }`}
-              asChild
-            >
-              <Link href={GITHUB_LINK}>GitHub</Link>
-            </Button>
-
-            <Button
-              variant="link"
-              className={`${
-                isActive("/community")
-                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                  : "text-secondary-foreground"
-              }`}
-              asChild
-            >
-              <Link href="/community">Community</Link>
-            </Button>
-
-            <Button
-              variant="link"
-              className={`${
-                isActive("/enterprise")
-                  ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                  : "text-secondary-foreground"
-              }`}
-              asChild
-            >
-              <Link href="/enterprise">Enterprise</Link>
-            </Button>
-
-            <DocSearch
-              appId="0Q0AZY5UR3"
-              indexName="kagent"
-              apiKey="fd2a6ceddf6d52e55495a46fc7b0a5db"
-            />
-
-            <ThemeToggle />
-            <Button variant="secondary" asChild>
-              <Link href="/docs/kagent/getting-started/quickstart">
-                Get Started
+                {link.title}
               </Link>
-            </Button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="flex items-center md:hidden">
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-2 px-2"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden pt-4 pb-2">
-            <div className="flex flex-col space-y-2">
-              <Button
-                variant="ghost"
-                className={`justify-start ${
-                  isActive("/blog")
-                    ? "font-bold text-primary underline decoration-white underline-offset-4"
-                    : ""
-                }`}
-                asChild
-              >
-                <Link href="/blog">Blog</Link>
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`justify-start flex items-center ${
-                      pathname.startsWith("/docs")
-                        ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                        : ""
-                    }`}
-                  >
-                    Docs
-                    <ChevronDown className="ml-1 w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-56 shadow-md rounded-md py-2"
-                  align="start"
-                >
-                  <DropdownMenuItem
-                    onClick={() => (window.location.href = "/docs/kagent")}
-                    className={`flex items-center space-x-2 cursor-pointer transition-colors group ${
-                      pathname.startsWith("/docs/kagent")
-                        ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                        : "hover:bg-primary/10"
-                    }`}
-                  >
-                    <KagentLogo className="w-4 h-4 transition-colors group-hover:text-primary" />
-                    <span>kagent</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => (window.location.href = "/docs/kmcp")}
-                    className={`flex items-center space-x-2 cursor-pointer transition-colors group ${
-                      pathname.startsWith("/docs/kmcp")
-                        ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                        : "hover:bg-primary/10"
-                    }`}
-                  >
-                    <KMCPIcon className="w-4 h-4 transition-colors group-hover:text-primary" />
-                    <span>KMCP</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                variant="ghost"
-                className={`justify-start ${
-                  isActive("/tools")
-                    ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                    : ""
-                }`}
-                asChild
-              >
-                <Link href="/tools">Tools</Link>
-              </Button>
-
-              <Button
-                variant="ghost"
-                className={`justify-start ${
-                  isActive("/agents")
-                    ? "font-bold text-primary underline decoration-primary underline-offset-4"
-                    : ""
-                }`}
-                asChild
-              >
-                <Link href="/agents">Agents</Link>
-              </Button>
-
-              <Button
-                variant="ghost"
-                className={`justify-start ${
-                  isActive(GITHUB_LINK)
-                    ? "font-bold text-primary underline decoration-white underline-offset-4"
-                    : ""
-                }`}
-                asChild
-              >
-                <Link href={GITHUB_LINK}>GitHub</Link>
-              </Button>
-
-              <Button
-                variant="ghost"
-                className={`justify-start ${
-                  isActive("/community")
-                    ? "font-bold text-primary underline decoration-white underline-offset-4"
-                    : ""
-                }`}
-                asChild
-              >
-                <Link href="/community">Community</Link>
-              </Button>
-
-              <Button
-                variant="ghost"
-                className={`justify-start ${
-                  isActive("/enterprise")
-                    ? "font-bold text-primary underline decoration-white underline-offset-4"
-                    : ""
-                }`}
-                asChild
-              >
-                <Link href="/enterprise">Enterprise</Link>
-              </Button>
-
-              <Button variant="secondary" className="mt-4" asChild>
-                <Link href="/docs/kagent/getting-started/quickstart">
-                  Get Started
-                </Link>
-              </Button>
-            </div>
+            ))}
           </div>
         )}
+
+        <div className="navbar-right">
+          <DocSearch
+            appId="0Q0AZY5UR3"
+            indexName="kagent"
+            apiKey="fd2a6ceddf6d52e55495a46fc7b0a5db"
+          />
+
+          {stars && (
+            <Link
+              href={GITHUB_LINK}
+              className="navbar-chip"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+              <span className="navbar-chip-count">{stars}</span>
+            </Link>
+          )}
+
+          {version && (
+            <Link
+              href={`${GITHUB_LINK}/releases/tag/${version}`}
+              className="navbar-version"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {version}
+            </Link>
+          )}
+
+          <ThemeToggle />
+        </div>
       </div>
     </nav>
   );
