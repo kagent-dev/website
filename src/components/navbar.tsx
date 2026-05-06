@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import KagentLogoWithText from "./icons/kagent-logo-text";
 import { ThemeToggle } from "./theme-toggle";
 import { DocSearch } from "@docsearch/react";
-import docsNavigation from "@/config/navigation.json";
 
 const SITE_LINKS = [
   { title: 'Docs', href: '/docs/kagent' },
@@ -14,11 +13,6 @@ const SITE_LINKS = [
   { title: 'Community', href: '/community' },
   { title: 'Enterprise', href: '/enterprise' },
 ];
-
-const DOCS_LINKS = docsNavigation.map((section: { title: string; href: string }) => ({
-  title: section.title,
-  href: section.href,
-}));
 
 export default function Navbar() {
   const pathname = usePathname();
