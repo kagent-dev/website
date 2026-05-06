@@ -22,6 +22,10 @@
       {
         "title": "Local Development",
         "href": "/docs/kagent/getting-started/local-development"
+      },
+      {
+        "title": "Features",
+        "href": "/docs/kagent/introduction/features"
       }
     ]
   },
@@ -78,6 +82,11 @@
     "href": "/docs/kagent/concepts/agents",
     "items": [
       {
+        "title": "Agents Registry",
+        "href": "/agents",
+        "external": true
+      },
+      {
         "title": "Agent Concepts",
         "href": "/docs/kagent/concepts/agents"
       },
@@ -123,6 +132,11 @@
     "title": "Tools & Plugins",
     "href": "/docs/kagent/concepts/tools",
     "items": [
+      {
+        "title": "Tools Registry",
+        "href": "/tools",
+        "external": true
+      },
       {
         "title": "Tool Concepts",
         "href": "/docs/kagent/concepts/tools"

@@ -9,8 +9,6 @@ import { DocSearch } from "@docsearch/react";
 
 const SITE_LINKS = [
   { title: 'Docs', href: '/docs/kagent' },
-  { title: 'Agents', href: '/agents' },
-  { title: 'Tools', href: '/tools' },
   { title: 'Blog', href: '/blog' },
   { title: 'Community', href: '/community' },
   { title: 'Enterprise', href: '/enterprise' },
