@@ -26,6 +26,32 @@
     ]
   },
   {
+    "title": "Install",
+    "href": "/docs/kagent/introduction/installation",
+    "items": [
+      {
+        "title": "Installing kagent",
+        "href": "/docs/kagent/introduction/installation"
+      },
+      {
+        "title": "Helm Chart Configuration",
+        "href": "/docs/kagent/resources/helm"
+      },
+      {
+        "title": "Upgrade kagent",
+        "href": "/docs/kagent/operations/upgrade"
+      },
+      {
+        "title": "Uninstall kagent",
+        "href": "/docs/kagent/operations/uninstall"
+      },
+      {
+        "title": "Operational Considerations",
+        "href": "/docs/kagent/operations/operational-considerations"
+      }
+    ]
+  },
+  {
     "title": "Features",
     "href": "/docs/kagent/introduction/features",
     "items": [
@@ -76,32 +102,6 @@
       {
         "title": "Postgres Storage",
         "href": "/docs/kagent/introduction/features#postgres-storage"
-      }
-    ]
-  },
-  {
-    "title": "Install",
-    "href": "/docs/kagent/introduction/installation",
-    "items": [
-      {
-        "title": "Installing kagent",
-        "href": "/docs/kagent/introduction/installation"
-      },
-      {
-        "title": "Helm Chart Configuration",
-        "href": "/docs/kagent/resources/helm"
-      },
-      {
-        "title": "Upgrade kagent",
-        "href": "/docs/kagent/operations/upgrade"
-      },
-      {
-        "title": "Uninstall kagent",
-        "href": "/docs/kagent/operations/uninstall"
-      },
-      {
-        "title": "Operational Considerations",
-        "href": "/docs/kagent/operations/operational-considerations"
       }
     ]
   },
