@@ -102,14 +102,6 @@
         "href": "/docs/kagent/concepts/tools",
         "items": [
           {
-            "title": "Tool Concepts",
-            "href": "/docs/kagent/concepts/tools"
-          },
-          {
-            "title": "Tools Ecosystem",
-            "href": "/docs/kagent/resources/tools-ecosystem"
-          },
-          {
             "title": "kmcp Overview",
             "href": "/docs/kmcp/introduction"
           },
@@ -200,6 +192,14 @@
       {
         "title": "Tools Registry",
         "href": "/tools"
+      },
+      {
+        "title": "Tool Concepts",
+        "href": "/docs/kagent/concepts/tools"
+      },
+      {
+        "title": "Tools Ecosystem",
+        "href": "/docs/kagent/resources/tools-ecosystem"
       }
     ]
   },
