@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
+import adopters from "@/data/adopters.yaml";
 
 /* ============================================================
    Icon component — line icons, 1.7px stroke
@@ -176,6 +177,65 @@ const HowItWorks = () => {
 };
 
 /* ============================================================
+   Quick Start — tabbed terminal install block
+   ============================================================ */
+const INSTALL_TABS = [
+  { label: 'One-liner', cmd: 'curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash' },
+  { label: 'Brew', cmd: 'brew install kagent' },
+];
+
+const QuickStart = () => {
+  const [tab, setTab] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(INSTALL_TABS[tab].cmd);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [tab]);
+
+  return (
+    <div className="rd-quickstart">
+      <div className="rd-qs-terminal">
+        <div className="rd-qs-bar">
+          <div className="rd-qs-dots"><i /><i /><i /></div>
+          <div className="rd-qs-tabs">
+            {INSTALL_TABS.map((t, i) => (
+              <button
+                key={i}
+                className={`rd-qs-tab ${i === tab ? 'active' : ''}`}
+                onClick={() => { setTab(i); setCopied(false); }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <button className="rd-qs-copy" onClick={copy} aria-label="Copy command">
+            {copied ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11"/></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            )}
+          </button>
+        </div>
+        <div className="rd-qs-body">
+          <code>
+            <span className="rd-qs-prompt">$</span> {INSTALL_TABS[tab].cmd}
+          </code>
+        </div>
+      </div>
+
+      <p className="rd-qs-requires">
+        <strong>Requires:</strong>{' '}
+        <a href="https://kind.sigs.k8s.io/docs/user/quick-start/" target="_blank" rel="noopener noreferrer">kind</a>,{' '}
+        <a href="https://helm.sh/docs/intro/install/" target="_blank" rel="noopener noreferrer">Helm</a>, and{' '}
+        <a href="https://kubernetes.io/docs/tasks/tools/" target="_blank" rel="noopener noreferrer">kubectl</a>
+      </p>
+    </div>
+  );
+};
+
+/* ============================================================
    Main page
    ============================================================ */
 export default function RedesignPage() {
@@ -237,6 +297,9 @@ export default function RedesignPage() {
               <span className="rd-dot" />
               <span>Works with any LLM</span>
             </div>
+
+            {/* Quick Start terminal */}
+            <QuickStart />
           </div>
 
           {/* Hero visual — platform hero image in browser frame */}
@@ -533,37 +596,30 @@ export default function RedesignPage() {
         </div>
       </section>
 
-      {/* EDITIONS */}
-      <section className="rd-editions" id="editions">
+      {/* WHO USES */}
+      <section className="rd-adopters" id="adopters">
         <div className="rd-container">
           <div className="rd-section-head rv">
-            <span className="rd-eyebrow">Fully open source</span>
-            <h2>Everything included. No paywall.</h2>
-            <p>kagent is open source forever. Every feature ships in the community edition — no enterprise tier required.</p>
+            <span className="rd-eyebrow">Adopters</span>
+            <h2>Who uses our <span className="rd-grad">projects</span></h2>
           </div>
-          <div className="rd-ed-grid" style={{ maxWidth: 640, margin: '0 auto' }}>
-            <div className="rd-ed-card rd-ed-os rv">
-              <div className="rd-ed-tag">OPEN SOURCE · APACHE 2.0</div>
-              <h3>kagent</h3>
-              <p className="rd-ed-sub">Everything you need to run agents on a Kubernetes cluster. Forever free, forever open.</p>
-              <ul className="rd-ed-list">
-                {[
-                  'Agent and Session CRDs',
-                  'Native MCP and A2A support',
-                  'OpenTelemetry tracing + Prometheus metrics',
-                  'CLI, dashboard, and Helm chart',
-                  'NemoClaw support',
-                  'Chat channels — Slack, Discord, Telegram, WhatsApp',
-                  'Community support via Discord',
-                ].map((t, i) => <li key={i}><Icon name="check" size={16} />{t}</li>)}
-              </ul>
-              <div className="rd-ed-cta">
-                <Link href={GITHUB_LINK} className="rd-btn rd-btn--ghost" target="_blank" rel="noopener noreferrer">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
-                  Star on GitHub
-                </Link>
-              </div>
-            </div>
+          <div className="rd-adopters-grid rv">
+            {(adopters as { adopters: { name: string; logo?: string; logo_light?: string; logo_dark?: string; website: string }[] }).adopters.map((adopter, i) => (
+              <a key={i} href={adopter.website} target="_blank" rel="noopener noreferrer" className="rd-adopter-logo">
+                <Image
+                  src={adopter.logo || adopter.logo_light || ''}
+                  alt={adopter.name}
+                  width={150}
+                  height={60}
+                  style={{ objectFit: 'contain', maxHeight: 48 }}
+                />
+              </a>
+            ))}
+          </div>
+          <div className="rd-adopters-add rv">
+            <a href="https://github.com/kagent-dev/website?tab=readme-ov-file#adopters" target="_blank" rel="noopener noreferrer">
+              Add your logo here
+            </a>
           </div>
         </div>
       </section>
