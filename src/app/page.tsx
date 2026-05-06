@@ -284,7 +284,7 @@ export default function RedesignPage() {
             </p>
             <div className="rd-hero-ctas">
               <Link href="/docs/kagent/getting-started/quickstart" className="rd-btn rd-btn--purple">
-                Install kagent
+                Get Started
                 <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </Link>
               <Link href={GITHUB_LINK} className="rd-btn rd-btn--ghost" target="_blank" rel="noopener noreferrer">
@@ -675,7 +675,7 @@ export default function RedesignPage() {
             <p className="rd-lead">One Helm chart. One CRD. One namespace. You&apos;ll be looking at agent traces before your coffee gets cold.</p>
             <div className="rd-hero-ctas">
               <Link href="/docs/kagent/getting-started/quickstart" className="rd-btn rd-btn--purple">
-                Install kagent
+                Get Started
                 <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </Link>
               <Link href="/docs/kagent" className="rd-btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
