@@ -48,6 +48,128 @@
       {
         "title": "Operational Considerations",
         "href": "/docs/kagent/operations/operational-considerations"
+      },
+      {
+        "title": "Agents",
+        "href": "/docs/kagent/concepts/agents",
+        "items": [
+          {
+            "title": "Agent Concepts",
+            "href": "/docs/kagent/concepts/agents"
+          },
+          {
+            "title": "A2A Agents",
+            "href": "/docs/kagent/examples/a2a-agents"
+          },
+          {
+            "title": "BYO ADK Agents",
+            "href": "/docs/kagent/examples/a2a-byo"
+          },
+          {
+            "title": "BYO CrewAI Agents",
+            "href": "/docs/kagent/examples/crewai-byo"
+          },
+          {
+            "title": "BYO LangGraph Agents",
+            "href": "/docs/kagent/examples/langchain-byo"
+          },
+          {
+            "title": "Agent Sandbox",
+            "href": "/docs/kagent/examples/agent-sandbox"
+          },
+          {
+            "title": "Agent Memory",
+            "href": "/docs/kagent/concepts/agent-memory"
+          },
+          {
+            "title": "Skills",
+            "href": "/docs/kagent/examples/skills"
+          },
+          {
+            "title": "Human-in-the-Loop",
+            "href": "/docs/kagent/examples/human-in-the-loop"
+          },
+          {
+            "title": "Documentation Agent",
+            "href": "/docs/kagent/examples/documentation"
+          }
+        ]
+      },
+      {
+        "title": "Tools & Plugins",
+        "href": "/docs/kagent/concepts/tools",
+        "items": [
+          {
+            "title": "Tool Concepts",
+            "href": "/docs/kagent/concepts/tools"
+          },
+          {
+            "title": "Tools Ecosystem",
+            "href": "/docs/kagent/resources/tools-ecosystem"
+          },
+          {
+            "title": "kmcp Overview",
+            "href": "/docs/kmcp/introduction"
+          },
+          {
+            "title": "kmcp Quickstart",
+            "href": "/docs/kmcp/quickstart"
+          },
+          {
+            "title": "Develop MCP Servers",
+            "href": "/docs/kmcp/develop",
+            "items": [
+              {
+                "title": "FastMCP Python",
+                "href": "/docs/kmcp/develop/fastmcp-python"
+              },
+              {
+                "title": "MCP Go",
+                "href": "/docs/kmcp/develop/mcp-go"
+              }
+            ]
+          },
+          {
+            "title": "Deploy to Kubernetes",
+            "href": "/docs/kmcp/deploy",
+            "items": [
+              {
+                "title": "Install kmcp Controller",
+                "href": "/docs/kmcp/deploy/install-controller"
+              },
+              {
+                "title": "Deploy MCP Servers",
+                "href": "/docs/kmcp/deploy/server"
+              }
+            ]
+          },
+          {
+            "title": "Manage Secrets",
+            "href": "/docs/kmcp/secrets"
+          }
+        ]
+      },
+      {
+        "title": "Channels",
+        "href": "/docs/kagent/channels",
+        "items": [
+          {
+            "title": "Slack",
+            "href": "/docs/kagent/examples/slack-a2a"
+          },
+          {
+            "title": "Discord",
+            "href": "/docs/kagent/examples/discord-a2a"
+          },
+          {
+            "title": "Telegram",
+            "href": "/docs/kagent/examples/telegram-bot"
+          },
+          {
+            "title": "MCP Clients (Cursor, Claude)",
+            "href": "/docs/kagent/examples/agents-mcp"
+          }
+        ]
       }
     ]
   },
@@ -106,134 +228,24 @@
     ]
   },
   {
-    "title": "Channels",
-    "href": "/docs/kagent/channels",
-    "items": [
-      {
-        "title": "Slack",
-        "href": "/docs/kagent/examples/slack-a2a"
-      },
-      {
-        "title": "Discord",
-        "href": "/docs/kagent/examples/discord-a2a"
-      },
-      {
-        "title": "Telegram",
-        "href": "/docs/kagent/examples/telegram-bot"
-      },
-      {
-        "title": "MCP Clients (Cursor, Claude)",
-        "href": "/docs/kagent/examples/agents-mcp"
-      }
-    ]
-  },
-  {
     "title": "Agents",
-    "href": "/docs/kagent/concepts/agents",
+    "href": "/agents",
     "items": [
       {
         "title": "Agents Registry",
         "href": "/agents",
         "external": true
-      },
-      {
-        "title": "Agent Concepts",
-        "href": "/docs/kagent/concepts/agents"
-      },
-      {
-        "title": "A2A Agents",
-        "href": "/docs/kagent/examples/a2a-agents"
-      },
-      {
-        "title": "BYO ADK Agents",
-        "href": "/docs/kagent/examples/a2a-byo"
-      },
-      {
-        "title": "BYO CrewAI Agents",
-        "href": "/docs/kagent/examples/crewai-byo"
-      },
-      {
-        "title": "BYO LangGraph Agents",
-        "href": "/docs/kagent/examples/langchain-byo"
-      },
-      {
-        "title": "Agent Sandbox",
-        "href": "/docs/kagent/examples/agent-sandbox"
-      },
-      {
-        "title": "Agent Memory",
-        "href": "/docs/kagent/concepts/agent-memory"
-      },
-      {
-        "title": "Skills",
-        "href": "/docs/kagent/examples/skills"
-      },
-      {
-        "title": "Human-in-the-Loop",
-        "href": "/docs/kagent/examples/human-in-the-loop"
-      },
-      {
-        "title": "Documentation Agent",
-        "href": "/docs/kagent/examples/documentation"
       }
     ]
   },
   {
-    "title": "Tools & Plugins",
-    "href": "/docs/kagent/concepts/tools",
+    "title": "Tools",
+    "href": "/tools",
     "items": [
       {
         "title": "Tools Registry",
         "href": "/tools",
         "external": true
-      },
-      {
-        "title": "Tool Concepts",
-        "href": "/docs/kagent/concepts/tools"
-      },
-      {
-        "title": "Tools Ecosystem",
-        "href": "/docs/kagent/resources/tools-ecosystem"
-      },
-      {
-        "title": "kmcp Overview",
-        "href": "/docs/kmcp/introduction"
-      },
-      {
-        "title": "kmcp Quickstart",
-        "href": "/docs/kmcp/quickstart"
-      },
-      {
-        "title": "Develop MCP Servers",
-        "href": "/docs/kmcp/develop",
-        "items": [
-          {
-            "title": "FastMCP Python",
-            "href": "/docs/kmcp/develop/fastmcp-python"
-          },
-          {
-            "title": "MCP Go",
-            "href": "/docs/kmcp/develop/mcp-go"
-          }
-        ]
-      },
-      {
-        "title": "Deploy to Kubernetes",
-        "href": "/docs/kmcp/deploy",
-        "items": [
-          {
-            "title": "Install kmcp Controller",
-            "href": "/docs/kmcp/deploy/install-controller"
-          },
-          {
-            "title": "Deploy MCP Servers",
-            "href": "/docs/kmcp/deploy/server"
-          }
-        ]
-      },
-      {
-        "title": "Manage Secrets",
-        "href": "/docs/kmcp/secrets"
       }
     ]
   },
