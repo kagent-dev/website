@@ -23,6 +23,8 @@ interface DocsLayoutClientProps {
 export default function DocsLayoutClient({ navigation, children }: DocsLayoutClientProps) {
   const pathname = usePathname();
 
+  const alwaysExpandedSections = new Set(['Install', 'Channels']);
+
   function initExpandedSections(nav: NavItem[], path: string): Record<string, boolean> {
     const result: Record<string, boolean> = {};
     const match = (href: string) => path === href || path.startsWith(href + '/');
@@ -31,10 +33,11 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
       return items.some(item => match(item.href) || hasActive(item.items));
     };
     nav.forEach(section => {
-      result[section.title] = match(section.href) || hasActive(section.items);
+      const forceOpen = alwaysExpandedSections.has(section.title);
+      result[section.title] = forceOpen || match(section.href) || hasActive(section.items);
       section.items?.forEach(item => {
         if (item.items?.length) {
-          result[item.title] = match(item.href) || hasActive(item.items);
+          result[item.title] = forceOpen || match(item.href) || hasActive(item.items);
         }
       });
     });
@@ -117,13 +120,13 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
                             : 'text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-white/5'
                         }`}
                         onClick={() => {
-                          if (item.items?.length) toggleSection(item.title);
+                          if (item.items?.length && !alwaysExpandedSections.has(activeSection.title)) toggleSection(item.title);
                         }}
                       >
                         {item.title}
                       </Link>
                     )}
-                    {item.items && item.items.length > 0 && (
+                    {item.items && item.items.length > 0 && !alwaysExpandedSections.has(activeSection.title) && (
                       <button
                         onClick={() => toggleSection(item.title)}
                         className="ml-1 p-1 hover:bg-white/10 rounded transition-colors"
