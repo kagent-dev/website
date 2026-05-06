@@ -777,23 +777,22 @@
 .rd-adopter-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 24px;
+  justify-content: center;
+  padding: 16px 32px;
   background: #fff;
   border: 1px solid #ECEAF2;
   border-radius: 14px;
-  white-space: nowrap;
-  font-family: 'Figtree', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: #151927;
   flex-shrink: 0;
   transition: box-shadow 200ms, border-color 200ms, transform 200ms;
+  opacity: 0.7;
+  filter: grayscale(30%);
 }
 .rd-adopter-item:hover {
   box-shadow: 0 4px 16px rgba(15,19,35,0.08);
   border-color: #D1CCE4;
   transform: translateY(-2px);
+  opacity: 1;
+  filter: grayscale(0%);
 }
 .rd-adopters-add {
   text-align: center;
