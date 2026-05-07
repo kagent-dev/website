@@ -18,7 +18,7 @@ An AI agent is an application that can interact with users in natural language. 
 Each agent consists of the following components:
 
 - Agent instructions: A set of instructions that define the agent's behavior and capabilities. This is also called a system prompt.
-- Tools: Functions that the agent can use to interact with its environment. Kagent features built-in tools and has support for accessing tools over the [MCP](https://github.com/modelcontextprotocol).
+- Tools: Functions that the agent can use to interact with its environment. kagent features built-in tools and has support for accessing tools over the [MCP](https://github.com/modelcontextprotocol).
 - Skills: Descriptions of capabilities that help the agent act more autonomously and guide its tool usage and planning.
 
 ## Agent Instructions
@@ -100,11 +100,11 @@ If the user asks "List all pods in the cluster", the agent can use the **list_re
 
 Some tools support additional configuration that can be set in when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
 
-Kagent comes with a set of built-in tools that you can use to interact with your environment. Kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
 
 ## Human-in-the-Loop
 
-Kagent supports Human-in-the-Loop (HITL) to keep humans in control of agent actions. You can require user approval before an agent executes sensitive tools, and agents can ask users questions when they need clarification.
+kagent supports Human-in-the-Loop (HITL) to keep humans in control of agent actions. You can require user approval before an agent executes sensitive tools, and agents can ask users questions when they need clarification.
 
 For a hands-on tutorial that walks through setting up HITL with tool approval and the `ask_user` tool, see the [Human-in-the-Loop example](/docs/kagent/examples/human-in-the-loop).
 
@@ -153,7 +153,7 @@ For example, two agents may share the same tools but use them differently based 
 Skills can refer to two broad types:
 
 * **A2A skills**: Metadata-based skills that are defined inline in the agent specification.
-* **Kagent's container-based skills**: Executable skills packaged as container images and loaded from registries, for reuse across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
+* **kagent's container-based skills**: Executable skills packaged as container images and loaded from registries, for reuse across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
 
 ### A2A skills metadata
 
@@ -179,7 +179,7 @@ A2A skills are instructions about capabilities, not the capabilities themselves.
 
 ### Container-based skills
 
-Kagent's container-based skills are executable skill implementations packaged as container images. These are runnable procedural logic that the agent can use as an extension of itself.
+kagent's container-based skills are executable skill implementations packaged as container images. These are runnable procedural logic that the agent can use as an extension of itself.
 
 Container-based skills include:
 
@@ -193,7 +193,7 @@ These skills contain instructions, scripts, and resources that are loaded from c
 
 Container-based skills are actual, callable capabilities—not just descriptions of capabilities.
 
-Kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: you can use kagent's skills with any LLM provider, not just Anthropic Claude. This means your agents can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
+kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: you can use kagent's skills with any LLM provider, not just Anthropic Claude. This means your agents can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
 
 ### Git-based skills
 
@@ -306,7 +306,7 @@ For setup steps, see the [Agent Sandbox example](/docs/kagent/examples/agent-san
 
 ## Agents as Tools
 
-Kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
+kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
 
 Here's how you could reference an existing agent (`promql-agent`) as a tool:
 

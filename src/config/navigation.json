@@ -21,6 +21,11 @@
             "description": "Understand what kagent is and its core purpose."
           },
           {
+            "title": "Features",
+            "href": "/docs/kagent/introduction/features",
+            "description": "A complete overview of kagent platform capabilities."
+          },
+          {
             "title": "Feature Roadmap",
             "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
             "external": true
@@ -61,6 +66,18 @@
             "title": "Writing System Prompts",
             "href": "/docs/kagent/getting-started/system-prompts",
             "description": "Learn the art and science of writing effective system prompts for your kagent agents."
+          }
+        ]
+      },
+      {
+        "title": "Channels",
+        "href": "/docs/kagent/channels",
+        "description": "Connect kagent agents to the messaging platforms your team already uses.",
+        "items": [
+          {
+            "title": "WhatsApp",
+            "href": "/docs/kagent/channels/whatsapp",
+            "description": "Connect WhatsApp to your kagent agents for mobile-first cluster operations."
           }
         ]
       },
@@ -135,6 +152,11 @@
             "title": "BYO OpenAI-compatible model",
             "href": "/docs/kagent/supported-providers/byo-openai",
             "description": "Bring your own OpenAI-compatible model to kagent."
+          },
+          {
+            "title": "xAI (Grok)",
+            "href": "/docs/kagent/supported-providers/xai",
+            "description": "Learn how to configure xAI Grok models for kagent."
           }
         ]
       },
@@ -159,9 +181,9 @@
             "description": "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions."
           },
           {
-            "title": "Using Kagent agents via MCP",
+            "title": "Using kagent agents via MCP",
             "href": "/docs/kagent/examples/agents-mcp",
-            "description": "Connect external clients like Cursor and Claude to interact with Kagent agents using the Model Context Protocol."
+            "description": "Connect external clients like Cursor and Claude to interact with kagent agents using the Model Context Protocol."
           },
           {
             "title": "BYO CrewAI Agents",

@@ -91,7 +91,7 @@ const EnterprisePage = () => {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-xl text-muted-foreground mb-8 leading-relaxed"
               >
-                Kagent was originally created by <Link href="https://solo.io" className="text-primary hover:text-primary/80" target="_blank" rel="noopener noreferrer">Solo.io</Link> and is a <Link href="https://cncf.io" className="text-primary hover:text-primary/80" target="_blank" rel="noopener noreferrer">CNCF</Link> project. The listed partners offer enterprise distributions, training, and commercial support for kagent.
+                kagent was originally created by <Link href="https://solo.io" className="text-primary hover:text-primary/80" target="_blank" rel="noopener noreferrer">Solo.io</Link> and is a <Link href="https://cncf.io" className="text-primary hover:text-primary/80" target="_blank" rel="noopener noreferrer">CNCF</Link> project. The listed partners offer enterprise distributions, training, and commercial support for kagent.
               </motion.p>
             </div>
             <div className="lg:col-span-4 flex justify-center lg:justify-end">
@@ -265,7 +265,7 @@ const EnterprisePage = () => {
             </div>
 
             <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-              Kagent is supported by contributions from leading technology companies and organizations worldwide.
+              kagent is supported by contributions from leading technology companies and organizations worldwide.
             </p>
           </motion.div>
 
