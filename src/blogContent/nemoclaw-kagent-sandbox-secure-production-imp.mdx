@@ -50,7 +50,7 @@ With the theory and the "why" talked about in the two previous sections, let's s
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
-kind: Sandbox
+kind: AgentHarness
 metadata:
   name: my-sandbox
   namespace: kagent
@@ -65,7 +65,7 @@ spec:
 2. Run the following to see your sandbox on the terminal:
 
 ```shell
-kubectl get sandboxes -n kagent
+kubectl get agentharness -n kagent
 ```
 
 3. You can then use your sandbox within the kagent UI.
@@ -110,7 +110,7 @@ kubectl -n kagent create secret generic telegram-credentials \
 
 ```yaml
   apiVersion: kagent.dev/v1alpha2
-  kind: Sandbox
+  kind: AgentHarness
   metadata:
     name: my-claw
     namespace: kagent
