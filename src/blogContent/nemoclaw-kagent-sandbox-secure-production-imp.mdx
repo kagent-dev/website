@@ -7,6 +7,8 @@ export const metadata = {
   authorIds: ["michaellevan"],
 };
 
+# NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation
+
 
 There are many Agentic clients (to interact with your Agent) and methods for building via your LLM of choice, but what about the full end-to-end suite? Client, sandbox, observability, security, AuthN/Z, policies, and a full enterprise integration?
 
@@ -18,9 +20,9 @@ In this blog post, you will learn from a theoretical and hands-on perspective ho
 
 Before getting into the hands-on portion, let's first dive into the key aspects of this implement:
 
-1. kagent
-2. NemoClaw
-3. OpenShell
+1. [kagent](https://github.com/kagent-dev/kagent)
+2. [NemoClaw](https://github.com/NVIDIA/NemoClaw)
+3. [OpenShell](https://github.com/NVIDIA/OpenShell/)
 
 kagent is the agentic runtime that you use to deploy, run, manage, secure, and govern Agents in a Kubernetes environment. Without it, you would need to implement a client/server architecture (the client because the interaction between you and your Agent and server being the hosted/exposed Agent) in a manual way on Kubernetes. Kagent provides the CRDs and the ability to manage and scale Agents just like you would any other Kubernetes workload.
 
@@ -46,7 +48,7 @@ With the theory and the "why" talked about in the two previous sections, let's s
 
 1. Using the kagent Sandbox CRD, deploy a NemoClaw-based container image for interacting with OpenShell so you can have a fully isolated Agent environment.
 
-```
+```yaml
 apiVersion: kagent.dev/v1alpha2
 kind: Sandbox
 metadata:
@@ -62,7 +64,7 @@ spec:
 
 2. Run the following to see your sandbox on the terminal:
 
-```
+```shell
 kubectl get sandboxes -n kagent
 ```
 
@@ -80,7 +82,7 @@ kubectl get sandboxes -n kagent
 Kicking things up a notch, lets integrate our Agentic sandbox environment with Telegram so you can interact with your Agent on the go.
 
 1. Install Telegram on your phone.
-2. Search for “@BotFather
+2. Search for `@BotFather`
 
 ![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo3.png)
 
@@ -94,19 +96,19 @@ Kicking things up a notch, lets integrate our Agentic sandbox environment with T
 
 5. Create a Kubernetes secret with your token
 
-```
+```shell
 kubectl -n kagent create secret generic telegram-credentials \
 --from-literal=bot-token="$TELEGRAM_BOT_TOKEN" \
 --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-6. Within Telegram, search for “@RawDataBot” and get your ID.
+6. Within Telegram, search for `@RawDataBot` and get your ID.
 
 ![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo6.png)
 
 7. Deploy a new Sandbox that uses your telegram ID and the bot token.
 
-```
+```yaml
   apiVersion: kagent.dev/v1alpha2
   kind: Sandbox
   metadata:
@@ -138,4 +140,8 @@ Congrats! You are officially up and operational with kagent, NemoClaw, and OpenS
 
 ## Closing Thoughts
 
-Jenson mentioned at the latest GTC keynote that "OpenClaw is like the Operating System for personal AI". It allows anyone to run, build, and orchestrate as many Agentic environments as they'd like, and these Agentic environments can be anything from a banking agentic to a healthcare agentic to a full suite of multi-agent workloads running within any and every environment. The orchestration layer for where the Agents and sandboxes run in Kubernetes, but what the Agent does can be for anything and everything outside of k8s.
+Jensen mentioned at the latest GTC keynote:
+
+>OpenClaw is like the Operating System for personal AI
+
+It allows anyone to run, build, and orchestrate as many Agentic environments as they'd like, and these Agentic environments can be anything from a banking agentic to a healthcare agentic to a full suite of multi-agent workloads running within any and every environment. The orchestration layer for where the Agents and sandboxes run in Kubernetes, but what the Agent does can be for anything and everything outside of Kubernetes.
