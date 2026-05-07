@@ -91,6 +91,13 @@ const posts = [
         title: "kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI",
         description: 'kagent v0.9.1 brings AWS Bedrock support for Claude with extended thinking, REST API secret management, sidecar container support, Git-based skill configuration, and a configurable Helm runtime.',
         authorId: 'sebastianmaniak',
+    },
+    {
+        slug: 'nemoclaw-kagent-sandbox-secure-production-imp',
+        publishDate: '2026-05-07',
+        title: 'NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation',
+        description: 'Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell',
+        authorId: 'michaellevan',
     }
 ]
 
