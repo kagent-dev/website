@@ -33,7 +33,7 @@ export const authors: Author[] = [
     name: "Jet Chiang",
     title: "Linux Foundation Mentee",
     photo: "/images/authors/jetchiang.jpg",
-    bio: "Jet is an aspiring machine learning engineer + researcher studying at the University of Toronto. He is the Linux Foundation Mentee at Kagent for 2025.",
+    bio: "Jet is an aspiring machine learning engineer + researcher studying at the University of Toronto. He is the Linux Foundation Mentee at kagent for 2025.",
   },
   {
     id: "sebastianmaniak",

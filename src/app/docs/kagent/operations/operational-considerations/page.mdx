@@ -18,7 +18,7 @@ Review the following operational considerations when running kagent in productio
 
 ## Automatic agent restart on secret updates
 
-Kagent automatically restarts agents when you update the secrets that the agents reference. This restart ensures that agents pick up new API keys, TLS certificates, and other secret values without manual intervention.
+kagent automatically restarts agents when you update the secrets that the agents reference. This restart ensures that agents pick up new API keys, TLS certificates, and other secret values without manual intervention.
 
 The following secret updates trigger automatic agent restarts:
 
@@ -64,7 +64,7 @@ controller:
 
 ## Database configuration
 
-Kagent uses PostgreSQL as the database backend.
+kagent uses PostgreSQL as the database backend.
 
 By default, a bundled PostgreSQL instance is deployed when you install kagent. This bundled instance works out of the box without any external prerequisites. It is a simple instance that is meant for demos, local development, and short proofs of concept.
 
@@ -176,7 +176,7 @@ controller:
 
 ## Secure execution environment
 
-Kagent supports Kubernetes security contexts to run agents and tool servers with reduced privileges. Configure `securityContext` and `podSecurityContext` on your Agent or ToolServer resources to enforce secure execution.
+kagent supports Kubernetes security contexts to run agents and tool servers with reduced privileges. Configure `securityContext` and `podSecurityContext` on your Agent or ToolServer resources to enforce secure execution.
 
 Common settings include:
 

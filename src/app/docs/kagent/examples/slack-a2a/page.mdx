@@ -16,7 +16,7 @@ export const metadata = {
 
 # Integrating kagent with Slack
 
-Kagent enables you to create AI agents that run inside your Kubernetes cluster. They have access to a variety of [built-in tools](/docs/kagent/concepts/tools) like Kubernetes, Istio, Grafana, Prometheus, Argo and can be extended with any other tools [using MCP](/docs/kagent/examples/documentation).
+kagent enables you to create AI agents that run inside your Kubernetes cluster. They have access to a variety of [built-in tools](/docs/kagent/concepts/tools) like Kubernetes, Istio, Grafana, Prometheus, Argo and can be extended with any other tools [using MCP](/docs/kagent/examples/documentation).
 
 ![Slack - A2A - MCP - kagent](/images/slack-a2a/slack-a2a-kagent.png)
 
@@ -66,7 +66,7 @@ You'll be redirected to the app's installation page. Make sure you select a chan
 
 If you open your Slack workspaces you'll notice the "My kagent app" is added to the list of apps.
 
-![Kagent app installed in Slack](/images/slack-a2a/app-in-slack.png)
+![kagent app installed in Slack](/images/slack-a2a/app-in-slack.png)
 
 Let's go back to the "OAuth & Permissions" page - notice the Bot User OAuth Token (`SLACK_BOT_TOKEN`). Copy it and save it somewhere as we'll use it later. 
 
@@ -134,7 +134,7 @@ uv run main.py
 The bot should start and the output should look like this:
 
 ```console
-INFO:root:Starting Kagent Slack bot
+INFO:root:Starting kagent Slack bot
 DEBUG:asyncio:Using selector: KqueueSelector
 ⚡️ Bolt app is running!
 ```

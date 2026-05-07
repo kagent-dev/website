@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Menu, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Background } from "@/components/background";
 import { LabCTA } from "@/components/mdx/lab-cta";
 import { LabsCarousel } from "@/components/mdx/labs-carousel";
@@ -12,7 +13,6 @@ interface NavItem {
   title: string;
   href: string;
   items?: NavItem[];
-  external?: boolean;
 }
 
 interface DocsLayoutClientProps {
@@ -23,133 +23,186 @@ interface DocsLayoutClientProps {
 export default function DocsLayoutClient({ navigation, children }: DocsLayoutClientProps) {
   const pathname = usePathname();
 
-  const alwaysExpandedSections = new Set(['Install', 'Channels']);
+  function initializeExpandedSections(navigation: NavItem[], currentPath: string): { [key: string]: boolean } {
+    const initial: { [key: string]: boolean } = {};
 
-  function initExpandedSections(nav: NavItem[], path: string): Record<string, boolean> {
-    const result: Record<string, boolean> = {};
-    const match = (href: string) => path === href || path.startsWith(href + '/');
-    const hasActive = (items?: NavItem[]): boolean => {
+    // Helper function to check if path matches
+    const isActiveItem = (href: string) => currentPath === href || currentPath.startsWith(href + '/');
+
+    // Helper function to check if section contains active item
+    const containsActiveItem = (items?: NavItem[]): boolean => {
       if (!items) return false;
-      return items.some(item => match(item.href) || hasActive(item.items));
+      return items.some(item => {
+        if (isActiveItem(item.href)) return true;
+        if (item.items) return containsActiveItem(item.items);
+        return false;
+      });
     };
-    nav.forEach(section => {
-      const forceOpen = alwaysExpandedSections.has(section.title);
-      result[section.title] = forceOpen || match(section.href) || hasActive(section.items);
+
+    navigation.forEach(section => {
+      // Expand section if it or its children contain the active page
+      initial[section.title] = isActiveItem(section.href) || containsActiveItem(section.items);
+
       section.items?.forEach(item => {
-        if (item.items?.length) {
-          result[item.title] = forceOpen || match(item.href) || hasActive(item.items);
+        if (item.items && item.items.length > 0) {
+          // Expand subsection if it or its children contain the active page
+          initial[item.title] = isActiveItem(item.href) || containsActiveItem(item.items);
         }
       });
     });
-    return result;
+    return initial;
   }
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() =>
-    initExpandedSections(navigation, pathname)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() =>
+    initializeExpandedSections(navigation, pathname)
   );
 
+  // Update expanded sections when pathname changes
   useEffect(() => {
-    setExpandedSections(initExpandedSections(navigation, pathname));
+    setExpandedSections(initializeExpandedSections(navigation, pathname));
   }, [pathname, navigation]);
 
-  const toggleSection = (title: string) => {
-    setExpandedSections(prev => ({ ...prev, [title]: !prev[title] }));
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
-
-  const sectionContainsPage = (section: NavItem): boolean => {
-    if (pathname === section.href) return true;
-    if (section.items) {
-      return section.items.some(item => {
-        if (pathname === item.href || pathname.startsWith(item.href + '/')) return true;
-        if (item.items) return item.items.some(sub => pathname === sub.href || pathname.startsWith(sub.href + '/'));
-        return false;
-      });
-    }
-    return false;
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
+    }));
   };
 
-  const activeSection = navigation.find(sectionContainsPage) || navigation[0];
+  const isActiveItem = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <>
       <Background />
       <div className="min-h-screen">
-        {/* Section tabs — always visible at top */}
-        <div className="docs-section-bar">
-          <div className="docs-section-bar-inner">
-            {navigation.map((section) => (
-              <Link
-                key={section.title}
-                href={section.href}
-                className={`docs-section-tab ${sectionContainsPage(section) ? 'docs-section-tab-active' : ''}`}
-              >
-                {section.title}
-              </Link>
-            ))}
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row min-h-[calc(100vh-256px)]">
+          {/* Mobile Sidebar Toggle */}
+          <div className="md:hidden sticky top-0 z-10 bg-background p-4 border-b flex justify-between items-center">
+            <span className="font-bold">Documentation</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="p-1"
+            >
+              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </Button>
           </div>
-        </div>
 
-        <div className="max-w-7xl mx-auto flex flex-row min-h-[calc(100vh-256px)]">
-          {/* Sidebar — always visible */}
-          <div className="docs-sidebar w-64 flex-shrink-0 border-r border-white/10 overflow-y-auto">
-            <nav className="px-3 py-6 space-y-1">
-              <div className="font-bold text-sm uppercase tracking-wide text-primary mb-3">
-                {activeSection.title}
-              </div>
-              {activeSection.items?.map((item) => (
-                <div key={item.href}>
-                  <div className="flex items-center justify-between">
-                    {item.external ? (
-                      <a
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 text-sm py-1.5 px-2 rounded-md transition-colors font-medium text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-white/5"
-                      >
-                        {item.title}
-                        <svg className="inline ml-1 opacity-50" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
-                      </a>
-                    ) : (
+          {/* Sidebar - hidden on mobile unless toggled */}
+          <div
+            className={`${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-64 flex-shrink-0 md:border-r border-white/10 overflow-y-auto`}
+          >
+            <nav className="px-2 md:px-3 py-6 md:py-16 space-y-4 md:space-y-6">
+              {navigation.map((section) => (
+                <div key={section.title}>
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    {section.href ? (
                       <Link
-                        href={item.href}
-                        className={`flex-1 text-sm py-1.5 px-2 rounded-md transition-colors font-medium ${
-                          isActive(item.href)
-                            ? 'text-primary bg-primary/10'
-                            : 'text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-white/5'
-                        }`}
+                        href={section.href}
+                        className={`font-black text-lg hover:text-primary transition-colors flex-1 ${isActiveItem(section.href) ? 'underline underline-offset-4' : ''}`}
                         onClick={() => {
-                          if (item.items?.length && !alwaysExpandedSections.has(activeSection.title)) toggleSection(item.title);
+                          // Navigate to the page AND expand/collapse if it has sub-items
+                          if (section.items && section.items.length > 0) {
+                            toggleSection(section.title);
+                          }
+                          if (window.innerWidth < 768) {
+                            setSidebarOpen(false);
+                          }
                         }}
                       >
-                        {item.title}
+                        {section.title}
                       </Link>
-                    )}
-                    {item.items && item.items.length > 0 && !alwaysExpandedSections.has(activeSection.title) && (
-                      <button
-                        onClick={() => toggleSection(item.title)}
-                        className="ml-1 p-1 hover:bg-white/10 rounded transition-colors"
-                        aria-label={`Toggle ${item.title}`}
+                    ) : (
+                      <div 
+                        className={`font-black text-lg flex-1 ${section.items && section.items.length > 0 ? 'cursor-pointer select-none hover:text-primary transition-colors' : ''}`}
+                        onClick={() => {
+                          if (section.items && section.items.length > 0) {
+                            toggleSection(section.title);
+                          }
+                        }}
                       >
-                        {expandedSections[item.title] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        {section.title}
+                      </div>
+                    )}
+                    {section.items && section.items.length > 0 && (
+                      <button
+                        onClick={() => toggleSection(section.title)}
+                        className="ml-2 p-1 hover:bg-white/10 rounded transition-colors cursor-pointer"
+                        aria-label={`Toggle ${section.title} section`}
+                      >
+                        {expandedSections[section.title] ? (
+                          <ChevronUp size={18} />
+                        ) : (
+                          <ChevronDown size={18} />
+                        )} 
                       </button>
                     )}
                   </div>
-                  {item.items && expandedSections[item.title] && (
-                    <ul className="ml-4 mt-1 mb-2 space-y-0.5 border-l border-white/10 pl-2">
-                      {item.items.map((sub) => (
-                        <li key={sub.href}>
-                          <Link
-                            href={sub.href}
-                            className={`block text-sm py-1 px-2 rounded-md transition-colors ${
-                              isActive(sub.href)
-                                ? 'text-primary font-medium bg-primary/5'
-                                : 'text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-white/5'
-                            }`}
-                          >
-                            {sub.title}
-                          </Link>
+                  {expandedSections[section.title] && (
+                    <ul className="space-y-2">
+                      {section.items?.map((item) => (
+                        <li key={item.href}>
+                          <div className="flex items-center justify-between">
+                            <Link
+                              href={item.href}
+                              className={`flex-1 text-sm py-1 hover:text-secondary-foreground transition-colors ${isActiveItem(item.href)
+                                  ? 'text-secondary-foreground font-bold underline decoration-1 underline-offset-2'
+                                  : 'text-secondary-foreground/70 font-bold'
+                                }`}
+                              onClick={() => {
+                                // Navigate to the page AND expand/collapse if it has sub-items
+                                if (item.items && item.items.length > 0) {
+                                  toggleSection(item.title);
+                                }
+                                if (window.innerWidth < 768) {
+                                  setSidebarOpen(false);
+                                }
+                              }}
+                            >
+                              {item.title}
+                            </Link>
+                            {item.items && item.items.length > 0 && (
+                              <button
+                                onClick={() => toggleSection(item.title)}
+                                className="ml-2 p-1 hover:bg-white/10 rounded transition-colors"
+                                aria-label={`Toggle ${item.title} section`}
+                              >
+                                {expandedSections[item.title] ? (
+                                  <ChevronUp size={14} />
+                                ) : (
+                                  <ChevronDown size={14} />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          {item.items && expandedSections[item.title] && (
+                            <ul className="ml-4 mt-2 space-y-2">
+                              {item.items.map((subItem) => (
+                                <li key={subItem.href}>
+                                  <Link
+                                    href={subItem.href}
+                                    className={`block text-sm py-1 hover:text-secondary-foreground ${isActiveItem(subItem.href)
+                                        ? 'text-secondary-foreground underline decoration-1 underline-offset-2'
+                                        : 'text-secondary-foreground/70'
+                                      }`}
+                                    onClick={() => {
+                                      if (window.innerWidth < 768) {
+                                        setSidebarOpen(false);
+                                      }
+                                    }}
+                                  >
+                                    {subItem.title}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -177,4 +230,4 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
       </div>
     </>
   );
-}
+} 
