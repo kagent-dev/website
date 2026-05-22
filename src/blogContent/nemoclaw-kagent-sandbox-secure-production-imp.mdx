@@ -56,7 +56,6 @@ metadata:
   namespace: kagent
 spec:
   backend: openclaw
-  image: us-docker.pkg.dev/field-engineering-us/images/openshell/openclaw-sandbox:adf18c0-netif-amd64
   modelConfigRef: default-model-config
   description: "my openclaw agent"
 
@@ -116,7 +115,6 @@ kubectl -n kagent create secret generic telegram-credentials \
     namespace: kagent
   spec:
     backend: openclaw
-    image: us-docker.pkg.dev/field-engineering-us/images/openshell/openclaw-sandbox:adf18c0-netif-amd64
     modelConfigRef: default-model-config
     description: "my openclaw agent"
     channels:
