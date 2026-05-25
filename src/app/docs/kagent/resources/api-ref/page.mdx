@@ -22,6 +22,7 @@ Package v1alpha1 contains API Schema definitions for the agent v1alpha1 API grou
 
 ### Resource Types
 - [Agent](#agent)
+- [AgentHarness](#agentharness)
 - [ModelConfig](#modelconfig)
 - [ModelProviderConfig](#modelproviderconfig)
 - [RemoteMCPServer](#remotemcpserver)
@@ -64,6 +65,256 @@ Agent is the Schema for the agents API.
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AgentSpec](#agentspec)_ |  |  |  |
 | `status` _[AgentStatus](#agentstatus)_ |  |  |  |
+
+
+#### AgentHarness
+
+
+
+AgentHarness is a generic remote execution environment provisioned by a backend
+(e.g. OpenShell) and addressable by exec/SSH.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `kagent.dev/v1alpha2` | | |
+| `kind` _string_ | `AgentHarness` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AgentHarnessSpec](#agentharnessspec)_ |  |  |  |
+| `status` _[AgentHarnessStatus](#agentharnessstatus)_ |  |  |  |
+
+
+#### AgentHarnessBackendType
+
+_Underlying type:_ _string_
+
+AgentHarnessBackendType selects which sandbox control plane provisions the
+environment. Additional backends may be added in the future.
+
+_Validation:_
+- Enum: [openclaw nemoclaw]
+
+_Appears in:_
+- [AgentHarnessSpec](#agentharnessspec)
+- [AgentHarnessStatusRef](#agentharnessstatusref)
+
+| Field | Description |
+| --- | --- |
+| `openclaw` |  |
+| `nemoclaw` |  |
+
+
+#### AgentHarnessChannel
+
+
+
+AgentHarnessChannel declares one messenger binding inside an OpenClaw/NemoClaw harness VM.
+
+
+
+_Appears in:_
+- [AgentHarnessSpec](#agentharnessspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name is a stable id for this binding (OpenClaw channels.*.accounts key). |  | MinLength: 1 <br /> |
+| `type` _[AgentHarnessChannelType](#agentharnesschanneltype)_ |  |  | Enum: [telegram slack] <br /> |
+| `telegram` _[AgentHarnessTelegramChannelSpec](#agentharnesstelegramchannelspec)_ |  |  |  |
+| `slack` _[AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)_ |  |  |  |
+
+
+#### AgentHarnessChannelAccess
+
+_Underlying type:_ _string_
+
+AgentHarnessChannelAccess controls whether the bot listens broadly or only on an allowlist.
+
+_Validation:_
+- Enum: [allowlist open disabled]
+
+_Appears in:_
+- [AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)
+
+| Field | Description |
+| --- | --- |
+| `allowlist` |  |
+| `open` |  |
+| `disabled` |  |
+
+
+#### AgentHarnessChannelCredential
+
+
+
+AgentHarnessChannelCredential supplies a token from an inline value or a Secret/ConfigMap key.
+
+
+
+_Appears in:_
+- [AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)
+- [AgentHarnessTelegramChannelSpec](#agentharnesstelegramchannelspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `value` _string_ |  |  | MaxLength: 8192 <br /> |
+| `valueFrom` _[ValueSource](#valuesource)_ |  |  |  |
+
+
+#### AgentHarnessChannelType
+
+_Underlying type:_ _string_
+
+AgentHarnessChannelType selects a messenger integration for OpenClaw harness VMs.
+
+_Validation:_
+- Enum: [telegram slack]
+
+_Appears in:_
+- [AgentHarnessChannel](#agentharnesschannel)
+
+| Field | Description |
+| --- | --- |
+| `telegram` |  |
+| `slack` |  |
+
+
+#### AgentHarnessConnection
+
+
+
+AgentHarnessConnection describes how clients reach the provisioned harness VM.
+
+
+
+_Appears in:_
+- [AgentHarnessStatus](#agentharnessstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `endpoint` _string_ | Endpoint is the backend-specific address (gRPC target, SSH host:port,<br />...) clients should use to reach the harness. |  |  |
+
+
+#### AgentHarnessNetwork
+
+
+
+AgentHarnessNetwork captures the minimal network-policy knobs exposed to users.
+
+
+
+_Appears in:_
+- [AgentHarnessSpec](#agentharnessspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowedDomains` _string array_ | AllowedDomains is a list of DNS names the harness may reach. |  |  |
+
+
+#### AgentHarnessSlackChannelSpec
+
+
+
+AgentHarnessSlackChannelSpec configures Slack when AgentHarnessChannel.type is Slack.
+
+
+
+_Appears in:_
+- [AgentHarnessChannel](#agentharnesschannel)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `botToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
+| `appToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
+| `channelAccess` _[AgentHarnessChannelAccess](#agentharnesschannelaccess)_ |  |  | Enum: [allowlist open disabled] <br /> |
+| `allowlistChannels` _string array_ |  |  |  |
+| `interactiveReplies` _boolean_ |  | true |  |
+
+
+#### AgentHarnessSpec
+
+
+
+AgentHarnessSpec describes a generic remote execution environment that agents
+(or human operators) can attach to via exec or SSH.
+
+
+An AgentHarness is distinct from a SandboxAgent: it has no agent runtime baked
+in. The backend is responsible for provisioning an environment that stays
+ready to accept incoming commands.
+
+
+
+_Appears in:_
+- [AgentHarness](#agentharness)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ | Backend selects the control plane to use. Required. |  | Enum: [openclaw nemoclaw] <br /> |
+| `description` _string_ | Description is a short human-readable summary shown in the UI (e.g. agents list). |  |  |
+| `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backends openclaw and nemoclaw pin the image<br />to the NemoClaw sandbox base when this field is empty. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env is a list of environment variables injected into the harness workload.<br />Values use the Kubernetes EnvVar shape; ValueFrom references are<br />resolved server-side where supported. |  |  |
+| `network` _[AgentHarnessNetwork](#agentharnessnetwork)_ | Network controls outbound access from the harness. When unset,<br />backend defaults apply. |  |  |
+| `modelConfigRef` _string_ | ModelConfigRef is the reference to the ModelConfig used to configure the harness.<br />The controller registers the gateway provider and, after the harness is Ready,<br />writes OpenClaw config inside the VM (~/.openclaw/openclaw.json) and starts the gateway. |  |  |
+| `channels` _[AgentHarnessChannel](#agentharnesschannel) array_ | Channels configures Telegram and Slack integrations for OpenClaw inside the harness VM. |  |  |
+
+
+#### AgentHarnessStatus
+
+
+
+AgentHarnessStatus is the observed state of an AgentHarness.
+
+
+
+_Appears in:_
+- [AgentHarness](#agentharness)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `observedGeneration` _integer_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `backendRef` _[AgentHarnessStatusRef](#agentharnessstatusref)_ | BackendRef points at the harness instance on the backend control<br />plane, once Ensure has succeeded at least once. |  |  |
+| `connection` _[AgentHarnessConnection](#agentharnessconnection)_ | Connection is populated by the controller when the harness is ready. |  |  |
+
+
+#### AgentHarnessStatusRef
+
+
+
+AgentHarnessStatusRef identifies a harness instance on an external control plane.
+
+
+
+_Appears in:_
+- [AgentHarnessStatus](#agentharnessstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ |  |  | Enum: [openclaw nemoclaw] <br /> |
+| `id` _string_ |  |  |  |
+
+
+#### AgentHarnessTelegramChannelSpec
+
+
+
+AgentHarnessTelegramChannelSpec configures Telegram when AgentHarnessChannel.type is Telegram.
+
+
+
+_Appears in:_
+- [AgentHarnessChannel](#agentharnesschannel)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `botToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
+| `allowedUserIDs` _string array_ |  |  |  |
+| `allowedUserIDsFrom` _[ValueSource](#valuesource)_ |  |  |  |
 
 
 
@@ -288,6 +539,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  |  |
+| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
 
 
 #### ByoDeploymentSpec
@@ -322,6 +574,7 @@ _Appears in:_
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
 | `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
+| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
 
 
 #### ContextCompressionConfig
@@ -434,6 +687,7 @@ _Appears in:_
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
 | `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
+| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
 
 
 #### DeclarativeRuntime
@@ -541,10 +795,10 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `url` _string_ | URL of the git repository (HTTPS or SSH). |  | Required: \{\} <br /> |
+| `url` _string_ | URL of the git repository (HTTPS or SSH). |  |  |
 | `ref` _string_ | Git reference: branch name, tag, or commit SHA. | main |  |
 | `path` _string_ | Subdirectory within the repo to use as the skill root. |  |  |
-| `name` _string_ | Name for the skill directory under /skills. Defaults to the repo name. |  |  |
+| `name` _string_ | Name for the skill directory under /skills. If omitted, defaults to the last<br />segment of Path when Path is set; otherwise defaults to the repo name (last<br />URL path segment, without .git). |  |  |
 
 
 #### MCPTool
@@ -599,7 +853,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfig` _string_ | ModelConfig is the name of the ModelConfig object whose embedding<br />provider will be used to generate memory vectors. |  | Required: \{\} <br /> |
+| `modelConfig` _string_ | ModelConfig is the name of the ModelConfig object whose embedding<br />provider will be used to generate memory vectors. |  |  |
 | `ttlDays` _integer_ | TTLDays controls how many days a stored memory entry remains valid before<br />it is eligible for pruning. Defaults to 15 days when unset or zero. |  | Minimum: 1 <br /> |
 
 
@@ -734,7 +988,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore] <br />Required: \{\} <br /> |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore] <br /> |
 | `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
 | `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
 
@@ -927,7 +1181,7 @@ _Appears in:_
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
 | `url` _string_ |  |  | MinLength: 1 <br /> |
 | `headersFrom` _[ValueRef](#valueref) array_ |  |  |  |
-| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
+| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  | 30s |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing |  |  |
@@ -948,7 +1202,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
-| `discoveredTools` _[MCPTool](#mcptool) array_ |  |  | Optional: \{\} <br /> |
+| `discoveredTools` _[MCPTool](#mcptool) array_ |  |  |  |
 
 
 #### SAPAICoreConfig
@@ -1072,6 +1326,7 @@ _Appears in:_
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
 | `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
+| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
 
 
 #### SkillForAgent
@@ -1089,6 +1344,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `insecureSkipVerify` _boolean_ | Fetch images insecurely from registries (allowing HTTP and skipping TLS verification).<br />Meant for development and testing purposes only. |  |  |
 | `refs` _string array_ | The list of skill images to fetch. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets is a list of references to secrets in the same namespace to use for<br />pulling skill images from private registries. Each referenced secret must be of type<br />kubernetes.io/dockerconfigjson. The credentials from all secrets are merged and made<br />available to the skills-init container at /.kagent/.docker/config.json; krane will<br />use them automatically when pulling images. |  | MaxItems: 20 <br /> |
 | `gitAuthSecretRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | Reference to a Secret containing git credentials.<br />Applied to all gitRefs entries.<br />The secret should contain a `token` key for HTTPS auth,<br />or `ssh-privatekey` for SSH auth. |  |  |
 | `gitRefs` _[GitRepo](#gitrepo) array_ | Git repositories to fetch skills from. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
 | `initContainer` _[SkillsInitContainer](#skillsinitcontainer)_ | Configuration for the skills-init init container. |  |  |
@@ -1269,14 +1525,16 @@ ValueSource defines a source for configuration values from a Secret or ConfigMap
 
 
 _Appears in:_
+- [AgentHarnessChannelCredential](#agentharnesschannelcredential)
+- [AgentHarnessTelegramChannelSpec](#agentharnesstelegramchannelspec)
 - [DeclarativeAgentSpec](#declarativeagentspec)
 - [ValueRef](#valueref)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `type` _[ValueSourceType](#valuesourcetype)_ |  |  | Enum: [ConfigMap Secret] <br /> |
-| `name` _string_ | The name of the ConfigMap or Secret. |  |  |
-| `key` _string_ | The key of the ConfigMap or Secret. |  |  |
+| `name` _string_ | The name of the ConfigMap or Secret. |  | MaxLength: 253 <br /> |
+| `key` _string_ | The key of the ConfigMap or Secret. |  | MaxLength: 253 <br /> |
 
 
 #### ValueSourceType
