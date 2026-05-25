@@ -4,8 +4,6 @@ pageOrder: 2
 description: "kagent Helm chart configuration reference"
 ---
 
-import { VERSIONS } from "../../../_constants";
-
 export const metadata = {
   title: "Helm Chart Configuration",
   description: "kagent Helm chart configuration reference",
@@ -40,56 +38,22 @@ A Helm chart for kagent, built with Google ADK
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| agents.argo-rollouts-agent.enabled | bool | `true` |  |
-| agents.argo-rollouts-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.argo-rollouts-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.argo-rollouts-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.argo-rollouts-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.cilium-debug-agent.enabled | bool | `true` |  |
-| agents.cilium-debug-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.cilium-debug-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.cilium-debug-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.cilium-debug-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.cilium-manager-agent.enabled | bool | `true` |  |
-| agents.cilium-manager-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.cilium-manager-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.cilium-manager-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.cilium-manager-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.cilium-policy-agent.enabled | bool | `true` |  |
-| agents.cilium-policy-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.cilium-policy-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.cilium-policy-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.cilium-policy-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.helm-agent.enabled | bool | `true` |  |
-| agents.helm-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.helm-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.helm-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.helm-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.istio-agent.enabled | bool | `true` |  |
-| agents.istio-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.istio-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.istio-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.istio-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.k8s-agent.enabled | bool | `true` |  |
-| agents.k8s-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.k8s-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.k8s-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.k8s-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.kgateway-agent.enabled | bool | `true` |  |
-| agents.kgateway-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.kgateway-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.kgateway-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.kgateway-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.observability-agent.enabled | bool | `true` |  |
-| agents.observability-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.observability-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.observability-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.observability-agent.resources.requests.memory | string | `"256Mi"` |  |
-| agents.promql-agent.enabled | bool | `true` |  |
-| agents.promql-agent.resources.limits.cpu | string | `"1000m"` |  |
-| agents.promql-agent.resources.limits.memory | string | `"1Gi"` |  |
-| agents.promql-agent.resources.requests.cpu | string | `"100m"` |  |
-| agents.promql-agent.resources.requests.memory | string | `"256Mi"` |  |
+| argo-rollouts-agent.enabled | bool | `true` |  |
+| argo-rollouts-agent.resources.limits.memory | string | `"256Mi"` |  |
+| argo-rollouts-agent.resources.requests.cpu | string | `"50m"` |  |
+| argo-rollouts-agent.resources.requests.memory | string | `"128Mi"` |  |
+| cilium-debug-agent.enabled | bool | `true` |  |
+| cilium-debug-agent.resources.limits.memory | string | `"256Mi"` |  |
+| cilium-debug-agent.resources.requests.cpu | string | `"50m"` |  |
+| cilium-debug-agent.resources.requests.memory | string | `"128Mi"` |  |
+| cilium-manager-agent.enabled | bool | `true` |  |
+| cilium-manager-agent.resources.limits.memory | string | `"256Mi"` |  |
+| cilium-manager-agent.resources.requests.cpu | string | `"50m"` |  |
+| cilium-manager-agent.resources.requests.memory | string | `"128Mi"` |  |
+| cilium-policy-agent.enabled | bool | `true` |  |
+| cilium-policy-agent.resources.limits.memory | string | `"256Mi"` |  |
+| cilium-policy-agent.resources.requests.cpu | string | `"50m"` |  |
+| cilium-policy-agent.resources.requests.memory | string | `"128Mi"` |  |
 | controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc.cluster.local:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
 | controller.agentDeployment | object | `{"host":"","podLabels":{},"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.host | string | "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled) | Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of "0.0.0.0". Automatically set to "::" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag. |
@@ -126,7 +90,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
-| database.postgres.bundled | object | `{"enabled":true,"image":{"name":"postgres","pullPolicy":"IfNotPresent","registry":"docker.io","repository":"library","tag":"18.3-alpine"},"podSecurityContext":{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"seccompProfile":{"type":"RuntimeDefault"}},"storage":"500Mi","storageClassName":""}` | Bundled PostgreSQL instance — for development and evaluation only. Not suitable for production. Deployed when enabled is true and url/urlFile are not set. |
+| database.postgres.bundled | object | `{"enabled":true,"image":{"name":"postgres","pullPolicy":"IfNotPresent","registry":"docker.io","repository":"library","tag":"18.3-alpine"},"podSecurityContext":{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"storage":"500Mi","storageClassName":""}` | Bundled PostgreSQL instance — for development and evaluation only. Not suitable for production. Deployed when enabled is true and url/urlFile are not set. |
 | database.postgres.bundled.enabled | bool | `true` | Set to false to disable the bundled database and provide your own via url or urlFile. |
 | database.postgres.bundled.image.name | string | `"postgres"` | Bundled PostgreSQL image name |
 | database.postgres.bundled.image.pullPolicy | string | `"IfNotPresent"` | Bundled PostgreSQL image pull policy |
@@ -135,31 +99,52 @@ A Helm chart for kagent, built with Google ADK
 | database.postgres.bundled.image.tag | string | `"18.3-alpine"` | Bundled PostgreSQL image tag |
 | database.postgres.bundled.podSecurityContext | object | `{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}}` | Pod-level security context for the bundled PostgreSQL deployment. |
 | database.postgres.bundled.resources | object | `{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}}` | Resource requests/limits for the demo PostgreSQL container |
-| database.postgres.bundled.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"seccompProfile":{"type":"RuntimeDefault"}}` | Container-level security context for the bundled PostgreSQL container. |
+| database.postgres.bundled.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}` | Container-level security context for the bundled PostgreSQL container. |
 | database.postgres.bundled.storage | string | `"500Mi"` | PersistentVolumeClaim size for demo PostgreSQL data |
 | database.postgres.bundled.storageClassName | string | `""` | StorageClass for the PostgreSQL PVC. Defaults to the cluster default when empty. |
 | database.postgres.url | string | `""` | External PostgreSQL connection string. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over url when set. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.vectorEnabled | bool | `false` | Enable the pgvector migration Required to use features that depend on database vector capability. (e.g. long-term memory) Set to true when using an external PostgreSQL that has the pgvector extension installed. |
 | fullnameOverride | string | `""` |  |
+| grafana-mcp.enabled | bool | `true` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
 | grafana-mcp.grafana.url | string | `"grafana.kagent:3000/api"` |  |
 | grafana-mcp.resources.limits.cpu | string | `"500m"` |  |
 | grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
 | grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
 | grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
+| helm-agent.enabled | bool | `true` |  |
+| helm-agent.resources.limits.memory | string | `"256Mi"` |  |
+| helm-agent.resources.requests.cpu | string | `"50m"` |  |
+| helm-agent.resources.requests.memory | string | `"128Mi"` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
 | imagePullSecrets | list | `[]` |  |
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
+| istio-agent.enabled | bool | `true` |  |
+| istio-agent.resources.limits.memory | string | `"256Mi"` |  |
+| istio-agent.resources.requests.cpu | string | `"50m"` |  |
+| istio-agent.resources.requests.memory | string | `"128Mi"` |  |
+| k8s-agent.enabled | bool | `true` |  |
+| k8s-agent.resources.limits.memory | string | `"256Mi"` |  |
+| k8s-agent.resources.requests.cpu | string | `"50m"` |  |
+| k8s-agent.resources.requests.memory | string | `"128Mi"` |  |
 | kagent-tools.enabled | bool | `true` |  |
 | kagent-tools.nameOverride | string | `"tools"` |  |
+| kagent-tools.podSecurityContext.runAsNonRoot | bool | `true` |  |
+| kagent-tools.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | kagent-tools.replicaCount | int | `1` |  |
-| kagent-tools.resources.limits.cpu | string | `"1000m"` |  |
-| kagent-tools.resources.limits.memory | string | `"1Gi"` |  |
-| kagent-tools.resources.requests.cpu | string | `"100m"` |  |
-| kagent-tools.resources.requests.memory | string | `"256Mi"` |  |
+| kagent-tools.resources.limits.memory | string | `"256Mi"` |  |
+| kagent-tools.resources.requests.cpu | string | `"50m"` |  |
+| kagent-tools.resources.requests.memory | string | `"128Mi"` |  |
+| kagent-tools.securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| kagent-tools.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| kagent-tools.securityContext.readOnlyRootFilesystem | bool | `true` |  |
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
 | kagent-tools.tools.metrics.port | int | `8085` |  |
+| kgateway-agent.enabled | bool | `true` |  |
+| kgateway-agent.resources.limits.memory | string | `"256Mi"` |  |
+| kgateway-agent.resources.requests.cpu | string | `"50m"` |  |
+| kgateway-agent.resources.requests.memory | string | `"128Mi"` |  |
 | kmcp.enabled | bool | `true` |  |
 | kmcp.fullnameOverride | string | `""` |  |
 | kmcp.nameOverride | string | `"kmcp"` |  |
@@ -203,6 +188,10 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.service.portNumber | int | `4180` |  |
 | oauth2-proxy.service.type | string | `"ClusterIP"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
+| observability-agent.enabled | bool | `true` |  |
+| observability-agent.resources.limits.memory | string | `"256Mi"` |  |
+| observability-agent.resources.requests.cpu | string | `"50m"` |  |
+| observability-agent.resources.requests.memory | string | `"128Mi"` |  |
 | otel.logging.enabled | bool | `false` |  |
 | otel.logging.exporter.otlp.endpoint | string | `""` |  |
 | otel.logging.exporter.otlp.insecure | bool | `true` |  |
@@ -213,7 +202,11 @@ A Helm chart for kagent, built with Google ADK
 | otel.tracing.exporter.otlp.protocol | string | `"grpc"` |  |
 | otel.tracing.exporter.otlp.timeout | int | `15000` |  |
 | podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{"runAsNonRoot":true}` | Security context for all pods |
+| podSecurityContext | object | `{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for all pods |
+| promql-agent.enabled | bool | `true` |  |
+| promql-agent.resources.limits.memory | string | `"256Mi"` |  |
+| promql-agent.resources.requests.cpu | string | `"50m"` |  |
+| promql-agent.resources.requests.memory | string | `"128Mi"` |  |
 | providers.anthropic.apiKeySecretKey | string | `"ANTHROPIC_API_KEY"` |  |
 | providers.anthropic.apiKeySecretRef | string | `"kagent-anthropic"` |  |
 | providers.anthropic.model | string | `"claude-haiku-4-5"` |  |
@@ -240,6 +233,7 @@ A Helm chart for kagent, built with Google ADK
 | providers.openAI.model | string | `"gpt-4.1-mini"` |  |
 | providers.openAI.provider | string | `"OpenAI"` |  |
 | proxy.url | string | `""` |  |
+| querydoc.enabled | bool | `true` |  |
 | querydoc.image.pullPolicy | string | `"IfNotPresent"` |  |
 | querydoc.image.registry | string | `"ghcr.io"` |  |
 | querydoc.image.repository | string | `"kagent-dev/doc2vec/mcp"` |  |
@@ -252,12 +246,12 @@ A Helm chart for kagent, built with Google ADK
 | querydoc.resources.requests.memory | string | `"128Mi"` |  |
 | rbac.namespaces | list | `[]` | Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence). |
 | registry | string | `"cr.kagent.dev"` |  |
-| securityContext | object | `{"readOnlyRootFilesystem":true}` | Security context for all containers |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
-| tools.grafana-mcp.enabled | bool | `true` |  |
-| tools.querydoc.enabled | bool | `true` |  |
+| ui.additionalForwardedHeaders | list | `[]` | Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped. |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
+| ui.backendInternalUrl | string | `""` |  |
 | ui.env | object | `{}` |  |
 | ui.image.pullPolicy | string | `""` |  |
 | ui.image.registry | string | `""` |  |
@@ -266,6 +260,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.podAnnotations | object | `{}` |  |
 | ui.podSecurityContext | object | (uses global podSecurityContext) | Pod-level security context for the UI pod. Overrides the global podSecurityContext. |
+| ui.publicBackendUrl | string | `"/api"` |  |
 | ui.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |
 | ui.replicas | int | `1` |  |
 | ui.resources.limits.cpu | string | `"1000m"` |  |
