@@ -1,0 +1,73 @@
+---
+title: "Agent Harness"
+pageOrder: 4
+description: "Understand AgentHarness resources, OpenShell-backed execution environments, and backend-specific channel configuration."
+---
+
+export const metadata = {
+  title: "Agent Harness",
+  description: "Understand AgentHarness resources, OpenShell-backed execution environments, and backend-specific channel configuration.",
+  author: "kagent.dev"
+};
+
+# Agent Harness
+
+An `AgentHarness` is a Kubernetes resource that asks kagent to provision a long-running remote execution environment through an OpenShell gateway. It is useful when you want a managed sandbox that can be attached to, bootstrapped, and connected to messaging channels, but you do not want kagent to package and run a full agent runtime inside the workload.
+
+`AgentHarness` resources appear alongside agents in kagent APIs and status views, but they are not the same thing as `Agent` or `SandboxAgent`.
+
+## How it differs from agents
+
+- `Agent` runs a kagent-managed agent runtime, such as a declarative agent or a bring-your-own container.
+- `SandboxAgent` runs an agent runtime inside a restricted sandboxed workload.
+- `AgentHarness` provisions the execution environment itself. The selected backend decides what is installed and how the environment is bootstrapped.
+
+Think of `AgentHarness` as lifecycle management for a remote shell or VM-like sandbox. It gives kagent a Kubernetes-native handle for creating, tracking, deleting, and surfacing that environment.
+
+## Backend model
+
+The `spec.backend` field selects the backend implementation.
+
+| Backend | Purpose |
+| --- | --- |
+| `openclaw` | Provisions an OpenClaw-compatible sandbox and writes OpenClaw configuration when a `ModelConfig` is referenced. |
+| `nemoclaw` | Uses the OpenClaw/NemoClaw backend path while preserving a distinct backend value for NemoClaw-oriented environments. |
+| `hermes` | Provisions a Hermes sandbox and writes Hermes configuration plus environment files for supported messaging channels. |
+
+All backends use the same top-level `AgentHarness` shape: `backend`, `description`, `image`, `env`, `network`, `modelConfigRef`, and `channels`.
+
+## Lifecycle and status
+
+When the controller reconciles an `AgentHarness`, it translates the Kubernetes spec into an OpenShell sandbox request. If the sandbox already exists, reconciliation is idempotent and kagent reuses it.
+
+The resource reports two primary conditions:
+
+- `Accepted` tells you whether kagent accepted the spec and could hand it to the selected backend.
+- `Ready` tells you whether the backend sandbox is available.
+
+Once the sandbox exists, `.status.backendRef` records the backend and sandbox ID, and `.status.connection.endpoint` contains the connection hint returned by kagent.
+
+## Models and images
+
+`spec.modelConfigRef` points at a kagent `ModelConfig`. OpenClaw-compatible backends translate that model configuration into OpenClaw bootstrap config. Hermes uses the referenced model while building its Hermes configuration.
+
+If `spec.image` is omitted, kagent uses the default base image for the selected backend. Set `spec.image` only when you have a backend-compatible custom image.
+
+## Network access
+
+`spec.network.allowedDomains` limits outbound access from the harness when the backend supports network policy. Keep this list focused on the APIs the harness needs, such as model provider endpoints or messaging-provider APIs.
+
+## Channels
+
+`spec.channels` declares messaging integrations inside the harness environment. Each channel has a stable `name`, a `type`, and exactly one matching channel spec.
+
+Slack has backend-specific settings because OpenClaw/NemoClaw and Hermes use Slack differently:
+
+- OpenClaw and NemoClaw settings live under `slack.openclaw` and configure channel access, allowlisted Slack channels, and interactive replies.
+- Hermes settings live under `slack.hermes` and configure allowed Slack users plus the home channel used for scheduled messages.
+
+The API uses CEL validation to ensure Slack settings match the selected backend. A Hermes harness must use `slack.hermes`; an OpenClaw or NemoClaw harness must use `slack.openclaw`.
+
+## Next steps
+
+For OpenShell installation and kagent Helm values, see [Enable AgentHarness support](/docs/kagent/introduction/installation#enable-agentharness-support). For complete YAML examples, including Slack token references and backend-specific Slack settings, see the [Agent Harness example](/docs/kagent/examples/agent-harness). For the generated schema, see the [API reference](/docs/kagent/resources/api-ref#agentharness).

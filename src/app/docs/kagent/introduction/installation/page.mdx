@@ -197,6 +197,66 @@ Another way to install kagent is using Helm.
 
 Review the following advanced configuration options that you might want to set up for your kagent installation.
 
+### Enable AgentHarness support
+
+`AgentHarness` resources require an OpenShell gateway that the kagent controller can reach. To enable the AgentHarness backends, install OpenShell and set `OPENSHELL_GATEWAY_URL` on the kagent controller deployment.
+
+1. Install OpenShell in your cluster.
+
+   ```bash
+   kubectl create namespace openshell
+   kubectl -n openshell create secret generic openshell-ssh-handshake \
+       --from-literal=secret="$(openssl rand -hex 32)"
+
+   kubectl apply -f https://raw.githubusercontent.com/NVIDIA/OpenShell/refs/heads/main/deploy/kube/manifests/agent-sandbox.yaml
+
+   helm upgrade --install openshell oci://ghcr.io/nvidia/openshell/helm-chart \
+   --version 0.0.49 \
+   --namespace openshell \
+   --create-namespace \
+   --values - <<'EOF'
+   server:
+   disableTls: true
+   auth:
+      allowUnauthenticatedUsers: true
+   service:
+   metricsPort: 0
+   EOF
+   
+   This example disables TLS and authentication. For production environments, configure TLS and authentication  according to your OpenShell requirements.
+
+2. Configure the kagent controller with the OpenShell gateway URL.
+
+   **Helm values file:**
+
+   ```yaml
+   controller:
+     openshell:
+         enabled: "true"
+     env:
+       - name: OPENSHELL_GATEWAY_URL
+         value: dns:///openshell.openshell.svc:8080
+       - name: OPENSHELL_INSECURE
+         value: "true"
+   ```
+
+   **Helm `--set` flags:**
+
+   ```bash
+   helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+   --namespace kagent \
+   --set controller.openshell.enabled=true \
+   --set 'controller.env[0].name=OPENSHELL_GATEWAY_URL' \
+   --set-string 'controller.env[0].value=dns:///openshell.openshell.svc:8080' \
+   --set 'controller.env[1].name=OPENSHELL_INSECURE' \
+   --set-string 'controller.env[1].value=true'
+
+   ```
+
+   If you already configure `controller.env`, merge the `OPENSHELL_GATEWAY_URL` entry into your existing values. When `OPENSHELL_GATEWAY_URL` is empty, the controller does not register AgentHarness backends.
+
+For more information about creating harness resources, see [Agent Harness](/docs/kagent/examples/agent-harness).
+
 ### Database configuration
 
 For production environments, set up kagent with an external PostgreSQL instance. For more information, see the [Database configuration guide](/operations/operational-considerations/#database-configuration).
