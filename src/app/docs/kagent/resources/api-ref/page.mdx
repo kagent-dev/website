@@ -97,7 +97,7 @@ AgentHarnessBackendType selects which sandbox control plane provisions the
 environment. Additional backends may be added in the future.
 
 _Validation:_
-- Enum: [openclaw nemoclaw]
+- Enum: [openclaw nemoclaw hermes]
 
 _Appears in:_
 - [AgentHarnessSpec](#agentharnessspec)
@@ -107,13 +107,14 @@ _Appears in:_
 | --- | --- |
 | `openclaw` |  |
 | `nemoclaw` |  |
+| `hermes` |  |
 
 
 #### AgentHarnessChannel
 
 
 
-AgentHarnessChannel declares one messenger binding inside an OpenClaw/NemoClaw harness VM.
+AgentHarnessChannel declares one messenger binding inside a harness VM.
 
 
 
@@ -125,7 +126,7 @@ _Appears in:_
 | `name` _string_ | Name is a stable id for this binding (OpenClaw channels.*.accounts key). |  | MinLength: 1 <br /> |
 | `type` _[AgentHarnessChannelType](#agentharnesschanneltype)_ |  |  | Enum: [telegram slack] <br /> |
 | `telegram` _[AgentHarnessTelegramChannelSpec](#agentharnesstelegramchannelspec)_ |  |  |  |
-| `slack` _[AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)_ |  |  |  |
+| `slack` _[AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)_ | Slack configures Slack when type is Slack. |  |  |
 
 
 #### AgentHarnessChannelAccess
@@ -138,7 +139,7 @@ _Validation:_
 - Enum: [allowlist open disabled]
 
 _Appears in:_
-- [AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)
+- [AgentHarnessOpenClawSlackOptions](#agentharnessopenclawslackoptions)
 
 | Field | Description |
 | --- | --- |
@@ -199,6 +200,25 @@ _Appears in:_
 | `endpoint` _string_ | Endpoint is the backend-specific address (gRPC target, SSH host:port,<br />...) clients should use to reach the harness. |  |  |
 
 
+#### AgentHarnessHermesSlackOptions
+
+
+
+AgentHarnessHermesSlackOptions configures Hermes-specific Slack settings (env vars in the sandbox).
+
+
+
+_Appears in:_
+- [AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowedUserIDs` _string array_ | AllowedUserIDs restricts which Slack member IDs may interact with the bot (SLACK_ALLOWED_USERS). |  | MaxItems: 1024 <br /> |
+| `allowedUserIDsFrom` _[ValueSource](#valuesource)_ |  |  |  |
+| `homeChannel` _string_ | HomeChannel is the default Slack channel ID for cron/scheduled messages (SLACK_HOME_CHANNEL). |  |  |
+| `homeChannelName` _string_ | HomeChannelName is a human-readable label for HomeChannel (SLACK_HOME_CHANNEL_NAME). |  |  |
+
+
 #### AgentHarnessNetwork
 
 
@@ -215,11 +235,31 @@ _Appears in:_
 | `allowedDomains` _string array_ | AllowedDomains is a list of DNS names the harness may reach. |  |  |
 
 
+#### AgentHarnessOpenClawSlackOptions
+
+
+
+AgentHarnessOpenClawSlackOptions configures OpenClaw/NemoClaw-specific Slack routing.
+
+
+
+_Appears in:_
+- [AgentHarnessSlackChannelSpec](#agentharnessslackchannelspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `channelAccess` _[AgentHarnessChannelAccess](#agentharnesschannelaccess)_ |  |  | Enum: [allowlist open disabled] <br /> |
+| `allowlistChannels` _string array_ | AllowlistChannels is required when channelAccess is allowlist. |  | MaxItems: 1024 <br /> |
+| `interactiveReplies` _boolean_ |  | true |  |
+
+
 #### AgentHarnessSlackChannelSpec
 
 
 
 AgentHarnessSlackChannelSpec configures Slack when AgentHarnessChannel.type is Slack.
+Backend-specific settings live under the matching backend key; AgentHarnessSpec validation
+requires the key to match spec.backend.
 
 
 
@@ -230,9 +270,8 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `botToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
 | `appToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
-| `channelAccess` _[AgentHarnessChannelAccess](#agentharnesschannelaccess)_ |  |  | Enum: [allowlist open disabled] <br /> |
-| `allowlistChannels` _string array_ |  |  |  |
-| `interactiveReplies` _boolean_ |  | true |  |
+| `openclaw` _[AgentHarnessOpenClawSlackOptions](#agentharnessopenclawslackoptions)_ | OpenClaw configures OpenClaw/NemoClaw-specific Slack routing. |  |  |
+| `hermes` _[AgentHarnessHermesSlackOptions](#agentharnesshermesslackoptions)_ | Hermes configures Hermes-specific Slack settings. |  |  |
 
 
 #### AgentHarnessSpec
@@ -254,13 +293,13 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ | Backend selects the control plane to use. Required. |  | Enum: [openclaw nemoclaw] <br /> |
+| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ | Backend selects the control plane to use. Required. |  | Enum: [openclaw nemoclaw hermes] <br /> |
 | `description` _string_ | Description is a short human-readable summary shown in the UI (e.g. agents list). |  |  |
-| `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backends openclaw and nemoclaw pin the image<br />to the NemoClaw sandbox base when this field is empty. |  |  |
+| `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backends openclaw and nemoclaw pin the image<br />to the NemoClaw sandbox base when this field is empty; backend hermes pins<br />to the Hermes sandbox base image when empty. |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env is a list of environment variables injected into the harness workload.<br />Values use the Kubernetes EnvVar shape; ValueFrom references are<br />resolved server-side where supported. |  |  |
 | `network` _[AgentHarnessNetwork](#agentharnessnetwork)_ | Network controls outbound access from the harness. When unset,<br />backend defaults apply. |  |  |
 | `modelConfigRef` _string_ | ModelConfigRef is the reference to the ModelConfig used to configure the harness.<br />The controller registers the gateway provider and, after the harness is Ready,<br />writes OpenClaw config inside the VM (~/.openclaw/openclaw.json) and starts the gateway. |  |  |
-| `channels` _[AgentHarnessChannel](#agentharnesschannel) array_ | Channels configures Telegram and Slack integrations for OpenClaw inside the harness VM. |  |  |
+| `channels` _[AgentHarnessChannel](#agentharnesschannel) array_ | Channels configures Telegram and Slack integrations for OpenClaw inside the harness VM. |  | MaxItems: 1024 <br /> |
 
 
 #### AgentHarnessStatus
@@ -295,7 +334,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ |  |  | Enum: [openclaw nemoclaw] <br /> |
+| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ |  |  | Enum: [openclaw nemoclaw hermes] <br /> |
 | `id` _string_ |  |  |  |
 
 
@@ -313,7 +352,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `botToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
-| `allowedUserIDs` _string array_ |  |  |  |
+| `allowedUserIDs` _string array_ |  |  | MaxItems: 1024 <br /> |
 | `allowedUserIDsFrom` _[ValueSource](#valuesource)_ |  |  |  |
 
 
@@ -1526,6 +1565,7 @@ ValueSource defines a source for configuration values from a Secret or ConfigMap
 
 _Appears in:_
 - [AgentHarnessChannelCredential](#agentharnesschannelcredential)
+- [AgentHarnessHermesSlackOptions](#agentharnesshermesslackoptions)
 - [AgentHarnessTelegramChannelSpec](#agentharnesstelegramchannelspec)
 - [DeclarativeAgentSpec](#declarativeagentspec)
 - [ValueRef](#valueref)
