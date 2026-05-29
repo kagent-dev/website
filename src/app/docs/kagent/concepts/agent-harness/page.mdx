@@ -12,7 +12,7 @@ export const metadata = {
 
 # Agent Harness
 
-An `AgentHarness` is a Kubernetes resource that asks kagent to provision a long-running remote execution environment through an OpenShell gateway. It is useful when you want a managed sandbox that can be attached to, bootstrapped, and connected to messaging channels, but you do not want kagent to package and run a full agent runtime inside the workload.
+An `AgentHarness` is a Kubernetes custom resource that asks kagent to provision a long-running remote execution environment through an [OpenShell](https://github.com/NVIDIA/OpenShell) gateway. It is useful when you want a managed sandbox that can be attached to, bootstrapped, and connected to messaging channels, but you do not want kagent to package and run a full agent runtime inside the workload.
 
 `AgentHarness` resources appear alongside agents in kagent APIs and status views, but they are not the same thing as `Agent` or `SandboxAgent`.
 
