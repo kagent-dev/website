@@ -74,6 +74,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.loglevel | string | `"info"` |  |
 | controller.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.podAnnotations | object | `{}` |  |
+| controller.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.replicas | int | `1` |  |
 | controller.resources.limits.cpu | int | `2` |  |
 | controller.resources.limits.memory | string | `"512Mi"` |  |
@@ -83,6 +84,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
 | controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
+| controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.streaming.initialBufSize | string | `"4Ki"` |  |
 | controller.streaming.maxBufSize | string | `"1Mi"` |  |
 | controller.streaming.timeout | string | `"600s"` |  |
