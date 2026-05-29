@@ -59,7 +59,7 @@ If `spec.image` is omitted, kagent uses the default base image for the selected 
 
 ## Channels
 
-`spec.channels` declares messaging integrations inside the harness environment. Each channel has a stable `name`, a `type`, and exactly one matching channel spec.
+`spec.channels` declares the external messaging platform (such as Slack) that you want to integrate with the harness. Each channel has a stable `name`, a `type`, and exactly one matching channel spec.
 
 Slack has backend-specific settings because OpenClaw/NemoClaw and Hermes use Slack differently:
 
