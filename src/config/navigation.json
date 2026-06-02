@@ -70,18 +70,6 @@
         ]
       },
       {
-        "title": "Channels",
-        "href": "/docs/kagent/channels",
-        "description": "Connect kagent agents to the messaging platforms your team already uses.",
-        "items": [
-          {
-            "title": "WhatsApp",
-            "href": "/docs/kagent/channels/whatsapp",
-            "description": "Connect WhatsApp to your kagent agents for mobile-first cluster operations."
-          }
-        ]
-      },
-      {
         "title": "Core Concepts",
         "href": "/docs/kagent/concepts",
         "description": "Understand the fundamental concepts and architecture of kagent.",
@@ -100,6 +88,11 @@
             "title": "Tools",
             "href": "/docs/kagent/concepts/tools",
             "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
+          },
+          {
+            "title": "Agent Harness",
+            "href": "/docs/kagent/concepts/agent-harness",
+            "description": "Understand AgentHarness resources, OpenShell-backed execution environments, and backend-specific channel configuration."
           },
           {
             "title": "Agent Memory",
@@ -157,6 +150,11 @@
             "title": "xAI (Grok)",
             "href": "/docs/kagent/supported-providers/xai",
             "description": "Learn how to configure xAI Grok models for kagent."
+          },
+          {
+            "title": "SAP AI Core",
+            "href": "/docs/kagent/supported-providers/sap-ai-core",
+            "description": "Learn how to configure SAP AI Core models for kagent."
           }
         ]
       },
@@ -224,6 +222,11 @@
             "title": "Human-in-the-Loop",
             "href": "/docs/kagent/examples/human-in-the-loop",
             "description": "Build a Kubernetes-native AI agent that pauses and asks for your approval before taking destructive actions."
+          },
+          {
+            "title": "Agent Harness",
+            "href": "/docs/kagent/examples/agent-harness",
+            "description": "Provision OpenClaw, NemoClaw, and Hermes sandboxes with the AgentHarness API."
           }
         ]
       },

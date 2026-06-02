@@ -1,0 +1,217 @@
+---
+title: "Agent Harness"
+pageOrder: 8
+description: "Provision OpenClaw, NemoClaw, and Hermes sandboxes with the AgentHarness API."
+---
+
+import { VERSIONS } from "../../../_constants";
+
+export const metadata = {
+  title: "Agent Harness",
+  description: "Provision OpenClaw, NemoClaw, and Hermes sandboxes with the AgentHarness API.",
+  author: "kagent.dev"
+};
+
+# Agent Harness
+
+`AgentHarness` creates a long-running remote execution environment through an OpenShell gateway. Unlike an `Agent` or `SandboxAgent`, it does not package a kagent runtime into the workload. The backend provisions a sandbox that operators, tools, or chat integrations can attach to.
+
+Use `AgentHarness` when you want kagent to manage the lifecycle of an OpenClaw, NemoClaw, or Hermes sandbox and surface it in the kagent API/UI alongside regular agents.
+
+## Before you begin
+
+1. Install kagent v{VERSIONS.kagent} or later by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+2. Install and expose an OpenShell gateway that the kagent controller can reach over gRPC. For Helm-based setup instructions, see [Enable AgentHarness support](/docs/kagent/introduction/installation#enable-agentharness-support).
+3. Configure the kagent controller with the gateway address. For example, set the controller environment variable `OPENSHELL_GATEWAY_URL` to a gRPC target such as `dns:///openshell.openshell.svc:443`.
+
+When `OPENSHELL_GATEWAY_URL` is empty, the AgentHarness backends are not registered by the controller.
+
+## Choose a backend
+
+`spec.backend` selects the sandbox backend.
+
+- `openclaw` provisions an OpenClaw-compatible sandbox. When `modelConfigRef` is set, kagent translates the referenced `ModelConfig` and writes OpenClaw configuration into the sandbox.
+- `nemoclaw` uses the same kagent backend path as `openclaw`, but lets you label the resource for NemoClaw-oriented usage.
+- `hermes` provisions a Hermes sandbox. kagent writes Hermes configuration and environment files into the sandbox and wires supported messaging channels into Hermes environment variables.
+
+All three backends share the same top-level `AgentHarness` shape: `backend`, optional `description`, optional `image`, optional `env`, optional `network`, optional `modelConfigRef`, and optional `channels`.
+
+## Create an OpenClaw harness
+
+The following resource creates an OpenClaw harness and lets it reach the OpenAI and Slack APIs.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: AgentHarness
+metadata:
+  name: openclaw-shell
+  namespace: kagent
+spec:
+  backend: openclaw
+  description: "OpenClaw shell for platform experiments"
+  modelConfigRef: default-model-config
+  network:
+    allowedDomains:
+      - api.openai.com
+      - slack.com
+      - api.slack.com
+      - hooks.slack.com
+      - wss-primary.slack.com
+      - wss-backup.slack.com
+```
+
+Apply the resource and wait for it to become ready.
+
+```bash
+kubectl apply -f openclaw-shell.yaml
+kubectl -n kagent get agentharness openclaw-shell
+```
+
+Example output:
+
+```txt
+NAME             BACKEND    READY   ID                     AGE
+openclaw-shell   openclaw   True    kagent-openclaw-shell   30s
+```
+
+## Create a Hermes harness
+
+Hermes uses the same `AgentHarness` API with `spec.backend: hermes`.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: AgentHarness
+metadata:
+  name: hermes-shell
+  namespace: kagent
+spec:
+  backend: hermes
+  description: "Hermes shell for scheduled and chat-driven workflows"
+  modelConfigRef: default-model-config
+  network:
+    allowedDomains:
+      - api.openai.com
+      - slack.com
+      - api.slack.com
+      - wss-primary.slack.com
+      - wss-backup.slack.com
+```
+
+If `spec.image` is omitted, kagent uses the backend's default sandbox base image. Set `spec.image` only when you need a custom image that is compatible with the selected backend.
+
+## Configure Slack
+
+Slack channels require a bot token and an app-level token. Store them in a Kubernetes `Secret` and reference them from the harness.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: slack-tokens
+  namespace: kagent
+type: Opaque
+stringData:
+  bot-token: xoxb-your-bot-token
+  app-token: xapp-your-app-token
+```
+
+Backend-specific Slack settings are nested under the backend name. The API validates this with CEL:
+
+- `backend: hermes` requires `slack.hermes` and rejects `slack.openclaw`.
+- `backend: openclaw` and `backend: nemoclaw` require `slack.openclaw` and reject `slack.hermes`.
+
+### OpenClaw Slack
+
+OpenClaw and NemoClaw Slack settings control channel access and interactive replies.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: AgentHarness
+metadata:
+  name: openclaw-slack
+  namespace: kagent
+spec:
+  backend: openclaw
+  modelConfigRef: default-model-config
+  channels:
+    - name: platform
+      type: slack
+      slack:
+        botToken:
+          valueFrom:
+            type: Secret
+            name: slack-tokens
+            key: bot-token
+        appToken:
+          valueFrom:
+            type: Secret
+            name: slack-tokens
+            key: app-token
+        openclaw:
+          channelAccess: allowlist
+          allowlistChannels:
+            - C0123456789
+          interactiveReplies: true
+```
+
+Set `channelAccess` to `open`, `allowlist`, or `disabled`. When `channelAccess` is `allowlist`, `allowlistChannels` must include at least one Slack channel ID.
+
+### Hermes Slack
+
+Hermes Slack settings control allowed users and the home channel used for scheduled messages.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: AgentHarness
+metadata:
+  name: hermes-slack
+  namespace: kagent
+spec:
+  backend: hermes
+  modelConfigRef: default-model-config
+  channels:
+    - name: platform
+      type: slack
+      slack:
+        botToken:
+          valueFrom:
+            type: Secret
+            name: slack-tokens
+            key: bot-token
+        appToken:
+          valueFrom:
+            type: Secret
+            name: slack-tokens
+            key: app-token
+        hermes:
+          allowedUserIDs:
+            - U01234567
+            - U89ABCDEF
+          homeChannel: C0123456789
+          homeChannelName: platform-alerts
+```
+
+Use `allowedUserIDsFrom` instead of `allowedUserIDs` when you want to load the Slack member allowlist from a Secret or ConfigMap key. The two fields are mutually exclusive.
+
+## Check status
+
+Use `kubectl` to confirm the harness was accepted and is ready.
+
+```bash
+kubectl -n kagent get agentharnesses
+kubectl -n kagent describe agentharness hermes-slack
+```
+
+The `Accepted` condition reports whether kagent accepted the spec. The `Ready` condition reports whether the backend sandbox is ready. Once ready, `.status.backendRef` identifies the sandbox in the OpenShell control plane and `.status.connection.endpoint` shows the connection hint returned by kagent.
+
+## Troubleshooting
+
+If the harness is not accepted or ready, check these common causes.
+
+- The kagent controller was not configured with `OPENSHELL_GATEWAY_URL`, so AgentHarness backends were not registered.
+- The OpenShell gateway address is not reachable from the controller pod.
+- `modelConfigRef` points to a missing or unsupported `ModelConfig`.
+- A Slack channel has the wrong backend settings, such as `slack.hermes` on an OpenClaw harness or `slack.openclaw` on a Hermes harness.
+- A Slack credential uses neither `value` nor `valueFrom`, or sets both.
+
+For the complete generated schema, see the [API reference](/docs/kagent/resources/api-ref#agentharness).
