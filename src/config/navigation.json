@@ -157,6 +157,11 @@
             "title": "xAI (Grok)",
             "href": "/docs/kagent/supported-providers/xai",
             "description": "Learn how to configure xAI Grok models for kagent."
+          },
+          {
+            "title": "SAP AI Core",
+            "href": "/docs/kagent/supported-providers/sap-ai-core",
+            "description": "Learn how to configure SAP AI Core models for kagent."
           }
         ]
       },
@@ -224,6 +229,11 @@
             "title": "Human-in-the-Loop",
             "href": "/docs/kagent/examples/human-in-the-loop",
             "description": "Build a Kubernetes-native AI agent that pauses and asks for your approval before taking destructive actions."
+          },
+          {
+            "title": "agentgateway",
+            "href": "/docs/kagent/examples/agentgateway",
+            "description": "Add governance to your kagent deployment with agentgateway"
           }
         ]
       },
