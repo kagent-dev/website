@@ -55,6 +55,7 @@ With agentgateway installed, point kagent at the agentgateway proxy instead of d
 
    ```shell
    helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --reuse-values
      --namespace kagent \
      --set providers.default=ollama \
      --set providers.ollama.baseUrl=http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1 \
@@ -142,11 +143,12 @@ With agentgateway in place, you can now apply policies to govern how your kagent
 
 ## Cleanup
 
-To remove agentgateway-related resources from your kagent setup:
+1. Remove agentgateway-related resources from your kagent setup.
+   ```shell
+   kubectl delete agentgatewaypolicy prompt-guard -n agentgateway-system
+   kubectl delete modelconfig llama3-model-config -n kagent
+   ```
 
-```shell
-kubectl delete agentgatewaypolicy prompt-guard -n agentgateway-system
-kubectl delete modelconfig llama3-model-config -n kagent
-```
+2. If you no longer need agentgateway, [uninstall agentgateway](https://agentgateway.dev/docs/kubernetes/latest/operations/uninstall/).
 
-To also remove agentgateway itself, follow the [agentgateway uninstall guide](https://agentgateway.dev/docs/kubernetes/latest/operations/uninstall/).
+3. Upgrade your kagent installation to unset agentgateway as the proxy in front of your LLM provider.
