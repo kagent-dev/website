@@ -836,7 +836,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `url` _string_ | URL of the git repository (HTTPS or SSH). |  |  |
 | `ref` _string_ | Git reference: branch name, tag, or commit SHA. | main |  |
-| `path` _string_ | Subdirectory within the repo to use as the skill root. |  |  |
+| `path` _string_ | Subdirectory within the repo to use as the skill root. The API validates<br />this input path, but treats repository contents as trusted: symlinks under<br />this path are dereferenced when materializing the skill. |  |  |
 | `name` _string_ | Name for the skill directory under /skills. If omitted, defaults to the last<br />segment of Path when Path is set; otherwise defaults to the repo name (last<br />URL path segment, without .git). |  |  |
 
 
