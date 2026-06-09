@@ -253,6 +253,24 @@ _Appears in:_
 | `interactiveReplies` _boolean_ |  | true |  |
 
 
+#### AgentHarnessRuntime
+
+_Underlying type:_ _string_
+
+AgentHarnessRuntime selects which control plane provisions the harness VM.
+
+_Validation:_
+- Enum: [openshell substrate]
+
+_Appears in:_
+- [AgentHarnessSpec](#agentharnessspec)
+
+| Field | Description |
+| --- | --- |
+| `openshell` |  |
+| `substrate` |  |
+
+
 #### AgentHarnessSlackChannelSpec
 
 
@@ -294,6 +312,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ | Backend selects the control plane to use. Required. |  | Enum: [openclaw nemoclaw hermes] <br /> |
+| `runtime` _[AgentHarnessRuntime](#agentharnessruntime)_ | Runtime selects the harness provisioning stack. Defaults to openshell when unset. | openshell | Enum: [openshell substrate] <br /> |
+| `substrate` _[AgentHarnessSubstrateSpec](#agentharnesssubstratespec)_ | Substrate is required when runtime is substrate. |  |  |
 | `description` _string_ | Description is a short human-readable summary shown in the UI (e.g. agents list). |  |  |
 | `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backends openclaw and nemoclaw pin the image<br />to the NemoClaw sandbox base when this field is empty; backend hermes pins<br />to the Hermes sandbox base image when empty. |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env is a list of environment variables injected into the harness workload.<br />Values use the Kubernetes EnvVar shape; ValueFrom references are<br />resolved server-side where supported. |  |  |
@@ -338,6 +358,48 @@ _Appears in:_
 | `id` _string_ |  |  |  |
 
 
+#### AgentHarnessSubstrateSnapshotsConfig
+
+
+
+AgentHarnessSubstrateSnapshotsConfig points at a GCS prefix for actor memory snapshots.
+Substrate currently expects a gs:// location (see Agent Substrate SnapshotsConfig).
+
+
+
+_Appears in:_
+- [AgentHarnessSubstrateSpec](#agentharnesssubstratespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `location` _string_ | Location is the GCS URI prefix for golden and incremental snapshots.<br />Example: gs://ate-snapshots/kagent/my-namespace/my-harness/ |  | Pattern: `^gs://` <br /> |
+
+
+#### AgentHarnessSubstrateSpec
+
+
+
+AgentHarnessSubstrateSpec configures Agent Substrate (WorkerPool + ActorTemplate + Actor).
+
+
+kagent generates a per-harness ActorTemplate and creates an Actor from it. WorkerPool
+capacity is referenced from workerPoolRef or the controller default; it is not
+created or deleted by the AgentHarness controller.
+
+
+
+_Appears in:_
+- [AgentHarnessSpec](#agentharnessspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `workerPoolRef` _[TypedLocalReference](#typedlocalreference)_ | WorkerPoolRef references an existing ate.dev WorkerPool in the harness namespace.<br />When unset, the controller uses its configured default WorkerPool. |  |  |
+| `snapshotsConfig` _[AgentHarnessSubstrateSnapshotsConfig](#agentharnesssubstratesnapshotsconfig)_ | SnapshotsConfig configures actor memory snapshots. Defaults to<br />gs://ate-snapshots/&lt;namespace&gt;/&lt;agentharnessname&gt; when unset. |  |  |
+| `workloadImage` _string_ | WorkloadImage overrides the default nemoclaw/openclaw sandbox image in the ActorTemplate. |  |  |
+| `gatewayToken` _string_ | GatewayToken is the OpenClaw gateway Bearer token for this harness.<br />Prefer gatewayTokenSecretRef for production secrets. |  | MinLength: 1 <br /> |
+| `gatewayTokenSecretRef` _[TypedLocalReference](#typedlocalreference)_ | GatewayTokenSecretRef references a Secret key holding the OpenClaw gateway Bearer token.<br />The Secret must contain a "token" key. |  |  |
+
+
 #### AgentHarnessTelegramChannelSpec
 
 
@@ -360,9 +422,9 @@ _Appears in:_
 
 #### AgentSkill
 
-_Underlying type:_ _AgentSkill_
 
 
+AgentSkill describes a specific capability or function of the agent.
 
 
 
@@ -372,12 +434,12 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `id` _string_ | ID is the unique identifier for the skill. |  |  |
-| `name` _string_ | Name is the human-readable name of the skill. |  |  |
+| `name` _string_ | Name is the human-readable name of the skill. |  | MinLength: 1 <br /> |
 | `description` _string_ | Description is an optional detailed description of the skill. |  |  |
-| `tags` _string array_ | Tags are optional tags for categorization. |  |  |
-| `examples` _string array_ | Examples are optional usage examples. |  |  |
-| `inputModes` _string array_ | InputModes are the supported input data modes/types. |  |  |
-| `outputModes` _string array_ | OutputModes are the supported output data modes/types. |  |  |
+| `tags` _string array_ | Tags are optional tags for categorization. |  | MaxItems: 20 <br /> |
+| `examples` _string array_ | Examples are optional usage examples. |  | MaxItems: 20 <br /> |
+| `inputModes` _string array_ | InputModes are the supported input MIME types for this skill, overriding the agent's defaults. |  |  |
+| `outputModes` _string array_ | OutputModes are the supported output MIME types for this skill, overriding the agent's defaults. |  |  |
 
 
 #### AgentSpec
@@ -395,12 +457,12 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `type` _[AgentType](#agenttype)_ |  | Declarative | Enum: [Declarative BYO] <br /> |
-| `byo` _[BYOAgentSpec](#byoagentspec)_ |  |  |  |
-| `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ |  |  |  |
+| `byo` _[BYOAgentSpec](#byoagentspec)_ | BYO configures a "bring your own" agent backed by a user-provided<br />container image. Kagent deploys the image and expects it to serve the<br />agent over the A2A protocol on port 8080.<br />Required if type is BYO. |  |  |
+| `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ | Declarative configures an agent that is fully described by this resource<br />(model, instructions, tools) and runs on one of kagent's built-in runtimes.<br />Required if type is Declarative. |  |  |
 | `description` _string_ |  |  |  |
 | `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
 | `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
-| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing |  |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
 
 
 #### AgentStatus
@@ -539,7 +601,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `deployment` _[ByoDeploymentSpec](#byodeploymentspec)_ | Trust relationship to the agent. |  |  |
+| `deployment` _[ByoDeploymentSpec](#byodeploymentspec)_ | Deployment configures the Kubernetes Deployment created for the BYO agent container. |  |  |
 
 
 #### BaseVertexAIConfig
@@ -594,21 +656,22 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `image` _string_ |  |  | MinLength: 1 <br /> |
-| `cmd` _string_ |  |  |  |
-| `args` _string array_ |  |  |  |
-| `replicas` _integer_ |  |  |  |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
-| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
-| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
-| `labels` _object (keys:string, values:string)_ |  |  |  |
-| `annotations` _object (keys:string, values:string)_ |  |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
+| `image` _string_ | Image is the container image of the BYO agent.<br />The image is expected to serve the agent over the A2A protocol on port 8080. |  | MinLength: 1 <br /> |
+| `cmd` _string_ | Cmd overrides the container entrypoint (the container's command). |  |  |
+| `args` _string array_ | Args are the arguments passed to the container entrypoint. |  |  |
+| `workingDir` _string_ | workingDir sets the container working directory. Defaults to the image WORKDIR when omitted. |  |  |
+| `replicas` _integer_ | Replicas is the number of desired agent pods. Defaults to 1. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
-| `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
@@ -689,9 +752,9 @@ _Appears in:_
 | `modelConfig` _string_ | The name of the model config to use.<br />If not specified, the default value is "default-model-config".<br />Must be in the same namespace as the Agent. |  |  |
 | `stream` _boolean_ | Whether to stream the response from the model.<br />If not specified, the default value is false. |  |  |
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
-| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/google/A2A |  |  |
+| `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/a2aproject/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
-| `executeCodeBlocks` _boolean_ | Allow code execution for python code blocks with this agent.<br />If true, the agent will automatically execute python code blocks in the LLM responses.<br />Code will be executed in a sandboxed environment.<br />due to a bug in adk (https://github.com/google/adk-python/issues/3921), this field is ignored for now. |  |  |
+| `executeCodeBlocks` _boolean_ | Allow code execution for python code blocks with this agent.<br />If true, the agent will automatically execute python code blocks in the LLM responses.<br />Code will be executed in a sandboxed environment.<br />due to a bug in adk (https://github.com/google/adk-python/issues/3921 ), this field is ignored for now. |  |  |
 | `memory` _[MemorySpec](#memoryspec)_ | Memory configuration for the agent. |  |  |
 | `context` _[ContextConfig](#contextconfig)_ | Context configures context management for this agent.<br />This includes event compaction (compression) and context caching. |  |  |
 
@@ -710,18 +773,18 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `imageRegistry` _string_ |  |  |  |
-| `replicas` _integer_ |  |  |  |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
-| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
-| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
-| `labels` _object (keys:string, values:string)_ |  |  |  |
-| `annotations` _object (keys:string, values:string)_ |  |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
+| `replicas` _integer_ | Replicas is the number of desired agent pods. Defaults to 1. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
-| `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
@@ -753,7 +816,7 @@ _Underlying type:_ _string_
 
 FromNamespaces specifies namespace from which references to this resource are allowed.
 This follows the same pattern as Gateway API's cross-namespace route attachment.
-See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing
+See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment
 
 _Validation:_
 - Enum: [All Same Selector]
@@ -1223,7 +1286,8 @@ _Appears in:_
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  | 30s |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
-| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-routing |  |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
+| `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />Use this for HTTPS upstreams that present a certificate the agent's<br />system trust store does not include (corporate CA, self-signed cert<br />on a test fixture, internal MCP gateway). Reuses the same TLSConfig<br />type as ModelConfig.spec.tls — disableVerify turns off certificate<br />validation entirely, caCertSecretRef + caCertSecretKey point at a<br />PEM bundle Secret in the same namespace, and disableSystemCAs<br />trusts only the named bundle.<br /><br />Note one asymmetry with ModelConfig: a spec-level XValidation rule<br />on RemoteMCPServer rejects spec.tls when spec.url has the http://<br />scheme (a TLS opinion contradicts a plaintext URL). ModelConfig has<br />no equivalent rule, so a TLS block can sit alongside any baseUrl. |  |  |
 
 
 #### RemoteMCPServerStatus
@@ -1242,6 +1306,7 @@ _Appears in:_
 | `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  |  |
+| `secretHash` _string_ | SecretHash stores a hash of the TLS Secret referenced by spec.tls so<br />agents that consume this RemoteMCPServer can detect cert rotation and<br />roll on the next reconcile. Empty when spec.tls.caCertSecretRef is unset. |  |  |
 
 
 #### SAPAICoreConfig
@@ -1331,8 +1396,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `labels` _object (keys:string, values:string)_ |  |  |  |
-| `annotations` _object (keys:string, values:string)_ |  |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the created ServiceAccount. |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the created ServiceAccount. |  |  |
 
 
 #### SharedDeploymentSpec
@@ -1349,18 +1414,18 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ |  |  |  |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ |  |  |  |
-| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ |  |  |  |
-| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ |  |  |  |
-| `labels` _object (keys:string, values:string)_ |  |  |  |
-| `annotations` _object (keys:string, values:string)_ |  |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ |  |  |  |
+| `replicas` _integer_ | Replicas is the number of desired agent pods. Defaults to 1. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
-| `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
@@ -1410,20 +1475,22 @@ _Appears in:_
 
 
 
-TLSConfig contains TLS/SSL configuration options for model provider connections.
-This enables agents to connect to internal LiteLLM gateways or other providers
-that use self-signed certificates or custom certificate authorities.
+TLSConfig contains TLS/SSL configuration options for outbound HTTPS
+connections from the agent (model provider, RemoteMCPServer). The
+XValidation rules below apply at admission to every CRD field that
+uses TLSConfig, so callers don't need to re-declare them per spec.
 
 
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
+- [RemoteMCPServerSpec](#remotemcpserverspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `disableVerify` _boolean_ | DisableVerify disables SSL certificate verification entirely.<br />When false (default), SSL certificates are verified.<br />When true, SSL certificate verification is disabled.<br />WARNING: This should ONLY be used in development/testing environments.<br />Production deployments MUST use proper certificates. | false |  |
-| `caCertSecretRef` _string_ | CACertSecretRef is a reference to a Kubernetes Secret containing<br />CA certificate(s) in PEM format. The Secret must be in the same<br />namespace as the ModelConfig.<br />When set, the certificate will be used to verify the provider's SSL certificate.<br />This field follows the same pattern as APIKeySecret. |  |  |
-| `caCertSecretKey` _string_ | CACertSecretKey is the key within the Secret that contains the CA certificate data.<br />This field follows the same pattern as APIKeySecretKey.<br />Required when CACertSecretRef is set (unless DisableVerify is true). |  |  |
+| `caCertSecretRef` _string_ | CACertSecretRef is a reference to a Kubernetes Secret containing<br />CA certificate(s) in PEM format. The Secret must be in the same<br />namespace as the resource referencing it (ModelConfig,<br />RemoteMCPServer, or any future consumer of TLSConfig).<br />When set, the certificate will be used to verify the upstream's<br />SSL certificate. |  |  |
+| `caCertSecretKey` _string_ | CACertSecretKey is the key within the Secret that contains the<br />CA certificate data (PEM-encoded). Required when CACertSecretRef<br />is set — admission rejects ref-without-key regardless of<br />DisableVerify (see the TLSConfig-level XValidation rules). |  |  |
 | `disableSystemCAs` _boolean_ | DisableSystemCAs disables the use of system CA certificates.<br />When false (default), system CA certificates are used for verification (safe behavior).<br />When true, only the custom CA from CACertSecretRef is trusted.<br />This allows strict security policies where only corporate CAs should be trusted. | false |  |
 
 
@@ -1507,6 +1574,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [AgentHarnessSubstrateSpec](#agentharnesssubstratespec)
 - [PromptSource](#promptsource)
 
 | Field | Description | Default | Validation |
