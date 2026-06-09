@@ -1,31 +1,40 @@
 ---
-title: "agentgateway"
+title: "Agentgateway"
 pageOrder: 1
-description: "Add governance to your kagent deployment with agentgateway"
+description: "Control traffic to and from your kagent deployment with agentgateway."
 ---
 
 import { Tabs, Tab } from '@/components/mdx/tabs';
 import { Mermaid } from '@/components/mdx/mermaid';
 
 export const metadata = {
-  title: "Using agentgateway with kagent",
-  description: "Learn how to add governance to your kagent deployment using agentgateway",
+  title: "Use agentgateway with kagent",
+  description: "Control traffic to and from your kagent deployment with agentgateway.",
   author: "kagent.dev"
 };
 
 # Using agentgateway with kagent
 
-As your kagent deployment grows, you might need governance over how your agents communicate with LLM providers. [Agentgateway](https://agentgateway.dev) is a proxy purpose-built for AI workloads that sits between your kagent agents and your LLM provider. This way, you can apply AgentgatewayPolicy for things like access control, rate limiting, audit logging, and observability. 
+As your kagent deployment grows, you might need governance over how 
+your agents communicate with LLM providers. [Agentgateway](https://
+agentgateway.dev) is a proxy purpose-built for AI workloads that sits 
+between your kagent agents and your LLM provider. This way, you can 
+apply AgentgatewayPolicy for things like access control, rate 
+limiting, audit logging, and observability. 
 
-## Prerequisites
+## Before you begin
 
-1. A running kagent installation. If you haven't installed kagent yet, follow the [quick start](/docs/kagent/getting-started/quickstart) guide first.
-2. Follow the [agentgateway installation guide](https://agentgateway.dev/docs/kubernetes/latest/quickstart/install/) to install agentgateway in your cluster.
+1. Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+
+2. Install agentgateway in your cluster by following the [agentgateway installation guide](https://agentgateway.dev/docs/kubernetes/latest/quickstart/install/).
+
 3. Set up an LLM provider with agentgateway. This guide uses [the Ollama setup](https://agentgateway.dev/docs/kubernetes/latest/llm/providers/ollama/) as an example.
 
 ## Architecture
 
-Once set up, kagent agent pods route all LLM requests through agentgateway (running in the `agentgateway-system` namespace). Agentgateway enforces your policies, auth/authz, rate limiting, audit logging, and observability. Before forwarding requests to Ollama on the host.
+After setup, kagent agent pods route all LLM requests through agentgateway in the `agentgateway-system` namespace. Agentgateway enforces your policies for authentication and authorization (auth/authz), rate limiting, audit logging, and observability before forwarding requests to Ollama on the host.
+
+The diagram shows traffic flowing from kagent agent pods to agentgateway inside the cluster, then to Ollama on the host.
 
 <Mermaid chart={`
 flowchart LR
@@ -38,24 +47,23 @@ flowchart LR
      kagentPods:::internal
      agentGateway:::internal
      ollama:::external
-    classDef cluster stroke:#818cf8,fill:#eef2ff
-    classDef internal stroke:#a78bfa,fill:#f5f3ff
-    classDef external stroke:#fb923c,fill:#fff7ed
-    style kagentPods stroke:#a78bfa,fill:#ffffff
-    style agentGateway fill:#ffffff,stroke:#AA00FF
-    style ollama fill:#ffffff,stroke:#00C853
-    style KindCluster stroke:#2962FF,fill:#ffffff
+    classDef internal stroke:#a78bfa,fill:transparent
+    classDef external stroke:#fb923c,fill:transparent
+    style kagentPods stroke:#a78bfa,fill:transparent
+    style agentGateway stroke:#AA00FF,fill:transparent
+    style ollama stroke:#00C853,fill:transparent
+    style KindCluster stroke:#2962FF,fill:transparent
 `} />
 
 ## Configure kagent to use agentgateway
 
 With agentgateway installed, point kagent at the agentgateway proxy instead of directly at Ollama.
 
-1. If you installed kagent without agentgateway, upgrade your installation to route through the proxy.
+1. Upgrade the kagent Helm release to route LLM traffic through agentgateway.
 
-   ```shell
+   ```bash
    helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-     --reuse-values
+     --reuse-values \
      --namespace kagent \
      --set providers.default=ollama \
      --set providers.ollama.baseUrl=http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1 \
@@ -65,7 +73,7 @@ With agentgateway installed, point kagent at the agentgateway proxy instead of d
 2. Create a `ModelConfig` that points to Ollama via the agentgateway proxy.
 
    ```yaml
-   kubectl apply -f- <<EOF
+   kubectl apply -f- <<'EOF'
    apiVersion: kagent.dev/v1alpha2
    kind: ModelConfig
    metadata:
@@ -106,14 +114,14 @@ With agentgateway installed, point kagent at the agentgateway proxy instead of d
 
 ## Apply governance policies
 
-With agentgateway in place, you can now apply policies to govern how your kagent agents interact with your LLM provider.
+With agentgateway in place, apply policies to govern how your kagent agents interact with your LLM provider.
 
 ### Block requests with PII
 
-1. Create an `AgentgatewayPolicy` resource to reject any request that contains PII, such as an email address. For more policy examples, see the [agentgateway guardrails docs](https://agentgateway.dev/docs/kubernetes/latest/llm/guardrails/regex/#block-requests-with-pii).
+1. Create an `AgentgatewayPolicy` resource to reject any request that contains personally identifiable information (PII), such as an email address. For more policy examples, see the [agentgateway guardrails docs](https://agentgateway.dev/docs/kubernetes/latest/llm/guardrails/regex/#block-requests-with-pii).
 
    ```yaml
-   kubectl apply -f - <<EOF
+   kubectl apply -f - <<'EOF'
    apiVersion: agentgateway.dev/v1alpha1
    kind: AgentgatewayPolicy
    metadata:
@@ -144,6 +152,7 @@ With agentgateway in place, you can now apply policies to govern how your kagent
 ## Cleanup
 
 1. Remove agentgateway-related resources from your kagent setup.
+
    ```shell
    kubectl delete agentgatewaypolicy prompt-guard -n agentgateway-system
    kubectl delete modelconfig llama3-model-config -n kagent
