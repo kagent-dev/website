@@ -65,13 +65,15 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentImage.tag | string | `""` |  |
 | controller.auth.mode | string | `"unsecure"` |  |
 | controller.auth.userIdClaim | string | `""` |  |
-| controller.env | list | `[]` |  |
+| controller.env | string | `nil` |  |
 | controller.envFrom | list | `[]` |  |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
 | controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
 | controller.image.tag | string | `""` |  |
 | controller.loglevel | string | `"info"` |  |
+| controller.mcpEgressPlaintext | bool | `false` | Rewrite RemoteMCPServer tool URLs and the controller's tool-discovery dial from `https://host[:port]` to `http://host:<port-or-443>` so MCP traffic egresses in plaintext to a proxy that originates TLS upstream off by default. |
+| controller.metrics | object | disabled | Prometheus-style /metrics endpoint for the controller manager. When enabled, provisions a dedicated metrics Service plus the ClusterRoles required for authenticated scrapes. Bind `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant scrape access. Use `bindAddress` for any port change: the Service `targetPort` and the pod `containerPort` are derived from it at template time, so overriding `METRICS_BIND_ADDRESS` via `controller.env` shifts only the runtime listener and leaves the rendered Service pointing at the chart-time port. Setting `bindAddress: "0"` (or empty) is treated as a disable signal — equivalent to `enabled: false` — to keep faith with the controller binary's documented contract for `--metrics-bind-address`. |
 | controller.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.podAnnotations | object | `{}` |  |
 | controller.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
@@ -85,9 +87,15 @@ A Helm chart for kagent, built with Google ADK
 | controller.service.type | string | `"ClusterIP"` |  |
 | controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
 | controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
-| controller.streaming.initialBufSize | string | `"4Ki"` |  |
-| controller.streaming.maxBufSize | string | `"1Mi"` |  |
-| controller.streaming.timeout | string | `"600s"` |  |
+| controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
+| controller.substrate.ateApiEndpoint | string | `""` |  |
+| controller.substrate.ateApiInsecure | bool | `false` |  |
+| controller.substrate.ateApiServer.namespace | string | `"ate-system"` |  |
+| controller.substrate.ateApiServer.serviceAccount | string | `"ate-api-server"` |  |
+| controller.substrate.atenetRouterURL | string | `""` |  |
+| controller.substrate.defaultWorkerPool.name | string | `""` |  |
+| controller.substrate.defaultWorkerPool.namespace | string | `""` |  |
+| controller.substrate.enabled | bool | `false` |  |
 | controller.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
@@ -171,7 +179,7 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.extraArgs.redirect-url | string | `"$(OIDC_REDIRECT_URL)"` |  |
 | oauth2-proxy.extraArgs.scope | string | `"openid profile email groups"` |  |
 | oauth2-proxy.extraArgs.set-authorization-header | bool | `true` |  |
-| oauth2-proxy.extraArgs.skip-auth-regex | string | `"^/(login|_next/static|_next/image|login-bg\\.(jpg|png|webp)|logo-.*\\.png|favicon\\.ico).*$"` |  |
+| oauth2-proxy.extraArgs.skip-auth-regex | string | `"^/(login|_next/static|_next/image|login-bg\\.(jpg|png|webp)|logo-.*\\.png|favicon\\.ico|api/agentharnesses/.*/gateway).*$"` |  |
 | oauth2-proxy.extraArgs.skip-auth-route | string | `"^/(health|login)$"` |  |
 | oauth2-proxy.extraArgs.skip-jwt-bearer-tokens | bool | `true` |  |
 | oauth2-proxy.extraArgs.upstream | string | `"$(UPSTREAM_URL)"` |  |
@@ -249,6 +257,7 @@ A Helm chart for kagent, built with Google ADK
 | rbac.namespaces | list | `[]` | Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence). |
 | registry | string | `"cr.kagent.dev"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
+| substrateWorkerPool | object | `{"ateomImage":"","create":false,"name":"kagent-default","replicas":1}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.additionalForwardedHeaders | list | `[]` | Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped. |
