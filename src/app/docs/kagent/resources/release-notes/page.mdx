@@ -143,6 +143,7 @@ Before you upgrade:
 * **AWS LoadBalancer annotations** — the UI Service now supports AWS LoadBalancer service annotations for easier AWS deployment.
 * **SSH auth for git-based skills** — fixed SSH authentication when loading skills from private Git repositories.
 * **MCP connection error handling** — MCP connection errors are now returned to the LLM as context instead of raising exceptions.
+* **RemoteMCPServer TLS (v0.9.6)** — you can now connect to an MCP server that uses a private CA, self-signed certificate, or corporate internal CA by setting the `spec.tls` field on a `RemoteMCPServer`. The `spec.tls` shape mirrors the `ModelConfig` TLS configuration. For details, see kagent PR [#1905](https://github.com/kagent-dev/kagent/pull/1905).
 
 # v0.8
 
