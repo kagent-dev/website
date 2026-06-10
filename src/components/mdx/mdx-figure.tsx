@@ -3,7 +3,13 @@
 import * as React from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import {
+  MDX_IMAGE_SIZE_STYLES,
+  resolveMdxImageSize,
+  type MdxImageSize,
+} from "@/config/mdx-image-sizes"
 
 const MdxFigureLightbox = dynamic(
   () =>
@@ -13,7 +19,9 @@ const MdxFigureLightbox = dynamic(
   { ssr: false }
 )
 
-type MdxFigureProps = React.ImgHTMLAttributes<HTMLImageElement>
+type MdxFigureProps = React.ImgHTMLAttributes<HTMLImageElement> & {
+  size?: MdxImageSize
+}
 
 export function MdxFigure({
   src,
@@ -21,7 +29,9 @@ export function MdxFigure({
   title,
   className,
   style,
+  size,
 }: MdxFigureProps) {
+  const pathname = usePathname()
   const [open, setOpen] = React.useState(false)
   const [hasOpened, setHasOpened] = React.useState(false)
 
@@ -40,15 +50,14 @@ export function MdxFigure({
   }
 
   const hasLayoutOverride = className != null || style != null
+  const resolvedSize = resolveMdxImageSize(src, pathname, size)
+  const figureStyle = hasLayoutOverride ? style : MDX_IMAGE_SIZE_STYLES[resolvedSize]
 
   return (
-    <figure className={cn(hasLayoutOverride && className)} style={hasLayoutOverride ? style : undefined}>
+    <figure className={cn("mx-auto", className)} style={figureStyle}>
       <button
         type="button"
-        className={cn(
-          "block w-full cursor-zoom-in text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none",
-          hasLayoutOverride && "mx-0"
-        )}
+        className="block w-full cursor-zoom-in text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
         aria-label={`View larger image: ${label}`}
         aria-haspopup="dialog"
         aria-expanded={open}
