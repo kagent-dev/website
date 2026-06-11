@@ -38,13 +38,13 @@ flowchart LR
      kagentPods:::internal
      agentGateway:::internal
      ollama:::external
-    classDef cluster stroke:#818cf8,fill:#eef2ff
-    classDef internal stroke:#a78bfa,fill:#f5f3ff
-    classDef external stroke:#fb923c,fill:#fff7ed
-    style kagentPods stroke:#a78bfa,fill:#ffffff
-    style agentGateway fill:#ffffff,stroke:#AA00FF
-    style ollama fill:#ffffff,stroke:#00C853
-    style KindCluster stroke:#2962FF,fill:#ffffff
+    classDef cluster stroke:#818cf8,fill:transparent
+    classDef internal stroke:#a78bfa,fill:transparent
+    classDef external stroke:#fb923c,fill:transparent
+    style kagentPods stroke:#a78bfa,fill:transparent
+    style agentGateway fill:transparent,stroke:#AA00FF
+    style ollama fill:transparent,stroke:#00C853
+    style KindCluster stroke:#2962FF,fill:transparent
 `} />
 
 ## Configure kagent to use agentgateway
@@ -55,7 +55,7 @@ With agentgateway installed, point kagent at the agentgateway proxy instead of d
 
    ```shell
    helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-     --reuse-values
+     --reuse-values \
      --namespace kagent \
      --set providers.default=ollama \
      --set providers.ollama.baseUrl=http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1 \
