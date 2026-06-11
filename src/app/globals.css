@@ -355,6 +355,13 @@
 }
 .rd-browser { border-radius: 20px; overflow: hidden; }
 .dark .rd-browser img { filter: invert(0.88) hue-rotate(180deg); }
+/* Mermaid: transparent fills so nodes and subgraphs follow the page background */
+.mermaid-diagram svg .node rect,
+.mermaid-diagram svg .node polygon,
+.mermaid-diagram svg .node circle,
+.mermaid-diagram svg .cluster rect {
+  fill: transparent !important;
+}
 .rd-browser-bar {
   height: 38px;
   background: var(--rd-tint);
