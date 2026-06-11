@@ -45,4 +45,13 @@ spec:
 ..
 ```
 
+To see exactly what the agent sends to and receives from the LLM — every model request, response, and tool call — enable [debug logging](/docs/kagent/concepts/reliability#debug-logging) on the agent:
+
+```yaml
+spec:
+  declarative:
+    reliability:
+      debugLogging: true
+```
+
 You can also ask for help in the [community](https://discord.gg/Fu3k65f2k3) or log an issue on [GitHub](https://github.com/kagent-dev/kagent). You can create a bug report using the kagent CLI by running `kagent bug-report`. Before attaching files to your bug report, make sure they don't contain any sensitive information!

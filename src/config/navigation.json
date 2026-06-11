@@ -98,6 +98,11 @@
             "title": "Agent Memory",
             "href": "/docs/kagent/concepts/agent-memory",
             "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
+          },
+          {
+            "title": "Reliability",
+            "href": "/docs/kagent/concepts/reliability",
+            "description": "Configure self-healing and safety behaviors for kagent agents: tool call retries with reflection, model call limits, debug logging, and LLM request retries."
           }
         ]
       },

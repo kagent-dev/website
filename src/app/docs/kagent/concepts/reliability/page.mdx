@@ -1,0 +1,219 @@
+---
+title: "Reliability"
+pageOrder: 6
+description: "Configure self-healing and safety behaviors for kagent agents: tool call retries with reflection, model call limits, debug logging, and LLM request retries."
+---
+
+export const metadata = {
+  title: "Agent reliability features in kagent",
+  description: "Configure self-healing and safety behaviors for kagent agents: tool call retries with reflection, model call limits, debug logging, and LLM request retries.",
+  author: "kagent.dev"
+};
+
+# Reliability
+
+Agents fail in ways traditional applications don't: tool calls error out, LLM providers rate-limit requests, and a confused model can loop forever burning tokens. kagent provides a set of reliability features that make agents self-healing, bounded, and observable:
+
+| Feature | Resource | Field | What it does |
+|---------|----------|-------|--------------|
+| [Tool retries](#tool-retries-with-reflection) | Agent | `spec.declarative.reliability.toolRetries` | Retries failed tool calls with reflection guidance so the agent can self-correct |
+| [Max LLM calls](#max-llm-calls) | Agent | `spec.declarative.reliability.maxLLMCalls` | Caps model calls per request to prevent runaway loops |
+| [Debug logging](#debug-logging) | Agent | `spec.declarative.reliability.debugLogging` | Logs every LLM request/response and tool call to the agent pod logs |
+| [LLM request retries](#llm-request-retries) | ModelConfig | `spec.retry.attempts` | Automatically retries failed LLM HTTP requests (429, 408, 5xx) with exponential backoff |
+
+All features work with both the Python (default) and Go agent runtimes.
+
+## Tool retries with reflection
+
+Tool calls fail for many reasons: a malformed manifest, a missing resource, a temporarily unavailable backend. By default, a failed tool call simply returns the error to the model, which may repeat the exact same failing call.
+
+Setting `reliability.toolRetries` enables a *reflect-and-retry* behavior: when a tool call fails, the runtime injects structured reflection guidance into the model context — the error details, the error type, and instructions to analyze what went wrong — so the agent can correct its approach instead of blindly repeating the same call. The value is the maximum number of consecutive failures for a tool before the agent stops retrying it (between 1 and 10).
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |
+      You're a Kubernetes agent that helps users manage their cluster resources.
+    reliability:
+      toolRetries: 3
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_create_resource
+            - k8s_describe_resource
+```
+
+When a tool call fails, the model receives a function response like this instead of a raw error:
+
+```json
+{
+  "error_details": "[Kubernetes] create -f /tmp/k8s-resource.yaml failed: exit status 1",
+  "error_type": "ToolError",
+  "reflection_guidance": "The call to tool `k8s_create_resource` failed.\n\n**Error Details:**\n..."
+}
+```
+
+The agent then has a chance to fix its inputs (for example, correct an invalid manifest) and try again. After `toolRetries` consecutive failures of the same tool, the agent stops retrying and reports the failure gracefully in its final answer rather than erroring out.
+
+## Max LLM calls
+
+An agent that gets stuck in a tool-call loop can make hundreds of model calls for a single request, which gets expensive fast. `reliability.maxLLMCalls` is a cost safety rail that caps the total number of model calls the agent can make while handling a single request.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |
+      You're a Kubernetes agent that helps users manage their cluster resources.
+    reliability:
+      maxLLMCalls: 20
+```
+
+If the agent exceeds the limit, the run stops with a clear error instead of looping:
+
+```
+Agent stopped: exceeded the configured limit of 20 model calls for a single
+request. This safety rail prevents runaway loops. If the task legitimately
+needs more model calls, increase reliability.maxLLMCalls on the agent.
+```
+
+If unset, the runtime default of 500 calls per request applies. Note that each tool call round-trip costs at least one model call, so set the limit with your agent's expected workflow in mind — a value that's too low will cut off legitimate multi-step tasks.
+
+## Debug logging
+
+When an agent misbehaves, the first question is always "what did the model actually see, and what did it respond?". Setting `reliability.debugLogging: true` enables verbose runtime logging of every LLM request, LLM response, tool call, and tool result to the agent pod logs. It's off by default because the output is verbose and may include prompt and response content.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |
+      You're a Kubernetes agent that helps users manage their cluster resources.
+    reliability:
+      debugLogging: true
+```
+
+View the output in the agent's pod logs:
+
+```shell
+kubectl logs -n kagent deploy/k8s-agent -f
+```
+
+```console
+[logging_plugin] 🚀 USER MESSAGE RECEIVED
+[logging_plugin]    Invocation ID: e-712e920d-00bf-40fb-8fd3-130071ab80f5
+[logging_plugin]    Session ID: 2ed4bd5d-79f0-433b-b938-dfb75e8d256a
+[logging_plugin]    User Content: text: 'Describe the kagent-controller deployment'
+[logging_plugin] 🧠 LLM REQUEST
+[logging_plugin]    Model: gpt-4.1-mini
+[logging_plugin]    System Instruction: 'You're a Kubernetes agent...'
+[logging_plugin] 🔧 TOOL STARTED
+[logging_plugin]    Tool Name: k8s_describe_resource
+[logging_plugin] 🔧 TOOL COMPLETED
+[logging_plugin]    Result: {'content': [{'type': 'text', 'text': 'Name: kagent-controller...'}]}
+```
+
+> **Note:** Debug logging records full prompts, model responses, and tool results. Avoid enabling it permanently in environments where conversation content is sensitive, and prefer [tracing](/docs/kagent/observability/tracing) for long-term observability.
+
+## LLM request retries
+
+LLM provider APIs fail transiently: rate limits (429), request timeouts (408), and server errors (5xx) are routine at scale. The `retry` field on a ModelConfig configures the provider SDK to automatically retry failed HTTP requests with exponential backoff before surfacing an error to the agent.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: default-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-4.1-mini
+  provider: OpenAI
+  openAI: {}
+  retry:
+    attempts: 5
+```
+
+`attempts` is the maximum number of retry attempts after the initial request fails (0 to 20). Set it to `0` to disable retries entirely.
+
+A few things to know:
+
+- Retries are supported for the **OpenAI**, **Azure OpenAI**, **Anthropic**, and **Gemini** providers. Other providers ignore the setting and log a warning in the agent pod.
+- The OpenAI and Anthropic SDKs already retry twice by default — the `retry` setting overrides that default. Use a higher value for production workloads that must ride out rate-limit bursts, or `0` if you'd rather fail fast.
+- These retries happen at the HTTP transport level and are invisible to the model; they're complementary to [tool retries](#tool-retries-with-reflection), which operate at the agent reasoning level.
+
+## Combining the features
+
+The features are independent and compose naturally. A production-hardened agent typically combines transport-level retries with reasoning-level retries and a cost cap:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: prod-model
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-4.1-mini
+  provider: OpenAI
+  openAI: {}
+  retry:
+    attempts: 5            # ride out rate limits and transient 5xx errors
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: prod-k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: prod-model
+    systemMessage: |
+      You're a Kubernetes agent that helps users manage their cluster resources.
+    reliability:
+      toolRetries: 3       # self-correct failed tool calls
+      maxLLMCalls: 50      # hard cap on cost per request
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_create_resource
+```
+
+Enable `debugLogging: true` temporarily when you need to diagnose agent behavior, and turn it off again once you're done.
+
+## Configuring via the UI
+
+All of these settings are also available in the kagent dashboard:
+
+- **Agent reliability** (`toolRetries`, `maxLLMCalls`, `debugLogging`): in the agent create/edit form.
+- **LLM request retries** (`retry.attempts`): in the **Advanced** section of the model configuration form.
