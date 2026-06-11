@@ -1,0 +1,81 @@
+---
+title: "Agent Substrate"
+pageOrder: 5
+description: "Run declarative agents on Agent Substrate — a Kubernetes-native runtime that delivers fast startup, efficient resource usage, and secure sandboxed execution."
+---
+
+export const metadata = {
+  title: "Agent Substrate",
+  description: "Run declarative agents on Agent Substrate — a Kubernetes-native runtime that delivers fast startup, efficient resource usage, and secure sandboxed execution.",
+  author: "kagent.dev"
+};
+
+# Agent Substrate
+
+Agent Substrate is a Kubernetes-native runtime for running AI agents and other stateful workloads efficiently. Instead of dedicating one pod per agent — which wastes capacity while agents sit idle — Substrate decouples an agent's lifecycle from pod infrastructure. Idle agents are snapshotted to object storage and rehydrated on demand, so a small pool of pre-warmed workers can host far more agents than there are pods.
+
+kagent can run workloads on Agent Substrate in two ways:
+
+- **Declarative agents** — A declarative `Agent` describes its model, instructions, and tools (see [Agents](/docs/kagent/concepts/agents)). Its sandboxed variant, the [`SandboxAgent`](/docs/kagent/resources/api-ref) CRD, lets you run a (Go) declarative agent on Agent Substrate.
+- **AgentHarness** — The [`AgentHarness`](/docs/kagent/concepts/agent-harness) CRD provisions a long-running execution environment. Select Agent Substrate as its runtime by setting `runtime` to `substrate`; kagent then generates a per-harness `ActorTemplate` and creates an `Actor` from it, referencing a `WorkerPool` for capacity.
+
+## Why Agent Substrate
+
+- **Fast startup** — Agents cold-start by restoring a compressed snapshot rather than booting a fresh pod, so they resume in a fraction of the time.
+- **Efficient resource usage** — A pool of pre-warmed workers multiplexes many actors across far fewer pods, persisting idle actors to object storage instead of holding a pod each.
+- **Secure execution** — Each workload runs inside a gVisor sandbox, isolating untrusted agent code from the host and from other actors.
+- **Declarative management** — WorkerPools and ActorTemplates are Kubernetes CRDs, so the runtime is configured and versioned with the same GitOps workflow as the rest of your platform.
+
+## Core concepts
+
+| Term | Definition |
+| --- | --- |
+| **Actor** | An individual agent instance with isolated state, managed by Substrate. |
+| **WorkerPool** | A CRD declaring the pool of pre-warmed gVisor worker pods that host actors. |
+| **ActorTemplate** | A CRD defining an actor's configuration and lifecycle behavior. kagent generates one per `AgentHarness`. |
+| **Snapshot** | A compressed (Zstd) checkpoint of actor state in object storage that enables suspension and fast restoration. |
+| **Session** | The execution context that tracks an actor's activity and checkpoints. |
+
+## How it works
+
+When an agent is invoked, Substrate restores its actor onto an available worker from the WorkerPool — rehydrating from a snapshot if the actor was idle. The agent runs inside a gVisor sandbox for the duration of the session. When the actor goes idle, its state is checkpointed back to object storage and the worker is freed to host another actor. This snapshot-and-restore cycle is what lets a single worker pool serve many more agents than a pod-per-agent model.
+
+## Architecture
+
+Agent Substrate is composed of a control plane, a data plane, and snapshot storage:
+
+**Control plane**
+
+- `ateapi` — gRPC API and workflow engine, backed by Redis.
+- `atecontroller` — the Kubernetes reconciler for `WorkerPool` and `ActorTemplate` resources.
+
+**Data plane**
+
+- `atenet` — an L7 proxy and DNS routing layer that directs traffic to actors.
+- `atelet` — a DaemonSet that manages snapshot uploads and downloads on each node.
+- `ateom` — the worker-pod supervisor that communicates with the gVisor runtime.
+
+**Storage**
+
+- Zstd-compressed checkpoint snapshots stored in object storage (GCS or S3).
+
+## Using Agent Substrate with AgentHarness and Declarative agents
+
+### Declarative agents
+
+Run a (Go) declarative agent on Agent Substrate by creating a `SandboxAgent` resource. It carries the same spec as a regular `Agent`, but the kagent controller runs it as a sandboxed workload on the runtime instead of a plain Deployment.
+
+### AgentHarness
+
+Set the harness runtime to `substrate` and provide the substrate configuration. The key fields are:
+
+- `workerPoolRef` — references an existing WorkerPool in the harness namespace. When unset, the controller uses its configured default WorkerPool.
+- `snapshotsConfig` — configures where actor memory snapshots are stored. Defaults to `gs://ate-snapshots/<namespace>/<agentharnessname>` when unset.
+- `workloadImage` — overrides the default NemoClaw/OpenClaw sandbox image used in the generated ActorTemplate.
+- `gatewayTokenSecretRef` — references a Secret (with a `token` key) holding the OpenClaw gateway Bearer token. Prefer this over an inline `gatewayToken` for production secrets.
+
+See the [API reference](/docs/kagent/resources/api-ref) for the full `AgentHarnessSubstrateSpec` schema.
+
+## Learn more
+
+For a deeper dive into the runtime internals, see the [Agent Substrate documentation](https://learn.agentsubstrate.dev/).

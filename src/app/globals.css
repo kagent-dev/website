@@ -407,6 +407,7 @@
 .rd-float-b { right: 8%; bottom: -22px; }
 .rd-float-b2 { left: 8%; bottom: -22px; }
 .rd-float-t { right: -24px; top: 50%; }
+.rd-float-l2 { left: -24px; bottom: 12%; }
 
 /* ---- Logo strip ---- */
 .rd-logo-strip {
@@ -953,7 +954,7 @@
 @media (max-width: 980px) {
   .rd-value-grid, .rd-uc-grid, .rd-comm-grid, .rd-ed-grid, .rd-std-grid { grid-template-columns: 1fr; }
   .rd-how-grid { grid-template-columns: 1fr; }
-  .rd-float-l, .rd-float-r, .rd-float-b2, .rd-float-t { display: none; }
+  .rd-float-l, .rd-float-r, .rd-float-b2, .rd-float-t, .rd-float-l2 { display: none; }
   .rd-qs-bar { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 8px; }
   .rd-qs-tabs { flex-wrap: wrap; }
   .rd-qs-body code { font-size: 12.5px; }

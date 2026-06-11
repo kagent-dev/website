@@ -352,6 +352,16 @@ export default function RedesignPage() {
                   <div className="rd-chip-sub">LangGraph · CrewAI · Google ADK</div>
                 </div>
               </div>
+
+              <div className="rd-float-chip rd-float-l2">
+                <div className="rd-chip-icon" style={{ background: '#EEE8FF', color: '#7C3AED' }}>
+                  <Icon name="bolt" size={20} />
+                </div>
+                <div>
+                  <div className="rd-chip-label">Agent Substrate</div>
+                  <div className="rd-chip-sub">Fast startup · Secure · Efficient</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -372,6 +382,7 @@ export default function RedesignPage() {
               ['eye', 'Observable by default', 'OpenTelemetry traces, Prometheus metrics, structured logs. See every prompt, every tool call, every token.'],
               ['shield', 'Zero-trust ready', 'Run on top of Istio or Ambient Mesh. mTLS, fine-grained RBAC, and policy-driven egress for agent traffic.'],
               ['shield', 'NVIDIA NemoClaw', 'Built-in security and privacy guardrails via NVIDIA NemoClaw. Run Nemotron locally or route to cloud models — with policy enforcement on every call.'],
+              ['bolt', 'Agent Substrate', 'Run declarative agents on Agent Substrate for fast startup, efficient resource usage, and secure sandboxed execution — a Kubernetes-native runtime for agents at scale.'],
               ['book', 'Standards-based', 'Native MCP, A2A, OpenTelemetry, and Kubernetes APIs. No proprietary glue, no rewrite tax later.'],
             ].map(([icon, title, body], i) => (
               <div key={i} className="rd-value-card rv">
@@ -393,6 +404,7 @@ export default function RedesignPage() {
               {[
                 ['Agent lifecycle via CRDs', 'Define, version, and roll out agents with kubectl and GitOps — the same workflow as every other workload.'],
                 ['Multi-runtime support', 'Go and Python ADK runtimes. Pick the language that fits, or mix both in the same cluster.'],
+                ['Agent Substrate runtime', 'Run agents on the substrate runtime — a WorkerPool + Actor model that delivers fast cold starts, low resource overhead, and secure isolation per agent.'],
                 ['BYO frameworks', 'LangGraph, CrewAI, Google ADK, or your own — bring any agent framework and kagent orchestrates it.'],
                 ['Long-term memory', 'Persistent vector-backed memory across sessions. Agents remember context, not just the last prompt.'],
                 ['Human-in-the-loop', 'Tool approval gates, agent-initiated questions, and cascading HITL — humans stay in control.'],
@@ -634,7 +646,7 @@ export default function RedesignPage() {
           <div className="rd-comm-grid">
             <div className="rd-comm-card rv">
               <div className="rd-c-icon"><Icon name="git" /></div>
-              <div className="rd-stat">2,500+</div>
+              <div className="rd-stat">3,000+</div>
               <div className="rd-stat-l">GITHUB STARS</div>
               <h4>Open source</h4>
               <p>Apache 2.0. Public roadmap, public RFCs, public weekly community calls.</p>

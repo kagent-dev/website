@@ -95,6 +95,11 @@
             "description": "Understand AgentHarness resources, OpenShell-backed execution environments, and backend-specific channel configuration."
           },
           {
+            "title": "Agent Substrate",
+            "href": "/docs/kagent/concepts/agent-substrate",
+            "description": "Run declarative agents on Agent Substrate — a Kubernetes-native runtime that delivers fast startup, efficient resource usage, and secure sandboxed execution."
+          },
+          {
             "title": "Agent Memory",
             "href": "/docs/kagent/concepts/agent-memory",
             "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
