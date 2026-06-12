@@ -369,6 +369,7 @@ Substrate currently expects a gs:// location (see Agent Substrate SnapshotsConfi
 
 _Appears in:_
 - [AgentHarnessSubstrateSpec](#agentharnesssubstratespec)
+- [SandboxSubstrateSpec](#sandboxsubstratespec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -452,7 +453,7 @@ AgentSpec defines the desired state of Agent.
 
 _Appears in:_
 - [Agent](#agent)
-- [SandboxAgent](#sandboxagent)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -494,6 +495,7 @@ _Validation:_
 
 _Appears in:_
 - [AgentSpec](#agentspec)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description |
 | --- | --- |
@@ -517,6 +519,7 @@ By default (when not specified), only references from the same namespace are all
 _Appears in:_
 - [AgentSpec](#agentspec)
 - [RemoteMCPServerSpec](#remotemcpserverspec)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -598,6 +601,7 @@ _Appears in:_
 
 _Appears in:_
 - [AgentSpec](#agentspec)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -742,6 +746,7 @@ _Appears in:_
 
 _Appears in:_
 - [AgentSpec](#agentspec)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1331,7 +1336,7 @@ _Appears in:_
 
 
 
-SandboxAgent declares an agent that runs in an isolated sandbox (agent-sandbox Sandbox CR).
+SandboxAgent declares an agent that runs in an isolated sandbox (agent-sandbox or Agent Substrate).
 
 
 
@@ -1344,8 +1349,32 @@ SandboxAgent declares an agent that runs in an isolated sandbox (agent-sandbox S
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[AgentSpec](#agentspec)_ |  |  |  |
+| `spec` _[SandboxAgentSpec](#sandboxagentspec)_ |  |  |  |
 | `status` _[AgentStatus](#agentstatus)_ |  |  |  |
+
+
+#### SandboxAgentSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [SandboxAgent](#sandboxagent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[AgentType](#agenttype)_ |  | Declarative | Enum: [Declarative BYO] <br /> |
+| `byo` _[BYOAgentSpec](#byoagentspec)_ | BYO configures a "bring your own" agent backed by a user-provided<br />container image. Kagent deploys the image and expects it to serve the<br />agent over the A2A protocol on port 8080.<br />Required if type is BYO. |  |  |
+| `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ | Declarative configures an agent that is fully described by this resource<br />(model, instructions, tools) and runs on one of kagent's built-in runtimes.<br />Required if type is Declarative. |  |  |
+| `description` _string_ |  |  |  |
+| `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
+| `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
+| `platform` _[SandboxPlatform](#sandboxplatform)_ | Platform selects the sandbox control plane. Defaults to agent-sandbox. | agent-sandbox | Enum: [agent-sandbox substrate] <br /> |
+| `substrate` _[SandboxSubstrateSpec](#sandboxsubstratespec)_ | Substrate is optional substrate-specific settings when platform is substrate. |  |  |
 
 
 #### SandboxConfig
@@ -1358,10 +1387,47 @@ SandboxConfig configures sandboxed execution behavior.
 
 _Appears in:_
 - [AgentSpec](#agentspec)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `network` _[NetworkConfig](#networkconfig)_ | Network configures outbound network access for sandboxed execution paths.<br />When unset or when allowedDomains is empty, outbound access is denied by default. |  |  |
+
+
+#### SandboxPlatform
+
+_Underlying type:_ _string_
+
+SandboxPlatform selects the control plane for sandboxed agents.
+
+_Validation:_
+- Enum: [agent-sandbox substrate]
+
+_Appears in:_
+- [SandboxAgentSpec](#sandboxagentspec)
+
+| Field | Description |
+| --- | --- |
+| `agent-sandbox` |  |
+| `substrate` |  |
+
+
+#### SandboxSubstrateSpec
+
+
+
+SandboxSubstrateSpec configures Agent Substrate for a SandboxAgent.
+WorkerPool capacity is referenced from workerPoolRef or the controller default.
+
+
+
+_Appears in:_
+- [SandboxAgentSpec](#sandboxagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `workerPoolRef` _[TypedLocalReference](#typedlocalreference)_ | WorkerPoolRef references an existing ate.dev WorkerPool. |  |  |
+| `snapshotsConfig` _[AgentHarnessSubstrateSnapshotsConfig](#agentharnesssubstratesnapshotsconfig)_ | SnapshotsConfig configures actor memory snapshots.<br />Defaults to gs://ate-snapshots/&lt;namespace&gt;/&lt;agentname&gt; when unset. |  |  |
 
 
 #### SecretReference
@@ -1443,6 +1509,7 @@ _Appears in:_
 
 _Appears in:_
 - [AgentSpec](#agentspec)
+- [SandboxAgentSpec](#sandboxagentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1576,6 +1643,7 @@ _Appears in:_
 _Appears in:_
 - [AgentHarnessSubstrateSpec](#agentharnesssubstratespec)
 - [PromptSource](#promptsource)
+- [SandboxSubstrateSpec](#sandboxsubstratespec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
