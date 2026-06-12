@@ -232,6 +232,11 @@
             "title": "Agent Harness",
             "href": "/docs/kagent/examples/agent-harness",
             "description": "Provision OpenClaw, NemoClaw, and Hermes sandboxes with the AgentHarness API."
+          },
+          {
+            "title": "Agent Substrate",
+            "href": "/docs/kagent/examples/agent-substrate",
+            "description": "Run a declarative agent on Agent Substrate — a Kubernetes-native runtime that snapshots idle agents and rehydrates them inside gVisor sandboxes."
           }
         ]
       },

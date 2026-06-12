@@ -10,6 +10,7 @@ export const VERSIONS = {
 
   // External dependencies
   agentSandbox: "0.3.10",
+  agentSubstrate: "0.0.6",
   loki: "6.24.0",
   tempo: "1.16.0",
   jaeger: "4.4.7",
