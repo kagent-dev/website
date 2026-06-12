@@ -32,7 +32,7 @@ A Helm chart for kagent, built with Google ADK
 | file://../tools/querydoc | querydoc |  |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~7.0.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
-| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.1.3 |
+| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
 
 ## Values
 
@@ -92,6 +92,9 @@ A Helm chart for kagent, built with Google ADK
 | controller.substrate.ateApiInsecure | bool | `false` |  |
 | controller.substrate.ateApiServer.namespace | string | `"ate-system"` |  |
 | controller.substrate.ateApiServer.serviceAccount | string | `"ate-api-server"` |  |
+| controller.substrate.ateApiTokenAudience | string | `"api.ate-system.svc"` |  |
+| controller.substrate.ateApiTokenExpirationSeconds | int | `3600` |  |
+| controller.substrate.ateApiTokenFile | string | `"/var/run/secrets/tokens/ate-api/token"` |  |
 | controller.substrate.atenetRouterURL | string | `""` |  |
 | controller.substrate.defaultWorkerPool.name | string | `""` |  |
 | controller.substrate.defaultWorkerPool.namespace | string | `""` |  |
