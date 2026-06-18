@@ -6,6 +6,7 @@
 export const VERSIONS = {
   // Core kagent version requirements
   kagent: "0.9.1",
+  kagentSubstrate: "0.9.7",
   kmcp: "0.2.8",
 
   // External dependencies

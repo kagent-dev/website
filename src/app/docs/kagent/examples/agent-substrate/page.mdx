@@ -14,19 +14,19 @@ export const metadata = {
 
 # Agent Substrate
 
-This example walks from an empty machine to a declarative agent running inside a gVisor actor on [Agent Substrate](/docs/kagent/concepts/agent-substrate). Everything pulls from published OCI charts — no source builds, no repo clones.
+In this guide, you install Agent Substrate and kagent on a local kind cluster, then deploy a declarative `SandboxAgent` that runs inside a gVisor actor. All components come from published OCI charts — no source builds or repo clones required.
 
-By the end you'll have:
+By the end, you will have:
 
-- A kind cluster running Agent Substrate {VERSIONS.agentSubstrate} in `ate-system`.
-- kagent 0.9.7 or later installed with the substrate integration enabled. **kagent 0.9.7 is the minimum version** — earlier releases do not include the controller wiring that lets a `SandboxAgent` target substrate.
+- Agent Substrate v{VERSIONS.agentSubstrate} running in the `ate-system` namespace.
+- kagent v{VERSIONS.kagentSubstrate} or later installed with the substrate integration enabled. **kagent v{VERSIONS.kagentSubstrate} is the minimum version** — earlier releases do not include the controller wiring that lets a `SandboxAgent` target substrate.
 - A `SandboxAgent` running on substrate, reachable from the kagent UI.
 
 For background on what substrate is and how it differs from a per-pod agent runtime, see the [Agent Substrate concept page](/docs/kagent/concepts/agent-substrate). This guide does not cover the `AgentHarness` path on substrate.
 
 ## Before you begin
 
-You will need:
+You need:
 
 - `kind`, `kubectl`, and `helm` on your `PATH`.
 - A running Docker daemon (Docker Desktop or equivalent).
@@ -42,7 +42,7 @@ export OPENAI_API_KEY="sk-..."
 kind create cluster --name kagent-substrate
 ```
 
-The substrate {VERSIONS.agentSubstrate} chart defaults to JWT auth backed by Kubernetes ServiceAccount tokens, so a vanilla kind cluster works — no feature gates or custom kind config are required.
+The substrate v{VERSIONS.agentSubstrate} chart defaults to JWT auth backed by Kubernetes ServiceAccount tokens, so a vanilla kind cluster works — no feature gates or custom kind config are required.
 
 ## Step 2: Install Agent Substrate
 
@@ -70,27 +70,31 @@ You should see `ate-api-server`, `ate-controller`, `atelet-*`, `atenet-router`, 
 
 ## Step 3: Install kagent with substrate enabled
 
-> Pin the chart to `0.9.7` or later. The `controller.substrate.*` and `substrateWorkerPool.*` values used below were introduced in 0.9.7; against an older chart they will be silently ignored and the controller will start without the substrate integration.
+<Aside type="warning">
+Pin the chart to v{VERSIONS.kagentSubstrate} or later. The `controller.substrate.*` and `substrateWorkerPool.*` values used below were introduced in v{VERSIONS.kagentSubstrate}; against an older chart they are silently ignored and the controller starts without the substrate integration.
+</Aside>
 
-Confirm the OpenAI key is set in this shell before running helm. If it's empty, the install will run silently with no `kagent-openai` Secret and the default agent pods will land in `CreateContainerConfigError`.
+Confirm the OpenAI key is set in this shell before you run Helm. If the key is empty, the install runs silently with no `kagent-openai` Secret and the default agent pods land in `CreateContainerConfigError`.
 
 ```bash
 [[ -n "${OPENAI_API_KEY:-}" ]] && echo "key is set (len=${#OPENAI_API_KEY})" || echo "OPENAI_API_KEY is empty — export it first"
 ```
 
-> Don't combine the export and the helm command on one line — `OPENAI_API_KEY="$(cat ...)" helm ... --set providers.openAI.apiKey="${OPENAI_API_KEY}"` evaluates `${OPENAI_API_KEY}` before the inline assignment runs and passes an empty string. Either `export` on its own line first, or splice the value directly with `--set providers.openAI.apiKey="$(cat ~/path/to/key)"`.
+<Aside type="tip">
+Do not combine the export and the Helm command on one line — `OPENAI_API_KEY="$(cat ...)" helm ... --set providers.openAI.apiKey="${OPENAI_API_KEY}"` evaluates `${OPENAI_API_KEY}` before the inline assignment runs and passes an empty string. Either `export` on its own line first, or splice the value directly with `--set providers.openAI.apiKey="$(cat ~/path/to/key)"`.
+</Aside>
 
 Install the CRDs, then kagent with the substrate flags.
 
 ```bash
 helm upgrade --install kagent-crds \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
-  --version 0.9.7 \
+  --version {VERSIONS.kagentSubstrate} \
   --namespace kagent --create-namespace --wait
 
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-  --version 0.9.7 \
+  --version {VERSIONS.kagentSubstrate} \
   --namespace kagent --timeout 10m --wait \
   --set providers.openAI.apiKey="${OPENAI_API_KEY}" \
   --set providers.default=openAI \
@@ -102,9 +106,9 @@ helm upgrade --install kagent \
   --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v{VERSIONS.agentSubstrate}
 ```
 
-The `controller.substrate.*` and `substrateWorkerPool.*` flags are what turn on the substrate integration. The rest is a standard kagent install.
+The `controller.substrate.*` and `substrateWorkerPool.*` flags turn on the substrate integration. The rest is a standard kagent install.
 
-If helm hits its `--timeout 10m` while waiting on the cold-start pod startup race (the controller restarts a couple of times waiting on postgres), wait for the controller manually and continue.
+If Helm hits its `--timeout 10m` while waiting on the cold-start pod startup race (the controller restarts a couple of times waiting on postgres), wait for the controller manually and continue.
 
 ```bash
 kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=10m
@@ -117,16 +121,16 @@ kubectl get secret kagent-openai -n kagent         # should exist with 1 data en
 kubectl get pods -n kagent | grep -v Running       # only header + Completed jobs expected
 ```
 
-If you see `CreateContainerConfigError` on the default agent pods, the secret didn't get created — re-run the kagent helm command with `--reuse-values --set providers.openAI.apiKey="$(cat ~/path/to/key)"` to patch it in. The deployments will roll to new pods automatically.
+If you see `CreateContainerConfigError` on the default agent pods, the secret did not get created — re-run the kagent Helm command with `--reuse-values --set providers.openAI.apiKey="$(cat ~/path/to/key)"` to patch it in. The deployments roll to new pods automatically.
 
-### Tuning the WorkerPool size
+### Tune the WorkerPool size
 
-`substrateWorkerPool.replicas=1` is the chart default. One worker is enough for a declarative-only walkthrough: session actors release their slot the moment they snapshot back to object storage, so a single worker can serve many sequential sessions. Bump it when:
+`substrateWorkerPool.replicas=1` is the chart default. One worker is enough for a declarative-only walkthrough: session actors release their slot the moment they snapshot back to object storage, so a single worker can serve many sequential sessions. Increase the replica count when:
 
 - You add a long-lived `AgentHarness`. The `ahr-<...>` actor pins a slot for the lifetime of the CR, so you need at least `1 + (number of harnesses)`.
 - You want simultaneous, overlapping declarative sessions.
 
-You can change the size three ways, depending on how permanent you want it.
+You can change the size three ways, depending on how permanent you want the change.
 
 ```bash
 # 1) Quick, ephemeral — scale the live CR. Reverts on the next helm upgrade.
@@ -134,7 +138,7 @@ kubectl scale workerpool kagent-default -n kagent --replicas=3
 
 # 2) Stick it into the helm release — survives upgrades.
 helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-  --version 0.9.7 --namespace kagent --reuse-values \
+  --version {VERSIONS.kagentSubstrate} --namespace kagent --reuse-values \
   --set substrateWorkerPool.replicas=3
 
 # 3) Fresh install — change the value on the Step 3 install command above.
@@ -159,7 +163,7 @@ A `SandboxAgent` with `platform: substrate` and a `substrate.workerPoolRef` runs
    - **Name**: `hello-substrate`
    - **Namespace**: `kagent`
    - **Model config**: `default-model-config`
-   - **Runtime**: `Go` (required — the Python ADK isn't supported on substrate today)
+   - **Runtime**: `Go` (required — the Python ADK is not supported on substrate today)
    - **System message**:
      ```
      You are a friendly assistant living inside an Agent Substrate sandbox.
@@ -211,7 +215,7 @@ Expected reply:
 
 > *I am hello-substrate, a Go ADK declarative agent running inside a gVisor actor.*
 
-Behind the scenes, a per-session gVisor actor was restored from the golden snapshot, ran the LLM call, and snapshotted itself back to object storage. Open **View → Substrate** to see the actor in the inventory — between requests it will sit `Suspended`.
+Behind the scenes, a per-session gVisor actor was restored from the golden snapshot, ran the LLM call, and snapshotted itself back to object storage. Open **View → Substrate** to see the actor in the inventory — between requests it sits `Suspended`.
 
 ## Cleanup
 
