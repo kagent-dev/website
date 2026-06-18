@@ -1,0 +1,154 @@
+---
+title: "agentgateway"
+pageOrder: 1
+description: "Add governance to your kagent deployment with agentgateway"
+---
+
+import { Tabs, Tab } from '@/components/mdx/tabs';
+import { Mermaid } from '@/components/mdx/mermaid';
+
+export const metadata = {
+  title: "Using agentgateway with kagent",
+  description: "Learn how to add governance to your kagent deployment using agentgateway",
+  author: "kagent.dev"
+};
+
+# Using agentgateway with kagent
+
+As your kagent deployment grows, you might need governance over how your agents communicate with LLM providers. [Agentgateway](https://agentgateway.dev) is a proxy purpose-built for AI workloads that sits between your kagent agents and your LLM provider. This way, you can apply AgentgatewayPolicy for things like access control, rate limiting, audit logging, and observability. 
+
+## Prerequisites
+
+1. A running kagent installation. If you haven't installed kagent yet, follow the [quick start](/docs/kagent/getting-started/quickstart) guide first.
+2. Follow the [agentgateway installation guide](https://agentgateway.dev/docs/kubernetes/latest/quickstart/install/) to install agentgateway in your cluster.
+3. Set up an LLM provider with agentgateway. This guide uses [the Ollama setup](https://agentgateway.dev/docs/kubernetes/latest/llm/providers/ollama/) as an example.
+
+## Architecture
+
+Once set up, kagent agent pods route all LLM requests through agentgateway (running in the `agentgateway-system` namespace). Agentgateway enforces your policies, auth/authz, rate limiting, audit logging, and observability. Before forwarding requests to Ollama on the host.
+
+<Mermaid chart={`
+flowchart LR
+ subgraph KindCluster["kind cluster"]
+        kagentPods["kagent agent pods"]
+        agentGateway["agentgateway<br>(agentgateway-system ns)<br>• auth / authz<br>• rate limiting<br>• audit logging<br>• observability"]
+  end
+    kagentPods --> agentGateway
+    agentGateway --> ollama["Ollama<br>(host)"]
+     kagentPods:::internal
+     agentGateway:::internal
+     ollama:::external
+    classDef cluster stroke:#818cf8,fill:transparent
+    classDef internal stroke:#a78bfa,fill:transparent
+    classDef external stroke:#fb923c,fill:transparent
+    style kagentPods stroke:#a78bfa,fill:transparent
+    style agentGateway fill:transparent,stroke:#AA00FF
+    style ollama fill:transparent,stroke:#00C853
+    style KindCluster stroke:#2962FF,fill:transparent
+`} />
+
+## Configure kagent to use agentgateway
+
+With agentgateway installed, point kagent at the agentgateway proxy instead of directly at Ollama.
+
+1. If you installed kagent without agentgateway, upgrade your installation to route through the proxy.
+
+   ```shell
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --reuse-values \
+     --namespace kagent \
+     --set providers.default=ollama \
+     --set providers.ollama.baseUrl=http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1 \
+     --set providers.ollama.apiKey=dummy
+   ```
+
+2. Create a `ModelConfig` that points to Ollama via the agentgateway proxy.
+
+   ```yaml
+   kubectl apply -f- <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: ModelConfig
+   metadata:
+     name: llama3-model-config
+     namespace: kagent
+   spec:
+     model: llama3
+     provider: Ollama
+     ollama:
+       host: agentgateway-proxy.agentgateway-system.svc.cluster.local
+   EOF
+   ```
+
+3. Verify that kagent is still accessible and correctly functioning.
+
+   <Tabs tabs={[
+     { id: 'loadbalancer', label: 'Cloud Provider LoadBalancer' },
+     { id: 'port-forward', label: 'Port-forward for local testing' }
+   ]} />
+
+   <div id="loadbalancer-tab">
+   ```shell
+   export INGRESS_GW_ADDRESS=$(kubectl get svc -n kagent kagent-ui -o jsonpath="{.spec.clusterIP}")
+   echo $INGRESS_GW_ADDRESS
+   ```
+   </div>
+
+   <div id="port-forward-tab">
+   ```shell
+   kubectl port-forward -n kagent service/kagent-ui 8082:8080
+   ```
+   </div>
+
+4. [Open the kagent UI](/docs/kagent/observability/launch-ui).
+5. Start a chat with an agent such as `k8s-agent` to confirm that requests flow through agentgateway.
+
+   ![kagent default k8s-agent UI](/images/kagent-default-k8s-agent.png "kagent default k8s-agent UI")
+
+## Apply governance policies
+
+With agentgateway in place, you can now apply policies to govern how your kagent agents interact with your LLM provider.
+
+### Block requests with PII
+
+1. Create an `AgentgatewayPolicy` resource to reject any request that contains PII, such as an email address. For more policy examples, see the [agentgateway guardrails docs](https://agentgateway.dev/docs/kubernetes/latest/llm/guardrails/regex/#block-requests-with-pii).
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: agentgateway.dev/v1alpha1
+   kind: AgentgatewayPolicy
+   metadata:
+     name: prompt-guard
+     namespace: agentgateway-system
+   spec:
+     targetRefs:
+     - group: gateway.networking.k8s.io
+       kind: HTTPRoute
+       name: ollama
+     backend:
+       ai:
+         promptGuard:
+           request:
+           - response:
+               message: "Rejected due to inappropriate content"
+             regex:
+               action: Reject
+               matches:
+               - "email"
+   EOF
+   ```
+
+2. Verify the policy by sending a prompt to your agent through the kagent UI that includes the word `email`. You get a `403` response.
+
+   ![kagent rejected content](/images/kagent-rejected-content.png "kagent rejected content")
+
+## Cleanup
+
+1. Remove agentgateway-related resources from your kagent setup.
+   ```shell
+   kubectl delete agentgatewaypolicy prompt-guard -n agentgateway-system
+   kubectl delete modelconfig llama3-model-config -n kagent
+   ```
+
+2. If you no longer need agentgateway, [uninstall agentgateway](https://agentgateway.dev/docs/kubernetes/latest/operations/uninstall/).
+
+3. Upgrade your kagent installation to unset agentgateway as the proxy in front of your LLM provider.

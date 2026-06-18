@@ -184,6 +184,11 @@
             "description": "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions."
           },
           {
+            "title": "agentgateway",
+            "href": "/docs/kagent/examples/agentgateway",
+            "description": "Add governance to your kagent deployment with agentgateway"
+          },
+          {
             "title": "Using kagent agents via MCP",
             "href": "/docs/kagent/examples/agents-mcp",
             "description": "Connect external clients like Cursor and Claude to interact with kagent agents using the Model Context Protocol."
