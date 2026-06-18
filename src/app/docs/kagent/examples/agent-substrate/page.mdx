@@ -19,7 +19,7 @@ In this guide, you install Agent Substrate and kagent on a local kind cluster, t
 By the end, you will have:
 
 - Agent Substrate v{VERSIONS.agentSubstrate} running in the `ate-system` namespace.
-- kagent v{VERSIONS.kagentSubstrate} or later installed with the substrate integration enabled. **kagent v{VERSIONS.kagentSubstrate} is the minimum version** — earlier releases do not include the controller wiring that lets a `SandboxAgent` target substrate.
+- kagent v{VERSIONS.kagent} or later installed with the substrate integration enabled. **kagent v{VERSIONS.kagent} is the minimum version** — earlier releases do not include the controller wiring that lets a `SandboxAgent` target substrate.
 - A `SandboxAgent` running on substrate, reachable from the kagent UI.
 
 For background on what substrate is and how it differs from a per-pod agent runtime, see the [Agent Substrate concept page](/docs/kagent/concepts/agent-substrate). This guide does not cover the `AgentHarness` path on substrate.
@@ -71,7 +71,7 @@ You should see `ate-api-server`, `ate-controller`, `atelet-*`, `atenet-router`, 
 ## Step 3: Install kagent with substrate enabled
 
 <Aside type="warning">
-Pin the chart to v{VERSIONS.kagentSubstrate} or later. The `controller.substrate.*` and `substrateWorkerPool.*` values used below were introduced in v{VERSIONS.kagentSubstrate}; against an older chart they are silently ignored and the controller starts without the substrate integration.
+Pin the chart to v{VERSIONS.kagent} or later. The `controller.substrate.*` and `substrateWorkerPool.*` values used below were introduced in v{VERSIONS.kagent}; against an older chart they are silently ignored and the controller starts without the substrate integration.
 </Aside>
 
 Confirm the OpenAI key is set in this shell before you run Helm. If the key is empty, the install runs silently with no `kagent-openai` Secret and the default agent pods land in `CreateContainerConfigError`.
@@ -89,12 +89,12 @@ Install the CRDs, then kagent with the substrate flags.
 ```bash
 helm upgrade --install kagent-crds \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
-  --version {VERSIONS.kagentSubstrate} \
+  --version {VERSIONS.kagent} \
   --namespace kagent --create-namespace --wait
 
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-  --version {VERSIONS.kagentSubstrate} \
+  --version {VERSIONS.kagent} \
   --namespace kagent --timeout 10m --wait \
   --set providers.openAI.apiKey="${OPENAI_API_KEY}" \
   --set providers.default=openAI \
@@ -138,7 +138,7 @@ kubectl scale workerpool kagent-default -n kagent --replicas=3
 
 # 2) Stick it into the helm release — survives upgrades.
 helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
-  --version {VERSIONS.kagentSubstrate} --namespace kagent --reuse-values \
+  --version {VERSIONS.kagent} --namespace kagent --reuse-values \
   --set substrateWorkerPool.replicas=3
 
 # 3) Fresh install — change the value on the Step 3 install command above.
