@@ -4,6 +4,7 @@ import createMDX from "@next/mdx";
 import rehypeUnwrapImages from 'rehype-unwrap-images'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
+import { remarkVersionSubstitution } from './scripts/remark-version-substitution.mjs'
 
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
@@ -41,7 +42,7 @@ const nextConfig = {
 
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkFrontmatter, remarkGfm],
+    remarkPlugins: [remarkFrontmatter, remarkGfm, remarkVersionSubstitution],
     rehypePlugins: [rehypeUnwrapImages],
   },
 })
