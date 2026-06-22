@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Learn how to install kagent"
 ---
 
+import { VERSIONS } from "../../../_constants";
+
 export const metadata = {
   title: "Installing kagent",
   description: "Learn how to install kagent.",
@@ -28,7 +30,7 @@ Install kagent by using the kagent CLI or Helm.
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. Download the kagent CLI.
+2. Download the kagent CLI. By default, the latest version {VERSIONS.kagent} of kagent is installed.
 
    ```bash
    brew install kagent
