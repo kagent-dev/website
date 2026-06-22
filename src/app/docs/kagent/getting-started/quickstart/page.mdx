@@ -4,6 +4,8 @@ pageOrder: 1
 description: "A quick guide to get kagent installed and running with your first AI agent."
 ---
 
+import { VERSIONS } from "../../../_constants";
+
 export const metadata = {
   title: "kagent quick start",
   description: "Get started with this guide and get kagent installed and run your first AI agent.",
@@ -32,7 +34,7 @@ To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. Y
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. Download the kagent CLI.
+2. Download the kagent CLI. By default, the latest version {VERSIONS.kagent} of kagent is installed.
 
    ```bash
    brew install kagent
