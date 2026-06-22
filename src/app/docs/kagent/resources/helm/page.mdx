@@ -32,6 +32,7 @@ A Helm chart for kagent, built with Google ADK
 | file://../tools/querydoc | querydoc |  |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~7.0.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
+| oci://ghcr.io/kagent-dev/substrate/helm | substrate | ${SUBSTRATE_VERSION} |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
 
 ## Values
@@ -260,6 +261,7 @@ A Helm chart for kagent, built with Google ADK
 | rbac.namespaces | list | `[]` | Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence). |
 | registry | string | `"cr.kagent.dev"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
+| substrate.enabled | bool | `false` |  |
 | substrateWorkerPool | object | `{"ateomImage":"","create":false,"name":"kagent-default","replicas":1}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
@@ -281,6 +283,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.resources.limits.memory | string | `"1Gi"` |  |
 | ui.resources.requests.cpu | string | `"100m"` |  |
 | ui.resources.requests.memory | string | `"256Mi"` |  |
+| ui.route | object | `{"enabled":true}` | Gates the OpenShift `Route` for the UI. Additionally conditional on the `route.openshift.io/v1` API being present, so it is a no-op off-OpenShift. Set to `false` to front the UI with your own Route/ingress or the bundled oauth2-proxy instead of the chart's edge-terminated Route. |
 | ui.securityContext | object | (uses global securityContext) | Container-level security context for the UI container. Overrides the global securityContext. |
 | ui.service.annotations | object | `{}` |  |
 | ui.service.ports.port | int | `8080` |  |
