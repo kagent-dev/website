@@ -133,7 +133,7 @@ If you need to roll back more than one minor kagent version, you must first rese
    kubectl -n kagent scale deploy/kagent-controller --replicas=0
    ```
 
-3. Reset the core track to the target migration version. The `github://` source lets you reference the migration files directly from the kagent release tag without a local checkout. Replace `<target-migration-version>` with the highest migration sequence number in the `go/core/pkg/migrations/core/` directory of the target release.
+3. Reset the core track to the target migration version. The `github://` source lets you reference the migration files directly from the kagent release tag without a local checkout. Replace `<target-migration-version>` with the highest migration sequence number in the `go/core/pkg/migrations/core/` directory of the target release. For example, if the highest file is `000005_a2a_protocol_version.up.sql`, use `5`.
    ```bash
    migrate \
      -source "github://kagent-dev/kagent/go/core/pkg/migrations/core#v$ROLLBACK_VERSION" \
