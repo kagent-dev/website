@@ -25,7 +25,13 @@ Follow these steps to upgrade kagent to the latest version and keep your cluster
 3. Back up your current configuration, including the following:
     - Agent definitions
     - Any custom settings
-    - PostgreSQL database
+    - PostgreSQL database: You can take a snapshot now so that you have a restore point if the upgrade fails. For the database connection string, see [Database configuration](/docs/kagent/operations/operational-considerations#database-configuration).
+
+   ```bash
+   pg_dump "postgres://<user>:<password>@<host>:5432/<dbname>" \
+     --format=custom \
+     --file=kagent-pre-upgrade-snapshot.dump
+   ```
 
 4. **v0.9.0 and later**: You must be running at least v0.8.0 before upgrading to v0.9.0. Check the [release notes](/docs/kagent/resources/release-notes#v09) for 0.9-specific upgrades related to database migrations and RBAC scope.
 
@@ -124,13 +130,30 @@ When the controller detects that the database schema is ahead of its own migrati
 
 ### Reset the database before rolling back further
 
-If you need to roll back more than one minor kagent version, you must first reset the database schema to match the target version before rolling back the application. Use `golang-migrate` directly against the migration files.
+If you need to roll back more than one minor kagent version, be sure to roll back one minor version at a time. Kagent guarantees backwards compatibility of only one minor version, so skipping minor versions can result in data loss.
+
+You have two options for resetting the database schema at each step.
+
+#### Option 1: Restore from snapshot
+
+If you took a snapshot before upgrading, you can restore it directly. This is simpler than running down migrations, but any data written after the snapshot was taken is lost.
+
+```bash
+pg_restore \
+  --clean \
+  --dbname="postgres://<user>:<password>@<host>:5432/<dbname>" \
+  kagent-pre-upgrade-snapshot.dump
+```
+
+After restoring, follow the steps to [roll back the kagent application](#steps-to-roll-back).
+
+#### Option 2: Run down migrations
+
+Use `golang-migrate` to run down migrations one minor version at a time. This preserves data written after the snapshot but requires more steps.
 
 The source must be the current (newer) version that you are rolling back from, because it contains the down migrations needed to reverse the schema changes. The `goto` target is the highest migration sequence number present in the version that you are rolling back to.
 
 For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `CURRENT_VERSION=0.9.9`, `ROLLBACK_VERSION=0.9.3`, and run `goto 4`.
-
-> **Note**: If you need to roll back more than one minor kagent version, be sure to roll back one minor version at a time. Kagent guarantees backwards compatibility of only one minor version, so skipping minor versions can result in data loss.
 
 1. Save your current kagent version and the kagent version you want to roll back to in environment variables.
    ```bash
