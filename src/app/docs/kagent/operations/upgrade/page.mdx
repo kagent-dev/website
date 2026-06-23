@@ -88,7 +88,7 @@ If you need to roll back to a previous version after a successful upgrade, use t
 
 ### Rollback compatibility window
 
-kagent guarantees `n-1` application compatibility with the database: an application at version `n-1` can start against a database schema applied by version `n`. This means that you can roll back the application without manually resetting the database first, as long as you stay within the supported window:
+As of v0.9, kagent guarantees `n-1` application compatibility with the database: an application at version `n-1` can start against a database schema applied by version `n`. This means that you can roll back the application without manually resetting the database first, as long as you stay within the supported window:
 
 - **Supported**: Rolling back one minor version (for example, `v0.10.x` → `v0.9.x`).
 - **Requires DB reset first**: Rolling back more than one minor version.
