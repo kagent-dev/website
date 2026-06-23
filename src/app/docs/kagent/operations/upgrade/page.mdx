@@ -124,29 +124,39 @@ When the controller detects that the database schema is ahead of its own migrati
 
 ### Reset the database before rolling back further
 
-If you need to roll back more than one minor kagent version, you must first reset the database schema to match the target version before rolling back the application. Use `golang-migrate` directly against the target version's migration files.
+If you need to roll back more than one minor kagent version, you must first reset the database schema to match the target version before rolling back the application. Use `golang-migrate` directly against the migration files.
 
-1. Install [`golang-migrate`](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate).
+The source must be the current (newer) version that you are rolling back from, because it contains the down migrations needed to reverse the schema changes. The `goto` target is the highest migration sequence number present in the version that you are rolling back to.
 
-2. Stop the kagent controller.
+For example, if you are rolling back from `v0.10.2` (migrations up to `10`) to `v0.9.4` (migrations up to `8`), you use the `v0.10.2` source and `goto 8`.
+
+1. Save your current kagent version and the kagent version that you want to roll back to.
+   ```bash
+   export CURRENT_VERSION=<current-version>
+   export ROLLBACK_VERSION=<target-version>
+   ```
+
+2. Install [`golang-migrate`](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate).
+
+3. Stop the kagent controller.
    ```bash
    kubectl -n kagent scale deploy/kagent-controller --replicas=0
    ```
 
-3. Reset the core track to the target migration version. The `github://` source lets you reference the migration files directly from the kagent release tag without a local checkout. Replace `<target-migration-version>` with the highest migration sequence number in the `go/core/pkg/migrations/core/` directory of the target release. For example, if the highest file is `000005_a2a_protocol_version.up.sql`, use `5`.
+4. Reset the core track. Use the `CURRENT_VERSION` source and `goto` the highest migration sequence number in the `go/core/pkg/migrations/core/` directory of `ROLLBACK_VERSION`. The `github://` source references the migration files directly from the release tag without a local checkout.
    ```bash
    migrate \
-     -source "github://kagent-dev/kagent/go/core/pkg/migrations/core#v$ROLLBACK_VERSION" \
+     -source "github://kagent-dev/kagent/go/core/pkg/migrations/core#v$CURRENT_VERSION" \
      -database "$DATABASE_URL?x-migrations-table=schema_migrations" \
-     goto <target-migration-version>
+     goto <rollback-migration-version>
    ```
 
-4. If vector features are enabled, reset the vector track as well. Replace `<target-vector-migration-version>` with the highest migration sequence number in the `go/core/pkg/migrations/vector/` directory of the target release.
+5. If vector features are enabled, reset the vector track as well.
    ```bash
    migrate \
-     -source "github://kagent-dev/kagent/go/core/pkg/migrations/vector#v$ROLLBACK_VERSION" \
+     -source "github://kagent-dev/kagent/go/core/pkg/migrations/vector#v$CURRENT_VERSION" \
      -database "$DATABASE_URL?x-migrations-table=vector_schema_migrations" \
-     goto <target-vector-migration-version>
+     goto <rollback-vector-migration-version>
    ```
 
-5. After the database is at the correct schema version, roll back the kagent application by following the steps in the [previous section](#steps-to-roll-back).
+6. After the database is at the correct schema version, roll back the kagent application by following the steps in the [previous section](#steps-to-roll-back).
