@@ -90,8 +90,8 @@ If you need to roll back to a previous version after a successful upgrade, use t
 
 As of v0.9, kagent guarantees `n-1` application compatibility with the database: an application at version `n-1` can start against a database schema applied by version `n`. This means that you can roll back the application without manually resetting the database first, as long as you stay within the supported window:
 
-- **Supported**: Rolling back one minor version (for example, `v0.10.x` → `v0.9.x`).
-- **Requires DB reset first**: Rolling back more than one minor version.
+- **Supported**: Roll back one minor version (for example, `v0.10.x` → `v0.9.x`).
+- **Requires DB reset, one minor at a time**: Roll back more than one minor version. Be sure to roll back only one minor version at a time, as skipping a minor version can result in data loss.
 
 When the controller detects that the database schema is ahead of its own migration files, it starts in compatibility mode and skips migration application. The database schema is left unchanged.
 
@@ -129,6 +129,8 @@ If you need to roll back more than one minor kagent version, you must first rese
 The source must be the current (newer) version that you are rolling back from, because it contains the down migrations needed to reverse the schema changes. The `goto` target is the highest migration sequence number present in the version that you are rolling back to.
 
 For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `CURRENT_VERSION=0.9.9`, `ROLLBACK_VERSION=0.9.3`, and run `goto 4`.
+
+> **Note**: If you need to roll back more than one minor kagent version, be sure to roll back one minor version at a time. Kagent guarantees backwards compatibility of only one minor version, so skipping minor versions can result in data loss.
 
 1. Save your current kagent version and the kagent version you want to roll back to in environment variables.
    ```bash
