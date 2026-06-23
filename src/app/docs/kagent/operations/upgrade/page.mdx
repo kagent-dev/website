@@ -97,7 +97,7 @@ When the controller detects that the database schema is ahead of its own migrati
 
 ### Steps to roll back
 
-1. Save the version you want to roll back to in an environment variable.
+1. Save the kagent version you want to roll back to in an environment variable.
    ```bash
    export ROLLBACK_VERSION=<previous-version>
    ```
@@ -124,9 +124,9 @@ When the controller detects that the database schema is ahead of its own migrati
 
 ### Reset the database before rolling back further
 
-If you need to roll back more than one minor version, you must first reset the database schema to match the target version before rolling back the application. Use `golang-migrate` directly against the target version's migration files.
+If you need to roll back more than one minor kagent version, you must first reset the database schema to match the target version before rolling back the application. Use `golang-migrate` directly against the target version's migration files. Note that these migration files might have a different version number than the kagent version.
 
-1. Check out the migration files for the target version.
+1. Check out the migration files for the target kagent version.
    ```bash
    git clone https://github.com/kagent-dev/kagent.git
    cd kagent && git checkout v$ROLLBACK_VERSION
@@ -145,6 +145,6 @@ If you need to roll back more than one minor version, you must first reset the d
      goto <target-vector-migration-version>
    ```
 
-3. After the database is at the correct schema version, roll back the kagent application using the steps above.
+3. After the database is at the correct schema version, roll back the kagent application by following the steps in the [previous section](#steps-to-roll-back).
 
 > **Note**: Database migration version numbers do not correspond directly to kagent release versions. Always check the migration files in the target release to identify the correct target migration version.
