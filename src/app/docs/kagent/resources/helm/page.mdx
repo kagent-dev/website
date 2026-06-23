@@ -40,18 +40,34 @@ A Helm chart for kagent, built with Google ADK
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | argo-rollouts-agent.enabled | bool | `true` |  |
+| argo-rollouts-agent.memory.enabled | bool | `false` |  |
+| argo-rollouts-agent.memory.modelConfigRef | string | `""` |  |
+| argo-rollouts-agent.memory.ttlDays | int | `15` |  |
+| argo-rollouts-agent.modelConfigRef | string | `""` |  |
 | argo-rollouts-agent.resources.limits.memory | string | `"256Mi"` |  |
 | argo-rollouts-agent.resources.requests.cpu | string | `"50m"` |  |
 | argo-rollouts-agent.resources.requests.memory | string | `"128Mi"` |  |
 | cilium-debug-agent.enabled | bool | `true` |  |
+| cilium-debug-agent.memory.enabled | bool | `false` |  |
+| cilium-debug-agent.memory.modelConfigRef | string | `""` |  |
+| cilium-debug-agent.memory.ttlDays | int | `15` |  |
+| cilium-debug-agent.modelConfigRef | string | `""` |  |
 | cilium-debug-agent.resources.limits.memory | string | `"256Mi"` |  |
 | cilium-debug-agent.resources.requests.cpu | string | `"50m"` |  |
 | cilium-debug-agent.resources.requests.memory | string | `"128Mi"` |  |
 | cilium-manager-agent.enabled | bool | `true` |  |
+| cilium-manager-agent.memory.enabled | bool | `false` |  |
+| cilium-manager-agent.memory.modelConfigRef | string | `""` |  |
+| cilium-manager-agent.memory.ttlDays | int | `15` |  |
+| cilium-manager-agent.modelConfigRef | string | `""` |  |
 | cilium-manager-agent.resources.limits.memory | string | `"256Mi"` |  |
 | cilium-manager-agent.resources.requests.cpu | string | `"50m"` |  |
 | cilium-manager-agent.resources.requests.memory | string | `"128Mi"` |  |
 | cilium-policy-agent.enabled | bool | `true` |  |
+| cilium-policy-agent.memory.enabled | bool | `false` |  |
+| cilium-policy-agent.memory.modelConfigRef | string | `""` |  |
+| cilium-policy-agent.memory.ttlDays | int | `15` |  |
+| cilium-policy-agent.modelConfigRef | string | `""` |  |
 | cilium-policy-agent.resources.limits.memory | string | `"256Mi"` |  |
 | cilium-policy-agent.resources.requests.cpu | string | `"50m"` |  |
 | cilium-policy-agent.resources.requests.memory | string | `"128Mi"` |  |
@@ -128,6 +144,10 @@ A Helm chart for kagent, built with Google ADK
 | grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
 | grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
 | helm-agent.enabled | bool | `true` |  |
+| helm-agent.memory.enabled | bool | `false` |  |
+| helm-agent.memory.modelConfigRef | string | `""` |  |
+| helm-agent.memory.ttlDays | int | `15` |  |
+| helm-agent.modelConfigRef | string | `""` |  |
 | helm-agent.resources.limits.memory | string | `"256Mi"` |  |
 | helm-agent.resources.requests.cpu | string | `"50m"` |  |
 | helm-agent.resources.requests.memory | string | `"128Mi"` |  |
@@ -135,10 +155,18 @@ A Helm chart for kagent, built with Google ADK
 | imagePullSecrets | list | `[]` |  |
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
 | istio-agent.enabled | bool | `true` |  |
+| istio-agent.memory.enabled | bool | `false` |  |
+| istio-agent.memory.modelConfigRef | string | `""` |  |
+| istio-agent.memory.ttlDays | int | `15` |  |
+| istio-agent.modelConfigRef | string | `""` |  |
 | istio-agent.resources.limits.memory | string | `"256Mi"` |  |
 | istio-agent.resources.requests.cpu | string | `"50m"` |  |
 | istio-agent.resources.requests.memory | string | `"128Mi"` |  |
 | k8s-agent.enabled | bool | `true` |  |
+| k8s-agent.memory.enabled | bool | `false` |  |
+| k8s-agent.memory.modelConfigRef | string | `""` |  |
+| k8s-agent.memory.ttlDays | int | `15` |  |
+| k8s-agent.modelConfigRef | string | `""` |  |
 | k8s-agent.resources.limits.memory | string | `"256Mi"` |  |
 | k8s-agent.resources.requests.cpu | string | `"50m"` |  |
 | k8s-agent.resources.requests.memory | string | `"128Mi"` |  |
@@ -156,6 +184,10 @@ A Helm chart for kagent, built with Google ADK
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
 | kagent-tools.tools.metrics.port | int | `8085` |  |
 | kgateway-agent.enabled | bool | `true` |  |
+| kgateway-agent.memory.enabled | bool | `false` |  |
+| kgateway-agent.memory.modelConfigRef | string | `""` |  |
+| kgateway-agent.memory.ttlDays | int | `15` |  |
+| kgateway-agent.modelConfigRef | string | `""` |  |
 | kgateway-agent.resources.limits.memory | string | `"256Mi"` |  |
 | kgateway-agent.resources.requests.cpu | string | `"50m"` |  |
 | kgateway-agent.resources.requests.memory | string | `"128Mi"` |  |
@@ -203,6 +235,10 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.service.type | string | `"ClusterIP"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
 | observability-agent.enabled | bool | `true` |  |
+| observability-agent.memory.enabled | bool | `false` |  |
+| observability-agent.memory.modelConfigRef | string | `""` |  |
+| observability-agent.memory.ttlDays | int | `15` |  |
+| observability-agent.modelConfigRef | string | `""` |  |
 | observability-agent.resources.limits.memory | string | `"256Mi"` |  |
 | observability-agent.resources.requests.cpu | string | `"50m"` |  |
 | observability-agent.resources.requests.memory | string | `"128Mi"` |  |
@@ -218,6 +254,10 @@ A Helm chart for kagent, built with Google ADK
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for all pods |
 | promql-agent.enabled | bool | `true` |  |
+| promql-agent.memory.enabled | bool | `false` |  |
+| promql-agent.memory.modelConfigRef | string | `""` |  |
+| promql-agent.memory.ttlDays | int | `15` |  |
+| promql-agent.modelConfigRef | string | `""` |  |
 | promql-agent.resources.limits.memory | string | `"256Mi"` |  |
 | promql-agent.resources.requests.cpu | string | `"50m"` |  |
 | promql-agent.resources.requests.memory | string | `"128Mi"` |  |
