@@ -153,7 +153,7 @@ Use `golang-migrate` to run down migrations one minor version at a time. This pr
 
 The source must be the current (newer) version that you are rolling back from, because it contains the down migrations needed to reverse the schema changes. The `goto` target is the highest migration sequence number present in the version that you are rolling back to.
 
-For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `CURRENT_VERSION=0.9.9`, `ROLLBACK_VERSION=0.9.3`, and run `goto 4`.
+For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `CURRENT_VERSION=0.9.9`, `ROLLBACK_VERSION=0.9.3`, and run `goto 4` because you want to go back to migration sequence 4 (v0.9.3's `000004`).
 
 1. Save your current kagent version and the kagent version you want to roll back to in environment variables.
    ```bash
@@ -168,7 +168,7 @@ For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` 
    kubectl -n kagent scale deploy/kagent-controller --replicas=0
    ```
 
-4. Open the core migration directory for your rollback version and save the sequence number of the highest-numbered file in an environment variable.
+4. Open the core migration directory for your rollback version and save the sequence number of the highest-numbered file in an environment variable, such as `4` from the previous v0.9.3 `goto 4` example.
    ```bash
    open "https://github.com/kagent-dev/kagent/tree/v${ROLLBACK_VERSION}/go/core/pkg/migrations/core/"
    ```
