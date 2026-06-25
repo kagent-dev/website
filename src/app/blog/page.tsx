@@ -98,6 +98,13 @@ const posts = [
         title: 'NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation',
         description: 'Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell',
         authorId: 'michaellevan',
+    },
+    {
+        slug: 'is-pod-right-deployment-unit-ai-agent',
+        publishDate: '2026-06-25',
+        title: 'Is a Pod the Right Deployment Unit for an AI Agent?',
+        description: 'How kagent evolved from one runtime hosting many agents to agent-substrate—and why Pods may be the right execution unit, but not the right deployment model, for AI agents.',
+        authorId: 'linsun',
     }
 ]
 
