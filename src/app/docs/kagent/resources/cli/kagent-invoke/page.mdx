@@ -1,0 +1,49 @@
+---
+title: "kagent invoke"
+pageOrder: 10
+description: "kagent invoke command"
+---
+
+# `kagent invoke`
+
+Invoke a kagent agent to perform a task.
+
+```bash
+kagent invoke [flags]
+```
+
+**Flags:**
+- `--agent, -a` - Agent to invoke
+- `--file, -f` - File to read the task from
+- `--session, -s` - Session
+- `--stream, -S` - Stream the response
+- `--task, -t` - Task to perform
+- `--url-override, -u` - URL override
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## Example
+
+Invoke an agent with a task:
+
+```bash
+kagent invoke --agent "k8s-agent" --task "Get all the pods in the kagent namespace"
+```
+
+Invoke with streaming output:
+
+```bash
+kagent invoke --agent "k8s-agent" --task "Get all the pods" --stream
+```
+
+Invoke from a task file:
+
+```bash
+kagent invoke --agent "k8s-agent" --file task.txt
+```
+

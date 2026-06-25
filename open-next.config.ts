@@ -9,15 +9,19 @@ const config = {
       converter: "edge",
       tagCache: "dummy",
       queue: "dummy",
+      proxyExternalRequest: "fetch",
     },
   },
-
+  edgeExternals: ["node:crypto"],
   middleware: {
     external: true,
     override: {
       wrapper: "cloudflare-edge",
       converter: "edge",
       proxyExternalRequest: "fetch",
+      incrementalCache: "dummy",
+      tagCache: "dummy",
+      queue: "dummy",
     },
   },
 };

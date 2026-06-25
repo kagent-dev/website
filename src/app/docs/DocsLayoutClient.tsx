@@ -1,10 +1,13 @@
 'use client'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Background } from "@/components/background";
+import { LabCTA } from "@/components/mdx/lab-cta";
+import { LabsCarousel } from "@/components/mdx/labs-carousel";
+import labs from "@/data/labs.yaml";
 
 interface NavItem {
   title: string;
@@ -18,14 +21,32 @@ interface DocsLayoutClientProps {
 }
 
 export default function DocsLayoutClient({ navigation, children }: DocsLayoutClientProps) {
+  const pathname = usePathname();
 
-  function initializeExpandedSections(navigation: NavItem[]): { [key: string]: boolean } {
+  function initializeExpandedSections(navigation: NavItem[], currentPath: string): { [key: string]: boolean } {
     const initial: { [key: string]: boolean } = {};
+
+    // Helper function to check if path matches
+    const isActiveItem = (href: string) => currentPath === href || currentPath.startsWith(href + '/');
+
+    // Helper function to check if section contains active item
+    const containsActiveItem = (items?: NavItem[]): boolean => {
+      if (!items) return false;
+      return items.some(item => {
+        if (isActiveItem(item.href)) return true;
+        if (item.items) return containsActiveItem(item.items);
+        return false;
+      });
+    };
+
     navigation.forEach(section => {
-      initial[section.title] = false;
+      // Expand section if it or its children contain the active page
+      initial[section.title] = isActiveItem(section.href) || containsActiveItem(section.items);
+
       section.items?.forEach(item => {
         if (item.items && item.items.length > 0) {
-          initial[item.title] = false;
+          // Expand subsection if it or its children contain the active page
+          initial[item.title] = isActiveItem(item.href) || containsActiveItem(item.items);
         }
       });
     });
@@ -33,10 +54,14 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
   }
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() =>
-    initializeExpandedSections(navigation)
+    initializeExpandedSections(navigation, pathname)
   );
+
+  // Update expanded sections when pathname changes
+  useEffect(() => {
+    setExpandedSections(initializeExpandedSections(navigation, pathname));
+  }, [pathname, navigation]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -190,6 +215,16 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
           {/* Main content */}
           <div className="prose-lg p-4 md:p-8 lg:p-16 flex-1 prose-li:marker:text-muted-foreground prose-ol:list-decimal prose-ul:list-disc prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:italic overflow-x-hidden">
             {children}
+
+            {labs?.labs && labs.labs.length > 1 ? (
+              <LabsCarousel labs={labs.labs} />
+            ) : labs?.labs?.length === 1 ? (
+              <LabCTA
+                title={labs.labs[0].title}
+                description={labs.labs[0].description}
+                href={labs.labs[0].href}
+              />
+            ) : null}
           </div>
         </div>
       </div>

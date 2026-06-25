@@ -1,0 +1,44 @@
+---
+title: "kagent mcp"
+pageOrder: 10
+description: "kagent mcp command"
+---
+
+# `kagent mcp`
+
+Model Context Protocol (MCP) server management commands for creating and managing MCP servers with dynamic tool loading.
+
+```bash
+kagent mcp [subcommand] [flags]
+```
+
+**Subcommands:**
+- `init` - Initialize a new MCP server project
+- `build` - Build a Docker image for your MCP server
+- `deploy` - Deploy your MCP server to a Kubernetes cluster
+- `add-tool` - Generate an MCP tool boilerplate
+- `run` - Run an MCP server locally
+- `secrets` - Manage secrets for MCP server projects
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent mcp`
+
+The `kagent mcp` command provides a set of subcommands for managing MCP servers. This is useful for creating and managing tools that can be used by kagent agents.
+
+## Example
+
+See the kagent mcp documentation for detailed examples of each subcommand:
+
+- [kagent mcp init](/docs/kmcp/reference/kmcp-init) - Create a scaffold for your MCP server
+- [kagent mcp build](/docs/kmcp/reference/kmcp-build) - Build a Docker image
+- [kagent mcp deploy](/docs/kmcp/reference/kmcp-deploy) - Deploy to Kubernetes
+- [kagent mcp add-tool](/docs/kmcp/reference/kmcp-add-tool) - Generate tool boilerplate
+- [kagent mcp run](/docs/kmcp/reference/kmcp-run) - Run locally
+- [kagent mcp secrets](/docs/kmcp/reference/kmcp-secrets) - Manage secrets
+

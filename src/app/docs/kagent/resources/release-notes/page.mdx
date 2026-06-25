@@ -1,0 +1,722 @@
+---
+title: "Release Notes"
+pageOrder: 5
+description: "Review the release notes for kagent."
+---
+
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
+export const metadata = {
+  title: "Release Notes",
+  description: "Review the release notes for kagent.",
+  author: "kagent.dev"
+};
+
+# Release Notes
+
+The kagent documentation shows information only for the latest release. If you run an older version, review the release notes to understand the main changes from version to version.
+
+For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
+
+# v0.9
+
+Review this summary of significant changes from kagent version 0.8 to v0.9.
+
+**Before you upgrade:**
+
+* You must be running at least v0.8.0 before upgrading to v0.9.0.
+* Back up your PostgreSQL database before upgrading. For details on your database configuration, see the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration).
+* The `rbac.clusterScoped` Helm value is removed. RBAC scope is now derived from `rbac.namespaces`. If you set `rbac.clusterScoped` in your Helm values, update your configuration to use `rbac.namespaces` instead.
+
+**What's included:**
+
+* Agent Sandbox — run agents in isolated sandboxes with network controls using the Kubernetes agent-sandbox project.
+* OIDC proxy authentication — optional enterprise authentication via oauth2-proxy with support for Cognito, Okta, Dex, and other OIDC providers.
+* SAP AI Core provider — new model provider for SAP AI Core via the Orchestration Service.
+* Database migration tooling — the database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc.
+* Bedrock embedding support — native Bedrock embedding models for agent memory.
+
+## Agent Sandbox
+
+You can now run agents in isolated sandboxes using the [Kubernetes agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) project. A new `SandboxAgent` CRD creates sandboxed agent instances with restricted filesystem and network access, providing stronger isolation for untrusted or experimental workloads.
+
+Sandbox agents support configurable network allowlists for both Go and Python runtimes, so you can control which external endpoints the agent is permitted to reach.
+
+To use agent sandboxes, install the agent-sandbox controller in your cluster:
+
+```bash
+export VERSION="v0.3.10"
+kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}/manifest.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}/extensions.yaml
+```
+
+Then create a `SandboxAgent` resource with the same spec as a regular `Agent` resource.
+
+## OIDC Proxy Authentication
+
+kagent now supports optional OIDC proxy-based authentication through an [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy/) subchart. This feature enables integration with enterprise identity providers such as Cognito, Okta, and Dex.
+
+When `controller.auth.mode` is set to `"proxy"`, the controller trusts JWT tokens from the `Authorization` header injected by oauth2-proxy and extracts user identity from configurable JWT claims. The default mode remains `"unsecure"`, which preserves the existing behavior with no authentication required.
+
+This release adds authentication only. Access control is not yet implemented.
+
+**What's included:**
+
+* A `ProxyAuthenticator` backend that extracts user identity (email, name, groups) from JWT claims.
+* An `/api/me` endpoint that returns the current user's identity.
+* A login page with SSO redirect and a user menu in the UI.
+* NetworkPolicies that restrict UI and controller access to oauth2-proxy when auth is enabled.
+
+To enable OIDC authentication:
+
+```yaml
+controller:
+  auth:
+    mode: proxy
+
+oauth2-proxy:
+  enabled: true
+  extraEnv:
+    - name: OIDC_ISSUER_URL
+      value: "https://your-idp.example.com"
+    - name: OIDC_REDIRECT_URL
+      value: "https://kagent.example.com/oauth2/callback"
+```
+
+## SAP AI Core Provider
+
+You can now use [SAP AI Core](https://help.sap.com/docs/sap-ai-core) as a model provider via the Orchestration Service. Configure a ModelConfig resource with the SAP AI Core provider to use SAP-hosted models with your agents.
+
+## Database migrations
+
+v0.9.0 replaces GORM `AutoMigrate` with versioned SQL migrations managed by [golang-migrate](https://github.com/golang-migrate/migrate) and [sqlc](https://sqlc.dev/). Migration history is tracked in two new tables, `schema_migrations` and `vector_schema_migrations`.
+
+Review the following before upgrading:
+
+- **Minimum prior version**: You must be on v0.8.0 or later. Upgrades from earlier versions are not supported.
+- **Existing data is preserved**: Tables created by GORM are reused
+- **Back up first**: Take a snapshot or backup of your database before upgrading. A fresh install on a fresh database is the cleanest path. Restore from your backup if anything goes wrong.
+- **Automatic rollback on failure**: If a migration fails partway through, changes are rolled back before the controller exits non-zero. On the initial run from a GORM database, rollback to version 0 is skipped to protect pre-existing tables.
+- **pgvector pre-check**: When `database.postgres.vectorEnabled: true` is set, the migration runner verifies that the `pgvector` extension is available before running any migrations. A missing extension cannot leave core tables in a partial state.
+- **Safe with multiple replicas**: Migrations use a PostgreSQL session-level advisory lock, so only one controller instance applies migrations at a time. The lock releases automatically if the process crashes. If a crash leaves a dirty migration state, the next startup detects it and rolls back before retrying.
+
+## RBAC scope
+
+The `rbac.clusterScoped` Helm value was removed in v0.9.0. RBAC scope is now derived from `rbac.namespaces`:
+
+| `rbac.namespaces` | Resulting RBAC | Watched namespaces |
+| --- | --- | --- |
+| `[]` (empty, default) | Cluster-scoped `ClusterRole` and `ClusterRoleBinding` | All namespaces |
+| Non-empty list | Namespaced `Role` and `RoleBinding` per listed namespace | The same list, unless `controller.watchNamespaces` is set explicitly |
+
+The empty-list default is unchanged from previous releases that used `rbac.clusterScoped: true`. When `controller.watchNamespaces` is set, it always takes precedence over the auto-derived list.
+
+The chart fails in the following cases:
+
+- You still have `rbac.clusterScoped` in your Helm values.
+- `rbac.namespaces` is non-empty but does not include the install namespace.
+
+Before you upgrade:
+
+1. Remove `rbac.clusterScoped` from your Helm values.
+2. If you previously set `rbac.clusterScoped: false` with a custom namespace list, make sure `rbac.namespaces` includes your install namespace (typically `kagent`):
+
+   ```yaml
+   rbac:
+     namespaces:
+       - kagent
+       - team-a
+       - team-b
+   ```
+
+3. To keep cluster-scoped RBAC, leave `rbac.namespaces` empty (the default). No values change is required.
+
+## Additional changes in v0.9
+
+* **Default model update** — the retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
+* **Bedrock embedding support** — native Bedrock embedding models are now available for agent memory, extending the existing AWS Bedrock provider.
+* **Token exchange for model auth** — a new authentication mechanism that supports token exchange for model configurations.
+* **Prompt templates in UI** — prompt templates are now manageable directly in the UI.
+* **Require approval toggle in UI** — you can now enable or disable the `requireApproval` setting for tools directly in the UI.
+* **Enhanced Go ADK model config** — broader model and provider support in the Go runtime.
+* **IPv6/dual-stack support** — agent bind host and UI probes now support IPv6 and dual-stack configurations.
+* **AWS LoadBalancer annotations** — the UI Service now supports AWS LoadBalancer service annotations for easier AWS deployment.
+* **SSH auth for git-based skills** — fixed SSH authentication when loading skills from private Git repositories.
+* **MCP connection error handling** — MCP connection errors are now returned to the LLM as context instead of raising exceptions.
+* **RemoteMCPServer TLS (v0.9.6)** — you can now connect to an MCP server that uses a private CA, self-signed certificate, or corporate internal CA by setting the `spec.tls` field on a `RemoteMCPServer`. The `spec.tls` shape mirrors the `ModelConfig` TLS configuration.
+
+# v0.8
+
+Review this summary of significant changes from kagent version 0.7 to v0.8.
+
+* Human-in-the-Loop (HITL) — tool approval gates and interactive `ask_user` tool.
+* Agent Memory — vector-backed long-term memory for agents.
+* Go ADK runtime — new Go-based agent runtime for faster startup and lower resource usage.
+* Agents as MCP servers — expose A2A agents via MCP for cross-tool interoperability.
+* Skills — markdown knowledge documents loaded from OCI images or Git repositories.
+* Go workspace restructure — the Go codebase is split into `api`, `core`, and `adk` modules for composability.
+* Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax.
+* Context management — automatic event compaction for long conversations.
+* AWS Bedrock support — new model provider for AWS Bedrock.
+* **PostgreSQL-only database backend** — SQLite support has been removed. PostgreSQL is now the only supported database backend.
+
+## Human-in-the-Loop (HITL)
+
+You can now use two Human-in-the-Loop mechanisms that can pause agent execution and wait for user input.
+
+**Tool Approval** — You can mark specific tools as requiring user confirmation before execution by using the `requireApproval` field in the Agent CR. When the agent calls a tool that requires approval, the UI presents Approve/Reject buttons. The reason provided for rejection gets used as context for the LLM.
+
+**Ask User** — A built-in `ask_user` tool is automatically added to every agent. Agents can pose questions to users with predefined choices (single-select, multi-select) or free-text input during execution.
+
+For more information, see the [Human-in-the-Loop example](/docs/kagent/examples/human-in-the-loop) and the [blog post](/blog/human-in-the-loop-kagent).
+
+## Agent Memory
+
+Your agents can now automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on the Google ADK memory implementation and uses the same kagent database (PostgreSQL).
+
+When you enable memory on an agent, it receives three additional tools: `save_memory`, `load_memory`, and `prefetch_memory`. Every 5th user message, the agent automatically extracts key information, such as user intent, key learnings, preferences.
+
+You can configure memory in the Agent CR or through the UI when you create or edit an agent by selecting an embedding model and TTL.
+
+For more information, see [Agent Memory](/docs/kagent/concepts/agent-memory).
+
+## Go ADK Runtime
+
+You can now choose between two Agent Development Kit runtimes: **Python** (default) and **Go**. The Go ADK provides significantly faster startup (~2 seconds vs ~15 seconds for Python) and lower resource consumption.
+
+Select the runtime via the `runtime` field in the declarative agent spec.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    runtime: go
+```
+
+The Go ADK includes built-in tools: `SkillsTool`, `BashTool`, `ReadFile`, `WriteFile`, and `EditFile`.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#runtime) and the [blog post](/blog/go-vs-python-runtime).
+
+## Agents as MCP Servers
+
+Agent-to-Agent (A2A) agents are now exposed as MCP servers via the kagent controller HTTP server. This enables cross-tool interoperability — any MCP-compatible client can consume agents, not just the A2A protocol.
+
+## Skills
+
+Your agents can now load markdown-based knowledge documents (skills) that provide domain-specific instructions, best practices, and procedures. Skills load at agent startup and are discoverable through the built-in `SkillsTool`.
+
+You can load skills from two sources.
+
+- **OCI images.** Container images containing skill files.
+- **Git repositories.** Clone skills directly from Git repos, with support for private repos via HTTPS token or SSH key authentication.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#git-based-skills).
+
+## Go Workspace Restructure
+
+The Go code now uses a Go workspace with three modules: `api`, `core`, and `adk`. This makes the codebase more composable for you if you want to pull in parts of kagent (such as the API types or ADK) without importing all dependencies.
+
+| Module | Purpose |
+|--------|---------|
+| `go/api` | Shared types: CRDs, ADK config types, database models, HTTP client. Import this module to work with kagent's API types without pulling in the full codebase. |
+| `go/core` | Infrastructure: controllers, HTTP server, CLI. This module contains the main kagent controller logic. |
+| `go/adk` | Go Agent Development Kit runtime. Import this module to build custom Go-based agents. |
+
+## Prompt Templates
+
+Agent system messages now support Go `text/template` syntax. You can store common prompt fragments, such as safety guardrails or tool usage best practices, in ConfigMaps and reference them with `{{include "alias/key"}}` syntax.
+
+The `kagent-builtin-prompts` ConfigMap ships with five reusable templates: `skills-usage`, `tool-usage-best-practices`, `safety-guardrails`, `kubernetes-context`, and `a2a-communication`.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#prompt-templates).
+
+## Context Management
+
+Long conversations can now be automatically compacted to stay within LLM context windows. You can configure the `context.compaction` field to enable periodic summarization of older events while preserving key information.
+
+For more information, see [Agents](/docs/kagent/concepts/agents#context-management).
+
+## AWS Bedrock Support
+
+You can now use AWS Bedrock as a model provider, allowing your agents to use Bedrock-hosted models.
+
+## PostgreSQL-Only Database Backend
+
+SQLite support has been removed from kagent. PostgreSQL is now the only supported database backend.
+
+**What changed:**
+- The `database.type` configuration option is removed.
+- SQLite-related Helm values (`database.sqlite.*`) are removed.
+- A bundled PostgreSQL instance is deployed by default via `database.postgres.bundled.enabled: true`. The bundled image is `postgres:18` (standard PostgreSQL without pgvector).
+- `database.postgres.vectorEnabled` now defaults to `false`. Set it to `true` only when using a PostgreSQL server that has the pgvector extension installed.
+- `database.postgres.bundled.enabled` and `url`/`urlFile` are now independent controls. You can keep the bundled pod running while pointing the controller at an external database, which is useful for migration.
+- The bundled instance database name, username, and password are hardcoded to `kagent`. Credentials are stored in a Kubernetes Secret instead of a ConfigMap.
+- The `database.postgres.bundled.database`, `bundled.user`, and `bundled.password` configuration options are removed.
+
+**Why this change:**
+- SQLite lacks pgvector support, requiring separate code paths for memory and vector search.
+- SQLite's single-writer constraint prevents horizontal scaling of the controller.
+- Divergent SQL dialects between SQLite and PostgreSQL required maintaining duplicate code paths.
+- PostgreSQL was already the recommended production backend.
+
+**Migration:**
+
+If you were using the default SQLite backend, no migration is needed. The bundled PostgreSQL is deployed automatically. You can optionally customize the bundled instance via `database.postgres.bundled.*` (storage size, image) as needed. See the [Database configuration guide](/docs/kagent/operations/operational-considerations/#database-configuration) for details.
+
+Note that for production deployments, use your own external PostgreSQL instance. If you already are, you can keep your `database.postgres.url` or `database.postgres.urlFile` settings as before. If your external PostgreSQL has the pgvector extension and you were using vector-based memory features, set `database.postgres.vectorEnabled: true` since the default has changed to `false`.
+
+## Additional Changes
+
+- **API key passthrough** for ModelConfig.
+- **Custom service account** override in agent CRDs.
+- **Voice support** for agents.
+- **UI dynamic provider model discovery** for easier model configuration.
+- **CLI `--token` flag** for `kagent invoke` API key passthrough.
+- **CVE fixes** across Go, Python, and container images.
+
+# v0.7
+
+Review the main changes from kagent version 0.6 to v0.7, then continue reading for more detailed information.
+
+* kmcp is installed by default when you install kagent
+* New feature to develop agents locally without a Kubernetes cluster
+* New `kgateway.dev/discovery` label
+* Installation profiles
+
+## kmcp installed by default
+
+Now, kmcp is installed automatically with kagent, so you can use kmcp functionality out of the box.
+
+This change is enabled by the new default values of `kmcp.enabled=true` in both the `kagent` and `kagent-crds` Helm charts.
+
+### Existing kmcp installations
+
+If you already have kmcp installed separately, upgrade your existing Helm releases with the `kmcp.enabled=false` flag set for both the kagent and kagent-crds charts.
+
+Example commands:
+
+`kagent-crds` Helm release:
+
+```bash
+helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+`kagent` Helm release:
+
+```bash
+helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set kmcp.enabled=false
+```
+
+## Local agent development
+
+Develop and test agents locally on your machine without needing a Kubernetes cluster. As part of this feature, the `kagent` CLI includes new commands to scaffold, build, run, and deploy agents.
+
+For more information, see the [local development](/docs/kagent/getting-started/local-development) guide.
+
+## Discovery label
+
+Now, you can add a discovery label to MCPServer kmcp resources. By default, discovery is enabled.
+
+If you plan to use your kmcp resources later with kagent and agentgateway, add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.
+
+## Installation profiles
+
+By default, kagent installs a `demo` profile with agents and MCP tools preloaded for you. If you don't want these default agents, you can disable them with the `minimal` profile. 
+
+For the CLI: `kagent install --profile minimal`
+
+For Helm installations: Individually disable the default agents with Helm values or `--set` flags, such as `--set agents.argo-rollouts-agent.enabled=false`. You can also use Helm to update the resource limits and requests for each agent.
+
+# v0.6
+
+Review the main changes from kagent version 0.5 to v0.6, then continue reading for more detailed information.
+
+* The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
+* A new Helm chart for kmcp CRDs is available.
+* API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+* The Tools API moves or eliminates some APIs entirely in favor of new kmcp APIs.
+* The Agents APIs now require a top-level `type` field to support the new BYO agent functionality.
+* The ModelConfig APIs rename the secret name field from `apiKeySecretRef` to `apiKeySecret`.
+* Memory APIs are not supported in ADK.
+
+## Upgraded API version
+
+The `apiVersion` field in the kagent CRDs is now `kagent.dev/v1alpha2`.
+
+## New! Helm chart for kmcp CRDs
+
+Previously, the kagent installation included only one CRD Helm chart. As of v0.6.3, the MCPServer CRD is part of a separate kmcp Helm subchart. This kmcp subchart is installed for you when you install the kagent CRD Helm chart.
+
+1. If you installed the separate kmcp CRD Helm in earlier versions of v0.6, uninstall the Helm chart.
+
+   ```shell
+   helm uninstall kmcp-crds -n kagent
+   ```
+
+2. Install the kagent CRD Helm chart that includes the kmcp subchart.
+
+   ```shell
+   helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --namespace kagent \
+     --create-namespace
+   ```
+
+## General changes
+
+**`namespace/name` references**: API string references to resources in other namespaces in the format `namespace/name` now fail. Instead, the APIs have a separate field for you to specify the namespace of the resource.
+
+**Local development `buildx` access**: The `make helm-install` command now creates a local Docker registry to push development images to. As part of the build process, you might need to allow the buildx builder to access your host network. For more information, see the [developer docs in the kagent repo](https://github.com/kagent-dev/kagent/blob/main/DEVELOPMENT.md#troubleshooting).
+
+## Tools APIs
+
+The Tools-related APIs are split up into several different APIs. Some functionality is moved to kmcp, such as the ToolServer API.
+
+### ToolServer
+
+The ToolServer API is completely removed from kagent. Instead, use other resources including some [kmcp APIs](https://kagent.dev/docs/kmcp) to create and manage tools.
+
+#### Stdio ToolServer now in kmcp MCPServer
+
+Flip through the following tabs to understand the API differences between the old kagent ToolServer and the new method of using kmcp along with a kagent MCPServer and Kubernetes Service for the Stdio transport type.
+
+<Tabs tabs={[
+  { id: 'kagent', label: 'kagent ToolServer' },
+  { id: 'kmcp', label: 'kmcp MCPServer' }
+]} />
+
+<div id="kagent-tab">
+  Old ToolServer example:
+  * The `stdio` config section includes the Grafana deployment details.
+  * The Grafana details, including the API key, are loaded as environment settings directly in the ToolServer.
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: ToolServer
+  metadata:
+    name: mcp-grafana
+    namespace: kagent
+  spec:
+    config:
+      stdio:
+        command: /app/python/bin/mcp-grafana
+        args:
+          - -t
+          - stdio
+          - debug
+        readTimeoutSeconds: 30
+        envFrom:
+        - name: "GRAFANA_URL"
+          value: my-url.com
+        - name: "GRAFANA_API_KEY"
+          valueFrom:
+            type: Secret
+            key: "grafana"
+            valueRef: kagent-toolserver-secret
+    description: ""
+  ```
+</div>
+
+<div id="kmcp-tab">
+  kmcp example:
+  * The kagent MCPServer includes the Grafana deployment details, with `stdio` as the transport type.
+  ```yaml
+  apiVersion: kagent.dev/v1alpha1
+  kind: MCPServer
+  metadata:
+    name: grafana
+  spec:
+    deployment:
+      image: "mcp/grafana:latest"
+      port: 3000
+      cmd: "/app/mcp-grafana"
+      args:
+        - "--transport"
+        - "stdio"
+      env:
+        GRAFANA_URL: my-url.com
+      secretRefs:
+        - name: grafana-api-key
+    transportType: "stdio"
+  ```  
+  * The Grafana API key is stored separately in a Secret, which is more secure.
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: grafana-api-key
+  type: Opaque
+  data:
+    GRAFANA_API_KEY: my-base-64-ikey
+  ```
+</div>
+
+#### HTTP ToolServer moved to RemoteMCPServer
+
+ToolServer resources that used `type: streamableHttp` are now configured as RemoteMCPServer resources. For more detailed information, review the API definitions:
+* ToolServer: [toolserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/controller/api/v1alpha1/toolserver_types.go)
+* RemoteMCPServer: [remotemcpserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/controller/api/v1alpha2/remotemcpserver_types.go)
+* MCPServer: [mcpserver_types.go](https://github.com/kagent-dev/kmcp/blob/main/api/v1alpha1/mcpserver_types.go)
+
+<Tabs tabs={[
+  { id: 'old-http', label: 'Old ToolServer (v1alpha1)' },
+  { id: 'new-http', label: 'New RemoteMCPServer (v1alpha2)' }
+]} />
+
+<div id="old-http-tab">
+  Old ToolServer API:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: ToolServer
+  metadata:
+    name: kagent-tool-server
+  spec:
+    config:
+      type: streamableHttp
+      streamableHttp:
+        url: "http://kagent-tools.kagent:8084/mcp"
+        timeout: 30s
+        sseReadTimeout: 5m0s
+    description: "Official kagent tool server"
+  ```
+</div>
+
+<div id="new-http-tab">
+  New RemoteMCPServer API:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: RemoteMCPServer
+  metadata:
+    name: kagent-tool-server
+  spec:
+    url: "http://kagent-tools.kagent:8084/mcp"
+    timeout: 30s
+    sseReadTimeout: 5m0s
+    description: "Official kagent tool server"
+  ```
+</div>
+
+### Kubernetes Services as HTTP MCP servers
+
+Now, you can use Kubernetes Services as MCP Servers.
+
+<Tabs tabs={[
+  { id: 'old-svc', label: 'Old Service' },
+  { id: 'new-svc', label: 'New Service for MCP' }
+]} />
+
+<div id="old-svc-tab">
+In the old configuration, you created a Service for your MCP Deployment, and then a ToolServer resource that referred to the Service.
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kagent-querydoc
+  namespace: kagent
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ToolServer
+metadata:
+  name: kagent-querydoc
+  namespace: kagent
+spec:
+  description: Queries a documentation site
+  config:
+    sse:
+      url: http://kagent-querydoc.kagent.svc.cluster.local/sse
+```
+</div>
+
+<div id="new-http-tab">
+In v0.6, you add certain fields to designate the Service as an MCP server.
+
+In the following configuration file, notice the following settings:
+* `kagent.dev/mcp-service: "true"`: Optional: Configure kagent to discover the tools for this Service.
+* `appProtocol: mcp`: Required: Configure the port that the controller uses. If not set, and there is a single port, the controller uses that port for the MCP server.
+
+**Additional annotations**: You can use the following annotations to further configure the your MCP Service.
+
+* `kagent.dev:mcp-service-path`: Set the path on which the MCP server lives. The default value is `/mcp`.
+* `kagent.dev/mcp-service-port`: Set the port number to be used. No port is set by default.
+* `kagent.dev/mcp-service-port`: Set the protocol to use. Accepted values are `SSE` or `STREAMABLE_HTTP`. The default value is `STREAMABLE_HTTP`.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kagent.dev/mcp-service: "true"
+  annotations:
+    kagent.dev/mcp-service-path: /sse
+    kagent.dev/mcp-service-port: 8080
+    kagent.dev/mcp-service-protocol: SSE
+  name: kagent-querydoc
+  namespace: kagent
+spec:
+  ports:
+  - appProtocol: mcp
+    name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+```
+
+</div>
+
+## Agent APIs
+
+### API to specify the MCP server
+
+<Tabs tabs={[
+  { id: 'old-mcp', label: 'Old API (v1alpha1)' },
+  { id: 'new-mcp', label: 'New API (v1alpha2)' }
+]} />
+
+<div id="old-mcp-tab">
+  **Old API Example:**
+  ```yaml
+  tools:
+    - type: McpServer
+      mcpServer:
+        toolServer: kagent-querydoc
+        toolNames:
+          - query_documentation
+  ```
+</div>
+
+<div id="new-mcp-tab">
+  **New API Example:**
+  ```yaml
+  tools:
+    - type: McpServer
+      mcpServer:
+        name: kagent-querydoc
+        kind: Service
+        toolNames:
+          - query_documentation
+  ```
+  
+  **Key Changes:**
+  * The `toolServer` field has been removed
+  * Replaced with: `name`, `kind`, and `apiGroup` fields
+  * This allows specifying 3 different types: `RemoteMCPServer`, `Service`, and `MCPServer`
+</div>
+
+
+The toolServer field has been removed, and has been replaced with the following:
+name
+kind
+apiGroup
+This allows for specifying the 3 different types which may be used. Those are:
+RemoteMCPServer
+Service
+MCPServer
+Here are the 2 api defs:
+* [v1alpha1](https://github.com/kagent-dev/kagent/blob/069582fbd748cb66df31d620ceb2a7beae85caf0/go/controller/api/v1alpha1/agent_types.go#L106)
+* [v1alpha2](https://github.com/kagent-dev/kagent/blob/069582fbd748cb66df31d620ceb2a7beae85caf0/go/controller/api/v1alpha2/agent_types.go#L93)
+
+### Top-level field for Agent APIs
+
+A new top-level `type` field is added to the Agents API. For existing Agents, set the `type` to `Declarative`, and then nest the previous Agent configuration inline under the `declarative` setting.
+
+This change supports the new type for BYO agents.
+
+<Tabs tabs={[
+  { id: 'old-agent', label: 'Old Agent API' },
+  { id: 'new-agent', label: 'New Agent API with inline type' }
+]} />
+
+<div id="old-agent-tab">
+[v1alpha1 Example](https://github.com/kagent-dev/kagent/blob/main/helm/agents/k8s/templates/agent.yaml):
+  
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    name: k8s-agent
+    namespace: {{ include "kagent.namespace" . }}
+    labels:
+      {{- include "kagent.labels" . | nindent 4 }}
+  spec:
+    description: An Kubernetes Expert AI Agent specializing in cluster operations, troubleshooting, and maintenance.
+    systemMessage: |
+      # Kubernetes AI Agent System Prompt
+
+      You are KubeAssist, an advanced AI agent
+      # ... (truncated for brevity)
+  ```
+</div>
+
+<div id="new-agent-tab">
+[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `declarative` setting.
+  
+  ```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    name: k8s-agent
+    namespace: kagent
+  spec:
+    description: An Kubernetes Expert AI Agent specializing in cluster operations, troubleshooting, and maintenance.
+    type: Declarative
+    declarative:
+      systemMessage: |
+        # Kubernetes AI Agent System Prompt
+
+        You are KubeAssist, an advanced AI agent
+        # ... (truncated for brevity)
+  ```
+  
+  **Key Changes:**
+  * Added `type: Declarative` field to specify agent type
+  * Agent configuration now under `declarative` section
+  * Supports new BYO deployment model
+</div>
+
+### New! BYO agents
+
+A new agent type has been added to the Agents API so that you can bring your own (BYO) agent. The agent must be written in ADK, with other frameworks under development.
+
+BYO Agent example configuration. For more information, see the [BYO Agent](/docs/kagent/examples/a2a-byo) guide.
+  
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: basic-agent
+  namespace: kagent
+spec:
+  description: This agent can do anything.
+  type: BYO
+  byo:
+    deployment:
+      image: my-byo:latest
+      env:
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kagent-google
+              key: GOOGLE_API_KEY
+```
+
+## ModelConfig API
+
+The secret name field is renamed from `apiKeySecretRef` to `apiKeySecret`.
+
+### ModelInfo removed
+
+The `modelInfo` setting is removed from the ModelConfig API. 
+
+Supported LLM providers are pre-configured by the [kagent-dev/autogen project fork](https://github.com/kagent-dev/autogen/tree/main/python/packages/autogen-ext/src/autogen_ext/models) for you by default. Trying to override these default settings, such as to enable vision for image recognition, could cause unexpected behavior in models that do not support these settings. Therefore, the `modelInfo` field is removed.
+
+## Memory API
+
+The Memory API is not supported in ADK. The [agent development kit](https://google.github.io/adk-docs/) is required to bring your own agents. As such, the Memory docs are removed.

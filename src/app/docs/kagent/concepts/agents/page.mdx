@@ -1,12 +1,12 @@
 ---
 title: "Agents"
 pageOrder: 2
-description: "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools."
+description: "Dive into the concept of AI agents in kagent, their components (instructions, tools, skills), and how they can even use other agents as tools."
 ---
 
 export const metadata = {
   title: "What are AI agents?",
-  description: "Dive into the concept of AI agents in kagent, their components (instructions, tools), and how they can even use other agents as tools.",
+  description: "Dive into the concept of AI agents in kagent, their components (instructions, tools, skills), and how they can even use other agents as tools.",
   author: "kagent.dev"
 };
 
@@ -18,7 +18,8 @@ An AI agent is an application that can interact with users in natural language. 
 Each agent consists of the following components:
 
 - Agent instructions: A set of instructions that define the agent's behavior and capabilities. This is also called a system prompt.
-- Tools: Functions that the agent can use to interact with its environment. Kagent features built-in tools and has support for accessing tools over the [MCP](https://github.com/modelcontextprotocol).
+- Tools: Functions that the agent can use to interact with its environment. kagent features built-in tools and has support for accessing tools over the [MCP](https://github.com/modelcontextprotocol).
+- Skills: Descriptions of capabilities that help the agent act more autonomously and guide its tool usage and planning.
 
 ## Agent Instructions
 
@@ -33,6 +34,60 @@ Instructions are an important part of the agent's behavior. They define the agen
 
 Writing good instructions is an art and a science. It requires a good understanding of the task at hand, the tools available, and the user's needs. In order to make it easier to write good instructions, we've created a [system prompt tutorial](/docs/kagent/getting-started/system-prompts) that can help you get started.
 
+### Prompt templates
+
+You can use Go `text/template` syntax in system messages to compose reusable fragments stored in ConfigMaps. Instead of duplicating safety guidelines and tool usage instructions across every agent, store them once and reference them with `{{include "alias/key"}}` syntax. The controller resolves templates during reconciliation, so the final system message is fully expanded before reaching the agent runtime.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    promptTemplate:
+      dataSources:
+        - kind: ConfigMap
+          name: kagent-builtin-prompts
+          alias: builtin
+        - kind: ConfigMap
+          name: my-custom-prompts
+    systemMessage: |
+      You are a Kubernetes management agent named {{.AgentName}}.
+
+      {{include "builtin/safety-guardrails"}}
+      {{include "builtin/tool-usage-best-practices"}}
+      {{include "my-custom-prompts/k8s-specific-rules"}}
+
+      Your tools: {{.ToolNames}}
+      Your skills: {{.SkillNames}}
+```
+
+The `kagent-builtin-prompts` ConfigMap ships with five reusable templates.
+
+| Template Key | Description |
+|-------------|-------------|
+| `skills-usage` | Instructions for discovering and using skills. |
+| `tool-usage-best-practices` | Best practices for tool invocation. |
+| `safety-guardrails` | Safety and operational guardrails. |
+| `kubernetes-context` | Kubernetes-specific operational context. |
+| `a2a-communication` | Agent-to-agent communication guidelines. |
+
+The following template variables are available in system messages.
+
+| Variable | Description |
+|----------|-------------|
+| `{{.AgentName}}` | Name of the Agent resource. |
+| `{{.AgentNamespace}}` | Namespace of the Agent resource. |
+| `{{.Description}}` | Agent description. |
+| `{{.ToolNames}}` | Comma-separated list of tool names. |
+| `{{.SkillNames}}` | Comma-separated list of skill names. |
+
+> **Security Note:** Only ConfigMaps are supported as data sources. Secret references are intentionally excluded to avoid leaking sensitive data into prompts sent to LLM providers.
+
 ## Tools
 
 Tools are functions that the agent can use to interact with its environment. For example, a Kubernetes agent might have tools to list pods, get pod logs, and describe services.
@@ -45,25 +100,242 @@ If the user asks "List all pods in the cluster", the agent can use the **list_re
 
 Some tools support additional configuration that can be set in when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
 
-Kagent comes with a set of built-in tools that you can use to interact with your environment. Kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+
+## Human-in-the-Loop
+
+kagent supports Human-in-the-Loop (HITL) to keep humans in control of agent actions. You can require user approval before an agent executes sensitive tools, and agents can ask users questions when they need clarification.
+
+For a hands-on tutorial that walks through setting up HITL with tool approval and the `ask_user` tool, see the [Human-in-the-Loop example](/docs/kagent/examples/human-in-the-loop).
+
+### Tool approval
+
+Add `requireApproval` to your agent's tool specification to gate destructive operations. Tools listed in `requireApproval` pause execution and present Approve/Reject buttons in the UI. Tools not listed run without waiting for approval.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      apiGroup: kagent.dev
+      toolNames:
+        - k8s_get_resources       # runs immediately
+        - k8s_describe_resource   # runs immediately
+        - k8s_delete_resource     # pauses for approval
+        - k8s_apply_manifest      # pauses for approval
+      requireApproval:
+        - k8s_delete_resource
+        - k8s_apply_manifest
+```
+
+When you reject a tool call, you can provide a reason. This reason is passed back to the LLM as context, so the agent can adjust its approach.
+
+### Ask User
+
+Every agent automatically has the built-in `ask_user` tool. It allows agents to pause and ask users questions with optional predefined choices, which is useful for clarifying ambiguous requests or collecting configuration preferences. No configuration for the `ask_user` tool is required.
+
+## Skills
+
+Skills are descriptions or even executable implementations of the capabilities that an agent has to act more autonomously. They make the LLM's responses more than just reactions to prompts by orienting them toward goals.
+
+In some frameworks, skills are expressed as wrapped functions, reusable prompt templates, or even a synonym for a tool.
+
+Think of skills like a catalog that expresses what the agent is capable of doing for a user. Unlike tools, skills are not a specific function that produces an output, like "fetch a website" or "tell the weather." Unlike system instructions, they are not rules that apply to all interactions, such as "Follow my company's style guide."
+
+Instead, skills are building blocks that guide the agent's tool usage and planning. They help the agent understand what its goals are, and when and how to use tools effectively.
+
+For example, two agents may share the same tools but use them differently based on their skills:
+
+- A troubleshooting agent might use a `describe` tool to check the events of a crashing pod before taking a recovery action, such as restarting the pod.
+- A research agent might use the same `describe` tool to gather details about a pod in order to answer a user's question.
+
+Skills can refer to two broad types:
+
+* **A2A skills**: Metadata-based skills that are defined inline in the agent specification.
+* **kagent's container-based skills**: Executable skills packaged as container images and loaded from registries, for reuse across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
+
+### A2A skills metadata
+
+Actions-to-actions (A2A) skills are metadata—structured descriptions of capabilities, not executable code. Think of A2A skills as a machine-readable catalog entry about what a tool can do.
+
+A2A skills metadata describes:
+
+- What a capability is
+- What the capability can do
+- The inputs and outputs
+- Safety requirements
+- How a model should think about the capability
+
+A2A skills metadata does not:
+
+- Provide runtime code
+- Execute actions
+- Bundle actual logic for performing the skill
+
+In kagent, you define A2A skills in `a2aConfig.skills`. These consist of a description, examples, ID, and tags that help guide the agent's behavior. The description and examples provide context for both humans and the agent itself, often incorporated into system instructions. The ID and tags help you manage skills, such as by making it simpler to compare and reuse them across agents.
+
+A2A skills are instructions about capabilities, not the capabilities themselves. That is why A2A is sometimes described as "just metadata"—it's descriptive information, not executable code.
+
+### Container-based skills
+
+kagent's container-based skills are executable skill implementations packaged as container images. These are runnable procedural logic that the agent can use as an extension of itself.
+
+Container-based skills include:
+
+- Executable code snippets or procedures
+- Behavior modules that the agent can call at inference time
+- Validation and step-by-step behaviors
+- Reusable functions
+- Direct execution capabilities
+
+These skills contain instructions, scripts, and resources that are loaded from container registries and made available to the agent at runtime. You can build and push skills as container images, then reference them in `spec.skills.refs` to load them into your agents.
+
+Container-based skills are actual, callable capabilities—not just descriptions of capabilities.
+
+kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: you can use kagent's skills with any LLM provider, not just Anthropic Claude. This means your agents can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
+
+### Git-based skills
+
+You can also load skills directly from Git repositories, as an alternative to OCI images.
+
+```yaml
+skills:
+  gitRefs:
+    - url: https://github.com/myorg/agent-skills.git
+      ref: main
+    - url: https://github.com/myorg/monorepo.git
+      ref: main
+      path: skills/kubernetes  # Use a subdirectory
+```
+
+For private repositories, configure authentication via HTTPS token or SSH key.
+
+```yaml
+skills:
+  gitAuthSecretRef:
+    name: git-credentials  # Secret containing a `token` key
+  gitRefs:
+    - url: https://github.com/myorg/private-skills.git
+      ref: main
+```
+
+A single `gitAuthSecretRef` applies to all Git repositories in the agent. You can combine Git and OCI skills in the same agent by specifying both `refs` and `gitRefs`.
+
+### Best practices for skills
+
+Containerize and store your skills in a specialized registry so that you can reuse them across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
+
+When creating skills for your agents, consider the following best practices. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
+
+1. **Be specific**: Each skill should represent a distinct capability.
+2. **Provide good examples**: Include diverse examples that cover different ways users might express the need for that skill.
+3. **Use descriptive tags**: Tags help organize skills and make them easier to manage.
+4. **Align with tools**: Ensure your skills align with the tools available to the agent. If you have a skill that centers around writing docs in markdown, you might want to align it with the `write-markdown` tool (as opposed to a `generate-pdf` tool).
+5. **Keep skills focused**: Each skill should have a clear, focused purpose. For example, a document-generating skill might be too broad, but a skill that focuses on creating a specific type of document, such as a `.docx` file or alternatively a genre like a getting started guide, might be more appropriate.
+
+To learn more about using skills in your agents, see the [Skills example guide](/docs/kagent/examples/skills).
+
+## Runtime
+
+You can choose between two Agent Development Kit (ADK) runtimes for declarative agents: **Python** (default) and **Go**.
+
+| Feature | Python ADK | Go ADK |
+|---------|-----------|--------|
+| Startup time | ~15 seconds | ~2 seconds |
+| Ecosystem | Google ADK, LangGraph, CrewAI integrations | Native Go implementation |
+| Resource usage | Higher (Python runtime) | Lower (compiled binary) |
+| Default | Yes | No |
+| Memory support | Yes | Yes |
+| MCP support | Yes | Yes |
+| HITL support | Yes | Yes |
+
+Select the runtime via the `runtime` field in the declarative agent spec.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    runtime: go  # or "python" (default)
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent."
+```
+
+**Choose Go when** fast startup matters (autoscaling, cold starts), lower resource consumption is important, or you don't need Python-specific framework integrations.
+
+**Choose Python when** you need Google ADK-native features, CrewAI/LangGraph/OpenAI framework integrations, or Python-based custom tools.
+
+For more benchmarks and details, see the [Go vs Python runtime blog post](/blog/go-vs-python-runtime).
+
+## Memory
+
+Your agents can save and retrieve relevant context across conversations using vector similarity search. When you enable memory on an agent, it receives three additional tools (`save_memory`, `load_memory`, `prefetch_memory`) and automatically extracts key information every 5th user message.
+
+For configuration details, supported storage backends, API endpoints, and limitations, see [Agent Memory](/docs/kagent/concepts/agent-memory).
+
+## Context Management
+
+Long conversations can exceed LLM context windows. The context window is the maximum amount of text (tokens) that an LLM can process in a single request. You can enable **event compaction** to automatically summarize older messages while preserving key information.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful agent for extended sessions."
+    context:
+      compaction:
+        compactionInterval: 5  # Compact every 5 user invocations
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `compactionInterval` | integer | `5` | Number of new user invocations before triggering a compaction. |
+| `overlapSize` | integer | `2` | Number of preceding invocations to include for context overlap. |
+| `eventRetentionSize` | integer | — | Number of most recent events to always retain. |
+| `tokenThreshold` | integer | — | Post-invocation token threshold that triggers compaction. |
+| `summarizer` | object | — | Optional LLM-based summarizer configuration. When set, uses an LLM to generate a summary of compacted events instead of discarding them. Requires a `modelConfig` reference. |
+
+Compaction removes older conversation events to free up space in the context window. By default, compacted events are discarded. To preserve a summary of compacted events, configure the `summarizer` field with a `modelConfig` reference. Enable compaction for agents that handle long-running conversations, call many tools with large outputs, or need to support extended interactions.
+
+## Sandboxed Agents
+
+You can run agents in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. The `SandboxAgent` spec is identical to the `Agent` spec, but the kagent controller creates an upstream [agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) workload instead of a Deployment. Sandboxed agents enforce process isolation, deny all outbound network access by default, and restrict filesystem writes to the working directory and `/tmp`. To allow outbound access to specific domains, set the `spec.sandbox.network.allowedDomains` field.
+
+For setup steps, see the [Agent Sandbox example](/docs/kagent/examples/agent-sandbox).
 
 ## Agents as Tools
 
-Kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural langauge. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
+kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
 
 Here's how you could reference an existing agent (`promql-agent`) as a tool:
 
 ```yaml
 ...
     # Referencing existing tools
+    tools:
     - type: McpServer
       mcpServer:
-        toolServer: kagent-tool-server
+        name: kagent-tool-server
+        # Or a Kubernetes Service with "appProtocol: mcp", labels, and annotations for MCP
+        # Or an MCPServer
+        kind: RemoteMCPServer
         toolNames:
         - k8s_get_resources
         - k8s_get_available_api_resources
-    # Referencing an existing agent as a tool
+    # Referencing an existing agent as a tool (same namespace)
     - type: Agent
       agent:
-        ref: promql-agent
+        name: promql-agent
+    # Referencing an agent in another namespace
+    - type: Agent
+      agent:
+        name: promql-agent
+        namespace: other-namespace
 ```
+
+### MCP server endpoint
+
+A2A-enabled agents are automatically exposed as an MCP server on the kagent controller. The MCP endpoint is available at `/mcp` on the same port as the A2A endpoint (default 8083).
+
+For more information, see the [MCP tools](/docs/kagent/examples/agents-mcp) guide.

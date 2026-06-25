@@ -40,6 +40,15 @@ export default async function Page({
         .filter((author: Author | undefined): author is Author => author !== undefined);
     }
     return <div className="container mx-auto px-4 py-8">
+        {/* Add JSON-LD structured data if present in metadata */}
+        {metadata?.jsonLd && (
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(metadata.jsonLd).replace(/</g, '\\u003c'),
+                }}
+            />
+        )}
         <div className="mb-8">
             <Link href="/blog" className="text-primary hover:underline inline-flex items-center">
                 <span aria-hidden="true" className="mr-1">←</span> Back to Blog

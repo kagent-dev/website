@@ -1,6 +1,6 @@
 ---
 title: "Anthropic"
-pageOrder: 1
+pageOrder: 2
 description: "Learn how to configure Anthropic models for kagent."
 ---
 
@@ -23,20 +23,20 @@ kubectl create secret generic kagent-anthropic -n kagent --from-literal ANTHROPI
 2. Create a ModelConfig resource that references the secret and key name, and specify the Anthropic model you want to use:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: claude-model-config
   namespace: kagent
 spec:
-  apiKeySecretRef: kagent-anthropic
+  apiKeySecret: kagent-anthropic
   apiKeySecretKey: ANTHROPIC_API_KEY
   model: claude-3-sonnet-20240229
   provider: Anthropic
   anthropic: {}
 ```
 
-For Anthropic's Claude models, kagent automatically configures the appropriate model capabilities, including vision support for Claude-3 models. You can override these settings using the `modelInfo` field if needed. For more information about model capabilities and configuration, see [Custom Models](/docs/kagent/supported-providers/custom-models).
+For Anthropic's Claude models, kagent automatically configures the appropriate model capabilities, including vision support for Claude-3 models.
 
 3. Apply the above resource to the cluster.
 

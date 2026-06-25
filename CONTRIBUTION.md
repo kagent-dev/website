@@ -9,6 +9,7 @@ Thank you for your interest in contributing to Kagent! This document provides gu
 - [Style Guide](#style-guide)
 - [Documentation](#documentation)
 - [Testing](#testing)
+- [Contributing Blog Posts](#contributing-blog-posts)
 - [Community](#community)
 - [License](#license)
 - [Questions and Help](#questions-and-help)
@@ -74,7 +75,18 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 7. Once approved, a maintainer will merge your PR
 
-## Adding a new blog post
+## Contributing Blog Posts
+
+The kagent website includes a blog section where we post about kagent. If you'd like to submit a blog post to [kagent.dev](https://kagent.dev), make sure your article meets the guidelines below. If you have any questions or you'd like to discuss your ideas, please send us a meessage on our [Discord server](https://bit.ly/kagentdiscord).
+
+### Blog post guidelines
+
+- Posts should be about the kagent project and valuable to our community
+- Posts should focus on the open source kagent project and not vendor specific projects or products
+- Any submitted blog posts must be original content and not a copy of existing blog posts
+
+### Writing a new blog post on kagent
+
 1. Create your blog post in `src/blogContent` folder. You can copy an existing blog post and modify it.
 2. Make sure you add the following metadata at the top of your blog post - update the title, published date, description, author, and authorIds accordingly.
 
@@ -111,6 +123,10 @@ Make sure the slug in this file matches the slug you used in the .mdx file.
 If you need to add a new author, you can do that in the [authors.ts file](https://github.com/kagent-dev/website/blob/main/src/app/blog/authors.ts). Make sure the id of an author matches the author ID you used in the metadata in your blog post.
 
 4. All images can be added to the public/images folder. 
+
+### Adding an existing blog post
+
+To add an existing blog post, you can add a new entry into the `external-blog-posts.yaml` file. Same guidelines as above apply.
 
 ## Style Guide
 

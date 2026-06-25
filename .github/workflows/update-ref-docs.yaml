@@ -1,0 +1,376 @@
+name: Update Reference Documentation
+
+on:
+  workflow_dispatch:  # Allow manual triggers
+  schedule:
+    # Nightly at 06:30 UTC: regenerate API/Helm docs from the latest kagent/kmcp main so docs don't drift from code.
+    - cron: '30 6 * * *'
+
+# Queue overlapping runs (e.g. nightly cron + a manual dispatch) so they don't force-push the same PR branch concurrently.
+concurrency:
+  group: update-ref-docs
+  cancel-in-progress: false
+
+jobs:
+  generate-api-docs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout kagent repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/kagent
+          path: kagent
+
+      - name: Checkout kmcp repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/kmcp
+          path: kmcp
+
+      - name: Checkout docs repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/website
+          path: website
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+          cache: false
+
+      - name: Set kagent commit SHA
+        run: echo "KAGENT_COMMIT=$(cd kagent && git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Set kmcp commit SHA
+        run: echo "KMCP_COMMIT=$(cd kmcp && git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Verify API directory exists
+        run: |
+          if [ ! -d "$GITHUB_WORKSPACE/kagent/go/api/v1alpha2" ]; then
+            echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/go/api/v1alpha2"
+            ls -la "$GITHUB_WORKSPACE/kagent/go/api/"
+            exit 1
+          fi
+          echo "API directory found and verified"
+
+      - name: Read max Kubernetes version
+        run: |
+          if [ ! -f "website/public/docs/versions/max-kube.md" ]; then
+            echo "Error: max-kube.md file not found"
+            exit 1
+          fi
+          KUBE_VERSION=$(cat website/public/docs/versions/max-kube.md | tr -d '\n')
+          echo "KUBE_VERSION=$KUBE_VERSION" >> $GITHUB_ENV
+          echo "Using Kubernetes version: $KUBE_VERSION"
+
+      - name: Generate API Reference
+        run: |
+          # Substitute KUBE_VERSION in the config template and write to a temp file
+          cd "$GITHUB_WORKSPACE/website"
+          if [ ! -f "scripts/crd-ref-docs-config.yaml" ]; then
+            echo "Error: crd-ref-docs-config.yaml not found in scripts directory"
+            exit 1
+          fi
+          
+          envsubst < scripts/crd-ref-docs-config.yaml > crd-ref-docs-config.yaml
+
+          echo "Changed to docs repository: $PWD"
+          echo "Using config file:"
+          cat crd-ref-docs-config.yaml
+
+          # Generate API docs
+          go run github.com/elastic/crd-ref-docs@v0.1.0 \
+            --source-path="$GITHUB_WORKSPACE/kagent/go/api/v1alpha2/" \
+            --renderer=markdown \
+            --output-path ./ \
+            --config=crd-ref-docs-config.yaml
+
+          # Check if generation was successful
+          if [ ! -f "./out.md" ]; then
+            echo "Error: API docs generation failed - out.md not created"
+            exit 1
+          fi
+
+          # Remove the temporary config file so it is not included in the PR
+          rm -f crd-ref-docs-config.yaml
+
+          # Create index file with frontmatter
+          echo '---' > src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'title: "API docs"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'pageOrder: 1' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'description: "kagent API reference documentation"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '---' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo 'export const metadata = {' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  title: "API docs",' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  description: "kagent API reference documentation",' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '  author: "kagent.dev"' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '};' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
+          cat "./out.md" >> src/app/docs/kagent/resources/api-ref/page.mdx
+
+          # Remove temporary file
+          rm -f "./out.md"
+
+          # Fix problematic angle brackets in the generated MDX file
+          # Convert literal angle brackets to HTML entities to prevent MDX parsing errors
+          # But preserve legitimate HTML tags like <br />, <kagent-controller-ip>, etc.
+          echo "Fixing problematic angle brackets in generated MDX..."
+          
+          # First, temporarily replace legitimate HTML tags with placeholders
+          sed -i 's/<br \/>/__BR_TAG__/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          
+          # Convert remaining angle brackets to HTML entities
+          sed -i 's/</\&lt;/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          sed -i 's/>/\&gt;/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          
+          # Restore legitimate HTML tags
+          sed -i 's/__BR_TAG__/<br \/>/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
+          
+          # Verify the output file was created
+          if [ ! -f "src/app/docs/kagent/resources/api-ref/page.mdx" ]; then
+            echo "Error: Failed to create API docs page"
+            exit 1
+          fi
+
+          echo "API docs generated and processed successfully"
+
+      - name: Verify KMCP API directory exists
+        run: |
+          if [ ! -d "$GITHUB_WORKSPACE/kmcp/api/v1alpha1" ]; then
+            echo "Error: KMCP API directory not found at $GITHUB_WORKSPACE/kmcp/api/v1alpha1"
+            ls -la "$GITHUB_WORKSPACE/kmcp/api/" || echo "kmcp/api directory not found"
+            exit 1
+          fi
+          echo "KMCP API directory found and verified"
+
+      - name: Generate KMCP API Reference
+        run: |
+          # Substitute KUBE_VERSION in the config template and write to a temp file
+          cd "$GITHUB_WORKSPACE/website"
+          if [ ! -f "scripts/crd-ref-docs-config.yaml" ]; then
+            echo "Error: crd-ref-docs-config.yaml not found in scripts directory"
+            exit 1
+          fi
+          
+          envsubst < scripts/crd-ref-docs-config.yaml > crd-ref-docs-config.yaml
+
+          echo "Changed to docs repository: $PWD"
+          echo "Using config file:"
+          cat crd-ref-docs-config.yaml
+
+          # Generate KMCP API docs
+          go run github.com/elastic/crd-ref-docs@v0.1.0 \
+            --source-path="$GITHUB_WORKSPACE/kmcp/api/v1alpha1/" \
+            --renderer=markdown \
+            --output-path ./ \
+            --config=crd-ref-docs-config.yaml
+
+          # Check if generation was successful
+          if [ ! -f "./out.md" ]; then
+            echo "Error: KMCP API docs generation failed - out.md not created"
+            exit 1
+          fi
+
+          # Remove the temporary config file so it is not included in the PR
+          rm -f crd-ref-docs-config.yaml
+
+          # Create index file with frontmatter
+          echo '---' > src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'title: "API docs"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'pageOrder: 5' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'description: "kmcp API reference documentation"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '---' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo 'export const metadata = {' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '  title: "API docs",' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '  description: "kmcp API reference documentation",' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '  author: "kagent.dev"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '};' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          echo '' >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          cat "./out.md" >> src/app/docs/kmcp/reference/api-ref/page.mdx
+
+          # Remove temporary file
+          rm -f "./out.md"
+
+          # Fix problematic angle brackets in the generated MDX file
+          # Convert literal angle brackets to HTML entities to prevent MDX parsing errors
+          # But preserve legitimate HTML tags like <br />, <kmcp-controller-ip>, etc.
+          echo "Fixing problematic angle brackets in generated MDX..."
+          
+          # First, temporarily replace legitimate HTML tags with placeholders
+          sed -i 's/<br \/>/__BR_TAG__/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          
+          # Convert remaining angle brackets to HTML entities
+          sed -i 's/</\&lt;/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          sed -i 's/>/\&gt;/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          
+          # Restore legitimate HTML tags
+          sed -i 's/__BR_TAG__/<br \/>/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
+          
+          # Verify the output file was created
+          if [ ! -f "src/app/docs/kmcp/reference/api-ref/page.mdx" ]; then
+            echo "Error: Failed to create KMCP API docs page"
+            exit 1
+          fi
+
+          echo "KMCP API docs generated and processed successfully"
+
+      - name: Generate Helm Chart Reference
+        run: |
+            echo "Looking for Helm directory:"
+            ls -la "$GITHUB_WORKSPACE/kagent/helm" || echo "Helm directory not found!"
+  
+            # Update docs repository
+            cd "$GITHUB_WORKSPACE/website"
+            echo "Changed to docs repository: $PWD"
+
+            # Create directory for Helm docs
+            mkdir -p src/app/docs/kagent/resources/helm/
+            
+            # Generate Helm Docs for kagent chart
+            if [ ! -d "$GITHUB_WORKSPACE/kagent/helm/kagent" ]; then
+              echo "Error: kagent Helm chart directory not found"
+              exit 1
+            fi
+            
+            echo "Processing kagent Helm chart..."
+            
+            echo "Chart directory contents:"
+            ls -la "$GITHUB_WORKSPACE/kagent/helm/kagent/"
+            
+            # Generate Chart.yaml from template for helm-docs to work
+            echo "Generating Chart.yaml from template..."
+            cd "$GITHUB_WORKSPACE/kagent/helm/kagent"
+            
+            # Get the version from git or use a default
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.5.5")
+            echo "Using version: $VERSION"
+            
+            # Copy template and substitute version
+            cp Chart-template.yaml Chart.yaml
+            sed -i "s/\${VERSION}/$VERSION/g" Chart.yaml
+            
+            echo "Generated Chart.yaml contents:"
+            cat Chart.yaml
+            
+            # Go back to website directory
+            cd "$GITHUB_WORKSPACE/website"
+            
+            echo "Chart.yaml contents:"
+            cat "$GITHUB_WORKSPACE/kagent/helm/kagent/Chart.yaml" || echo "Chart.yaml not found!"
+            
+            echo "Values.yaml contents (first 20 lines):"
+            head -20 "$GITHUB_WORKSPACE/kagent/helm/kagent/values.yaml" || echo "values.yaml not found!"
+            
+            # Generate the helm documentation
+            echo "Running helm-docs..."
+            
+            # Debug: Show all available paths
+            echo "Available paths:"
+            echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+            echo "Current directory: $PWD"
+            echo "kagent repo path: $GITHUB_WORKSPACE/kagent"
+            echo "kagent helm path: $GITHUB_WORKSPACE/kagent/helm"
+            echo "kagent chart path: $GITHUB_WORKSPACE/kagent/helm/kagent"
+            
+            # List all helm directories to see what's available
+            echo "All helm directories:"
+            find "$GITHUB_WORKSPACE/kagent/helm" -name "Chart.yaml" -type f 2>/dev/null | head -10
+            
+            # Check if the specific chart directory exists and what's in it
+            echo "Checking chart directory:"
+            if [ -d "$GITHUB_WORKSPACE/kagent/helm/kagent" ]; then
+              echo "Chart directory exists"
+              ls -la "$GITHUB_WORKSPACE/kagent/helm/kagent/"
+              echo "Chart.yaml exists: $([ -f "$GITHUB_WORKSPACE/kagent/helm/kagent/Chart.yaml" ] && echo "YES" || echo "NO")"
+              echo "Values.yaml exists: $([ -f "$GITHUB_WORKSPACE/kagent/helm/kagent/values.yaml" ] && echo "YES" || echo "NO")"
+            else
+              echo "Chart directory does NOT exist"
+            fi
+            
+            # Generate the helm documentation
+            go run github.com/norwoodj/helm-docs/cmd/helm-docs@v1.14.2 \
+              --chart-search-root "$GITHUB_WORKSPACE/kagent/helm/kagent" \
+              --dry-run > "src/app/docs/kagent/resources/helm/temp.mdx"
+            
+            # Go back to website directory
+            cd "$GITHUB_WORKSPACE/website"
+
+            echo "Generated helm-docs output (first 50 lines):"
+            head -50 "src/app/docs/kagent/resources/helm/temp.mdx"
+            
+            echo "Generated helm-docs output (last 50 lines):"
+            tail -50 "src/app/docs/kagent/resources/helm/temp.mdx"
+            
+            echo "Total lines generated:"
+            wc -l "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            # Remove badge line and following empty line 
+            # (might be replaced by helm docs template in the future)
+            sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            # Wrap version placeholders in inline code so they show literally in MDX
+            python - <<'PY'
+            from pathlib import Path
+
+            path = Path("src/app/docs/kagent/resources/helm/temp.mdx")
+            text = path.read_text()
+            for placeholder in ("${KMCP_VERSION}", "${SUBSTRATE_VERSION}"):
+                text = text.replace(placeholder, "`" + placeholder + "`")
+            path.write_text(text)
+            PY
+
+            # Add frontmatter
+            echo '---' > "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'title: "Helm Chart Configuration"' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'pageOrder: 2' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'description: "kagent Helm chart configuration reference"' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '---' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo 'export const metadata = {' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '  title: "Helm Chart Configuration",' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '  description: "kagent Helm chart configuration reference",' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '  author: "kagent.dev"' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '};' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            echo '' >> "src/app/docs/kagent/resources/helm/page.mdx"
+
+            # Append the processed helm documentation
+            cat "src/app/docs/kagent/resources/helm/temp.mdx" >> "src/app/docs/kagent/resources/helm/page.mdx"
+
+            # Clean up temporary file
+            rm -f "src/app/docs/kagent/resources/helm/temp.mdx"
+
+            echo "=== Debug: After creating index file ==="
+            echo "Content directory structure:"
+            ls -la src/app/docs/kagent/resources/helm/
+            
+            echo "Final generated file contents (first 50 lines):"
+            head -50 "src/app/docs/kagent/resources/helm/page.mdx"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: website
+          commit-message: "docs: Update kagent and kmcp API reference docs"
+          signoff: true
+          title: "Update kagent and kmcp API reference docs"
+          body: |
+            Automated API and kagent Helm chart documentation update based on the latest commits:
+            - **kagent**: [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }})
+            - **kmcp**: [`${{ env.KMCP_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kmcp/commit/${{ env.KMCP_COMMIT }})
+            
+            This PR was automatically generated by the [**Update Reference documentation** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/update-ref-docs.yaml).
+          branch: api-gen-update
+          delete-branch: true
+          base: main
+          labels: |
+            documentation
+            automated pr

@@ -3,6 +3,8 @@
 import createMDX from "@next/mdx";
 import rehypeUnwrapImages from 'rehype-unwrap-images'
 import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
+import { remarkVersionSubstitution } from './scripts/remark-version-substitution.mjs'
 
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
@@ -11,6 +13,11 @@ const nextConfig = {
       {
         source: '/docs/getting-started/configuring-providers',
         destination: '/docs/kagent/supported-providers',
+        permanent: true,
+      },
+      {
+        source: '/docs/kagent/getting-started/tracing',
+        destination: '/docs/kagent/observability/tracing',
         permanent: true,
       },
     ];
@@ -35,7 +42,7 @@ const nextConfig = {
 
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkFrontmatter],
+    remarkPlugins: [remarkFrontmatter, remarkGfm, remarkVersionSubstitution],
     rehypePlugins: [rehypeUnwrapImages],
   },
 })

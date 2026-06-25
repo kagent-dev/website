@@ -1,0 +1,64 @@
+---
+title: "kagent init"
+pageOrder: 10
+description: "kagent init command"
+---
+
+# `kagent init`
+
+Initialize a new agent project with the specified framework and language.
+
+```bash
+kagent init [framework] [language] [agent-name] [flags]
+```
+
+**Arguments:**
+- `framework` - The framework to use (currently supports `adk`)
+- `language` - The programming language to use (supports `python`)
+- `agent-name` - The name of the agent project
+
+**Flags:**
+- `--description` - Description for the agent
+- `--instruction-file` - Path to file containing custom instructions for the root agent
+- `--model-name` - Model name (e.g., gpt-4, claude-3-5-sonnet, gemini-2.0-flash) (default: "gemini-2.0-flash")
+- `--model-provider` - Model provider (OpenAI, Anthropic, Gemini) (default: "Gemini")
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent init`
+
+The `kagent init` command creates a bootstrap agent project. Select a specific model using the `--model-provider` and `--model-name` flags. You can also customize the root agent instructions by using the `--instruction-file` flag. 
+
+If no custom instruction file is provided, a default dice-rolling instruction is used. If no model is specified, the agent can be configured later.
+
+Currently supported model providers are the models that are supported in the models configuration:
+- OpenAI
+- Anthropic
+- AzureOpenAI
+- Gemini
+
+## Example
+
+Create a new agent project:
+
+```bash
+kagent init adk python dice
+```
+
+Create a new agent project with custom instructions:
+
+```bash
+kagent init adk python dice --instruction-file instructions.md
+```
+
+Create a new agent project with a specific model:
+
+```bash
+kagent init adk python dice --model-provider Gemini --model-name gemini-2.0-flash
+```
+

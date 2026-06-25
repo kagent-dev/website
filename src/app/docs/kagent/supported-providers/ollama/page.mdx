@@ -1,6 +1,6 @@
 ---
 title: "Ollama"
-pageOrder: 4
+pageOrder: 6
 description: "Learn how to configure Ollama models in kagent."
 ---
 
@@ -72,26 +72,16 @@ Once the pod has started, you can port-forward to the Ollama service and use `ol
 Let's assume we've downloaded the `llama3` model, you can then use the following ModelConfig to configure the model:
 
 ```yaml
-apiVersion: kagent.dev/v1alpha1
+apiVersion: kagent.dev/v1alpha2
 kind: ModelConfig
 metadata:
   name: llama3-model-config
   namespace: kagent
 spec:
   apiKeySecretKey: OPENAI_API_KEY
-  apiKeySecretRef: kagent-openai
+  apiKeySecret: kagent-openai
   model: llama3
   provider: Ollama
   ollama:
     host: http://ollama.ollama.svc.cluster.local
-  # Required: Specify model capabilities
-  modelInfo:
-    vision: false
-    functionCalling: true
-    jsonOutput: true
-    family: "unknown"
-    structuredOutput: true
-    multipleSystemMessages: false
 ```
-
-Since Ollama supports various models with different capabilities, you must specify the model's capabilities using the `modelInfo` field. For detailed information about model capabilities and how to configure them, see [Custom Models](/docs/kagent/supported-providers/custom-models). Make sure to set `functionCalling: true` if your model supports it, as this is required for using tools with the agent.

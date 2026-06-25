@@ -1,0 +1,5 @@
+labs:
+  - id: kagent-kmcp-discover
+    title: "Kagent Lab: Discover kagent and kmcp"
+    description: "Free, on‑demand lab: build custom AI agents with kagent and integrate tools via kmcp on Kubernetes."
+    href: "https://www.solo.io/resources/lab/kagent-lab-discover-kagent-kmcp/?utm_source=kagent-website&utm_medium=referral"

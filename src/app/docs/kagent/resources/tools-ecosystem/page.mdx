@@ -1,0 +1,252 @@
+---
+title: "Tools Ecosystem"
+pageOrder: 3
+description: "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
+---
+
+export const metadata = {
+  title: "Tools Ecosystem",
+  description: "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts.",
+  author: "kagent.dev"
+};
+
+# Tools Ecosystem
+
+You can use a rich set of built-in tools through **Model Context Protocol (MCP)** servers, plus add your own custom tools. Two primary MCP servers serve the tools: `kagent-tool-server` (Kubernetes, Helm, Istio, Cilium, Argo) and `kagent-grafana-mcp` (Grafana, Prometheus, Loki, Incidents).
+
+## kagent-tool-server Tools
+
+### Kubernetes
+
+The following tools provide comprehensive cluster management.
+
+| Tool | Description |
+|------|-------------|
+| `k8s_get_resources` | Query resources, such as pods, deployments, and services. |
+| `k8s_describe_resource` | Get detailed resource information. |
+| `k8s_get_resource_yaml` | Get YAML representation of a resource. |
+| `k8s_get_pod_logs` | Retrieve pod logs. |
+| `k8s_get_events` | Get cluster events. |
+| `k8s_get_available_api_resources` | List supported API resources. |
+| `k8s_get_cluster_configuration` | Retrieve cluster configuration. |
+| `k8s_check_service_connectivity` | Test service connectivity. |
+| `k8s_execute_command` | Execute commands in pods. |
+| `k8s_patch_resource` | Patch resources with strategic merge. |
+| `k8s_label_resource` | Add labels to resources. |
+| `k8s_remove_label` | Remove labels from resources. |
+| `k8s_annotate_resource` | Add annotations to resources. |
+| `k8s_remove_annotation` | Remove annotations from resources. |
+| `k8s_delete_resource` | Delete resources. |
+| `k8s_apply_manifest` | Apply YAML manifests. |
+| `k8s_create_resource` | Create a resource from a local file. |
+| `k8s_create_resource_from_url` | Create a resource from a URL. |
+| `k8s_generate_resource` | Generate YAML for Istio, Gateway API, or Argo resources. |
+| `k8s_rollout` | Manage rollouts (restart, status, history). |
+| `k8s_scale` | Scale a resource (deployment, statefulset, etc.). |
+
+### Helm
+
+| Tool | Description |
+|------|-------------|
+| `helm_list_releases` | List installed releases. |
+| `helm_get_release` | Get details of a specific release. |
+| `helm_upgrade` | Upgrade a release. |
+| `helm_uninstall` | Remove a release. |
+| `helm_repo_add` | Add a chart repository. |
+| `helm_repo_update` | Update chart repositories. |
+
+### Istio
+
+| Tool | Description |
+|------|-------------|
+| `istio_proxy_status` | Check proxy synchronization status. |
+| `istio_proxy_config` | Inspect proxy configuration. |
+| `istio_install_istio` | Install Istio. |
+| `istio_generate_manifest` | Generate installation manifests. |
+| `istio_analyze_cluster_configuration` | Analyze Istio configuration for issues. |
+| `istio_version` | Get Istio version info. |
+| `istio_remote_clusters` | Manage remote cluster configuration. |
+| `istio_waypoint_status` | Get waypoint proxy status. |
+| `istio_list_waypoints` | List waypoint proxies. |
+| `istio_generate_waypoint` | Generate waypoint configuration. |
+| `istio_apply_waypoint` | Apply waypoint configuration. |
+| `istio_delete_waypoint` | Delete a waypoint proxy. |
+| `istio_ztunnel_config` | Inspect ztunnel configuration. |
+
+### Argo Rollouts
+
+| Tool | Description |
+|------|-------------|
+| `argo_verify_argo_rollouts_controller_install` | Verify the Argo Rollouts controller is running. |
+| `argo_rollouts_list` | List Argo Rollouts in a namespace. |
+| `argo_promote_rollout` | Promote a paused rollout. |
+| `argo_pause_rollout` | Pause a rollout. |
+| `argo_set_rollout_image` | Set the image of a rollout. |
+| `argo_check_plugin_logs` | Check Argo Rollouts plugin logs. |
+| `argo_verify_kubectl_plugin_install` | Verify the kubectl Argo Rollouts plugin is installed. |
+| `argo_verify_gateway_plugin` | Verify the Argo Rollouts gateway plugin. |
+
+### Cilium
+
+The following table shows a subset of Cilium tools. Cilium has 30+ tools available.
+
+| Tool | Description |
+|------|-------------|
+| `cilium_status_and_version` | Check Cilium status and version. |
+| `cilium_install_cilium` | Install Cilium. |
+| `cilium_upgrade_cilium` | Upgrade Cilium. |
+| `cilium_toggle_cluster_mesh` | Enable or disable cluster mesh. |
+| `cilium_show_cluster_mesh_status` | View cluster mesh status. |
+| `cilium_list_bgp_peers` | View BGP peers. |
+| `cilium_list_bgp_routes` | View BGP routes. |
+| `cilium_get_endpoints_list` | List endpoints. |
+| `cilium_get_endpoint_details` | Get endpoint details. |
+| `cilium_validate_cilium_network_policies` | Validate network policies. |
+| `cilium_toggle_hubble` | Enable or disable Hubble observability. |
+
+### Kubescape
+
+| Tool | Description |
+|------|-------------|
+| `kubescape_check_health` | Check Kubescape health status. |
+| `kubescape_list_vulnerabilities` | List vulnerabilities. |
+| `kubescape_get_vulnerability_details` | Get details of a specific vulnerability. |
+| `kubescape_list_vulnerability_manifests` | List vulnerability manifests. |
+| `kubescape_list_configuration_scans` | List configuration scans. |
+| `kubescape_get_configuration_scan` | Get a specific configuration scan. |
+| `kubescape_list_application_profiles` | List application profiles. |
+| `kubescape_get_application_profile` | Get a specific application profile. |
+| `kubescape_list_network_neighborhoods` | List network neighborhoods. |
+| `kubescape_get_network_neighborhood` | Get a specific network neighborhood. |
+
+## kagent-grafana-mcp Tools
+
+A separate `kagent-grafana-mcp` MCP server (`RemoteMCPServer`) serves tools for Prometheus, Grafana, Loki, and incident management.
+
+### Prometheus
+
+| Tool | Description |
+|------|-------------|
+| `query_prometheus` | Execute PromQL queries. |
+| `list_prometheus_metric_names` | List available metric names. |
+| `list_prometheus_metric_metadata` | Get metric metadata. |
+| `list_prometheus_label_names` | List available label names. |
+| `list_prometheus_label_values` | List values for a specific label. |
+
+### Grafana
+
+| Tool | Description |
+|------|-------------|
+| `search_dashboards` | Search dashboards. |
+| `update_dashboard` | Update a dashboard. |
+| `get_dashboard_by_uid` | Get a dashboard by UID. |
+| `get_dashboard_panel_queries` | Get panel queries from a dashboard. |
+| `list_datasources` | List data sources. |
+| `get_datasource` | Get a data source by name or UID. |
+| `alerting_manage_rules` | Manage alert rules (list, create, update, delete). |
+| `alerting_manage_routing` | Manage alerting routing, notification policies, and contact points. |
+
+### Loki
+
+| Tool | Description |
+|------|-------------|
+| `query_loki_logs` | Query logs via Loki. |
+| `query_loki_stats` | Query Loki statistics. |
+| `list_loki_label_names` | List Loki label names. |
+| `list_loki_label_values` | List Loki label values. |
+
+### Incidents & On-Call
+
+| Tool | Description |
+|------|-------------|
+| `list_incidents` | List incidents. |
+| `get_incident` | Get incident details. |
+| `create_incident` | Create a new incident. |
+| `add_activity_to_incident` | Add activity to an incident. |
+| `list_oncall_users` | List on-call users. |
+| `get_current_oncall_users` | Get current on-call users. |
+| `list_oncall_schedules` | List on-call schedules. |
+
+## Agent Built-in Tools
+
+The following tools are automatically available to every agent without any configuration.
+
+| Tool | Description |
+|------|-------------|
+| `ask_user` | Pose questions to users with optional choices. |
+| `SkillsTool` | Discover and load skills (Go ADK). |
+| `bash` | Execute shell commands (Python ADK). |
+| `read_file` | Read file contents with pagination (Python ADK). |
+| `write_file` | Write file content (Python ADK). |
+| `edit_file` | Edit files via string replacement (Python ADK). |
+
+## Configuring Tools on an Agent
+
+### Single MCP Server
+
+The following example shows how to configure an agent with a single MCP server.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You manage Kubernetes clusters."
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          name: kagent-tool-server
+          kind: RemoteMCPServer
+          toolNames:
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_get_pod_logs
+            - k8s_get_events
+```
+
+### With Tool Approval
+
+You can require user approval for sensitive tools by adding `requireApproval`.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      apiGroup: kagent.dev
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      toolNames:
+        - k8s_get_resources
+        - k8s_describe_resource
+        - k8s_delete_resource
+        - k8s_apply_manifest
+      requireApproval:  # These tools pause for user approval
+        - k8s_delete_resource
+        - k8s_apply_manifest
+```
+
+### Agent as Tool (A2A)
+
+You can use another agent as a tool via the A2A protocol.
+
+```yaml
+tools:
+  - type: Agent
+    agent:
+      name: specialist-agent
+```
+
+## Community / Contrib MCP Servers
+
+You can find additional MCP servers in `contrib/tools/`.
+
+| Server | Description |
+|--------|-------------|
+| **GitHub MCP Server** | GitHub Copilot MCP server with tools for issues, PRs, repos, actions, and more. |
+| **k8sgpt MCP Server** | K8sGPT integration for AI-powered Kubernetes diagnostics. |

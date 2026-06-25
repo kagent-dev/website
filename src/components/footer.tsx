@@ -11,7 +11,7 @@ import Youtube from "./icons/youtube";
 export default function Footer() {
   return (
     <footer className="mt-auto py-16 border-t border-white/10">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Getting Started Section */}
           <div>
@@ -124,7 +124,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
                   Contributing
                 </Link>
               </li>
@@ -177,7 +177,7 @@ export default function Footer() {
             </div>
             <div className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} kagent, a Series of LF Projects, LLC.
-              <Link href="https://www.linuxfoundation.org/trademark-usage/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
+              <Link href="https://lfprojects.org/policies/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
                 Trademark Usage
               </Link>
             </div>

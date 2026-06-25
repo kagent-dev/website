@@ -1,0 +1,12 @@
+# Enterprise distributions and support for kagent
+# This file contains information about commercial partners offering
+# enterprise distributions, training, and support for kagent
+
+distributions:
+  - name: "Solo.io"
+    title: "Solo Enterprise for kagent"
+    description: "Discover Solo Enterprise for kagent, the first context-aware platform that extends Kubernetes to securely run, manage, and scale AI agents, tools, and LLMs in production."
+    logo_light: "/images/adopters/solo-io-light.png"
+    logo_dark: "/images/adopters/solo-io-dark.png"
+    website: "https://www.solo.io/products/kagent-enterprise"
+    cta_text: "Learn more"

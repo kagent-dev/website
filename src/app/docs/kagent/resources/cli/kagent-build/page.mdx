@@ -1,0 +1,62 @@
+---
+title: "kagent build"
+pageOrder: 10
+description: "kagent build command"
+---
+
+# `kagent build`
+
+Build a Docker image for an agent project.
+
+```bash
+kagent build [project-directory] [flags]
+```
+
+**Arguments:**
+- `project-directory` - The directory containing the agent project with `kagent.yaml`
+
+**Flags:**
+- `--image` - Full image specification (e.g., ghcr.io/myorg/my-agent:v1.0.0)
+- `--platform` - Target platform for Docker build (e.g., linux/amd64, linux/arm64)
+- `--push` - Push the image to the registry
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent build`
+
+The `kagent build` command builds Docker images for an agent project created with the `init` command. It looks for a `kagent.yaml` file in the specified project directory and builds Docker images using `docker build`.
+
+**Image naming:**
+- If `--image` is provided, it is used as the full image specification (e.g., `ghcr.io/myorg/my-agent:v1.0.0`)
+- Otherwise, defaults to `localhost:5001/{agentName}:latest` where `agentName` is loaded from `kagent.yaml`
+
+## Example
+
+Build a Docker image:
+
+```bash
+kagent build ./my-agent
+```
+
+Build and tag a Docker image:
+
+```bash
+kagent build ./my-agent --image ghcr.io/myorg/my-agent:v1.0.0
+```
+
+Build and push an image to a registry:
+
+```bash
+kagent build ./my-agent --image ghcr.io/myorg/my-agent:v1.0.0 --push
+```
+
+Build for a specific platform:
+
+```bash
+kagent build ./my-agent --platform linux/amd64 --image ghcr.io/myorg/my-agent:v1.0.0
+```

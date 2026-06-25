@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard."
 ---
 
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
 export const metadata = {
   title: "kagent architecture",
   description: "Explore the high-level architecture of kagent, including its core components like the Controller, App/Engine, CLI, and Dashboard.",
@@ -12,7 +14,7 @@ export const metadata = {
 
 # kagent Architecture
 
-Kagent consists of multiple components running inside and outside of Kubernetes cluster.
+kagent consists of multiple components running inside and outside of Kubernetes cluster.
 
 
 ![Architecture](/images/arch.png "kagent architecture")
@@ -26,26 +28,52 @@ In the future, we envision more features for the controller, such as:
 
 ## App/Engine
 
-The kagent engine is the core component of kagent. It is a Python application that is responsible for running the agent's conversation loop. It is built on top of the [AutoGen](https://github.com/microsoft/autogen) framework. Currently, we are running the autogenstudio backend, but likely in the near future we will switch to running our own backend as the use-cases begin to diverge.
+The kagent engine is the core component of kagent. It runs the agent's conversation loop and supports two runtimes:
 
-The autogen team did a wonderful job of creating a flexible, powerful, and most importantly extensible framework for building AI agents. We take full advantage of this by using the framework by adding our own `Teams`, `Agents`, and `Tools`.
+- **Python ADK** (default) — Built on top of the [Google ADK](https://google.github.io/adk-docs/) framework. Supports Google ADK-native features and integrations with CrewAI, LangGraph, and OpenAI frameworks.
+- **Go ADK** — A native Go implementation that provides faster startup (~2 seconds vs ~15 seconds) and lower resource consumption.
 
-Please see the following links for more information on the AutoGen framework:
+Select the runtime by setting the `runtime` field in the agent spec (e.g., `runtime: go`). Both runtimes support MCP tools, HITL, and agent memory. For more details, see [Agents](/docs/kagent/concepts/agents#runtime).
 
-- [Serializing Components](https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/serialize-components.html)
-- [Component Config](https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/component-config.html)
-- [Autogen Agentchat](https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/index.html)
+For more information on the Google ADK framework:
+
+- [Agents](https://google.github.io/adk-docs/agents/)
+- [Tools](https://google.github.io/adk-docs/tools/)
+- [Context](https://google.github.io/adk-docs/context/)
 
 ## CLI
 
-Kagent CLI is one of the entry points to kagent. The CLI connects to the engine and allows you to manage resources and interact with agents.
+kagent CLI is one of the entry points to kagent. The CLI connects to the engine and allows you to manage resources and interact with agents.
 
 The CLI offers a way to interact with the engine for those who prefer a CLI interface to the UI dashboard.
 
 
 ## Dashboard (UI)
 
-Kagent dashboard provides a web interface for managing and working with AI agents. Is it the simplest way to get started with kagent.
+kagent dashboard provides a web interface for managing and working with AI agents. Is it the simplest way to get started with kagent.
+
+<Tabs tabs={[
+  { id: 'kagent', label: 'kagent dashboard' },
+  { id: 'kubectl', label: 'kubectl port-forward' }
+]} />
+
+<div id="kagent-tab">
+  ```shell
+  kagent dashboard
+  ```
+</div>
+
+<div id="kubectl-tab">
+1. Enable port-forwarding on the `kagent` service.
+   
+   ```shell
+   kubectl -n kagent port-forward svc/kagent 8001:80
+   ```
+
+2. Open your browser to [http://localhost:8001](http://localhost:8001).
+</div>
+
+![kagent dashboard](/images/kagent-landing.png "kagent landing page")
 
 ## Next Steps
 

@@ -1,0 +1,33 @@
+---
+title: "kagent version"
+pageOrder: 10
+description: "kagent version command"
+---
+
+# `kagent version`
+
+Print the kagent version information.
+
+```bash
+kagent version [flags]
+```
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## About `kagent version`
+
+This command prints the kagent CLI version. The CLI attempts to connect to the kagent server to retrieve server version information. Versions unable to be obtained from the remote kagent server are reported as "unknown".
+
+## Example
+
+Print version information:
+
+```bash
+kagent version
+```
+

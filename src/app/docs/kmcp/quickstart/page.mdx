@@ -4,6 +4,8 @@ sectionOrder: 20
 description: "Get started with kmcp"
 ---
 
+import { VERSIONS } from "../../_constants";
+
 # Quickstart
 
 Install the kmcp CLI and quickly spin up your first FastMCP Python server in a Kubernetes cluster. 
@@ -86,7 +88,15 @@ With your first FastMCP Python server up and running, you can now deploy it to a
    kind create cluster
    ```
 
-2. Install the following kmcp controller components in your cluster. 
+2. Install the kmcp CRDs.
+
+   ```sh
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kmcp-system \
+     --create-namespace
+   ```
+
+3. Install the following kmcp controller components in your cluster. 
    * The MCPServer Custom Resource Definition to define your MCP server. 
    * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the kmcp controller.
    * The kmcp controller deployment that automatically manages the lifecycle of MCPServer resources. 
@@ -98,7 +108,7 @@ With your first FastMCP Python server up and running, you can now deploy it to a
    Example output: 
    ```sh
    🚀 Deploying KMCP controller to cluster...
-   No version specified, using latest: v0.1.0
+   No version specified, using latest: v{VERSIONS.kmcp}
    Release "kmcp" does not exist. Installing it now.
    NAME: kmcp
    LAST DEPLOYED: Wed Jul 30 18:41:01 2025
@@ -111,7 +121,7 @@ With your first FastMCP Python server up and running, you can now deploy it to a
    💡 View controller logs with: kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
    ```
    
-3. Verify that the kmcp controller manager is up and running. 
+4. Verify that the kmcp controller manager is up and running. 
    ```sh
    kubectl get pods -n kmcp-system
    ```
