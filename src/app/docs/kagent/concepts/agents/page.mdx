@@ -300,9 +300,9 @@ Compaction removes older conversation events to free up space in the context win
 
 ## Sandboxed Agents
 
-You can run agents in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. The `SandboxAgent` spec is identical to the `Agent` spec, but the kagent controller creates an upstream [agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) workload instead of a Deployment. Sandboxed agents enforce process isolation, deny all outbound network access by default, and restrict filesystem writes to the working directory and `/tmp`. To allow outbound access to specific domains, set the `spec.sandbox.network.allowedDomains` field.
+You can run a declarative agent in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. A `SandboxAgent` runs on [Agent Substrate](/docs/kagent/concepts/agent-substrate): the kagent controller runs it as a gVisor-sandboxed actor instead of a Deployment, snapshotting it to object storage when idle and rehydrating it on demand. The spec mirrors the `Agent` spec, with a few constraints: sandboxed agents always use the Go ADK runtime, and `spec.skills` and `BYO` agents are not supported. Configure substrate placement with the optional `spec.substrate` field (for example, `workerPoolRef`).
 
-For setup steps, see the [Agent Sandbox example](/docs/kagent/examples/agent-sandbox).
+For setup steps, see the [Agent Substrate example](/docs/kagent/examples/agent-substrate).
 
 ## Agents as Tools
 

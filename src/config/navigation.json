@@ -92,7 +92,7 @@
           {
             "title": "Agent Harness",
             "href": "/docs/kagent/concepts/agent-harness",
-            "description": "Understand AgentHarness resources, OpenShell-backed execution environments, and backend-specific channel configuration."
+            "description": "Understand AgentHarness resources, Substrate-backed execution environments, and how kagent talks to them over the Agent Client Protocol (ACP)."
           },
           {
             "title": "Agent Substrate",
@@ -179,11 +179,6 @@
             "description": "Bring your own ADK agent to kagent"
           },
           {
-            "title": "Agent Sandbox",
-            "href": "/docs/kagent/examples/agent-sandbox",
-            "description": "Run agents in isolated sandboxes with deny-by-default networking and filesystem restrictions."
-          },
-          {
             "title": "agentgateway",
             "href": "/docs/kagent/examples/agentgateway",
             "description": "Add governance to your kagent deployment with agentgateway"
@@ -236,7 +231,7 @@
           {
             "title": "Agent Harness",
             "href": "/docs/kagent/examples/agent-harness",
-            "description": "Provision OpenClaw, NemoClaw, and Hermes sandboxes with the AgentHarness API."
+            "description": "Provision OpenClaw and Hermes sandboxes on Agent Substrate with the AgentHarness API."
           },
           {
             "title": "Agent Substrate",
