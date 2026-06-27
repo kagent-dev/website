@@ -71,8 +71,8 @@ Agent is the Schema for the agents API.
 
 
 
-AgentHarness is a generic remote execution environment provisioned by a backend
-(e.g. OpenShell) and addressable by exec/SSH.
+AgentHarness is a generic remote execution environment provisioned by a
+backend (OpenClaw or Hermes) running on Agent Substrate.
 
 
 
@@ -97,7 +97,7 @@ AgentHarnessBackendType selects which sandbox control plane provisions the
 environment. Additional backends may be added in the future.
 
 _Validation:_
-- Enum: [openclaw nemoclaw hermes]
+- Enum: [openclaw hermes]
 
 _Appears in:_
 - [AgentHarnessSpec](#agentharnessspec)
@@ -106,7 +106,6 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `openclaw` |  |
-| `nemoclaw` |  |
 | `hermes` |  |
 
 
@@ -219,27 +218,11 @@ _Appears in:_
 | `homeChannelName` _string_ | HomeChannelName is a human-readable label for HomeChannel (SLACK_HOME_CHANNEL_NAME). |  |  |
 
 
-#### AgentHarnessNetwork
-
-
-
-AgentHarnessNetwork captures the minimal network-policy knobs exposed to users.
-
-
-
-_Appears in:_
-- [AgentHarnessSpec](#agentharnessspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `allowedDomains` _string array_ | AllowedDomains is a list of DNS names the harness may reach. |  |  |
-
-
 #### AgentHarnessOpenClawSlackOptions
 
 
 
-AgentHarnessOpenClawSlackOptions configures OpenClaw/NemoClaw-specific Slack routing.
+AgentHarnessOpenClawSlackOptions configures OpenClaw-specific Slack routing.
 
 
 
@@ -251,24 +234,6 @@ _Appears in:_
 | `channelAccess` _[AgentHarnessChannelAccess](#agentharnesschannelaccess)_ |  |  | Enum: [allowlist open disabled] <br /> |
 | `allowlistChannels` _string array_ | AllowlistChannels is required when channelAccess is allowlist. |  | MaxItems: 1024 <br /> |
 | `interactiveReplies` _boolean_ |  | true |  |
-
-
-#### AgentHarnessRuntime
-
-_Underlying type:_ _string_
-
-AgentHarnessRuntime selects which control plane provisions the harness VM.
-
-_Validation:_
-- Enum: [openshell substrate]
-
-_Appears in:_
-- [AgentHarnessSpec](#agentharnessspec)
-
-| Field | Description |
-| --- | --- |
-| `openshell` |  |
-| `substrate` |  |
 
 
 #### AgentHarnessSlackChannelSpec
@@ -288,7 +253,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `botToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
 | `appToken` _[AgentHarnessChannelCredential](#agentharnesschannelcredential)_ |  |  |  |
-| `openclaw` _[AgentHarnessOpenClawSlackOptions](#agentharnessopenclawslackoptions)_ | OpenClaw configures OpenClaw/NemoClaw-specific Slack routing. |  |  |
+| `openclaw` _[AgentHarnessOpenClawSlackOptions](#agentharnessopenclawslackoptions)_ | OpenClaw configures OpenClaw-specific Slack routing. |  |  |
 | `hermes` _[AgentHarnessHermesSlackOptions](#agentharnesshermesslackoptions)_ | Hermes configures Hermes-specific Slack settings. |  |  |
 
 
@@ -311,13 +276,11 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ | Backend selects the control plane to use. Required. |  | Enum: [openclaw nemoclaw hermes] <br /> |
-| `runtime` _[AgentHarnessRuntime](#agentharnessruntime)_ | Runtime selects the harness provisioning stack. Defaults to openshell when unset. | openshell | Enum: [openshell substrate] <br /> |
-| `substrate` _[AgentHarnessSubstrateSpec](#agentharnesssubstratespec)_ | Substrate is required when runtime is substrate. |  |  |
+| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ | Backend selects the control plane to use. Required. |  | Enum: [openclaw hermes] <br /> |
+| `substrate` _[AgentHarnessSubstrateSpec](#agentharnesssubstratespec)_ | Substrate configures the Agent Substrate provisioning stack. Required. |  |  |
 | `description` _string_ | Description is a short human-readable summary shown in the UI (e.g. agents list). |  |  |
-| `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backends openclaw and nemoclaw pin the image<br />to the NemoClaw sandbox base when this field is empty; backend hermes pins<br />to the Hermes sandbox base image when empty. |  |  |
+| `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backend openclaw pins the image<br />to the OpenClaw sandbox base when this field is empty; backend hermes pins<br />to the Hermes sandbox base image when empty. |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env is a list of environment variables injected into the harness workload.<br />Values use the Kubernetes EnvVar shape; ValueFrom references are<br />resolved server-side where supported. |  |  |
-| `network` _[AgentHarnessNetwork](#agentharnessnetwork)_ | Network controls outbound access from the harness. When unset,<br />backend defaults apply. |  |  |
 | `modelConfigRef` _string_ | ModelConfigRef is the reference to the ModelConfig used to configure the harness.<br />The controller registers the gateway provider and, after the harness is Ready,<br />writes OpenClaw config inside the VM (~/.openclaw/openclaw.json) and starts the gateway. |  |  |
 | `channels` _[AgentHarnessChannel](#agentharnesschannel) array_ | Channels configures Telegram and Slack integrations for OpenClaw inside the harness VM. |  | MaxItems: 1024 <br /> |
 
@@ -354,7 +317,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ |  |  | Enum: [openclaw nemoclaw hermes] <br /> |
+| `backend` _[AgentHarnessBackendType](#agentharnessbackendtype)_ |  |  | Enum: [openclaw hermes] <br /> |
 | `id` _string_ |  |  |  |
 
 
@@ -396,9 +359,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `workerPoolRef` _[TypedLocalReference](#typedlocalreference)_ | WorkerPoolRef references an existing ate.dev WorkerPool in the harness namespace.<br />When unset, the controller uses its configured default WorkerPool. |  |  |
 | `snapshotsConfig` _[AgentHarnessSubstrateSnapshotsConfig](#agentharnesssubstratesnapshotsconfig)_ | SnapshotsConfig configures actor memory snapshots. Defaults to<br />gs://ate-snapshots/&lt;namespace&gt;/&lt;agentharnessname&gt; when unset. |  |  |
-| `workloadImage` _string_ | WorkloadImage overrides the default nemoclaw/openclaw sandbox image in the ActorTemplate. |  |  |
-| `gatewayToken` _string_ | GatewayToken is the OpenClaw gateway Bearer token for this harness.<br />Prefer gatewayTokenSecretRef for production secrets. |  | MinLength: 1 <br /> |
-| `gatewayTokenSecretRef` _[TypedLocalReference](#typedlocalreference)_ | GatewayTokenSecretRef references a Secret key holding the OpenClaw gateway Bearer token.<br />The Secret must contain a "token" key. |  |  |
+| `workloadImage` _string_ | WorkloadImage overrides the default openclaw sandbox image in the ActorTemplate. |  |  |
 
 
 #### AgentHarnessTelegramChannelSpec
@@ -752,7 +713,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `runtime` _[DeclarativeRuntime](#declarativeruntime)_ | Runtime specifies which ADK implementation to use for this agent.<br />- "python": Uses the Python ADK (default, slower startup, full feature set)<br />- "go": Uses the Go ADK (faster startup, most features supported)<br />The runtime determines both the container image and readiness probe configuration. | python | Enum: [python go] <br /> |
+| `runtime` _[DeclarativeRuntime](#declarativeruntime)_ | Runtime specifies which ADK implementation to use for this agent.<br />- "go": Uses the Go ADK (default, faster startup, most features supported)<br />- "python": Uses the Python ADK (slower startup, full feature set)<br />The runtime determines both the container image and readiness probe configuration. | go | Enum: [python go] <br /> |
 | `systemMessage` _string_ | SystemMessage is a string specifying the system message for the agent.<br />When PromptTemplate is set, this field is treated as a Go text/template<br />with access to an include("source/key") function and agent context variables<br />such as .AgentName, .AgentNamespace, .Description, .ToolNames, and .SkillNames. |  |  |
 | `systemMessageFrom` _[ValueSource](#valuesource)_ | SystemMessageFrom is a reference to a ConfigMap or Secret containing the system message.<br />When PromptTemplate is set, the resolved value is treated as a Go text/template. |  |  |
 | `promptTemplate` _[PromptTemplateSpec](#prompttemplatespec)_ | PromptTemplate enables Go text/template processing on the systemMessage field.<br />When set, systemMessage is treated as a Go template with access to the include function<br />and agent context variables. |  |  |
@@ -1338,7 +1299,7 @@ _Appears in:_
 
 
 
-SandboxAgent declares an agent that runs in an isolated sandbox (agent-sandbox or Agent Substrate).
+SandboxAgent declares an agent that runs in an isolated sandbox on Agent Substrate.
 
 
 
@@ -1375,8 +1336,7 @@ _Appears in:_
 | `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
 | `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
-| `platform` _[SandboxPlatform](#sandboxplatform)_ | Platform selects the sandbox control plane. Defaults to agent-sandbox. | agent-sandbox | Enum: [agent-sandbox substrate] <br /> |
-| `substrate` _[SandboxSubstrateSpec](#sandboxsubstratespec)_ | Substrate is optional substrate-specific settings when platform is substrate. |  |  |
+| `substrate` _[SandboxSubstrateSpec](#sandboxsubstratespec)_ | Substrate is optional Agent Substrate-specific settings. |  |  |
 
 
 #### SandboxConfig
@@ -1394,24 +1354,6 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `network` _[NetworkConfig](#networkconfig)_ | Network configures outbound network access for sandboxed execution paths.<br />When unset or when allowedDomains is empty, outbound access is denied by default. |  |  |
-
-
-#### SandboxPlatform
-
-_Underlying type:_ _string_
-
-SandboxPlatform selects the control plane for sandboxed agents.
-
-_Validation:_
-- Enum: [agent-sandbox substrate]
-
-_Appears in:_
-- [SandboxAgentSpec](#sandboxagentspec)
-
-| Field | Description |
-| --- | --- |
-| `agent-sandbox` |  |
-| `substrate` |  |
 
 
 #### SandboxSubstrateSpec
