@@ -82,7 +82,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentImage.tag | string | `""` |  |
 | controller.auth.mode | string | `"unsecure"` |  |
 | controller.auth.userIdClaim | string | `""` |  |
-| controller.env | string | `nil` |  |
+| controller.env | list | `[]` |  |
 | controller.envFrom | list | `[]` |  |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
@@ -99,6 +99,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.resources.limits.memory | string | `"512Mi"` |  |
 | controller.resources.requests.cpu | string | `"100m"` |  |
 | controller.resources.requests.memory | string | `"128Mi"` |  |
+| controller.service.annotations | object | `{}` |  |
 | controller.service.ports.port | int | `8083` |  |
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
@@ -313,7 +314,11 @@ A Helm chart for kagent, built with Google ADK
 | ui.image.registry | string | `""` |  |
 | ui.image.repository | string | `"kagent-dev/kagent/ui"` |  |
 | ui.image.tag | string | `""` |  |
+| ui.nginx | object | `{"proxyReadTimeout":"1800s","proxySendTimeout":"1800s"}` | Nginx proxy timeout configuration for the UI sidecar (values are passed directly to the corresponding nginx directives, e.g. "1800s"). |
+| ui.nginx.proxyReadTimeout | string | `"1800s"` | proxy_read_timeout: max time between two successive reads from the upstream. |
+| ui.nginx.proxySendTimeout | string | `"1800s"` | proxy_send_timeout: max time between two successive writes to the upstream. |
 | ui.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| ui.openshiftRoute.annotations."haproxy.router.openshift.io/timeout" | string | `"120m"` |  |
 | ui.podAnnotations | object | `{}` |  |
 | ui.podSecurityContext | object | (uses global podSecurityContext) | Pod-level security context for the UI pod. Overrides the global podSecurityContext. |
 | ui.publicBackendUrl | string | `"/api"` |  |
@@ -330,6 +335,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.service.ports.targetPort | int | `8080` |  |
 | ui.service.type | string | `"ClusterIP"` |  |
 | ui.startupProbe | object | httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1 | Custom startup probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |
+| ui.streamTimeoutSeconds | int | `1800` | Client-side chat stream inactivity timeout (seconds). The browser aborts a streaming response if no event is received within this window. Should be >= ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m). |
 | ui.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.volumes | object | `{"nextjsCache":"100Mi","tmp":"50Mi"}` | EmptyDir volume sizes for Next.js UI workload (typically used when enabling readOnlyRootFilesystem) |
 | ui.volumes.nextjsCache | string | `"100Mi"` | Size limit for Next.js build cache (.next/cache). Default 100Mi is sufficient for typical Next.js apps with moderate caching needs. |
