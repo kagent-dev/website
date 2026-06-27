@@ -9,7 +9,6 @@ export const VERSIONS = {
   kmcp: "0.3.0",
 
   // External dependencies
-  agentSandbox: "0.3.10",
   agentSubstrate: "0.0.6",
   loki: "6.24.0",
   tempo: "1.16.0",
@@ -19,5 +18,4 @@ export const VERSIONS = {
   kubernetesAppsApi: "apps/v1",
   kubernetesApi: "v1",
   kagentApi: "kagent.dev/v1alpha2",
-  agentSandboxApi: "agents.x-k8s.io/v1alpha1",
 };

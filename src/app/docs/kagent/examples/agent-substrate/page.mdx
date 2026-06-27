@@ -127,7 +127,7 @@ If you see `CreateContainerConfigError` on the default agent pods, the secret di
 
 `substrateWorkerPool.replicas=1` is the chart default. One worker is enough for a declarative-only walkthrough: session actors release their slot the moment they snapshot back to object storage, so a single worker can serve many sequential sessions. Increase the replica count when:
 
-- You add a long-lived `AgentHarness`. The `ahr-<...>` actor pins a slot for the lifetime of the CR, so you need at least `1 + (number of harnesses)`.
+- You add a long-lived `AgentHarness`. Its shared actor is created on the first chat connect and then pins a slot, so you need at least `1 + (number of active harnesses)`.
 - You want simultaneous, overlapping declarative sessions.
 
 You can change the size three ways, depending on how permanent you want the change.
@@ -154,7 +154,7 @@ Open [http://localhost:8001](http://localhost:8001). Skip the first-run wizard i
 
 ## Step 5: Create a declarative agent on substrate
 
-A `SandboxAgent` with `platform: substrate` and a `substrate.workerPoolRef` runs as a substrate actor instead of a plain Deployment. Pick one of the two paths below.
+A `SandboxAgent` runs as a substrate actor instead of a plain Deployment. Set `substrate.workerPoolRef` to target a specific WorkerPool, or omit it to use the controller's default. Pick one of the two paths below.
 
 ### Option A: Via the UI
 
@@ -170,7 +170,7 @@ A `SandboxAgent` with `platform: substrate` and a `substrate.workerPoolRef` runs
      When asked who you are, say "I am hello-substrate, a Go ADK declarative
      agent running inside a gVisor actor."
      ```
-3. In the **Sandbox** / **Platform** section (the label depends on UI version), set **Platform** to **`substrate`** and select the worker pool `kagent-default`.
+3. In the **Sandbox** section, select the worker pool `kagent-default`.
 4. Save.
 
 ### Option B: Via kubectl
@@ -192,7 +192,6 @@ spec:
       You are a friendly assistant living inside an Agent Substrate sandbox.
       When asked who you are, say "I am hello-substrate, a Go ADK declarative
       agent running inside a gVisor actor."
-  platform: substrate
   substrate:
     workerPoolRef:
       name: kagent-default
@@ -226,5 +225,4 @@ kind delete cluster --name kagent-substrate
 ## Next steps
 
 - [Agent Substrate concept page](/docs/kagent/concepts/agent-substrate) — runtime architecture and how snapshots, actors, and worker pools fit together.
-- [AgentHarness](/docs/kagent/examples/agent-harness) — provision long-running OpenClaw, NemoClaw, or Hermes sandboxes. Set `runtime: substrate` to run a harness on Agent Substrate too.
-- [Agent Sandbox](/docs/kagent/examples/agent-sandbox) — the upstream `kubernetes-sigs/agent-sandbox` backend for `SandboxAgent`, a separate path from substrate.
+- [AgentHarness](/docs/kagent/examples/agent-harness) — provision long-running OpenClaw and Hermes coding-agent sandboxes on Agent Substrate and chat with them over ACP.

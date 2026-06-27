@@ -17,7 +17,7 @@ Agent Substrate is a Kubernetes-native runtime for running AI agents and other s
 kagent can run workloads on Agent Substrate in two ways:
 
 - **Declarative agents** — A declarative `Agent` describes its model, instructions, and tools (see [Agents](/docs/kagent/concepts/agents)). Its sandboxed variant, the [`SandboxAgent`](/docs/kagent/resources/api-ref) CRD, lets you run a (Go) declarative agent on Agent Substrate.
-- **AgentHarness** — The [`AgentHarness`](/docs/kagent/concepts/agent-harness) CRD provisions a long-running execution environment. Select Agent Substrate as its runtime by setting `runtime` to `substrate`; kagent then generates a per-harness `ActorTemplate` and creates an `Actor` from it, referencing a `WorkerPool` for capacity.
+- **AgentHarness** — The [`AgentHarness`](/docs/kagent/concepts/agent-harness) CRD provisions a long-running execution environment for a coding agent (OpenClaw or Hermes). It always runs on Agent Substrate: kagent generates a per-harness `ActorTemplate` and creates an `Actor` from it on demand, referencing a `WorkerPool` for capacity.
 
 ## Why Agent Substrate
 
@@ -67,12 +67,13 @@ Run a (Go) declarative agent on Agent Substrate by creating a `SandboxAgent` res
 
 ### AgentHarness
 
-Set the harness runtime to `substrate` and provide the substrate configuration. The key fields are:
+An `AgentHarness` always runs on Agent Substrate; `spec.substrate` is required. The key fields are:
 
 - `workerPoolRef` — references an existing WorkerPool in the harness namespace. When unset, the controller uses its configured default WorkerPool.
 - `snapshotsConfig` — configures where actor memory snapshots are stored. Defaults to `gs://ate-snapshots/<namespace>/<agentharnessname>` when unset.
-- `workloadImage` — overrides the default NemoClaw/OpenClaw sandbox image used in the generated ActorTemplate.
-- `gatewayTokenSecretRef` — references a Secret (with a `token` key) holding the OpenClaw gateway Bearer token. Prefer this over an inline `gatewayToken` for production secrets.
+- `workloadImage` — overrides the default OpenClaw or Hermes sandbox image used in the generated ActorTemplate.
+
+kagent talks to the harness over the [Agent Client Protocol (ACP)](https://agentclientprotocol.com/) so you can chat with it from the kagent UI. See the [Agent Harness concept page](/docs/kagent/concepts/agent-harness) for details.
 
 See the [API reference](/docs/kagent/resources/api-ref) for the full `AgentHarnessSubstrateSpec` schema.
 
