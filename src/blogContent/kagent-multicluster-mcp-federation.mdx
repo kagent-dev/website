@@ -1,0 +1,238 @@
+export const metadata = {
+  title: "One Agent, Many Clusters: Federating Kubernetes MCP Tools with Kagent and Agentgateway",
+  publishDate: "2026-06-29T10:00:00Z",
+  description: "A practical pattern for exposing read-only Kubernetes tools from multiple clusters to a single Kagent agent through Agentgateway Virtual MCP.",
+  author: "Devam Parikh",
+  authorIds: ["devamparikh"],
+  tags: ["kagent", "agentgateway", "mcp", "kubernetes", "platform-engineering"],
+}
+
+![Kagent multi-cluster MCP federation hero](/images/blog/kagent-multicluster-mcp/hero.png)
+
+# One Agent, Many Clusters: Federating Kubernetes MCP Tools with Kagent and Agentgateway
+
+Platform teams rarely operate one Kubernetes cluster. A more realistic environment has a management or agent cluster, several application clusters, and a growing set of operational tools that need to work across all of them.
+
+That creates an interesting question for Kubernetes-native agents:
+
+How can one Kagent agent inspect multiple clusters without embedding every cluster connection directly into the agent?
+
+This post walks through a practical pattern: run Kagent in an agent cluster, expose Kubernetes MCP servers from application clusters, and federate those MCP servers through Agentgateway Virtual MCP. The result is a single MCP endpoint where tools are namespaced by cluster, such as:
+
+```text
+cluster-a_k8s_get_resources
+cluster-a_k8s_describe_resource
+cluster-b_k8s_get_resources
+cluster-b_k8s_describe_resource
+```
+
+The cluster names above are examples. In your own environment, the prefixes should be boring, obvious identifiers: `prod_eu`, `stage_us`, `payments`, `search`, or whatever matches your operating model.
+
+## Why this pattern matters
+
+Kagent is Kubernetes-native: agents, model configuration, and tool connections are represented as Kubernetes resources. That is powerful because platform teams can manage agents the same way they manage the rest of their platform: declaratively, with GitOps, RBAC, reviews, and repeatable rollouts.
+
+MCP gives agents a standard way to discover and call tools. Agentgateway adds the routing layer that makes MCP manageable in a platform setting. Instead of every agent talking directly to every MCP server, Agentgateway can expose a stable endpoint, route to one or more MCP backends, and make the resulting tool surface easier to govern.
+
+For multi-cluster operations, the important bit is Virtual MCP: multiple MCP servers can be federated behind a single gateway endpoint. Each backend contributes tools, and the gateway prefixes those tools so clients can tell which backend they are calling.
+
+That gives you a useful separation of concerns:
+
+- Application clusters own their local Kubernetes MCP servers.
+- The agent cluster owns Kagent, the `RemoteMCPServer`, and the agent definitions.
+- Agentgateway owns the federated MCP endpoint that joins those worlds.
+- Agents choose the correct cluster by selecting the correctly prefixed tool.
+
+## The architecture
+
+![Kagent multi-cluster MCP federation architecture](/images/blog/kagent-multicluster-mcp/architecture.svg)
+
+At a high level, the setup looks like this:
+
+```text
+Kagent Agent
+  |
+  | RemoteMCPServer
+  v
+Agentgateway endpoint
+  |
+  | Virtual MCP targets
+  +--> Cluster A Kubernetes MCP server
+  |
+  +--> Cluster B Kubernetes MCP server
+```
+
+Each application cluster exposes a Kubernetes MCP server over HTTP. The agent cluster does not need to run all of those MCP servers locally. It only needs network reachability to their MCP endpoints.
+
+Agentgateway is configured with an `AgentgatewayBackend` that contains one target per application cluster. In this example, the gateway uses static targets because the MCP servers live behind cross-cluster addresses rather than ordinary in-cluster Services:
+
+```yaml
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: application-clusters-k8s-readonly
+  namespace: platform-mcps
+spec:
+  mcp:
+    failureMode: FailOpen
+    sessionRouting: Stateless
+    targets:
+      - name: cluster-a
+        static:
+          host: cluster-a-mcp.example.internal
+          port: 80
+          path: /mcp
+          protocol: StreamableHTTP
+      - name: cluster-b
+        static:
+          host: cluster-b-mcp.example.internal
+          port: 80
+          path: /mcp
+          protocol: StreamableHTTP
+```
+
+The target names matter. They become part of the tool names that the agent sees. If `cluster-a` exposes a tool named `k8s_get_resources`, the federated endpoint exposes it as `cluster-a_k8s_get_resources`.
+
+An `HTTPRoute` then publishes the federated backend on a stable path:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: application-clusters-k8s-readonly
+  namespace: platform-mcps
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: shared-mcps
+      namespace: platform-mcps
+  rules:
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: application-clusters-k8s-readonly
+          namespace: platform-mcps
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /mcps/application-clusters-k8s-readonly
+```
+
+From Kagent's point of view, this is just a remote MCP server:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: application-clusters-k8s-readonly
+  namespace: kagent
+spec:
+  description: Federated read-only Kubernetes MCP tools for application clusters
+  protocol: STREAMABLE_HTTP
+  terminateOnClose: true
+  url: http://shared-mcps.platform-mcps.svc.cluster.local:80/mcps/application-clusters-k8s-readonly/mcp
+```
+
+Finally, the agent can be configured to use the federated MCP server and explicitly list the tools it is allowed to call:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: application-clusters-mcp-test-agent
+  namespace: kagent
+spec:
+  description: Test agent for federated application-cluster Kubernetes MCP access
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    runtime: python
+    systemMessage: |
+      You are a read-only Kubernetes assistant for application clusters.
+      Use cluster-prefixed MCP tools to inspect live resources.
+      Use cluster-a_* tools for Cluster A and cluster-b_* tools for Cluster B.
+      Do not suggest or perform write operations.
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: application-clusters-k8s-readonly
+          toolNames:
+            - cluster-a_k8s_describe_resource
+            - cluster-a_k8s_get_resources
+            - cluster-a_k8s_get_resource_yaml
+            - cluster-b_k8s_describe_resource
+            - cluster-b_k8s_get_resources
+            - cluster-b_k8s_get_resource_yaml
+```
+
+## What worked well
+
+The cleanest part of the design is that the agent only needs one MCP connection. Tool selection becomes a routing decision expressed in the tool name.
+
+For example:
+
+- "List pods in Cluster A" maps to `cluster-a_k8s_get_resources`.
+- "Show events in Cluster B" maps to `cluster-b_k8s_get_events`.
+- "Describe this deployment in Cluster A" maps to `cluster-a_k8s_describe_resource`.
+
+That makes the agent prompt simpler and makes operational boundaries easier to see. You can also keep the tools read-only, which is a good default for early production experiments. The agent can inspect resources, summarize state, compare clusters, and gather troubleshooting context without being able to mutate the environment.
+
+`failureMode: FailOpen` is also useful for multi-cluster setups. If one target is unavailable, the gateway can continue serving tools from healthy targets instead of failing the entire federated session. That is often the behavior you want when clusters are managed independently.
+
+## A practical lesson: static targets vs. selectors
+
+Agentgateway supports selector-based MCP federation, which is a nice fit when the MCP servers are ordinary Kubernetes Services in the same cluster. In cross-cluster setups, though, the MCP endpoints may be represented by external DNS names, service network addresses, or other forms of cross-cluster connectivity.
+
+In that case, static targets are often the more predictable model:
+
+- The target name is explicit.
+- The host, port, path, and protocol are explicit.
+- Tool prefixes are stable.
+- The agent-facing endpoint stays the same as clusters are added or removed.
+
+Selectors are still worth considering when your MCP servers are discoverable as regular in-cluster Services with the expected labels and protocol metadata. For cross-cluster endpoints, start with static targets and automate their generation later.
+
+## Verification checklist
+
+![Verification flow for Kagent MCP federation](/images/blog/kagent-multicluster-mcp/verification-flow.svg)
+
+A good rollout should prove each layer independently:
+
+1. Confirm each application-cluster MCP endpoint responds directly.
+2. Confirm the `AgentgatewayBackend` is accepted.
+3. Confirm the `HTTPRoute` is accepted and resolves the backend reference.
+4. Connect to the federated MCP endpoint and list tools.
+5. Verify that tools from every cluster are present with the expected prefixes.
+6. Create or update the Kagent `RemoteMCPServer`.
+7. Confirm Kagent discovers the federated tools.
+8. Invoke the agent and ask it to query both clusters.
+
+The most important test is the last one. A tool list proves discovery. An agent invocation proves the complete path: prompt, tool selection, MCP call, gateway routing, backend MCP server, and response synthesis.
+
+The screenshot below shows the kind of tool discovery output you want to see: prefixed Kubernetes tools from more than one application cluster available through a single federated MCP server.
+
+![Kagent federated MCP tool discovery screenshot](/images/blog/kagent-multicluster-mcp/tool-discovery-screenshot.png)
+
+## Design principles for production use
+
+This pattern is intentionally simple, but it benefits from a few production-minded constraints:
+
+- Start read-only. Inspection tools are enough for a lot of platform and SRE workflows.
+- Use clear cluster prefixes. Humans should be able to predict the right tool name.
+- Keep the agent prompt explicit. Tell the agent how prefixes map to clusters.
+- Treat the gateway endpoint as a platform API. Review it, version it, and observe it.
+- Prefer least privilege. The MCP server in each cluster should only have the permissions it needs.
+- Add write tools later, behind approvals and stronger policy.
+- Verify with real agent invocations, not only resource status.
+
+## Where this goes next
+
+Once the basic pattern works, the next step is automation. Platform teams can generate Agentgateway targets from a cluster registry, cloud service discovery, GitOps inventory, or another source of truth. They can also attach policies for tool access, rate limits, audit logging, and identity-aware authorization.
+
+The bigger idea is not just "one agent can see many clusters." It is that MCP tools can become a governed platform surface. Kagent provides the Kubernetes-native agent model, application clusters provide local operational tools, and Agentgateway gives the platform a single place to federate, route, and control access.
+
+That is a practical foundation for multi-cluster agentic operations: one agent-facing endpoint, many cluster-local tools, and a clear path from read-only inspection toward safer automated remediation.

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="680" viewBox="0 0 1400 680" role="img" aria-labelledby="title desc">
+  <title id="title">Verification flow for multi-cluster Kagent MCP federation</title>
+  <desc id="desc">A six step verification path from validating remote MCP endpoints to invoking a Kagent agent across both clusters.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="680" fill="url(#bg)"/>
+  <text x="70" y="82" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700" fill="#0f172a">Verify the path layer by layer</text>
+  <text x="70" y="122" font-family="Inter, Arial, sans-serif" font-size="21" fill="#475569">Discovery proves the gateway. Invocation proves the complete agent workflow.</text>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="70" y="205" width="185" height="190" rx="24" fill="#eff6ff" stroke="#bfdbfe" stroke-width="2"/>
+    <circle cx="110" cy="248" r="22" fill="#2563eb"/>
+    <text x="104" y="256" font-size="22" font-weight="700" fill="#fff">1</text>
+    <text x="105" y="300" font-size="21" font-weight="700" fill="#0f172a">Remote MCP</text>
+    <text x="105" y="331" font-size="16" fill="#475569">Each cluster endpoint</text>
+    <text x="105" y="356" font-size="16" fill="#475569">responds directly</text>
+
+    <rect x="300" y="205" width="185" height="190" rx="24" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="2"/>
+    <circle cx="340" cy="248" r="22" fill="#7c3aed"/>
+    <text x="334" y="256" font-size="22" font-weight="700" fill="#fff">2</text>
+    <text x="335" y="300" font-size="21" font-weight="700" fill="#0f172a">Backend</text>
+    <text x="335" y="331" font-size="16" fill="#475569">Agentgateway</text>
+    <text x="335" y="356" font-size="16" fill="#475569">Backend accepted</text>
+
+    <rect x="530" y="205" width="185" height="190" rx="24" fill="#ecfdf5" stroke="#bbf7d0" stroke-width="2"/>
+    <circle cx="570" cy="248" r="22" fill="#16a34a"/>
+    <text x="564" y="256" font-size="22" font-weight="700" fill="#fff">3</text>
+    <text x="565" y="300" font-size="21" font-weight="700" fill="#0f172a">Route</text>
+    <text x="565" y="331" font-size="16" fill="#475569">HTTPRoute resolves</text>
+    <text x="565" y="356" font-size="16" fill="#475569">the backend ref</text>
+
+    <rect x="760" y="205" width="185" height="190" rx="24" fill="#fff7ed" stroke="#fed7aa" stroke-width="2"/>
+    <circle cx="800" cy="248" r="22" fill="#ea580c"/>
+    <text x="794" y="256" font-size="22" font-weight="700" fill="#fff">4</text>
+    <text x="795" y="300" font-size="21" font-weight="700" fill="#0f172a">Tool list</text>
+    <text x="795" y="331" font-size="16" fill="#475569">Federated endpoint</text>
+    <text x="795" y="356" font-size="16" fill="#475569">shows prefixes</text>
+
+    <rect x="990" y="205" width="185" height="190" rx="24" fill="#fdf2f8" stroke="#fbcfe8" stroke-width="2"/>
+    <circle cx="1030" cy="248" r="22" fill="#db2777"/>
+    <text x="1024" y="256" font-size="22" font-weight="700" fill="#fff">5</text>
+    <text x="1025" y="300" font-size="21" font-weight="700" fill="#0f172a">Kagent</text>
+    <text x="1025" y="331" font-size="16" fill="#475569">Remote MCP server</text>
+    <text x="1025" y="356" font-size="16" fill="#475569">discovers tools</text>
+
+    <rect x="1220" y="205" width="120" height="190" rx="24" fill="#0f172a"/>
+    <circle cx="1260" cy="248" r="22" fill="#38bdf8"/>
+    <text x="1254" y="256" font-size="22" font-weight="700" fill="#0f172a">6</text>
+    <text x="1250" y="300" font-size="21" font-weight="700" fill="#fff">Invoke</text>
+    <text x="1250" y="331" font-size="16" fill="#cbd5e1">Ask the</text>
+    <text x="1250" y="356" font-size="16" fill="#cbd5e1">agent</text>
+  </g>
+
+  <path d="M255 300 L300 300" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M485 300 L530 300" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M715 300 L760 300" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M945 300 L990 300" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M1175 300 L1220 300" stroke="#64748b" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <rect x="210" y="480" width="1030" height="112" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="250" y="525" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#0f172a">Rule of thumb</text>
+  <text x="250" y="556" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">Resource status confirms configuration. Tool discovery confirms federation.</text>
+  <text x="250" y="582" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">Agent invocation confirms the user-facing workflow.</text>
+</svg>
