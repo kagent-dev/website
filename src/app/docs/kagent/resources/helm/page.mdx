@@ -72,6 +72,7 @@ A Helm chart for kagent, built with Google ADK
 | cilium-policy-agent.resources.requests.cpu | string | `"50m"` |  |
 | cilium-policy-agent.resources.requests.memory | string | `"128Mi"` |  |
 | controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc.cluster.local:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
+| controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
 | controller.agentDeployment | object | `{"host":"","podLabels":{},"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.host | string | "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled) | Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of "0.0.0.0". Automatically set to "::" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag. |
 | controller.agentDeployment.podLabels | object | {} (no extra labels) | Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults. |
@@ -303,13 +304,14 @@ A Helm chart for kagent, built with Google ADK
 | registry | string | `"cr.kagent.dev"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
 | substrate.enabled | bool | `false` |  |
-| substrateWorkerPool | object | `{"ateomImage":"","create":false,"name":"kagent-default","replicas":1}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
+| substrateWorkerPool | object | `{"ateomImage":"","create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{}}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.additionalForwardedHeaders | list | `[]` | Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped. |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
 | ui.backendInternalUrl | string | `""` |  |
 | ui.env | object | `{}` |  |
+| ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
 | ui.image.pullPolicy | string | `""` |  |
 | ui.image.registry | string | `""` |  |
 | ui.image.repository | string | `"kagent-dev/kagent/ui"` |  |
