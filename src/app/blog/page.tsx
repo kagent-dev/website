@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'kagent-multicluster-mcp-federation',
+        publishDate: '2026-06-29',
+        title: 'One Agent, Many Clusters: Federating Kubernetes MCP Tools with Kagent and Agentgateway',
+        description: 'A practical pattern for exposing read-only Kubernetes tools from multiple clusters to a single Kagent agent through Agentgateway Virtual MCP.',
+        authorId: 'devamparikh',
+    },
+    {
         slug: 'community-nginx-khook-kagent',
         publishDate: '2025-10-15',
         title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
@@ -219,4 +226,4 @@ export default async function BlogPage() {
             </div>
         </>
     );
-} 
+}
