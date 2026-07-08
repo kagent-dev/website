@@ -18,6 +18,7 @@ A Helm chart for kagent, built with Google ADK
 
 | Repository | Name | Version |
 |------------|------|---------|
+| ${SUBSTRATE_REPO} | substrate | `${SUBSTRATE_VERSION}` |
 | file://../agents/argo-rollouts | argo-rollouts-agent |  |
 | file://../agents/cilium-debug | cilium-debug-agent |  |
 | file://../agents/cilium-manager | cilium-manager-agent |  |
@@ -32,13 +33,13 @@ A Helm chart for kagent, built with Google ADK
 | file://../tools/querydoc | querydoc |  |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~7.0.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
-| oci://ghcr.io/kagent-dev/substrate/helm | substrate | `${SUBSTRATE_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
 | argo-rollouts-agent.enabled | bool | `true` |  |
 | argo-rollouts-agent.memory.enabled | bool | `false` |  |
 | argo-rollouts-agent.memory.modelConfigRef | string | `""` |  |
@@ -81,6 +82,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentImage.registry | string | `""` |  |
 | controller.agentImage.repository | string | `"kagent-dev/kagent/app"` |  |
 | controller.agentImage.tag | string | `""` |  |
+| controller.annotations | object | `{}` | Additional annotations to add to the controller Deployment metadata |
 | controller.auth.mode | string | `"unsecure"` |  |
 | controller.auth.userIdClaim | string | `""` |  |
 | controller.env | list | `[]` |  |
@@ -308,6 +310,7 @@ A Helm chart for kagent, built with Google ADK
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.additionalForwardedHeaders | list | `[]` | Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped. |
+| ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
 | ui.backendInternalUrl | string | `""` |  |
 | ui.env | object | `{}` |  |
