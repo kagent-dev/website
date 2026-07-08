@@ -322,7 +322,7 @@ jobs:
 
             path = Path("src/app/docs/kagent/resources/helm/temp.mdx")
             text = path.read_text()
-            for placeholder in ("${KMCP_VERSION}", "${SUBSTRATE_VERSION}"):
+            for placeholder in ("${KMCP_VERSION}", "${SUBSTRATE_VERSION}", "${SUBSTRATE_REPO}"):
                 text = text.replace(placeholder, "`" + placeholder + "`")
             path.write_text(text)
             PY
