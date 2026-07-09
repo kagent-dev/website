@@ -303,7 +303,7 @@ A Helm chart for kagent, built with Google ADK
 | querydoc.resources.requests.cpu | string | `"100m"` |  |
 | querydoc.resources.requests.memory | string | `"128Mi"` |  |
 | rbac.namespaces | list | `[]` | Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence). |
-| registry | string | `"cr.kagent.dev"` |  |
+| registry | string | `"ghcr.io"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
 | substrate.enabled | bool | `false` |  |
 | substrateWorkerPool | object | `{"ateomImage":"","create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{}}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
