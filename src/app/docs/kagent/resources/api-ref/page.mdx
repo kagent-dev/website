@@ -382,6 +382,24 @@ _Appears in:_
 
 
 
+#### AgentProvider
+
+
+
+AgentProvider identifies the organization responsible for an agent on its A2A AgentCard.
+
+
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+- [SandboxAgentSpec](#sandboxagentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `organization` _string_ | Organization is the name of the agent provider's organization. |  | MinLength: 1 <br /> |
+| `url` _string_ | URL is a URL for the agent provider's website or relevant documentation. |  | Format: uri <br /> |
+
+
 #### AgentSkill
 
 
@@ -422,6 +440,10 @@ _Appears in:_
 | `byo` _[BYOAgentSpec](#byoagentspec)_ | BYO configures a "bring your own" agent backed by a user-provided<br />container image. Kagent deploys the image and expects it to serve the<br />agent over the A2A protocol on port 8080.<br />Required if type is BYO. |  |  |
 | `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ | Declarative configures an agent that is fully described by this resource<br />(model, instructions, tools) and runs on one of kagent's built-in runtimes.<br />Required if type is Declarative. |  |  |
 | `description` _string_ |  |  |  |
+| `iconUrl` _string_ | IconURL is a URL to an icon representing the agent. It is surfaced on the<br />agent's A2A AgentCard. |  | Format: uri <br /> |
+| `documentationUrl` _string_ | DocumentationURL is a URL to human-readable documentation for the agent. It<br />is surfaced on the agent's A2A AgentCard. |  | Format: uri <br /> |
+| `version` _string_ | Version is the agent's version string, surfaced on the A2A AgentCard. |  |  |
+| `provider` _[AgentProvider](#agentprovider)_ | Provider identifies the organization responsible for the agent. It is<br />surfaced on the agent's A2A AgentCard. |  |  |
 | `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
 | `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
@@ -1334,6 +1356,10 @@ _Appears in:_
 | `byo` _[BYOAgentSpec](#byoagentspec)_ | BYO configures a "bring your own" agent backed by a user-provided<br />container image. Kagent deploys the image and expects it to serve the<br />agent over the A2A protocol on port 8080.<br />Required if type is BYO. |  |  |
 | `declarative` _[DeclarativeAgentSpec](#declarativeagentspec)_ | Declarative configures an agent that is fully described by this resource<br />(model, instructions, tools) and runs on one of kagent's built-in runtimes.<br />Required if type is Declarative. |  |  |
 | `description` _string_ |  |  |  |
+| `iconUrl` _string_ | IconURL is a URL to an icon representing the agent. It is surfaced on the<br />agent's A2A AgentCard. |  | Format: uri <br /> |
+| `documentationUrl` _string_ | DocumentationURL is a URL to human-readable documentation for the agent. It<br />is surfaced on the agent's A2A AgentCard. |  | Format: uri <br /> |
+| `version` _string_ | Version is the agent's version string, surfaced on the A2A AgentCard. |  |  |
+| `provider` _[AgentProvider](#agentprovider)_ | Provider identifies the organization responsible for the agent. It is<br />surfaced on the agent's A2A AgentCard. |  |  |
 | `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
 | `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
