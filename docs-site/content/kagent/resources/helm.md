@@ -130,6 +130,7 @@ A Helm chart for kagent, built with Google ADK
 | database.postgres.bundled.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}` | Container-level security context for the bundled PostgreSQL container. |
 | database.postgres.bundled.storage | string | `"500Mi"` | PersistentVolumeClaim size for demo PostgreSQL data |
 | database.postgres.bundled.storageClassName | string | `""` | StorageClass for the PostgreSQL PVC. Defaults to the cluster default when empty. |
+| database.postgres.skipMigrations | bool | `false` | Skip running database migrations at controller startup. The controller instead verifies the database is already migrated and fails if it is not. Migrations must be applied out-of-band (e.g. from a CI/CD pipeline) before install/upgrade. |
 | database.postgres.url | string | `""` | External PostgreSQL connection string. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over url when set. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.vectorEnabled | bool | `false` | Enable the pgvector migration Required to use features that depend on database vector capability. (e.g. long-term memory) Set to true when using an external PostgreSQL that has the pgvector extension installed. |
@@ -297,7 +298,7 @@ A Helm chart for kagent, built with Google ADK
 | querydoc.resources.requests.cpu | string | `"100m"` |  |
 | querydoc.resources.requests.memory | string | `"128Mi"` |  |
 | rbac.namespaces | list | `[]` | Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence). |
-| registry | string | `"cr.kagent.dev"` |  |
+| registry | string | `"ghcr.io"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
 | substrate.enabled | bool | `false` |  |
 | substrateWorkerPool | object | `{"ateomImage":"","create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{}}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
