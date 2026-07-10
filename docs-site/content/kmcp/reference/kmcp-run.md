@@ -1,0 +1,32 @@
+---
+title: kmcp run
+description: kmcp run command
+weight: 10
+---
+
+Run an MCP server on your local machine by using the Model Context Protocol inspector tool. 
+
+**Note**: If you do not have the MCP inspector tool installed, run `npm install -g @modelcontextprotocol/inspector`. 
+
+```bash
+kmcp run [flags]
+```
+
+**Flags:**
+- `-h, --help` - Help for the command
+- `--no-inspector` - Run the server directly without launching the MCP inspector tool
+- `--project-dir, -d` - Project directory to use (default: current directory)
+
+**Global Flags:**
+- `--verbose, -v` - Show detailed output
+
+## Example
+
+The following command runs the MCP server that is defined in the `my-mcp-server` project on your local machine. 
+The command automatically builds the Docker image for your MCP server and opens the MCP inspector tool so that you can connect to your server. 
+
+```sh
+kmcp run --project-dir my-mcp-server
+```
+
+To learn how to use the MCP inspector tool to connect to an MCP server, check out the [FastMCP Python](/docs/kmcp/develop/fastmcp-python) or [MCP Go](/docs/kmcp/develop/mcp-go) guide. 

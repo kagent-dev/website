@@ -42,3 +42,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# converter staging output (scripts/mdx-to-hugo.mjs --out); never committed
+/content-gen/
+
+# hugo docs site (docs-site/) — build artifacts + local deps
+/docs-site/public
+/docs-site/resources
+/docs-site/node_modules
+/docs-site/hugo_stats.json
+/docs-site/.hugo_build.lock
+
+# docs static output injected into the web app at build time (make inject-docs).
+# Generated from docs-site/; keep only the tracked assets (versions/).
+/public/docs/*
+!/public/docs/versions/

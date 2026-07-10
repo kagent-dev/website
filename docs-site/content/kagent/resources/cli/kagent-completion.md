@@ -1,0 +1,23 @@
+---
+title: kagent completion
+description: kagent completion command
+weight: 40
+---
+
+Generate the autocompletion script for kagent for the specified shell. See each sub-command's help for details on how to use the generated script.
+
+```bash
+kagent completion [command]
+```
+
+**Global Flags:**
+- `--config` - config file
+- `--kagent-url` - KAgent URL (default "http://localhost:8083")
+- `--timeout` - Timeout (default 5m0s)
+
+**Subcommands:**
+- `bash` - Generate the autocompletion script for bash
+- `fish` - Generate the autocompletion script for fish
+- `powershell` - Generate the autocompletion script for powershell
+- `zsh` - Generate the autocompletion script for zsh
+

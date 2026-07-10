@@ -1,0 +1,28 @@
+---
+title: kmcp build
+description: kmcp build command
+weight: 10
+---
+
+Build a Docker image for your MCP server. You can later use this image to deploy your MCP server in a Kubernetes environment. 
+
+```bash
+kmcp build [flags]
+```
+
+**Flags:**
+- `-h, --help` - Help for the command
+- `--kind-load` - Load image onto a kind cluster (requires kind)
+- `--kind-load-cluster` - Name of the kind cluster to load the image onto (default: current cluster context)
+- `--platform` - Target platform (e.g., linux/amd64, linux/arm64)
+- `--project-dir, -d` - Build directory (default: current directory)
+- `--push` - Push the Docker image to a container registry
+- `--tag, -t` - Docker image tag
+
+## Example
+
+The following command creates a Docker image for the `my-mcp-server` project on your local machine and tags the image as latest. The image is then loaded to a kind cluster named `kind`. 
+
+```sh
+kmcp build --project-dir my-mcp-server -t my-mcp-server:latest --kind-load-cluster kind
+```

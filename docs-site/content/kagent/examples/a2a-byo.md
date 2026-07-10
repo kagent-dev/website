@@ -1,0 +1,347 @@
+---
+title: Bringing your own ADK agent to kagent
+linkTitle: BYO ADK Agents
+description: Bring your own ADK agent to kagent
+weight: 1
+author: kagent.dev
+---
+
+Bring your own custom agents. This example uses the [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), but you can also try out the [LangGraph guide](/docs/kagent/examples/langchain-byo/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
+
+Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. kagent can invoke your agent directly through the A2A protocol.
+
+## Prerequisites
+
+1. Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+2. Use [Google ADK](https://github.com/google/adk-python) version 1.22.1 or later.
+
+## Building a custom agent
+
+The following example builds a simple agent from the [kagent code repository](https://github.com/kagent-dev/kagent). The sample app is built with Google's ADK framework and performs two basic tasks: rolls a die with a specified number of sides and determines whether a number in a list is prime. It uses Google's Gemini model as the underlying LLM provider.
+
+1. Clone the kagent code repository.
+
+   ```bash
+   git clone https://github.com/kagent-dev/kagent.git
+   cd kagent
+   ```
+
+2. Build the custom agent image and push it to your Docker registry. This example assumes that you want to push the image to the ghcr.io registry. 
+   ```bash
+   cd python/samples/adk/basic
+   docker build . -t ghcr.io/my-org:$latest \
+    --build-arg DOCKER_REGISTRY=ghcr.io \
+    --build-arg VERSION=latest \
+    --push
+   ```
+
+   If you do not have a Docker registry, you can use the `make helm-install` command to create one as part of installing kagent in your kind cluster.
+Then, change `ghcr.io` to `localhost:5001`. 
+
+## Creating a BYO Agent resource 
+
+Now that you have your own custom agent image, you can create a BYO Agent resource for kagent to manage.
+
+1. Save the API key for your LLM provider, such as Gemini, in an environment variable.
+
+   ```bash
+   export GOOGLE_API_KEY=your-api-key-here
+   ```
+
+2. Create a secret with the API key.
+
+   ```bash
+   kubectl create secret generic kagent-google -n kagent  --from-literal=GOOGLE_API_KEY=$GOOGLE_API_KEY   --dry-run=client -oyaml | kubectl apply -f -
+   ```
+
+3. Create a BYO Agent resource.
+
+{{< tabs >}}
+{{< tab name="Without imagePullSecrets" >}}
+```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: basic-agent
+     namespace: kagent
+   spec:
+     description: This agent can do anything.
+     type: BYO
+     byo:
+       deployment:
+         image: ghcr.io/my-org:latest
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+{{< /tab >}}
+{{< tab name="With imagePullSecrets" >}}
+For agent images that are in private container registries, you can use an image pull secret with the credentials to the registry. 
+   
+   First, create the Secret.
+   ```sh
+   kubectl create secret docker-registry my-registry-secret --docker-server=<registry> --docker-username=<user> --docker-password=<password> -n kagent
+   ```
+
+   Then, add `imagePullSecrets` to refer to the Secret that you just created.
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: basic-agent
+     namespace: kagent
+   spec:
+     description: This agent can do anything.
+     type: BYO
+     byo:
+       deployment:
+         image: ghcr.io/my-org:latest
+         imagePullSecrets:
+           - name: my-registry-secret
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+{{< /tab >}}
+{{< /tabs >}}
+
+## Testing the A2A endpoint
+
+The A2A endpoint is exposed on the port `8083` of the kagent controller service.
+
+1. Enable port-forwarding on the `kagent-controller` service.
+
+   >Note that you could also expose the A2A endpoint publicly by using a gateway.
+
+   ```bash
+   kubectl port-forward svc/kagent-controller 8083:8083 -n kagent
+   ```
+
+2. To test that the agent is available and has an agent card, send a request to the `.well-known/agent.json` endpoint. Note the API endpoint follows the pattern `/api/a2a/{namespace}/{agent-name}/.well-known/agent.json`.
+
+   ```bash
+   curl localhost:8083/api/a2a/kagent/basic-agent/.well-known/agent.json
+   ```
+
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+
+   ```json
+   {
+     "name": "basic_agent",
+     "description": "This agent can do anything.",
+     "url": "http://127.0.0.1:8083/api/a2a/kagent/basic-agent/",
+     "version": "",
+     "capabilities": {
+       "streaming": true,
+       "pushNotifications": false,
+       "stateTransitionHistory": true
+     },
+     "defaultInputModes": [
+       "text"
+     ],
+     "defaultOutputModes": [
+       "text"
+     ],
+     "skills": []
+   }
+   ```
+
+## Invoking the agent
+
+You can invoke the agent in several ways, including the kagent dashboard, kagent CLI, and the A2A host CLI.
+
+### Dashboard
+
+Launch the dashboard with `kagent dashboard`, find your `basic-agent`, and start chatting. For complete steps, see the [Your First Agent](/docs/kagent/getting-started/first-agent) guide.
+
+![BYO Agent](/images/byo-basic.png "Chat with your basic agent")
+
+### kagent CLI
+
+To use the kagent CLI, make sure that the controller is still being port-forwarded.
+
+Then, use the invoke command. For more options, run `kagent help invoke`.
+
+```shell
+kagent invoke --agent basic-agent --task "Roll a die with 6 sides"
+```
+
+Example output: The output includes both the response as well as the details of the response. The formatting is in JSON but can be quite long, depending on the call and the agent configuration.
+
+```json
+{
+  "artifacts": [
+    {
+      "artifactId": "2d44a62e-d079-4dae-8ee8-f8759add9ffe",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "I rolled a 4 on the 6-sided die.\n"
+        }
+      ]
+    }
+  ],
+...
+```
+
+### A2A host CLI
+
+You can use the A2A host CLI to invoke the agent. This CLI is part of the [A2A samples repository](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/cli).
+
+1. Clone the A2A samples repository.
+
+   ```bash
+   git clone https://github.com/a2aproject/a2a-samples.git
+   ```
+
+2. From the `a2a-samples/samples/python/hosts/cli` directory, point the CLI to the kagent endpoint.
+
+   ```bash
+   cd a2a-samples/samples/python/hosts/cli
+   uv run . --agent http://127.0.0.1:8083/api/a2a/kagent/basic-agent
+   ```
+
+   Example output: The CLI connects to the kagent, displays the agent card and prompts you for input.
+
+   ```console
+   ======= Agent Card ========
+   {"capabilities":{"pushNotifications":false,"stateTransitionHistory":true,"streaming":true},"defaultInputModes":["text"],"defaultOutputModes":["text"],"description":"This agent can do anything.","name":"basic_agent","protocolVersion":"0.2.6","skills":[],"url":"http://127.0.0.1:8083/api/a2a/kagent/basic-agent/","version":""}
+   =========  starting a new task ======== 
+   
+   What do you want to send to the agent? (:q or quit to exit): 
+   ```
+
+3. Send the task `"Roll a die with 6 sides"` to the agent. You'll be also prompted to optionally attach a file to the request, but just hit enter to skip this step. 
+
+   Example output: You get a stream of events that include the prompt and the agent's response, such as the following.
+
+   ```json
+   {
+     "contextId": "157a0834df2c459d9cee45316ffbfb5b",
+     "final": false,
+     "kind": "status-update",
+     "metadata": {
+       "adk_app_name": "kagent__NS__basic_agent",
+       "adk_author": "hello_world_agent",
+       "adk_invocation_id": "e-8619b200-2f0a-4257-bd6b-b08bd1b139fd",
+       "adk_session_id": "157a0834df2c459d9cee45316ffbfb5b",
+       "adk_usage_metadata": {
+         "candidatesTokenCount": 15,
+         "candidatesTokensDetails": [
+           {
+             "modality": "TEXT",
+             "tokenCount": 15
+           }
+         ],
+         "promptTokenCount": 415,
+         "promptTokensDetails": [
+           {
+             "modality": "TEXT",
+             "tokenCount": 415
+           }
+         ],
+         "totalTokenCount": 430
+       },
+       "adk_user_id": "admin@kagent.dev"
+     },
+     "status": {
+       "message": {
+         "kind": "message",
+         "messageId": "dd05c3cd-2dc3-4efd-9791-d7124be6dd52",
+         "parts": [
+           {
+             "kind": "text",
+             "text": "I rolled a 6-sided die and got a 5.\n"
+           }
+         ],
+         "role": "agent"
+       },
+       "state": "working",
+       "timestamp": "2025-08-14T22:15:04.276358+00:00"
+     },
+     "taskId": "59d2b071-04e9-4fef-a0dd-e925dd13cceb"
+   }
+   ```
+
+## More options
+
+Review more options that you might want to configure for your BYO ADK agents.
+
+### Lifespan hooks
+
+Lifespan hooks initialize or clean up tasks when your BYO agent starts up or shuts down. This feature is useful for tasks like connecting to external services, loading configuration, or cleaning up resources.
+
+To use lifespan hooks in your ADK agent, create a lifespan function and pass it to `KAgentApp`.
+
+1. Create a lifespan function in your agent code, such as the following python example. The lifespan function is an async context manager that runs in either startup or shutdown code.
+   
+   - **Startup code** (before `yield`): Executes when the agent container starts.
+   
+   - **Shutdown code** (after `yield`): Executes when the agent container stops.
+
+   ```python
+   # basic/lifespan.py
+   import logging
+   from contextlib import asynccontextmanager
+   from typing import Any
+
+   @asynccontextmanager
+   async def lifespan(app: Any):
+       # Startup: runs when the agent starts
+       logging.info("Lifespan: setup - initializing resources")
+       # Perform initialization tasks here
+       # For example: connect to databases, load configuration, etc.
+       
+       try:
+           yield  # Agent is running
+       finally:
+           # Shutdown: runs when the agent stops
+           logging.info("Lifespan: teardown - cleaning up resources")
+           # Perform cleanup tasks here
+           # For example: close connections, save state, etc.
+   ```
+
+2. Import and pass the lifespan to `KAgentApp`.
+
+   ```python
+   # main.py or similar
+   from kagent.adk import KAgentApp
+   from basic import agent, lifespan  # Import your agent and lifespan
+
+   app = KAgentApp(
+       root_agent=agent.root_agent,
+       agent_card=agent.agent_card,
+       kagent_url=os.getenv("KAGENT_URL", "http://kagent-controller.kagent.svc.cluster.local:8083"),
+       app_name="basic_agent",
+       lifespan=lifespan.lifespan  # Pass the lifespan function
+   )
+   ```
+
+### A2A max payload size
+
+BYO agents accept A2A requests with a default maximum payload size of 10 MB. For agents that need to handle larger payloads (for example, when processing large file attachments), set the `A2A_MAX_CONTENT_LENGTH` environment variable in the agent deployment.
+
+Example: Allow 50 MB payloads:
+
+```yaml
+spec:
+  type: BYO
+  byo:
+    deployment:
+      image: ghcr.io/my-org:latest
+      env:
+        - name: A2A_MAX_CONTENT_LENGTH
+          value: "52428800"  # 50 MB in bytes
+```
+
+Set to `0`, `none`, or `unlimited` for no limit (use with caution).
