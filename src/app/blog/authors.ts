@@ -63,8 +63,15 @@ export const authors: Author[] = [
     photo: "/images/authors/yanivmn.jpg",
     bio: "Passionate about cloud-native technologies and Kubernetes.",
   },
+  {
+    id: "devamparikh",
+    name: "Devam Parikh",
+    title: "Site Reliability Engineer",
+    photo: "/images/authors/devamparikh.jpeg",
+    bio: "Passionate about cloud native technologies and Kubernetes.",
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
   return authors.find(author => author.id === id);
-}; 
+};
