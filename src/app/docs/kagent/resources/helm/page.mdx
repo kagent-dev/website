@@ -316,6 +316,12 @@ A Helm chart for kagent, built with Google ADK
 | ui.backendInternalUrl | string | `""` |  |
 | ui.env | object | `{}` |  |
 | ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
+| ui.httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":[],"labels":{},"parentRefs":[],"rules":[]}` | Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via `parentRefs`. Disabled by default; enable to front the UI with a Gateway API implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the OpenShift Route or bundled oauth2-proxy. |
+| ui.httpRoute.annotations | object | `{}` | Annotations to add to the `HTTPRoute`. |
+| ui.httpRoute.hostnames | list | `[]` | Hostnames matched by the route. |
+| ui.httpRoute.labels | object | `{}` | Extra labels to add to the `HTTPRoute` (merged with the chart labels). |
+| ui.httpRoute.parentRefs | list | `[]` | Gateways this route attaches to. Required when `enabled` is `true`. |
+| ui.httpRoute.rules | list | `[]` | Routing rules. When a rule omits `backendRefs`, it defaults to the UI `Service` on `ui.service.ports.port`. Each rule may also set `matches`, `filters`, and `timeouts`. |
 | ui.image.pullPolicy | string | `""` |  |
 | ui.image.registry | string | `""` |  |
 | ui.image.repository | string | `"kagent-dev/kagent/ui"` |  |
