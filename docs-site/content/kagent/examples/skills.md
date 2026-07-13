@@ -10,9 +10,8 @@ Skills are descriptions of capabilities that help agents act more autonomously. 
 
 In this guide, you learn how to add container-based skills to your agents in kagent. 
 
-{{< callout type="tip" >}}
-Want to containerize and manage your skills? Try out the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a secure, AI-first container registry. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
-{{< /callout >}}
+> [!TIP]
+> Want to containerize and manage your skills? Try out the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a secure, AI-first container registry. Agentregistry also has a [repo of example skills](https://github.com/agentregistry-dev/skills) based on Claude Skills that you can use as a starting point.
 
 ## Before you begin
 
@@ -249,9 +248,8 @@ To create a container-based skill, package your skill files into a container ima
 
 To load container-based skills into your agent, reference them in the `spec.skills.refs` field.
 
-{{< callout type="tip" >}}
-For development and testing such as in a local Docker registry, you can use the `insecureSkipVerify` option. Note that for Kind clusters, use `kind-registry:5000` instead of `localhost:5000`.
-{{< /callout >}}
+> [!TIP]
+> For development and testing such as in a local Docker registry, you can use the `insecureSkipVerify` option. Note that for Kind clusters, use `kind-registry:5000` instead of `localhost:5000`.
 
 ```yaml
 kubectl apply -f - <<EOF

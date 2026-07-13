@@ -42,7 +42,7 @@ The kmcp controller manages the lifecycle of MCP servers that are defined in an 
    Example output: 
    ```sh
    🚀 Deploying KMCP controller to cluster...
-   No version specified, using latest: v0.3.0
+   No version specified, using latest: v{{< reuse "versions/kmcp.md" >}}
    Release "kmcp" does not exist. Installing it now.
    NAME: kmcp
    LAST DEPLOYED: Wed Jul 30 18:41:01 2025

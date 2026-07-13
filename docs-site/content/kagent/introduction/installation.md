@@ -21,7 +21,7 @@ Install kagent by using the kagent CLI or Helm.
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. Download the kagent CLI. By default, the latest version 0.9.9 of kagent is installed.
+2. Download the kagent CLI. By default, the latest version {{< reuse "versions/kagent.md" >}} of kagent is installed.
 
    ```bash
    brew install kagent

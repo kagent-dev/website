@@ -104,7 +104,7 @@ With your first FastMCP Python server up and running, you can now deploy it to a
    Example output: 
    ```sh
    🚀 Deploying KMCP controller to cluster...
-   No version specified, using latest: v0.3.0
+   No version specified, using latest: v{{< reuse "versions/kmcp.md" >}}
    Release "kmcp" does not exist. Installing it now.
    NAME: kmcp
    LAST DEPLOYED: Wed Jul 30 18:41:01 2025

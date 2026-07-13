@@ -2,137 +2,167 @@
 
 This document provides guidelines and instructions for those who want to contribute to the kagent website and documentation.
 
+## Architecture
+
+The site is two stacks served from one origin (`kagent.dev`):
+
+- **Marketing site** (home, blog, agents, tools, community, enterprise) — a
+  Next.js app in `src/`, deployed as an [OpenNext](https://opennext.js.org/cloudflare)
+  Cloudflare Worker.
+- **Documentation** — a [Hugo](https://gohugo.io/) site in `docs-site/`, built
+  with the [Hextra](https://imfing.github.io/hextra/) theme and the shared
+  [docs-theme-extras](https://github.com/solo-io/docs-theme-extras) overlay
+  (the same stack as the other Solo OSS docs sites, e.g. agentgateway). It is
+  served entirely under the `/docs` subpath.
+
+`make build` builds the Hugo docs, injects the static output into `public/docs/`
+so the Worker serves it as static assets, then builds the Worker. One build, one
+deploy, one origin. Cloudflare serves the static `/docs/*` assets before the
+Worker runs, so the docs shadow any old Next.js `/docs` routes.
+
 ## Prerequisites
 
-Before you begin development, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v18 or later recommended)
-- [npm](https://www.npmjs.com/) (v8 or later) or [yarn](https://yarnpkg.com/) (v1.22 or later)
+- [Node.js](https://nodejs.org/) (v18.18.2 or later) and [npm](https://www.npmjs.com/)
 - [Git](https://git-scm.com/)
+- [Hugo extended](https://gohugo.io/installation/) — use the version-pinned
+  `hugo160` binary that the Solo docs repos standardize on. CI can fall back to a
+  bare `hugo` on PATH with `make ... HUGO=hugo`.
+- [Go](https://go.dev/) — required by Hugo to fetch the `docs-theme-extras`
+  module.
 
-## Setting Up the Development Environment
+## Setting up the development environment
 
 1. **Clone the repository**
 
    ```bash
    git clone https://github.com/kagent-dev/website.git
-   cd src
+   cd website
    ```
 
-2. **Install dependencies**
+2. **Install dependencies** (web + docs npm packages and Hugo modules)
 
    ```bash
-   npm install
-   # or
-   yarn install
+   make install
    ```
 
-3. **Start the development server**
+The `Makefile` at the repo root orchestrates both stacks. Run `make help` to list
+every target.
 
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
+## Working on the marketing site (Next.js)
 
-   This will start the Next.js development server. Open [http://localhost:3000](http://localhost:3000) to view the site in your browser.
+```bash
+make serve-web      # Next.js dev server at http://localhost:3000
+```
 
+Marketing pages live in `src/app/` and blog posts in `src/blogContent/`.
 
-## Documentation Development
+## Working on the documentation (Hugo)
 
-The documentation is built using MDX files. To contribute to the documentation:
+Edit the markdown directly under `docs-site/content/`. The directory tree maps to
+the URL, so `docs-site/content/kagent/introduction/installation.md` is served at
+`/docs/kagent/introduction/installation/`. Hextra builds the sidebar
+automatically from the tree plus each page's `weight`.
 
-1. Navigate to the `src/app/docs/` directory
-2. Edit existing .mdx files or create new ones
-3. If adding a new page, ensure it's properly linked in the navigation (layout.tsx)
+```bash
+make serve-docs     # Hugo docs only, at http://localhost:1313/docs/
+```
 
-## Code Style and Linting
+To preview the docs and marketing site together the way they deploy (so
+cross-stack links and the shared top nav behave), build and serve the combined
+site through wrangler:
 
-This project uses ESLint and Prettier for code formatting and linting.
+```bash
+make preview        # combined build, served at http://localhost:3000
+```
 
-- Run linting check:
+### Authoring conventions
 
-  ```bash
-  npm run lint
-  # or
-  yarn lint
+- **Frontmatter** is plain YAML: `title` (the page H1 / sidebar name),
+  optional `linkTitle` (short sidebar name when the H1 is longer), `description`,
+  `weight` (ordering), and `author`.
+- **Shortcodes** from Hextra / docs-theme-extras are available, including
+  `{{</* cards */>}}` / `{{</* card */>}}`, `{{</* tabs */>}}` / `{{</* tab */>}}`,
+  and `{{</* reuse */>}}`.
+- **Callouts** use GitHub-flavored alert blockquotes, which Hextra renders as
+  callouts (and which also render on GitHub):
+
+  ```markdown
+  > [!TIP]
+  > This is a tip.
+
+  > [!WARNING]
+  > This is a warning.
   ```
 
-- Format code:
+- **Versions** are single-sourced as reuse snippets, one file per version under
+  `docs-site/assets/versions/` (e.g. `agent-substrate.md` contains just `0.0.6`),
+  matching the convention on the other Solo docs sites. Reference a version with
+  the `reuse` shortcode. This replaces the old `{VERSIONS.key}` placeholders that
+  were sourced from `src/app/docs/_constants.ts`. Because the `reuse` shortcode
+  trims trailing whitespace, the bare value drops cleanly into prose and code
+  fences:
+
+  ```markdown
+  Install Agent Substrate v{{</* reuse "versions/agent-substrate.md" */>}}.
 
   ```bash
-  npm run format
-  # or
-  yarn format
+  helm install substrate ... --version {{</* reuse "versions/agent-substrate.md" */>}}
+  ```
   ```
 
-## Building for Production
+  To bump a dependency version across the docs, edit the one snippet file under
+  `docs-site/assets/versions/`. A snippet may reference another snippet, so a
+  composed value can nest a base version rather than duplicating it.
 
-To build the site for production:
+### Auto-generated reference docs
+
+The kagent/kmcp CRD API references and the kagent Helm chart reference are
+generated nightly from the upstream source repos by the
+[Update Reference Documentation workflow](.github/workflows/update-ref-docs.yaml),
+which opens a PR against `main`. **Do not hand-edit** these files, because the
+next run overwrites them:
+
+- `docs-site/content/kagent/resources/api-ref.md`
+- `docs-site/content/kmcp/reference/api-ref.md`
+- `docs-site/content/kagent/resources/helm.md`
+
+### The MDX converter (migration tool)
+
+`scripts/mdx-to-hugo.mjs` converted the original Next.js `src/app/docs/**/page.mdx`
+docs into the Hugo `docs-site/content/` tree during the migration. It is kept for
+reference and re-runs (`make gen-docs`), but `docs-site/content/` is now the
+source of truth — a blind `make gen-docs` overwrites hand edits, so only use it to
+regenerate into a scratch dir and diff.
+
+## Building for production
 
 ```bash
-npm run build
-# or
-yarn build
+make build          # docs + inject into /docs + build the Worker
 ```
-
-To preview the production build locally:
-
-```bash
-npm run start
-# or
-yarn start
-```
-
-## Keeping the lock file in sync
-
-Cloudflare Pages runs `npm ci`, which requires `package-lock.json` to match `package.json` exactly. If you change dependencies in `package.json`, update the lock file and commit it:
-
-```bash
-npm install
-git add package-lock.json
-git commit -m "chore: update package-lock.json"
-```
-
-If the Cloudflare build fails with errors like "lock file's X does not satisfy X" or "Missing: X from lock file", run `npm install` in the website directory and commit the updated `package-lock.json`.
 
 ## Deployment
 
-The site is automatically deployed when changes are pushed to the main branch. The deployment process includes:
+`make deploy` builds everything and deploys the Worker to Cloudflare. The site is
+also deployed automatically when changes land on `main`.
 
-1. Linting and testing the code
-2. Building the Next.js application
-3. Deploying to the hosting platform
+## Keeping the lock files in sync
 
-## Contributing Workflow
+Cloudflare runs `npm ci`, which requires each `package-lock.json` to match its
+`package.json` exactly. If you change dependencies, run `npm install` in the
+affected directory (repo root for the web app, `docs-site/` for the docs) and
+commit the updated lock file. If a build fails with "lock file's X does not
+satisfy X" or "Missing: X from lock file", regenerate and commit the lock file.
 
-1. **Fork the repository**
-2. **Create a new branch** for your feature or bugfix
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## Code style and linting
 
-3. **Make your changes**
-4. **Commit your changes** with descriptive commit messages following [Conventional Commits](https://www.conventionalcommits.org/)
-   ```bash
-   git commit -m "feat: add new documentation section"
-   ```
-5. **Push your branch**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-6. **Create a Pull Request** against the main branch
+The Next.js app uses ESLint and Prettier:
 
-## Pull Request Guidelines
+```bash
+npm run lint
+npm run format
+```
 
-- Include a clear description of the changes
-- Reference any relevant issues
-- Update documentation if necessary
-- Add tests for new features
-
-## Getting Help
-
-If you need assistance, you can:
+## Getting help
 
 - Create an issue on GitHub
 - Reach out to project maintainers
