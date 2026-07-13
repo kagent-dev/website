@@ -1,0 +1,161 @@
+export const metadata = {
+  title: "How One Platform Team Scaled AI Adoption with Kagent and Agentgateway",
+  publishDate: "2026-07-13T14:00:00Z",
+  description: "Lin spoke with David Karlsen and Ibrahim Umar from DNB about their journey adopting kagent and agentgateway",
+  author: "Lin Sun",
+  authorIds: ["linsun"],
+}
+
+# How One Platform Team Scaled AI Adoption with Kagent and Agentgateway
+
+<img src="/images/blog/dnb-kagent/image1.png" alt="DNB platform team scaling AI adoption with kagent and agentgateway" width="800"/>
+
+For many enterprise platform teams, the challenge isn't a lack of ideas for AI. It's finding a way to scale support and automation without adding headcount, compromising security, or creating another platform to maintain.
+
+That was the challenge facing the platform team who run payments for [DNB](https://www.linkedin.com/company/dnb/about/), Norway's largest financial services group.
+
+After attending KubeCon Europe in Amsterdam (which David Karlsen jokingly refers to as "AICon" because of the sheer amount of AI content), the team returned with a simple question: how could they use these new ideas to make themselves more effective?
+
+What started as an idea for a Slack bot evolved into a broader agentic platform. Using kagent and agentgateway, the team built a foundation that could connect Slack, internal systems, and MCP servers while keeping security and access control front and center.
+
+## From "How Do We Scale Ourselves?" to a Working System
+
+The starting point wasn't AI experimentation. It was a practical operational challenge.
+
+> "We came back home and thought, how can we kind of automate our team so we are more efficient with the same set of hands?" — David Karlsen, Staff Engineer at DNB
+
+Like many platform teams, they were responsible for infrastructure, architecture, and internal support. As demand grew, they needed a way to help more users without increasing operational overhead.
+
+Their first instinct was to build a Slack bot. But the team quickly realized they wanted something broader than a chat interface. They wanted an architecture that could support multiple user experiences while keeping intelligence, access control, and integrations cleanly separated.
+
+That decision became foundational to the project.
+
+## Why They Didn't Just Build a Slack Bot
+
+Rather than building a single tightly coupled assistant, the team adopted a modular architecture using agentgateway and kagent.
+
+As David put it:
+
+> "We don't want our bot to be too smart. We want to build the smartness into the agents."
+
+That idea became one of the key architectural decisions behind the project.
+
+At a high level, the design looked like this:
+
+**Users (Slack, IDEs)** → **Agentgateway** → **Kagent-managed Agents** → **Agentgateway** → **MCP Servers** → **Enterprise Systems**
+
+In this architecture:
+- User interfaces handle interaction.
+- Agents handle reasoning and orchestration.
+- MCP servers expose tools and systems.
+- Agentgateway controls access and policy enforcement.
+- LLM-access is gated by Agentgateway virtual-LLM pattern, for flexible model access, tracing and ease of access to LLMs.
+- OTEL-based traces to track calls, outcomes and actors.
+- Langfuse to track LLM-traffic, tool-calls and support learning and optimization.
+
+This separation gave the team something more valuable than a chatbot: a reusable control plane for agentic experiences where users may have different experience and background:
+- Chat with agents in kagent.
+- Chat with agents via Claude Code via kagent agents exposed as an MCP server behind agentgateway.
+- Chat directly with their MCP servers.
+
+Different users could access the same underlying capabilities through different interfaces while security, governance, and observability remained consistent.
+
+## Why Kagent and Agentgateway Fit Their Environment
+
+The team evaluated several approaches before settling on kagent and agentgateway.
+
+One alternative would have required a more intrusive installation model and a new networking stack that didn't fit their environment. Other solutions required additional configuration and operational complexity.
+
+Kagent stood out because it was straightforward to deploy and easy to extend.
+
+> "After we tried kagent we said, okay, this is pretty easy to use, easy to add agents, easy to add MCP servers. We like it that everything is configurable. You have to just provide a manifest and everything got deployed nicely." — Ibrahim Umar, Senior DevOps Engineer at DNB
+
+That declarative model aligned naturally with the team's existing Kubernetes, OpenShift, and GitOps workflows.
+
+The ability to deploy agents and MCP servers through declarative YAMLs meant they could experiment quickly without introducing operational friction.
+
+Just as importantly, agentgateway remained a separate control layer rather than being bundled into a monolithic platform with kagent. That flexibility allowed the team to manage their MCP servers' access independently from agent deployment and orchestration.
+
+## Security and Identity from Day One
+
+Because the team operates in an enterprise environment and works with real systems, security requirements shaped the architecture from the beginning.
+
+Agentgateway was integrated with Microsoft Entra ID and configured to use JWT-based identity propagation and authorization controls. This allowed the team to enforce identity-aware policies while remaining aligned with existing Azure-native authentication workflows.
+
+As the project evolved, they also explored broader questions around agent identity, delegated access, and authorization boundaries.
+
+> "Security needs to be in the driver's seat." — David Karlsen, Staff Engineer at DNB
+
+The team viewed security as a prerequisite for adoption rather than something to be added later. That perspective influenced everything from gateway design to access control decisions.
+
+## Real Use Cases: Debugging, Introspection, and Operational Support
+
+One of the most important aspects of the project was deciding what agents should do—and what they shouldn't do.
+
+The team deliberately focused on use cases where AI could accelerate understanding and troubleshooting without introducing unnecessary operational risk.
+
+One of their first examples was a DB2 MCP server built by Ibrahim. It connected to DB2, a system many enterprises still depend on. Within a short time, the team could inspect database structures, review lock reports, and look at performance data through natural language interactions instead of manually digging through tools and dashboards.
+
+The same pattern extended to other systems as well. The team connected MQ, Jira, Atlassian tools, and other internal platforms to create a broader developer support ecosystem capable of helping users navigate increasingly complex environments without understanding their specific APIs.
+
+## Adoption Happened Faster Than Expected
+
+Many AI initiatives struggle not because of technology limitations but because users don't change their habits.
+
+That wasn't the case here.
+
+The team had already invested heavily in Slack and digital-first collaboration. Because the assistant appeared in a familiar environment, users could begin interacting with it immediately without learning an entirely new workflow.
+
+The result was faster adoption than the team anticipated. People simply started talking to the bot in Slack. Because the organization had already invested heavily in digital-first collaboration, adding another helper into the same environment felt natural.
+
+One night, David found himself asking the assistant about a problem in the assistant itself. Because the agent had access to its own source code and traces, it was able to explain what was happening and help diagnose the issue.
+
+> "It was a bit meta but fascinating. It could actually explain very well what was going on." — David Karlsen, Staff Engineer at DNB
+
+It wasn't a planned use case, but it was one of those moments that made the team's investment in the architecture feel worthwhile.
+
+## Why Open Source and Open Standards Mattered
+
+For the team, open source wasn't simply a philosophical preference. It was a practical requirement.
+
+Both David and Ibrahim have long histories with open source software, so transparency mattered. When they hit a roadblock, they wanted to inspect the code, understand the architecture, and potentially fix the problem themselves rather than wait for someone else to solve it. And they wanted the freedom to adapt the architecture as requirements evolved.
+
+> "Being an open source project is very fascinating… if we have time, we try to implement it ourselves and contribute." — Ibrahim Umar, Senior DevOps Engineer at DNB
+
+The team also valued support for open standards including:
+- Model Context Protocol (MCP)
+- Agent-to-Agent (A2A) communication
+- JWT-based identity propagation
+
+These standards helped reduce lock-in while making it easier to connect existing systems to the emerging agentic ecosystem.
+
+In many cases, they didn't need to rebuild services at all. Existing REST APIs could be exposed as MCP servers easily via agentgateway, creating a practical bridge between traditional enterprise systems and modern AI workflows.
+
+That approach allowed them to build on investments they had already made rather than introducing an entirely new platform from scratch.
+
+## From Users to Contributors
+
+As the team became more familiar with the architecture, they moved beyond adoption and started contributing ideas back to the kagent open source community.
+
+Their path into the community started with a real problem. While evaluating the architecture, David began digging into security boundaries and access enforcement. That investigation led him into the project's backlog, Discord discussions, and eventually to writing a design [proposal](https://github.com/kagent-dev/kagent/issues/1270#issuecomment-4778333681) for a security enhancement. They look forward to working with the kagent community to implement this feature.
+
+## What They Learned
+
+Looking back, several lessons stood out:
+
+- Security and authorization need to be designed up front.
+- A clean separation between bots, agents, gateways, and MCP servers makes systems easier to scale and reuse.
+- Declarative agent deployment model provided by kagent fits naturally with Kubernetes and GitOps operating models.
+- Open standards reduce lock-in and make ecosystems easier to extend.
+- Existing REST APIs can often be bridged into MCP using agentgateway rather than rebuilt.
+- Flexibility matters because identity, context management, and agent interoperability continue to evolve rapidly.
+
+For teams evaluating agentic AI, their recommendation is simple: start with a concrete use case, understand the security model thoroughly, and build on composable foundations that can evolve over time.
+
+## Final Thoughts
+
+When the team came back from KubeCon, they weren't looking for a new AI project. They were trying to answer a practical question: how do we become more efficient with the same set of hands?
+
+For them, the answer wasn't a smarter chatbot. It was a modular architecture built around agents, MCPs, and clear security boundaries. Kagent and agentgateway provided the building blocks, but the bigger lesson was that successful AI adoption starts with solving a real operational problem, not with chasing the latest trend.
+
+*Want to join the kagent community? Check out the project at [kagent.dev](https://kagent.dev), star us on [GitHub](https://github.com/kagent-dev/kagent), and join our [Discord](https://discord.gg/Fu3k65f2k3) or weekly community meeting. Whether you're looking to build your first AI agent or contribute to the framework itself, we'd love to have you onboard.*
