@@ -103,6 +103,11 @@
             "title": "Agent Memory",
             "href": "/docs/kagent/concepts/agent-memory",
             "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
+          },
+          {
+            "title": "MCP Apps",
+            "href": "/docs/kagent/concepts/mcp-apps",
+            "description": "Render interactive MCP UI widgets (MCP Apps) inline in the kagent chat and test them from the dashboard."
           }
         ]
       },

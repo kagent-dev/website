@@ -1,0 +1,70 @@
+---
+title: "MCP Apps"
+pageOrder: 7
+description: "Render interactive MCP UI widgets (MCP Apps) inline in the kagent chat and test them from the dashboard."
+---
+
+export const metadata = {
+  title: "MCP Apps in kagent",
+  description: "Render interactive MCP UI widgets (MCP Apps) inline in the kagent chat and test them from the dashboard.",
+  author: "kagent.dev"
+};
+
+# MCP Apps
+
+MCP Apps are MCP tools that ship an interactive user interface with their results. Instead of returning plain JSON, an MCP server can attach an HTML/UI **resource** to a tool using the MCP Apps extension ([`@modelcontextprotocol/ext-apps`](https://github.com/modelcontextprotocol/ext-apps)). When an agent calls such a tool, kagent renders a live widget — a form, board, chart, or dashboard — directly in the chat.
+
+## How it works
+
+An MCP server advertises an app by setting `_meta.ui.resourceUri` on a tool (for example, `ui://server-everything/weather-dashboard`). kagent detects this metadata automatically — no extra configuration is needed:
+
+- **Inline rendering.** When the agent calls an MCP App tool, the chat renders the app's UI resource in a sandboxed frame inside the chat message, in addition to the usual tool-call details.
+- **Two-way messaging.** The app can send messages on the user's behalf, and kagent proxies the app's resource reads and tool calls back to the originating MCP server. This lets a widget update itself in place, for example by re-calling its own tool.
+- **Model-result compaction.** Rich UI payloads stay in the chat history for rendering, but kagent compacts what is sent back to the model, avoiding token bloat and redundant tool churn. A tool's `_meta.ui.visibility` controls whether results are app-only or also visible to the model.
+
+## Discover and test apps in the dashboard
+
+The **MCP servers** page in the kagent dashboard lists each server's MCP Apps alongside its regular tools. The server row shows separate counts (for example, "5 tools · 1 app"), and apps are marked with a window icon.
+
+Clicking an app opens a standalone testing page where you can invoke the tool with JSON arguments and preview the rendered widget — without going through an agent chat. This is useful when developing your own MCP Apps.
+
+## Try it out
+
+The [Server Everything](https://servereverything.dev/mcp) reference MCP server exposes a `show-weather-dashboard` MCP App. Connect it to kagent with a `RemoteMCPServer`:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: server-everything
+  namespace: kagent
+spec:
+  url: "https://servereverything.dev/mcp"
+  protocol: STREAMABLE_HTTP
+  timeout: 30s
+  sseReadTimeout: 5m0s
+  description: "Server Everything reference MCP server with an interactive weather dashboard MCP App"
+```
+
+Then reference the tool from an agent like any other MCP tool:
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      apiGroup: kagent.dev
+      kind: RemoteMCPServer
+      name: server-everything
+      toolNames:
+        - show-weather-dashboard
+```
+
+Open the agent in the kagent UI and ask: **"show the weather dashboard"**. The dashboard renders inline in the chat and keeps itself updated in place.
+
+A complete example, including a demo agent, is available in the kagent repository under [`contrib/tools/server-everything`](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/server-everything).
+
+## Learn more
+
+- [MCP Apps extension](https://github.com/modelcontextprotocol/ext-apps)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Tools in kagent](/docs/kagent/concepts/tools)
