@@ -55,7 +55,12 @@ jobs:
           # each push, instead of a new per-version hostname every time.
           command: versions upload --minify --preview-alias ${{ steps.alias.outputs.alias }}
 
-      - name: Print website URL
+      - name: Print website URLs
         env:
-          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
-        run: echo $DEPLOYMENT_URL
+          # Per-version URL (changes each push) from the wrangler-action output;
+          # stable alias URL built from the branch alias + fixed worker/subdomain.
+          VERSION_URL: ${{ steps.deploy.outputs.deployment-url }}
+          ALIAS: ${{ steps.alias.outputs.alias }}
+        run: |
+          echo "Version Preview URL: ${VERSION_URL}"
+          echo "Version Preview Alias URL: https://${ALIAS}-kagent-website.solo-io.workers.dev"
