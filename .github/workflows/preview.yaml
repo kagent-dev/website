@@ -30,7 +30,12 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --minify
+          # Upload a new Worker version and get a preview URL WITHOUT shifting
+          # production traffic. `deploy` promotes the version to 100% live, so PR
+          # runs were redeploying prod. `versions upload` keeps prod on the
+          # currently-deployed version; production is deployed only by
+          # production.yaml (on merge to main).
+          command: versions upload --minify
 
       - name: Print website URL
         env:
