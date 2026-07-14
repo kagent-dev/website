@@ -5,3 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 main = ".open-next/worker.js"
 assets = { directory = ".open-next/assets", binding = "ASSETS" }
+
+# Enable per-version preview URLs so PR builds (`wrangler versions upload` in
+# preview.yaml) get a shareable URL without deploying to production.
+preview_urls = true
