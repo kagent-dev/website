@@ -15,6 +15,20 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'dnb-kagent-agentgateway',
+        publishDate: '2026-07-13',
+        title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
+        description: 'Lin spoke with David Karlsen and Ibrahim Umar from DNB about their journey adopting kagent and agentgateway',
+        authorId: 'linsun',
+    },
+    {
+        slug: 'deploy-kagent-with-agent-substrate',
+        publishDate: '2026-07-13',
+        title: 'Code Share: Deploy kagent with Agent Substrate',
+        description: 'Agent sessions are bursty and idle most of the time. Agent Substrate multiplexes gVisor-sandboxed actors onto a small pool of warm workers with sub-second suspend/resume. This guide explains the model, the use cases, and how to stand up kagent OSS with substrate on a kind cluster.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'community-nginx-khook-kagent',
         publishDate: '2025-10-15',
         title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
