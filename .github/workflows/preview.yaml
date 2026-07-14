@@ -24,6 +24,20 @@ jobs:
       - name: Build the site
         run: npm run build:worker
 
+      # Derive a stable preview alias from the PR branch name. Cloudflare preview
+      # aliases must be a valid subdomain label (lowercase alphanumerics and
+      # hyphens), and `<alias>-<worker>` must stay under the 63-char DNS limit, so
+      # sanitize and cap the length.
+      - name: Compute preview alias from branch name
+        id: alias
+        run: |
+          alias=$(echo "${{ github.head_ref }}" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9-]/-/g; s/-\{2,\}/-/g; s/^-*//; s/-*$//' \
+            | cut -c1-40)
+          echo "alias=$alias" >> "$GITHUB_OUTPUT"
+          echo "Preview alias: $alias"
+
       - name: Create website preview
         id: deploy
         uses: cloudflare/wrangler-action@v3.14.1
@@ -35,7 +49,11 @@ jobs:
           # runs were redeploying prod. `versions upload` keeps prod on the
           # currently-deployed version; production is deployed only by
           # production.yaml (on merge to main).
-          command: versions upload --minify
+          #
+          # --preview-alias gives a STABLE, branch-named preview URL
+          # (<alias>-<worker>.<subdomain>.workers.dev) that updates in place on
+          # each push, instead of a new per-version hostname every time.
+          command: versions upload --minify --preview-alias ${{ steps.alias.outputs.alias }}
 
       - name: Print website URL
         env:
