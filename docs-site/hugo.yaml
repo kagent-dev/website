@@ -64,6 +64,15 @@ markup:
 enableInlineShortcodes: true
 
 params:
+  # Default social-share image for OpenGraph / Twitter cards (og:image),
+  # emitted by Hextra's opengraph.html and docs-theme-extras' twitter_cards.html.
+  # Requires a raster card committed at static/ogimage.png (agw-oss uses a
+  # 1280x720 PNG). Until that asset exists this points at a 404 and no card
+  # image is shown. Note: the main kagent.dev marketing site is Next.js and
+  # sets its own OG image; this only affects the Hugo docs-site.
+  images:
+    - /ogimage.png
+
   # Load the docs-theme-extras OSS brand layer (brand-oss.css + Open Sans).
   # This is what gives the navbar search its rounded/padded look and keeps
   # styling consistent with the other Solo OSS docs sites (agw, kgw).
