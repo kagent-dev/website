@@ -7,6 +7,13 @@
 # comes only from baseURL and isn't doubled.
 baseURL: "https://kagent.dev/docs/"
 enableRobotsTXT: true
+# Derive each page's .Lastmod from its last git commit — no manually maintained
+# front-matter dates. Feeds the sitemap <lastmod> for SEO. Listing "lastmod"
+# before ":git" keeps an explicit front-matter date ahead of the commit date
+# where a page sets one.
+enableGitInfo: true
+frontmatter:
+  lastmod: ["lastmod", ":git", "date", "publishDate"]
 # canonifyURLs must stay off with a subpath baseURL: it would rewrite already
 # root-relative links (/docs/…) and relURL-built asset paths against baseURL and
 # double the /docs prefix. The theme uses relURL, which already honors the
@@ -64,6 +71,11 @@ markup:
 enableInlineShortcodes: true
 
 params:
+  # Hide the visible "Last updated on <date>" footer (imported OSS content
+  # modules ship displayUpdatedDate=true; this overrides it). The git date still
+  # feeds the sitemap <lastmod> for SEO.
+  displayUpdatedDate: false
+
   # Default social-share image for OpenGraph / Twitter cards (og:image),
   # emitted by Hextra's opengraph.html and docs-theme-extras' twitter_cards.html.
   # Requires a raster card committed at static/ogimage.png (agw-oss uses a
