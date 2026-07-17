@@ -1,4 +1,11 @@
-name: Deploy Preview
+name: Preview
+
+# Runs on every PR to main. Builds the combined site (Hugo docs + Next.js
+# marketing Worker) and uploads it as an isolated Worker VERSION with its own
+# preview URL. It deliberately uses `wrangler versions upload`, NOT `deploy`, so
+# production traffic is never shifted — the currently-deployed version keeps
+# serving prod. Promotion to production happens only via production.yaml
+# (on merge to main).
 on:
   pull_request:
     types:
@@ -6,6 +13,11 @@ on:
       - synchronize
     branches:
       - main
+
+# Cancel superseded preview runs for the same PR.
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -16,13 +28,29 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.160.1'
+          extended: true
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          cd docs-site && npm ci
 
-      - name: Build the site
-        run: npm run build:worker
+      # Builds the Hugo docs, injects them into public/docs, then builds the
+      # OpenNext Worker (which bundles public/ as static assets). HUGO=hugo uses
+      # the Hugo installed above instead of the local hugo160 alias.
+      - name: Build (Hugo docs + inject into /docs + Worker)
+        run: make build HUGO=hugo
 
       # Derive a stable preview alias from the PR branch name. Cloudflare preview
       # aliases must be a valid subdomain label (lowercase alphanumerics and
@@ -38,7 +66,7 @@ jobs:
           echo "alias=$alias" >> "$GITHUB_OUTPUT"
           echo "Preview alias: $alias"
 
-      - name: Create website preview
+      - name: Upload preview version (does NOT touch production)
         id: deploy
         uses: cloudflare/wrangler-action@v3.14.1
         with:

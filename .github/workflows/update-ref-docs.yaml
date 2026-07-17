@@ -11,6 +11,12 @@ concurrency:
   group: update-ref-docs
   cancel-in-progress: false
 
+# The docs are a Hugo site under docs-site/ (served at /docs). This workflow
+# generates the reference pages directly as Hugo markdown into docs-site/content:
+#   - kagent CRD API ref -> docs-site/content/kagent/resources/api-ref.md
+#   - kmcp CRD API ref   -> docs-site/content/kmcp/reference/api-ref.md
+#   - kagent Helm ref     -> docs-site/content/kagent/resources/helm.md
+# Each page uses plain Hugo YAML frontmatter (no MDX `export const metadata`).
 jobs:
   generate-api-docs:
     runs-on: ubuntu-latest
@@ -18,7 +24,13 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    
+
+    # Target Hugo content paths (relative to the website checkout).
+    env:
+      KAGENT_API_PAGE: docs-site/content/kagent/resources/api-ref.md
+      KMCP_API_PAGE: docs-site/content/kmcp/reference/api-ref.md
+      HELM_PAGE: docs-site/content/kagent/resources/helm.md
+
     steps:
       - name: Checkout kagent repository
         uses: actions/checkout@v4
@@ -77,7 +89,7 @@ jobs:
             echo "Error: crd-ref-docs-config.yaml not found in scripts directory"
             exit 1
           fi
-          
+
           envsubst < scripts/crd-ref-docs-config.yaml > crd-ref-docs-config.yaml
 
           echo "Changed to docs repository: $PWD"
@@ -100,41 +112,33 @@ jobs:
           # Remove the temporary config file so it is not included in the PR
           rm -f crd-ref-docs-config.yaml
 
-          # Create index file with frontmatter
-          echo '---' > src/app/docs/kagent/resources/api-ref/page.mdx
-          echo 'title: "API docs"' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo 'pageOrder: 1' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo 'description: "kagent API reference documentation"' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '---' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo 'export const metadata = {' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '  title: "API docs",' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '  description: "kagent API reference documentation",' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '  author: "kagent.dev"' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '};' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          echo '' >> src/app/docs/kagent/resources/api-ref/page.mdx
-          cat "./out.md" >> src/app/docs/kagent/resources/api-ref/page.mdx
+          # Fix problematic angle brackets in the generated markdown.
+          # Goldmark (unsafe: true) would otherwise treat stray <...> as raw HTML
+          # and silently swallow it, so convert bare angle brackets to HTML
+          # entities (they render literally). Preserve legitimate <br /> tags.
+          echo "Fixing problematic angle brackets in generated markdown..."
+          sed -i 's/<br \/>/__BR_TAG__/g' "./out.md"
+          sed -i 's/</\&lt;/g' "./out.md"
+          sed -i 's/>/\&gt;/g' "./out.md"
+          sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
 
-          # Remove temporary file
+          # Write the Hugo page: plain YAML frontmatter + generated body.
+          mkdir -p "$(dirname "$KAGENT_API_PAGE")"
+          cat > "$KAGENT_API_PAGE" <<'EOF'
+          ---
+          title: API Reference
+          linkTitle: API docs
+          description: kagent API reference documentation
+          weight: 1
+          author: kagent.dev
+          ---
+
+          EOF
+          cat "./out.md" >> "$KAGENT_API_PAGE"
           rm -f "./out.md"
 
-          # Fix problematic angle brackets in the generated MDX file
-          # Convert literal angle brackets to HTML entities to prevent MDX parsing errors
-          # But preserve legitimate HTML tags like <br />, <kagent-controller-ip>, etc.
-          echo "Fixing problematic angle brackets in generated MDX..."
-          
-          # First, temporarily replace legitimate HTML tags with placeholders
-          sed -i 's/<br \/>/__BR_TAG__/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
-          
-          # Convert remaining angle brackets to HTML entities
-          sed -i 's/</\&lt;/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
-          sed -i 's/>/\&gt;/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
-          
-          # Restore legitimate HTML tags
-          sed -i 's/__BR_TAG__/<br \/>/g' "src/app/docs/kagent/resources/api-ref/page.mdx"
-          
           # Verify the output file was created
-          if [ ! -f "src/app/docs/kagent/resources/api-ref/page.mdx" ]; then
+          if [ ! -f "$KAGENT_API_PAGE" ]; then
             echo "Error: Failed to create API docs page"
             exit 1
           fi
@@ -158,7 +162,7 @@ jobs:
             echo "Error: crd-ref-docs-config.yaml not found in scripts directory"
             exit 1
           fi
-          
+
           envsubst < scripts/crd-ref-docs-config.yaml > crd-ref-docs-config.yaml
 
           echo "Changed to docs repository: $PWD"
@@ -181,41 +185,30 @@ jobs:
           # Remove the temporary config file so it is not included in the PR
           rm -f crd-ref-docs-config.yaml
 
-          # Create index file with frontmatter
-          echo '---' > src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo 'title: "API docs"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo 'pageOrder: 5' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo 'description: "kmcp API reference documentation"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '---' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo 'export const metadata = {' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '  title: "API docs",' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '  description: "kmcp API reference documentation",' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '  author: "kagent.dev"' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '};' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          echo '' >> src/app/docs/kmcp/reference/api-ref/page.mdx
-          cat "./out.md" >> src/app/docs/kmcp/reference/api-ref/page.mdx
+          # Fix problematic angle brackets (see the kagent step for rationale).
+          echo "Fixing problematic angle brackets in generated markdown..."
+          sed -i 's/<br \/>/__BR_TAG__/g' "./out.md"
+          sed -i 's/</\&lt;/g' "./out.md"
+          sed -i 's/>/\&gt;/g' "./out.md"
+          sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
 
-          # Remove temporary file
+          # Write the Hugo page: plain YAML frontmatter + generated body.
+          mkdir -p "$(dirname "$KMCP_API_PAGE")"
+          cat > "$KMCP_API_PAGE" <<'EOF'
+          ---
+          title: API Reference
+          linkTitle: API docs
+          description: kmcp API reference documentation
+          weight: 5
+          author: kagent.dev
+          ---
+
+          EOF
+          cat "./out.md" >> "$KMCP_API_PAGE"
           rm -f "./out.md"
 
-          # Fix problematic angle brackets in the generated MDX file
-          # Convert literal angle brackets to HTML entities to prevent MDX parsing errors
-          # But preserve legitimate HTML tags like <br />, <kmcp-controller-ip>, etc.
-          echo "Fixing problematic angle brackets in generated MDX..."
-          
-          # First, temporarily replace legitimate HTML tags with placeholders
-          sed -i 's/<br \/>/__BR_TAG__/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
-          
-          # Convert remaining angle brackets to HTML entities
-          sed -i 's/</\&lt;/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
-          sed -i 's/>/\&gt;/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
-          
-          # Restore legitimate HTML tags
-          sed -i 's/__BR_TAG__/<br \/>/g' "src/app/docs/kmcp/reference/api-ref/page.mdx"
-          
           # Verify the output file was created
-          if [ ! -f "src/app/docs/kmcp/reference/api-ref/page.mdx" ]; then
+          if [ ! -f "$KMCP_API_PAGE" ]; then
             echo "Error: Failed to create KMCP API docs page"
             exit 1
           fi
@@ -226,133 +219,114 @@ jobs:
         run: |
             echo "Looking for Helm directory:"
             ls -la "$GITHUB_WORKSPACE/kagent/helm" || echo "Helm directory not found!"
-  
+
             # Update docs repository
             cd "$GITHUB_WORKSPACE/website"
             echo "Changed to docs repository: $PWD"
 
-            # Create directory for Helm docs
-            mkdir -p src/app/docs/kagent/resources/helm/
-            
             # Generate Helm Docs for kagent chart
             if [ ! -d "$GITHUB_WORKSPACE/kagent/helm/kagent" ]; then
               echo "Error: kagent Helm chart directory not found"
               exit 1
             fi
-            
+
             echo "Processing kagent Helm chart..."
-            
+
             echo "Chart directory contents:"
             ls -la "$GITHUB_WORKSPACE/kagent/helm/kagent/"
-            
+
             # Generate Chart.yaml from template for helm-docs to work
             echo "Generating Chart.yaml from template..."
             cd "$GITHUB_WORKSPACE/kagent/helm/kagent"
-            
+
             # Get the version from git or use a default
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.5.5")
             echo "Using version: $VERSION"
-            
+
             # Copy template and substitute version
             cp Chart-template.yaml Chart.yaml
             sed -i "s/\${VERSION}/$VERSION/g" Chart.yaml
-            
+
             echo "Generated Chart.yaml contents:"
             cat Chart.yaml
-            
+
             # Go back to website directory
             cd "$GITHUB_WORKSPACE/website"
-            
+
             echo "Chart.yaml contents:"
             cat "$GITHUB_WORKSPACE/kagent/helm/kagent/Chart.yaml" || echo "Chart.yaml not found!"
-            
+
             echo "Values.yaml contents (first 20 lines):"
             head -20 "$GITHUB_WORKSPACE/kagent/helm/kagent/values.yaml" || echo "values.yaml not found!"
-            
+
             # Generate the helm documentation
             echo "Running helm-docs..."
-            
-            # Debug: Show all available paths
-            echo "Available paths:"
-            echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-            echo "Current directory: $PWD"
-            echo "kagent repo path: $GITHUB_WORKSPACE/kagent"
-            echo "kagent helm path: $GITHUB_WORKSPACE/kagent/helm"
-            echo "kagent chart path: $GITHUB_WORKSPACE/kagent/helm/kagent"
-            
-            # List all helm directories to see what's available
-            echo "All helm directories:"
             find "$GITHUB_WORKSPACE/kagent/helm" -name "Chart.yaml" -type f 2>/dev/null | head -10
-            
-            # Check if the specific chart directory exists and what's in it
-            echo "Checking chart directory:"
-            if [ -d "$GITHUB_WORKSPACE/kagent/helm/kagent" ]; then
-              echo "Chart directory exists"
-              ls -la "$GITHUB_WORKSPACE/kagent/helm/kagent/"
-              echo "Chart.yaml exists: $([ -f "$GITHUB_WORKSPACE/kagent/helm/kagent/Chart.yaml" ] && echo "YES" || echo "NO")"
-              echo "Values.yaml exists: $([ -f "$GITHUB_WORKSPACE/kagent/helm/kagent/values.yaml" ] && echo "YES" || echo "NO")"
-            else
-              echo "Chart directory does NOT exist"
-            fi
-            
-            # Generate the helm documentation
+
             go run github.com/norwoodj/helm-docs/cmd/helm-docs@v1.14.2 \
               --chart-search-root "$GITHUB_WORKSPACE/kagent/helm/kagent" \
-              --dry-run > "src/app/docs/kagent/resources/helm/temp.mdx"
-            
-            # Go back to website directory
-            cd "$GITHUB_WORKSPACE/website"
+              --dry-run > "helm-temp.md"
 
             echo "Generated helm-docs output (first 50 lines):"
-            head -50 "src/app/docs/kagent/resources/helm/temp.mdx"
-            
-            echo "Generated helm-docs output (last 50 lines):"
-            tail -50 "src/app/docs/kagent/resources/helm/temp.mdx"
-            
+            head -50 "helm-temp.md"
             echo "Total lines generated:"
-            wc -l "src/app/docs/kagent/resources/helm/temp.mdx"
+            wc -l "helm-temp.md"
 
-            # Remove badge line and following empty line 
-            # (might be replaced by helm docs template in the future)
-            sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
+            # Remove the badge line and following empty line
+            # (might be replaced by a helm-docs template in the future).
+            sed -i '/!\[Version:/,/^$/d' "helm-temp.md"
 
-            # Wrap version placeholders in inline code so they show literally in MDX
+            # Drop the leading `# <chart name>` H1: Hextra renders the frontmatter
+            # title as the page H1, so a body H1 would duplicate it.
+            sed -i '0,/^# /{/^# /d}' "helm-temp.md"
+
+            # Wrap version placeholders in inline code so they show literally.
             python - <<'PY'
+            import re
             from pathlib import Path
 
-            path = Path("src/app/docs/kagent/resources/helm/temp.mdx")
+            path = Path("helm-temp.md")
             text = path.read_text()
             for placeholder in ("${KMCP_VERSION}", "${SUBSTRATE_VERSION}", "${SUBSTRATE_REPO}"):
                 text = text.replace(placeholder, "`" + placeholder + "`")
+
+            # Wrap bare Helm/Go template expressions ({{ ... }}) in inline code.
+            # Hugo renders them literally, but the MDX build (and copy-out to any
+            # MDX consumer) parses {{ ... }} in prose as a JSX expression and
+            # fails with "Could not parse expression with acorn" (e.g. the
+            # extraObjects @default example). Existing inline-code spans are left
+            # untouched so already-backticked templates are not double-wrapped.
+            template = re.compile(r"\{\{.*?\}\}")
+            code_span = re.compile(r"`[^`]*`")
+            wrapped = []
+            pos = 0
+            for span in code_span.finditer(text):
+                wrapped.append(template.sub(lambda m: "`" + m.group(0) + "`", text[pos:span.start()]))
+                wrapped.append(span.group(0))
+                pos = span.end()
+            wrapped.append(template.sub(lambda m: "`" + m.group(0) + "`", text[pos:]))
+            text = "".join(wrapped)
+
             path.write_text(text)
             PY
 
-            # Add frontmatter
-            echo '---' > "src/app/docs/kagent/resources/helm/page.mdx"
-            echo 'title: "Helm Chart Configuration"' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo 'pageOrder: 2' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo 'description: "kagent Helm chart configuration reference"' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '---' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo 'export const metadata = {' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '  title: "Helm Chart Configuration",' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '  description: "kagent Helm chart configuration reference",' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '  author: "kagent.dev"' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '};' >> "src/app/docs/kagent/resources/helm/page.mdx"
-            echo '' >> "src/app/docs/kagent/resources/helm/page.mdx"
+            # Write the Hugo page: plain YAML frontmatter + generated body.
+            mkdir -p "$(dirname "$HELM_PAGE")"
+            cat > "$HELM_PAGE" <<'EOF'
+            ---
+            title: kagent
+            linkTitle: Helm Chart Configuration
+            description: kagent Helm chart configuration reference
+            weight: 2
+            author: kagent.dev
+            ---
 
-            # Append the processed helm documentation
-            cat "src/app/docs/kagent/resources/helm/temp.mdx" >> "src/app/docs/kagent/resources/helm/page.mdx"
+            EOF
+            cat "helm-temp.md" >> "$HELM_PAGE"
+            rm -f "helm-temp.md"
 
-            # Clean up temporary file
-            rm -f "src/app/docs/kagent/resources/helm/temp.mdx"
-
-            echo "=== Debug: After creating index file ==="
-            echo "Content directory structure:"
-            ls -la src/app/docs/kagent/resources/helm/
-            
             echo "Final generated file contents (first 50 lines):"
-            head -50 "src/app/docs/kagent/resources/helm/page.mdx"
+            head -50 "$HELM_PAGE"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
@@ -366,7 +340,7 @@ jobs:
             Automated API and kagent Helm chart documentation update based on the latest commits:
             - **kagent**: [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }})
             - **kmcp**: [`${{ env.KMCP_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kmcp/commit/${{ env.KMCP_COMMIT }})
-            
+
             This PR was automatically generated by the [**Update Reference documentation** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/update-ref-docs.yaml).
           branch: api-gen-update
           delete-branch: true

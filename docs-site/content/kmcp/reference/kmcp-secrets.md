@@ -1,0 +1,34 @@
+---
+title: kmcp secrets
+description: kmcp secrets command
+weight: 10
+---
+
+Manage secrets for MCP server projects and apply them to a Kubernetes cluster. 
+
+```bash
+kmcp secrets [subcommand] [flags]
+```
+
+**Subcommands:**
+- `sync [environment]` - Sync secrets to a Kubernetes environment from a local .env file. The environment is defined in the `kmcp.yaml` file. 
+
+**Sync Flags:**
+- `--dry-run` - Output the generated secret YAML instead of applying it
+- `--from-file` - Source .env file to sync from (default: ".env")
+- `-h, --help` - Help for the command
+- `--project-dir, -d` - Project directory (default: current directory)
+
+**Global Flags:**
+- `--verbose, -v` - Show detailed output
+
+## Example
+
+The following command reads the environment variables that are defined in the `.env.staging` file and puts them into a Kubernetes secret in your cluster. 
+The name and namespace for the secret are defined in the `staging` environment configuration of the `kmcp.yaml` file. 
+
+```sh
+kmcp secrets sync staging --from-file my-mcp-server/.env.staging --project-dir my-mcp-server
+```
+
+For more information, check out [Manage secrets for MCP servers](/docs/kmcp/secrets).

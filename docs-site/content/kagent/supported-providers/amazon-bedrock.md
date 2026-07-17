@@ -1,0 +1,155 @@
+---
+title: Amazon Bedrock
+description: Use Amazon Bedrock models with kagent via the native Bedrock provider or the OpenAI Chat Completions API.
+weight: 1
+author: kagent.dev
+---
+
+You can use Amazon Bedrock models with kagent in two ways: the native Bedrock provider (recommended) or the OpenAI-compatible API interface.
+
+## Option 1: Native Bedrock provider
+
+The native Bedrock provider uses the standard AWS credential chain and the Bedrock API directly. Use this option when you want the simplest configuration and full Bedrock feature support.
+
+On Kubernetes, the recommended setup is to use an IAM role attached to the agent's ServiceAccount, such as [EKS IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html). Use static access keys only when workload identity is not available.
+
+### Step 1: Prepare AWS access
+
+1. Create an IAM user or role with permissions for Bedrock. You need at least `bedrock:InvokeModel` for the models you use. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
+
+2. Choose the AWS region and Bedrock model. Refer to the [AWS Bedrock supported models documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html).
+   - Example regions: `us-east-1` or `us-west-2`
+   - Example model IDs: `us.anthropic.claude-sonnet-4-20250514-v1:0` or `amazon.titan-text-express-v1`
+
+3. Choose how the agent will authenticate to AWS:
+   - Recommended: attach an IAM role to the agent ServiceAccount using workload identity, such as EKS IRSA.
+   - Alternative: create a Kubernetes secret with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+
+If you are using access keys, create the secret in the same namespace as your agent, typically `kagent`:
+
+```bash
+kubectl create secret generic bedrock-credentials -n kagent \
+  --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
+  --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key>
+```
+
+### Step 2: Create the ModelConfig
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: bedrock-native
+  namespace: kagent
+spec:
+  provider: Bedrock
+  model: us.anthropic.claude-sonnet-4-20250514-v1:0
+  bedrock:
+    region: us-east-1
+EOF
+```
+
+If you are using access keys instead of an IAM role, add `apiKeySecret: bedrock-credentials` to the `ModelConfig` spec.
+
+| Setting | Description |
+| --- | --- |
+| `provider` | Set to `Bedrock` for the native provider. |
+| `model` | The Bedrock model ID. Use the format from the [AWS Bedrock model IDs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html) (for example, `us.anthropic.claude-sonnet-4-20250514-v1:0`). |
+| `apiKeySecret` | Optional. Set this when using a Kubernetes secret that contains `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. Omit it when the agent uses the pod's AWS credential chain, such as an IAM role attached to the ServiceAccount. |
+| `bedrock.region` | The AWS region where the Bedrock model is available (for example, `us-east-1`). |
+
+### Step 3: Configure the agent to use an IAM role
+
+If you already have a ServiceAccount that is configured for workload identity, reference it from the agent:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: bedrock-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: bedrock-native
+    systemMessage: You are a helpful assistant.
+    deployment:
+      serviceAccountName: bedrock-irsa
+```
+
+If you want kagent to create the ServiceAccount for the agent, you can add the workload identity annotation through `serviceAccountConfig`:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: bedrock-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: bedrock-native
+    systemMessage: You are a helpful assistant.
+    deployment:
+      serviceAccountConfig:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/kagent-bedrock
+```
+
+If you want to use one shared ServiceAccount for multiple agents, you can also set `controller.agentDeployment.serviceAccountName` in the [Helm chart configuration](/docs/kagent/resources/helm).
+
+## Option 2: OpenAI-compatible API
+
+You can also use Bedrock models via the [OpenAI Chat Completions API](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html). This option is useful when you need compatibility with the OpenAI API format or when using Bedrock's inference profiles.
+
+### Step 1: Prepare your AWS details
+
+1. Follow the [AWS Bedrock API keys guide](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html) to create the API key needed for authentication.
+
+2. Choose the AWS region and Bedrock model. Refer to the [AWS Bedrock supported models documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html).
+   - Example regions: `us-west-2` or `us-east-1`
+   - Example model IDs: `amazon.titan-text-express-v1` or `openai.gpt-oss-20b-1:0`. Ensure your AWS account has access to the chosen model. Some models, like Anthropic models, may require additional access controls. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
+
+3. Save your AWS API key as an environment variable.
+
+   ```bash
+   export AWS_API_KEY=<your-aws-api-key>
+   ```
+
+4. Create a Kubernetes secret that stores your AWS API key in the same namespace as your agent, typically `kagent`.
+
+   ```bash
+   kubectl create secret generic kagent-bedrock -n kagent --from-literal AWS_API_KEY=$AWS_API_KEY
+   ```
+
+### Step 2: Create the ModelConfig
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: bedrock-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-bedrock
+  apiKeySecretKey: AWS_API_KEY
+  model: amazon.titan-text-express-v1
+  provider: OpenAI
+  openAI:
+    baseUrl: "https://bedrock-runtime.us-west-2.amazonaws.com/openai/v1"
+EOF
+```
+
+| Setting | Description |
+| --- | --- |
+| `apiKeySecret` | The name of the Kubernetes secret storing your AWS API key. |
+| `apiKeySecretKey` | The key in the secret that stores your AWS API key. |
+| `model` | The Bedrock model ID to use, such as `amazon.titan-text-express-v1` or `openai.gpt-oss-20b-1:0`. |
+| `provider` | Set to `OpenAI` to use the OpenAI-compatible API interface. |
+| `openAI.baseUrl` | The Bedrock OpenAI-compatible endpoint URL for your chosen region. The `baseUrl` format is: `https://bedrock-runtime.<region>.amazonaws.com/openai/v1`. |
+
+## Next steps
+
+Now that you configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.

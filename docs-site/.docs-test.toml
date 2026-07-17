@@ -1,0 +1,62 @@
+# Configuration for the docs-theme-extras harness when run against kagent's
+# Hugo docs site (the docs-site/ subtree of kagent-dev/website).
+#
+# The harness lives in github.com/solo-io/docs-theme-extras and reads this file
+# via the DOCS_TEST_CONFIG env var (set by CI). All relative paths are resolved
+# against this file's directory (docs-site/). The harness does NOT build the
+# site — `hugo --config hugo.yaml` runs first and writes to builtRoot.
+#
+# NOTE: docs-site/content is GENERATED from the Next.js MDX source under
+# src/app/docs by `make gen-docs` (scripts/mdx-to-hugo.mjs --out docs-site/content).
+# These checks run against the generated Hugo output, which is the right place
+# to catch shortcode/rendering breaks — but a content fix must land in the MDX
+# source (or the converter), not in docs-site/content, or `gen-docs` overwrites it.
+
+version = "1"
+name    = "kagent-oss"
+brand   = "oss"
+
+# Where the consumer's built HTML lives. Hugo writes to docs-site/public at the
+# tree root (the /docs baseURL subpath lives in hrefs, not the filesystem), so
+# builtRoot is ./public and baseURL is "/" for file mapping.
+builtRoot = "./public"
+baseURL   = "/"
+
+# Hugo build log for hugo-warnings.spec. The CI build step writes the Hugo build
+# output here; the spec scans it for ERROR / WARN lines (filtered by
+# [allowlists].hugoWarnings).
+buildLog  = "./.build.log"
+
+# Source-tree roots for author-side lints (curl-quotes, tab-syntax,
+# shortcode-args). Points at the generated Hugo content — the lints target Hugo
+# shortcode syntax, which only exists post-conversion, so scanning the generated
+# output is what catches converter bugs.
+scanRoots = [
+  "./content",
+]
+
+# NOTE: kagent docs are a flat, unversioned set (/<section>/<page>/) with no
+# version segment. There is intentionally no [versioning] block — version-aware
+# specs detect the absence and skip gracefully (same mechanism agentregistry's
+# and ambientmesh's flat docs rely on).
+
+# All checks default to enabled. No [checks] overrides are needed: kagent runs
+# the full default set. (The former `smoke`/`crossBrowser` toggles were removed
+# from the harness — smoke folded into the `content` project scoped by
+# CONTENT_DIR, and cross-browser is now selected per Playwright project.)
+
+# Allowlists for known-benign noise that surfaces against real content (the
+# module's bundled fixture has none of this).
+[allowlists]
+hugoWarnings = [
+  "\\.Site\\.Data was deprecated",
+  "'items' parameter of the 'tabs' shortcode is deprecated",
+]
+# consoleErrors is intentionally empty: CI runs only the static + content
+# projects, which don't launch the third-party page scripts. Populate this when
+# the browser / console-error projects are enabled for kagent (they'll surface
+# the analytics/search backends that fail in the offline test environment). The
+# Hextra main.js null-deref that other consumers allowlisted here does NOT occur:
+# docs-theme-extras' module footer renders the hidden hamburger/sidebar stand-ins
+# site-wide (confirmed present on the built docs pages after the beta.4 bump).
+consoleErrors = []

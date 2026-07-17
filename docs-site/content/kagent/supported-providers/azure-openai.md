@@ -1,0 +1,41 @@
+---
+title: Azure OpenAI
+description: Learn how to configure Azure OpenAI models in kagent.
+weight: 3
+author: kagent.dev
+---
+
+## Configuring Azure OpenAI
+
+1. Create a Kubernetes Secret that stores the API key, replace `<your_api_key>` with an actual API key:
+
+```shell
+export AZURE_OPENAI_API_KEY=<your_api_key>
+kubectl create secret generic kagent-azureopenai -n kagent --from-literal AZURE_OPENAI_API_KEY=$AZURE_OPENAI_API_KEY
+```
+
+2. Create a ModelConfig resource that references the secret and key name, and specify the additional information that's required for the Azure OpenAI - that's the deployment name, version and the Azure AD token. You can get these values from Azure.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: azuredefault-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-azureopenai
+  apiKeySecretKey: AZURE_OPENAI_API_KEY
+  model: gpt-4o-mini
+  provider: AzureOpenAI
+  azureOpenAI:
+    azureEndpoint: "https://{yourendpointname}.openai.azure.com/"
+    apiVersion: "2025-03-01-preview"
+    azureDeployment: "gpt-4o-mini"
+    azureAdToken: <azure_ad_token_value>
+```
+
+For Azure OpenAI's standard models, kagent automatically configures the appropriate model capabilities.
+
+3. Apply the above resource to the cluster.
+
+Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.

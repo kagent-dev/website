@@ -1,0 +1,150 @@
+# Hugo + Hextra docs-framework harness, run against kagent's Hugo docs site.
+#
+# kagent-dev/website is a mixed repo: a Next.js marketing worker at the root and
+# a Hugo docs site under docs-site/ that consumes docs-theme-extras. Only the
+# docs site is in scope here — every build/config path below is under docs-site/.
+#
+# One Hugo build feeds two Playwright projects (defined in docs-theme-extras'
+# playwright.config.ts):
+#   --project=static   layout / theme-behavior specs (render the theme)
+#   --project=content  scanners that depend on the consumer's real content
+#                      (markdown-leaks walks the built HTML for rendering
+#                      leaks; curl-quotes lints source markdown)
+# The `content` scanners are the reason this workflow's path filter includes
+# CONTENT paths (docs-site/content/**), not just layout paths: a content PR must
+# still run the leak scan, since that's the kind of PR that introduces content
+# rendering breaks. docs-site/content is GENERATED from the MDX source by
+# `make gen-docs`, and is committed, so a regenerated-content PR touches it and
+# triggers here. Both projects share one build, so running the (fast, mostly
+# fixture-bound) layout specs on a content PR too costs almost nothing.
+#
+# The harness lives in solo-io/docs-theme-extras and is checked out at the
+# version pinned in docs-site/go.mod. Layouts and tests stay in lockstep —
+# bumping the module pin is one PR that updates both.
+#
+# NOTE: this workflow assumes docs-site/go.mod pins a RELEASED docs-theme-extras
+# version with no local `replace` directive. A local `replace` (absolute path)
+# used for dev will fail the Hugo build here — remove it and bump the pin first.
+#
+# Marked continue-on-error while allowlists and fixture-aware specs settle.
+# Promote to a required check once it stays green for a sustained run.
+
+name: Framework tests
+
+on:
+  pull_request:
+    paths:
+      # Content — so the `content` scanners run on content-only PRs.
+      - 'docs-site/content/**'
+      # Layout / build inputs.
+      - 'docs-site/layouts/**'
+      - 'docs-site/static/**'
+      - 'docs-site/assets/**'
+      - 'docs-site/go.mod'
+      - 'docs-site/go.sum'
+      - 'docs-site/hugo.yaml'
+      - 'docs-site/.docs-test.toml'
+      - '.github/workflows/framework-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  framework-test:
+    name: Static + content checks
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: 'stable'
+          cache: false
+      - uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+        with:
+          hugo-version: '0.160.1'
+          extended: true
+
+      - name: Resolve docs-theme-extras ref from docs-site/go.mod
+        id: theme-sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Pull the version field for the module's `require` line. exit-on-first
+          # match takes `require` (which precedes any `replace`) so a dev-only
+          # replace line doesn't shadow it. Handles tags, prereleases, and Go
+          # pseudo-versions.
+          version=$(awk -v pkg="github.com/solo-io/docs-theme-extras" '
+            /^replace/ { next }
+            { for (i=1; i<=NF; i++) if ($i == pkg) { print $(i+1); exit } }
+          ' docs-site/go.mod)
+          if [ -z "$version" ]; then
+            echo "Could not extract docs-theme-extras version from docs-site/go.mod" >&2
+            exit 1
+          fi
+          # Pseudo-version shape: ends with .<14-digit timestamp>-<12-hex short SHA>.
+          if echo "$version" | grep -qE -- '\.[0-9]{14}-[0-9a-f]{12}$'; then
+            short=$(echo "$version" | grep -oE '[0-9a-f]{12}$')
+            ref=$(gh api "repos/solo-io/docs-theme-extras/commits/${short}" --jq .sha)
+            if [ -z "$ref" ]; then
+              echo "Could not resolve full SHA for short=${short}" >&2
+              exit 1
+            fi
+          else
+            ref="$version"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Check out docs-theme-extras at module pin
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: solo-io/docs-theme-extras
+          ref: ${{ steps.theme-sha.outputs.ref }}
+          path: docs-theme-extras
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'docs-theme-extras/package-lock.json'
+
+      - name: Build docs-site with Hugo
+        working-directory: docs-site
+        run: |
+          # docs-site's CSS pipeline shells out to tooling in its own
+          # devDependencies, so install them first so Hugo finds the binaries.
+          npm ci
+          # Capture the build log so hugo-warnings.spec can scan it for ERROR /
+          # WARN lines; surface it and fail if the build itself fails. Mirrors
+          # the Makefile's build-docs target (hugo --config hugo.yaml --gc --minify).
+          hugo --config hugo.yaml --gc --minify > .build.log 2>&1 || { cat .build.log; exit 1; }
+
+      - name: Install harness dependencies
+        working-directory: docs-theme-extras
+        run: npm ci
+
+      - name: Run static + content specs
+        working-directory: docs-theme-extras
+        env:
+          DOCS_TEST_CONFIG: ${{ github.workspace }}/docs-site/.docs-test.toml
+        run: |
+          # One invocation runs both projects against the single build above.
+          npx playwright test --project=static --project=content --reporter=list,html 2>&1 | tee playwright-output.txt
+
+      - name: Append summary to PR check
+        if: always()
+        working-directory: docs-theme-extras
+        run: |
+          {
+            echo "## Framework tests (informational)"
+            echo ""
+            echo '```'
+            tail -25 playwright-output.txt 2>/dev/null || echo "No test output captured."
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: framework-test-report
+          path: docs-theme-extras/playwright-report
+          retention-days: 7

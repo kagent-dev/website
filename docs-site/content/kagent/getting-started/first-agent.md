@@ -1,0 +1,94 @@
+---
+title: Creating your first agent
+linkTitle: Your First Agent
+description: Learn how to create your first AI agent using the kagent dashboard.
+weight: 2
+author: kagent.dev
+---
+
+In this guide, you'll learn how to create your first AI agent using the kagent dashboard.
+
+## Prerequisites
+
+Before you begin make sure you have a Kubernetes cluster with kagent installed. If you haven't done this yet, check out the [installation guide](/docs/kagent/introduction/installation) or the [quickstart guide](/docs/kagent/getting-started/quickstart).
+
+We'll be working in the kagent dashboard, so use the kagent CLI to open the dashboard:
+
+```bash
+$ kagent dashboard
+```
+
+![kagent UI](/images/kagent-landing.png "kagent dashboard main page")
+
+## Creating the agent
+
+Let's create an agent that can use Kubernetes tools to interact with the cluster.
+
+1. From the top menu bar, click **+ Create > New Agent**. The **Create New Agent** form opens.
+
+2. For the **Agent Name**, enter `k8sagent`. 
+
+3. For the **Agent Namespace**, select the namespace that you installed kagent in, `kagent`. 
+
+4. Although optional, enter a description for the agent. The description can help you remember what the agent does and why you created it.
+
+   ```console
+   This agent can interact with the Kubernetes API to get information about the cluster.
+   ```
+
+5. Fill out the **Agent Instructions**. Together with tools, agent instructions are what agent uses to interact with the user. They play an important role in instructing and guiding the agent on how and when to use tools, how to interact with the user, and what to do in certain scenarios. Think of these instructions as if you'd be giving them to a colleague who's new to the job.
+
+   >Note that the way you structure your instructions is up to you. You can add more details, or simplify them as needed. It's important to make sure the instructions are clear and easy to follow.
+
+   ```md
+   You're a friendly and helpful agent that uses Kubernetes tools to answer users questions about the cluster.
+   
+   # Instructions
+   
+   - If user question is unclear, ask for clarification before running any tools
+   - Always be helpful and friendly
+   - If you don't know how to answer the question DO NOT make things up
+     respond with "Sorry, I don't know how to answer that" and ask the user to further clarify the question
+   
+   # Response format
+   - ALWAYS format your response as Markdown
+   - Your response will include a summary of actions you took and an explanation of the result
+   ```
+
+6. For the **Model**, select the default `gpt-4.1-mini` default model.
+
+![Create new agent](/images/kagent-new.png "Create a new agent")
+
+## Adding tools
+
+Tools are an essential building block of the agent. They are the commands that the agent can run to interact with the environment. As LLMs don't have the ability to run commands, tools are the way to bridge the gap between the agent and the environment. kagent provides a set of built-in tools that you can use to interact with Kubernetes, Istio, Prometheus and projects. You can also [build your own tools](https://kagent.dev/tools)!
+
+1. Click **Add Tools & Agents**. The selection panel opens.
+2. In the search bar, enter `k8s` to filter the available tools. 
+3. Scroll through the list and select some tools, such as the following:
+
+   * `k8s_get_available_api_resources`: Let the agent list the available API resources in the cluster.
+   * `k8s_get_resources`: Let the agent list the resources running in the cluster.
+
+4. Click **Save Selection** to add the tools to the agent.
+
+   ![Add tools](/images/kagent-tools-add.png "Add tools to the agent")
+
+## Testing the agent
+
+Now that you set up all the details for your agent, you're ready to finish creating and trying it out.
+
+1. Click **Create Agent** to create the agent.
+
+2. From the kagent UI landing page, find your `kagent/k8sagent` agent. You might have to refresh the page.
+
+   ![kagent agent list](/images/kagent-landing.png "Your first agent")
+
+3. Click your agent, then enter a message such as "What API resources are running in my cluster?", and click **Send**. The agent uses the available tools as shown in the  to help answer the question.
+
+   ![kagent chat](/images/k8s-agent-first-chat.png "Chat with your agent")
+
+## Next Steps
+
+- Learn more about [Core Concepts](/docs/kagent/concepts)
+- Join our [Community](https://discord.gg/Fu3k65f2k3)

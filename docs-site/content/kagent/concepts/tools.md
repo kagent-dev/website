@@ -1,0 +1,89 @@
+---
+title: Tools
+description: Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works.
+weight: 3
+author: kagent.dev
+---
+
+Tools are functions that the agent can use to interact with its environment. For example, a Kubernetes agent might have tools to list pods, get pod logs, and describe services.
+
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports the MCP (Model Configuration Protocol) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+
+## Built-in Tools
+
+You can check out the full list of [built-in tools](https://kagent.dev/tools), or see the [Tools Ecosystem](/docs/kagent/resources/tools-ecosystem) reference for a detailed catalog of tools organized by MCP server.
+
+The built-in tools are meant as a good starting point for any agents running in kubernetes, however we don't envision them covering all possible use-cases, so we support multiple tool extension points to allow you to bring in your own tools.
+
+### Cross-namespace tool references
+
+You can refer to tools from MCP servers in other namespaces by using the `namespace/name` format. This way, you can share tool servers across namespaces without duplicating them.
+
+Example: Reference to a RemoteMCPServer in the `tools` namespace.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      namespace: tools
+      kind: RemoteMCPServer
+      toolNames:
+        - k8s_get_resources
+```
+
+The same format applies when referring to Services or MCPServers in other namespaces.
+
+### Headers for tool calls
+
+You can add headers to requests sent from an agent to a tool using `headersFrom`. This ability is useful for passing API keys, authentication tokens, or other per-request metadata to MCP servers. Header values are resolved from Secrets or ConfigMaps in the same namespace as the Agent.
+
+Example: Add an API key header when calling a tool.
+
+```yaml
+tools:
+  - type: McpServer
+    mcpServer:
+      name: kagent-tool-server
+      kind: RemoteMCPServer
+      toolNames:
+        - k8s_get_resources
+    headersFrom:
+      - name: Authorization
+        valueFrom:
+          type: Secret
+          name: tool-api-secret
+          key: api-key
+```
+
+Headers specified in `headersFrom` override any headers of the same name configured on the tool itself.
+
+## Agents as Tools
+
+You also have an option of using agents as tools. Any agent you create can be referenced and used by other agents you have. You can refer to agents in other namespaces by using the `namespace/name` format.
+
+```yaml
+tools:
+  - type: Agent
+    agent:
+      name: promql-agent
+      namespace: other-namespace
+```
+
+## MCP Tools
+
+MCP stands for [Model Context Protocol](https://modelcontextprotocol.io/introduction). It is a protocol, originally created by Anthropic, which is meant as a flexible way to provide tools and other information to Agents. In the year or so since its inception, it has begun to gain traction and more and more tools are adopting it. The [servers](https://github.com/modelcontextprotocol/servers) repository has a list of MCP servers that you can use immediately with kagent! Of course there are more than just the ones listed there, so we also support bringing in your own MCP servers.
+
+**Note:** Double check any community servers before running them in your environment.
+
+## HTTP Tools
+
+HTTP tools are another way to bring external tools into kagent. Simply put, given a URL and a schema, kagent will send the user query to the URL and return the response. kagent has the ability to discovery HTTP tools from services running in the cluster, assuming they are OpenAPI Compliant.
+
+## Build your own tools with kmcp
+
+A subproject of kagent, kmcp provides a powerful CLI tool with built-in boilerplates to speed up the local development of MCP servers and MCP tools. Then, you can use the kmcp control plane to quickly spin up and deploy your MCP servers in your cloud-native environment, such as Kubernetes.
+
+By default, kmcp is installed with kagent. If you already installed kmcp separately, you can set `kmcp.enabled=false` in your `values.yaml` file or `--set` commands for both the `kagent` and `kagent-crds` charts.
+
+Planning to use your kmcp resources later with kagent and agentgateway? Add the `kagent.dev/discovery=disabled` label to your MCPServer resource. Then, kagent does not automatically discover MCP servers. This way, you can have agentgateway in front of your kmcp servers so that the agent-tool traffic is routed correctly through agentgateway.

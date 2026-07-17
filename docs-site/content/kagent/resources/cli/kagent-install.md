@@ -1,0 +1,42 @@
+---
+title: kagent install
+description: kagent install command
+weight: 10
+---
+
+Install kagent in a Kubernetes cluster.
+
+```bash
+kagent install [flags]
+```
+
+**Flags:**
+- `--profile` - Installation profile (minimal|demo)
+
+**Global Flags:**
+- `--kagent-url` - kagent URL (default: "http://localhost:8083")
+- `--namespace, -n` - Namespace (default: "kagent")
+- `--output-format, -o` - Output format (default: "table")
+- `--timeout` - Timeout duration (default: 300s)
+- `--verbose, -v` - Verbose output
+
+## Example
+
+Install kagent with the default profile:
+
+```bash
+kagent install
+```
+
+Install kagent with the minimal profile:
+
+```bash
+kagent install --profile minimal
+```
+
+Install kagent with the demo profile:
+
+```bash
+kagent install --profile demo
+```
+
