@@ -282,12 +282,31 @@ jobs:
 
             # Wrap version placeholders in inline code so they show literally.
             python - <<'PY'
+            import re
             from pathlib import Path
 
             path = Path("helm-temp.md")
             text = path.read_text()
             for placeholder in ("${KMCP_VERSION}", "${SUBSTRATE_VERSION}", "${SUBSTRATE_REPO}"):
                 text = text.replace(placeholder, "`" + placeholder + "`")
+
+            # Wrap bare Helm/Go template expressions ({{ ... }}) in inline code.
+            # Hugo renders them literally, but the MDX build (and copy-out to any
+            # MDX consumer) parses {{ ... }} in prose as a JSX expression and
+            # fails with "Could not parse expression with acorn" (e.g. the
+            # extraObjects @default example). Existing inline-code spans are left
+            # untouched so already-backticked templates are not double-wrapped.
+            template = re.compile(r"\{\{.*?\}\}")
+            code_span = re.compile(r"`[^`]*`")
+            wrapped = []
+            pos = 0
+            for span in code_span.finditer(text):
+                wrapped.append(template.sub(lambda m: "`" + m.group(0) + "`", text[pos:span.start()]))
+                wrapped.append(span.group(0))
+                pos = span.end()
+            wrapped.append(template.sub(lambda m: "`" + m.group(0) + "`", text[pos:]))
+            text = "".join(wrapped)
+
             path.write_text(text)
             PY
 
