@@ -31,7 +31,7 @@ A Helm chart for kagent, built with Google ADK
 | file://../agents/promql | promql-agent |  |
 | file://../tools/grafana-mcp | grafana-mcp |  |
 | file://../tools/querydoc | querydoc |  |
-| https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~7.0.0 |
+| https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
 
@@ -72,10 +72,11 @@ A Helm chart for kagent, built with Google ADK
 | cilium-policy-agent.resources.limits.memory | string | `"256Mi"` |  |
 | cilium-policy-agent.resources.requests.cpu | string | `"50m"` |  |
 | cilium-policy-agent.resources.requests.memory | string | `"128Mi"` |  |
-| controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc.cluster.local:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
+| controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
-| controller.agentDeployment | object | `{"host":"","podLabels":{},"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
+| controller.agentDeployment | object | `{"host":"","nodeSelector":{},"podLabels":{},"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.host | string | "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled) | Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of "0.0.0.0". Automatically set to "::" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag. |
+| controller.agentDeployment.nodeSelector | object | {} (no default nodeSelector) | Default nodeSelector applied to all agent deployments. Useful when admission policies require a nodeSelector on every Deployment, since wizard-created Agents carry none. A per-agent nodeSelector in the Agent CRD takes precedence over these defaults. |
 | controller.agentDeployment.podLabels | object | {} (no extra labels) | Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.serviceAccountName | string | "" (auto-create per-agent ServiceAccount) | Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA. |
 | controller.agentImage.pullPolicy | string | `""` |  |
@@ -96,6 +97,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.metrics | object | disabled | Prometheus-style /metrics endpoint for the controller manager. When enabled, provisions a dedicated metrics Service plus the ClusterRoles required for authenticated scrapes. Bind `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant scrape access. Use `bindAddress` for any port change: the Service `targetPort` and the pod `containerPort` are derived from it at template time, so overriding `METRICS_BIND_ADDRESS` via `controller.env` shifts only the runtime listener and leaves the rendered Service pointing at the chart-time port. Setting `bindAddress: "0"` (or empty) is treated as a disable signal — equivalent to `enabled: false` — to keep faith with the controller binary's documented contract for `--metrics-bind-address`. |
 | controller.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.podAnnotations | object | `{}` |  |
+| controller.podLabels | object | `{}` | Additional labels for the controller pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
 | controller.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.replicas | int | `1` |  |
 | controller.resources.limits.cpu | int | `2` |  |
@@ -140,6 +142,7 @@ A Helm chart for kagent, built with Google ADK
 | database.postgres.url | string | `""` | External PostgreSQL connection string. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over url when set. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.vectorEnabled | bool | `false` | Enable the pgvector migration Required to use features that depend on database vector capability. (e.g. long-term memory) Set to true when using an external PostgreSQL that has the pgvector extension installed. |
+| extraObjects | list | [] | Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.:   extraObjects:     - apiVersion: external-secrets.io/v1       kind: ExternalSecret       metadata:         name: '{{ include "kagent.fullname" . }}-openai'         namespace: '{{ .Release.Namespace }}'       spec:         secretStoreRef:           name: aws-secretsmanager           kind: ClusterSecretStore         target:           name: kagent-openai         data:           - secretKey: OPENAI_API_KEY             remoteRef:               key: prod/kagent/openai               property: api_key |
 | fullnameOverride | string | `""` |  |
 | grafana-mcp.enabled | bool | `true` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
@@ -177,6 +180,7 @@ A Helm chart for kagent, built with Google ADK
 | k8s-agent.resources.requests.memory | string | `"128Mi"` |  |
 | kagent-tools.enabled | bool | `true` |  |
 | kagent-tools.nameOverride | string | `"tools"` |  |
+| kagent-tools.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | kagent-tools.podSecurityContext.runAsNonRoot | bool | `true` |  |
 | kagent-tools.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | kagent-tools.replicaCount | int | `1` |  |
@@ -186,6 +190,7 @@ A Helm chart for kagent, built with Google ADK
 | kagent-tools.securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | kagent-tools.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
 | kagent-tools.securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| kagent-tools.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
 | kagent-tools.tools.metrics.port | int | `8085` |  |
 | kgateway-agent.enabled | bool | `true` |  |
@@ -235,7 +240,6 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.extraVolumeMounts[0].readOnly | bool | `true` |  |
 | oauth2-proxy.extraVolumes[0].configMap.name | string | `"kagent-oauth2-proxy-templates"` |  |
 | oauth2-proxy.extraVolumes[0].name | string | `"custom-templates"` |  |
-| oauth2-proxy.redis.enabled | bool | `false` |  |
 | oauth2-proxy.service.portNumber | int | `4180` |  |
 | oauth2-proxy.service.type | string | `"ClusterIP"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
@@ -257,6 +261,7 @@ A Helm chart for kagent, built with Google ADK
 | otel.tracing.exporter.otlp.protocol | string | `"grpc"` |  |
 | otel.tracing.exporter.otlp.timeout | int | `15000` |  |
 | podAnnotations | object | `{}` |  |
+| podLabels | object | `{}` | Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods. |
 | podSecurityContext | object | `{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for all pods |
 | promql-agent.enabled | bool | `true` |  |
 | promql-agent.memory.enabled | bool | `false` |  |
@@ -332,6 +337,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.openshiftRoute.annotations."haproxy.router.openshift.io/timeout" | string | `"120m"` |  |
 | ui.podAnnotations | object | `{}` |  |
+| ui.podLabels | object | `{}` | Additional labels for the UI pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
 | ui.podSecurityContext | object | (uses global podSecurityContext) | Pod-level security context for the UI pod. Overrides the global podSecurityContext. |
 | ui.publicBackendUrl | string | `"/api"` |  |
 | ui.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |

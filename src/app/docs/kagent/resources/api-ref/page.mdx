@@ -18,7 +18,7 @@ export const metadata = {
 
 ## kagent.dev/v1alpha2
 
-Package v1alpha1 contains API Schema definitions for the agent v1alpha1 API group.
+Package v1alpha2 contains API Schema definitions for the kagent.dev v1alpha2 API group.
 
 ### Resource Types
 - [Agent](#agent)
@@ -1163,7 +1163,7 @@ _Appears in:_
 | `seed` _integer_ | Seed value |  |  |
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
-| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [minimal low medium high] <br /> |
+| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high] <br /> |
 | `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
 
@@ -1172,9 +1172,11 @@ _Appears in:_
 _Underlying type:_ _string_
 
 OpenAIReasoningEffort represents how many reasoning tokens the model generates before producing a response.
+Set to "none" to disable reasoning; some models (e.g. gpt-5.6-terra) require this to use
+function tools via the Chat Completions API.
 
 _Validation:_
-- Enum: [minimal low medium high]
+- Enum: [none minimal low medium high]
 
 _Appears in:_
 - [OpenAIConfig](#openaiconfig)
