@@ -80,6 +80,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentDeployment.podLabels | object | {} (no extra labels) | Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.serviceAccountName | string | "" (auto-create per-agent ServiceAccount) | Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA. |
 | controller.agentImage.pullPolicy | string | `""` |  |
+| controller.agentImage.pullSecret | string | `""` | Image pull secret name set on agent pods created by the controller |
 | controller.agentImage.registry | string | `""` |  |
 | controller.agentImage.repository | string | `"kagent-dev/kagent/app"` |  |
 | controller.agentImage.tag | string | `""` |  |
@@ -88,6 +89,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.auth.userIdClaim | string | `""` |  |
 | controller.env | list | `[]` |  |
 | controller.envFrom | list | `[]` |  |
+| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
 | controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
@@ -271,6 +273,7 @@ A Helm chart for kagent, built with Google ADK
 | promql-agent.resources.limits.memory | string | `"256Mi"` |  |
 | promql-agent.resources.requests.cpu | string | `"50m"` |  |
 | promql-agent.resources.requests.memory | string | `"128Mi"` |  |
+| providers.annotations | object | `{}` | Annotations added to the metadata of the generated default ModelConfig (the one derived from `providers.default`). Omitted from the resource when empty. |
 | providers.anthropic.apiKeySecretKey | string | `"ANTHROPIC_API_KEY"` |  |
 | providers.anthropic.apiKeySecretRef | string | `"kagent-anthropic"` |  |
 | providers.anthropic.model | string | `"claude-haiku-4-5"` |  |
