@@ -1156,7 +1156,8 @@ _Appears in:_
 | `baseUrl` _string_ | Base URL for the OpenAI API (overrides default) |  |  |
 | `organization` _string_ | Organization ID for the OpenAI API |  |  |
 | `temperature` _string_ | Temperature for sampling |  |  |
-| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate. Sent as the OpenAI `max_tokens` request<br />parameter, which is deprecated and rejected by reasoning models<br />(GPT-5 / o-series). For those models set maxCompletionTokens instead.<br />Mutually exclusive with maxCompletionTokens. |  | Minimum: 1 <br /> |
+| `maxCompletionTokens` _integer_ | Maximum completion tokens to generate. Sent as the OpenAI<br />`max_completion_tokens` request parameter (an upper bound on visible<br />output plus reasoning tokens). This is the parameter reasoning models<br />(GPT-5 / o-series) require in place of the deprecated maxTokens.<br />Mutually exclusive with maxTokens. |  | Minimum: 1 <br /> |
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `frequencyPenalty` _string_ | Frequency penalty |  |  |
 | `presencePenalty` _string_ | Presence penalty |  |  |
