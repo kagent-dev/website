@@ -18,6 +18,150 @@ The kagent documentation shows information only for the latest release. If you r
 
 For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
 
+# v0.10
+
+Review this summary of significant changes from kagent version 0.9 to v0.10.
+
+**What's included:**
+
+* Go ADK is now the default runtime: New declarative agents use the Go ADK by default.
+* A2A AgentCard metadata: New optional fields on the Agent spec for enriching the A2A AgentCard.
+* Configurable streaming timeouts: Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
+* Controller service annotations: `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
+* ACP protocol support for substrate agents: ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
+* Chat session sharing: Session owners can generate shareable links in read-only or read-write mode.
+* Substrate support for BYO and Python agents: `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
+* Configurable A2A client timeout: `controller.a2aClientTimeout` removes the previous 3-minute hard cutoff for long-running agents.
+* SSO session expiry re-authentication: Expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
+* Out-of-band database migrations: Manage database migrations via the kagent CLI independently of controller startup.
+
+## Go ADK is now the default runtime
+
+The default declarative agent runtime is now **Go**. Previously, new declarative agents used the Python ADK unless `runtime: go` was explicitly set. The Go ADK starts in approximately 2 seconds (versus ~15 seconds for Python) and uses fewer resources.
+
+Existing agents with an explicit `runtime: python` are unaffected. Agents that relied on the Python default will now use Go unless you add `runtime: python` to their spec.
+
+For a full comparison, see [Agents — Runtime](/docs/kagent/concepts/agents#runtime).
+
+## A2A AgentCard metadata
+
+You can now enrich your agent's [A2A AgentCard](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card) with optional metadata fields on the `Agent` spec. The AgentCard is served from `/.well-known/agent.json` and is read by other agents and A2A-compatible clients when they discover your agent.
+
+```yaml
+spec:
+  iconUrl: https://example.com/icons/my-agent.png
+  documentationUrl: https://docs.example.com/my-agent/
+  version: "1.0.0"
+  provider:
+    organization: My Organization
+    url: https://example.com
+```
+
+| Field | Description |
+|-------|-------------|
+| `iconUrl` | URL to an icon image representing the agent. |
+| `documentationUrl` | URL to human-readable documentation for the agent. |
+| `version` | Version string for the agent, such as `"1.0.0"`. |
+| `provider.organization` | Name of the organization responsible for the agent. |
+| `provider.url` | URL to the agent provider's website or documentation. |
+
+For more information, see [Agents — A2A AgentCard metadata](/docs/kagent/concepts/agents#a2a-agentcard-metadata).
+
+## Configurable streaming timeouts
+
+New Helm values let you tune how long nginx and the browser keep streaming connections open. The defaults are all set to 1800 seconds (30 minutes).
+
+| Helm value | Default | Description |
+|---|---|---|
+| `ui.streamTimeoutSeconds` | `1800` | Client-side EventSource inactivity timeout. Exposed to the UI container at runtime. |
+| `ui.nginx.proxyReadTimeout` | `1800` | nginx `proxy_read_timeout` for the UI sidecar. |
+| `ui.nginx.proxySendTimeout` | `1800` | nginx `proxy_send_timeout` for the UI sidecar. |
+| `ui.openshiftRoute.annotations` | — | Annotations added to the OpenShift Route resource. Set `haproxy.router.openshift.io/timeout: 120m` to prevent the default 60-second HAProxy timeout from terminating A2A and SSE streams. |
+
+Example for OpenShift deployments:
+
+```yaml
+ui:
+  openshiftRoute:
+    annotations:
+      haproxy.router.openshift.io/timeout: 120m
+```
+
+## Controller service annotations
+
+You can now add custom annotations to the kagent controller's Kubernetes Service via `controller.service.annotations`. This is useful for integrations such as AWS Load Balancer Controller and ExternalDNS.
+
+```yaml
+controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+      external-dns.alpha.kubernetes.io/hostname: kagent.example.com
+```
+
+## ACP protocol support for substrate agents
+
+kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with OpenClaw and Hermes to communicate over the substrate runtime without additional configuration.
+
+## Chat session sharing
+
+Session owners can now generate shareable links for any chat session. Shared sessions support two modes:
+
+- **Read-only** (default): Recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
+- **Read-write** (interactive): Recipients can interact with the session as if they were the owner, such as sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
+
+Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
+
+## Substrate support for BYO and Python agents
+
+`SandboxAgent` now supports running BYO agents and Python runtime declarative agents on Agent Substrate, in addition to Go declarative agents. This means any `Agent` type can be run as a sandboxed substrate workload.
+
+For setup details, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
+
+## Configurable A2A client timeout
+
+A new `controller.a2aClientTimeout` Helm value (default: `""` — no timeout) lets you override the A2A client HTTP timeout. Previously, the a2a-go SDK applied a hard 3-minute timeout to all A2A client requests, causing `context deadline exceeded` errors during long-running agent interactions or SSE streams.
+
+```yaml
+controller:
+  a2aClientTimeout: "10m"  # or "" for no timeout (default)
+```
+
+## SSO session expiry re-authentication
+
+When deployed behind an OIDC proxy (such as oauth2-proxy), expired sessions now trigger an automatic redirect to `/oauth2/start` for re-authentication instead of showing an error. A loop guard prevents infinite redirects if re-authentication fails. Sessions in unsecured (no-proxy) mode are unaffected.
+
+## Out-of-band database migrations
+
+Two new features give operators control over when and how database migrations run.
+
+### kagent db migrate CLI
+
+A new `kagent db migrate` command group lets you apply, inspect, and recover database migrations without relying on controller startup. This is useful for CI/CD pipelines and environments where migration timing must be explicit.
+
+| Subcommand | Description |
+|---|---|
+| `kagent db migrate up` | Apply all pending migrations across all sources. |
+| `kagent db migrate status` | Show applied and pending migration counts per source. |
+| `kagent db migrate version` | Print the highest applied version per source. |
+| `kagent db migrate goto V --source <name>` | Move the schema to version V (forward or backward). Used for rollbacks. |
+| `kagent db migrate down N --source <name>` | Roll back the N most recent migrations on the named source. |
+| `kagent db migrate force V --source <name>` | Mark version V as applied without running SQL. Used to recover from a dirty migration state. |
+
+Set `POSTGRES_DATABASE_URL` or pass `--db-url` to provide the database connection string. If `DATABASE_VECTOR_ENABLED` is not set in the environment, the CLI reads it from the `kagent-controller` ConfigMap in the current cluster context.
+
+### Skip startup migrations
+
+A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents the controller from running migrations at startup. When enabled, the controller verifies the schema is already fully migrated and exits with an error if it is not. Apply migrations out-of-band before installing or upgrading when this option is set.
+
+For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
+
+## Additional changes in v0.10
+
+* **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
+* **Go ADK OpenAI embeddings**: Fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
+* **Helm image registry fixes**: Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
+
 # v0.9
 
 Review this summary of significant changes from kagent version 0.8 to v0.9.
@@ -30,11 +174,11 @@ Review this summary of significant changes from kagent version 0.8 to v0.9.
 
 **What's included:**
 
-* Agent Sandbox — run agents in isolated sandboxes with network controls using the Kubernetes agent-sandbox project.
-* OIDC proxy authentication — optional enterprise authentication via oauth2-proxy with support for Cognito, Okta, Dex, and other OIDC providers.
-* SAP AI Core provider — new model provider for SAP AI Core via the Orchestration Service.
-* Database migration tooling — the database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc.
-* Bedrock embedding support — native Bedrock embedding models for agent memory.
+* Agent Sandbox: Run agents in isolated sandboxes with network controls using the Kubernetes agent-sandbox project.
+* OIDC proxy authentication: Optional enterprise authentication via oauth2-proxy with support for Cognito, Okta, Dex, and other OIDC providers.
+* SAP AI Core provider: New model provider for SAP AI Core via the Orchestration Service.
+* Database migration tooling: The database backend is refactored from GORM + AutoMigrate to golang-migrate + sqlc.
+* Bedrock embedding support: Native Bedrock embedding models for agent memory.
 
 ## Agent Sandbox
 
@@ -133,32 +277,32 @@ Before you upgrade:
 
 ## Additional changes in v0.9
 
-* **Default model update** — the retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
-* **Bedrock embedding support** — native Bedrock embedding models are now available for agent memory, extending the existing AWS Bedrock provider.
-* **Token exchange for model auth** — a new authentication mechanism that supports token exchange for model configurations.
-* **Prompt templates in UI** — prompt templates are now manageable directly in the UI.
-* **Require approval toggle in UI** — you can now enable or disable the `requireApproval` setting for tools directly in the UI.
-* **Enhanced Go ADK model config** — broader model and provider support in the Go runtime.
-* **IPv6/dual-stack support** — agent bind host and UI probes now support IPv6 and dual-stack configurations.
-* **AWS LoadBalancer annotations** — the UI Service now supports AWS LoadBalancer service annotations for easier AWS deployment.
-* **SSH auth for git-based skills** — fixed SSH authentication when loading skills from private Git repositories.
-* **MCP connection error handling** — MCP connection errors are now returned to the LLM as context instead of raising exceptions.
-* **RemoteMCPServer TLS (v0.9.6)** — you can now connect to an MCP server that uses a private CA, self-signed certificate, or corporate internal CA by setting the `spec.tls` field on a `RemoteMCPServer`. The `spec.tls` shape mirrors the `ModelConfig` TLS configuration.
+* **Default model update**: The retired `claude-3-5-haiku-20241022` model is replaced with `claude-haiku-4-5`.
+* **Bedrock embedding support**: Native Bedrock embedding models are now available for agent memory, extending the existing AWS Bedrock provider.
+* **Token exchange for model auth**: A new authentication mechanism that supports token exchange for model configurations.
+* **Prompt templates in UI**: Prompt templates are now manageable directly in the UI.
+* **Require approval toggle in UI**: You can now enable or disable the `requireApproval` setting for tools directly in the UI.
+* **Enhanced Go ADK model config**: Broader model and provider support in the Go runtime.
+* **IPv6/dual-stack support**: Agent bind host and UI probes now support IPv6 and dual-stack configurations.
+* **AWS LoadBalancer annotations**: The UI Service now supports AWS LoadBalancer service annotations for easier AWS deployment.
+* **SSH auth for git-based skills**: Fixed SSH authentication when loading skills from private Git repositories.
+* **MCP connection error handling**: MCP connection errors are now returned to the LLM as context instead of raising exceptions.
+* **RemoteMCPServer TLS (v0.9.6)**: You can now connect to an MCP server that uses a private CA, self-signed certificate, or corporate internal CA by setting the `spec.tls` field on a `RemoteMCPServer`. The `spec.tls` shape mirrors the `ModelConfig` TLS configuration.
 
 # v0.8
 
 Review this summary of significant changes from kagent version 0.7 to v0.8.
 
-* Human-in-the-Loop (HITL) — tool approval gates and interactive `ask_user` tool.
-* Agent Memory — vector-backed long-term memory for agents.
-* Go ADK runtime — new Go-based agent runtime for faster startup and lower resource usage.
-* Agents as MCP servers — expose A2A agents via MCP for cross-tool interoperability.
-* Skills — markdown knowledge documents loaded from OCI images or Git repositories.
-* Go workspace restructure — the Go codebase is split into `api`, `core`, and `adk` modules for composability.
-* Prompt templates — reusable prompt fragments from ConfigMaps using Go template syntax.
-* Context management — automatic event compaction for long conversations.
-* AWS Bedrock support — new model provider for AWS Bedrock.
-* **PostgreSQL-only database backend** — SQLite support has been removed. PostgreSQL is now the only supported database backend.
+* Human-in-the-Loop (HITL): Tool approval gates and interactive `ask_user` tool.
+* Agent Memory: Vector-backed long-term memory for agents.
+* Go ADK runtime: New Go-based agent runtime for faster startup and lower resource usage.
+* Agents as MCP servers: Expose A2A agents via MCP for cross-tool interoperability.
+* Skills: Markdown knowledge documents loaded from OCI images or Git repositories.
+* Go workspace restructure: The Go codebase is split into `api`, `core`, and `adk` modules for composability.
+* Prompt templates: Reusable prompt fragments from ConfigMaps using Go template syntax.
+* Context management: Automatic event compaction for long conversations.
+* AWS Bedrock support: New model provider for AWS Bedrock.
+* **PostgreSQL-only database backend**: SQLite support has been removed. PostgreSQL is now the only supported database backend.
 
 ## Human-in-the-Loop (HITL)
 

@@ -238,13 +238,13 @@ To learn more about using skills in your agents, see the [Skills example guide](
 
 ## Runtime
 
-You can choose between two Agent Development Kit (ADK) runtimes for declarative agents: **Python** (default) and **Go**.
+You can choose between two Agent Development Kit (ADK) runtimes for declarative agents: **Go** (default) and **Python**.
 
-| Feature | Python ADK | Go ADK |
-|---------|-----------|--------|
-| Startup time | ~15 seconds | ~2 seconds |
-| Ecosystem | Google ADK, LangGraph, CrewAI integrations | Native Go implementation |
-| Resource usage | Higher (Python runtime) | Lower (compiled binary) |
+| Feature | Go ADK | Python ADK |
+|---------|--------|-----------|
+| Startup time | ~2 seconds | ~15 seconds |
+| Ecosystem | Native Go implementation | Google ADK, LangGraph, CrewAI integrations |
+| Resource usage | Lower (compiled binary) | Higher (Python runtime) |
 | Default | Yes | No |
 | Memory support | Yes | Yes |
 | MCP support | Yes | Yes |
@@ -256,7 +256,7 @@ Select the runtime via the `runtime` field in the declarative agent spec.
 spec:
   type: Declarative
   declarative:
-    runtime: go  # or "python" (default)
+    runtime: go  # or "python"
     modelConfig: default-model-config
     systemMessage: "You are a helpful agent."
 ```
@@ -303,6 +303,28 @@ Compaction removes older conversation events to free up space in the context win
 You can run a declarative agent in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. A `SandboxAgent` runs on [Agent Substrate](/docs/kagent/concepts/agent-substrate): the kagent controller runs it as a gVisor-sandboxed actor instead of a Deployment, snapshotting it to object storage when idle and rehydrating it on demand. The spec mirrors the `Agent` spec, with a few constraints: sandboxed agents always use the Go ADK runtime, and `spec.skills` and `BYO` agents are not supported. Configure substrate placement with the optional `spec.substrate` field (for example, `workerPoolRef`).
 
 For setup steps, see the [Agent Substrate example](/docs/kagent/examples/agent-substrate).
+
+## A2A AgentCard metadata
+
+When another agent or client discovers your agent over the [A2A protocol](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
+
+```yaml
+spec:
+  iconUrl: https://example.com/icons/my-agent.png
+  documentationUrl: https://docs.example.com/my-agent/
+  version: "1.0.0"
+  provider:
+    organization: My Organization
+    url: https://example.com
+```
+
+| Field | Description |
+|-------|-------------|
+| `iconUrl` | URL to an icon image representing the agent. Must be a valid URI. |
+| `documentationUrl` | URL to human-readable documentation for the agent. Must be a valid URI. |
+| `version` | Version string for the agent, such as `"1.0.0"`. |
+| `provider.organization` | Name of the organization responsible for the agent. |
+| `provider.url` | URL to the agent provider's website or documentation. Must be a valid URI. |
 
 ## Agents as Tools
 

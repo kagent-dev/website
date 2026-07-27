@@ -63,7 +63,7 @@ Agent Substrate is composed of a control plane, a data plane, and snapshot stora
 
 ### Declarative agents
 
-Run a (Go) declarative agent on Agent Substrate by creating a `SandboxAgent` resource. It carries the same spec as a regular `Agent`, but the kagent controller runs it as a sandboxed workload on the runtime instead of a plain Deployment.
+Run a declarative agent on Agent Substrate by creating a `SandboxAgent` resource. It carries the same spec as a regular `Agent`, but the kagent controller runs it as a sandboxed workload on the runtime instead of a plain Deployment. All three declarative runtimes are supported: **Go** (default), **Python**, and **BYO**.
 
 ### AgentHarness
 
