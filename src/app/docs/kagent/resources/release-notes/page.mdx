@@ -107,8 +107,8 @@ kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol
 
 Session owners can now generate shareable links for any chat session. Shared sessions support two modes:
 
-- **Read-only** (default): recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
-- **Read-write** (interactive): recipients can interact with the session as if they were the owner — sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
+- **Read-only** (default): Recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
+- **Read-write** (interactive): Recipients can interact with the session as if they were the owner, such as sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
 
 Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
 
@@ -155,6 +155,12 @@ Set `POSTGRES_DATABASE_URL` or pass `--db-url` to provide the database connectio
 A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents the controller from running migrations at startup. When enabled, the controller verifies the schema is already fully migrated and exits with an error if it is not. Apply migrations out-of-band before installing or upgrading when this option is set.
 
 For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
+
+## Additional changes in v0.10
+
+* **CVE patches** — critical and high CVEs patched in the Go ADK and app container images.
+* **Go ADK OpenAI embeddings** — fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
+* **Helm image registry fixes** — Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
 
 # v0.9
 
