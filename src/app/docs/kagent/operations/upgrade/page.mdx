@@ -88,6 +88,44 @@ After upgrading, verify that kagent is running.
 kubectl get pods -n kagent
 ```
 
+## Run migrations out-of-band
+
+By default, kagent runs database migrations automatically at controller startup. You can disable this behavior and manage migrations separately—for example, from a CI/CD pipeline or a Helm pre-upgrade hook.
+
+### Enable skip migrations
+
+Set `database.postgres.skipMigrations: true` in your Helm values file:
+
+```yaml
+database:
+  postgres:
+    skipMigrations: true
+```
+
+When enabled, the controller does not run migrations at startup. Instead, it verifies that the schema is already fully migrated and exits with an error if it is not. Apply all pending migrations before installing or upgrading kagent.
+
+### Apply migrations
+
+Use `kagent db migrate up` to apply all pending migrations before starting or upgrading the controller. Set `POSTGRES_DATABASE_URL` to your database connection string (see [Database configuration](/docs/kagent/operations/operational-considerations#database-configuration)).
+
+```bash
+export POSTGRES_DATABASE_URL="postgres://<user>:<password>@<host>:5432/<dbname>"
+kagent db migrate up
+```
+
+### Check migration status
+
+```bash
+kagent db migrate status
+```
+
+Example output:
+```
+9 migration(s) applied, 0 pending
+  core: 6 applied (at v6), 0 pending
+  vector: 3 applied (at v3), 0 pending
+```
+
 ## Roll back kagent
 
 If you need to roll back to a previous version after a successful upgrade, use the following steps.
@@ -147,28 +185,24 @@ pg_restore \
 
 After restoring, follow the steps to [roll back the kagent application](#steps-to-roll-back).
 
-#### Option 2: Run down migrations
+#### Option 2: Use the kagent CLI
 
-Use `golang-migrate` to run down migrations one minor version at a time. This preserves data written after the snapshot but requires more steps.
+Use the `kagent db migrate` command to run down migrations one minor version at a time. This preserves data written after the snapshot but requires more steps.
 
-The source must be the current (newer) version that you are rolling back from, because it contains the down migrations needed to reverse the schema changes. The `goto` target is the highest migration sequence number present in the version that you are rolling back to.
+The target is the highest migration sequence number present in the version that you are rolling back to. For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `ROLLBACK_VERSION=0.9.3` and run `goto 4` because you want to go back to migration sequence 4 (v0.9.3's `000004`).
 
-For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `CURRENT_VERSION=0.9.9`, `ROLLBACK_VERSION=0.9.3`, and run `goto 4` because you want to go back to migration sequence 4 (v0.9.3's `000004`).
-
-1. Save your current kagent version and the kagent version you want to roll back to in environment variables.
+1. Save your current kagent version and the version you want to roll back to in environment variables.
    ```bash
    export CURRENT_VERSION=<current-version>
    export ROLLBACK_VERSION=<previous-version>
    ```
 
-2. Install [`golang-migrate`](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate).
-
-3. Stop the kagent controller.
+2. Stop the kagent controller.
    ```bash
    kubectl -n kagent scale deploy/kagent-controller --replicas=0
    ```
 
-4. Open the core migration directory for your rollback version and save the sequence number of the highest-numbered file in an environment variable, such as `4` from the previous v0.9.3 `goto 4` example.
+3. Open the core migration directory for your rollback version and save the sequence number of the highest-numbered file in an environment variable.
    ```bash
    open "https://github.com/kagent-dev/kagent/tree/v${ROLLBACK_VERSION}/go/core/pkg/migrations/core/"
    ```
@@ -176,26 +210,21 @@ For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` 
    export ROLLBACK_MIGRATION_VERSION=<sequence-number>
    ```
 
-5. Reset the core track. The `github://` source references the migration files directly from the release tag without a local checkout. For the database connection string, see [Database configuration](/docs/kagent/operations/operational-considerations#database-configuration).
+4. Reset the core track. For the database connection string, see [Database configuration](/docs/kagent/operations/operational-considerations#database-configuration).
    ```bash
-   migrate \
-     -source "github://kagent-dev/kagent/go/core/pkg/migrations/core#v$CURRENT_VERSION" \
-     -database "postgres://<user>:<password>@<host>:5432/<dbname>?sslmode=require&x-migrations-table=schema_migrations" \
-     goto $ROLLBACK_MIGRATION_VERSION
+   export POSTGRES_DATABASE_URL="postgres://<user>:<password>@<host>:5432/<dbname>"
+   kagent db migrate goto $ROLLBACK_MIGRATION_VERSION --source core
    ```
 
-6. If vector features are enabled, reset the vector track as well.
-   1. Open the vector migration directory for your rollback version and save the sequence number of the highest-numbered file in an environment variable.
+5. If vector features are enabled, reset the vector track as well.
+   1. Open the vector migration directory for your rollback version and save the sequence number of the highest-numbered file.
       ```bash
       open "https://github.com/kagent-dev/kagent/tree/v${ROLLBACK_VERSION}/go/core/pkg/migrations/vector/"
       export ROLLBACK_VECTOR_MIGRATION_VERSION=<sequence-number>
       ```
    2. Reset the vector track.
       ```bash
-      migrate \
-      -source "github://kagent-dev/kagent/go/core/pkg/migrations/vector#v$CURRENT_VERSION" \
-      -database "postgres://<user>:<password>@<host>:5432/<dbname>?sslmode=require&x-migrations-table=vector_schema_migrations" \
-      goto $ROLLBACK_VECTOR_MIGRATION_VERSION
+      kagent db migrate goto $ROLLBACK_VECTOR_MIGRATION_VERSION --source vector
       ```
 
-7. After the database is at the correct schema version, follow the steps to [roll back the kagent application](#steps-to-roll-back).
+6. After the database is at the correct schema version, follow the steps to [roll back the kagent application](#steps-to-roll-back).

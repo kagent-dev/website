@@ -18,6 +18,112 @@ The kagent documentation shows information only for the latest release. If you r
 
 For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
 
+# v0.10
+
+Review this summary of significant changes from kagent version 0.9 to v0.10.
+
+**What's included:**
+
+* Go ADK is now the default runtime — new declarative agents use the Go ADK by default.
+* A2A AgentCard metadata — new optional fields on the Agent spec for enriching the A2A AgentCard.
+* Configurable streaming timeouts — Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
+* Controller service annotations — `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
+* ACP protocol support for substrate agents — ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
+* Out-of-band database migrations — manage database migrations via the kagent CLI independently of controller startup.
+
+## Go ADK is now the default runtime
+
+The default declarative agent runtime is now **Go**. Previously, new declarative agents used the Python ADK unless `runtime: go` was explicitly set. The Go ADK starts in approximately 2 seconds (versus ~15 seconds for Python) and uses fewer resources.
+
+Existing agents with an explicit `runtime: python` are unaffected. Agents that relied on the Python default will now use Go unless you add `runtime: python` to their spec.
+
+For a full comparison, see [Agents — Runtime](/docs/kagent/concepts/agents#runtime).
+
+## A2A AgentCard metadata
+
+You can now enrich your agent's [A2A AgentCard](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card) with optional metadata fields on the `Agent` spec. The AgentCard is served from `/.well-known/agent.json` and is read by other agents and A2A-compatible clients when they discover your agent.
+
+```yaml
+spec:
+  iconUrl: https://example.com/icons/my-agent.png
+  documentationUrl: https://docs.example.com/my-agent/
+  version: "1.0.0"
+  provider:
+    organization: My Organization
+    url: https://example.com
+```
+
+| Field | Description |
+|-------|-------------|
+| `iconUrl` | URL to an icon image representing the agent. |
+| `documentationUrl` | URL to human-readable documentation for the agent. |
+| `version` | Version string for the agent, such as `"1.0.0"`. |
+| `provider.organization` | Name of the organization responsible for the agent. |
+| `provider.url` | URL to the agent provider's website or documentation. |
+
+For more information, see [Agents — A2A AgentCard metadata](/docs/kagent/concepts/agents#a2a-agentcard-metadata).
+
+## Configurable streaming timeouts
+
+New Helm values let you tune how long nginx and the browser keep streaming connections open. The defaults are all set to 1800 seconds (30 minutes).
+
+| Helm value | Default | Description |
+|---|---|---|
+| `ui.streamTimeoutSeconds` | `1800` | Client-side EventSource inactivity timeout. Exposed to the UI container at runtime. |
+| `ui.nginx.proxyReadTimeout` | `1800` | nginx `proxy_read_timeout` for the UI sidecar. |
+| `ui.nginx.proxySendTimeout` | `1800` | nginx `proxy_send_timeout` for the UI sidecar. |
+| `ui.openshiftRoute.annotations` | — | Annotations added to the OpenShift Route resource. Set `haproxy.router.openshift.io/timeout: 120m` to prevent the default 60-second HAProxy timeout from terminating A2A and SSE streams. |
+
+Example for OpenShift deployments:
+
+```yaml
+ui:
+  openshiftRoute:
+    annotations:
+      haproxy.router.openshift.io/timeout: 120m
+```
+
+## Controller service annotations
+
+You can now add custom annotations to the kagent controller's Kubernetes Service via `controller.service.annotations`. This is useful for integrations such as AWS Load Balancer Controller and ExternalDNS.
+
+```yaml
+controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+      external-dns.alpha.kubernetes.io/hostname: kagent.example.com
+```
+
+## ACP protocol support for substrate agents
+
+kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with openclaw and hermes to communicate over the substrate runtime without additional configuration.
+
+## Out-of-band database migrations
+
+Two new features give operators control over when and how database migrations run.
+
+### kagent db migrate CLI
+
+A new `kagent db migrate` command group lets you apply, inspect, and recover database migrations without relying on controller startup. This is useful for CI/CD pipelines and environments where migration timing must be explicit.
+
+| Subcommand | Description |
+|---|---|
+| `kagent db migrate up` | Apply all pending migrations across all sources. |
+| `kagent db migrate status` | Show applied and pending migration counts per source. |
+| `kagent db migrate version` | Print the highest applied version per source. |
+| `kagent db migrate goto V --source <name>` | Move the schema to version V (forward or backward). Used for rollbacks. |
+| `kagent db migrate down N --source <name>` | Roll back the N most recent migrations on the named source. |
+| `kagent db migrate force V --source <name>` | Mark version V as applied without running SQL. Used to recover from a dirty migration state. |
+
+Set `POSTGRES_DATABASE_URL` or pass `--db-url` to provide the database connection string. If `DATABASE_VECTOR_ENABLED` is not set in the environment, the CLI reads it from the `kagent-controller` ConfigMap in the current cluster context.
+
+### Skip startup migrations
+
+A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents the controller from running migrations at startup. When enabled, the controller verifies the schema is already fully migrated and exits with an error if it is not. Apply migrations out-of-band before installing or upgrading when this option is set.
+
+For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
+
 # v0.9
 
 Review this summary of significant changes from kagent version 0.8 to v0.9.
