@@ -15,6 +15,20 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'dnb-kagent-agentgateway',
+        publishDate: '2026-07-13',
+        title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
+        description: 'Lin spoke with David Karlsen and Ibrahim Umar from DNB about their journey adopting kagent and agentgateway',
+        authorId: 'linsun',
+    },
+    {
+        slug: 'deploy-kagent-with-agent-substrate',
+        publishDate: '2026-07-13',
+        title: 'Code Share: Deploy kagent with Agent Substrate',
+        description: 'Agent sessions are bursty and idle most of the time. Agent Substrate multiplexes gVisor-sandboxed actors onto a small pool of warm workers with sub-second suspend/resume. This guide explains the model, the use cases, and how to stand up kagent OSS with substrate on a kind cluster.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'community-nginx-khook-kagent',
         publishDate: '2025-10-15',
         title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
@@ -65,11 +79,46 @@ const posts = [
         authorId: "christianposta",
     },
     {
+        slug: 'human-in-the-loop-kagent',
+        publishDate: '2026-03-11',
+        title: 'Human-in-the-Loop with kagent: Keeping Humans in Control of AI Agents',
+        description: 'How to build Kubernetes-native AI agents that pause and ask for approval before taking destructive actions, using kagent\'s human-in-the-loop capabilities.',
+        authorId: 'sebastianmaniak',
+    },
+    {
+        slug: 'go-vs-python-runtime',
+        publishDate: '2026-03-12',
+        title: 'We Added a Go Runtime to kagent and the Numbers Are Wild',
+        description: 'We benchmarked kagent\'s Go and Python agent runtimes on image size, startup time, and memory. The results: 11x smaller images, 6.7x faster startup, and 36x less memory.',
+        authorId: 'eitanya',
+    },
+    {
         slug: 'inside-kagent-oss-ent-ai-meshes',
         publishDate: '2025-11-18',
         title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
         description: 'Learn how to architect open source and enterprise AI agent meshes for 2026.',
         authorId: "michaellevan",
+    },
+    {
+        slug: 'kagent-v0-9-1-release',
+        publishDate: '2026-05-04',
+        title: "kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI",
+        description: 'kagent v0.9.1 brings AWS Bedrock support for Claude with extended thinking, REST API secret management, sidecar container support, Git-based skill configuration, and a configurable Helm runtime.',
+        authorId: 'sebastianmaniak',
+    },
+    {
+        slug: 'nemoclaw-kagent-sandbox-secure-production-imp',
+        publishDate: '2026-05-07',
+        title: 'NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation',
+        description: 'Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell',
+        authorId: 'michaellevan',
+    },
+    {
+        slug: 'is-pod-right-deployment-unit-ai-agent',
+        publishDate: '2026-06-25',
+        title: 'Is a Pod the Right Deployment Unit for an AI Agent?',
+        description: 'How kagent evolved from one runtime hosting many agents to agent-substrate—and why Pods may be the right execution unit, but not the right deployment model, for AI agents.',
+        authorId: 'linsun',
     }
 ]
 

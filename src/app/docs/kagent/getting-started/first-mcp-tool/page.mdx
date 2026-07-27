@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 
-# Adding MCP Tools to Your First Kagent Agent
+# Adding MCP Tools to Your First kagent Agent
 
 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/introduction) tools extend the agent's abilities by calling external services to perform tasks that require logic or access outside the cluster.
 
@@ -129,7 +129,7 @@ The following example creates an agent that can retrieve information from a webs
    EOF
    ```
 
-2. Create an Agent resource. Note that in the `tools` section, you refer to the MCPServer that you just created. One tool is included, the fetch tool. Even if the MCP server has multiple tools, you can decide which tools to include for this particular agent. The tool takes a single input parameter: the URL to fetch. You do not have to include the input schema, however. Kagent automatically discovers the input schema from the tool itself.
+2. Create an Agent resource. Note that in the `tools` section, you refer to the MCPServer that you just created. One tool is included, the fetch tool. Even if the MCP server has multiple tools, you can decide which tools to include for this particular agent. The tool takes a single input parameter: the URL to fetch. You do not have to include the input schema, however. kagent automatically discovers the input schema from the tool itself.
 
    ```yaml
    kubectl apply -f - <<EOF

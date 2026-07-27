@@ -84,6 +84,18 @@ npm run start
 yarn start
 ```
 
+## Keeping the lock file in sync
+
+Cloudflare Pages runs `npm ci`, which requires `package-lock.json` to match `package.json` exactly. If you change dependencies in `package.json`, update the lock file and commit it:
+
+```bash
+npm install
+git add package-lock.json
+git commit -m "chore: update package-lock.json"
+```
+
+If the Cloudflare build fails with errors like "lock file's X does not satisfy X" or "Missing: X from lock file", run `npm install` in the website directory and commit the updated `package-lock.json`.
+
 ## Deployment
 
 The site is automatically deployed when changes are pushed to the main branch. The deployment process includes:

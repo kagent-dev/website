@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Bring your own ADK agent to kagent"
 ---
 
+import { Tabs, Tab } from '@/components/mdx/tabs';
+
 export const metadata = {
   title: "Bringing your own ADK agent to kagent",
   description: "Learn how to bring your own ADK agent to kagent",
@@ -14,11 +16,12 @@ export const metadata = {
 
 Bring your own custom agents. This example uses the [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), but you can also try out the [LangGraph guide](/docs/kagent/examples/langchain-byo/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
 
-Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. Kagent can invoke your agent directly through the A2A protocol.
+Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. kagent can invoke your agent directly through the A2A protocol.
 
 ## Prerequisites
 
-Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+1. Install kagent by following the [quick start](/docs/kagent/getting-started/quickstart) guide.
+2. Use [Google ADK](https://github.com/google/adk-python) version 1.22.1 or later.
 
 ## Building a custom agent
 
@@ -62,6 +65,12 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
 
 3. Create a BYO Agent resource.
 
+   <Tabs tabs={[
+     { id: 'without-secrets', label: 'Without imagePullSecrets' },
+     { id: 'with-secrets', label: 'With imagePullSecrets' }
+   ]} />
+
+   <div id="without-secrets-tab">
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: kagent.dev/v1alpha2
@@ -83,6 +92,41 @@ Now that you have your own custom agent image, you can create a BYO Agent resour
                  key: GOOGLE_API_KEY
    EOF
    ```
+   </div>
+
+   <div id="with-secrets-tab">
+   For agent images that are in private container registries, you can use an image pull secret with the credentials to the registry. 
+   
+   First, create the Secret.
+   ```sh
+   kubectl create secret docker-registry my-registry-secret --docker-server=<registry> --docker-username=<user> --docker-password=<password> -n kagent
+   ```
+
+   Then, add `imagePullSecrets` to refer to the Secret that you just created.
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: Agent
+   metadata:
+     name: basic-agent
+     namespace: kagent
+   spec:
+     description: This agent can do anything.
+     type: BYO
+     byo:
+       deployment:
+         image: ghcr.io/my-org:latest
+         imagePullSecrets:
+           - name: my-registry-secret
+         env:
+           - name: GOOGLE_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: kagent-google
+                 key: GOOGLE_API_KEY
+   EOF
+   ```
+   </div>
 
 ## Testing the A2A endpoint
 
@@ -295,3 +339,22 @@ To use lifespan hooks in your ADK agent, create a lifespan function and pass it 
        lifespan=lifespan.lifespan  # Pass the lifespan function
    )
    ```
+
+### A2A max payload size
+
+BYO agents accept A2A requests with a default maximum payload size of 10 MB. For agents that need to handle larger payloads (for example, when processing large file attachments), set the `A2A_MAX_CONTENT_LENGTH` environment variable in the agent deployment.
+
+Example: Allow 50 MB payloads:
+
+```yaml
+spec:
+  type: BYO
+  byo:
+    deployment:
+      image: ghcr.io/my-org:latest
+      env:
+        - name: A2A_MAX_CONTENT_LENGTH
+          value: "52428800"  # 50 MB in bytes
+```
+
+Set to `0`, `none`, or `unlimited` for no limit (use with caution).

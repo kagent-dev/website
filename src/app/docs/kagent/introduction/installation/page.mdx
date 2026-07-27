@@ -4,6 +4,8 @@ pageOrder: 1
 description: "Learn how to install kagent"
 ---
 
+import { VERSIONS } from "../../../_constants";
+
 export const metadata = {
   title: "Installing kagent",
   description: "Learn how to install kagent.",
@@ -28,7 +30,7 @@ Install kagent by using the kagent CLI or Helm.
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-2. Download the kagent CLI.
+2. Download the kagent CLI. By default, the latest version {VERSIONS.kagent} of kagent is installed.
 
    ```bash
    brew install kagent
@@ -196,6 +198,57 @@ Another way to install kagent is using Helm.
 ## Advanced Configuration
 
 Review the following advanced configuration options that you might want to set up for your kagent installation.
+
+### Enable AgentHarness support
+
+`AgentHarness` resources run on [Agent Substrate](/docs/kagent/concepts/agent-substrate). To enable them, install Agent Substrate and turn on the substrate integration in kagent. When the integration is disabled, the controller cannot provision AgentHarness resources.
+
+1. Install Agent Substrate (CRDs, then the control plane and data plane).
+
+   ```bash
+   helm upgrade --install substrate-crds \
+     oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds \
+     --namespace ate-system --create-namespace --wait
+
+   helm upgrade --install substrate \
+     oci://ghcr.io/kagent-dev/substrate/helm/substrate \
+     --namespace ate-system --wait --timeout 10m
+   ```
+
+2. Install (or upgrade) kagent with the substrate integration and a WorkerPool enabled.
+
+   **Helm values file:**
+
+   ```yaml
+   controller:
+     substrate:
+       enabled: true
+       ateApiEndpoint: dns:///api.ate-system.svc:443
+       ateApiInsecure: true
+   substrateWorkerPool:
+     create: true
+     replicas: 1
+   ```
+
+   **Helm `--set` flags:**
+
+   ```bash
+   helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+   --namespace kagent \
+   --set controller.substrate.enabled=true \
+   --set controller.substrate.ateApiEndpoint=dns:///api.ate-system.svc:443 \
+   --set controller.substrate.ateApiInsecure=true \
+   --set substrateWorkerPool.create=true \
+   --set substrateWorkerPool.replicas=1
+   ```
+
+   Pin the kagent chart to v0.9.9 or later — earlier versions do not include the `controller.substrate.*` and `substrateWorkerPool.*` values.
+
+For an end-to-end walkthrough on a kind cluster, see the [Agent Substrate example](/docs/kagent/examples/agent-substrate). For more information about creating harness resources, see [Agent Harness](/docs/kagent/examples/agent-harness).
+
+### Database configuration
+
+For production environments, set up kagent with an external PostgreSQL instance. For more information, see the [Database configuration guide](/operations/operational-considerations/#database-configuration).
 
 ### Configure controller environment variables
 

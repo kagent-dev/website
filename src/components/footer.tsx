@@ -177,7 +177,7 @@ export default function Footer() {
             </div>
             <div className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} kagent, a Series of LF Projects, LLC.
-              <Link href="https://www.linuxfoundation.org/trademark-usage/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
+              <Link href="https://lfprojects.org/policies/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
                 Trademark Usage
               </Link>
             </div>

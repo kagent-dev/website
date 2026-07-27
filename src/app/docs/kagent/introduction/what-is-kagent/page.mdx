@@ -10,11 +10,13 @@ export const metadata = {
   author: "kagent.dev"
 };
 
+import FeatureGrid from '@/components/mdx/feature-grid';
+
 # Introducing kagent
 
-Kagent is an open-source programming framework that brings the power of agentic AI to cloud-native environments. Built specifically for DevOps and platform engineers, Kagent enables AI agents to run directly in Kubernetes clusters to automate operations, troubleshoot issues, and solve complex cloud-native challenges.
+kagent is an open-source programming framework that brings the power of agentic AI to cloud-native environments. Built specifically for DevOps and platform engineers, kagent enables AI agents to run directly in Kubernetes clusters to automate operations, troubleshoot issues, and solve complex cloud-native challenges.
 
-Kagent was created at [Solo.io](https://www.solo.io) in 2025 and is a [Cloud Native Computing Foundation](https://www.cncf.io) sandbox project.
+kagent was created at [Solo.io](https://www.solo.io) in 2025 and is a [Cloud Native Computing Foundation](https://www.cncf.io) sandbox project.
 
 ## What is kagent?
 
@@ -28,20 +30,26 @@ Unlike traditional chatbots, kagent leverages advanced reasoning and iterative p
 
 ## Core Components
 
-Kagent's architecture consists of three main components:
+kagent's architecture consists of three main components:
 
-- **Tools**: Any MCP-style function that agents can leverage to interact with cloud-native systems. Kagent comes with pre-built tools that include capabilities like displaying pod logs, querying Prometheus metrics, generating resources and more. You can check the available tools in the [tool registry](/tools).
+- **Tools**: Any MCP-style function that agents can leverage to interact with cloud-native systems. kagent comes with pre-built tools that include capabilities like displaying pod logs, querying Prometheus metrics, generating resources and more. You can check the available tools in the [tool registry](/tools).
 - **Agents**: Autonomous systems that plan, execute, and analyze tasks using the available tools. These agents can chain multiple operations together to solve complex problems. Each agent can have access to one or more tools to accomplish its work. Agents can also be grouped into teams where a planning agent comes up with a plan and assigns tasks to individual agents in the team.
 - **Framework**: A flexible interface that allows running agents either through a UI or declaratively. Built on Google's ADK framework, it provides extensive customization options.
 
 ## Why kagent?
 
-Kagent addresses the growing complexity of cloud-native operations by:
+kagent addresses the growing complexity of cloud-native operations by:
 
 - Automating routine troubleshooting and operational tasks
 - Reducing the need for specialist intervention in common scenarios
 - Enabling teams to formalize and share their operational expertise
 - Providing a platform for building and sharing custom AI agents
+
+## Platform features
+
+Everything works with a single `helm install`. No add-ons, no extra databases, no waiting for enterprise.
+
+<FeatureGrid />
 
 ## Enterprise distributions
 

@@ -29,8 +29,8 @@ This should give you the reason why the agent was rejected.
 If it's not there, you can try to get the logs of the agent:
 
 ```shell
-kubectl logs -n kagent deployment/kagent -c controller
-kubectl logs -n kagent deployment/kagent -c app
+kubectl logs -n kagent deployment/kagent-controller
+kubectl logs -n kagent deployment/kagent-ui
 ```
 
 You can also set the logging level to `DEBUG` to get more detailed logs from the agent pod. To do that, edit the agent resource and add the `LOG_LEVEL` environment variable to the `deployment` field:
@@ -46,4 +46,3 @@ spec:
 ```
 
 You can also ask for help in the [community](https://discord.gg/Fu3k65f2k3) or log an issue on [GitHub](https://github.com/kagent-dev/kagent). You can create a bug report using the kagent CLI by running `kagent bug-report`. Before attaching files to your bug report, make sure they don't contain any sensitive information!
-

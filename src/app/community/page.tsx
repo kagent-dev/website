@@ -153,6 +153,7 @@ const CommunityPage = () => {
     }, 500);
   };
 
+
   const today = new Date();
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth();
@@ -428,8 +429,9 @@ const CommunityPage = () => {
           </motion.section>
         )}
 
+
         {/* Get Involved Section */}
-        <motion.section 
+        <motion.section
           className="mb-20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

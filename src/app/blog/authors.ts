@@ -33,7 +33,14 @@ export const authors: Author[] = [
     name: "Jet Chiang",
     title: "Linux Foundation Mentee",
     photo: "/images/authors/jetchiang.jpg",
-    bio: "Jet is an aspiring machine learning engineer + researcher studying at the University of Toronto. He is the Linux Foundation Mentee at Kagent for 2025.",
+    bio: "Jet is an aspiring machine learning engineer + researcher studying at the University of Toronto. He is the Linux Foundation Mentee at kagent for 2025.",
+  },
+  {
+    id: "sebastianmaniak",
+    name: "Sebastian Maniak",
+    title: "Technical Product Marketing Manager",
+    photo: "/images/authors/sebastianmaniak.png",
+    bio: "Sebastian Maniak is a Technical Product Marketing Manager at Solo.io, focused on AI and helping organizations adopt AI-powered infrastructure.",
   },
   {
     id: "michaellevan",
@@ -41,6 +48,20 @@ export const authors: Author[] = [
     title: "Principal Solutions Engineer",
     photo: "/images/authors/michaellevan.jpeg",
     bio: "Michael Levan translates technical complexity into practical value. He's a seasoned engineer, consultant, trainer, and content creator in the Kubernetes and Agentic space. Michael is a Microsoft MVP (Azure), 4x published author, podcast host, international public speaker, CNCF Ambassador, and was part of the Kubernetes v1.28 and v1.31 Release Team.",
+  },
+  {
+    id: "eitanya",
+    name: "Eitan Yarmush",
+    title: "Senior Architect",
+    photo: "/images/authors/eitan_yarmush.jpeg",
+    bio: "Professional tinkerer and problem solver",
+  },
+  {
+    id: "yanivmn",
+    name: "Yaniv Marom-Nachumi",
+    title: "Solutions Architect @ Amdocs",
+    photo: "/images/authors/yanivmn.jpg",
+    bio: "Passionate about cloud-native technologies and Kubernetes.",
   },
 ];
 

@@ -21,6 +21,11 @@
             "description": "Understand what kagent is and its core purpose."
           },
           {
+            "title": "Features",
+            "href": "/docs/kagent/introduction/features",
+            "description": "A complete overview of kagent platform capabilities."
+          },
+          {
             "title": "Feature Roadmap",
             "href": "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap",
             "external": true
@@ -61,11 +66,6 @@
             "title": "Writing System Prompts",
             "href": "/docs/kagent/getting-started/system-prompts",
             "description": "Learn the art and science of writing effective system prompts for your kagent agents."
-          },
-          {
-            "title": "Tracing",
-            "href": "/docs/kagent/getting-started/tracing",
-            "description": "A guide to tracing your kagent agents."
           }
         ]
       },
@@ -88,6 +88,21 @@
             "title": "Tools",
             "href": "/docs/kagent/concepts/tools",
             "description": "Understand the different types of tools kagent can use, including built-in, MCP, and HTTP tools, and how tool discovery works."
+          },
+          {
+            "title": "Agent Harness",
+            "href": "/docs/kagent/concepts/agent-harness",
+            "description": "Understand AgentHarness resources, Substrate-backed execution environments, and how kagent talks to them over the Agent Client Protocol (ACP)."
+          },
+          {
+            "title": "Agent Substrate",
+            "href": "/docs/kagent/concepts/agent-substrate",
+            "description": "Run declarative agents on Agent Substrate — a Kubernetes-native runtime that delivers fast startup, efficient resource usage, and secure sandboxed execution."
+          },
+          {
+            "title": "Agent Memory",
+            "href": "/docs/kagent/concepts/agent-memory",
+            "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
           }
         ]
       },
@@ -99,7 +114,7 @@
           {
             "title": "Amazon Bedrock",
             "href": "/docs/kagent/supported-providers/amazon-bedrock",
-            "description": "Use Amazon Bedrock models with kagent via the OpenAI Chat Completions API."
+            "description": "Use Amazon Bedrock models with kagent via the native Bedrock provider or the OpenAI Chat Completions API."
           },
           {
             "title": "Anthropic",
@@ -135,6 +150,16 @@
             "title": "BYO OpenAI-compatible model",
             "href": "/docs/kagent/supported-providers/byo-openai",
             "description": "Bring your own OpenAI-compatible model to kagent."
+          },
+          {
+            "title": "xAI (Grok)",
+            "href": "/docs/kagent/supported-providers/xai",
+            "description": "Learn how to configure xAI Grok models for kagent."
+          },
+          {
+            "title": "SAP AI Core",
+            "href": "/docs/kagent/supported-providers/sap-ai-core",
+            "description": "Learn how to configure SAP AI Core models for kagent."
           }
         ]
       },
@@ -152,6 +177,16 @@
             "title": "BYO ADK Agents",
             "href": "/docs/kagent/examples/a2a-byo",
             "description": "Bring your own ADK agent to kagent"
+          },
+          {
+            "title": "agentgateway",
+            "href": "/docs/kagent/examples/agentgateway",
+            "description": "Add governance to your kagent deployment with agentgateway"
+          },
+          {
+            "title": "Using kagent agents via MCP",
+            "href": "/docs/kagent/examples/agents-mcp",
+            "description": "Connect external clients like Cursor and Claude to interact with kagent agents using the Model Context Protocol."
           },
           {
             "title": "BYO CrewAI Agents",
@@ -179,9 +214,29 @@
             "description": "Learn how to create a Discord bot that interacts with kagent via A2A"
           },
           {
+            "title": "Telegram Bot",
+            "href": "/docs/kagent/examples/telegram-bot",
+            "description": "Build a Telegram bot that talks to your Kubernetes cluster through kagent and A2A"
+          },
+          {
             "title": "Skills",
             "href": "/docs/kagent/examples/skills",
             "description": "Learn how to add skills to your agents to guide their behavior and tool usage."
+          },
+          {
+            "title": "Human-in-the-Loop",
+            "href": "/docs/kagent/examples/human-in-the-loop",
+            "description": "Build a Kubernetes-native AI agent that pauses and asks for your approval before taking destructive actions."
+          },
+          {
+            "title": "Agent Harness",
+            "href": "/docs/kagent/examples/agent-harness",
+            "description": "Provision OpenClaw and Hermes sandboxes on Agent Substrate with the AgentHarness API."
+          },
+          {
+            "title": "Agent Substrate",
+            "href": "/docs/kagent/examples/agent-substrate",
+            "description": "Run a declarative agent on Agent Substrate — a Kubernetes-native runtime that snapshots idle agents and rehydrates them inside gVisor sandboxes."
           }
         ]
       },
@@ -199,6 +254,11 @@
             "title": "Audit kagent prompts",
             "href": "/docs/kagent/observability/audit-prompts",
             "description": "Review and audit prompts used by kagent agents."
+          },
+          {
+            "title": "Tracing",
+            "href": "/docs/kagent/observability/tracing",
+            "description": "A guide to tracing your kagent agents."
           }
         ]
       },
@@ -248,6 +308,11 @@
             "title": "Helm Chart Configuration",
             "href": "/docs/kagent/resources/helm",
             "description": "kagent Helm chart configuration reference"
+          },
+          {
+            "title": "Tools Ecosystem",
+            "href": "/docs/kagent/resources/tools-ecosystem",
+            "description": "Explore the built-in MCP tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts."
           },
           {
             "title": "FAQs",
@@ -326,7 +391,7 @@
           {
             "title": "API docs",
             "href": "/docs/kmcp/reference/api-ref",
-            "description": "kmcp API reference docs"
+            "description": "kmcp API reference documentation"
           },
           {
             "title": "kmcp add-tool",
