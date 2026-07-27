@@ -43,6 +43,8 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * [extraObjects](#extraobjects): New `extraObjects` Helm value for deploying arbitrary Kubernetes manifests in the same chart lifecycle as kagent.
 * [Default nodeSelector for agent deployments](#default-nodeselector-for-agent-deployments): New `controller.agentDeployment.nodeSelector` Helm value applies a global default nodeSelector to all agent Deployments created by the controller.
 * [Configurable Go ADK agent image](#configurable-go-adk-agent-image): New `controller.goAgentImage` Helm values configure the Go ADK runtime image independently, fixing mirror registry layouts that the previous derivation could not produce.
+* [Max completion tokens for OpenAI](#max-completion-tokens-for-openai): New `openAI.maxCompletionTokens` field for capping output on reasoning models (o-series, GPT-5), which reject the deprecated `maxTokens` field.
+* [ServiceAccount annotations](#serviceaccount-annotations): New `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations` Helm values for cloud workload identity integrations (GCP, AWS IRSA, Azure).
 
 ## Go ADK is now the default runtime
 
@@ -329,37 +331,95 @@ The `registry` and `pullPolicy` fields default to the global `image.registry` an
 
 For more information, see [Private registry and image mirroring](/docs/kagent/introduction/installation#private-registry-and-image-mirroring).
 
+## Max completion tokens for OpenAI
+
+OpenAI reasoning models (o-series, GPT-5) reject the `max_tokens` request parameter with a 400 error. Use the new `openAI.maxCompletionTokens` field instead, which maps to OpenAI's `max_completion_tokens` parameter and caps both visible output tokens and internal reasoning tokens.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+    maxCompletionTokens: 16000
+```
+
+The existing `openAI.maxTokens` field is unchanged and continues to work for standard models and OpenAI-compatible endpoints. The two fields are independent: set `maxCompletionTokens` for reasoning models and `maxTokens` only for endpoints that still require `max_tokens`.
+
+For more information, see [Max completion tokens](/docs/kagent/supported-providers/openai#max-completion-tokens).
+
+## ServiceAccount annotations
+
+You can now annotate the controller and UI Kubernetes ServiceAccounts via `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations`. This standard mechanism is required for cloud-provider workload identity integrations that grant IAM permissions by annotating a ServiceAccount.
+
+```yaml
+controller:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+
+ui:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
+```
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
 ## Additional changes in v0.10
 
+**Security**
+
 * **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
-* **Go ADK OpenAI embeddings**: Fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
-* **Helm image registry fixes**: Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
-* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now scoped to their Kubernetes namespace (atespace = namespace). Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
-* **Concurrent memory search deadlock fix**: Fixed intermittent PostgreSQL deadlocks when concurrent memory searches (such as `PrefetchMemoryTool` fan-out) updated overlapping rows. Row locks are now acquired in ID order and access-count updates are best-effort.
-* **Anthropic thinking blocks in Python ADK**: Google ADK bumped to 1.32.0, enabling Anthropic thinking block support for agents using the Python runtime.
+* **A2A task security scoping**: Task `get`, `create`, and `delete` operations are now scoped to the session owner, preventing one user from accessing another user's A2A tasks.
+
+**Helm and configuration**
+
 * **Image registry updated to ghcr.io**: The `cr.kagent.dev` registry alias is removed. All default image references now use `ghcr.io/kagent-dev/kagent`. If you pinned images using the `cr.kagent.dev` alias, update your references to `ghcr.io`.
-* **Migration orchestrator**: The internal database migration runner is refactored from two hardcoded tracks to an extensible orchestrator with ordered source registration and coordinated rollback. No change to the `kagent db migrate` CLI.
-* **Claude ACP sandbox image**: A new `acp-sandbox-claude` image wraps the Claude Agent SDK behind the ACP protocol, enabling Claude-based agents to run in the ACP sandbox alongside the existing openclaw and hermes targets. Authenticate via `ANTHROPIC_API_KEY` at runtime.
-* **SandboxAgent readiness gating**: `SandboxAgent` actors are now only marked ready once the agent application is confirmed to be serving traffic, preventing requests from reaching actors that have started but are not yet initialized.
-* **Go ADK v2.0.0**: The Go Agent Development Kit is upgraded to v2.0.0.
-* **`none` reasoning effort**: `none` is now a valid option for reasoning effort on `ModelConfig`, in addition to the existing `low`, `medium`, and `high` values.
+* **Helm image registry fixes**: Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
 * **Declarative agents referenced by tag**: Regular declarative agent images are now referenced by tag (`registry/repository:tag`) rather than digest, so they respect `IMAGE_TAG` overrides. Digest pinning is kept for sandbox agents where Substrate requires it. New controller flags (`--app-image-digest`, `--golang-adk-image-digest`, and their `-full` variants) let operators override baked-in sandbox digests when using a mirror registry.
 * **Configurable cluster DNS domain**: A `clusterDomain` controller setting (default `cluster.local`) makes the in-cluster service URLs configurable for clusters that use a non-standard DNS domain.
-* **MCP server startup resilience**: An MCP toolset is no longer silently dropped when an MCP server is unreachable at agent startup. The error is surfaced rather than causing tools to disappear.
-* **Agent ready on first available replica**: An agent is now marked ready as soon as at least one replica is available, rather than waiting for all replicas.
-* **UI tool call grouping**: Tool calls in the chat interface are now visually grouped, making it easier to follow multi-step agent reasoning.
-* **oauth2-proxy subchart updated to ~10.7.0**: The bundled oauth2-proxy dependency is bumped to the 10.7.x chart series.
-* **Model config name editing fix**: Fixed an issue where the model name field could not be edited on the model configuration form in the UI.
 * **`kgateway.dev/a2a` appProtocol for BYO agents**: The controller now sets `kgateway.dev/a2a` as the `appProtocol` on the Service for BYO agents, which is required for A2A routing to work correctly in kgateway environments.
-* **Azure OpenAI secretKeyRef fix**: Fixed an issue where an empty `secretKeyRef` was generated for Azure OpenAI model configurations that do not use a Kubernetes secret for credentials.
 * **`nodeSelector` and `tolerations` for `kagent-tools` subchart**: The `kagent-tools` bundled subchart now accepts `nodeSelector` and `tolerations` values, so tools pods can be placed on specific nodes or tolerate taints.
-* **Python ADK minimum version is now 3.11**: The Python Agent Development Kit now requires Python 3.11 or later.
-* **Agent Substrate bumped to v0.0.9**: The bundled Agent Substrate runtime is updated to v0.0.9.
+* **oauth2-proxy subchart updated to ~10.7.0**: The bundled oauth2-proxy dependency is bumped to the 10.7.x chart series.
 * **Custom annotations on the default ModelConfig**: A new per-provider `annotations` map under `providers.<provider>.annotations` is applied to the Helm-generated default ModelConfig. Useful for downstream tooling or UI extensions that key off resource annotations.
-* **Memory vector search normalization**: Agent names are now normalized before querying the memory vector index, fixing cases where a name stored in mixed case would miss records indexed under a different casing.
+
+**Agent runtimes and providers**
+
+* **Go ADK v2.0.0**: The Go Agent Development Kit is upgraded to v2.0.0.
+* **Anthropic thinking blocks in Python ADK**: Google ADK bumped to 1.32.0, enabling Anthropic thinking block support for agents using the Python runtime.
+* **Go ADK OpenAI embeddings**: Fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
+* **Python ADK minimum version is now 3.11**: The Python Agent Development Kit now requires Python 3.11 or later.
+* **Claude ACP sandbox image**: A new `acp-sandbox-claude` image wraps the Claude Agent SDK behind the ACP protocol, enabling Claude-based agents to run in the ACP sandbox alongside the existing openclaw and hermes targets. Authenticate via `ANTHROPIC_API_KEY` at runtime.
+* **`none` reasoning effort**: `none` is now a valid option for reasoning effort on `ModelConfig`, in addition to the existing `low`, `medium`, and `high` values.
+* **`xhigh` reasoning effort**: `xhigh` is now a valid value for `openAI.reasoningEffort`, in addition to `none`, `minimal`, `low`, `medium`, and `high`.
 * **Bedrock nil tool-call args fix**: Nil tool-call arguments from the Bedrock API are now coerced to an empty JSON object before processing, preventing a nil-pointer panic in the Go ADK runtime.
+* **Azure OpenAI secretKeyRef fix**: Fixed an issue where an empty `secretKeyRef` was generated for Azure OpenAI model configurations that do not use a Kubernetes secret for credentials.
 * **Azure OpenAI API key env var name**: The `AZURE_OPENAI_API_KEY` environment variable name is now used consistently throughout the codebase, fixing providers that were reading a mismatched key name.
 * **OpenTelemetry double-instrumentation fix**: The OpenAI client is no longer double-instrumented on the Go ADK runtime, preventing duplicate spans in OTel traces when using OpenAI with the Go runtime.
+
+**Agent Substrate**
+
+* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now scoped to their Kubernetes namespace (atespace = namespace). Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
+* **SandboxAgent readiness gating**: `SandboxAgent` actors are now only marked ready once the agent application is confirmed to be serving traffic, preventing requests from reaching actors that have started but are not yet initialized.
+* **Agent Substrate bumped to v0.0.9**: The bundled Agent Substrate runtime is updated to v0.0.9.
+* **Substrate badge on agent cards**: Sandbox agents running on Agent Substrate are now visually marked in the UI agent card list.
+* **OTel trace flush for substrate agents**: Trace spans are now force-flushed before the A2A response completes for substrate agents, ensuring spans are not lost at the end of a session.
+
+**Database**
+
+* **Migration orchestrator**: The internal database migration runner is refactored from two hardcoded tracks to an extensible orchestrator with ordered source registration and coordinated rollback. No change to the `kagent db migrate` CLI.
+* **Concurrent memory search deadlock fix**: Fixed intermittent PostgreSQL deadlocks when concurrent memory searches (such as `PrefetchMemoryTool` fan-out) updated overlapping rows. Row locks are now acquired in ID order and access-count updates are best-effort.
+* **Memory vector search normalization**: Agent names are now normalized before querying the memory vector index, fixing cases where a name stored in mixed case would miss records indexed under a different casing.
+* **Database checkpoint write performance**: Session checkpoint writes are now batched, removing an N+1 query pattern that caused performance degradation for long conversations.
+
+**Reliability and UI**
+
+* **MCP server startup resilience**: An MCP toolset is no longer silently dropped when an MCP server is unreachable at agent startup. The error is surfaced rather than causing tools to disappear.
+* **Agent ready on first available replica**: An agent is now marked ready as soon as at least one replica is available, rather than waiting for all replicas.
+* **A2A `ListTasks` served from the task store**: `ListTasks` calls over A2A now return results from a persistent task store rather than being rebuilt from event history, improving reliability and performance for long sessions.
+* **UI tool call grouping**: Tool calls in the chat interface are now visually grouped, making it easier to follow multi-step agent reasoning.
+* **Model config name editing fix**: Fixed an issue where the model name field could not be edited on the model configuration form in the UI.
 * **UI rendering optimization**: Redundant background fetches in the chat interface are reduced, improving rendering performance for long sessions.
 
 # v0.9

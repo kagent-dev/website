@@ -342,6 +342,22 @@ ui:
 
 To add labels to all **agent** pods, use `controller.agentDeployment.podLabels`.
 
+#### ServiceAccount annotations
+
+Add annotations to the controller and UI ServiceAccount resources. These annotations are required for cloud-provider workload identity integrations (GCP Workload Identity, AWS IRSA, Azure Workload Identity) that grant IAM permissions to workloads by annotating their Kubernetes ServiceAccount.
+
+```yaml
+controller:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+
+ui:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
+```
+
 #### Deployment annotations
 
 Add annotations to the controller and UI Deployment resources. For example, to add annotations for cluster autoscaler or Datadog:
