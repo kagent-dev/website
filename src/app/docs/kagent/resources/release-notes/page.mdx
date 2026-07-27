@@ -29,6 +29,10 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * Configurable streaming timeouts — Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
 * Controller service annotations — `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
 * ACP protocol support for substrate agents — ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
+* Chat session sharing — session owners can generate shareable links in read-only or read-write mode.
+* Substrate support for BYO and Python agents — `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
+* Configurable A2A client timeout — `controller.a2aClientTimeout` removes the previous 3-minute hard cutoff for long-running agents.
+* SSO session expiry re-authentication — expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
 * Out-of-band database migrations — manage database migrations via the kagent CLI independently of controller startup.
 
 ## Go ADK is now the default runtime
@@ -98,6 +102,34 @@ controller:
 ## ACP protocol support for substrate agents
 
 kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with openclaw and hermes to communicate over the substrate runtime without additional configuration.
+
+## Chat session sharing
+
+Session owners can now generate shareable links for any chat session. Shared sessions support two modes:
+
+- **Read-only** (default): recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
+- **Read-write** (interactive): recipients can interact with the session as if they were the owner — sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
+
+Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
+
+## Substrate support for BYO and Python agents
+
+`SandboxAgent` now supports running BYO agents and Python runtime declarative agents on Agent Substrate, in addition to Go declarative agents. This means any `Agent` type can be run as a sandboxed substrate workload.
+
+For setup details, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
+
+## Configurable A2A client timeout
+
+A new `controller.a2aClientTimeout` Helm value (default: `""` — no timeout) lets you override the A2A client HTTP timeout. Previously, the a2a-go SDK applied a hard 3-minute timeout to all A2A client requests, causing `context deadline exceeded` errors during long-running agent interactions or SSE streams.
+
+```yaml
+controller:
+  a2aClientTimeout: "10m"  # or "" for no timeout (default)
+```
+
+## SSO session expiry re-authentication
+
+When deployed behind an OIDC proxy (such as oauth2-proxy), expired sessions now trigger an automatic redirect to `/oauth2/start` for re-authentication instead of showing an error. A loop guard prevents infinite redirects if re-authentication fails. Sessions in unsecured (no-proxy) mode are unaffected.
 
 ## Out-of-band database migrations
 
