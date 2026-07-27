@@ -42,6 +42,7 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * [Pod labels for controller and UI](#pod-labels-for-controller-and-ui): New `podLabels`, `controller.podLabels`, and `ui.podLabels` Helm values for pod template labels on the controller and UI Deployments.
 * [extraObjects](#extraobjects): New `extraObjects` Helm value for deploying arbitrary Kubernetes manifests in the same chart lifecycle as kagent.
 * [Default nodeSelector for agent deployments](#default-nodeselector-for-agent-deployments): New `controller.agentDeployment.nodeSelector` Helm value applies a global default nodeSelector to all agent Deployments created by the controller.
+* [Configurable Go ADK agent image](#configurable-go-adk-agent-image): New `controller.goAgentImage` Helm values configure the Go ADK runtime image independently, fixing mirror registry layouts that the previous derivation could not produce.
 
 ## Go ADK is now the default runtime
 
@@ -123,6 +124,8 @@ Session owners can now generate shareable links for any chat session. Shared ses
 - **Read-write** (interactive): Recipients can interact with the session as if they were the owner, such as sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
 
 Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
+
+Read-only share tokens can also read A2A tasks on the shared session (`ListTasks`, `GetTask`, `SubscribeToTask`). Mutating operations (`SendMessage`, `CancelTask`) still require a read-write share token.
 
 ## Substrate support for BYO and Python agents
 
@@ -307,6 +310,25 @@ k8s-agent:
 
 When unset, `nodeSelector` is omitted entirely, so there is no change for existing deployments.
 
+## Configurable Go ADK agent image
+
+You can now use the `controller.goAgentImage` Helm values to configure the Go ADK runtime image independently of the main agent image. Previously, the controller derived the Go image repository from the Python image by replacing the last path segment with `golang-adk`. This pattern breaks in flat-name mirror registries where the image name cannot be produced by that derivation.
+
+```yaml
+controller:
+  goAgentImage:
+    registry: my-registry.io
+    repository: kagent/golang-adk
+    tag: v0.10.0
+    pullPolicy: IfNotPresent
+```
+
+The `registry` and `pullPolicy` fields default to the global `image.registry` and `image.pullPolicy` values. The `tag` coalesces to the global image tag, then the chart version.
+
+> **Breaking change for mirror registry operators**: If you mirror kagent images and only set `agentImage`, you must now also set `controller.goAgentImage` to point to your mirrored Go ADK image. The controller logs a startup warning when the Go image registry differs from the main image registry, so that a misconfigured mirror is visible before a Go agent fails to pull.
+
+For more information, see [Private registry and image mirroring](/docs/kagent/introduction/installation#private-registry-and-image-mirroring).
+
 ## Additional changes in v0.10
 
 * **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
@@ -333,6 +355,12 @@ When unset, `nodeSelector` is omitted entirely, so there is no change for existi
 * **`nodeSelector` and `tolerations` for `kagent-tools` subchart**: The `kagent-tools` bundled subchart now accepts `nodeSelector` and `tolerations` values, so tools pods can be placed on specific nodes or tolerate taints.
 * **Python ADK minimum version is now 3.11**: The Python Agent Development Kit now requires Python 3.11 or later.
 * **Agent Substrate bumped to v0.0.9**: The bundled Agent Substrate runtime is updated to v0.0.9.
+* **Custom annotations on the default ModelConfig**: A new per-provider `annotations` map under `providers.<provider>.annotations` is applied to the Helm-generated default ModelConfig. Useful for downstream tooling or UI extensions that key off resource annotations.
+* **Memory vector search normalization**: Agent names are now normalized before querying the memory vector index, fixing cases where a name stored in mixed case would miss records indexed under a different casing.
+* **Bedrock nil tool-call args fix**: Nil tool-call arguments from the Bedrock API are now coerced to an empty JSON object before processing, preventing a nil-pointer panic in the Go ADK runtime.
+* **Azure OpenAI API key env var name**: The `AZURE_OPENAI_API_KEY` environment variable name is now used consistently throughout the codebase, fixing providers that were reading a mismatched key name.
+* **OpenTelemetry double-instrumentation fix**: The OpenAI client is no longer double-instrumented on the Go ADK runtime, preventing duplicate spans in OTel traces when using OpenAI with the Go runtime.
+* **UI rendering optimization**: Redundant background fetches in the chat interface are reduced, improving rendering performance for long sessions.
 
 # v0.9
 
