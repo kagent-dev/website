@@ -54,6 +54,58 @@ If you prefer to manually set up port-forwarding, or if you're on a platform whe
 
 3. When you're done, stop the port-forward by pressing `Ctrl+C` in the terminal where the port-forward is running.
 
+## Expose the UI outside the cluster
+
+Port-forwarding is suitable for local access. For persistent or team-accessible deployments, use one of the following options.
+
+### LoadBalancer service
+
+Set `ui.service.type: LoadBalancer` in your Helm values to provision a cloud load balancer for the UI service.
+
+```yaml
+ui:
+  service:
+    type: LoadBalancer
+```
+
+After the load balancer is provisioned, get the external IP or hostname from the service.
+
+```bash
+kubectl get svc -n kagent kagent-ui
+```
+
+### OpenShift Route
+
+On OpenShift clusters, kagent automatically creates an edge-terminated `Route` for the UI when the `route.openshift.io/v1` API is present. The route is enabled by default via `ui.route.enabled: true`.
+
+The default HAProxy timeout is overridden to 120 minutes to prevent long-lived A2A and SSE streams from being terminated. To adjust the timeout:
+
+```yaml
+ui:
+  openshiftRoute:
+    annotations:
+      haproxy.router.openshift.io/timeout: 60m
+```
+
+To disable the auto-created Route and front the UI with your own ingress instead, set `ui.route.enabled: false`.
+
+### Gateway API HTTPRoute
+
+If your cluster uses a Gateway API implementation such as kgateway, Istio, or Envoy Gateway, you can enable a `HTTPRoute` for the UI with `ui.httpRoute.enabled: true`.
+
+```yaml
+ui:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        namespace: gateway-system
+    hostnames:
+      - kagent.example.com
+```
+
+The `parentRefs` field is required and must reference an existing `Gateway`. The `HTTPRoute` resource requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) to be installed in your cluster.
+
 ## Next steps
 
 You can use the UI to view and manage your agents, tools, and models. For more information, see the following guides:
