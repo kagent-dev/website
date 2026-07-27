@@ -92,7 +92,7 @@ kubectl get pods -n kagent
 
 By default, kagent runs database migrations automatically at controller startup. You can disable this behavior and manage migrations separately, for example, from a CI/CD pipeline or a Helm pre-upgrade hook.
 
-### Enable skip migrations
+### Skip startup migrations
 
 Set `database.postgres.skipMigrations: true` in your Helm values file:
 
@@ -191,9 +191,8 @@ Use the `kagent db migrate` command to run down migrations one minor version at 
 
 The target is the highest migration sequence number present in the version that you are rolling back to. For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `ROLLBACK_VERSION=0.9.3` and run `goto 4` because you want to go back to migration sequence 4 (v0.9.3's `000004`).
 
-1. Save your current kagent version and the version you want to roll back to in environment variables.
+1. Save the version you want to roll back to in an environment variable.
    ```bash
-   export CURRENT_VERSION=<current-version>
    export ROLLBACK_VERSION=<previous-version>
    ```
 
