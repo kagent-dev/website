@@ -42,9 +42,6 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * [extraObjects](#extraobjects): New `extraObjects` Helm value for deploying arbitrary Kubernetes manifests in the same chart lifecycle as kagent.
 * [Deployment annotations](#deployment-annotations): New `controller.annotations` and `ui.annotations` Helm values for annotating the controller and UI Deployment resources.
 * [nodeSelector for agent Helm charts](#nodeselector-for-agent-helm-charts): New `nodeSelector` value in every bundled agent Helm chart for pinning agent pods to specific node pools.
-* [Configurable Go ADK agent image](#configurable-go-adk-agent-image): New `controller.goAgentImage` Helm values configure the Go ADK runtime image independently, fixing mirror registry layouts that the previous derivation could not produce.
-* [Max completion tokens for OpenAI](#max-completion-tokens-for-openai): New `openAI.maxCompletionTokens` field for capping output on reasoning models (o-series, GPT-5), which reject the deprecated `maxTokens` field.
-* [ServiceAccount annotations](#serviceaccount-annotations): New `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations` Helm values for cloud workload identity integrations (GCP, AWS IRSA, Azure).
 
 ## Go ADK is now the default runtime
 
@@ -175,7 +172,7 @@ For details and usage examples, see [Run migrations out-of-band](/docs/kagent/op
 
 ## Durable session state for sandbox agents
 
-Go and Python declarative `SandboxAgent` instances now persist session history to a local SQLite database backed by the agent's `durableDir` volume. Session history survives pod restarts and Deployment rollouts — for example, a previous conversation continues seamlessly after a rollout triggered by a prompt change.
+Go and Python declarative `SandboxAgent` instances now persist session history to a local SQLite database backed by the agent's `durableDir` volume. Session history survives pod restarts and Deployment rollouts; for example, a previous conversation continues seamlessly after a rollout triggered by a prompt change.
 
 Session metadata is mirrored to the PostgreSQL database to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store and you want to enable the same behavior.
 
@@ -315,7 +312,7 @@ When unset, `nodeSelector` is omitted entirely, so there is no change for existi
 * **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
 * **Go ADK OpenAI embeddings**: Fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
 * **Helm image registry fixes**: Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
-* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now scoped to their Kubernetes namespace (atespace = namespace). Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
+* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now isolated per Kubernetes namespace, so that actors in different namespaces cannot see or conflict with each other. Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
 * **Concurrent memory search deadlock fix**: Fixed intermittent PostgreSQL deadlocks when concurrent memory searches (such as `PrefetchMemoryTool` fan-out) updated overlapping rows. Row locks are now acquired in ID order and access-count updates are best-effort.
 * **Anthropic thinking blocks in Python ADK**: Google ADK bumped to 1.32.0, enabling Anthropic thinking block support for agents using the Python runtime.
 * **Image registry updated to ghcr.io**: The `cr.kagent.dev` registry alias is removed. All default image references now use `ghcr.io/kagent-dev/kagent`. If you pinned images using the `cr.kagent.dev` alias, update your references to `ghcr.io`.
