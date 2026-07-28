@@ -7,7 +7,7 @@ import { CodeBlock } from "./components/mdx/code-block";
 import { Mermaid } from "./components/mdx/mermaid";
 import { LabCTA } from "./components/mdx/lab-cta";
 import { Aside } from "./components/mdx/aside";
-import Image from "next/image";
+import { MdxFigure } from "./components/mdx/mdx-figure";
 import { generateAnchorId } from "@/lib/utils";
 
 function YouTube ({ id } : { id : string }){
@@ -171,12 +171,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           {children}
         </td>
       ),
-      img: ({ ...props }) => (
-        <figure>
-          <Image src={props.src} alt={props.title} width="0" height="0" sizes="100vw" className="w-full h-auto" />
-          {props.title && <figcaption className="text-xs text-center italic">{props.title}</figcaption>}
-        </figure>
-      ),
+      img: (props) => <MdxFigure {...props} />,
       // Pre (for code blocks)
       pre: ({ children }) => <>{children}</>,
       PlatformTabs,
@@ -186,6 +181,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       YouTube,
       LabCTA,
       Aside,
+      MdxFigure,
       ...components,
     }),
     [components]
