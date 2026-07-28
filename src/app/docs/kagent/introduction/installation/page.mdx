@@ -342,6 +342,22 @@ ui:
 
 To add labels to all **agent** pods, use `controller.agentDeployment.podLabels`.
 
+#### ServiceAccount annotations
+
+Add annotations to the controller and UI ServiceAccount resources. These annotations are required for cloud provider workload identity integrations (GCP Workload Identity, AWS IRSA, Azure Workload Identity) that grant IAM permissions to workloads by annotating their Kubernetes ServiceAccount.
+
+```yaml
+controller:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+
+ui:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
+```
+
 #### Deployment annotations
 
 Add annotations to the controller and UI Deployment resources. For example, to add annotations for cluster autoscaler or Datadog:
@@ -394,6 +410,39 @@ extraObjects:
           remoteRef:
             key: anthropic-api-key
 ```
+
+### Private registry and image mirroring
+
+If your cluster cannot pull from `ghcr.io` directly, such as in air-gapped environments, corporate proxies, or mandatory image scanning, you can mirror the kagent images to an internal registry and configure the chart to pull from this registry.
+
+kagent uses three independently configurable image locations:
+
+| Helm value | Default image | Description |
+|---|---|---|
+| `image.registry` | `ghcr.io` | Global registry prefix applied to all images that do not set their own registry. |
+| `controller.agentImage` | `ghcr.io/kagent-dev/kagent/app` | Python ADK runtime image used for Python and BYO declarative agents. |
+| `controller.goAgentImage` | `ghcr.io/kagent-dev/kagent/golang-adk` | Go ADK runtime image used for Go declarative agents. Must be set separately from `agentImage`. |
+
+To redirect all images to an internal mirror, set `image.registry` to your registry and override both agent images:
+
+```yaml
+image:
+  registry: my-registry.example.com
+
+controller:
+  agentImage:
+    registry: my-registry.example.com
+    repository: kagent/app
+    tag: v0.10.0
+  goAgentImage:
+    registry: my-registry.example.com
+    repository: kagent/golang-adk
+    tag: v0.10.0
+```
+
+When unset, the `registry` and `pullPolicy` fields of `agentImage` and `goAgentImage` default to the global `image.registry` and `image.pullPolicy` values. For many mirror setups, setting only `image.registry` and overriding `repository` and `tag` on each image is sufficient.
+
+> **Note**: If you set only `agentImage` without also setting `controller.goAgentImage`, Go declarative agents still try to pull the Go ADK image from its default location, `ghcr.io`. The controller logs a startup warning when the two image registries differ.
 
 ## Uninstallation
 

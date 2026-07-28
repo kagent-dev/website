@@ -43,7 +43,7 @@ Once the resource is applied, you can select the model from the Model dropdown i
 
 ## Reasoning effort
 
-For OpenAI reasoning models (o-series, GPT-5), you can control how many reasoning tokens the model generates before producing a response with the `openAI.reasoningEffort` field. Valid values are `none`, `minimal`, `low`, `medium`, and `high`.
+For OpenAI reasoning models (o-series, GPT-5), you can control how many reasoning tokens the model generates before producing a response with the `openAI.reasoningEffort` field. Valid values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
 
 For models that require reasoning to be explicitly disabled (such as some GPT-5 variants), set `reasoningEffort: none`. For standard models that do not support it, omit the field.
 
@@ -54,3 +54,20 @@ spec:
   openAI:
     reasoningEffort: medium
 ```
+
+## Max completion tokens
+
+For OpenAI reasoning models (o-series, GPT-5), use `openAI.maxCompletionTokens` to cap the total number of tokens the model can generate in a response, including both visible output tokens and reasoning tokens.
+
+> **Note**: Do not use `openAI.maxTokens` for reasoning models. OpenAI deprecated `max_tokens` for the Chat Completions API, and reasoning models reject it outright with a 400 error. Use `maxCompletionTokens` instead.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+    maxCompletionTokens: 16000
+```
+
+For standard (non-reasoning) models and OpenAI-compatible endpoints, `openAI.maxTokens` continues to work as before. The two fields are independent.
