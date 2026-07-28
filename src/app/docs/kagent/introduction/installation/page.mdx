@@ -344,7 +344,7 @@ To add labels to all **agent** pods, use `controller.agentDeployment.podLabels`.
 
 #### ServiceAccount annotations
 
-Add annotations to the controller and UI ServiceAccount resources. These annotations are required for cloud-provider workload identity integrations (GCP Workload Identity, AWS IRSA, Azure Workload Identity) that grant IAM permissions to workloads by annotating their Kubernetes ServiceAccount.
+Add annotations to the controller and UI ServiceAccount resources. These annotations are required for cloud provider workload identity integrations (GCP Workload Identity, AWS IRSA, Azure Workload Identity) that grant IAM permissions to workloads by annotating their Kubernetes ServiceAccount.
 
 ```yaml
 controller:
@@ -413,7 +413,7 @@ extraObjects:
 
 ### Private registry and image mirroring
 
-If your cluster cannot pull from `ghcr.io` directly, such as in air-gapped environments, corporate proxies, or mandatory image scanning, you can mirror the kagent images to an internal registry and configure the chart to pull from the registry.
+If your cluster cannot pull from `ghcr.io` directly, such as in air-gapped environments, corporate proxies, or mandatory image scanning, you can mirror the kagent images to an internal registry and configure the chart to pull from this registry.
 
 kagent uses three independently configurable image locations:
 
