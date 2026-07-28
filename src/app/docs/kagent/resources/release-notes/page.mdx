@@ -126,29 +126,6 @@ controller:
       external-dns.alpha.kubernetes.io/hostname: kagent.example.com
 ```
 
-## ACP protocol support for substrate agents
-
-kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with OpenClaw and Hermes to communicate over the substrate runtime without additional configuration.
-
-For more information, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
-
-## Chat session sharing
-
-Session owners can now generate shareable links for any chat session. Shared sessions support two modes:
-
-- **Read-only** (default): Recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
-- **Read-write** (interactive): Recipients can interact with the session as if they were the owner, such as sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
-
-Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
-
-Read-only share tokens can also read A2A tasks on the shared session (`ListTasks`, `GetTask`, `SubscribeToTask`). Mutating operations (`SendMessage`, `CancelTask`) still require a read-write share token.
-
-## Substrate support for BYO and Python agents
-
-`SandboxAgent` now supports running BYO agents and Python runtime declarative agents on Agent Substrate, in addition to Go declarative agents. This means any `Agent` type can be run as a sandboxed substrate workload.
-
-For setup details, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
-
 ## Configurable A2A client timeout
 
 A new `controller.a2aClientTimeout` Helm value (default: `""` — no timeout) lets you override the A2A client HTTP timeout. Previously, the a2a-go SDK applied a hard 3-minute timeout to all A2A client requests, causing `context deadline exceeded` errors during long-running agent interactions or SSE streams.
@@ -159,45 +136,6 @@ controller:
 ```
 
 For more information, see [Long-running connections](/docs/kagent/operations/operational-considerations#long-running-connections).
-
-## SSO session expiry re-authentication
-
-When deployed behind an OIDC proxy (such as oauth2-proxy), expired sessions now trigger an automatic redirect to `/oauth2/start` for re-authentication instead of showing an error. A loop guard prevents infinite redirects if re-authentication fails. Sessions in unsecured (no-proxy) mode are unaffected.
-
-## Out-of-band database migrations
-
-Two new features give operators control over when and how database migrations run.
-
-### kagent db migrate CLI
-
-A new `kagent db migrate` command group lets you apply, inspect, and recover database migrations without relying on controller startup. This is useful for CI/CD pipelines and environments where migration timing must be explicit.
-
-| Subcommand | Description |
-|---|---|
-| `kagent db migrate up` | Apply all pending migrations across all sources. |
-| `kagent db migrate status` | Show applied and pending migration counts per source. |
-| `kagent db migrate version` | Print the highest applied version per source. |
-| `kagent db migrate goto V --source <name>` | Move the schema to version V (forward or backward). Used for rollbacks. |
-| `kagent db migrate down N --source <name>` | Roll back the N most recent migrations on the named source. |
-| `kagent db migrate force V --source <name>` | Mark version V as applied without running SQL. Used to recover from a dirty migration state. |
-
-Set `POSTGRES_DATABASE_URL` or pass `--db-url` to provide the database connection string. If `DATABASE_VECTOR_ENABLED` is not set in the environment, the CLI reads it from the `kagent-controller` ConfigMap in the current cluster context.
-
-### Skip startup migrations
-
-A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents the controller from running migrations at startup. When enabled, the controller verifies the schema is already fully migrated and exits with an error if it is not. Apply migrations out-of-band before installing or upgrading when this option is set.
-
-For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
-
-## Durable session state for sandbox agents
-
-Go and Python declarative `SandboxAgent` instances now persist session history to a local SQLite database backed by the agent's `durableDir` volume. Session history survives pod restarts and Deployment rollouts; for example, a previous conversation continues seamlessly after a rollout triggered by a prompt change.
-
-Session metadata is mirrored to the PostgreSQL database to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store and you want to enable the same behavior.
-
-You can override the session database endpoint with the `KAGENT_SESSION_DB_URL` environment variable.
-
-For more information, see [Agent Substrate — Declarative agents](/docs/kagent/concepts/agent-substrate#declarative-agents).
 
 ## UI HTTPRoute
 
@@ -217,10 +155,6 @@ ui:
 ```
 
 For all UI exposure options including LoadBalancer service and OpenShift Route, see [Expose the UI outside the cluster](/docs/kagent/observability/launch-ui#expose-the-ui-outside-the-cluster).
-
-## MCP App chat widgets
-
-MCP tools that expose UI resources (MCP Apps) now render interactive widgets inline in the kagent chat interface. When an agent calls such a tool, the response appears as an embedded widget rather than raw text, and users can interact with it directly in the chat window. The backend compacts MCP App tool responses sent to the model to prevent redundant repeated calls.
 
 ## Pod labels for controller and UI
 
@@ -256,6 +190,60 @@ controller:
 ```
 
 This is useful in clusters where admission policies (Gatekeeper, Kyverno) require a `nodeSelector` on every Deployment. Without this, agents created through the UI wizard carry no nodeSelector and fail admission.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+## Configurable Go ADK agent image
+
+You can now use the `controller.goAgentImage` Helm values to configure the Go ADK runtime image independently of the main agent image. Previously, the controller derived the Go image repository from the Python image by replacing the last path segment with `golang-adk`. This pattern breaks in flat-name mirror registries where the image name cannot be produced by that derivation.
+
+```yaml
+controller:
+  goAgentImage:
+    registry: my-registry.io
+    repository: kagent/golang-adk
+    tag: v0.10.0
+    pullPolicy: IfNotPresent
+```
+
+The `registry` and `pullPolicy` fields default to the global `image.registry` and `image.pullPolicy` values. The `tag` coalesces to the global image tag, then the chart version.
+
+> **Breaking change for mirror registry operators**: If you mirror kagent images and only set `agentImage`, you must now also set `controller.goAgentImage` to point to your mirrored Go ADK image. The controller logs a startup warning when the Go image registry differs from the main image registry, so that a misconfigured mirror is visible before a Go agent fails to pull.
+
+For more information, see [Private registry and image mirroring](/docs/kagent/introduction/installation#private-registry-and-image-mirroring).
+
+## Max completion tokens for OpenAI
+
+OpenAI reasoning models (o-series, GPT-5) reject the `max_tokens` request parameter with a 400 error. Use the new `openAI.maxCompletionTokens` field instead, which maps to OpenAI's `max_completion_tokens` parameter and caps both visible output tokens and internal reasoning tokens.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+    maxCompletionTokens: 16000
+```
+
+The existing `openAI.maxTokens` field is unchanged and continues to work for standard models and OpenAI-compatible endpoints. The two fields are independent: set `maxCompletionTokens` for reasoning models and `maxTokens` only for endpoints that still require `max_tokens`.
+
+For more information, see [Max completion tokens](/docs/kagent/supported-providers/openai#max-completion-tokens).
+
+## ServiceAccount annotations
+
+You can now annotate the controller and UI Kubernetes ServiceAccounts via `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations`. This standard mechanism is required for cloud-provider workload identity integrations that grant IAM permissions by annotating a ServiceAccount.
+
+```yaml
+controller:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+
+ui:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
+```
 
 For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
 
@@ -326,59 +314,71 @@ k8s-agent:
 
 When unset, `nodeSelector` is omitted entirely, so there is no change for existing deployments.
 
-## Configurable Go ADK agent image
+## ACP protocol support for substrate agents
 
-You can now use the `controller.goAgentImage` Helm values to configure the Go ADK runtime image independently of the main agent image. Previously, the controller derived the Go image repository from the Python image by replacing the last path segment with `golang-adk`. This pattern breaks in flat-name mirror registries where the image name cannot be produced by that derivation.
+kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with OpenClaw and Hermes to communicate over the substrate runtime without additional configuration.
 
-```yaml
-controller:
-  goAgentImage:
-    registry: my-registry.io
-    repository: kagent/golang-adk
-    tag: v0.10.0
-    pullPolicy: IfNotPresent
-```
+For more information, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
 
-The `registry` and `pullPolicy` fields default to the global `image.registry` and `image.pullPolicy` values. The `tag` coalesces to the global image tag, then the chart version.
+## Substrate support for BYO and Python agents
 
-> **Breaking change for mirror registry operators**: If you mirror kagent images and only set `agentImage`, you must now also set `controller.goAgentImage` to point to your mirrored Go ADK image. The controller logs a startup warning when the Go image registry differs from the main image registry, so that a misconfigured mirror is visible before a Go agent fails to pull.
+`SandboxAgent` now supports running BYO agents and Python runtime declarative agents on Agent Substrate, in addition to Go declarative agents. This means any `Agent` type can be run as a sandboxed substrate workload.
 
-For more information, see [Private registry and image mirroring](/docs/kagent/introduction/installation#private-registry-and-image-mirroring).
+For setup details, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
 
-## Max completion tokens for OpenAI
+## Durable session state for sandbox agents
 
-OpenAI reasoning models (o-series, GPT-5) reject the `max_tokens` request parameter with a 400 error. Use the new `openAI.maxCompletionTokens` field instead, which maps to OpenAI's `max_completion_tokens` parameter and caps both visible output tokens and internal reasoning tokens.
+Go and Python declarative `SandboxAgent` instances now persist session history to a local SQLite database backed by the agent's `durableDir` volume. Session history survives pod restarts and Deployment rollouts; for example, a previous conversation continues seamlessly after a rollout triggered by a prompt change.
 
-```yaml
-spec:
-  provider: OpenAI
-  model: o3
-  openAI:
-    reasoningEffort: medium
-    maxCompletionTokens: 16000
-```
+Session metadata is mirrored to the PostgreSQL database to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store and you want to enable the same behavior.
 
-The existing `openAI.maxTokens` field is unchanged and continues to work for standard models and OpenAI-compatible endpoints. The two fields are independent: set `maxCompletionTokens` for reasoning models and `maxTokens` only for endpoints that still require `max_tokens`.
+You can override the session database endpoint with the `KAGENT_SESSION_DB_URL` environment variable.
 
-For more information, see [Max completion tokens](/docs/kagent/supported-providers/openai#max-completion-tokens).
+For more information, see [Agent Substrate — Declarative agents](/docs/kagent/concepts/agent-substrate#declarative-agents).
 
-## ServiceAccount annotations
+## Chat session sharing
 
-You can now annotate the controller and UI Kubernetes ServiceAccounts via `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations`. This standard mechanism is required for cloud-provider workload identity integrations that grant IAM permissions by annotating a ServiceAccount.
+Session owners can now generate shareable links for any chat session. Shared sessions support two modes:
 
-```yaml
-controller:
-  serviceAccount:
-    annotations:
-      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+- **Read-only** (default): Recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
+- **Read-write** (interactive): Recipients can interact with the session as if they were the owner, such as sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
 
-ui:
-  serviceAccount:
-    annotations:
-      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
-```
+Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
 
-For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+Read-only share tokens can also read A2A tasks on the shared session (`ListTasks`, `GetTask`, `SubscribeToTask`). Mutating operations (`SendMessage`, `CancelTask`) still require a read-write share token.
+
+## SSO session expiry re-authentication
+
+When deployed behind an OIDC proxy (such as oauth2-proxy), expired sessions now trigger an automatic redirect to `/oauth2/start` for re-authentication instead of showing an error. A loop guard prevents infinite redirects if re-authentication fails. Sessions in unsecured (no-proxy) mode are unaffected.
+
+## MCP App chat widgets
+
+MCP tools that expose UI resources (MCP Apps) now render interactive widgets inline in the kagent chat interface. When an agent calls such a tool, the response appears as an embedded widget rather than raw text, and users can interact with it directly in the chat window. The backend compacts MCP App tool responses sent to the model to prevent redundant repeated calls.
+
+## Out-of-band database migrations
+
+Two new features give operators control over when and how database migrations run.
+
+### kagent db migrate CLI
+
+A new `kagent db migrate` command group lets you apply, inspect, and recover database migrations without relying on controller startup. This is useful for CI/CD pipelines and environments where migration timing must be explicit.
+
+| Subcommand | Description |
+|---|---|
+| `kagent db migrate up` | Apply all pending migrations across all sources. |
+| `kagent db migrate status` | Show applied and pending migration counts per source. |
+| `kagent db migrate version` | Print the highest applied version per source. |
+| `kagent db migrate goto V --source <name>` | Move the schema to version V (forward or backward). Used for rollbacks. |
+| `kagent db migrate down N --source <name>` | Roll back the N most recent migrations on the named source. |
+| `kagent db migrate force V --source <name>` | Mark version V as applied without running SQL. Used to recover from a dirty migration state. |
+
+Set `POSTGRES_DATABASE_URL` or pass `--db-url` to provide the database connection string. If `DATABASE_VECTOR_ENABLED` is not set in the environment, the CLI reads it from the `kagent-controller` ConfigMap in the current cluster context.
+
+### Skip startup migrations
+
+A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents the controller from running migrations at startup. When enabled, the controller verifies the schema is already fully migrated and exits with an error if it is not. Apply migrations out-of-band before installing or upgrading when this option is set.
+
+For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
 
 ## Additional changes in v0.10
 
