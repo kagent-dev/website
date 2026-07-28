@@ -16,7 +16,7 @@ MCP Apps are MCP tools that ship an interactive user interface with their result
 
 ## How it works
 
-An MCP server advertises an app by setting `_meta.ui.resourceUri` on a tool (for example, `ui://server-everything/weather-dashboard`). kagent detects this metadata automatically — no extra configuration is needed:
+An MCP server advertises an app by setting `_meta.ui.resourceUri` on a tool in its configuration (`ui://server-everything/weather-dashboard`). kagent detects this metadata on the MCP server automatically: no extra kagent configuration is needed.
 
 - **Inline rendering.** When the agent calls an MCP App tool, the chat renders the app's UI resource in a sandboxed frame inside the chat message, in addition to the usual tool-call details.
 - **Two-way messaging.** The app can send messages on the user's behalf, and kagent proxies the app's resource reads and tool calls back to the originating MCP server. This lets a widget update itself in place, for example by re-calling its own tool.
