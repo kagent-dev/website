@@ -637,8 +637,14 @@ _Appears in:_
 
 #### GeminiConfig
 
+GeminiConfig contains Gemini (AI Studio, API-key) specific configuration options
+
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `maxOutputTokens` _integer_ | Maximum output tokens to generate for a single response |  | Minimum: 1 <br /> |
 
 #### GeminiVertexAIConfig
 
@@ -655,7 +661,7 @@ _Appears in:_
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `topK` _string_ | Top-k sampling parameter |  |  |
 | `stopSequences` _string array_ | Stop sequences |  |  |
-| `maxOutputTokens` _integer_ | Maximum output tokens |  |  |
+| `maxOutputTokens` _integer_ | Maximum output tokens |  | Minimum: 1 <br /> |
 | `candidateCount` _integer_ | Candidate count |  |  |
 | `responseMimeType` _string_ | Response mime type |  |  |
 
@@ -867,14 +873,15 @@ _Appears in:_
 | `baseUrl` _string_ | Base URL for the OpenAI API (overrides default) |  |  |
 | `organization` _string_ | Organization ID for the OpenAI API |  |  |
 | `temperature` _string_ | Temperature for sampling |  |  |
-| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate. Sent as the OpenAI `max_tokens` request<br />parameter, which is deprecated and rejected by reasoning models<br />(GPT-5 / o-series). For those models set maxCompletionTokens instead.<br />Mutually exclusive with maxCompletionTokens. |  | Minimum: 1 <br /> |
+| `maxCompletionTokens` _integer_ | Maximum completion tokens to generate. Sent as the OpenAI<br />`max_completion_tokens` request parameter (an upper bound on visible<br />output plus reasoning tokens). This is the parameter reasoning models<br />(GPT-5 / o-series) require in place of the deprecated maxTokens.<br />Mutually exclusive with maxTokens. |  | Minimum: 1 <br /> |
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `frequencyPenalty` _string_ | Frequency penalty |  |  |
 | `presencePenalty` _string_ | Presence penalty |  |  |
 | `seed` _integer_ | Seed value |  |  |
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
-| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high] <br /> |
+| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh] <br /> |
 | `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
 #### OpenAIReasoningEffort
@@ -882,11 +889,11 @@ _Appears in:_
 _Underlying type:_ _string_
 
 OpenAIReasoningEffort represents how many reasoning tokens the model generates before producing a response.
-Set to "none" to disable reasoning; some models (e.g. gpt-5.6-terra) require this to use
-function tools via the Chat Completions API.
+Supported values vary by model. Set to "none" to disable reasoning; some models (e.g. gpt-5.6-terra)
+require this to use function tools via the Chat Completions API.
 
 _Validation:_
-- Enum: [none minimal low medium high]
+- Enum: [none minimal low medium high xhigh]
 
 _Appears in:_
 - [OpenAIConfig](#openaiconfig)

@@ -12,6 +12,7 @@ Learn about the AI agent and kagent concepts
 {{< card link="/docs/kagent/concepts/architecture" title="Architecture" subtitle="Learn about the architecture of kagent." >}}
 {{< card link="/docs/kagent/concepts/agents" title="Agents" subtitle="Learn about AI agents." >}}
 {{< card link="/docs/kagent/concepts/tools" title="Tools" subtitle="Learn about tools and MCP." >}}
+{{< card link="/docs/kagent/concepts/mcp-apps" title="MCP Apps" subtitle="Render interactive MCP UI widgets inline in the chat and test them from the dashboard." >}}
 {{< card link="/docs/kagent/concepts/agent-harness" title="Agent Harness" subtitle="Run OpenClaw and Hermes coding-agent sandboxes on Agent Substrate and chat with them over ACP." >}}
 {{< card link="/docs/kagent/concepts/agent-substrate" title="Agent Substrate" subtitle="Run declarative agents on a Kubernetes-native runtime with fast startup, efficient resource usage, and secure gVisor-sandboxed execution." >}}
 {{< card link="/docs/kagent/resources/tools-ecosystem" title="Tools Ecosystem" subtitle="Comprehensive catalog of built-in tools for Kubernetes, Helm, Istio, Prometheus, Grafana, Cilium, and Argo Rollouts." >}}
