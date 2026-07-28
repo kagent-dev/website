@@ -24,19 +24,17 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 
 **What's included:**
 
+**Agent runtimes**
+
 * [Go ADK is now the default runtime](#go-adk-is-now-the-default-runtime): New declarative agents use the Go ADK by default.
 * [A2A AgentCard metadata](#a2a-agentcard-metadata): New optional fields on the Agent spec for enriching the A2A AgentCard.
+
+**Helm & configuration**
+
 * [Configurable streaming timeouts](#configurable-streaming-timeouts): New Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
 * [Controller service annotations](#controller-service-annotations): New `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
-* [ACP protocol support for substrate agents](#acp-protocol-support-for-substrate-agents): New ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
-* [Chat session sharing](#chat-session-sharing): Session owners can now generate shareable links in read-only or read-write mode.
-* [Substrate support for BYO and Python agents](#substrate-support-for-byo-and-python-agents): `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
 * [Configurable A2A client timeout](#configurable-a2a-client-timeout): New `controller.a2aClientTimeout` Helm value removes the previous 3-minute hard cutoff for long-running agents.
-* [SSO session expiry re-authentication](#sso-session-expiry-re-authentication): Expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
-* [Out-of-band database migrations](#out-of-band-database-migrations): New `kagent db migrate` CLI and `database.postgres.skipMigrations` Helm value for managing migrations independently of controller startup.
-* [Durable session state for sandbox agents](#durable-session-state-for-sandbox-agents): Go and Python declarative sandbox agents now persist session history to a local SQLite database in the `durableDir` volume, surviving pod restarts and Deployment rollouts.
 * [UI HTTPRoute](#ui-httproute): New `ui.httpRoute` Helm value for fronting the UI with a Gateway API HTTPRoute (kgateway, Istio, Envoy Gateway).
-* [MCP App chat widgets](#mcp-app-chat-widgets): MCP tools that expose UI resources now render interactive widgets inline in the chat interface.
 * [Pod labels for controller and UI](#pod-labels-for-controller-and-ui): New `podLabels`, `controller.podLabels`, and `ui.podLabels` Helm values for pod template labels on the controller and UI Deployments.
 * [Default nodeSelector for agent deployments](#default-nodeselector-for-agent-deployments): New `controller.agentDeployment.nodeSelector` Helm value applies a global default nodeSelector to all agent Deployments created by the controller.
 * [Configurable Go ADK agent image](#configurable-go-adk-agent-image): New `controller.goAgentImage` Helm values configure the Go ADK runtime image independently, fixing mirror registry layouts that the previous derivation could not produce.
@@ -45,6 +43,22 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * [extraObjects](#extraobjects): New `extraObjects` Helm value for deploying arbitrary Kubernetes manifests in the same chart lifecycle as kagent.
 * [Deployment annotations](#deployment-annotations): New `controller.annotations` and `ui.annotations` Helm values for annotating the controller and UI Deployment resources.
 * [nodeSelector for agent Helm charts](#nodeselector-for-agent-helm-charts): New `nodeSelector` value in every bundled agent Helm chart for pinning agent pods to specific node pools.
+
+**Agent Substrate**
+
+* [ACP protocol support for substrate agents](#acp-protocol-support-for-substrate-agents): New ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
+* [Substrate support for BYO and Python agents](#substrate-support-for-byo-and-python-agents): `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
+* [Durable session state for sandbox agents](#durable-session-state-for-sandbox-agents): Go and Python declarative sandbox agents now persist session history to a local SQLite database in the `durableDir` volume, surviving pod restarts and Deployment rollouts.
+
+**UI & auth**
+
+* [Chat session sharing](#chat-session-sharing): Session owners can now generate shareable links in read-only or read-write mode.
+* [SSO session expiry re-authentication](#sso-session-expiry-re-authentication): Expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
+* [MCP App chat widgets](#mcp-app-chat-widgets): MCP tools that expose UI resources now render interactive widgets inline in the chat interface.
+
+**Database**
+
+* [Out-of-band database migrations](#out-of-band-database-migrations): New `kagent db migrate` CLI and `database.postgres.skipMigrations` Helm value for managing migrations independently of controller startup.
 
 ## Go ADK is now the default runtime
 
@@ -400,7 +414,7 @@ For more information, see [Customize Kubernetes resources](/docs/kagent/introduc
 
 **Agent Substrate**
 
-* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now scoped to their Kubernetes namespace (atespace = namespace). Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
+* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now isolated per Kubernetes namespace, so that actors in different namespaces cannot see or conflict with each other. Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
 * **SandboxAgent readiness gating**: `SandboxAgent` actors are now only marked ready once the agent application is confirmed to be serving traffic, preventing requests from reaching actors that have started but are not yet initialized.
 * **Agent Substrate bumped to v0.0.9**: The bundled Agent Substrate runtime is updated to v0.0.9.
 * **Substrate badge on agent cards**: Sandbox agents running on Agent Substrate are now visually marked in the UI agent card list.
