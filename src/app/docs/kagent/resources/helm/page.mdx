@@ -80,6 +80,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentDeployment.podLabels | object | {} (no extra labels) | Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.serviceAccountName | string | "" (auto-create per-agent ServiceAccount) | Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA. |
 | controller.agentImage.pullPolicy | string | `""` |  |
+| controller.agentImage.pullSecret | string | `""` | Image pull secret name set on agent pods created by the controller |
 | controller.agentImage.registry | string | `""` |  |
 | controller.agentImage.repository | string | `"kagent-dev/kagent/app"` |  |
 | controller.agentImage.tag | string | `""` |  |
@@ -88,6 +89,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.auth.userIdClaim | string | `""` |  |
 | controller.env | list | `[]` |  |
 | controller.envFrom | list | `[]` |  |
+| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
 | controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
@@ -108,6 +110,8 @@ A Helm chart for kagent, built with Google ADK
 | controller.service.ports.port | int | `8083` |  |
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
+| controller.serviceAccount | object | `{"annotations":{}}` | ServiceAccount settings for the controller pod |
+| controller.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the controller ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
 | controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
 | controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
@@ -271,6 +275,7 @@ A Helm chart for kagent, built with Google ADK
 | promql-agent.resources.limits.memory | string | `"256Mi"` |  |
 | promql-agent.resources.requests.cpu | string | `"50m"` |  |
 | promql-agent.resources.requests.memory | string | `"128Mi"` |  |
+| providers.annotations | object | `{}` | Annotations added to the metadata of the generated default ModelConfig (the one derived from `providers.default`). Omitted from the resource when empty. |
 | providers.anthropic.apiKeySecretKey | string | `"ANTHROPIC_API_KEY"` |  |
 | providers.anthropic.apiKeySecretRef | string | `"kagent-anthropic"` |  |
 | providers.anthropic.model | string | `"claude-haiku-4-5"` |  |
@@ -352,6 +357,8 @@ A Helm chart for kagent, built with Google ADK
 | ui.service.ports.port | int | `8080` |  |
 | ui.service.ports.targetPort | int | `8080` |  |
 | ui.service.type | string | `"ClusterIP"` |  |
+| ui.serviceAccount | object | `{"annotations":{}}` | ServiceAccount settings for the UI pod |
+| ui.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the UI ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
 | ui.startupProbe | object | httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1 | Custom startup probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |
 | ui.streamTimeoutSeconds | int | `1800` | Client-side chat stream inactivity timeout (seconds). The browser aborts a streaming response if no event is received within this window. Should be >= ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m). |
 | ui.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |

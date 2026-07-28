@@ -83,6 +83,10 @@ MCP stands for [Model Context Protocol](https://modelcontextprotocol.io/introduc
 
 **Note:** Double check any community servers before running them in your environment.
 
+### MCP Apps
+
+Some MCP tools ship an interactive UI with their results. kagent detects these tools automatically and renders their widgets inline in the chat, and the dashboard lists them alongside a server's regular tools so you can test them directly. See [MCP Apps](/docs/kagent/concepts/mcp-apps) for details.
+
 ## HTTP Tools
 
 HTTP tools are another way to bring external tools into kagent. Simply put, given a URL and a schema, kagent will send the user query to the URL and return the response. kagent has the ability to discovery HTTP tools from services running in the cluster, assuming they are OpenAPI Compliant.
