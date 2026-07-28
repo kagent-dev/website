@@ -300,7 +300,7 @@ Compaction removes older conversation events to free up space in the context win
 
 ## Sandboxed Agents
 
-You can run a declarative agent in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. A `SandboxAgent` runs on [Agent Substrate](/docs/kagent/concepts/agent-substrate): the kagent controller runs it as a gVisor-sandboxed actor instead of a Deployment, snapshotting it to object storage when idle and rehydrating it on demand. The spec mirrors the `Agent` spec, with a few constraints: sandboxed agents always use the Go ADK runtime, and `spec.skills` and `BYO` agents are not supported. Configure substrate placement with the optional `spec.substrate` field (for example, `workerPoolRef`).
+You can run a declarative agent in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. A `SandboxAgent` runs on [Agent Substrate](/docs/kagent/concepts/agent-substrate): the kagent controller runs it as a gVisor-sandboxed actor instead of a Deployment, snapshotting it to object storage when idle and rehydrating it on demand. The spec mirrors the `Agent` spec. All three runtimes are supported: **Go** (default), **Python**, and **BYO**. For Go and Python agents, session history is persisted to a local SQLite database in the agent's `durableDir` volume, so conversation state survives pod restarts and Deployment rollouts. BYO agents do not get local session storage automatically. Configure substrate placement with the optional `spec.substrate` field (for example, `workerPoolRef`).
 
 For setup steps, see the [Agent Substrate example](/docs/kagent/examples/agent-substrate).
 

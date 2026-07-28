@@ -24,16 +24,24 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 
 **What's included:**
 
-* Go ADK is now the default runtime: New declarative agents use the Go ADK by default.
-* A2A AgentCard metadata: New optional fields on the Agent spec for enriching the A2A AgentCard.
-* Configurable streaming timeouts: Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
-* Controller service annotations: `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
-* ACP protocol support for substrate agents: ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
-* Chat session sharing: Session owners can generate shareable links in read-only or read-write mode.
-* Substrate support for BYO and Python agents: `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
-* Configurable A2A client timeout: `controller.a2aClientTimeout` removes the previous 3-minute hard cutoff for long-running agents.
-* SSO session expiry re-authentication: Expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
-* Out-of-band database migrations: Manage database migrations via the kagent CLI independently of controller startup.
+* [Go ADK is now the default runtime](#go-adk-is-now-the-default-runtime): New declarative agents use the Go ADK by default.
+* [A2A AgentCard metadata](#a2a-agentcard-metadata): New optional fields on the Agent spec for enriching the A2A AgentCard.
+* [Configurable streaming timeouts](#configurable-streaming-timeouts): New Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
+* [Controller service annotations](#controller-service-annotations): New `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
+* [ACP protocol support for substrate agents](#acp-protocol-support-for-substrate-agents): New ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
+* [Chat session sharing](#chat-session-sharing): Session owners can now generate shareable links in read-only or read-write mode.
+* [Substrate support for BYO and Python agents](#substrate-support-for-byo-and-python-agents): `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
+* [Configurable A2A client timeout](#configurable-a2a-client-timeout): New `controller.a2aClientTimeout` Helm value removes the previous 3-minute hard cutoff for long-running agents.
+* [SSO session expiry re-authentication](#sso-session-expiry-re-authentication): Expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
+* [Out-of-band database migrations](#out-of-band-database-migrations): New `kagent db migrate` CLI and `database.postgres.skipMigrations` Helm value for managing migrations independently of controller startup.
+* [Durable session state for sandbox agents](#durable-session-state-for-sandbox-agents): Go and Python declarative sandbox agents now persist session history to a local SQLite database in the `durableDir` volume, surviving pod restarts and Deployment rollouts.
+* [UI HTTPRoute](#ui-httproute): New `ui.httpRoute` Helm value for fronting the UI with a Gateway API HTTPRoute (kgateway, Istio, Envoy Gateway).
+* [MCP App chat widgets](#mcp-app-chat-widgets): MCP tools that expose UI resources now render interactive widgets inline in the chat interface.
+* [Pod labels for controller and UI](#pod-labels-for-controller-and-ui): New `podLabels`, `controller.podLabels`, and `ui.podLabels` Helm values for pod template labels on the controller and UI Deployments.
+* [Default nodeSelector for agent deployments](#default-nodeselector-for-agent-deployments): New `controller.agentDeployment.nodeSelector` Helm value applies a global default nodeSelector to all agent Deployments created by the controller.
+* [extraObjects](#extraobjects): New `extraObjects` Helm value for deploying arbitrary Kubernetes manifests in the same chart lifecycle as kagent.
+* [Deployment annotations](#deployment-annotations): New `controller.annotations` and `ui.annotations` Helm values for annotating the controller and UI Deployment resources.
+* [nodeSelector for agent Helm charts](#nodeselector-for-agent-helm-charts): New `nodeSelector` value in every bundled agent Helm chart for pinning agent pods to specific node pools.
 
 ## Go ADK is now the default runtime
 
@@ -87,6 +95,8 @@ ui:
       haproxy.router.openshift.io/timeout: 120m
 ```
 
+For tuning timeouts end-to-end for long-running agent sessions, see [Long-running connections](/docs/kagent/operations/operational-considerations#long-running-connections).
+
 ## Controller service annotations
 
 You can now add custom annotations to the kagent controller's Kubernetes Service via `controller.service.annotations`. This is useful for integrations such as AWS Load Balancer Controller and ExternalDNS.
@@ -102,6 +112,8 @@ controller:
 ## ACP protocol support for substrate agents
 
 kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with OpenClaw and Hermes to communicate over the substrate runtime without additional configuration.
+
+For more information, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
 
 ## Chat session sharing
 
@@ -126,6 +138,8 @@ A new `controller.a2aClientTimeout` Helm value (default: `""` — no timeout) le
 controller:
   a2aClientTimeout: "10m"  # or "" for no timeout (default)
 ```
+
+For more information, see [Long-running connections](/docs/kagent/operations/operational-considerations#long-running-connections).
 
 ## SSO session expiry re-authentication
 
@@ -156,11 +170,169 @@ A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents 
 
 For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
 
+## Durable session state for sandbox agents
+
+Go and Python declarative `SandboxAgent` instances now persist session history to a local SQLite database backed by the agent's `durableDir` volume. Session history survives pod restarts and Deployment rollouts; for example, a previous conversation continues seamlessly after a rollout triggered by a prompt change.
+
+Session metadata is mirrored to the PostgreSQL database to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store and you want to enable the same behavior.
+
+You can override the session database endpoint with the `KAGENT_SESSION_DB_URL` environment variable.
+
+For more information, see [Agent Substrate — Declarative agents](/docs/kagent/concepts/agent-substrate#declarative-agents).
+
+## UI HTTPRoute
+
+You can now front the kagent UI by a [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/) `HTTPRoute` instead of a plain `Ingress` or OpenShift `Route`. This is useful when your cluster uses kgateway, Istio, or Envoy Gateway as its traffic management layer.
+
+The HTTPRoute is off by default. Enable it with `ui.httpRoute.enabled: true` and configure `parentRefs` and `hostnames`:
+
+```yaml
+ui:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        namespace: istio-system
+    hostnames:
+      - kagent.example.com
+```
+
+For all UI exposure options including LoadBalancer service and OpenShift Route, see [Expose the UI outside the cluster](/docs/kagent/observability/launch-ui#expose-the-ui-outside-the-cluster).
+
+## MCP App chat widgets
+
+MCP tools that expose UI resources (MCP Apps) now render interactive widgets inline in the kagent chat interface. When an agent calls such a tool, the response appears as an embedded widget rather than raw text, and users can interact with it directly in the chat window. The backend compacts MCP App tool responses sent to the model to prevent redundant repeated calls.
+
+## Pod labels for controller and UI
+
+You can now add custom labels to the pod templates of the controller and UI Deployments. A global `podLabels` map applies to all component pods, with per-component overrides via `controller.podLabels` and `ui.podLabels` (component keys win on conflict).
+
+```yaml
+podLabels:
+  team: platform
+  environment: production
+
+controller:
+  podLabels:
+    cost-center: infra
+
+ui:
+  podLabels:
+    cost-center: frontend
+```
+
+This is useful for clusters with admission policies (such as OPA Gatekeeper or Kyverno) that require specific labels on every pod template. Note that selector labels always take precedence and cannot be overridden.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+## Default nodeSelector for agent deployments
+
+A new `controller.agentDeployment.nodeSelector` Helm value sets a global default nodeSelector applied to every agent Deployment created by the controller. Per-agent `nodeSelector` values in the `Agent` CRD take precedence over this default (per-key merge, agent wins).
+
+```yaml
+controller:
+  agentDeployment:
+    nodeSelector:
+      kubernetes.io/os: linux
+```
+
+This is useful in clusters where admission policies (Gatekeeper, Kyverno) require a `nodeSelector` on every Deployment. Without this, agents created through the UI wizard carry no nodeSelector and fail admission.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+## extraObjects
+
+A new top-level `extraObjects` Helm value lets you deploy arbitrary Kubernetes manifests in the same chart lifecycle as kagent. Entries are rendered through `tpl`, so they can reference the release context such as `{{ .Release.Namespace }}`.
+
+```yaml
+extraObjects:
+  - apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: kagent-api-key
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        name: my-store
+        kind: ClusterSecretStore
+      target:
+        name: kagent-api-key
+      data:
+        - secretKey: ANTHROPIC_API_KEY
+          remoteRef:
+            key: anthropic-api-key
+```
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+## Deployment annotations
+
+You can now add custom annotations to the kagent controller and UI Deployment resources. A global `annotations` map applies to all deployments, with per-component overrides via `controller.annotations` and `ui.annotations`.
+
+```yaml
+controller:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+
+ui:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+```
+
+This is useful for tools that read Deployment annotations such as cluster autoscaler, Datadog, and Karpenter.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+## nodeSelector for agent Helm charts
+
+Every bundled agent Helm chart now accepts an optional `nodeSelector` value. Use it to constrain agent pods to specific node pools.
+
+```yaml
+# Per-agent chart
+nodeSelector:
+  disktype: ssd
+```
+
+When installing agents through the parent `kagent` chart, pass the value under the dependency name:
+
+```yaml
+helm-agent:
+  nodeSelector:
+    kubernetes.io/os: linux
+k8s-agent:
+  nodeSelector:
+    kubernetes.io/os: linux
+```
+
+When unset, `nodeSelector` is omitted entirely, so there is no change for existing deployments.
+
 ## Additional changes in v0.10
 
 * **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
 * **Go ADK OpenAI embeddings**: Fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
 * **Helm image registry fixes**: Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
+* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now isolated per Kubernetes namespace, so that actors in different namespaces cannot see or conflict with each other. Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
+* **Concurrent memory search deadlock fix**: Fixed intermittent PostgreSQL deadlocks when concurrent memory searches (such as `PrefetchMemoryTool` fan-out) updated overlapping rows. Row locks are now acquired in ID order and access-count updates are best-effort.
+* **Anthropic thinking blocks in Python ADK**: Google ADK bumped to 1.32.0, enabling Anthropic thinking block support for agents using the Python runtime.
+* **Image registry updated to ghcr.io**: The `cr.kagent.dev` registry alias is removed. All default image references now use `ghcr.io/kagent-dev/kagent`. If you pinned images using the `cr.kagent.dev` alias, update your references to `ghcr.io`.
+* **Migration orchestrator**: The internal database migration runner is refactored from two hardcoded tracks to an extensible orchestrator with ordered source registration and coordinated rollback. No change to the `kagent db migrate` CLI.
+* **Claude ACP sandbox image**: A new `acp-sandbox-claude` image wraps the Claude Agent SDK behind the ACP protocol, enabling Claude-based agents to run in the ACP sandbox alongside the existing openclaw and hermes targets. Authenticate via `ANTHROPIC_API_KEY` at runtime.
+* **SandboxAgent readiness gating**: `SandboxAgent` actors are now only marked ready once the agent application is confirmed to be serving traffic, preventing requests from reaching actors that have started but are not yet initialized.
+* **Go ADK v2.0.0**: The Go Agent Development Kit is upgraded to v2.0.0.
+* **`none` reasoning effort**: `none` is now a valid option for reasoning effort on `ModelConfig`, in addition to the existing `low`, `medium`, and `high` values.
+* **Declarative agents referenced by tag**: Regular declarative agent images are now referenced by tag (`registry/repository:tag`) rather than digest, so they respect `IMAGE_TAG` overrides. Digest pinning is kept for sandbox agents where Substrate requires it. New controller flags (`--app-image-digest`, `--golang-adk-image-digest`, and their `-full` variants) let operators override baked-in sandbox digests when using a mirror registry.
+* **Configurable cluster DNS domain**: A `clusterDomain` controller setting (default `cluster.local`) makes the in-cluster service URLs configurable for clusters that use a non-standard DNS domain.
+* **MCP server startup resilience**: An MCP toolset is no longer silently dropped when an MCP server is unreachable at agent startup. The error is surfaced rather than causing tools to disappear.
+* **Agent ready on first available replica**: An agent is now marked ready as soon as at least one replica is available, rather than waiting for all replicas.
+* **UI tool call grouping**: Tool calls in the chat interface are now visually grouped, making it easier to follow multi-step agent reasoning.
+* **oauth2-proxy subchart updated to ~10.7.0**: The bundled oauth2-proxy dependency is bumped to the 10.7.x chart series.
+* **Model config name editing fix**: Fixed an issue where the model name field could not be edited on the model configuration form in the UI.
+* **`kgateway.dev/a2a` appProtocol for BYO agents**: The controller now sets `kgateway.dev/a2a` as the `appProtocol` on the Service for BYO agents, which is required for A2A routing to work correctly in kgateway environments.
+* **Azure OpenAI secretKeyRef fix**: Fixed an issue where an empty `secretKeyRef` was generated for Azure OpenAI model configurations that do not use a Kubernetes secret for credentials.
+* **`nodeSelector` and `tolerations` for `kagent-tools` subchart**: The `kagent-tools` bundled subchart now accepts `nodeSelector` and `tolerations` values, so tools pods can be placed on specific nodes or tolerate taints.
+* **Python ADK minimum version is now 3.11**: The Python Agent Development Kit now requires Python 3.11 or later.
+* **Agent Substrate bumped to v0.0.9**: The bundled Agent Substrate runtime is updated to v0.0.9.
 
 # v0.9
 

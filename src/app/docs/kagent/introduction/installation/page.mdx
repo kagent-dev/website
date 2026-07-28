@@ -317,6 +317,84 @@ controller:
 
 This example loads all key-value pairs from the `controller-secrets` secret as environment variables in the controller pod.
 
+### Customize Kubernetes resources
+
+Use the following Helm values to meet cluster admission policies or integrate with external tooling.
+
+#### Pod labels
+
+Add labels to the pod templates of the controller and UI Deployments. Pod labels can be useful for clusters with policies (OPA Gatekeeper, Kyverno) that require specific labels on every pod.
+
+A global `podLabels` map applies to all component pods; per-component values override it:
+
+```yaml
+podLabels:
+  team: platform
+
+controller:
+  podLabels:
+    cost-center: infra
+
+ui:
+  podLabels:
+    cost-center: frontend
+```
+
+To add labels to all **agent** pods, use `controller.agentDeployment.podLabels`.
+
+#### Deployment annotations
+
+Add annotations to the controller and UI Deployment resources. For example, to add annotations for cluster autoscaler or Datadog:
+
+```yaml
+controller:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+
+ui:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+```
+
+To add annotations to the controller **Service** (for AWS Load Balancer Controller or ExternalDNS), use `controller.service.annotations`.
+
+#### Default nodeSelector for agent deployments
+
+Set a default `nodeSelector` that is applied to every agent Deployment that the controller creates. This setting can be useful when admission policies require a `nodeSelector` on all Deployments, since agents created through the UI carry none by default.
+
+```yaml
+controller:
+  agentDeployment:
+    nodeSelector:
+      kubernetes.io/os: linux
+```
+
+Per-agent `nodeSelector` values in the `Agent` spec take precedence over this default.
+
+#### Deploy companion resources with extraObjects
+
+Use `extraObjects` to deploy arbitrary Kubernetes manifests in the same Helm chart lifecycle as kagent. Entries are rendered through `tpl`, so they can reference the release context.
+
+```yaml
+extraObjects:
+  - apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: kagent-api-key
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        name: my-store
+        kind: ClusterSecretStore
+      target:
+        name: kagent-api-key
+      data:
+        - secretKey: ANTHROPIC_API_KEY
+          remoteRef:
+            key: anthropic-api-key
+```
+
 ## Uninstallation
 
 Refer to the [Uninstall](/docs/kagent/operations/uninstall) guide.

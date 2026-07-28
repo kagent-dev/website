@@ -40,3 +40,17 @@ For OpenAI's standard models like GPT-4 and GPT-3.5, kagent automatically config
 3. Apply the above resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
+
+## Reasoning effort
+
+For OpenAI reasoning models (o-series, GPT-5), you can control how many reasoning tokens the model generates before producing a response with the `openAI.reasoningEffort` field. Valid values are `none`, `minimal`, `low`, `medium`, and `high`.
+
+For models that require reasoning to be explicitly disabled (such as some GPT-5 variants), set `reasoningEffort: none`. For standard models that do not support it, omit the field.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+```

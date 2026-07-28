@@ -65,6 +65,8 @@ Agent Substrate is composed of a control plane, a data plane, and snapshot stora
 
 Run a declarative agent on Agent Substrate by creating a `SandboxAgent` resource. It carries the same spec as a regular `Agent`, but the kagent controller runs it as a sandboxed workload on the runtime instead of a plain Deployment. All three declarative runtimes are supported: **Go** (default), **Python**, and **BYO**.
 
+Session history for Go and Python declarative sandbox agents is persisted to a local SQLite database backed by the agent's `durableDir` volume, so conversation state survives pod restarts and Deployment rollouts. Session metadata is mirrored to PostgreSQL to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store.
+
 ### AgentHarness
 
 An `AgentHarness` always runs on Agent Substrate; `spec.substrate` is required. The key fields are:
