@@ -1615,6 +1615,7 @@ _Appears in:_
 | `type` _[ToolProviderType](#toolprovidertype)_ |  |  | Enum: [McpServer Agent] <br /> |
 | `mcpServer` _[McpServerTool](#mcpservertool)_ |  |  |  |
 | `agent` _[TypedReference](#typedreference)_ |  |  |  |
+| `isolateSessions` _boolean_ | IsolateSessions controls per-call session isolation for Agent-type tools.<br />Only valid when Type is Agent.<br /><br />When unset or false (default), every call this agent makes to the<br />referenced sub-agent reuses the same A2A context_id, so all calls land<br />in one shared sub-agent session (session continuity for stateful<br />sub-agents).<br /><br />When true, each call mints a fresh context_id, so every invocation runs<br />in its own isolated sub-agent session. This is required for parallel<br />fan-out to a sub-agent: without it, N parallel calls in one turn<br />collapse into a single shared sub-agent session instead of N<br />independent ones.<br /><br />Cross-turn/conversation continuity for stateful sub-agents does not<br />depend on this flag; it rides the x-kagent-root-context-id header,<br />which stays stable regardless of IsolateSessions. |  |  |
 | `headersFrom` _[ValueRef](#valueref) array_ | HeadersFrom specifies a list of configuration values to be added as<br />headers to requests sent to the Tool from this agent. The value of<br />each header is resolved from either a Secret or ConfigMap in the same<br />namespace as the Agent. Headers specified here will override any<br />headers of the same name/key specified on the tool. |  |  |
 
 
