@@ -74,6 +74,7 @@ A Helm chart for kagent, built with Google ADK
 | cilium-policy-agent.resources.requests.memory | string | `"128Mi"` |  |
 | controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
+| controller.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod. |
 | controller.agentDeployment | object | `{"host":"","nodeSelector":{},"podLabels":{},"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.host | string | "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled) | Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of "0.0.0.0". Automatically set to "::" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag. |
 | controller.agentDeployment.nodeSelector | object | {} (no default nodeSelector) | Default nodeSelector applied to all agent deployments. Useful when admission policies require a nodeSelector on every Deployment, since wizard-created Agents carry none. A per-agent nodeSelector in the Agent CRD takes precedence over these defaults. |
@@ -127,6 +128,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.substrate.defaultWorkerPool.namespace | string | `""` |  |
 | controller.substrate.enabled | bool | `false` |  |
 | controller.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| controller.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the controller pod. |
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
@@ -321,6 +323,7 @@ A Helm chart for kagent, built with Google ADK
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.additionalForwardedHeaders | list | `[]` | Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped. |
+| ui.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod. |
 | ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
 | ui.backendInternalUrl | string | `""` |  |
@@ -362,6 +365,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.startupProbe | object | httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1 | Custom startup probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |
 | ui.streamTimeoutSeconds | int | `1800` | Client-side chat stream inactivity timeout (seconds). The browser aborts a streaming response if no event is received within this window. Should be >= ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m). |
 | ui.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| ui.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the UI pod. |
 | ui.volumes | object | `{"nextjsCache":"100Mi","tmp":"50Mi"}` | EmptyDir volume sizes for Next.js UI workload (typically used when enabling readOnlyRootFilesystem) |
 | ui.volumes.nextjsCache | string | `"100Mi"` | Size limit for Next.js build cache (.next/cache). Default 100Mi is sufficient for typical Next.js apps with moderate caching needs. |
 | ui.volumes.tmp | string | `"50Mi"` | Size limit for temporary files (/tmp). Default 50Mi provides ample space for Next.js runtime temporary data. |
