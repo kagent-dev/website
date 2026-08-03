@@ -1168,6 +1168,24 @@ _Appears in:_
 | `options` _object (keys:string, values:string)_ | Options for the Ollama API |  |  |
 
 
+#### OpenAIAPIFormat
+
+_Underlying type:_ _string_
+
+OpenAIAPIFormat selects the OpenAI HTTP API shape used by the Go ADK runtime.
+
+_Validation:_
+- Enum: [chatCompletions responses]
+
+_Appears in:_
+- [OpenAIConfig](#openaiconfig)
+
+| Field | Description |
+| --- | --- |
+| `chatCompletions` |  |
+| `responses` |  |
+
+
 #### OpenAIConfig
 
 
@@ -1193,6 +1211,7 @@ _Appears in:_
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
 | `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh] <br /> |
+| `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects which OpenAI HTTP API the runtime uses for this model.<br />chatCompletions (default) posts to /v1/chat/completions.<br />responses posts to /v1/responses. Use responses for OpenAI-compatible<br />gateways or models that require the Responses API. | chatCompletions | Enum: [chatCompletions responses] <br /> |
 | `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
 
