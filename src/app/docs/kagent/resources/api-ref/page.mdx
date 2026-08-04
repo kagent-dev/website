@@ -630,6 +630,27 @@ _Appears in:_
 | `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
 | `promptCaching` _boolean_ | PromptCaching enables Bedrock prompt caching by appending a CachePoint<br />block at the end of the Converse request's `system` content array and<br />the end of the `toolConfig.tools` array. Bedrock will cache the prefix up to and<br />including those cache points across requests in the same region for<br />roughly 5 minutes after first use, billing the cached portion at a<br />reduced rate on cache hits.<br /><br />Recommended for tool-using agents that make many Converse calls per<br />task with a stable system prompt and tool set — the per-call input<br />token count can drop by 70-90% on hit. Has no effect on models that<br />don't support caching; the marker is ignored by Bedrock for those.<br /><br />See https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html<br />for the current list of supported models and minimum prefix sizes. | false |  |
 | `cacheTTL` _string_ | CacheTTL controls how long Bedrock retains a cached prefix when<br />PromptCaching is enabled. Only meaningful when PromptCaching is true.<br /><br />  - "5m" (default): Bedrock's standard 5-minute sliding cache. Each cache<br />    hit refreshes the window. Supported by all prompt-caching models.<br />  - "1h": extended-TTL caching, useful for tasks whose Converse calls are<br />    spaced more than 5 minutes apart.<br /><br />NOTE: "1h" is NOT strictly better than "5m". Extended-TTL cache writes are<br />billed at a higher per-token rate than 5-minute writes, and 1h is supported<br />on a narrower set of models. Only choose "1h" when calls are spaced far<br />enough apart that a 5-minute cache would expire between them; otherwise the<br />higher write cost is wasted. See the AWS prompt-caching docs above. | 5m | Enum: [5m 1h] <br /> |
+| `guardrail` _[BedrockGuardrailConfig](#bedrockguardrailconfig)_ |  |  |  |
+| `readTimeout` _integer_ | ReadTimeout is the Bedrock HTTP client read timeout in seconds, applied by<br />both the Python and Go ADK runtimes. Raise this for agents that make long<br />Converse calls (large tool-augmented turns, extended reasoning). On the<br />Python ADK it overrides botocore's ~60s read timeout, which otherwise<br />aborts long completions with a ReadTimeoutError; on the Go ADK it bounds<br />the whole Converse request (default 30m). When unset, each runtime's<br />default is used. |  | Minimum: 1 <br /> |
+| `connectTimeout` _integer_ | ConnectTimeout is the Bedrock HTTP client connection-establishment timeout<br />in seconds, applied by both the Python and Go ADK runtimes. It bounds<br />connection setup only, not the response read. When unset, each runtime's<br />default is used (Python ADK: botocore; Go ADK: net dialer). |  | Minimum: 1 <br /> |
+
+
+#### BedrockGuardrailConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [BedrockConfig](#bedrockconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `identifier` _string_ | Identifier is the guardrail ID or full ARN. AWS accepts either a bare<br />guardrail ID or an arn:aws:bedrock:...:guardrail/... ARN, so the value is<br />only length-bounded here (AWS caps guardrailIdentifier at 2048 chars). |  | MaxLength: 2048 <br />MinLength: 1 <br /> |
+| `version` _string_ | Version is the guardrail version: a numeric version (e.g. "1") or "DRAFT". |  | MaxLength: 8 <br />MinLength: 1 <br /> |
+| `trace` _string_ |  | disabled | Enum: [disabled enabled enabled_full] <br /> |
 
 
 #### ByoDeploymentSpec
@@ -655,7 +676,9 @@ _Appears in:_
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
+| `deploymentAnnotations` _object (keys:string, values:string)_ | DeploymentAnnotations are additional annotations added to the agent Deployment<br />object itself. Unlike Annotations, which apply to the agent pods, these apply to<br />the Deployment metadata. Keys set here take precedence over annotations inherited<br />from the agent resource metadata. This has no effect when the agent runs with the<br />Sandbox workload mode, as no Deployment is created in that mode. |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
@@ -770,7 +793,9 @@ _Appears in:_
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
+| `deploymentAnnotations` _object (keys:string, values:string)_ | DeploymentAnnotations are additional annotations added to the agent Deployment<br />object itself. Unlike Annotations, which apply to the agent pods, these apply to<br />the Deployment metadata. Keys set here take precedence over annotations inherited<br />from the agent resource metadata. This has no effect when the agent runs with the<br />Sandbox workload mode, as no Deployment is created in that mode. |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
@@ -1143,6 +1168,24 @@ _Appears in:_
 | `options` _object (keys:string, values:string)_ | Options for the Ollama API |  |  |
 
 
+#### OpenAIAPIFormat
+
+_Underlying type:_ _string_
+
+OpenAIAPIFormat selects the OpenAI HTTP API shape used by the Go ADK runtime.
+
+_Validation:_
+- Enum: [chatCompletions responses]
+
+_Appears in:_
+- [OpenAIConfig](#openaiconfig)
+
+| Field | Description |
+| --- | --- |
+| `chatCompletions` |  |
+| `responses` |  |
+
+
 #### OpenAIConfig
 
 
@@ -1168,6 +1211,7 @@ _Appears in:_
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
 | `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh] <br /> |
+| `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects which OpenAI HTTP API the runtime uses for this model.<br />chatCompletions (default) posts to /v1/chat/completions.<br />responses posts to /v1/responses. Use responses for OpenAI-compatible<br />gateways or models that require the Responses API. | chatCompletions | Enum: [chatCompletions responses] <br /> |
 | `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
 
@@ -1463,7 +1507,9 @@ _Appears in:_
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
+| `deploymentAnnotations` _object (keys:string, values:string)_ | DeploymentAnnotations are additional annotations added to the agent Deployment<br />object itself. Unlike Annotations, which apply to the agent pods, these apply to<br />the Deployment metadata. Keys set here take precedence over annotations inherited<br />from the agent resource metadata. This has no effect when the agent runs with the<br />Sandbox workload mode, as no Deployment is created in that mode. |  |  |
 | `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
@@ -1588,6 +1634,7 @@ _Appears in:_
 | `type` _[ToolProviderType](#toolprovidertype)_ |  |  | Enum: [McpServer Agent] <br /> |
 | `mcpServer` _[McpServerTool](#mcpservertool)_ |  |  |  |
 | `agent` _[TypedReference](#typedreference)_ |  |  |  |
+| `isolateSessions` _boolean_ | IsolateSessions controls per-call session isolation for Agent-type tools.<br />Only valid when Type is Agent.<br /><br />When unset or false (default), every call this agent makes to the<br />referenced sub-agent reuses the same A2A context_id, so all calls land<br />in one shared sub-agent session (session continuity for stateful<br />sub-agents).<br /><br />When true, each call mints a fresh context_id, so every invocation runs<br />in its own isolated sub-agent session. This is required for parallel<br />fan-out to a sub-agent: without it, N parallel calls in one turn<br />collapse into a single shared sub-agent session instead of N<br />independent ones.<br /><br />Cross-turn/conversation continuity for stateful sub-agents does not<br />depend on this flag; it rides the x-kagent-root-context-id header,<br />which stays stable regardless of IsolateSessions. |  |  |
 | `headersFrom` _[ValueRef](#valueref) array_ | HeadersFrom specifies a list of configuration values to be added as<br />headers to requests sent to the Tool from this agent. The value of<br />each header is resolved from either a Secret or ConfigMap in the same<br />namespace as the Agent. Headers specified here will override any<br />headers of the same name/key specified on the tool. |  |  |
 
 
