@@ -1,7 +1,7 @@
 ---
 title: Creating your first agent
 linkTitle: Your First Agent
-description: Learn how to create your first AI agent using the kagent dashboard.
+description: Create an agent in the kagent dashboard, attach tools to it, then test it from the chat interface.
 weight: 2
 author: kagent.dev
 ---

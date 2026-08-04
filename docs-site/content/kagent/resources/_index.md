@@ -1,6 +1,6 @@
 ---
 title: Resources
-description: Find helpful resources and FAQs for kagent. Access guides, community links, and more.
+description: CLI and API reference, Helm chart values, the built-in tool catalog, FAQs, release notes, and community links.
 weight: 7
 author: kagent.dev
 ---

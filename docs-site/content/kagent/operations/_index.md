@@ -1,6 +1,6 @@
 ---
 title: Operations
-description: Manage your kagent installation with upgrade, uninstall, and operational tasks.
+description: Upgrade and roll back releases, debug a running install, uninstall cleanly, and review considerations for production clusters.
 weight: 7
 author: kagent.dev
 ---

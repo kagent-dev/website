@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: Welcome to kagent! Start here to understand what kagent is, how to install it, and how to contribute.
+description: What kagent is, the platform capabilities included in a default install, and how to install it on a Kubernetes cluster.
 weight: 1
 author: kagent.dev
 ---

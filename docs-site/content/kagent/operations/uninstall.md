@@ -1,6 +1,6 @@
 ---
 title: Uninstall kagent
-description: Learn how to uninstall kagent from your Kubernetes cluster.
+description: Uninstall kagent and, as a separate step, remove the kagent CRDs. Both actions delete agent resources across every namespace and cannot be undone.
 weight: 2
 author: kagent.dev
 ---

@@ -1,5 +1,6 @@
 ---
 title: kmcp
+description: Scaffold, run, and debug MCP servers locally with the kmcp CLI, then deploy them to Kubernetes as MCPServer resources with managed secrets.
 weight: 1
 author: kagent.dev
 ---

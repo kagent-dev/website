@@ -1,6 +1,6 @@
 ---
 title: Tracing
-description: A guide to tracing your kagent agents.
+description: Install Jaeger, turn on OpenTelemetry tracing in the kagent Helm release, then inspect a trace for a single agent request.
 weight: 6
 author: kagent.dev
 ---

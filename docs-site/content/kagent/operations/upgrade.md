@@ -1,6 +1,6 @@
 ---
 title: Upgrade kagent
-description: Learn how to upgrade kagent to the latest version.
+description: Upgrade a kagent release with Helm, verify the new version is running, and roll back if the upgrade goes wrong.
 weight: 1
 author: kagent.dev
 ---

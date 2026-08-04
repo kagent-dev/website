@@ -1,7 +1,7 @@
 ---
 title: Bringing your own LangGraph agent to kagent
 linkTitle: BYO LangGraph Agents
-description: Bring your own LangGraph agent to kagent
+description: Wire a LangGraph agent into kagent with the kagentCheckpointer, register it as a BYO Agent resource, and invoke it over A2A.
 weight: 1
 author: kagent.dev
 ---

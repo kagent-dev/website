@@ -1,6 +1,6 @@
 ---
 title: Amazon Bedrock
-description: Use Amazon Bedrock models with kagent via the native Bedrock provider or the OpenAI Chat Completions API.
+description: ModelConfig examples for both Bedrock access paths, including the IAM credentials each one needs and when to prefer the native provider.
 weight: 1
 author: kagent.dev
 ---

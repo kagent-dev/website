@@ -1,6 +1,6 @@
 ---
 title: Observability
-description: Monitor and observe your kagent installation with dashboards and audit logs.
+description: Open the kagent dashboard, trace agent requests with Jaeger, and audit the prompts your agents send.
 weight: 6
 author: kagent.dev
 ---
