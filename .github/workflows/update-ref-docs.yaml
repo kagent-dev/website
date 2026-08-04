@@ -316,14 +316,25 @@ jobs:
             # (might be replaced by helm docs template in the future)
             sed -i '/!\[Version:/,/^$/d' "src/app/docs/kagent/resources/helm/temp.mdx"
 
-            # Wrap version placeholders in inline code so they show literally in MDX
+            # Wrap version placeholders in inline code so they show literally in MDX,
+            # and escape braces outside code spans so MDX doesn't parse Helm template
+            # snippets from values.yaml comments (e.g. {{ .Release.Namespace }}) as JSX
+            # expressions.
             python - <<'PY'
+            import re
             from pathlib import Path
 
             path = Path("src/app/docs/kagent/resources/helm/temp.mdx")
             text = path.read_text()
             for placeholder in ("${KMCP_VERSION}", "${SUBSTRATE_VERSION}", "${SUBSTRATE_REPO}"):
                 text = text.replace(placeholder, "`" + placeholder + "`")
+
+            # Split on fenced blocks and inline code spans; escape braces only in prose.
+            parts = re.split(r"(```.*?```|`[^`\n]*`)", text, flags=re.S)
+            text = "".join(
+                part if index % 2 else part.replace("{", "\\{").replace("}", "\\}")
+                for index, part in enumerate(parts)
+            )
             path.write_text(text)
             PY
 
