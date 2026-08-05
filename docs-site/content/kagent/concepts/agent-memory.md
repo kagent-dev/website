@@ -1,0 +1,188 @@
+---
+title: Agent Memory
+description: Enable vector-backed long-term memory for agents to learn from past interactions.
+weight: 6
+author: kagent.dev
+---
+
+With agent memory, your agents can automatically save and retrieve relevant context across conversations using vector similarity search. Memory is built on top of the Google ADK memory implementation.
+
+## Overview
+
+Agent memory provides the following capabilities.
+
+- **Vector-backed.** A basic vector store uses embedding models to encode memories as 768-dimensional vectors.
+- **Searchable.** Agents retrieve relevant memories via cosine similarity.
+- **Automatic.** Agents extract and save user intent, key learnings, and preferences without explicit user action.
+- **Time-bounded.** Memories expire after a configurable time to live (TTL), which defaults to 15 days.
+- **Metadata.** Memories include timestamps and source session references.
+- **Shared storage.** Memory uses the kagent database (PostgreSQL), not a separate database.
+
+## Configure memory
+
+### Install kagent with Postgres
+
+To use memory, you must install kagent with a Postgres database that has the `pgvector` extension installed and vector enabled. For more information, see the [Database configuration](/docs/kagent/operations/operational-considerations#database-configuration) section.
+
+Example Helm configuration for your own external Postgres:
+
+```yaml
+database:
+  postgres:
+    urlFile: /var/secrets/db-url
+    vectorEnabled: true
+    bundled:
+      enabled: false
+controller:
+  volumes:
+    - name: db-secret
+      secret:
+        secretName: my-postgres-url-secret
+  volumeMounts:
+    - name: db-secret
+      mountPath: /var/secrets
+      readOnly: true
+```
+
+### Enable memory on an agent
+
+To enable memory, set the `memory` field on the declarative agent spec, as shown in the following YAML example. The `modelConfig` field references a `ModelConfig` object whose embedding provider generates memory vectors.
+
+You can also configure memory in the kagent UI when you create or edit an agent. In the UI, select an embedding model and set the memory TTL.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: memory-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "You are a helpful assistant with long-term memory."
+    memory:
+      modelConfig: default-model-config  # References the embedding provider
+```
+
+The embedding `ModelConfig` does not have to use the same provider as the agent's main LLM. kagent supports several embedding providers, including Amazon Bedrock as shown in the following section.
+
+### ModelConfig example: Amazon Bedrock
+
+To use [Amazon Bedrock Titan embedding models](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html), create a `ModelConfig` with `provider: Bedrock`. 
+
+The Bedrock provider uses the standard AWS credential chain, so no API key secret is required. The agent's pod must have AWS credentials with the `bedrock:InvokeModel` permission for the chosen model. On Kubernetes, the recommended setup is [EKS IRSA on the agent ServiceAccount](/docs/kagent/supported-providers/amazon-bedrock#step-3-configure-the-agent-to-use-an-iam-role). 
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: bedrock-embed
+  namespace: kagent
+spec:
+  provider: Bedrock
+  model: amazon.titan-embed-text-v2:0
+  bedrock:
+    region: us-east-1
+```
+
+| Setting | Description |
+| --- | --- |
+| `provider` | Set to `Bedrock`. |
+| `model` | The Bedrock embedding model ID, such as `amazon.titan-embed-text-v2:0` or `amazon.titan-embed-text-v1`. Note that Titan v1 produces 1536-dimensional vectors and Titan v2 produces 1024-dimensional vectors. kagent truncates and L2-normalizes both to the 768-dimensional vector store, so no model-specific dimension setting is required. |
+| `bedrock.region` | The AWS region where the model is available, for example `us-east-1`. |
+
+Reference the embedding `ModelConfig` from the agent's `memory.modelConfig` field:
+
+```yaml
+spec:
+  declarative:
+    memory:
+      modelConfig: bedrock-embed
+```
+
+### Optional: Custom TTL
+
+To change the default memory retention period of 15 days, set the `ttlDays` field.
+
+```yaml
+memory:
+  modelConfig: default-model-config
+  ttlDays: 30  # Memories expire after 30 days instead of the default 15
+```
+
+## Work with memories
+
+Review the following sections to understand what your agents can do with memory.
+
+### Automatic save cycle
+
+1. The agent processes user messages normally.
+2. Every 5th user message, the agent automatically extracts key information such as user intent, key learnings, and preferences.
+3. The agent summarizes extracted memories and encodes them as embedding vectors.
+4. The agent stores the vectors in the database with metadata and timestamps.
+
+### Memory retrieval (prefetch)
+
+Before generating a response, the agent performs the following steps.
+
+1. Encodes the current user message as an embedding vector.
+2. Searches stored memories by cosine similarity.
+3. Injects the most relevant memories into the agent's context.
+
+### Memory tools
+
+When you enable memory, the agent receives three additional tools.
+
+| Tool | Description |
+|------|-------------|
+| `save_memory` | Explicitly save a piece of information. |
+| `load_memory` | Search for relevant memories by query. |
+| `prefetch_memory` | Automatically run before the agent generates a response to retrieve relevant memories. |
+
+You can also instruct the agent to use `save_memory` or `load_memory` explicitly during a conversation.
+
+### View memories in the UI
+
+In the kagent UI, you can view the memories that an agent has saved. With saved memories, you can inspect what the agent has learned and retained from past interactions.
+
+### Manage memories via API
+
+The following API endpoints let you manage memories programmatically.
+
+Add a memory:
+
+```
+POST   /api/memories/sessions
+```
+
+Add memories in batch:
+
+```
+POST   /api/memories/sessions/batch
+```
+
+Search memories by cosine similarity:
+
+```
+POST   /api/memories/search
+```
+
+List memories:
+
+```
+GET    /api/memories?agent_name=X&user_id=Y
+```
+
+Delete all memories for an agent:
+
+```
+DELETE /api/memories?agent_name=X&user_id=Y
+```
+
+## Known limitations
+
+- **No per-memory deletion.** You can delete all memories for an agent, but you cannot delete individual memory entries.
+- **No cross-agent memory sharing.** Each agent has its own isolated memory store. You cannot share memories across agents.
+- **Not pluggable.** Memory is built on the Google ADK memory implementation and cannot be swapped for an alternative memory solution (such as Cognee). However, if an alternative memory solution exposes an [MCP server](/docs/kagent/concepts/tools#mcp-tools), you can add it as a tool and instruct the agent to use it instead of the built-in memory.
+

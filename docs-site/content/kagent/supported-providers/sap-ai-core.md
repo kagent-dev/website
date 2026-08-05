@@ -1,0 +1,52 @@
+---
+title: SAP AI Core
+description: Learn how to configure SAP AI Core models for kagent.
+author: kagent.dev
+---
+
+## Configuring SAP AI Core
+
+kagent connects to SAP AI Core through its [Orchestration Service](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/orchestration), which provides a unified endpoint for models from multiple families, including Anthropic, OpenAI, Gemini, Amazon, Meta, and Mistral. Authentication uses OAuth2 client credentials from your SAP AI Core service key.
+
+1. Create a Kubernetes Secret that stores the OAuth2 client credentials. The Secret must contain two keys, `client_id` and `client_secret`. Replace the placeholder values with the credentials from your SAP AI Core service key.
+
+   ```shell
+   export SAP_AI_CORE_CLIENT_ID=<your_client_id>
+   export SAP_AI_CORE_CLIENT_SECRET=<your_client_secret>
+   kubectl create secret generic kagent-sapaicore -n kagent \
+     --from-literal client_id=$SAP_AI_CORE_CLIENT_ID \
+     --from-literal client_secret=$SAP_AI_CORE_CLIENT_SECRET
+   ```
+
+   Unlike other providers, the `apiKeySecretKey` field on the `ModelConfig` is not used for SAP AI Core. The keys `client_id` and `client_secret` are read directly from the Secret.
+
+2. Create a `ModelConfig` resource that references the Secret and specifies the SAP AI Core endpoint, resource group, and OAuth2 token endpoint. You can find these values in your SAP AI Core service key.
+
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: kagent.dev/v1alpha2
+   kind: ModelConfig
+   metadata:
+     name: sapaicore-model-config
+     namespace: kagent
+   spec:
+     apiKeySecret: kagent-sapaicore
+     model: anthropic--claude-4.5-sonnet
+     provider: SAPAICore
+     sapAICore:
+       baseUrl: "https://api.ai.prod.eu-central-1.aws.ml.hana.ondemand.com"
+       authUrl: "https://<your-tenant>.authentication.eu10.hana.ondemand.com"
+       resourceGroup: "default"
+   EOF
+   ```
+
+   | Field | Required | Description |
+   | --- | --- | --- |
+   | `apiKeySecret` | Yes | Name of the secret that contains the OAuth2 client credentials. |
+   | `model` | Yes | Model names follow the Orchestration Service naming convention, such as `anthropic--claude-4.6-sonnet`, `gpt-5-mini`, or `gemini-3-pro-preview`. For the full list of supported models, see the [SAP AI Core Orchestration Service documentation](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/models-and-scenarios-in-generative-ai-hub). |
+   | `provider` | Yes | Provider name. Must be `SAPAICore`. |
+   | `sapAICore.baseUrl` | Yes | Base URL for the SAP AI Core API. |
+   | `sapAICore.authUrl` | No | OAuth2 token endpoint URL. |
+   | `sapAICore.resourceGroup` | No | Resource group in SAP AI Core. Defaults to `default`. |
+
+After the resource is applied, you can select the model from the **Model** dropdown in the UI when creating or updating agents.
