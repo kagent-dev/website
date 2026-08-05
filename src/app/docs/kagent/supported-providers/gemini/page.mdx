@@ -47,3 +47,17 @@ spec:
 4. Apply the above resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
+
+## Max output tokens
+
+Use `gemini.maxOutputTokens` to cap the number of tokens the model can generate in a single response.
+
+```yaml
+spec:
+  provider: Gemini
+  model: gemini-2.5-pro
+  gemini:
+    maxOutputTokens: 8192
+```
+
+A per-request value set by the agent always takes precedence over this model-level default.
