@@ -16,6 +16,7 @@ kagent run [project-directory] [flags]
 - `project-directory` - The directory containing the agent project (default: current directory)
 
 **Flags:**
+- `--build` - Rebuild the Docker image before running
 - `--project-dir` - Project directory (default: current directory)
 
 **Global Flags:**
@@ -28,6 +29,16 @@ kagent run [project-directory] [flags]
 ## About `kagent run`
 
 The `kagent run` command runs an agent project locally using `docker-compose` and launches an interactive chat session. This way, you can test and interact with your agent before deploying it to a Kubernetes cluster.
+
+### Rebuilding before running
+
+Use the `--build` flag to rebuild the Docker image before running the agent. This is useful when you've made changes to your agent code and want to test the updated version without manually running `kagent build` first.
+
+```bash
+kagent run --build
+```
+
+This command rebuilds the agent image and then starts the interactive chat interface. It's equivalent to running `kagent build` followed by `kagent run`.
 
 ## Example
 
@@ -42,4 +53,12 @@ Run an agent project from a specific directory:
 ```bash
 kagent run ./my-agent
 ```
+
+Rebuild the image and run the agent:
+
+```bash
+kagent run --build
+```
+
+This is useful after making code changes to ensure you're testing the latest version of your agent.
 

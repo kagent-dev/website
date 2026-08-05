@@ -1,0 +1,152 @@
+---
+title: Quick Start
+description: A quick guide to get kagent installed and running with your first AI agent.
+weight: 1
+author: kagent.dev
+---
+
+This guide will help you get started with [kagent](https://github.com/kagent-dev/kagent), an open-source framework that brings the power of agentic AI to cloud-native environments. We'll walk through setting up the environment and deploying your first AI agent.
+
+## Prerequisites
+
+Before you begin, make sure you have the following tools installed:
+
+- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) for creating and running a local Kubernetes cluster
+- [Helm](https://helm.sh/docs/intro/install/) - for installing the kagent chart
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) - for interacting with your cluster
+
+To run the AI agents you'll also need an [OpenAI](https://openai.com) API key. You can [get one here](https://platform.openai.com/account/api-keys).
+
+## Installing kagent
+
+1. Set the OpenAI API key as an environment variable.
+
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+2. Download the kagent CLI. By default, the latest version {{< reuse "versions/kagent.md" >}} of kagent is installed.
+
+   ```bash
+   brew install kagent
+   ```
+
+   or
+
+   ```bash
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+   ```
+
+3. Install kagent to the cluster by using the CLI. The following command installs a demo profile with agents and MCP tools preloaded for you. If you don't want these default agents, include the `--profile minimal` flag.
+
+   ```bash
+   kagent install --profile demo
+   ```
+   
+   Example output:
+
+   ```console
+   kagent installed successfully
+   ```
+
+## Accessing the kagent dashboard (UI)
+
+1. To open the kagent dashboard, run the dashboard command from the CLI. The CLI sets up the port-forward to the UI service running inside the cluster and opens the dashboard.
+
+   ```bash
+   kagent dashboard
+   ```
+
+   ```console
+   kagent dashboard is available at http://localhost:8082
+   Press Enter to stop the port-forward...
+   ```
+
+2. Click **Let's Get Started** in the welcome wizard.
+
+   ![kagent welcome wizard](/images/kagent-wizard.png "kagent welcome wizard")
+
+3. Walk through the wizard screen by screen to set up your first agent. At any time, you can exit out of the wizard by clicking **Skip wizard**.
+
+   * **Step 1: Configure AI Model**: Choose an existing model such as `gpt-4.1-mini`.
+   * **Step 2: Set up the AI Agent**: Review the default details for a basic Kubernetes agent.
+   * **Step 3: Select Tools**: Review the preselected tools for your first agent.
+   * **Step 4: Review Agent Configuration**: Review the details of your selections, then click **Create kagent/my-first-k8s-agent & Finish**.
+
+   ![kagent agent creation](/images/kagent-wizard-review.png "Review and finish your first wizard in the kagent wizard")
+
+Good job! You created your first agent. You can share your success, or click **Finish & Go to Agent**.
+
+## Running Your First AI Agent
+
+Once you're in the kagent UI, you can start interacting with the pre-configured sample agents. You can click on the agent card to view the agent details and start a conversation.
+
+1. From the kagent UI landing page, find your `kagent/my-first-k8s-agent` agent. You might have to refresh the page.
+
+   ![kagent agent list](/images/kagent-landing.png "Your first agent")
+
+2. Click your agent, then enter a message such as "What API resources are running in my cluster?", and click **Send**. The agent uses the available tools as shown in the  to help answer the question.
+
+   ![kagent chat](/images/k8s-agent-first-chat.png "Chat with your agent")
+
+3. Click around to explore the UI some more.
+   
+   * The menu shows a history of your chats as well as the ability to start a **New Chat**.
+   * The **Agent Details** panel shows the tools that the agent uses to respond to your messages.
+   * The chat interface includes **Arguments** and **Results** that you can expand to see more details about how your question was answered. For example, the **Results** show the output of the `kubectl` terminal commands that the agent ran to list the API resources in your cluster.
+   
+   ![kagent chat details](/images/k8s-agent-results.png "Explore features of the chat UI, such as results that show the output of terminal commands")
+
+## Using the CLI
+
+Interact with kagent in your terminal.
+
+1. Review the available commands.
+
+   ```shell
+   kagent help
+   
+   Available Commands:
+     bug-report  Generate a bug report
+     completion  Generate the autocompletion script for the specified shell
+     dashboard   Open the kagent dashboard
+     get         Get a kagent resource
+     help        Help about any command
+     install     Install kagent
+     invoke      Invoke a kagent agent
+     uninstall   Uninstall kagent
+     version     Print the kagent version
+   ```
+
+2. List the current agents.
+
+   ```shell
+   kagent get agent
+   +---+---------------------+----+----------------------------+
+   | # | NAME                | ID | CREATED                    |
+   +---+---------------------+----+----------------------------+
+   | 0 | helm-agent          | 2  | 2025-03-13T19:08:14.527935 |
+   | 1 | observability-agent | 3  | 2025-03-13T19:08:14.348957 |
+   | 2 | istio-agent         | 1  | 2025-03-13T19:08:13.794848 |
+   +---+---------------------+----+----------------------------+
+   ```
+
+3. Interact with an agent with the `invoke` command. The agent is called and a conversation starts.
+
+   ```shell
+   kagent invoke -t "What Helm charts are in my cluster?" --agent helm-agent
+   ```
+
+   In the output, verify that the agent found the `kagent` Helm chart release. If any other Helm charts are in your cluster, it finds those, too. Keep chatting with the agent to see what other things it can do :)
+
+## Next Steps
+
+- Create your [first agent](/docs/kagent/getting-started/first-agent)
+- Learn about [Core Concepts](/docs/kagent/concepts)
+- Join our [Community](https://discord.gg/Fu3k65f2k3)
+
+## Need Help?
+
+- Visit our [GitHub repository](https://github.com/kagent-dev/kagent)
+- Ask a question on [Discord](https://discord.gg/Fu3k65f2k3)
+- Check out the [FAQ](/docs/kagent/resources/faq)

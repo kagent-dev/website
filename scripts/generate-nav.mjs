@@ -99,7 +99,7 @@ async function buildNavigation() {
           const installationIndex = subSectionItems.findIndex(item => item.title.toLowerCase() === 'installation');
           const hardcodedItems = [
               { title: "Feature Roadmap", href: "https://github.com/kagent-dev/kagent/blob/main/README.md#roadmap", order: installationIndex !== -1 ? installationIndex + 1 : Infinity, external: true },
-              { title: "Contributing", href: "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTION.md", order: installationIndex !== -1 ? installationIndex + 2 : Infinity, external: true },
+              { title: "Contributing", href: "https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md", order: installationIndex !== -1 ? installationIndex + 2 : Infinity, external: true },
           ];
           subSectionItems.push(...hardcodedItems);
           subSectionItems.sort((a, b) => a.order - b.order); // Re-sort after adding

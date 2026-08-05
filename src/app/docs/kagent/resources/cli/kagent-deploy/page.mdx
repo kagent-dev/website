@@ -21,6 +21,7 @@ kagent deploy [project-directory] [flags]
 - `--dry-run` - Output YAML manifests without applying them to the cluster
 - `--image, -i` - Image to use (defaults to `localhost:5001/{agentName}:latest`)
 - `--namespace` - Kubernetes namespace to deploy to
+- `--platform` - Target platform for Docker build (e.g., linux/amd64, linux/arm64)
 
 **Global Flags:**
 - `--kagent-url` - kagent URL (default: "http://localhost:8083")
@@ -67,5 +68,11 @@ Generate manifests without deploying:
 
 ```bash
 kagent deploy ./my-agent --api-key "your-api-key" --dry-run > manifests.yaml
+```
+
+Deploy with a specific platform for the Docker build:
+
+```bash
+kagent deploy ./my-agent --env-file .env --platform linux/amd64
 ```
 

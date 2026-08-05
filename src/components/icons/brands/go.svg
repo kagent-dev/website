@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+  <!-- Body -->
+  <ellipse cx="12" cy="13" rx="7.5" ry="9.5" fill="#67D7E0"/>
+  <!-- Left ear -->
+  <ellipse cx="7.5" cy="4.5" rx="1.8" ry="2.2" fill="#67D7E0"/>
+  <ellipse cx="7.5" cy="4.5" rx="1" ry="1.4" fill="#C8B49B"/>
+  <!-- Right ear -->
+  <ellipse cx="16.5" cy="4.5" rx="1.8" ry="2.2" fill="#67D7E0"/>
+  <ellipse cx="16.5" cy="4.5" rx="1" ry="1.4" fill="#C8B49B"/>
+  <!-- Left eye white -->
+  <ellipse cx="9.2" cy="8.5" rx="2.5" ry="2.8" fill="#fff"/>
+  <!-- Right eye white -->
+  <ellipse cx="14.8" cy="8.5" rx="2.5" ry="2.8" fill="#fff"/>
+  <!-- Left pupil -->
+  <circle cx="9.8" cy="8.3" r="1.1" fill="#1A1A1A"/>
+  <!-- Right pupil -->
+  <circle cx="14.2" cy="8.3" r="1.1" fill="#1A1A1A"/>
+  <!-- Nose -->
+  <ellipse cx="12" cy="10.5" rx="0.6" ry="0.4" fill="#C8B49B"/>
+  <!-- Teeth -->
+  <rect x="10.8" y="12" width="1.1" height="1.5" rx="0.3" fill="#fff" stroke="#DADADA" stroke-width="0.2"/>
+  <rect x="12.1" y="12" width="1.1" height="1.5" rx="0.3" fill="#fff" stroke="#DADADA" stroke-width="0.2"/>
+  <!-- Left arm -->
+  <ellipse cx="5" cy="14" rx="1.2" ry="2.5" transform="rotate(-15 5 14)" fill="#67D7E0"/>
+  <!-- Right arm -->
+  <ellipse cx="19" cy="14" rx="1.2" ry="2.5" transform="rotate(15 19 14)" fill="#67D7E0"/>
+  <!-- Left foot -->
+  <ellipse cx="9.5" cy="22" rx="1.5" ry="0.8" fill="#C8B49B"/>
+  <!-- Right foot -->
+  <ellipse cx="14.5" cy="22" rx="1.5" ry="0.8" fill="#C8B49B"/>
+</svg>

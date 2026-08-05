@@ -1,0 +1,170 @@
+import { Aside } from "@/components/mdx/aside";
+
+export const metadata = {
+  title: "Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026",
+  publishDate: "2025-11-18T00:00:00Z",
+  description:
+    "Learn how to deploy your CrewAI agents as production-ready KAgent BYO agents in just minutes.",
+  author: "Michael Levan",
+  authorIds: ["michaellevan"],
+  jsonLd: {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does an agent mesh differ from a traditional service mesh?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "While foundational concepts are shared, agent meshes emphasize dynamic discovery, policy-driven connectivity, and AI/ML workload support—including protocol flexibility and observability for autonomous \"agentic\" workflows."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I start with open source and move to enterprise features as I grow?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Projects like Istio or Gloo Mesh enable this; start with OSS, then add enterprise controls for zero trust, compliance, and multi-cluster federation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does mesh improve business resilience and innovation?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "By automating failover, security, and observability, meshes reduce downtime, accelerate onboarding, and free teams to focus on AI value—not infrastructure firefighting."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is mesh only for Kubernetes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Leading meshes support VM-based, legacy, and hybrid workloads—enabling gradual migrations and broad coverage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are the cost implications?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Meshes can dramatically reduce infrastructure and operational costs as agent volumes scale, especially with ambient/sidecarless modes and centralized controls."
+        }
+      }
+    ]
+  }
+};
+
+# Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026
+
+AI has transformed from a buzzword to chatbots that help you figure out the perfect family cooking recipe to agentic infrastructure running in some of the largest organizations in the world. Because of that, AI-driven business value in 2026 will depend on the flexibility, scalability, and resilience of your agent infrastructure, networking, security, and overall observability within your environment.
+
+With organizations implementing and betting on AI, whether for automation, internal-specific agents to perform a specific task, or to enhance the DevEx/customer experience, mesh-based solutions like kagent are reshaping how enterprise teams build, connect, and secure distributed AI agents.
+
+## Why kagent?
+
+Before jumping into the credibility, deployment scenarios, and enhanced capabilities that kagent gives you, let’s talk about the “why” behind it, because there are some great questions that come out of the “why”.
+
+- Why yet another agentic framework?
+- Why run kagent when chatbots and AI consoles exist?
+- Why not just use AI that’s built into whatever tool/platform (like a cloud provider) is already being used?
+
+The answers are flexibility, control, governance, and declarative deployment options.
+
+Taking a step back, what do the current agentic-based frameworks give you right now? They give you the ability to write an agent in Python or JS (those are the typical general-purpose programming languages used), which involves you writing multiple clients (because you’ll definitely need more than one agent), multiple servers (because those agents need a server so others can connect to them), and connections to MCP servers. Once the clients/servers are built, you now have to create your own security (e.g. libraries/packages within your agent code to secure traffic between A2A, agent to MCP, and to various LLMs), observability (you need to create/expose your own metrics endpoints), and figure out where these clients/servers are even going to run with close to 100% uptime.
+
+<Aside type="tip">
+It’s important to note that there isn’t anything wrong with agent frameworks. In fact, kagent supports the most popular ones like CrewAI and Agentic Development Kit (ADK) and kagent is built on top of kagent. The biggest question is: Do you want to set up several clients, servers, and roll your own observability, governance and security?
+</Aside>
+
+Kagent with the help of agentgateway and service mesh (Istio Ambient Mesh) resolves all of these concerns for you. Kagent is hosted on Kubernetes and you can either create agents/connections to MCP servers on the UI or do it in a declarative fashion much like any other Kubernetes workload deployment. Kagent interacts directly with agentgateway helping with the networking, observability and security layer (think rate limiting, prompt guards, etc.), and Istio helps secure the traffic (and shows you observability for it) between agents.
+
+Sidenote: if you want to create MCP servers to connect to, that’s where [kmcp](https://kagent.dev/docs/kmcp) comes into play.
+
+## What is an Agent Mesh?
+
+Now that you know the stack ([kagent](https://kagent.dev), [agentgateway](https://agentgateway.dev), and [Istio](https://istio.io)), let’s talk about what it is all together - Agent Mesh.
+
+An **agent mesh** is a transparent infrastructure layer that manages how autonomous agents (Chatbots, agents, microservices, ML workloads, etc.) communicate, discover each other, and enforce security within complex, distributed environments.
+
+<Aside type="tip">
+Think about true distributed systems - the ability to connect, secure, implement HA, and observe across any cluster. Now take that same concept and embed it into Agent protocols.
+</Aside>
+
+Unlike traditional point-to-point APIs or message queues, an Agent Mesh abstracts away the operational burden which helps with handling connectivity, observability, policy, and reliability so engineers in all specialties (Programming, DevOps, Platform Engineering, Security Engineer, etc.) can focus on business logic and AI innovation.
+
+The key thing to remember is Agent Mesh isn’t a concept that hasn’t been vetted out already in the cloud-native space. It’s inspired by [service mesh architecture](https://www.solo.io/resources/resource-kit/service-mesh), which has become standard for microservices and Kubernetes workloads.
+
+Key pieces to the puzzle include:
+
+- **Discovery and Registration:** Agents can join, leave, or move without manual reconfiguration.
+- **Traffic Management:** Intelligent routing, load balancing, and failover for agent-to-agent calls (L4-L8)
+- **Security:** Automated mTLS encryption, authentication, and fine-grained authorization.
+- **Observability:** Unified metrics, logs, and tracing across agent interactions.
+
+This approach empowers both open source and enterprise teams to compose, scale, and govern agent-driven systems—without the complexity and risk of DIY networking, security, and discovery.
+
+One last thing to leave you with before moving on is you may have noticed in the **Traffic Management** bullet point that it says “L8”. With Agent Mesh, an important realization came out - what about the context layer? Agentic Workloads are all about semantic reasoning, which is different form the traditional/syntactic approach. With semantic workflows, a person/agent/bot is asking multiple questions to an Agent and getting a responses in a collected format. What that translates to is any time you ask an LLM several questions via an Agent or an AI dashboard (think Antropics UI, ChatGPT, Geminis UI, etc.), it’s looking at the questions and saying to itself "Are these related?", and the response you get is based on the decision that was made (e.g - are all of these, in fact, related?). The way that the whole process is done from a semantic perspective is that it converts the data to prompt embeddings (e.g - Vector). The embeddings are how LLMs understand the information being passed in. It’s like how a computer understands binary.
+
+
+## Why It Matters: Algorithmic and Market Shifts
+
+The landscape is changing at a drastic rate, probably faster than ever before. Think about it - the MCP concept hasn’t even been out 1 year yet and very big organizations are already implementing it into production. That’s VERY different in comparison to what it was before (the typical scenario was a new piece of tech would come out and enterprises would adopt it in 2-5 years). For 10+ years now, the cloud-native solutions were around microservices, stateless workloads, and network/API traffic based on headers. Now, with Agentic Workloads, we’re moving toward a stateful workflow with network traffic that’s based on the body of a call, not the headers. This is a very different concept than what engineers implementing cloud solutions are used to.
+
+The move to distributed AI architectures powered by stateful/agentic workloads, Kubernetes, and clusters of intelligent agents is gathering pace. Gartner predicts that by 2026, 70% of enterprises will deploy AI agents at scale, up from just 10% in 2022. The challenge? Exactly what kagent fixes - Connecting, scaling, and securing these agents across disparate environments without stifling innovation or exposing the business to risk.
+
+<Aside type="tip">
+A recent [Solo.io executive summary](https://www.solo.io/resources/resource-kit/service-mesh) lays out the stakes: “Modern enterprises increasingly depend on microservices and cloud-native architectures to drive speed, scalability, and innovation. The efficiency and resilience of these architectures hinge on selecting the right communication patterns.” As Agents become both more numerous and mission-critical, the Agentic Mesh approach is already proven for service-to-service networking emerges as the backbone for next-generation AI infrastructure.
+</Aside>
+
+Here are a few big transitions and needs we’re seeing at Solo when working with customers:
+
+- **Explosion of AI workloads:** As the cost of inference drops and AI capabilities grow, organizations are running thousands, or millions, of agents.
+- **Hybrid/Multicloud is the norm:** Agents span on-premises, cloud, and edge environments. Network complexity and policy drift threaten reliability.
+- **Agents On Kubernetes:** Engineers don’t want to change the way they’re deploying workloads already. They want an orchestrator that’s declarative and works the same way they’ve been deploying cloud-native workloads, which is Kubernetes (and why kagent exists).
+- **Security and compliance pressure:** AI systems process sensitive data; zero trust, auditability, and encryption are non-negotiable.
+- **Operational agility:** Teams want to deploy, upgrade, and secure agents rapidly—without bottlenecks or manual toil.
+- **Token/LLM Cost:** FinOps is being bigger and bigger within the LLM community as organizations are excited about Agents, but they have zero idea what it’s going to cost them (agentgateway exposes metrics to see token usage).
+
+Agent meshes, such as those enabled by service mesh technologies like Istio or [Gloo Mesh](https://www.solo.io/products/gloo-mesh), address these shifts by centralizing control, automating security, and providing observability at scale.
+
+## Implementation Of Kagent-Based Agent Mesh
+
+When implementing Agent Mesh, there will be a few key pieces to the puzzle:
+
+1. Service Mesh: In this case, it will be Istio Ambient Mesh to handle all of the L4 and L7 traffic.
+2. Gateway: agentgateway enterprise to handle all things network traffic to LLMs/Agents/MCP Servers/A2A, observability, and security.
+3. LLM key: An API key from your favorite AI provider (OpenAI, Anthropic, etc.).
+4. Operators (Controllers and CRDs): Much like any other Kubernetes workload, CRDs extend the Kubernetes API and Controllers ensure that workloads stay running with reconciliation loops underneath the hood. The same needs will exist for Agentic workloads.
+
+Once the above configurations are accounted for, you’ll want to Define Your Agent Network Topology (e.g - map out what agents need to communicate, what MCP Servers need to be accessed, if Agents are running in other clusters), Onboard AI Agents, implement security and Zero Trust, and deploy observability (traces, logs, metrics).
+
+Much like any other application stack/environment, engineering teams won’t have the ability to know what’s going on underneath the hood with observability. Agentgateway exposes several metrics out of the box including LLM and token usage. How agents communicate with each other or to MCP Servers will require network implementations, especially if Agents are running in different clusters or on-prem. For example, if you’re in an air-gapped environment, would the Agents that you’re deploying have internet connectivity to the LLM of your choosing? Last but certainly not least is the security to Agents, for Agents, and the connectivity to MCP Servers. With kagent and agentgateway, implementations like Prompt Guards (like policy enforcement, but for keywords/phrases in a prompt), Rate Limiting (e.g - only 1 token to an LLM every 100 seconds), and authentication to Agents and MCP Servers via system-level authentication like JWT.
+
+With Agent Mesh, you not only have network, observability, and security at the L4, L7, and L8 layers, but you also have a full fault tolerant environment for Agentic Infrastructure. It’s the definition of managing your Agents just like every good enterprise would an application stack.
+
+
+## Benchmarks & Case Studies: AI Mesh in Action
+
+### Case Study: Multi-Cluster AI Resilience in Production
+
+A global fintech scaled its AI fraud detection mesh across 12 Kubernetes clusters using Gloo Mesh. Result: downtime fell by 70%, with automated failover and [centralized multi-cluster control](https://rafay.co/ai-and-cloud-native-blog/top-7-reasons-why-a-centralized-management-platform-is-key-to-overcoming-day-2-kubernetes-challenges) eliminating configuration drift and human error.
+
+### Case Study: Open Source acceleration, Enterprise Guardrails
+A healthcare AI provider adopted open source mesh for initial agent connectivity, then upgraded to enterprise controls for compliance (HIPAA, FIPS). Automation of [mTLS across clusters](https://docs.solo.io/gloo-mesh-enterprise/main/setup/prod/certs/istio/managed/cert-rotation/) and policy-driven governance cut audit prep time by 60% and enabled safe scaling into new markets.
+
+
+### Benchmark: Cost Optimization*
+By moving from per-agent proxies to a sidecarless (ambient) mesh, one e-commerce innovator [reduced infrastructure spend by up to 90%](https://www.solo.io/blog/how-ambient-mesh-delivers-advanced-resource-and-cost-savings) and improved developer velocity—onboarding new AI agents in minutes, not weeks.
+
+## Pitfalls & Avoidance Tips When Implementing Agentic Mesh
+
+- **Overcomplicating the Mesh:** Start with a minimal deployment; add advanced policies (e.g., traffic splitting, L7 filtering) only as needed.
+- **Ignoring Observability:** Without end-to-end tracing ([see OpenTelemetry integration](https://www.solo.io/blog/opentelemetry-gloo-platform-graph)), debugging AI agent interactions is nearly impossible.  
+- **Manual Certificate Management:** Automate [certificate rotation and mTLS enforcement](https://docs.solo.io/gloo-mesh-enterprise/main/setup/prod/certs/istio/managed/cert-rotation/) to avoid outages and security gaps.  
+- **Neglecting Multi-Cluster Planning:** If you anticipate growth, set up [mesh federation](https://docs.solo.io/gloo-mesh-enterprise/main/getting_started/multi/) early to avoid migration pain.  
+- **One-Size-Fits-All Policies:** Fine-tune resiliency and security settings for each workload; over-aggressive defaults can harm performance.
+
+## Conclusion
+
+As AI agents become the building blocks of digital transformation, the infrastructure for connecting, securing, and managing them determines business success. Kagent’s Agent Mesh approach, rooted in open source innovation and enterprise-grade control, unlocks the operational agility, resilience, and cost optimization required for 2026 and beyond.

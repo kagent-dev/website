@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -21,14 +21,32 @@ interface DocsLayoutClientProps {
 }
 
 export default function DocsLayoutClient({ navigation, children }: DocsLayoutClientProps) {
+  const pathname = usePathname();
 
-  function initializeExpandedSections(navigation: NavItem[]): { [key: string]: boolean } {
+  function initializeExpandedSections(navigation: NavItem[], currentPath: string): { [key: string]: boolean } {
     const initial: { [key: string]: boolean } = {};
+
+    // Helper function to check if path matches
+    const isActiveItem = (href: string) => currentPath === href || currentPath.startsWith(href + '/');
+
+    // Helper function to check if section contains active item
+    const containsActiveItem = (items?: NavItem[]): boolean => {
+      if (!items) return false;
+      return items.some(item => {
+        if (isActiveItem(item.href)) return true;
+        if (item.items) return containsActiveItem(item.items);
+        return false;
+      });
+    };
+
     navigation.forEach(section => {
-      initial[section.title] = false;
+      // Expand section if it or its children contain the active page
+      initial[section.title] = isActiveItem(section.href) || containsActiveItem(section.items);
+
       section.items?.forEach(item => {
         if (item.items && item.items.length > 0) {
-          initial[item.title] = false;
+          // Expand subsection if it or its children contain the active page
+          initial[item.title] = isActiveItem(item.href) || containsActiveItem(item.items);
         }
       });
     });
@@ -36,10 +54,14 @@ export default function DocsLayoutClient({ navigation, children }: DocsLayoutCli
   }
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() =>
-    initializeExpandedSections(navigation)
+    initializeExpandedSections(navigation, pathname)
   );
+
+  // Update expanded sections when pathname changes
+  useEffect(() => {
+    setExpandedSections(initializeExpandedSections(navigation, pathname));
+  }, [pathname, navigation]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

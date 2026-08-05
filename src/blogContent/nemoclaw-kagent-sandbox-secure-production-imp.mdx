@@ -1,0 +1,145 @@
+export const metadata = {
+  title: "NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation",
+  publishDate: "2026-05-07T00:00:00Z",
+  description:
+    "Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell",
+  author: "Michael Levan",
+  authorIds: ["michaellevan"],
+};
+
+# NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation
+
+
+There are many Agentic clients (to interact with your Agent) and methods for building via your LLM of choice, but what about the full end-to-end suite? Client, sandbox, observability, security, AuthN/Z, policies, and a full enterprise integration?
+
+That's where kagent + NemoClaw comes into play.
+
+In this blog post, you will learn from a theoretical and hands-on perspective how to integrate kagent with NemoClaw and OpenShell for a scalable, Agentic implementation.
+
+## **What's The Stack?**
+
+Before getting into the hands-on portion, let's first dive into the key aspects of this implement:
+
+1. [kagent](https://github.com/kagent-dev/kagent)
+2. [NemoClaw](https://github.com/NVIDIA/NemoClaw)
+3. [OpenShell](https://github.com/NVIDIA/OpenShell/)
+
+kagent is the agentic runtime that you use to deploy, run, manage, secure, and govern Agents in a Kubernetes environment. Without it, you would need to implement a client/server architecture (the client because the interaction between you and your Agent and server being the hosted/exposed Agent) in a manual way on Kubernetes. Kagent provides the CRDs and the ability to manage and scale Agents just like you would any other Kubernetes workload.
+
+OpenShell is the secure sandbox from NVIDIA. Right now, the majority of production-grade Agents run on someones local computer, which leaves security holes wide open. By doing this, that means Agents have acecss to local files, folders, and command-line tools (e.g - kubectl, az cli, aws cli, etc.) becase the user running the Agents has access to these things. Within a sandbox environment, everything from the CLI tools to LLM and MCP access is isolated. The Agent running within a sandbox only has access to what you explicitly say.
+
+NemoClaw is the client built on top of, and with, OpenClaw to give users the ability to interact with OpenShell in a secure, governed way. It's the reference/security stack to ensure that users can safely interact with sandboxes.
+
+## **Where Does Kagent Come Into Play?**
+
+Putting the stack described above together, you now have an enterprise governance layer to interact with NemoClaw and OpenShell. With NemoClaw, you get a secure client. With OpenShell, you get an isolated, Agent sandbox.
+
+Bringing that all together with kagent, you get security and isolation within Kubernetes for your Agents comprised of policies, OBO, OIDC-based OAuth, and context/memory management, observability (full traces/logs/metrics for all Agentic calls), multi-cluster governance (waypoints for clusters to securely communicate), and declarative configurations that can be managed and deployed on the terminal or with a GitOps-based approach.
+
+NemoClaw + OpenShell give you a secure client built on top of OpenClaw and a sandbox. Kagent with NemoClaw + OpenShell gives you end-to-end security, governance, observability, workflow management, and evaluations. You get a full agentic stack/suite out of the box.
+
+With the above defined, lets dive into the hands-on portion and deploy.
+
+## Hands-On Kagent With NemoClaw and OpenShell Integration
+
+With the theory and the "why" talked about in the two previous sections, let's set up kagent with NemoClaw and OpenShell integrations. This section will cover both setting up a basic sandbox using the kagent Sandbox object and a Sandbox that allows you to interact with your kagent + NemoClaw setup using Telegram.
+
+### Deploy A Basic Sandbox
+
+1. Using the kagent Sandbox CRD, deploy a NemoClaw-based container image for interacting with OpenShell so you can have a fully isolated Agent environment.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: AgentHarness
+metadata:
+  name: my-sandbox
+  namespace: kagent
+spec:
+  backend: openclaw
+  modelConfigRef: default-model-config
+  description: "my openclaw agent"
+
+```
+
+2. Run the following to see your sandbox on the terminal:
+
+```shell
+kubectl get agentharness -n kagent
+```
+
+3. You can then use your sandbox within the kagent UI.
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo1.png)
+
+
+4. From within kagent, you can interact with your NemoClaw/OpenClaw agentic sandbox.
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo2.png)
+
+### Telegram + Kagent
+
+Kicking things up a notch, lets integrate our Agentic sandbox environment with Telegram so you can interact with your Agent on the go.
+
+1. Install Telegram on your phone.
+2. Search for `@BotFather`
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo3.png)
+
+3. Within BotFather, send a command for `/newbot`
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo4.png)
+
+4. Name your bot `your_name_kagent_demo_bot`. You will also receive a token for auth.
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo5.png)
+
+5. Create a Kubernetes secret with your token
+
+```shell
+kubectl -n kagent create secret generic telegram-credentials \
+--from-literal=bot-token="$TELEGRAM_BOT_TOKEN" \
+--dry-run=client -o yaml | kubectl apply -f -
+```
+
+6. Within Telegram, search for `@RawDataBot` and get your ID.
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo6.png)
+
+7. Deploy a new Sandbox that uses your telegram ID and the bot token.
+
+```yaml
+  apiVersion: kagent.dev/v1alpha2
+  kind: AgentHarness
+  metadata:
+    name: my-claw
+    namespace: kagent
+  spec:
+    backend: openclaw
+    modelConfigRef: default-model-config
+    description: "my openclaw agent"
+    channels:
+    - name: telegram
+      type: telegram
+      telegram:
+        allowedUserIDs:
+        - "your-telegram-chat-id"
+        botToken:
+          valueFrom:
+            type: Secret
+            name: telegram-credentials
+            key: bot-token
+```
+
+8.  Open Telegram and start chatting with your bot.
+
+![Alt text](/images/blog/kagent-nemo-openshell-imp/nemo7.png)
+
+Congrats! You are officially up and operational with kagent, NemoClaw, and OpenShell.
+
+## Closing Thoughts
+
+Jensen mentioned at the latest GTC keynote:
+
+>OpenClaw is like the Operating System for personal AI
+
+It allows anyone to run, build, and orchestrate as many Agentic environments as they'd like, and these Agentic environments can be anything from a banking agentic to a healthcare agentic to a full suite of multi-agent workloads running within any and every environment. The orchestration layer for where the Agents and sandboxes run in Kubernetes, but what the Agent does can be for anything and everything outside of Kubernetes.

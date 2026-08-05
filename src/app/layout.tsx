@@ -4,7 +4,6 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
-import KubeConAnnouncementBar from "@/components/kubecon-announcement-bar";
 import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import '@docsearch/css';
@@ -18,11 +17,25 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <GoogleTagManager gtmId="GTM-KNRGVQPF" />
       <body className="min-h-screen bg-background flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <Navbar />
-          <KubeConAnnouncementBar />
           <main className="flex-1">{children}</main>
           <Footer />
         </ThemeProvider>

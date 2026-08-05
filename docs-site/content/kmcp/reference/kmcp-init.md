@@ -1,0 +1,43 @@
+---
+title: kmcp init
+description: kmcp init command
+weight: 10
+---
+
+Create a scaffold for a new [FastMCP](https://github.com/jlowin/fastmcp) or [MCP Go](https://github.com/mark3labs/mcp-go) server project. 
+
+```bash
+kmcp init [subcommand] [project-name] [flags]
+```
+
+**Subcommands:**
+- `python [project-name]` - Initialize a Python MCP server project using fastmcp-python
+- `go [project-name]` - Initialize a Go MCP server project using mcp-go
+
+**Flags:**
+- `--author` - Set project author
+- `--description` - Set project description
+- `--email` - Set author email
+- `--force` - Overwrite existing directory
+- `-h, --help` - Help for the command
+- `--namespace` - Default namespace for project resources (default: "default")
+- `--no-git` - Skip git initialization
+- `--non-interactive` - Use defaults without prompts
+
+**Go-specific Flags:**
+- `--go-module-name` - The Go module name for the project (e.g., github.com/my-org/my-project)
+
+**Global Flags:**
+- `--verbose, -v` - Show detailed output
+
+## Example
+
+FastMCP:
+```sh
+kmcp init python my-mcp-server
+```
+
+MCP Go: 
+```sh
+kmcp init go my-mcp-server --go-module-name my-mcp-server
+```

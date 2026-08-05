@@ -22,6 +22,17 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
   };
 
   if (!language || !className) {
+    const content = typeof children === 'string' ? children : String(children);
+    // A fenced code block without a language (e.g. ASCII diagrams) has no
+    // className but spans multiple lines. Render it in a real <pre> so
+    // whitespace and newlines are preserved instead of collapsing to inline.
+    if (content.includes('\n')) {
+      return (
+        <pre className="overflow-x-auto p-4 text-sm rounded-lg bg-muted font-mono text-foreground whitespace-pre">
+          <code className="font-mono">{content.replace(/\n$/, '')}</code>
+        </pre>
+      );
+    }
     return <code className='font-mono text-foreground'>{children}</code>
   }
 
