@@ -267,6 +267,45 @@ spec:
 
 For more benchmarks and details, see the [Go vs Python runtime blog post](/blog/go-vs-python-runtime).
 
+## Deployment configuration
+
+The `spec.declarative.deployment` stanza controls how the agent's Kubernetes Deployment is configured.
+
+### Environment variables
+
+Use `env` to set individual environment variables, or `envFrom` to bulk-inject all keys from a ConfigMap or Secret.
+
+```yaml
+spec:
+  declarative:
+    deployment:
+      env:
+        - name: LOG_LEVEL
+          value: debug
+      envFrom:
+        - configMapRef:
+            name: my-agent-config
+        - secretRef:
+            name: my-agent-secrets
+```
+
+### Deployment annotations
+
+Use `deploymentAnnotations` to add annotations to the Deployment object itself. This field is distinct from the `annotations` field, which targets pod template metadata only.
+
+```yaml
+spec:
+  declarative:
+    deployment:
+      deploymentAnnotations:
+        argocd.argoproj.io/sync-wave: "5"
+        notifications.argoproj.io/subscribe.on-degraded.slack: my-channel
+      annotations:
+        prometheus.io/scrape: "true"   # pod template only
+```
+
+`deploymentAnnotations` is useful for GitOps tooling such as Argo CD sync waves and Flux annotations, which key off Deployment-level metadata rather than pod metadata.
+
 ## Memory
 
 Your agents can save and retrieve relevant context across conversations using vector similarity search. When you enable memory on an agent, it receives three additional tools (`save_memory`, `load_memory`, `prefetch_memory`) and automatically extracts key information every 5th user message.

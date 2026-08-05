@@ -128,11 +128,11 @@ spec:
 | `bedrock.guardrail.version` | The guardrail version to apply. Required when the `guardrail` block is present. |
 | `bedrock.guardrail.trace` | Trace mode: `disabled` (default), `enabled`, or `enabled_full`. |
 
-Guardrail interventions are applied before content is returned to the caller, so blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, so the agent loop continues.
+Guardrail interventions are applied before content returns to the caller, so blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, so that the agent loop continues.
 
 ## Request timeouts
 
-By default, the Bedrock client uses botocore's ~60-second read timeout, which can cause `ReadTimeoutError` on long completions. Use `bedrock.readTimeout` and `bedrock.connectTimeout` to override these values.
+By default, the Bedrock client uses botocore's ~60 second read timeout, which can cause `ReadTimeoutError` on long completions. Use `bedrock.readTimeout` and `bedrock.connectTimeout` to override these values.
 
 ```yaml
 spec:
