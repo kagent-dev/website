@@ -1,0 +1,9 @@
+{{- /* A single non-link feature tile. Mirrors extras' .section-card markup but
+       as a <div> (no anchor), because feature capabilities have no destination
+       URL. Cards that DO navigate use the `card` shortcode instead. */ -}}
+<div class="section-card section-card-static">
+  <span class="section-card-body">
+    <span class="section-card-title">{{ .Get "title" }}</span>
+    {{- with .Get "desc" }}<span class="section-card-desc">{{ . }}</span>{{ end -}}
+  </span>
+</div>

@@ -1,0 +1,114 @@
+{{- /*
+  kagent project override of Hextra's navbar-link.html.
+
+  Why this exists: Hextra highlights the active top-nav item with
+  `hx:font-medium` + a darker color. Because kagent's non-Docs nav links all
+  point off-site (kagent.dev/blog, /tools, …), they're never "active", so only
+  Docs ever gets the bold/dark treatment on docs pages — making it look bigger
+  than its neighbors. agw-oss and kgw-oss avoid this by rendering every top-nav
+  link with one uniform `.link` class (no active emphasis); this override mirrors
+  that result by forcing the non-active styling for all items.
+
+  Only the `$activeClass` line differs from Hextra v0.12.x's stock partial; the
+  rest is copied verbatim so the dropdown markup keeps working.
+*/ -}}
+{{- $currentPage := .currentPage -}}
+{{- $link := .link -}}
+{{- $item := .item -}}
+{{- $icon := .icon -}}
+{{- $external := .external -}}
+
+{{- /* Uniform styling for every top-nav link (no active bold/dark state), so
+       Docs doesn't stand out from the off-site links. */ -}}
+{{- $activeClass := "hx:text-gray-600 hx:hover:text-gray-800 hx:dark:text-gray-400 hx:dark:hover:text-gray-200" -}}
+
+{{- if $item.HasChildren -}}
+{{- /* Dropdown menu for items with children */ -}}
+<div class="hx:relative hx:hidden hx:md:inline-block">
+  <button
+    title="{{ or (T $item.Identifier) $item.Name | safeHTML }}"
+    data-state="closed"
+    class="hextra-nav-menu-toggle hx:cursor-pointer hx:text-sm hx:contrast-more:text-gray-700 hx:contrast-more:dark:text-gray-100 hx:relative hx:-ml-2 hx:whitespace-nowrap hx:p-2 hx:flex hx:items-center hx:gap-1 {{ $activeClass }}"
+    type="button"
+    aria-label="{{ or (T $item.Identifier) $item.Name | safeHTML }}"
+    aria-expanded="false"
+    aria-haspopup="menu"
+  >
+    {{- if $icon -}}
+    <span class="hx:inline-flex hx:items-center">
+      {{- partial "utils/icon" (dict "name" $icon "attributes" `height="1em" class="hx:inline-block"`) -}}
+    </span>
+    {{- end -}}
+    <span class="hx:text-center">
+      {{- or (T $item.Identifier) $item.Name | safeHTML -}}
+    </span>
+    {{- partial "utils/icon.html" (dict "name" "chevron-down" "attributes" "height=12 class=\"hx:transition-transform hx:duration-200 hx:ease-in-out\"") -}}
+  </button>
+  <ul
+    class="hextra-nav-menu-items hx:hidden hx:z-20 hx:max-h-64 hx:overflow-auto hx:rounded-lg hx:border hx:border-gray-200 hx:bg-white hx:p-2 hx:text-sm hx:shadow-lg hx:dark:border-neutral-700 hx:dark:bg-neutral-900"
+    style="min-width: 10.5rem;"
+    role="menu"
+  >
+    {{ range $item.Children }}
+    {{- $link := .URL -}}
+    {{- $external := strings.HasPrefix $link "http" -}}
+    {{- with .PageRef -}}
+    {{- if hasPrefix . "/" -}}
+    {{- $link = relLangURL (strings.TrimPrefix "/" .) -}}
+    {{- end -}}
+    {{- end -}}
+    <li role="none" class="hextra-nav-menu-item hx:flex hx:flex-col">
+      <a
+        href="{{ $link }}"
+        {{ if $external }}target="_blank" rel="noreferrer"{{ end }}
+        role="menuitem"
+        {{- /* Layout/spacing (flex, gap, padding, radius) is set in custom.css
+               under `.hextra-nav-menu-items a` — ad-hoc hx: spacing utilities
+               aren't generated in this build. Keep only color/hover here. */ -}}
+        class="hx:text-gray-600 hx:hover:text-gray-800 hx:dark:text-gray-400 hx:dark:hover:text-gray-200 hx:relative hx:cursor-pointer hx:whitespace-nowrap hx:transition-colors hx:hover:bg-gray-100 hx:dark:hover:bg-neutral-800"
+      >
+        {{- /* Inline the product SVG (assets/icons/nav-<icon>.svg) so the Docs
+               dropdown carries the same kagent/kMCP marks as the JS marketing
+               nav. Falls back to Hextra's named-icon partial for link-type items
+               (e.g. an external icon), preserving prior behavior. */ -}}
+        {{- with .Params.icon -}}
+          {{- $svg := resources.Get (printf "icons/nav-%s.svg" .) -}}
+          {{- if $svg -}}
+            <span class="nav-menu-icon hx:inline-flex hx:items-center">{{ $svg.Content | safeHTML }}</span>
+          {{- else -}}
+            <span class="hx:inline-flex hx:items-center">
+              {{- partial "utils/icon" (dict "name" . "attributes" `height="1em" class="hx:inline-block"`) -}}
+            </span>
+          {{- end -}}
+        {{- end -}}
+        {{- or (T .Identifier) .Name | safeHTML -}}
+      </a>
+    </li>
+    {{- end -}}
+  </ul>
+</div>
+{{- else -}}
+{{- /* Regular menu item without children */ -}}
+{{- /* Same-origin marketing links (Blog/Tools/Agents/…) live at the site ROOT,
+       not under the docs' /docs baseURL. A menu `url: /agents` would be prefixed
+       to /docs/agents, so those entries set `params.localHref` (used verbatim)
+       to keep them root-relative — clicking stays on the current host instead of
+       jumping to production. */ -}}
+{{- $href := $link -}}
+{{- with $item.Params.localHref -}}{{- $href = . -}}{{- end -}}
+<a
+  title="{{ or (T $item.Identifier) $item.Name | safeHTML }}"
+  href="{{ $href }}"
+  {{ if $external }}target="_blank" rel="noreferrer"{{ end }}
+  class="hx:text-sm hx:contrast-more:text-gray-700 hx:contrast-more:dark:text-gray-100 hx:relative hx:-ml-2 hx:hidden hx:whitespace-nowrap hx:p-2 hx:md:inline-flex hx:items-center hx:gap-1 {{ $activeClass }}"
+>
+  {{- if $icon -}}
+  <span class="hx:inline-flex hx:items-center">
+    {{- partial "utils/icon" (dict "name" $icon "attributes" `height="1em" class="hx:inline-block"`) -}}
+  </span>
+  {{- end -}}
+  <span class="hx:text-center">
+    {{- or (T $item.Identifier) $item.Name | safeHTML -}}
+  </span>
+</a>
+{{- end -}}

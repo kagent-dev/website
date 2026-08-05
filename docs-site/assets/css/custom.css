@@ -1,0 +1,487 @@
+/* Sticky side-rail offset (left sidebar + right TOC).
+   extras pins the rails to `--solo-rail-top = --navbar-height + --hextra-banner-height`.
+   The extras navbar is h-24 (6rem), so --navbar-height must be 6rem (Hextra
+   defaults it to 4rem, which tucked the rails under the taller navbar). Hextra
+   also defaults --hextra-banner-height to 2rem assuming an announcement banner;
+   kagent has none, so that 2rem was phantom space pushing both rails ~2rem below
+   the content column. Zero it so the rails line up with the breadcrumb/content. */
+:root {
+    --navbar-height: 6rem;
+    /* Small offset so the sidebar/TOC first lines sit on the breadcrumb line
+       (the breadcrumb row sits ~1.1rem below the content pad). Not a real banner. */
+    --hextra-banner-height: 1.1rem;
+}
+
+/* Horizontal divider between the top nav and page content (matches agw-oss).
+   The extras navbar is transparent with only a soft blur shadow; add an
+   explicit hairline so the nav reads as a distinct bar. */
+.hextra-nav-container {
+    border-bottom: 1px solid #e5e7eb;
+}
+.dark .hextra-nav-container {
+    border-bottom-color: #374151;
+}
+
+/* Theme-toggle icon visibility — explicit fallback for the Tailwind v4
+   hx:group-data-[theme=*]:hidden variant.  The v4 rule uses :is()/:where()
+   which can lose the battle against Tailwind v3's svg{display:block} preflight
+   when both pipelines run.  This direct descendant selector with !important
+   guarantees only the current-theme icon renders. */
+.hx\:group[data-theme="light"]  .hx\:group-data-\[theme\=light\]\:hidden,
+.hx\:group[data-theme="dark"]   .hx\:group-data-\[theme\=dark\]\:hidden,
+.hx\:group[data-theme="system"] .hx\:group-data-\[theme\=system\]\:hidden {
+    display: none !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Open Sans', 'ui-sans-serif', 'system-ui', 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.nav-container {
+    font-family: 'Open Sans', 'ui-sans-serif', 'system-ui', 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Test Status Badge - Modern gradient style */
+.test-status-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.03em;
+    text-transform: none;
+    transition: all 0.2s ease;
+    cursor: default;
+}
+
+.test-status-passed {
+    background: none;
+    color: #111827;
+    box-shadow: none;
+}
+
+.test-status-passed:hover {
+    transform: translateY(-1px);
+}
+
+.test-status-passed .test-status-icon {
+    fill: #059669;
+}
+
+.dark .test-status-passed {
+    background: none;
+    color: #f9fafb;
+    box-shadow: none;
+    border-color: #9ca3af;
+}
+
+.dark .test-status-passed:hover {
+    box-shadow: none;
+}
+
+.dark .test-status-passed .test-status-icon {
+    fill: #34d399;
+}
+
+.test-status-icon {
+    width: 0.7rem;
+    height: 0.7rem;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.test-status-text {
+    white-space: nowrap;
+}
+
+/* Modern tooltip */
+.test-status-tooltip {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%) translateY(8px);
+    padding: 0.5rem 0.75rem;
+    background: #1f2937;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.test-status-tooltip::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: #1f2937;
+}
+
+.test-status-badge:hover .test-status-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(6px);
+}
+
+.dark .test-status-tooltip {
+    background: #374151;
+    color: #f3f4f6;
+}
+
+.dark .test-status-tooltip::before {
+    border-bottom-color: #374151;
+}
+
+/* Theme-toggle dropdown — fix checkmark/text overlap.
+   Hextra's hx:ltr:pl-3, hx:ltr:pr-9, hx:py-1.5, and hx:ltr:right-3 live inside
+   @layer utilities in main.css.  Tailwind v3's unlayered button { padding:0 }
+   preflight in styles.css beats any @layer rule regardless of specificity, so the
+   right padding that makes room for the checkmark never applies.  Override with
+   explicit values here (unlayered + !important beats everything). */
+.hextra-theme-toggle-options button[role="menuitemradio"] {
+    padding-left: 0.75rem !important;    /* hx:ltr:pl-3 — 3 × 0.25rem */
+    padding-right: 2.25rem !important;   /* hx:ltr:pr-9 — 9 × 0.25rem */
+    padding-top: 0.375rem !important;    /* hx:py-1.5 — 1.5 × 0.25rem */
+    padding-bottom: 0.375rem !important;
+}
+.hextra-theme-toggle-options button[role="menuitemradio"] > span {
+    right: 0.75rem !important;           /* hx:ltr:right-3 — 3 × 0.25rem */
+}
+
+/* Theme-toggle dropdown container — hx:border and hx:shadow-lg also live in
+   @layer utilities, so the same @layer vs unlayered-preflight conflict applies.
+   Tailwind v3's * { border-width: 0 } erases the dropdown border, and
+   * { --tw-shadow: 0 0 #0000 } zeros the variable used by hx:shadow-lg, so
+   no shadow renders.  Dark-mode border color also needs a fix because
+   * { border-color: #e5e7eb } (light gray) beats the layered neutral-700. */
+.hextra-theme-toggle-options {
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-color: var(--hx-color-gray-200) !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+.dark .hextra-theme-toggle-options {
+    border-color: var(--hx-color-neutral-700) !important;
+}
+
+/* Dark mode code block scrollbar track */
+.dark pre::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+.dark pre::-webkit-scrollbar {
+    height: 8px;
+}
+.dark pre::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+.dark pre {
+    scrollbar-color: #444 #1e1e1e;
+}
+
+.dark .provider-icon-invert-dark {
+    filter: invert(1);
+}
+
+/* Sidebar link styling — match TOC text color */
+.sidebar-link:not(.sidebar-active-item) {
+    color: #6b7280;
+}
+.sidebar-link:not(.sidebar-active-item):hover {
+    color: #111827;
+    background: #f3f4f6;
+}
+.sidebar-link.sidebar-active-item {
+    color: #1e40af;
+    background: #dbeafe;
+}
+.dark .sidebar-link:not(.sidebar-active-item) {
+    color: #9ca3af !important;
+}
+.dark .sidebar-link:not(.sidebar-active-item):hover {
+    color: #e5e7eb !important;
+    background: rgba(255,255,255,0.05) !important;
+}
+.dark .sidebar-link.sidebar-active-item {
+    color: #c7d2fe !important;
+    background: rgba(99,102,241,0.1) !important;
+}
+
+.dark .sidebar-container {
+    background-color: #111 !important;
+}
+.sidebar-nav {
+    color: #6b7280;
+}
+.dark .sidebar-nav {
+    color: #9ca3af !important;
+}
+
+/* Hextra tabs - data-state show/hide and active styling */
+.hextra-tabs-panel {
+    display: none;
+}
+.hextra-tabs-panel[data-state="selected"] {
+    display: block;
+    padding-top: 1.5rem;
+}
+.hextra-tabs-toggle {
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 0.5rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    color: #4b5563;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    transition: color 0.15s, border-color 0.15s;
+}
+.hextra-tabs-toggle:hover {
+    color: #000;
+    border-bottom-color: #d1d5db;
+}
+.hextra-tabs-toggle[data-state="selected"] {
+    color: hsl(212, 100%, 45%);
+    border-bottom-color: hsl(212, 100%, 50%);
+}
+.dark .hextra-tabs-toggle {
+    color: #d1d5db;
+}
+.dark .hextra-tabs-toggle:hover {
+    color: #fff;
+    border-bottom-color: #4b5563;
+}
+.dark .hextra-tabs-toggle[data-state="selected"] {
+    color: hsl(212, 100%, 60%);
+    border-bottom-color: hsl(212, 100%, 50%);
+}
+
+/* Light/dark image toggling */
+.light-only { display: block; }
+.dark-only { display: none; }
+.dark .light-only { display: none; }
+.dark .dark-only { display: block; }
+
+/* Dark mode: page, sidebar, footer, toc, AND the navbar share one bg (#030712).
+   The navbar's bg lives on .hextra-nav-container-blur, which Hextra hardcodes to
+   var(--hx-color-dark) (#111) with !important — a lighter gray than the page — so
+   it must be listed here (higher specificity + !important) to match. Otherwise
+   the top nav reads as a different shade than the rest of the page in dark mode. */
+.dark body,
+.dark .hextra-footer,
+.dark .sidebar-container,
+.dark .hextra-toc,
+.dark .hextra-nav-container-blur {
+    background-color: #030712 !important;
+}
+
+/* Center all footer content on all screen sizes */
+.hextra-custom-footer {
+    margin-left: auto;
+    margin-right: auto;
+}
+.hextra-footer > .hextra-max-footer-width:not(.hextra-custom-footer) {
+    justify-content: center !important;
+}
+.hextra-footer > .hextra-max-footer-width:not(.hextra-custom-footer) > div {
+    align-items: center !important;
+}
+
+/* Generated card grids — top-align content */
+.section-cards .section-card {
+    justify-content: flex-start !important;
+}
+.section-cards .section-card > .hx\:mt-auto {
+    margin-top: 0 !important;
+}
+
+/* {{< cards >}} shortcode — responsive grid */
+.section-cards {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .section-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-cards {
+    grid-template-columns: repeat(var(--section-cards-cols, 3), minmax(0, 1fr));
+  }
+}
+
+
+
+/* Spacing between headings and following content. Needed because reuse
+   shortcode output has no <p> wrapper, so there's no margin-top from
+   the next element. Using padding-bottom avoids doubling up with
+   margin collapsing when a proper <p> does follow. */
+/* Space between headings and following content. Needed because reuse
+   shortcode output often has no <p> wrapper, leaving bare text/links
+   with no margin-top to create a gap after the heading. */
+.content :is(h1, h2, h3, h4, h5, h6) {
+    margin-bottom: 0.75rem !important;
+}
+
+/* Space between text and code blocks inside list items and after bare text */
+.content li > .hextra-code-block,
+.content li > pre {
+    margin-top: 0.75rem;
+}
+
+/* Sidebar child indent border - dark mode */
+.dark .sidebar-container ul[style*="border-left"] {
+    border-left-color: #374151 !important;
+}
+
+
+
+/* ── Print styles ─────────────────────────────────────────────────────── */
+@media print {
+  @page { margin: 1.5cm 2cm; }
+
+  /* Hide UI chrome — sidebar/TOC already have hx:print:hidden from hextra */
+  .copy-md-wrapper,
+  .navbar,
+  .desktop-navbar,
+  .mobile-nav-bar,
+  .mobile-nav,
+  .hextra-nav-container,
+  footer,
+  .hextra-component-issue,
+  [class*="pager"],
+  [class*="page-feedback"],
+  [class*="last-updated"],
+  [class*="comments"],
+  #chatbot-widget { display: none !important; }
+
+  /* Let article fill the printable area */
+  body, html { overflow: visible !important; }
+  article {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-right: 0 !important;
+    min-height: 0 !important;
+  }
+  article > main {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Fix the main cause: code blocks clip at the paper edge on screen overflow */
+  pre, code {
+    white-space: pre-wrap !important;
+    overflow: visible !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+  }
+
+  /* Chroma lntable: the general pre/code rules above collapse the line-number
+     column at page breaks, causing two-digit numbers to split across lines.
+     Undo word-break and max-width constraints for that column only. */
+  .lntable { width: 100%; }
+  .lntable .lntd:first-child pre,
+  .lntable .lntd:first-child code {
+    white-space: pre !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    max-width: none !important;
+    min-width: 2.5em;
+  }
+
+  /* Avoid breaking inside short blocks; don't force headings to next page */
+  blockquote, figure, img { break-inside: avoid; }
+}
+
+
+/* ── Top-nav dropdown popover (Docs → kagent/kmcp) ─────────────────────
+   The Docs menu item has child entries, so Hextra renders it as a dropdown
+   whose popover is <ul class="hextra-nav-menu-items">. Hextra styles that
+   popover with hx: utility classes for the background, border, radius, and
+   shadow, but in this extras/Tailwind build the border/shadow rely on runtime
+   --tw-* vars that do not materialize here, so the box renders invisibly (white
+   on the white page). Style it explicitly — same values as agw-oss'
+   .navbar-dropdown-content — so the popover reads as a distinct card. */
+.hextra-nav-menu-items {
+  padding: 0.5rem;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+:where(.dark, .dark *) .hextra-nav-menu-items {
+  background-color: rgb(17, 24, 39); /* gray-900 */
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dropdown item spacing lives here, NOT in hx: utility classes: ad-hoc hx:
+   spacing values (gap-3, px-4, py-2.5, …) that Hextra core doesn't already use
+   are not generated in this Tailwind build, so they silently no-op. */
+.hextra-nav-menu-items a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+}
+
+/* Product icons in the Docs dropdown (assets/icons/nav-*.svg, inlined by
+   navbar-link.html). Fixed-width, right-aligned icon column so (a) the labels
+   line up and (b) the gap to each label is uniform even though the marks differ
+   in aspect ratio (kagent is wide, kmcp square). Icons inherit currentColor. */
+.nav-menu-icon {
+  width: 1.4rem;
+  flex: none;
+  justify-content: flex-end;
+}
+.nav-menu-icon svg {
+  height: 1rem;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+/* ── Navbar logo light/dark switch ────────────────────────────────────────
+   The two logo <img>s rely on Hextra utilities (hx:md:block, hx:md:dark:block,
+   hx:dark:hidden) to show exactly one per theme, but several of those aren't in
+   Hextra's prebuilt main.css, so the switch fails and BOTH render (most visibly
+   in dark mode). Drive it explicitly off the .dark class, keyed on the SVG src.
+   Scoped to md+ so the existing mobile behavior (no navbar logo) is untouched. */
+@media (min-width: 768px) {
+  .hextra-nav-container img[src*="kagent-logo-light"] { display: block; }
+  .hextra-nav-container img[src*="kagent-logo-dark"]  { display: none; }
+  :where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-light"] { display: none; }
+  :where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-dark"]  { display: block; }
+}

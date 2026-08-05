@@ -1,0 +1,76 @@
+---
+title: Install the kmcp controller
+description: Deploy the kmcp controller in a Kubernetes cluster.
+weight: 10
+author: kagent.dev
+---
+
+The kmcp controller manages the lifecycle of MCP servers that are defined in an MCPServer custom resource. 
+
+## Prerequisites
+
+- [Kind](https://kind.sigs.k8s.io) for creating and running a local Kubernetes cluster
+- [Docker](https://docs.docker.com/desktop/) for running local kind clusters
+- [Helm](https://helm.sh/docs/intro/install/) for installing the kmcp controller chart
+
+## Install the controller
+
+1. Create a kind cluster. 
+   
+   **Tip**: If you already have a Kubernetes cluster that you want to use, switch to the kubeconfig context for that cluster by using the `kubectl config use-context [CONTEXT-NAME]` command. 
+   ```sh
+   kind create cluster
+   ```
+
+2. Install the kmcp CRDs.
+
+   ```sh
+   helm install kmcp-crds oci://ghcr.io/kagent-dev/kmcp/helm/kmcp-crds \
+     --namespace kmcp-system \
+     --create-namespace
+   ```
+
+3. Install the following kmcp controller components in your cluster. 
+   * The MCPServer Custom Resource Definition to define your MCP server. 
+   * The ClusterRole and ClusterRoleBinding to control RBAC permissions for the kmcp controller.
+   * The kmcp controller deployment that automatically manages the lifecycle of MCPServer resources. 
+   
+   ```sh
+   kmcp install
+   ``` 
+   
+   Example output: 
+   ```sh
+   🚀 Deploying KMCP controller to cluster...
+   No version specified, using latest: v{{< reuse "versions/kmcp.md" >}}
+   Release "kmcp" does not exist. Installing it now.
+   NAME: kmcp
+   LAST DEPLOYED: Wed Jul 30 18:41:01 2025
+   NAMESPACE: kmcp-system
+   STATUS: deployed
+   REVISION: 1
+   TEST SUITE: None
+   ✅ KMCP controller deployed successfully
+   💡 Check controller status with: kubectl get pods -n kmcp-system
+   💡 View controller logs with: kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
+   ```
+   
+4. Verify that the kmcp controller manager is up and running. 
+   ```sh
+   kubectl get pods -n kmcp-system
+   ```
+   
+   Example output: 
+   ```sh
+   NAME                                       READY   STATUS    RESTARTS   AGE
+   kmcp-controller-manager-66c8764c66-8h5sl   1/1     Running   0          27h
+   ```
+   
+5. Optional: Look at the logs of the kmcp controller manager. 
+   ```sh
+   kubectl logs -l app.kubernetes.io/name=kmcp -n kmcp-system
+   ```
+
+## Next
+
+[Deploy your MCP servers](/docs/kmcp/deploy/server) to your cluster and manage their lifecycle. 

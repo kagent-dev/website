@@ -1,0 +1,233 @@
+name: Links
+
+# Scheduled: full check on all built docs pages, creates an issue, posts to Slack.
+# Pull request: local links only on changed files, no issue or Slack.
+#
+# Scope: kagent-dev/website is a mixed repo — a Next.js marketing worker at the
+# root and a Hugo docs site under docs-site/ that consumes docs-theme-extras.
+# Only the docs site is in scope here; every build/config path below is under
+# docs-site/. The whole Hugo build IS the docs (it is served under /docs/), so
+# all of public/**/*.html is scanned.
+#
+# Subpath quirk: docs-site's baseURL is https://kagent.dev/docs/, but Hugo emits
+# the pages at the ROOT of public/ (public/kagent/, public/kmcp/), NOT under a
+# public/docs/ subdirectory. So links have to be remapped two ways:
+#   1. Absolute page/asset links (https://kagent.dev/docs/…) -> public/…
+#   2. Root-relative links (/docs/…), which lychee first resolves against
+#      --root-dir to the non-existent public/docs/…, are rewritten back to
+#      public/… by stripping that phantom /docs segment.
+# Marketing chrome links (/, /agents, /blog, …) point at the separate Next.js
+# worker, not this build, so they are remapped to production URLs — checked live
+# on the scheduled run and skipped as external on PRs.
+#
+# The shared link-checking scripts live in the public solo-io/docs-link-checking
+# repo, cloned with the built-in GITHUB_TOKEN (no dedicated secret needed). Only
+# the scheduled run's Slack post needs a SLACK_BOT_TOKEN secret; PR runs skip it.
+#
+# NOTE: the Hugo build here resolves docs-theme-extras from docs-site/go.mod. A
+# local `replace` (absolute path) used for dev will fail — pin the released
+# version before relying on this check.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "00 04 * * MON"
+  pull_request:
+    paths:
+      - 'docs-site/content/**'
+      - 'docs-site/assets/**'
+      - 'docs-site/layouts/**'
+      - 'docs-site/static/**'
+      - 'docs-site/hugo.yaml'
+      - 'docs-site/go.mod'
+      - 'docs-site/go.sum'
+      - '.github/workflows/links.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linkChecker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+    env:
+      PRODUCT_NAME: kagent OSS
+      ISSUE_TITLE: Link Checker Report - kagent OSS
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 100
+
+      - name: Checkout shared link-checking scripts
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: solo-io/docs-link-checking
+          path: docs-link-checking
+          # solo-io/docs-link-checking is a public repo, so the auto-provided
+          # GITHUB_TOKEN can clone it — no dedicated secret needed.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: 'stable'
+          cache: false
+
+      - name: Set up Hugo
+        uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+        with:
+          hugo-version: '0.160.1'
+          extended: true
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'docs-site/package-lock.json'
+
+      - name: Install Lychee
+        run: |
+          chmod +x docs-link-checking/install-lychee.sh
+          docs-link-checking/install-lychee.sh
+
+      - name: Hugo build
+        working-directory: docs-site
+        run: |
+          # docs-site's CSS pipeline shells out to tooling in its own
+          # devDependencies, so install them first so Hugo finds the binaries.
+          npm ci
+          hugo --config hugo.yaml --gc --minify
+
+      - name: Prepare workspace
+        run: mkdir -p artifacts
+
+      - name: Check Links with Lychee
+        id: lychee
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s globstar
+          set +e
+
+          # docs-site's baseURL is /docs/ but pages land at the root of public/,
+          # so three remaps reconcile the production URL shape with the on-disk
+          # build (see the header comment for the why):
+          #   1. absolute docs links   https://kagent.dev/docs/… -> public/…
+          #   2. root-relative /docs/…  (resolved to the phantom public/docs/…)
+          #      -> public/… by stripping the extra /docs segment
+          #   3. marketing chrome links -> production URLs (checked live on the
+          #      schedule, excluded as external on PRs)
+          LYCHEE_COMMON=(lychee
+            --verbose
+            --config docs-link-checking/lychee.toml
+            --root-dir "${{ github.workspace }}/docs-site/public"
+            --index-files index.html
+            --remap "^https://kagent\.dev/docs/ file://${{ github.workspace }}/docs-site/public/"
+            --remap "^file://${{ github.workspace }}/docs-site/public/docs(/.*)?\$ file://${{ github.workspace }}/docs-site/public\$1"
+            --remap "^file://${{ github.workspace }}/docs-site/public/(agents|blog|community|enterprise|tools)/?\$ https://kagent.dev/\$1"
+            --format json
+            --user-agent curl/8.4.0
+            --output "${{ github.workspace }}/artifacts/kagent-oss-links.json"
+            docs-site/public/**/*.html
+          )
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Skip external URLs on PRs; remaps still resolve kagent.dev/docs
+            # links to local files so internal links are checked.
+            "${LYCHEE_COMMON[@]}" --exclude "^https?://"
+          else
+            "${LYCHEE_COMMON[@]}" --github-token ${{ secrets.GITHUB_TOKEN }}
+          fi > "${{ github.workspace }}/artifacts/kagent-oss-links-json.log" 2>&1
+
+          EXIT=$?
+          set -e
+          echo "has_failures=$([ "$EXIT" != "0" ] && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate markdown report from JSON
+        id: report
+        if: hashFiles('artifacts/kagent-oss-links.json') != ''
+        run: |
+          chmod +x docs-link-checking/generate-link-report.sh
+          docs-link-checking/generate-link-report.sh \
+            "${{ github.workspace }}/artifacts/kagent-oss-links.json" \
+            "${{ github.workspace }}/artifacts/kagent-oss-links.md" \
+            "${{ github.workspace }}/docs-site/public" \
+            "${{ github.event_name == 'pull_request' && 'pr' || '' }}"
+
+      - name: Create issue from report
+        if: steps.report.outputs.has_issues == 'true' && github.event_name != 'pull_request'
+        id: create-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-issue-from-file@fca9117c27cdc29c6c4db3b86c48e4115a786710 # v6
+        with:
+          title: ${{ env.ISSUE_TITLE }}
+          content-filepath: ./artifacts/kagent-oss-links.md
+
+      - name: Set issue URL for Slack
+        if: steps.report.outputs.has_issues == 'true' && github.event_name != 'pull_request'
+        id: issue-url
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.create-issue.outputs.issue-number }}
+          ISSUE_TITLE: ${{ env.ISSUE_TITLE }}
+          LABELS: links,bug
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          chmod +x docs-link-checking/set-issue-url.sh
+          docs-link-checking/set-issue-url.sh
+
+      - name: Remove public directory
+        if: always()
+        run: rm -rf docs-site/public
+
+      - name: Read link checker results
+        id: link-stats
+        if: always() && hashFiles('artifacts/kagent-oss-links.json') != ''
+        env:
+          MD_FILE: artifacts/kagent-oss-links.md
+          JSON_FILE: artifacts/kagent-oss-links.json
+        run: |
+          chmod +x docs-link-checking/read-link-stats.sh
+          docs-link-checking/read-link-stats.sh
+
+      - name: Post results to Slack
+        if: always() && github.event_name != 'pull_request' && steps.link-stats.conclusion == 'success'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: "#doctopus-tests"
+          ERRORS: ${{ steps.link-stats.outputs.errors }}
+          WARNINGS: ${{ steps.link-stats.outputs.warnings }}
+          REDIRECTS: ${{ steps.link-stats.outputs.redirects }}
+          ICON: ${{ steps.link-stats.outputs.icon }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          ISSUE_LINE: ${{ steps.issue-url.outputs.issue_line }}
+        run: |
+          chmod +x docs-link-checking/post-slack-results.sh
+          docs-link-checking/post-slack-results.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: link-checker-assets
+          path: artifacts/*
+
+      - name: Write report to job summary
+        if: always() && hashFiles('artifacts/kagent-oss-links.md') != ''
+        run: cat artifacts/kagent-oss-links.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail check if errors exist
+        if: github.event_name == 'pull_request'
+        env:
+          ERRORS: ${{ steps.link-stats.outputs.errors }}
+        run: |
+          if [ "${ERRORS:-0}" -gt 0 ]; then
+            echo "Link checker found ${ERRORS} error(s). See artifacts for details."
+            exit 1
+          else
+            echo "Link checker found ${ERRORS} errors."
+          fi

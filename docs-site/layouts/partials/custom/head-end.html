@@ -1,0 +1,25 @@
+{{- /*
+  Module bootstrap MUST be the first call here. docs-theme-extras ships its
+  head-end content (brand CSS, fonts, sidebar JS, TOC scroll-spy, Copy-as-
+  Markdown, version dropdown) inside themeExtras/head-end.html. Hugo's
+  project-over-imports precedence would let this file silently shadow the
+  module's bootstrap, so we invoke it explicitly. Everything below is the
+  consumer-local PostCSS pipeline that carries kagent-specific Tailwind usage.
+*/ -}}
+{{ partial "themeExtras/head-end.html" . }}
+
+{{/* Consumer-local PostCSS pipeline (Tailwind utilities on top of the module CSS) */}}
+{{ $options := dict "inlineImports" true "config" "./assets/css/postcss.config.js" }}
+{{ $styles := resources.Get "css/styles.css" }}
+{{ $styles = $styles | css.PostCSS $options }}
+{{- if hugo.IsProduction }}
+{{ $styles = $styles | minify | fingerprint | resources.PostProcess }}
+<link href="{{ $styles.Permalink }}" rel="stylesheet" integrity="{{ $styles.Data.Integrity }}" />
+{{- else }}
+<link href="{{ $styles.Permalink }}" rel="stylesheet" />
+{{ end }}
+
+{{/* Font preconnects — perf hints; the module emits the actual font links */}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">

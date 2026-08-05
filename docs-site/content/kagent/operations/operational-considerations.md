@@ -1,0 +1,231 @@
+---
+title: Operational considerations
+description: Important operational considerations when running kagent in production.
+weight: 1
+author: kagent.dev
+---
+
+Review the following operational considerations when running kagent in production environments, including database configuration, high availability, and secret management.
+
+## Automatic agent restart on secret updates
+
+kagent automatically restarts agents when you update the secrets that the agents reference. This restart ensures that agents pick up new API keys, TLS certificates, and other secret values without manual intervention.
+
+The following secret updates trigger automatic agent restarts:
+
+- **API keys**: Secrets referenced in `ModelConfig` resources (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
+- **TLS certificates**: Secrets referenced in `ModelConfig` TLS configuration (e.g., CA certificates)
+- **Environment variables**: Any secrets referenced via `secretKeyRef` in agent deployment specifications
+
+## Leader election when controller is scaled
+
+When you scale the kagent controller to multiple replicas for high availability, leader election is automatically enabled. This ensures that only one controller instance actively reconciles resources at a time, preventing conflicts and duplicate operations.
+
+### Leader election scenarios
+
+- **Single replica**: No leader election needed; the single controller instance handles all operations.
+- **Multiple replicas**: Leader election is automatically enabled when `controller.replicas > 1`.
+- **Active leader**: Only the elected leader performs reconciliation operations.
+- **Standby replicas**: Other replicas remain ready but do not perform reconciliation until they become the leader.
+
+### Enable high availability
+
+You can set the number of controller replicas to enable high availability.
+
+**Helm `--set` flag:**
+
+```bash
+helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set controller.replicas=3
+```
+
+**Helm values file:**
+
+```yaml
+controller:
+  replicas: 3
+```
+
+### More considerations for HA
+
+- **Database requirement**: PostgreSQL is the default database backend and supports multiple controller replicas. The bundled PostgreSQL instance is deployed automatically unless you configure an external PostgreSQL.
+- **Leader election**: Leader election uses Kubernetes leases and is handled automatically.
+- **Failover**: If the leader fails, another replica automatically becomes the leader.
+
+## Database configuration
+
+kagent uses PostgreSQL as the database backend.
+
+By default, a bundled PostgreSQL instance is deployed when you install kagent. This bundled instance works out of the box without any external prerequisites. It is a simple instance that is meant for demos, local development, and short proofs of concept.
+
+> **Note:** The default bundled image (`postgres:18`) does not include the pgvector extension. If you need vector features such as long-term memory, either use an external PostgreSQL with pgvector installed and set `database.postgres.vectorEnabled: true`, or override the bundled image to a pgvector image.
+
+For production deployments, bring your own external PostgreSQL instance.
+
+### How database connection is determined
+
+The `database.postgres.bundled.enabled` and `database.postgres.url`/`database.postgres.urlFile` settings are independent controls.
+
+- **`bundled.enabled`** controls whether the bundled PostgreSQL pod and its PVC are deployed. It does not affect which database the controller connects to.
+- **`url` / `urlFile`** controls what the controller connects to. When either is set, the controller uses it. When both are empty, the controller connects to the bundled instance.
+
+**Connection precedence (controller):** 
+
+```
+urlFile > url > bundled connection string
+```
+
+| Scenario | `bundled.enabled` | `url` / `urlFile` | Bundled pod deployed? | Controller connects to |
+|---|---|---|---|---|
+| Default (dev/eval) | `true` | unset | yes | bundled |
+| External DB, no bundled pod | `false` | set | no | external |
+| External DB, bundled pod kept running | `true` | set | yes | external |
+| Bundled disabled, no external set | `false` | unset | no | error (misconfigured) |
+
+**Migration**: This means that you can keep the bundled pod running while the controller points at an external database, which is useful for migrating data.
+
+### Bundled PostgreSQL
+
+The bundled PostgreSQL instance is deployed by default (`database.postgres.bundled.enabled: true`). The database name, username, and password are all hardcoded to `kagent`. Credentials are stored in a Kubernetes Secret.
+
+You can customize the storage size and image of the bundled instance when you [install](/docs/kagent/introduction/installation) or upgrade kagent.
+
+1. Add the bundled database settings to your Helm values file for kagent.
+
+   ```yaml
+   database:
+     postgres:
+       bundled:
+         enabled: true    # default
+         storage: 500Mi
+         image:
+           registry: docker.io
+           repository: library
+           name: postgres
+           tag: "18"
+   ```
+
+2. Apply the values to the kagent Helm release.
+
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     --values kagent.yaml
+   ```
+
+### External PostgreSQL
+
+For production environments, use an external PostgreSQL instance instead of the bundled one. Set `database.postgres.bundled.enabled: false` and configure the connection with `database.postgres.url` or `database.postgres.urlFile`.
+
+> **Note**: If your external PostgreSQL has the `pgvector` extension installed and you want to use vector-based memory features, set `database.postgres.vectorEnabled: true`. The default is `false`.
+
+**Helm `--set` flag:**
+
+```bash
+helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --namespace kagent \
+  --set database.postgres.bundled.enabled=false \
+  --set database.postgres.url=postgres://user:password@postgres-host:5432/kagent \
+  --set database.postgres.vectorEnabled=true \
+  --set controller.replicas=3
+```
+
+**Helm values file:**
+
+```yaml
+database:
+  postgres:
+    url: postgres://user:password@postgres-host:5432/kagent
+    vectorEnabled: true  # Set to true if your external PostgreSQL has pgvector
+    bundled:
+      enabled: false
+controller:
+  replicas: 3
+```
+
+**Using a secret for the database URL:** Mount a Kubernetes secret that contains the PostgreSQL connection string using `controller.volumes` and `controller.volumeMounts`, then reference the mount path with `urlFile`. This keeps credentials out of Helm values.
+
+```yaml
+database:
+  postgres:
+    urlFile: /var/secrets/db-url
+    vectorEnabled: true
+    bundled:
+      enabled: false
+controller:
+  volumes:
+    - name: db-secret
+      secret:
+        secretName: my-postgres-url-secret
+  volumeMounts:
+    - name: db-secret
+      mountPath: /var/secrets
+      readOnly: true
+```
+
+## Secure execution environment
+
+kagent supports Kubernetes security contexts to run agents and tool servers with reduced privileges. Configure `securityContext` and `podSecurityContext` on your Agent or ToolServer resources to enforce secure execution.
+
+Common settings include:
+
+- **`runAsNonRoot: true`**: Ensures the container does not run as root.
+- **`runAsUser`**: Specifies the user ID for the container process.
+- **`readOnlyRootFilesystem`**: Mounts the root filesystem as read-only when possible.
+
+At the Helm chart level, you can set global defaults with `podSecurityContext` and `securityContext` in your values. For more information, see the [Kubernetes SecurityContext documentation](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+{{< tabs >}}
+{{< tab name="Declarative agents" >}}
+Set these in `spec.declarative.deployment.podSecurityContext` and `spec.declarative.deployment.securityContext`.
+
+```yaml
+spec:
+  type: Declarative
+  declarative:
+    deployment:
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: false
+```
+{{< /tab >}}
+{{< tab name="BYO agents" >}}
+Set these in `spec.byo.deployment.podSecurityContext` and `spec.byo.deployment.securityContext`.
+
+```yaml
+spec:
+  type: BYO
+  byo:
+    deployment:
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: false
+```
+{{< /tab >}}
+{{< /tabs >}}
+
+## Proxy configuration for agent traffic
+
+When agents and MCP servers run behind an API gateway or proxy, you can configure kagent to route agent-to-agent and agent-to-MCP traffic through that proxy. Set `proxy.url` in your Helm values to the proxy endpoint.
+
+The proxy applies to:
+
+- Agent-to-agent traffic (when one agent invokes another agent as a tool)
+- Agent-to-MCP-server traffic (when agents call ToolServers, Services, or RemoteMCPServers with internal Kubernetes URLs)
+
+Example Helm configuration:
+
+```yaml
+proxy:
+  url: "http://proxy.kagent.svc.cluster.local:8080"
+```
+
+The controller rewrites internal URLs to use the proxy and sets the `x-kagent-host` header so the proxy can route requests to the correct backend. External URLs (for example, RemoteMCPServers pointing to `https://external.example.com`) are not rewritten.
+

@@ -1,0 +1,88 @@
+{{- /*
+  kagent project sidebar override.
+
+  Why this exists: Hextra v0.12 ships layouts/_partials/sidebar.html, which
+  (per the _partials-shadows-partials precedence rule) wins over docs-theme-
+  extras' layouts/partials/sidebar.html. Hextra's native sidebar roots the tree
+  at the current section, so kagent's nav "drills down" as you navigate deeper
+  instead of showing the whole product tree.
+
+  kagent docs are flat + unversioned but split across two products (kagent + kmcp,
+  each a top-level content section). This override roots the tree at the product
+  section via .FirstSection — the current page's top-level section ancestor — so
+  every page in a product shows that product's full, expandable tree with the
+  active branch auto-expanded. Using .FirstSection (rather than parsing the URL
+  for a /docs/<product> prefix) keeps this correct regardless of the baseURL
+  subpath the site is served under. It reuses the same CSS classes /
+  data-attributes as extras' sidebar (sidebar-link, sidebar-toggle,
+  sidebar-children, data-sidebar-item, sidebar-mobile-panel) so the toggle JS and
+  mobile drawer in docs-theme-extras keep working.
+
+  Called by extras' docs/single.html + docs/list.html as:
+      {{ partial "sidebar.html" (dict "context" .) }}
+*/ -}}
+{{- $context := .context -}}
+
+{{- /* The site home (_index.md) is the /docs landing itself — it has no single
+       product tree to show, so suppress the sidebar there. */ -}}
+{{- if $context.IsHome -}}
+  <aside class="hx:hidden"></aside>
+{{- else -}}
+  {{- $navRoot := $context.FirstSection -}}
+
+  <div class="sidebar-mobile-overlay" onclick="closeMobileSidebar()"></div>
+  <aside class="sidebar-container hextra-sidebar-container sidebar-mobile-panel hx:order-first hx:w-64 hx:shrink-0 hx:hidden hx:xl:block hx:print:hidden">
+    <div class="sidebar-nav-wrapper">
+      <nav class="sidebar-nav">
+        {{- with $navRoot -}}
+          {{- template "kagent-sidebar-tree" (dict "page" . "current" $context "depth" 0) -}}
+        {{- end -}}
+      </nav>
+    </div>
+  </aside>
+{{- end -}}
+
+{{- /* Recursive tree renderer — mirrors extras' render-sidebar-tree markup. */ -}}
+{{- define "kagent-sidebar-tree" -}}
+  {{- $page := .page -}}
+  {{- $current := .current -}}
+  {{- $depth := .depth | default 0 -}}
+  {{- if gt $depth 4 -}}{{- return -}}{{- end -}}
+
+  {{- $children := $page.Pages -}}
+  {{- if gt (len $children) 0 -}}
+    <ul class="sidebar-list sidebar-list-depth-{{ $depth }}">
+      {{- range $children.ByWeight -}}
+        {{- $childIsActive := eq .RelPermalink $current.RelPermalink -}}
+        {{- $childIsAncestor := $current.IsDescendant . -}}
+        {{- $childIsExpanded := or $childIsActive $childIsAncestor -}}
+        {{- $hasChildren := gt (len .Pages) 0 -}}
+        {{- $navLabel := .LinkTitle | default .Title -}}
+
+        <li class="hx:relative"{{ if $hasChildren }} data-sidebar-item data-expanded="{{ $childIsExpanded }}"{{ end }}>
+          <div class="sidebar-link-wrapper">
+            <a href="{{ .RelPermalink }}"
+               class="sidebar-link {{ if $childIsActive }}sidebar-active-item{{ end }}"
+               {{ if $childIsActive }}aria-current="page"{{ end }}>
+              <span class="hx:flex-1">{{ $navLabel }}</span>
+            </a>
+            {{- if $hasChildren -}}
+              <button type="button" class="sidebar-toggle"
+                      aria-label="Toggle {{ $navLabel }} subsection"
+                      aria-expanded="{{ $childIsExpanded }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            {{- end -}}
+          </div>
+          {{- if $hasChildren -}}
+            <div class="sidebar-children"{{ if not $childIsExpanded }} hidden{{ end }}>
+              {{- template "kagent-sidebar-tree" (dict "page" . "current" $current "depth" (add $depth 1)) -}}
+            </div>
+          {{- end -}}
+        </li>
+      {{- end -}}
+    </ul>
+  {{- end -}}
+{{- end -}}
