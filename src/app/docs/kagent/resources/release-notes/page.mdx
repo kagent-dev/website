@@ -388,7 +388,7 @@ For details and usage examples, see [Run migrations out-of-band](/docs/kagent/op
 
 ## maxOutputTokens for Gemini and Vertex AI
 
-The `maxOutputTokens` field is now wired for the native Gemini and Vertex AI providers. Previously, this field was declared on `GeminiVertexAIConfig` but never applied, and `GeminiConfig` had no such field at all.
+The `maxOutputTokens` field is now wired for the native Gemini and Vertex AI providers. Previously, this field was declared on `GeminiVertexAIConfig` but never applied, and `GeminiConfig` did not define this field at all.
 
 ```yaml
 spec:
@@ -409,6 +409,8 @@ spec:
 ```
 
 A per-request value set by the agent always takes precedence over the model-level default.
+
+For more information, see [Gemini](/docs/kagent/supported-providers/gemini#max-output-tokens) and [Vertex AI](/docs/kagent/supported-providers/google-vertexai).
 
 ## AWS Bedrock Guardrails
 
@@ -432,11 +434,13 @@ spec:
 | `version` | The guardrail version to apply. Required when the `guardrail` block is present. |
 | `trace` | Trace mode: `disabled` (default), `enabled`, or `enabled_full`. |
 
-On the streaming path, guardrail interventions are applied before content is returned to the caller, so blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, so the agent loop continues.
+Guardrail interventions apply before content returns to the caller so that blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, allowing the agent loop to continue.
+
+For more information, see [Amazon Bedrock — Bedrock Guardrails](/docs/kagent/supported-providers/amazon-bedrock#bedrock-guardrails).
 
 ## envFrom for agent deployments
 
-You can now bulk-inject environment variables from ConfigMaps and Secrets into agent pods using the `envFrom` field on the agent deployment spec. This complements the existing `env` field, which requires enumerating individual keys.
+You can now bulk-inject environment variables from ConfigMaps and Secrets into agent pods using the `envFrom` field on the agent deployment spec. This field complements the existing `env` field, which requires enumerating individual keys.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -451,15 +455,19 @@ spec:
             name: my-agent-secrets
 ```
 
+For more information, see [Agents — Deployment configuration](/docs/kagent/concepts/agents#deployment-configuration).
+
 ## Disable default ModelConfig
 
-Set `providers: null` in your Helm values to suppress the default `ModelConfig` and its associated `Secret` from being created. This is useful when you manage `ModelConfig` resources outside the kagent Helm chart.
+To suppress the default `ModelConfig` and its associated `Secret` from being created, set `providers: null` in your Helm values. This setting is useful when you manage `ModelConfig` resources outside of the kagent Helm chart.
 
 ```yaml
 providers: null
 ```
 
-When `providers` is unset or null, neither the `modelconfig` nor the `modelconfig-secret` templates are rendered. Existing installs that supply `providers` are unaffected.
+When `providers` is unset or null, neither the `modelconfig` nor the `modelconfig-secret` templates are rendered. Existing installs that define `providers` are unaffected.
+
+For more information, see [Disable the default ModelConfig](/docs/kagent/introduction/installation#disable-the-default-modelconfig).
 
 ## Additional changes in v0.10
 
@@ -494,7 +502,7 @@ When `providers` is unset or null, neither the `modelconfig` nor the `modelconfi
 * **Azure OpenAI API key env var name**: The `AZURE_OPENAI_API_KEY` environment variable name is now used consistently throughout the codebase, fixing providers that were reading a mismatched key name.
 * **OpenTelemetry double-instrumentation fix**: The OpenAI client is no longer double-instrumented on the Go ADK runtime, preventing duplicate spans in OTel traces when using OpenAI with the Go runtime.
 * **Configurable Bedrock read/connect timeout**: New `bedrock.readTimeout` and `bedrock.connectTimeout` fields on `ModelConfig` replace the ~60s botocore default that caused `ReadTimeoutError` on long completions. Both values are in seconds and are optional.
-* **RFC 8707 resource and audience for STS token exchange**: The Go and Python ADK token-propagation plugins now read `KAGENT_STS_RESOURCE` and `KAGENT_STS_AUDIENCE` environment variables to scope issued STS tokens to a specific backend. Backwards compatible — existing deployments are unaffected when neither variable is set.
+* **RFC 8707 resource and audience for STS token exchange**: The Go and Python ADK token-propagation plugins now read `KAGENT_STS_RESOURCE` and `KAGENT_STS_AUDIENCE` environment variables to scope issued STS tokens to a specific backend. Backwards compatible so that existing deployments are unaffected when neither variable is set.
 
 **Agent Substrate**
 
@@ -521,7 +529,7 @@ When `providers` is unset or null, neither the `modelconfig` nor the `modelconfi
 * **UI rendering optimization**: Redundant background fetches in the chat interface are reduced, improving rendering performance for long sessions.
 * **ADK token refresh loop resilience**: Exceptions during token reads in the Python ADK no longer kill the background refresh goroutine. Failed reads are logged and the loop continues on the next cycle instead of silently stopping.
 * **ACP shim teardown deadlock fix**: Fixed a deadlock where `terminate()` could hang indefinitely when a WebSocket client stalled, blocking the stdout reader goroutine on a full channel and preventing the shim from shutting down.
-* **ADK session state with `num_recent_events`**: Fixed a bug where `session.state` was built from only the last N events when `num_recent_events` was set, silently dropping state deltas from older events. Full event history is now always used to compute state; `num_recent_events` only trims the returned events list.
+* **ADK session state with `num_recent_events`**: Fixed a bug where `session.state` was built from only the last `n` events when `num_recent_events` was set, silently dropping state deltas from older events. Full event history is now always used to compute state; `num_recent_events` only trims the returned events list.
 
 # v0.9
 

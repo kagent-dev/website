@@ -128,7 +128,7 @@ spec:
 | `bedrock.guardrail.version` | The guardrail version to apply. Required when the `guardrail` block is present. |
 | `bedrock.guardrail.trace` | Trace mode: `disabled` (default), `enabled`, or `enabled_full`. |
 
-Guardrail interventions apply before content returns to the caller so that blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, enabling the agent loop to continue.
+Guardrail interventions apply before content returns to the caller so that blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, allowing the agent loop to continue.
 
 ## Request timeouts
 
