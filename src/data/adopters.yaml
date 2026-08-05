@@ -40,3 +40,7 @@ adopters:
     logo_dark: "/images/adopters/sopra-steria-dark.png"
     logo_light: "/images/adopters/sopra-steria-light.png"
     website: "https://www.soprasteria.no/"
+  - name: "ushift"
+    logo_dark: "/images/adopters/ushift-dark.svg"
+    logo_light: "/images/adopters/ushift-light.png"
+    website: "https://ushift.cloud/"
