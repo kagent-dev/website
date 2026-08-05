@@ -31,3 +31,6 @@ export function remarkVersionSubstitution() {
     });
   };
 }
+
+// Default export so @next/mdx can load this plugin from a path string (Turbopack)
+export default remarkVersionSubstitution;

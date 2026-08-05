@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
 
 import createMDX from "@next/mdx";
-import rehypeUnwrapImages from 'rehype-unwrap-images'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import { remarkVersionSubstitution } from './scripts/remark-version-substitution.mjs'
+import { fileURLToPath } from 'node:url'
+
+const remarkVersionSubstitutionPath = fileURLToPath(
+  new URL('./scripts/remark-version-substitution.mjs', import.meta.url)
+)
 
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
@@ -29,6 +30,18 @@ const nextConfig = {
     });
     return config;
   },
+  turbopack: {
+    rules: {
+      '*.yaml': {
+        loaders: ['yaml-loader'],
+        as: '*.js',
+      },
+      '*.yml': {
+        loaders: ['yaml-loader'],
+        as: '*.js',
+      },
+    },
+  },
   images: {
     remotePatterns: [
       {
@@ -42,8 +55,9 @@ const nextConfig = {
 
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkFrontmatter, remarkGfm, remarkVersionSubstitution],
-    rehypePlugins: [rehypeUnwrapImages],
+    // Turbopack requires serializable options: plugins as name/path strings
+    remarkPlugins: ['remark-frontmatter', 'remark-gfm', remarkVersionSubstitutionPath],
+    rehypePlugins: ['rehype-unwrap-images'],
   },
 })
  
