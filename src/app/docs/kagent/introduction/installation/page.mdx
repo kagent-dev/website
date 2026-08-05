@@ -411,6 +411,16 @@ extraObjects:
             key: anthropic-api-key
 ```
 
+### Disable the default ModelConfig
+
+By default, kagent creates a `ModelConfig` resource and associated Kubernetes Secret for the provider that you set with `providers.default`. To skip this and manage `ModelConfig` resources entirely outside the Helm chart, set `providers` to null:
+
+```yaml
+providers: null
+```
+
+When `providers` is null (or omitted), neither the `ModelConfig` nor its Secret are created. Use this setting when you apply `ModelConfig` resources through GitOps, a separate Helm chart, or another external process.
+
 ### Private registry and image mirroring
 
 If your cluster cannot pull from `ghcr.io` directly, such as in air-gapped environments, corporate proxies, or mandatory image scanning, you can mirror the kagent images to an internal registry and configure the chart to pull from this registry.
