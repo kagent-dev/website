@@ -63,7 +63,6 @@
 
 @layer base {
   :root {
-    --docsearch-primary-color: #942DE7;
     --background: 0 0% 100%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
@@ -129,6 +128,7 @@
 }
 
 :root {
+  --docsearch-primary-color: #942DE7;
   --docsearch-modal-background: #ffffff;
 }
 
