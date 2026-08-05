@@ -510,6 +510,7 @@ _Appears in:_
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
+| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints describes how a group of pods ought to spread across topology<br />domains. All topologySpreadConstraints are ANDed. |  |  |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
@@ -598,6 +599,7 @@ _Appears in:_
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
+| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints describes how a group of pods ought to spread across topology<br />domains. All topologySpreadConstraints are ANDed. |  |  |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
@@ -621,6 +623,26 @@ _Appears in:_
 | --- | --- |
 | `python` |  |
 | `go` |  |
+
+#### FoundryConfig
+
+FoundryConfig contains Azure AI Foundry-specific configuration options.
+
+Authentication is implicit and mirrors the other cloud providers: if
+spec.apiKeySecret is set the API key is used; if it is absent, the Foundry
+runtime falls back to DefaultAzureCredential (which resolves to Azure
+Workload Identity in-cluster, or the az CLI in local development). There is
+no auth-type selector.
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `endpoint` _string_ | Endpoint is the Foundry or Azure AI Services account endpoint<br />(e.g., https://my-account.cognitiveservices.azure.com/).<br />Mutually exclusive with EndpointFrom. |  |  |
+| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
+| `deployment` _string_ | Deployment is the Foundry model deployment name. |  |  |
+| `apiVersion` _string_ | APIVersion is the Foundry OpenAI-compatible data-plane API version. | 2024-10-21 |  |
 
 #### FromNamespaces
 
@@ -762,7 +784,7 @@ _Appears in:_
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
 | `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
-| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore] <br /> |
+| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry] <br /> |
 | `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
 | `anthropic` _[AnthropicConfig](#anthropicconfig)_ | Anthropic-specific configuration |  |  |
 | `azureOpenAI` _[AzureOpenAIConfig](#azureopenaiconfig)_ | Azure OpenAI-specific configuration |  |  |
@@ -772,6 +794,7 @@ _Appears in:_
 | `anthropicVertexAI` _[AnthropicVertexAIConfig](#anthropicvertexaiconfig)_ | Anthropic-specific configuration |  |  |
 | `bedrock` _[BedrockConfig](#bedrockconfig)_ | AWS Bedrock-specific configuration |  |  |
 | `sapAICore` _[SAPAICoreConfig](#sapaicoreconfig)_ | SAP AI Core-specific configuration |  |  |
+| `foundry` _[FoundryConfig](#foundryconfig)_ | Azure AI Foundry-specific configuration |  |  |
 | `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for provider connections.<br />Enables agents to connect to internal LiteLLM gateways or other providers<br />that use self-signed certificates or custom certificate authorities. |  |  |
 
 #### ModelConfigStatus
@@ -794,7 +817,7 @@ _Underlying type:_ _string_
 ModelProvider represents the model provider type
 
 _Validation:_
-- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore]
+- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry]
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
@@ -811,6 +834,7 @@ _Appears in:_
 | `AnthropicVertexAI` |  |
 | `Bedrock` |  |
 | `SAPAICore` |  |
+| `Foundry` |  |
 
 #### ModelProviderConfig
 
@@ -836,7 +860,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore] <br /> |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry] <br /> |
 | `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
 | `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
 
@@ -1140,6 +1164,7 @@ _Appears in:_
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
+| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints describes how a group of pods ought to spread across topology<br />domains. All topologySpreadConstraints are ANDed. |  |  |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
