@@ -419,7 +419,7 @@ By default, kagent creates a `ModelConfig` resource and associated Kubernetes Se
 providers: null
 ```
 
-When `providers` is null (or omitted), neither the `ModelConfig` nor its Secret are created. Use this setting when you apply `ModelConfig` resources through GitOps, a separate Helm chart, or another external process.
+When `providers` is null (or omitted), kagent does not create the `ModelConfig` or its Secret. Use this setting when you apply `ModelConfig` resources through GitOps, a separate Helm chart, or another external process.
 
 ### Private registry and image mirroring
 

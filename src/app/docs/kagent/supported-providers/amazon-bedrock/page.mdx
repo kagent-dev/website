@@ -108,7 +108,7 @@ If you want to use one shared ServiceAccount for multiple agents, you can also s
 
 ## Bedrock Guardrails
 
-You can apply [AWS Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) directly from the native Bedrock `ModelConfig` to enable content filtering, topic denial, and PII redaction. The guardrail is applied on every request to the Converse and ConverseStream APIs.
+You can apply [AWS Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) directly from the native Bedrock `ModelConfig` to enable content filtering, topic denial, and PII redaction. The guardrail applies on every request to the Converse and ConverseStream APIs.
 
 ```yaml
 spec:
@@ -128,11 +128,11 @@ spec:
 | `bedrock.guardrail.version` | The guardrail version to apply. Required when the `guardrail` block is present. |
 | `bedrock.guardrail.trace` | Trace mode: `disabled` (default), `enabled`, or `enabled_full`. |
 
-Guardrail interventions are applied before content returns to the caller, so blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, so that the agent loop continues.
+Guardrail interventions apply before content returns to the caller so that blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, enabling the agent loop to continue.
 
 ## Request timeouts
 
-By default, the Bedrock client uses botocore's ~60 second read timeout, which can cause `ReadTimeoutError` on long completions. Use `bedrock.readTimeout` and `bedrock.connectTimeout` to override these values.
+By default, the Bedrock client uses botocore's ~60 second read timeout, which can cause `ReadTimeoutError` on long completions. To override these values, use `bedrock.readTimeout` and `bedrock.connectTimeout`.
 
 ```yaml
 spec:
