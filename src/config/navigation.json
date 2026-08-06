@@ -127,6 +127,11 @@
             "description": "Learn how to configure Anthropic models for kagent."
           },
           {
+            "title": "Azure AI Foundry",
+            "href": "/docs/kagent/supported-providers/azure-ai-foundry",
+            "description": "Learn how to configure Azure AI Foundry models in kagent."
+          },
+          {
             "title": "Azure OpenAI",
             "href": "/docs/kagent/supported-providers/azure-openai",
             "description": "Learn how to configure Azure OpenAI models in kagent."
