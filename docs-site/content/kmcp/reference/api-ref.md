@@ -6,8 +6,11 @@ weight: 5
 author: kagent.dev
 ---
 
+# API Reference
+
 ## Packages
 - [kagent.dev/v1alpha1](#kagentdevv1alpha1)
+
 
 ## kagent.dev/v1alpha1
 
@@ -16,9 +19,15 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group.
 ### Resource Types
 - [MCPServer](#mcpserver)
 
+
+
 #### HTTPTransport
 
+
+
 HTTPTransport defines the configuration for a Streamable HTTP transport.
+
+
 
 _Appears in:_
 - [MCPServerSpec](#mcpserverspec)
@@ -29,9 +38,14 @@ _Appears in:_
 | `path` _string_ | the target path where MCP is served |  |  |
 | `tls` _[HTTPTransportTLS](#httptransporttls)_ | TLS defines the TLS configuration for HTTPS access to the MCP server. |  |  |
 
+
 #### HTTPTransportTLS
 
+
+
 HTTPTransportTLS defines the TLS configuration for HTTP transport.
+
+
 
 _Appears in:_
 - [HTTPTransport](#httptransport)
@@ -41,9 +55,14 @@ _Appears in:_
 | `secretRef` _string_ | SecretRef is a reference to a Kubernetes Secret containing<br />the client certificate (tls.crt), key (tls.key), and optionally<br />the CA certificate (ca.crt) for mTLS authentication.<br />The Secret must be in the same namespace as the MCPServer. |  |  |
 | `insecureSkipVerify` _boolean_ | InsecureSkipVerify disables SSL certificate verification.<br />WARNING: This should ONLY be used in development/testing environments.<br />Production deployments MUST use proper certificates. | false |  |
 
+
 #### InitContainerConfig
 
+
+
 InitContainerConfig defines the configuration for the init container.
+
+
 
 _Appears in:_
 - [MCPServerDeployment](#mcpserverdeployment)
@@ -55,9 +74,16 @@ _Appears in:_
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ | Resources defines the compute resource requirements for the init container.<br />Use this to specify CPU and memory requests and limits for the init container. |  |  |
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ | SecurityContext defines the security context for the init container.<br />If not specified, the main container's security context will be used. |  |  |
 
+
 #### MCPServer
 
+
+
 MCPServer is the Schema for the mcpservers API.
+
+
+
+
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -69,9 +95,18 @@ MCPServer is the Schema for the mcpservers API.
 | `spec` _[MCPServerSpec](#mcpserverspec)_ |  |  |  |
 | `status` _[MCPServerStatus](#mcpserverstatus)_ |  |  |  |
 
+
+
+
+
+
 #### MCPServerDeployment
 
+
+
 MCPServerDeployment
+
+
 
 _Appears in:_
 - [MCPServerSpec](#mcpserverspec)
@@ -103,9 +138,14 @@ _Appears in:_
 | `replicas` _integer_ | Replicas defines the number of desired pod replicas.<br />Defaults to 1 if not specified. | 1 |  |
 | `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets defines the list of secrets to use for pulling container images. |  |  |
 
+
 #### MCPServerSpec
 
+
+
 MCPServerSpec defines the desired state of MCPServer.
+
+
 
 _Appears in:_
 - [MCPServer](#mcpserver)
@@ -118,9 +158,14 @@ _Appears in:_
 | `httpTransport` _[HTTPTransport](#httptransport)_ | HTTPTransport defines the configuration for a Streamable HTTP transport. |  |  |
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ | Timeout defines the default connection timeout for clients connecting<br />to this MCP server. MCP servers deployed via the MCPServer CRD use a<br />sidecar gateway that spawns a new stdio process (e.g. via uvx/npx)<br />for each session. Process startup can take 2-8 seconds depending on<br />package cache state, which may exceed the default timeout used by some<br />clients. This value is propagated to the generated RemoteMCPServer<br />resources when they do not specify an explicit timeout. | 30s |  |
 
+
 #### MCPServerStatus
 
+
+
 MCPServerStatus defines the observed state of MCPServer.
+
+
 
 _Appears in:_
 - [MCPServer](#mcpserver)
@@ -130,9 +175,14 @@ _Appears in:_
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions describe the current conditions of the MCPServer.<br />Implementations should prefer to express MCPServer conditions<br />using the `MCPServerConditionType` and `MCPServerConditionReason`<br />constants so that operators and tools can converge on a common<br />vocabulary to describe MCPServer state.<br /><br />Known condition types are:<br /><br />* "Accepted"<br />* "ResolvedRefs"<br />* "Programmed"<br />* "Ready" |  | MaxItems: 8 <br /> |
 | `observedGeneration` _integer_ | ObservedGeneration is the most recent generation observed for this MCPServer.<br />It corresponds to the MCPServer's generation, which is updated on mutation by the API Server. |  |  |
 
+
 #### ServiceAccountConfig
 
+
+
 ServiceAccountConfig defines the configuration for the ServiceAccount.
+
+
 
 _Appears in:_
 - [MCPServerDeployment](#mcpserverdeployment)
@@ -142,18 +192,27 @@ _Appears in:_
 | `annotations` _object (keys:string, values:string)_ | Annotations to add to the ServiceAccount.<br />This is useful for configuring AWS IRSA (IAM Roles for Service Accounts)<br />or other cloud provider integrations.<br />Example: \{"eks.amazonaws.com/role-arn": "arn:aws:iam::123456789012:role/my-role"\} |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels to add to the ServiceAccount. |  |  |
 
+
 #### StdioTransport
+
+
 
 StdioTransport defines the configuration for a standard input/output transport.
 
+
+
 _Appears in:_
 - [MCPServerSpec](#mcpserverspec)
+
+
 
 #### TransportType
 
 _Underlying type:_ _string_
 
 MCPServerTransportType defines the type of transport for the MCP server.
+
+
 
 _Appears in:_
 - [MCPServerSpec](#mcpserverspec)
@@ -162,4 +221,5 @@ _Appears in:_
 | --- | --- |
 | `stdio` | TransportTypeStdio indicates that the MCP server uses standard input/output for communication.<br /> |
 | `http` | TransportTypeHTTP indicates that the MCP server uses Streamable HTTP for communication.<br /> |
+
 
