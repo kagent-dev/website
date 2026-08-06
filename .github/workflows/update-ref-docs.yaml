@@ -308,6 +308,11 @@ jobs:
             # title as the page H1, so a body H1 would duplicate it.
             sed -i '0,/^# /{/^# /d}' "helm-temp.md"
 
+            # The H1 removal leaves a blank line where the heading was; strip
+            # leading blank lines so it doesn't stack with the frontmatter's
+            # own trailing blank line once appended into $HELM_PAGE below.
+            sed -i '/./,$!d' "helm-temp.md"
+
             # Wrap version placeholders in inline code so they show literally.
             python - <<'PY'
             import re
@@ -352,6 +357,10 @@ jobs:
             EOF
             cat "helm-temp.md" >> "$HELM_PAGE"
             rm -f "helm-temp.md"
+
+            # Normalize to exactly one trailing newline, same as the API ref
+            # pages above.
+            printf '%s\n' "$(cat "$HELM_PAGE")" > "$HELM_PAGE"
 
             echo "Final generated file contents (first 50 lines):"
             head -50 "$HELM_PAGE"
