@@ -65,7 +65,7 @@ After you apply the `ModelConfig`, you can select it from the **Model** dropdown
 
 > **Note:** Azure Workload Identity requires the Go agent runtime (`runtime: go`).
 
-Omit `apiKeySecret` and `apiKeyPassthrough` to use Azure Workload Identity. For local development, the runtime will attempt to authenticate with your Azure CLI login.
+Omit `apiKeySecret` and `apiKeyPassthrough` to use Azure Workload Identity. For local development, the runtime tries to authenticate using your Azure CLI login.
 
 > **Note:** The runtime validates Azure credentials at startup. If credentials cannot be resolved, the agent does not become ready.
 

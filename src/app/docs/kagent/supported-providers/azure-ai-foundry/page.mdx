@@ -12,7 +12,7 @@ export const metadata = {
 
 ## Configuring Azure AI Foundry
 
-> Foundry chat models and memory embeddings require the Go agent runtime (`runtime: go`). Chat models must be available through Foundry's OpenAI-compatible chat completions API. Claude and other models are not yet supported.
+> **Note:** Foundry chat models and memory embeddings require the Go agent runtime (`runtime: go`). Chat models must be available through Foundry's OpenAI-compatible chat completions API. Claude and other models are not yet supported.
 
 The following steps use API key authentication. To authenticate without an API key, see [Workload Identity](#workload-identity).
 
@@ -61,7 +61,7 @@ spec:
     systemMessage: "You are a helpful assistant."
 ```
 
-4. To create the agent declaratively, save the preceding manifests as `foundry-model.yaml` and `foundry-agent.yaml`, then apply them to your cluster.
+4. Save the manifests from steps 2 and 3 as `foundry-model.yaml` and `foundry-agent.yaml`, then apply them to your cluster.
 
 ```bash
 kubectl apply -f foundry-model.yaml
@@ -96,7 +96,7 @@ The runtime chooses a credential based on the fields in the `ModelConfig`.
 
 ### Workload Identity
 
-Omit `apiKeySecret` and `apiKeyPassthrough` to use Azure Workload Identity. For local development, the runtime will attempt to authenticate with your Azure CLI login.
+Omit `apiKeySecret` and `apiKeyPassthrough` to use Azure Workload Identity. For local development, the runtime tries to authenticate using your Azure CLI login.
 
 > **Note:** The runtime validates Azure credentials at startup. If credentials cannot be resolved, the agent does not become ready.
 
