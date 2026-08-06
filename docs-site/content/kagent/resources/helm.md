@@ -363,4 +363,3 @@ A Helm chart for kagent, built with Google ADK
 | ui.volumes | object | `{"nextjsCache":"100Mi","tmp":"50Mi"}` | EmptyDir volume sizes for Next.js UI workload (typically used when enabling readOnlyRootFilesystem) |
 | ui.volumes.nextjsCache | string | `"100Mi"` | Size limit for Next.js build cache (.next/cache). Default 100Mi is sufficient for typical Next.js apps with moderate caching needs. |
 | ui.volumes.tmp | string | `"50Mi"` | Size limit for temporary files (/tmp). Default 50Mi provides ample space for Next.js runtime temporary data. |
-

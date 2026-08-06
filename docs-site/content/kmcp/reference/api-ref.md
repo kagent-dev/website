@@ -6,6 +6,7 @@ weight: 5
 author: kagent.dev
 ---
 
+
 ## Packages
 - [kagent.dev/v1alpha1](#kagentdevv1alpha1)
 
@@ -162,4 +163,3 @@ _Appears in:_
 | --- | --- |
 | `stdio` | TransportTypeStdio indicates that the MCP server uses standard input/output for communication.<br /> |
 | `http` | TransportTypeHTTP indicates that the MCP server uses Streamable HTTP for communication.<br /> |
-
