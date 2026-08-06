@@ -60,11 +60,11 @@ Good job! You added a model to kagent. Next, you can [create or update an agent]
 
 ## Self-hosted vLLM behind an OpenAI-compatible gateway
 
-A common self-hosted pattern places an OpenAI-compatible gateway such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/) in front of a [vLLM](https://docs.vllm.ai/) server (kagent → gateway → vLLM). Configure it as an OpenAI-compatible provider exactly as above, with two extra things to get right.
+A common self-hosted pattern places an OpenAI-compatible gateway such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/) in front of a [vLLM](https://docs.vllm.ai/) server (kagent → gateway → vLLM). Configure the gateway as an OpenAI-compatible provider, exactly as shown above, with two extra things to get right.
 
 ### Enable tool calling in vLLM
 
-kagent sends a `tools` array with `tool_choice: "auto"` on every request. Its runtime registers a built-in `ask_user` tool on every agent, so this happens even when you configure no tools yourself. The vLLM backend **must** be launched with automatic tool choice enabled, or every agent turn fails.
+kagent sends a `tools` array with `tool_choice: "auto"` on every request. kagent's runtime registers a built-in `ask_user` tool on every agent, so a `tools` array is always sent, even when you configure no tools yourself. The vLLM backend **must** be launched with automatic tool choice enabled, or every agent turn fails.
 
 ```bash
 vllm serve Qwen/Qwen2.5-7B-Instruct \
@@ -72,7 +72,7 @@ vllm serve Qwen/Qwen2.5-7B-Instruct \
   --tool-call-parser hermes
 ```
 
-The correct `--tool-call-parser` depends on your model family. See the [vLLM tool calling docs](https://docs.vllm.ai/en/latest/features/tool_calling.html) for the current list. At the time of writing, Qwen2.5 uses `hermes` and Llama 3.1 uses `llama3_json`, but parser names change across vLLM releases, so check the docs for your model.
+The correct `--tool-call-parser` depends on your model family. For example, Qwen2.5 uses `hermes` and Llama 3.1 uses `llama3_json`. Parser names change across vLLM releases, so check the [vLLM tool calling docs](https://docs.vllm.ai/en/latest/features/tool_calling.html) for your model's current parser name.
 
 ### Use the gateway's model identifier
 
@@ -95,7 +95,7 @@ spec:
 
 ### Troubleshooting: `provider API error (status 400)`
 
-If every agent message fails with a generic `status 400`, vLLM was almost certainly started without `--enable-auto-tool-choice` and a matching `--tool-call-parser`. Because kagent always sends `tool_choice: "auto"`, vLLM rejects the request shape until automatic tool choice is enabled. Restart vLLM with the flags above and retry.
+If every agent message fails with a generic `status 400`, the most common cause is that vLLM started without `--enable-auto-tool-choice` and a matching `--tool-call-parser`. Because kagent always sends `tool_choice: "auto"`, vLLM rejects the request until automatic tool choice is enabled. Restart vLLM with the flags above and retry.
 
 ## TLS Configuration
 
