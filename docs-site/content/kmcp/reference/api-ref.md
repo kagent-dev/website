@@ -162,4 +162,3 @@ _Appears in:_
 | --- | --- |
 | `stdio` | TransportTypeStdio indicates that the MCP server uses standard input/output for communication.<br /> |
 | `http` | TransportTypeHTTP indicates that the MCP server uses Streamable HTTP for communication.<br /> |
-
