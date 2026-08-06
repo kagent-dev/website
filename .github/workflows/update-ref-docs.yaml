@@ -122,6 +122,23 @@ jobs:
           sed -i 's/>/\&gt;/g' "./out.md"
           sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
 
+          # crd-ref-docs's markdown renderer emits multiple consecutive blank
+          # lines around headings/descriptions. Collapse runs of 2+ blank
+          # lines to a single one so regenerating doesn't churn whitespace
+          # against the committed page on every run.
+          echo "Collapsing excess blank lines..."
+          sed -i ':a;N;$!ba;s/\n\{3,\}/\n\n/g' "./out.md"
+
+          # Drop crd-ref-docs's default leading `# API Reference` H1: Hextra
+          # renders the frontmatter title as the page H1, so a body H1 would
+          # duplicate it (same reasoning as the Helm chart step below).
+          sed -i '0,/^# /{/^# /d}' "./out.md"
+
+          # The H1 removal leaves a blank line where the heading was; strip
+          # leading blank lines so it doesn't stack with the frontmatter's
+          # own trailing blank line once appended below.
+          sed -i '/./,$!d' "./out.md"
+
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KAGENT_API_PAGE")"
           cat > "$KAGENT_API_PAGE" <<'EOF'
@@ -136,6 +153,11 @@ jobs:
           EOF
           cat "./out.md" >> "$KAGENT_API_PAGE"
           rm -f "./out.md"
+
+          # Normalize to exactly one trailing newline. crd-ref-docs can leave
+          # trailing blank lines at EOF that would otherwise churn on every
+          # regeneration even though nothing meaningful changed.
+          printf '%s\n' "$(cat "$KAGENT_API_PAGE")" > "$KAGENT_API_PAGE"
 
           # Verify the output file was created
           if [ ! -f "$KAGENT_API_PAGE" ]; then
@@ -192,6 +214,18 @@ jobs:
           sed -i 's/>/\&gt;/g' "./out.md"
           sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
 
+          # See the kagent step above for rationale: collapse crd-ref-docs's
+          # excess blank lines so this doesn't churn whitespace every run.
+          echo "Collapsing excess blank lines..."
+          sed -i ':a;N;$!ba;s/\n\{3,\}/\n\n/g' "./out.md"
+
+          # See the kagent step above for rationale: drop the duplicate H1.
+          sed -i '0,/^# /{/^# /d}' "./out.md"
+
+          # See the kagent step above for rationale: strip the leading blank
+          # line the H1 removal leaves behind.
+          sed -i '/./,$!d' "./out.md"
+
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KMCP_API_PAGE")"
           cat > "$KMCP_API_PAGE" <<'EOF'
@@ -206,6 +240,9 @@ jobs:
           EOF
           cat "./out.md" >> "$KMCP_API_PAGE"
           rm -f "./out.md"
+
+          # See the kagent step above for rationale: normalize trailing newline.
+          printf '%s\n' "$(cat "$KMCP_API_PAGE")" > "$KMCP_API_PAGE"
 
           # Verify the output file was created
           if [ ! -f "$KMCP_API_PAGE" ]; then
@@ -280,6 +317,11 @@ jobs:
             # title as the page H1, so a body H1 would duplicate it.
             sed -i '0,/^# /{/^# /d}' "helm-temp.md"
 
+            # The H1 removal leaves a blank line where the heading was; strip
+            # leading blank lines so it doesn't stack with the frontmatter's
+            # own trailing blank line once appended into $HELM_PAGE below.
+            sed -i '/./,$!d' "helm-temp.md"
+
             # Wrap version placeholders in inline code so they show literally.
             python - <<'PY'
             import re
@@ -324,6 +366,10 @@ jobs:
             EOF
             cat "helm-temp.md" >> "$HELM_PAGE"
             rm -f "helm-temp.md"
+
+            # Normalize to exactly one trailing newline, same as the API ref
+            # pages above.
+            printf '%s\n' "$(cat "$HELM_PAGE")" > "$HELM_PAGE"
 
             echo "Final generated file contents (first 50 lines):"
             head -50 "$HELM_PAGE"
