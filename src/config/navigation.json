@@ -103,6 +103,11 @@
             "title": "Agent Memory",
             "href": "/docs/kagent/concepts/agent-memory",
             "description": "Enable vector-backed long-term memory for agents to learn from past interactions."
+          },
+          {
+            "title": "MCP Apps",
+            "href": "/docs/kagent/concepts/mcp-apps",
+            "description": "Render interactive MCP UI widgets (MCP Apps) inline in the kagent chat and test them from the dashboard."
           }
         ]
       },
@@ -120,6 +125,11 @@
             "title": "Anthropic",
             "href": "/docs/kagent/supported-providers/anthropic",
             "description": "Learn how to configure Anthropic models for kagent."
+          },
+          {
+            "title": "Azure AI Foundry",
+            "href": "/docs/kagent/supported-providers/azure-ai-foundry",
+            "description": "Learn how to configure Azure AI Foundry models in kagent."
           },
           {
             "title": "Azure OpenAI",

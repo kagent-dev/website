@@ -9,3 +9,8 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 # Enable per-version preview URLs so PR builds (`wrangler versions upload` in
 # preview.yaml) get a shareable URL without deploying to production.
 preview_urls = true
+
+# esbuild keepNames injects __name() helper calls into functions; next-themes
+# stringifies its theme function into an inline <script>, so the helper is
+# undefined in the browser ("ReferenceError: t is not defined").
+keep_names = false

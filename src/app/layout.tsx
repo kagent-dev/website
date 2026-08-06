@@ -1,12 +1,11 @@
 import type React from "react";
+import '@docsearch/css';
 import "./globals.css";
 import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
 import { GoogleTagManager } from "@next/third-parties/google";
-import Script from "next/script";
-import '@docsearch/css';
 
 export const metadata: Metadata = {
   title: "kagent | Bringing Agentic AI to cloud native",
@@ -40,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
         </ThemeProvider>
       </body>
-      <Script src="https://cdn.jsdelivr.net/npm/@docsearch/react@3" />
     </html>
   );
 }

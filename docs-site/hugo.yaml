@@ -1,0 +1,172 @@
+# The docs are served as a static sub-site under /docs of the kagent.dev origin
+# (the Next.js marketing worker owns everything else). A baseURL with the /docs
+# path prefix namespaces every emitted URL (pages AND css/js/images/favicons)
+# under /docs, so Hugo's output drops cleanly into the worker's public/docs/
+# static assets with no collisions against the marketing site's /images, etc.
+# Content lives at content/<product>/ (NOT content/docs/) so the /docs prefix
+# comes only from baseURL and isn't doubled.
+baseURL: "https://kagent.dev/docs/"
+enableRobotsTXT: true
+# Derive each page's .Lastmod from its last git commit — no manually maintained
+# front-matter dates. Feeds the sitemap <lastmod> for SEO. Listing "lastmod"
+# before ":git" keeps an explicit front-matter date ahead of the commit date
+# where a page sets one.
+enableGitInfo: true
+frontmatter:
+  lastmod: ["lastmod", ":git", "date", "publishDate"]
+# canonifyURLs must stay off with a subpath baseURL: it would rewrite already
+# root-relative links (/docs/…) and relURL-built asset paths against baseURL and
+# double the /docs prefix. The theme uses relURL, which already honors the
+# subpath, so canonify is unnecessary here.
+canonifyURLs: false
+title: "kagent docs"
+
+outputs:
+  home: [HTML, RSS, llms]
+  page: [HTML, markdown]
+  section: [HTML, RSS, markdown, llms]
+
+defaultContentLanguage: en
+
+module:
+  imports:
+    # docs-theme-extras declares the hextra import itself; consumers do not
+    # need to list hextra separately. Extras layouts win over the transitively
+    # imported hextra ones.
+    - path: github.com/solo-io/docs-theme-extras
+  mounts:
+    - source: "assets"
+      target: "assets"
+    - source: "hugo_stats.json"
+      target: "assets/watching/hugo_stats.json"
+
+build:
+  writeStats: true
+  cachebusters:
+    - source: "assets/watching/hugo_stats\\.json"
+      target: "styles\\.css"
+    - source: "(postcss|tailwind)\\.config\\.js"
+      target: "css"
+    - source: "assets/.*\\.(js|ts|jsx|tsx)"
+      target: "js"
+    - source: "assets/.*\\.(.*)$"
+      target: "$1"
+
+caches:
+  getresource:
+    dir: ":cacheDir/:project"
+    maxAge: 1h
+
+markup:
+  goldmark:
+    extensions:
+      extras:
+        superscript:
+          enable: true
+    renderer:
+      unsafe: true
+  highlight:
+    noClasses: false
+
+enableInlineShortcodes: true
+
+params:
+  # Hide the visible "Last updated on <date>" footer (imported OSS content
+  # modules ship displayUpdatedDate=true; this overrides it). The git date still
+  # feeds the sitemap <lastmod> for SEO.
+  displayUpdatedDate: false
+
+  # Default social-share image for OpenGraph / Twitter cards (og:image),
+  # emitted by Hextra's opengraph.html and docs-theme-extras' twitter_cards.html.
+  # Requires a raster card committed at static/ogimage.png (agw-oss uses a
+  # 1280x720 PNG). Until that asset exists this points at a 404 and no card
+  # image is shown. Note: the main kagent.dev marketing site is Next.js and
+  # sets its own OG image; this only affects the Hugo docs-site.
+  images:
+    - /ogimage.png
+
+  # Load the docs-theme-extras OSS brand layer (brand-oss.css + Open Sans).
+  # This is what gives the navbar search its rounded/padded look and keeps
+  # styling consistent with the other Solo OSS docs sites (agw, kgw).
+  themeExtras:
+    brand: oss
+    prodHost: "https://kagent.dev"
+  navbar:
+    displayTitle: false
+    displayLogo: true
+    logo:
+      path: images/kagent-logo-light.svg
+      dark: images/kagent-logo-dark.svg
+      # The docs are served under /docs, so the Hugo home is the /docs landing.
+      # Point the logo at the site root (/) — the Next.js marketing home — instead.
+      # navbar-title.html emits this link raw (no relURL), so it stays "/" and
+      # isn't prefixed with /docs.
+      link: /
+      width: 126
+      height: 28
+  theme:
+    # Auto-render the light/dark toggle in the navbar
+    displayToggle: true
+
+# Top nav — mirrors kagent.dev. Docs is local; the marketing/blog sections stay
+# on the Next.js site, so those link out to absolute kagent.dev URLs.
+menu:
+  main:
+    - name: Docs
+      identifier: docs
+      # Menu urls are relative to baseURL, so Hugo prepends the /docs subpath
+      # automatically — use logical paths here (/, /kagent, /kmcp), NOT /docs/…,
+      # or the prefix doubles to /docs/docs/….
+      url: /
+      weight: 1
+    # Child entries turn "Docs" into a dropdown. Hextra's navbar-link.html
+    # renders any menu item with children as a dropdown toggle (matches agw's
+    # standalone/kubernetes split). kagent docs are unversioned, so these point
+    # straight at each product's section landing.
+    - name: kagent
+      parent: docs
+      url: /kagent
+      weight: 1
+      params:
+        # Matches assets/icons/nav-<icon>.svg; rendered inline by navbar-link.html
+        # so the dropdown carries the same product marks as the JS marketing nav.
+        icon: kagent
+    - name: kmcp
+      parent: docs
+      url: /kmcp
+      weight: 2
+      params:
+        icon: kmcp
+    # Marketing pages are served on the SAME origin (the Next.js worker), at the
+    # site root — not under the docs' /docs baseURL. Use params.localHref (emitted
+    # verbatim by navbar-link.html) so these stay root-relative and clicking stays
+    # on the current host instead of jumping to production kagent.dev.
+    - name: Blog
+      weight: 2
+      params:
+        localHref: /blog
+    - name: Tools
+      weight: 3
+      params:
+        localHref: /tools
+    - name: Agents
+      weight: 4
+      params:
+        localHref: /agents
+    - name: Community
+      weight: 5
+      params:
+        localHref: /community
+    - name: Enterprise
+      weight: 6
+      params:
+        localHref: /enterprise
+    - name: Search
+      weight: 7
+      params:
+        type: search
+    - name: GitHub
+      url: https://github.com/kagent-dev/kagent
+      weight: 8
+      params:
+        icon: github
