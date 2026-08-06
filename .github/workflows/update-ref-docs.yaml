@@ -129,6 +129,11 @@ jobs:
           echo "Collapsing excess blank lines..."
           sed -i ':a;N;$!ba;s/\n\{3,\}/\n\n/g' "./out.md"
 
+          # Drop crd-ref-docs's default leading `# API Reference` H1: Hextra
+          # renders the frontmatter title as the page H1, so a body H1 would
+          # duplicate it (same reasoning as the Helm chart step below).
+          sed -i '0,/^# /{/^# /d}' "./out.md"
+
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KAGENT_API_PAGE")"
           cat > "$KAGENT_API_PAGE" <<'EOF'
@@ -143,6 +148,11 @@ jobs:
           EOF
           cat "./out.md" >> "$KAGENT_API_PAGE"
           rm -f "./out.md"
+
+          # Normalize to exactly one trailing newline. crd-ref-docs can leave
+          # trailing blank lines at EOF that would otherwise churn on every
+          # regeneration even though nothing meaningful changed.
+          printf '%s\n' "$(cat "$KAGENT_API_PAGE")" > "$KAGENT_API_PAGE"
 
           # Verify the output file was created
           if [ ! -f "$KAGENT_API_PAGE" ]; then
@@ -204,6 +214,9 @@ jobs:
           echo "Collapsing excess blank lines..."
           sed -i ':a;N;$!ba;s/\n\{3,\}/\n\n/g' "./out.md"
 
+          # See the kagent step above for rationale: drop the duplicate H1.
+          sed -i '0,/^# /{/^# /d}' "./out.md"
+
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KMCP_API_PAGE")"
           cat > "$KMCP_API_PAGE" <<'EOF'
@@ -218,6 +231,9 @@ jobs:
           EOF
           cat "./out.md" >> "$KMCP_API_PAGE"
           rm -f "./out.md"
+
+          # See the kagent step above for rationale: normalize trailing newline.
+          printf '%s\n' "$(cat "$KMCP_API_PAGE")" > "$KMCP_API_PAGE"
 
           # Verify the output file was created
           if [ ! -f "$KMCP_API_PAGE" ]; then
