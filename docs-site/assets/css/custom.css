@@ -446,6 +446,18 @@ h6 {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* ── Top-nav dropdown toggle font size (Docs) ──────────────────────────
+   Hextra renders the Docs item as a <button class="hextra-nav-menu-toggle">
+   instead of an <a>, since it has child entries. Browsers don't apply the
+   inherited hx:text-sm sizing to <button> the same way they do to <a>, so
+   Docs renders larger than its sibling nav links. */
+.hextra-nav-menu-toggle {
+  font-family: inherit;
+  font-size: 0.875rem; /* match hx:text-sm on sibling nav links */
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
 /* Dropdown item spacing lives here, NOT in hx: utility classes: ad-hoc hx:
    spacing values (gap-3, px-4, py-2.5, …) that Hextra core doesn't already use
    are not generated in this Tailwind build, so they silently no-op. */
