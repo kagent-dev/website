@@ -122,6 +122,13 @@ jobs:
           sed -i 's/>/\&gt;/g' "./out.md"
           sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
 
+          # crd-ref-docs's markdown renderer emits multiple consecutive blank
+          # lines around headings/descriptions. Collapse runs of 2+ blank
+          # lines to a single one so regenerating doesn't churn whitespace
+          # against the committed page on every run.
+          echo "Collapsing excess blank lines..."
+          sed -i ':a;N;$!ba;s/\n\{3,\}/\n\n/g' "./out.md"
+
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KAGENT_API_PAGE")"
           cat > "$KAGENT_API_PAGE" <<'EOF'
@@ -191,6 +198,11 @@ jobs:
           sed -i 's/</\&lt;/g' "./out.md"
           sed -i 's/>/\&gt;/g' "./out.md"
           sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
+
+          # See the kagent step above for rationale: collapse crd-ref-docs's
+          # excess blank lines so this doesn't churn whitespace every run.
+          echo "Collapsing excess blank lines..."
+          sed -i ':a;N;$!ba;s/\n\{3,\}/\n\n/g' "./out.md"
 
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KMCP_API_PAGE")"
