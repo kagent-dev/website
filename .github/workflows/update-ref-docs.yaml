@@ -134,6 +134,11 @@ jobs:
           # duplicate it (same reasoning as the Helm chart step below).
           sed -i '0,/^# /{/^# /d}' "./out.md"
 
+          # The H1 removal leaves a blank line where the heading was; strip
+          # leading blank lines so it doesn't stack with the frontmatter's
+          # own trailing blank line once appended below.
+          sed -i '/./,$!d' "./out.md"
+
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KAGENT_API_PAGE")"
           cat > "$KAGENT_API_PAGE" <<'EOF'
@@ -216,6 +221,10 @@ jobs:
 
           # See the kagent step above for rationale: drop the duplicate H1.
           sed -i '0,/^# /{/^# /d}' "./out.md"
+
+          # See the kagent step above for rationale: strip the leading blank
+          # line the H1 removal leaves behind.
+          sed -i '/./,$!d' "./out.md"
 
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KMCP_API_PAGE")"
