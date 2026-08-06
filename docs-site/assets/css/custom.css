@@ -22,11 +22,11 @@
     border-bottom-color: #374151;
 }
 
-/* Theme-toggle icon visibility — explicit fallback for the Tailwind v4
-   hx:group-data-[theme=*]:hidden variant.  The v4 rule uses :is()/:where()
+/* -toggle icon visibility — explicit fallback for the Tailwind v4
+   hx:group-data-[=*]:hidden variant.  The v4 rule uses :is()/:where()
    which can lose the battle against Tailwind v3's svg{display:block} preflight
    when both pipelines run.  This direct descendant selector with !important
-   guarantees only the current-theme icon renders. */
+   guarantees only the current- icon renders. */
 .hx\:group[data-theme="light"]  .hx\:group-data-\[theme\=light\]\:hidden,
 .hx\:group[data-theme="dark"]   .hx\:group-data-\[theme\=dark\]\:hidden,
 .hx\:group[data-theme="system"] .hx\:group-data-\[theme\=system\]\:hidden {
@@ -450,10 +450,7 @@ h6 {
    Hextra renders the Docs item as a <button class="hextra-nav-menu-toggle">
    instead of an <a>, since it has child entries. Browsers don't apply the
    inherited hx:text-sm sizing to <button> the same way they do to <a>, so
-   Docs renders larger than its sibling nav links. docs-theme-extras ships
-   an equivalent fix, but only for the .dropdown > button/a markup pattern
-   used by kgateway/agentgateway-oss' custom navbar, not Hextra's native
-   .hextra-nav-menu-toggle markup used here, so it doesn't reach this case. */
+   Docs renders larger than its sibling nav links. */
 .hextra-nav-menu-toggle {
   font-family: inherit;
   font-size: 0.875rem; /* match hx:text-sm on sibling nav links */
