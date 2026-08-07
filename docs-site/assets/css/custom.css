@@ -42,9 +42,6 @@ h6 {
     font-family: 'Open Sans', 'ui-sans-serif', 'system-ui', 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-.nav-container {
-    font-family: 'Open Sans', 'ui-sans-serif', 'system-ui', 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
 
 /* Test Status Badge - Modern gradient style */
 .test-status-badge {
@@ -214,20 +211,12 @@ h6 {
     color: #111827;
     background: #f3f4f6;
 }
-.sidebar-link.sidebar-active-item {
-    color: #1e40af;
-    background: #dbeafe;
-}
 .dark .sidebar-link:not(.sidebar-active-item) {
     color: #9ca3af !important;
 }
 .dark .sidebar-link:not(.sidebar-active-item):hover {
     color: #e5e7eb !important;
     background: rgba(255,255,255,0.05) !important;
-}
-.dark .sidebar-link.sidebar-active-item {
-    color: #c7d2fe !important;
-    background: rgba(99,102,241,0.1) !important;
 }
 
 .dark .sidebar-container {
@@ -247,38 +236,6 @@ h6 {
 .hextra-tabs-panel[data-state="selected"] {
     display: block;
     padding-top: 1.5rem;
-}
-.hextra-tabs-toggle {
-    cursor: pointer;
-    padding: 0.5rem;
-    margin-right: 0.5rem;
-    font-weight: 500;
-    border-bottom: 2px solid transparent;
-    color: #4b5563;
-    background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    transition: color 0.15s, border-color 0.15s;
-}
-.hextra-tabs-toggle:hover {
-    color: #000;
-    border-bottom-color: #d1d5db;
-}
-.hextra-tabs-toggle[data-state="selected"] {
-    color: hsl(212, 100%, 45%);
-    border-bottom-color: hsl(212, 100%, 50%);
-}
-.dark .hextra-tabs-toggle {
-    color: #d1d5db;
-}
-.dark .hextra-tabs-toggle:hover {
-    color: #fff;
-    border-bottom-color: #4b5563;
-}
-.dark .hextra-tabs-toggle[data-state="selected"] {
-    color: hsl(212, 100%, 60%);
-    border-bottom-color: hsl(212, 100%, 50%);
 }
 
 /* Light/dark image toggling */
@@ -321,26 +278,6 @@ h6 {
 }
 
 /* {{< cards >}} shortcode — responsive grid */
-.section-cards {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 640px) {
-  .section-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .section-cards {
-    grid-template-columns: repeat(var(--section-cards-cols, 3), minmax(0, 1fr));
-  }
-}
-
-
 
 /* Spacing between headings and following content. Needed because reuse
    shortcode output has no <p> wrapper, so there's no margin-top from
