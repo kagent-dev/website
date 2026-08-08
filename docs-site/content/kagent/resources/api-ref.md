@@ -573,7 +573,6 @@ _Appears in:_
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
 | `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/a2aproject/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
-| `executeCodeBlocks` _boolean_ | Allow code execution for python code blocks with this agent.<br />If true, the agent will automatically execute python code blocks in the LLM responses.<br />Code will be executed in a sandboxed environment.<br />due to a bug in adk (https://github.com/google/adk-python/issues/3921 ), this field is ignored for now. |  |  |
 | `memory` _[MemorySpec](#memoryspec)_ | Memory configuration for the agent. |  |  |
 | `shareTools` _boolean_ | ShareTools enables the built-in share link tools for this agent.<br />When true, the agent gains create_share_link, list_share_links, and delete_share_link tools<br />that allow it to manage share tokens for the current session. |  |  |
 | `context` _[ContextConfig](#contextconfig)_ | Context configures context management for this agent.<br />This includes event compaction (compression) and context caching. |  |  |
