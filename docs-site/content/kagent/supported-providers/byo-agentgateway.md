@@ -84,7 +84,7 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
    EOF
    ```
 
-   {{< reuse "conrefs/snippets/field-desc/review-table.md" >}} For more information, see the [API docs]({{< link-hextra path="/reference/api/kagent/#modelconfigspec" >}}).
+   {{< reuse "conrefs/snippets/field-desc/review-table.md" >}} For more information, see the [API docs](https://kagent.dev/docs/kagent/resources/api-ref#modelconfigspec).
 
    | Setting | Description |
    | --- | --- |
@@ -120,7 +120,7 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
       EOF
       ```
 
-   {{< reuse "conrefs/snippets/field-desc/review-table.md" >}} For more information, see the [API docs]({{< link-hextra path="/reference/api/kagent/#modelconfigspec" >}}).
+   {{< reuse "conrefs/snippets/field-desc/review-table.md" >}} For more information, see the [API docs](https://kagent.dev/docs/kagent/resources/api-ref#modelconfigspec).
 
    | Setting | Description |
    | --- | --- |
@@ -137,4 +137,4 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
    kubectl get modelconfig agentgateway-model -n kagent -o yaml
    ```
 
-Agentgateway is now added as a model endpoint in kagent. Next, you can [create or update an agent]({{< link-hextra path="/getting-started/first-agent/" >}}) to use this model.
+Agentgateway is now added as a model endpoint in kagent. Next, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model.
