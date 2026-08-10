@@ -1,5 +1,5 @@
 ---
-title: agentgateway
+title: Agentgateway
 description: Configure an agentgateway deployment as a model endpoint for kagent.
 weight: 9
 author: kagent.dev
