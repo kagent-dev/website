@@ -125,7 +125,7 @@ const posts = [
         publishDate: '2026-08-10',
         title: 'The future of kagebnt',
         description: 'Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent is rebuilding its runtime on Agent Substrate to get there.',
-        authorId: 'eitanyarmush',
+        authorId: 'eitanya',
     }
 ]
 
