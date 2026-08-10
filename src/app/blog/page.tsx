@@ -123,7 +123,7 @@ const posts = [
     {
         slug: 'the-future-of-kagent',
         publishDate: '2026-08-10',
-        title: 'The future of kagebnt',
+        title: 'The future of kagent',
         description: 'Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent is rebuilding its runtime on Agent Substrate to get there.',
         authorId: 'eitanya',
     }
