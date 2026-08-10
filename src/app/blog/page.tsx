@@ -119,6 +119,13 @@ const posts = [
         title: 'Is a Pod the Right Deployment Unit for an AI Agent?',
         description: 'How kagent evolved from one runtime hosting many agents to agent-substrate—and why Pods may be the right execution unit, but not the right deployment model, for AI agents.',
         authorId: 'linsun',
+    },
+    {
+        slug: 'the-future-of-kagent',
+        publishDate: '2026-08-10',
+        title: 'The future of kagebnt',
+        description: 'Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent is rebuilding its runtime on Agent Substrate to get there.',
+        authorId: 'eitanyarmush',
     }
 ]
 
@@ -204,7 +211,7 @@ export default async function BlogPage() {
                         })()}
                     </div>
                 </div>
-                
+
                 {/* Community Section */}
                 <div className="py-16 border-t border-border">
                     <div className="max-w-3xl mx-auto px-4 text-center">
@@ -233,4 +240,4 @@ export default async function BlogPage() {
             </div>
         </>
     );
-} 
+}

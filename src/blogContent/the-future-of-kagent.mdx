@@ -1,0 +1,65 @@
+export const metadata = {
+  title: "The Future of kagent",
+  publishDate: "2026-08-10T10:00:00Z",
+  description: "Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent is rebuilding its runtime on Agent Substrate to get there.",
+  author: "Eitan Yarmush",
+  authorIds: ["eitanyarmush"],
+}
+
+The title of this blog explicitly mentions the future, but before we get there let's spend a little time talking about the past.
+
+As of August 2026, kagent has:
+
+* 163 releases
+* 174 contributors
+* 1,503 commits
+* 3,400+ stars
+
+Those are the tangible stats, but kagent also has amazing maintainers, a super active Discord community, and an incredibly dedicated user base. So from the bottom of my heart, thank you all for seeing the same potential in this project that we did, and thank you for being such a big part of it.
+
+It can be hard to remember now, but when we first started thinking about kagent in the winter of 2024, the landscape of AI infrastructure looked quite different. It was clear that agents were the future, but it was not at all clear what exactly an agent was. The most popular agents of the time were so-called "framework agents": agents hand built with code, using LangGraph, CrewAI, ADK, and others.
+
+Agents were also so young at the time that the discussion hadn't yet moved into "day 2 operations", or how users would run them securely and consistently in production. Kubernetes continues to be the dominant way of running applications at scale, so why not agents, we said. From this nebulous set of circumstances kagent was born.
+
+kagent started with a very simple goal: bring Agentic AI to Kubernetes. For us that broke down into two parts:
+
+1. Offer declarative, Kubernetes APIs for creating and deploying agents. This style of agent, now called a harness, was novel at the time.
+2. Offer easy ways to run, observe, and secure agents running in Kubernetes.
+
+In the intervening time we've shipped 10 minor releases, jam packed with incredible features. As mentioned, we created the first fully declarative agent API, an approach that has been validated by the move away from framework agents towards configurable harnesses. We also added `skills` support before it was clear that they would take over in the way they have.
+
+However, we're by no means done. The AI landscape is moving extremely quickly, and kagent needs to move with it. Since kagent was created, three things have become clear about agents and agent workflows:
+
+1. Agents can be very dangerous. Sandboxing their runtime environment is a necessity.
+2. Giving agents access to their own filesystem lets them work on problems for much longer stretches.
+3. Agents don't usually need to run 24/7, so reserving constant compute for them is very inefficient.
+
+## The present and the future
+
+A couple of months ago we added support for running our agents on Agent Substrate using our SandboxAgent CRD. That was a big step forward for kagent and it has worked out well, but it was only a first step.
+
+To remain the primary way users run agents on Kubernetes, we've decided to move away from our current Deployment-based runtime and fully embrace Agent Substrate as our runtime.
+
+From the Agent Substrate repo:
+
+> Agent Substrate delivers a performant, high density runtime environment for large scale agent deployments. The agent substrate control plane provides full lifecycle management for agent sandboxes, delivering sub-second agent resume/suspend operations, and allows heavy multiplexing of agents onto the same compute infrastructure. It supports multiple sandbox technologies including microVMs and gVisor, enabling consistent lifecycle operations for all sandbox types.
+
+Agent Substrate is a Google-founded open source project, and you can find the repo [here](https://github.com/agent-substrate/substrate). Importantly, embracing Agent Substrate **does not** mean abandoning Kubernetes. Substrate's core is built on top of Kubernetes, and kagent will continue to be a Kubernetes project.
+
+Shifting core runtimes is no small decision, and it's not one the kagent team took lightly. We're doing this because we truly believe it delivers the performance, security, and efficiency to make kagent better than it has ever been. The best way to show that is against the three points above:
+
+1. **Substrate sandboxes every agent by default.** All compute inside Substrate runs in a sandbox runtime, which makes it far harder for an agent to escalate its own privileges or reach parts of the system it shouldn't. Substrate also controls all network traffic in and out of the agent by default, so nothing gets in or out without explicit permission.
+2. **Every agent gets its own filesystem by default**, and it doesn't end there. Those filesystems are snapshotted when an agent is suspended, so agents can be started again from a previously known state on demand.
+3. **Agents share pools of workers** instead of getting their own dedicated compute the way they would on Kubernetes. That lets Substrate pack more agents onto the system than it has compute for, because agents that aren't running don't hold any. What holds this together is Substrate's sub-100ms resume guarantee, which means agents can be suspended and resumed on demand without any noticeable delay. If you want to see what that density looks like in practice, we walked through how Substrate fits [250 agents onto 8 pods](https://www.solo.io/topics/ai-infrastructure/how-google-agent-substrate-works).
+
+Alongside the runtime change, we're also updating our API to fit it. Just like our last API change, we're taking everything we learned from building and using the current API into the new one. You can read the details in the [API proposal on GitHub](https://github.com/kagent-dev/kagent/issues/2366). We believe the new API will combine the best parts of the current one with the flexibility Substrate gives us.
+
+As you can imagine, a change this size comes with growing pains. Here is how we plan to handle them.
+
+This transition will include breaking changes. To give users time to adapt, we will keep supporting the current runtime on the `release/v0.10.x` branch while new work happens on `main`. In practice, that means changes to the current system should be opened against `release/v0.10.x`, and new features and changes go to `main`. Detailed migration guides are coming over the next few weeks.
+
+This is the biggest change kagent has made since we started it, and we think it's the one that finally makes agents on Kubernetes work the way they always should have: fast to resume, cheap when idle, and sandboxed by default.
+
+We're not building it in a vacuum, though. That API proposal is still open, and we would much rather hear from you before we lock it in than after. Tell us what you think on the issue, come find us in [Discord](https://discord.gg/Fu3k65f2k3), or better still, join us at the [community meeting](https://kagent.dev/community). We meet every Tuesday, and the next several are going to be largely about this.
+
+kagent got where it is because of this community. Come help us build what's next.
