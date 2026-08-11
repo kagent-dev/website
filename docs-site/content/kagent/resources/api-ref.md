@@ -333,7 +333,7 @@ _Appears in:_
 | `documentationUrl` _string_ | DocumentationURL is a URL to human-readable documentation for the agent. It<br />is surfaced on the agent's A2A AgentCard. |  | Format: uri <br /> |
 | `version` _string_ | Version is the agent's version string, surfaced on the A2A AgentCard. |  |  |
 | `provider` _[AgentProvider](#agentprovider)_ | Provider identifies the organization responsible for the agent. It is<br />surfaced on the agent's A2A AgentCard. |  |  |
-| `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
+| `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from OCI images, git repos,<br />and/or S3, and made available to the agent under the `/skills` folder. |  |  |
 | `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
 
@@ -1046,6 +1046,23 @@ _Appears in:_
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  |  |
 | `secretHash` _string_ | SecretHash stores a hash of the TLS Secret referenced by spec.tls so<br />agents that consume this RemoteMCPServer can detect cert rotation and<br />roll on the next reconcile. Empty when spec.tls.caCertSecretRef is unset. |  |  |
 
+#### S3SkillRef
+
+S3SkillRef specifies a skill bundle in an S3 bucket.
+
+Two bundle shapes are supported:
+  - Prefix: s3://bucket/path/to/skill/ containing SKILL.md (and siblings); synced recursively
+  - Archive: a single .zip / .tgz / .tar.gz object; downloaded and extracted
+
+_Appears in:_
+- [SkillForAgent](#skillforagent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `uri` _string_ | S3 URI of the skill: s3://bucket/key-or-prefix |  | MinLength: 1 <br />Pattern: `^s3://.+` <br /> |
+| `region` _string_ | AWS region for the bucket. Optional when AWS_REGION / AWS_DEFAULT_REGION is set<br />on the skills-init container (e.g. via initContainer.env). |  |  |
+| `name` _string_ | Name for the skill directory under /skills. If omitted, defaults to the last<br />non-empty path segment of the URI (archive extension stripped). |  |  |
+
 #### SAPAICoreConfig
 
 SAPAICoreConfig contains SAP AI Core-specific configuration options.
@@ -1088,7 +1105,7 @@ _Appears in:_
 | `documentationUrl` _string_ | DocumentationURL is a URL to human-readable documentation for the agent. It<br />is surfaced on the agent's A2A AgentCard. |  | Format: uri <br /> |
 | `version` _string_ | Version is the agent's version string, surfaced on the A2A AgentCard. |  |  |
 | `provider` _[AgentProvider](#agentprovider)_ | Provider identifies the organization responsible for the agent. It is<br />surfaced on the agent's A2A AgentCard. |  |  |
-| `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from the specified container images.<br />and made available to the agent under the `/skills` folder. |  |  |
+| `skills` _[SkillForAgent](#skillforagent)_ | Skills to load into the agent. They will be pulled from OCI images, git repos,<br />and/or S3, and made available to the agent under the `/skills` folder. |  |  |
 | `sandbox` _[SandboxConfig](#sandboxconfig)_ | Sandbox configures sandboxed execution behavior shared across runtimes.<br />This is intended for sandboxed declarative execution today, and can also<br />be consumed by BYO agents. |  |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this Agent as a tool.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this Agent as a tool.<br />This field only applies when this Agent is used as a tool by another Agent.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
 | `substrate` _[SandboxSubstrateSpec](#sandboxsubstratespec)_ | Substrate is optional Agent Substrate-specific settings. |  |  |
@@ -1184,6 +1201,7 @@ _Appears in:_
 | `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets is a list of references to secrets in the same namespace to use for<br />pulling skill images from private registries. Each referenced secret must be of type<br />kubernetes.io/dockerconfigjson. The credentials from all secrets are merged and made<br />available to the skills-init container at /.kagent/.docker/config.json; krane will<br />use them automatically when pulling images. |  | MaxItems: 20 <br /> |
 | `gitAuthSecretRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | Reference to a Secret containing git credentials.<br />Applied to all gitRefs entries.<br />The secret should contain a `token` key for HTTPS auth,<br />or `ssh-privatekey` for SSH auth. |  |  |
 | `gitRefs` _[GitRepo](#gitrepo) array_ | Git repositories to fetch skills from. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
+| `s3Refs` _[S3SkillRef](#s3skillref) array_ | S3 object prefixes or archives to fetch skills from.<br />Auth uses the AWS SDK default credential chain (typically static keys via<br />skills.initContainer.env: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION). |  | MaxItems: 20 <br />MinItems: 1 <br /> |
 | `initContainer` _[SkillsInitContainer](#skillsinitcontainer)_ | Configuration for the skills-init init container. |  |  |
 
 #### SkillsInitContainer
