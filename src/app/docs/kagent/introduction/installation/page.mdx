@@ -387,6 +387,36 @@ controller:
 
 Per-agent `nodeSelector` values in the `Agent` spec take precedence over this default.
 
+#### Affinity and topology spread constraints
+
+Use `affinity` and `topologySpreadConstraints` to control pod scheduling for the controller and UI Deployments. Both fields accept standard Kubernetes scheduling objects.
+
+```yaml
+controller:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: controller
+            topologyKey: kubernetes.io/hostname
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: controller
+
+ui:
+  affinity: {}
+  topologySpreadConstraints: []
+```
+
+When unset, no affinity or spread constraints are applied.
+
 #### Deploy companion resources with extraObjects
 
 Use `extraObjects` to deploy arbitrary Kubernetes manifests in the same Helm chart lifecycle as kagent. Entries are rendered through `tpl`, so they can reference the release context.

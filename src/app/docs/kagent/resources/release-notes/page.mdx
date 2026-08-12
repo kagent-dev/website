@@ -30,6 +30,9 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * [A2A AgentCard metadata](#a2a-agentcard-metadata): New optional fields on the Agent spec for enriching the A2A AgentCard.
 * [maxOutputTokens for Gemini and Vertex AI](#maxoutputtokens-for-gemini-and-vertex-ai): New `maxOutputTokens` field on Gemini and Vertex AI providers for capping model output length.
 * [AWS Bedrock Guardrails](#aws-bedrock-guardrails): Native guardrail support for the Bedrock provider, enabling content filtering, topic denial, and PII redaction.
+* [Azure AI Foundry](#azure-ai-foundry): New provider for Azure AI Foundry models with Go ADK runtime support and Azure Workload Identity authentication.
+* [OpenAI Responses API](#openai-responses-api): New `openAI.apiFormat: responses` field switches the harness to use the OpenAI Responses API instead of Chat Completions.
+* [Per-call session isolation for Agent tools](#per-call-session-isolation-for-agent-tools): New `isolateSessions` flag gives each call to a sub-agent its own fresh session, enabling safe parallel fan-out.
 
 **Helm & configuration**
 
@@ -47,6 +50,7 @@ Review this summary of significant changes from kagent version 0.9 to v0.10.
 * [nodeSelector for agent Helm charts](#nodeselector-for-agent-helm-charts): New `nodeSelector` value in every bundled agent Helm chart for pinning agent pods to specific node pools.
 * [envFrom for agent deployments](#envfrom-for-agent-deployments): New `envFrom` field on the agent deployment spec for bulk-injecting environment variables from ConfigMaps and Secrets.
 * [Disable default ModelConfig](#disable-default-modelconfig): Set `providers: null` to suppress the Helm-generated default `ModelConfig` and `Secret`.
+* [Affinity and topologySpreadConstraints](#affinity-and-topologyspreadconstraints): New `controller.affinity`, `controller.topologySpreadConstraints`, `ui.affinity`, and `ui.topologySpreadConstraints` Helm values for advanced pod scheduling.
 
 **Agent Substrate**
 
@@ -469,11 +473,110 @@ When `providers` is unset or null, neither the `modelconfig` nor the `modelconfi
 
 For more information, see [Disable the default ModelConfig](/docs/kagent/introduction/installation#disable-the-default-modelconfig).
 
+## Azure AI Foundry
+
+[Azure AI Foundry](https://ai.azure.com/) is now a supported `ModelConfig` provider. The Foundry provider uses the Azure AI Inference SDK and supports both API key authentication and Azure Workload Identity (`DefaultAzureCredential`) when no key is configured. Only the Go declarative runtime is supported; the controller rejects other runtimes.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: foundry-model-config
+  namespace: kagent
+spec:
+  provider: Foundry
+  model: gpt-5.4-mini
+  foundry:
+    endpoint: https://my-hub.services.ai.azure.com/models
+    deployment: my-deployment
+    apiVersion: "2025-01-01-preview"
+```
+
+To authenticate with an API key, create a Kubernetes Secret with the key stored as `FOUNDRY_API_KEY` and reference it via `spec.apiKeySecret`. To use Azure Workload Identity instead, omit `apiKeySecret` and annotate the agent's ServiceAccount with the appropriate IAM role.
+
+| Field | Description |
+|---|---|
+| `foundry.endpoint` | The Azure AI Foundry endpoint URL. |
+| `foundry.endpointFrom` | Reference to a ConfigMap key containing the endpoint URL. Use with Azure Service Operator to inject the endpoint without hardcoding it. |
+| `foundry.deployment` | The deployment name within the Foundry project. |
+| `foundry.apiVersion` | The Azure AI Inference API version (for example, `2025-01-01-preview`). |
+
+Memory embeddings are supported and use 768-dimensional vectors. Anthropic (Claude) models on Foundry are not yet supported.
+
+For more information, see [Azure AI Foundry](/docs/kagent/supported-providers/azure-ai-foundry).
+
+## OpenAI Responses API
+
+You can now switch the harness to use the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) instead of Chat Completions by setting `openAI.apiFormat: responses` on a `ModelConfig`. This is also compatible with gateways such as AgentGateway that expose the Responses API.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: gpt-5.4-mini
+  openAI:
+    apiFormat: responses
+```
+
+Omit `apiFormat` (or set it to `chat`) to continue using Chat Completions, which remains the default. Native tool use and stateful Responses API chaining are not yet supported.
+
+For more information, see [OpenAI — Responses API](/docs/kagent/supported-providers/openai#responses-api).
+
+## Per-call session isolation for Agent tools
+
+When a coordinator agent calls the same sub-agent in parallel, all calls previously shared a single session, causing them to interfere with each other. Setting `isolateSessions: true` on an Agent-type tool gives each call its own fresh `context_id`, enabling safe parallel fan-out.
+
+```yaml
+spec:
+  declarative:
+    tools:
+      - type: Agent
+        agent:
+          name: worker-agent
+        isolateSessions: true
+```
+
+The default (`isolateSessions: false`) preserves the existing behavior where calls to the same sub-agent share a session for stateful continuity.
+
+For more information, see [Agents — Per-call session isolation](/docs/kagent/concepts/agents#per-call-session-isolation).
+
+## Affinity and topologySpreadConstraints
+
+New Helm values let you configure pod affinity rules and topology spread constraints for the controller and UI Deployments.
+
+```yaml
+controller:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: controller
+            topologyKey: kubernetes.io/hostname
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: controller
+
+ui:
+  affinity: {}
+  topologySpreadConstraints: []
+```
+
+Both fields accept standard Kubernetes scheduling objects. When unset, no affinity or spread constraints are applied and existing behavior is unchanged.
+
+For more information, see [Installing kagent — Affinity and topology spread constraints](/docs/kagent/introduction/installation#affinity-and-topology-spread-constraints).
+
 ## Additional changes in v0.10
 
 **Security**
 
 * **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
+* **Python dependency CVE patches**: `aiohttp` bumped to 3.14.3 (CVE-2026-69244) and `cryptography` bumped to 50.0.0 (CVE-2026-69247) in the Python ADK container images.
 * **A2A task security scoping**: Task `get`, `create`, and `delete` operations are now scoped to the session owner, preventing one user from accessing another user's A2A tasks.
 
 **Helm and configuration**
@@ -487,6 +590,7 @@ For more information, see [Disable the default ModelConfig](/docs/kagent/introdu
 * **oauth2-proxy subchart updated to ~10.7.0**: The bundled oauth2-proxy dependency is bumped to the 10.7.x chart series.
 * **Custom annotations on the default ModelConfig**: A new per-provider `annotations` map under `providers.<provider>.annotations` is applied to the Helm-generated default ModelConfig. Useful for downstream tooling or UI extensions that key off resource annotations.
 * **`deploymentAnnotations` for agent deployments**: New `deploymentAnnotations` field on the agent deployment spec sets annotations on the Deployment object itself. The existing `annotations` field targets pod template metadata only. Useful for GitOps tooling such as Argo CD sync waves, Flux, and Kyverno policies that key off Deployment-level annotations.
+* **pgx connection pool tuning**: New Helm values configure the idle connection timeout and check period for the PostgreSQL pgx driver, so that idle database connections are closed after a configurable period rather than held indefinitely.
 
 **Agent runtimes and providers**
 
@@ -530,6 +634,8 @@ For more information, see [Disable the default ModelConfig](/docs/kagent/introdu
 * **ADK token refresh loop resilience**: Exceptions during token reads in the Python ADK no longer kill the background refresh goroutine. Failed reads are logged and the loop continues on the next cycle instead of silently stopping.
 * **ACP shim teardown deadlock fix**: Fixed a deadlock where `terminate()` could hang indefinitely when a WebSocket client stalled, blocking the stdout reader goroutine on a full channel and preventing the shim from shutting down.
 * **ADK session state with `num_recent_events`**: Fixed a bug where `session.state` was built from only the last `n` events when `num_recent_events` was set, silently dropping state deltas from older events. Full event history is now always used to compute state; `num_recent_events` only trims the returned events list.
+* **Session sharing nil pointer fix**: Fixed a nil pointer panic on session sharing endpoints caused by `SessionSharesHandler` not being initialized at startup.
+* **OTel traces no longer sent to api.openai.com**: The Python ADK no longer forwards traces to OpenAI's hardcoded endpoint by default, preventing key leakage for proxy or gateway deployments. Set `KAGENT_OPENAI_AGENTS_NATIVE_TRACING=true` to restore the original behavior.
 
 # v0.9
 

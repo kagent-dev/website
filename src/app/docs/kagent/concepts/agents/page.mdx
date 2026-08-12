@@ -395,6 +395,22 @@ Here's how you could reference an existing agent (`promql-agent`) as a tool:
         namespace: other-namespace
 ```
 
+### Per-call session isolation
+
+By default, all calls to the same sub-agent share a single session, which preserves stateful continuity across calls. When a coordinator agent calls the same sub-agent in parallel, shared sessions can cause calls to interfere with each other.
+
+Set `isolateSessions: true` on the Agent-type tool to give each call its own fresh session, enabling safe parallel fan-out.
+
+```yaml
+spec:
+  declarative:
+    tools:
+      - type: Agent
+        agent:
+          name: worker-agent
+        isolateSessions: true
+```
+
 ### MCP server endpoint
 
 A2A-enabled agents are automatically exposed as an MCP server on the kagent controller. The MCP endpoint is available at `/mcp` on the same port as the A2A endpoint (default 8083).

@@ -71,3 +71,17 @@ spec:
 ```
 
 For standard (non-reasoning) models and OpenAI-compatible endpoints, `openAI.maxTokens` continues to work as before. The two fields are independent.
+
+## Responses API
+
+By default, kagent uses the [Chat Completions API](https://platform.openai.com/docs/api-reference/chat). To switch to the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) instead, set `openAI.apiFormat: responses` on the `ModelConfig`. This is also compatible with gateways such as AgentGateway that expose the Responses API.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: gpt-4o
+  openAI:
+    apiFormat: responses
+```
+
+Omit `apiFormat` (or set it to `chat`) to continue using Chat Completions. Native tool use and stateful Responses API chaining are not yet supported.
