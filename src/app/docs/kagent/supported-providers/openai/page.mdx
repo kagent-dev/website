@@ -19,7 +19,7 @@ export OPENAI_API_KEY=<your_api_key>
 kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_KEY=$OPENAI_API_KEY
 ```
 
-2. Create a ModelConfig resource that references the secret and key name:
+2. Create a `ModelConfig` resource that references the secret and key name. For standard models such as GPT-4 and GPT-3.5, kagent automatically configures the appropriate model capabilities.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -35,9 +35,7 @@ spec:
   openAI: {}
 ```
 
-For OpenAI's standard models like GPT-4 and GPT-3.5, kagent automatically configures the appropriate model capabilities.
-
-3. Apply the above resource to the cluster.
+3. Apply the resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
 

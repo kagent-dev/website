@@ -23,7 +23,7 @@ Each agent consists of the following components:
 
 ## Agent Instructions
 
-Agent instructions tell the agent what its role is, how to interact with the user, what actions it can take, how to behave and respond to user queries, and how to interact with other agents. Here's an example of simple agent instructions:
+Agent instructions tell the agent what its role is, how to interact with the user, what actions it can take, how to behave and respond to user queries, and how to interact with other agents. The following example shows simple agent instructions:
 
 ```yaml
 You're a Kubernetes agent that can help users manage their Kubernetes resources.
@@ -32,7 +32,7 @@ Your responses should be clear and concise; you should provide helpful informati
 
 Instructions are an important part of the agent's behavior. They define the agent's role and capabilities and help the agent understand its environment and the tasks it can perform.
 
-Writing good instructions is an art and a science. It requires a good understanding of the task at hand, the tools available, and the user's needs. In order to make it easier to write good instructions, we've created a [system prompt tutorial](/docs/kagent/getting-started/system-prompts) that can help you get started.
+Writing good instructions is an art and a science. It requires a good understanding of the task at hand, the tools available, and the user's needs. To help you write good instructions, see the [system prompt tutorial](/docs/kagent/getting-started/system-prompts).
 
 ### Prompt templates
 
@@ -94,13 +94,13 @@ Tools are functions that the agent can use to interact with its environment. For
 
 Tools definitions and their descriptions are made available to the agent and are sent to the LLMs together with the instructions. Based on the user query, the agent can use the tools to interact with the environment and generate responses.
 
-For example, we could add the **list_resources** tool to agent that would allow it to list resources in the Kubernetes cluster. The agent will determine based on the user input if it makes sense to invoke any of the available tools.
+For example, add the **list_resources** tool to your agent to allow it to list resources in the Kubernetes cluster. The agent determines, based on user input, whether to invoke any available tools.
 
-If the user asks "List all pods in the cluster", the agent can use the **list_resources** tool to list all pods in the cluster. Note that depending on how the instructions/tools are written and configure, the agent might list all the namespaces first then list all the pods in each namespace. Alternatively, if the **list_resources** tool allows listing resources across namespaces, the agent will pick that option.
+If the user asks "List all pods in the cluster", the agent can use the **list_resources** tool to list all pods in the cluster. Depending on how the instructions and tools are configured, the agent might list all namespaces first, then list all pods in each namespace. Alternatively, if the **list_resources** tool allows listing resources across namespaces, the agent picks that option.
 
-Some tools support additional configuration that can be set in when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
+Some tools support additional configuration that you set when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
 
-kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
 
 ## Human-in-the-Loop
 
@@ -157,7 +157,7 @@ Skills can refer to two broad types:
 
 ### A2A skills metadata
 
-Actions-to-actions (A2A) skills are metadata—structured descriptions of capabilities, not executable code. Think of A2A skills as a machine-readable catalog entry about what a tool can do.
+Actions-to-actions (A2A) skills are metadata-structured descriptions of capabilities, not executable code. Think of A2A skills as a machine-readable catalog entry about what a tool can do.
 
 A2A skills metadata describes:
 
@@ -261,7 +261,7 @@ spec:
     systemMessage: "You are a helpful agent."
 ```
 
-**Choose Go when** fast startup matters (autoscaling, cold starts), lower resource consumption is important, or you don't need Python-specific framework integrations.
+**Choose Go when** fast startup matters (autoscaling, cold starts), lower resource consumption is important, or you do not need Python-specific framework integrations.
 
 **Choose Python when** you need Google ADK-native features, CrewAI/LangGraph/OpenAI framework integrations, or Python-based custom tools.
 
@@ -369,7 +369,7 @@ spec:
 
 kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
 
-Here's how you could reference an existing agent (`promql-agent`) as a tool:
+The following example shows how to reference an existing agent (`promql-agent`) as a tool:
 
 ```yaml
 ...
