@@ -6,7 +6,7 @@ weight: 4
 author: kagent.dev
 ---
 
-kagent's CI tests against Kubernetes {{</* reuse "versions/max-kube.md" */>}} today. Below is a history of which Kubernetes version each release was tested against, and the policy we follow going forward.
+kagent's CI tests against Kubernetes {{< reuse "versions/max-kube.md" >}} today. Below is a history of which Kubernetes version each release was tested against, and the policy we follow going forward.
 
 ## Compatibility matrix
 
