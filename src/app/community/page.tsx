@@ -94,7 +94,9 @@ const EventSkeleton = () => (
 const CommunityPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 6;
+  const [typeFilter, setTypeFilter] = useState<'all' | 'livestream' | 'community' | 'contributors'>('all');
+  const [yearFilter, setYearFilter] = useState<'all' | string>('all');
+  const itemsPerPage = 12;
 
   // Separate upcoming and past events
   const upcomingLivestreams = livestreams.livestreams.filter(
@@ -130,9 +132,32 @@ const CommunityPage = () => {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const totalPages = Math.ceil(allPastEvents.length / itemsPerPage);
+  const availableYears = Array.from(
+    new Set(allPastEvents.map((event) => new Date(event.date).getFullYear()))
+  ).sort((a, b) => b - a);
+
+  const matchesTypeFilter = (event: PastEvent): boolean => {
+    switch (typeFilter) {
+      case 'livestream':
+        return event.type === 'livestream';
+      case 'community':
+        return event.type === 'meeting' && !event.title.toLowerCase().includes('contributor');
+      case 'contributors':
+        return event.type === 'meeting' && event.title.toLowerCase().includes('contributor');
+      default:
+        return true;
+    }
+  };
+
+  const filteredPastEvents = allPastEvents.filter(
+    (event) =>
+      matchesTypeFilter(event) &&
+      (yearFilter === 'all' || new Date(event.date).getFullYear().toString() === yearFilter)
+  );
+
+  const totalPages = Math.ceil(filteredPastEvents.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const pastEvents = allPastEvents.slice(startIndex, startIndex + itemsPerPage);
+  const pastEvents = filteredPastEvents.slice(startIndex, startIndex + itemsPerPage);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -231,6 +256,7 @@ const CommunityPage = () => {
                             src={getYouTubeThumbnail(videoId)} 
                             alt={event.title}
                             fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             className="object-cover"
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -287,16 +313,49 @@ const CommunityPage = () => {
         )}
 
         {/* Past Events Section - Combined */}
-        {pastEvents.length > 0 && (
+        {allPastEvents.length > 0 && (
           <motion.section
             className="mb-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            <div className="flex items-center gap-2 mb-8">
-              <VideoIcon className="w-5 h-5 text-primary" />
-              <h2 className="text-2xl font-medium">Past Events</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              <div className="flex items-center gap-2">
+                <VideoIcon className="w-5 h-5 text-primary" />
+                <h2 className="text-2xl font-medium">Past Events</h2>
+                <span className="text-sm text-muted-foreground">({filteredPastEvents.length})</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value as typeof typeFilter);
+                    setCurrentPage(1);
+                  }}
+                  aria-label="Filter by event type"
+                  className="h-9 rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="all">All events</option>
+                  <option value="livestream">Livestreams</option>
+                  <option value="community">Community meetings</option>
+                  <option value="contributors">Contributors meetings</option>
+                </select>
+                <select
+                  value={yearFilter}
+                  onChange={(e) => {
+                    setYearFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  aria-label="Filter by year"
+                  className="h-9 rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="all">All years</option>
+                  {availableYears.map((year) => (
+                    <option key={year} value={year.toString()}>{year}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <motion.div 
               className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 min-h-[600px]"
@@ -309,6 +368,10 @@ const CommunityPage = () => {
                 Array.from({ length: itemsPerPage }, (_, index) => (
                   <EventSkeleton key={`skeleton-${currentPage}-${index}`} />
                 ))
+              ) : pastEvents.length === 0 ? (
+                <p className="col-span-full self-start text-muted-foreground">
+                  No events match the selected filters.
+                </p>
               ) : (
                 pastEvents.map((event: PastEvent, index: number) => {
                   const videoId = getYouTubeVideoId(event.url);
@@ -335,6 +398,8 @@ const CommunityPage = () => {
                             src={getYouTubeThumbnail(videoId)} 
                             alt={event.title}
                             fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            priority={index < 3}
                             className="object-cover"
                           />
                         </div>
