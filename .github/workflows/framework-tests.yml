@@ -121,6 +121,10 @@ jobs:
         working-directory: docs-theme-extras
         run: npm ci
 
+      - name: Install Playwright browsers
+        working-directory: docs-theme-extras
+        run: npx playwright install --with-deps chromium
+
       - name: Run static + content specs
         working-directory: docs-theme-extras
         env:
