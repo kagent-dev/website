@@ -36,10 +36,6 @@ install: ## Install web + docs dependencies (npm) and Hugo modules
 	cd $(DOCS_DIR) && $(HUGO) mod get ./...
 
 # ── Docs (Hugo) ────────────────────────────────────────────────────────────
-.PHONY: gen-docs
-gen-docs: ## Regenerate Hugo docs content from src/app/docs (the MDX source)
-	node scripts/mdx-to-hugo.mjs --out $(DOCS_DIR)/content
-
 .PHONY: build-docs
 build-docs: ## Build the Hugo docs site -> docs-site/public
 	cd $(DOCS_DIR) && $(HUGO) --config hugo.yaml $(if $(DOCS_BASEURL),--baseURL "$(DOCS_BASEURL)") --gc --minify
