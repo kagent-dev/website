@@ -26,7 +26,9 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
    kubectl create secret generic kagent-gemini -n kagent --from-literal GOOGLE_API_KEY=<your_api_key>
    ```
 
-3. Create a `ModelConfig` resource using the `Gemini` provider. You can find the latest model names and capabilities on the [Gemini API docs](https://ai.google.dev/gemini-api/docs/models). Replace the `model` field with your chosen model name, such as `gemini-2.5-pro`.
+3. Create a ModelConfig resource using the `Gemini` provider.
+
+You can find out the latest model names and capabilities on the [Gemini API docs](https://ai.google.dev/gemini-api/docs/models). Once you have chosen a model, replace the `model` field with the name such as `gemini-2.5-pro`.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -45,17 +47,3 @@ spec:
 4. Apply the above resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
-
-## Max output tokens
-
-Use `gemini.maxOutputTokens` to cap the number of tokens that the model can generate in a single response.
-
-```yaml
-spec:
-  provider: Gemini
-  model: gemini-2.5-pro
-  gemini:
-    maxOutputTokens: 8192
-```
-
-A per-request value set by the agent always takes precedence over this model-level default.

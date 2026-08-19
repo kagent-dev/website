@@ -52,6 +52,7 @@ controller:
 - **Database requirement**: PostgreSQL is the default database backend and supports multiple controller replicas. The bundled PostgreSQL instance is deployed automatically unless you configure an external PostgreSQL.
 - **Leader election**: Leader election uses Kubernetes leases and is handled automatically.
 - **Failover**: If the leader fails, another replica automatically becomes the leader.
+- **Pod disruption budgets**: You can create a `PodDisruptionBudget` for the controller and UI Deployments via `controller.pdb.enabled: true` and `ui.pdb.enabled: true`. Both default to disabled because each component defaults to `replicas: 1`, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, which causes node drains and cluster upgrades to hang indefinitely. When enabled, the default budget uses `maxUnavailable: 1`, which is safe at any replica count. Raise `controller.replicas` and `ui.replicas` before switching to a `minAvailable`-based budget. For all available fields, see the [Helm reference](/docs/kagent/resources/helm/).
 
 ## Database configuration
 
@@ -83,7 +84,7 @@ urlFile > url > bundled connection string
 | External DB, bundled pod kept running | `true` | set | yes | external |
 | Bundled disabled, no external set | `false` | unset | no | error (misconfigured) |
 
-**Migration**: This means that you can keep the bundled pod running while the controller points at an external database, which is useful for migrating data.
+**Migration**: You can keep the bundled pod running while the controller points at an external database, which is useful for migrating data.
 
 ### Bundled PostgreSQL
 
@@ -164,6 +165,20 @@ controller:
       readOnly: true
 ```
 
+### Session cleanup
+
+kagent can automatically delete idle sessions and their cascaded data — including events, tasks, checkpoints, shares, push notifications, memory, and flow states — after a configurable number of days of inactivity. Idle time is measured from `session.updated_at`, which is updated on every write so that active sessions are never affected.
+
+To enable cleanup, set `database.postgres.sessionRetentionDays` in your Helm values:
+
+```yaml
+database:
+  postgres:
+    sessionRetentionDays: 30
+```
+
+A value of `0` (the default) disables cleanup. Existing installs are unaffected unless you set this value.
+
 ## Secure execution environment
 
 kagent supports Kubernetes security contexts to run agents and tool servers with reduced privileges. Configure `securityContext` and `podSecurityContext` on your Agent or ToolServer resources to enforce secure execution.
@@ -210,6 +225,43 @@ spec:
 ```
 {{< /tab >}}
 {{< /tabs >}}
+
+## Long-running connections
+
+Agents that run multi-step tasks or stream results over SSE can take minutes or longer to respond. To ensure that long-running sessions work correctly from end to end, tune the following timeout values together.
+
+### Streaming timeouts
+
+The UI uses nginx as a sidecar proxy and a client-side EventSource for streaming. Both have independent inactivity timeouts that default to 1800 seconds (30 minutes).
+
+| Helm value | Default | Description |
+|---|---|---|
+| `ui.streamTimeoutSeconds` | `1800` | Client-side EventSource inactivity timeout. |
+| `ui.nginx.proxyReadTimeout` | `1800s` | nginx `proxy_read_timeout` — max time between successive reads from the upstream. |
+| `ui.nginx.proxySendTimeout` | `1800s` | nginx `proxy_send_timeout` — max time between successive writes to the upstream. |
+
+To ensure that the nginx proxy is not the silent limit, set `ui.streamTimeoutSeconds` to a value greater than or equal to `ui.nginx.proxyReadTimeout`. For example, to support 2-hour sessions:
+
+```yaml
+ui:
+  streamTimeoutSeconds: 7200
+  nginx:
+    proxyReadTimeout: 7200s
+    proxySendTimeout: 7200s
+```
+
+On OpenShift, also set the HAProxy route timeout via `ui.openshiftRoute.annotations`. For more information, see [Expose the UI outside the cluster](/docs/kagent/observability/launch-ui#expose-the-ui-outside-the-cluster).
+
+### A2A client timeout
+
+When one agent calls another agent as a tool over the A2A protocol, the request uses an HTTP client with a configurable timeout. The default is no timeout (`""`), which replaced a previous hard-coded 3-minute limit.
+
+If you need to enforce a ceiling on A2A call duration, set `controller.a2aClientTimeout`:
+
+```yaml
+controller:
+  a2aClientTimeout: "10m"  # empty string = no timeout (default)
+```
 
 ## Proxy configuration for agent traffic
 

@@ -15,7 +15,7 @@ Each agent consists of the following components:
 
 ## Agent Instructions
 
-Agent instructions tell the agent what its role is, how to interact with the user, what actions it can take, how to behave and respond to user queries, and how to interact with other agents. Here's an example of simple agent instructions:
+Agent instructions tell the agent what its role is, how to interact with the user, what actions it can take, how to behave and respond to user queries, and how to interact with other agents. The following example shows simple agent instructions:
 
 ```yaml
 You're a Kubernetes agent that can help users manage their Kubernetes resources.
@@ -24,7 +24,7 @@ Your responses should be clear and concise; you should provide helpful informati
 
 Instructions are an important part of the agent's behavior. They define the agent's role and capabilities and help the agent understand its environment and the tasks it can perform.
 
-Writing good instructions is an art and a science. It requires a good understanding of the task at hand, the tools available, and the user's needs. In order to make it easier to write good instructions, we've created a [system prompt tutorial](/docs/kagent/getting-started/system-prompts) that can help you get started.
+Writing good instructions is an art and a science. It requires a good understanding of the task at hand, the tools available, and the user's needs. To help you write good instructions, see the [system prompt tutorial](/docs/kagent/getting-started/system-prompts).
 
 ### Prompt templates
 
@@ -86,13 +86,13 @@ Tools are functions that the agent can use to interact with its environment. For
 
 Tools definitions and their descriptions are made available to the agent and are sent to the LLMs together with the instructions. Based on the user query, the agent can use the tools to interact with the environment and generate responses.
 
-For example, we could add the **list_resources** tool to agent that would allow it to list resources in the Kubernetes cluster. The agent will determine based on the user input if it makes sense to invoke any of the available tools.
+For example, add the **list_resources** tool to your agent to allow it to list resources in the Kubernetes cluster. The agent determines, based on user input, whether to invoke any available tools.
 
-If the user asks "List all pods in the cluster", the agent can use the **list_resources** tool to list all pods in the cluster. Note that depending on how the instructions/tools are written and configure, the agent might list all the namespaces first then list all the pods in each namespace. Alternatively, if the **list_resources** tool allows listing resources across namespaces, the agent will pick that option.
+If the user asks "List all pods in the cluster", the agent can use the **list_resources** tool to list all pods in the cluster. Depending on how the instructions and tools are configured, the agent might list all namespaces first, then list all pods in each namespace. Alternatively, if the **list_resources** tool allows listing resources across namespaces, the agent picks that option.
 
-Some tools support additional configuration that can be set in when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
+Some tools support additional configuration that you set when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
 
-kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports the [MCP (Model Configuration Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
 
 ## Human-in-the-Loop
 
@@ -149,7 +149,7 @@ Skills can refer to two broad types:
 
 ### A2A skills metadata
 
-Actions-to-actions (A2A) skills are metadata—structured descriptions of capabilities, not executable code. Think of A2A skills as a machine-readable catalog entry about what a tool can do.
+Actions-to-actions (A2A) skills are metadata: structured descriptions of capabilities, not executable code. Think of A2A skills as a machine-readable catalog entry about what a tool can do.
 
 A2A skills metadata describes:
 
@@ -214,6 +214,35 @@ skills:
 
 A single `gitAuthSecretRef` applies to all Git repositories in the agent. You can combine Git and OCI skills in the same agent by specifying both `refs` and `gitRefs`.
 
+### S3-based skills
+
+You can load skills directly from S3 — either a folder prefix (a path ending with `/` that contains a `SKILL.md` and sibling files) or a single `.zip` archive. Credentials use the AWS SDK default credential chain, which you supply as environment variables on the skills init container.
+
+```yaml
+skills:
+  s3Refs:
+    - uri: s3://kagent-skills-bucket/team-a/kebab-maker   # folder prefix
+      name: kebab-maker
+    - uri: s3://kagent-skills-bucket/bundles/ops.zip       # zip archive
+      region: us-east-1
+  initContainer:
+    env:
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: aws-creds
+            key: AWS_ACCESS_KEY_ID
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: aws-creds
+            key: AWS_SECRET_ACCESS_KEY
+      - name: AWS_REGION
+        value: us-west-2
+```
+
+You can combine S3 skills with OCI and Git skills in the same agent by specifying `refs`, `gitRefs`, and `s3Refs` together. For the full field reference, see [S3SkillRef](/docs/kagent/resources/api-ref/#s3skillref).
+
 ### Best practices for skills
 
 Containerize and store your skills in a specialized registry so that you can reuse them across agents. You can use the [agentregistry project](https://github.com/agentregistry-dev/agentregistry) to build and push skills to a registry.
@@ -230,17 +259,18 @@ To learn more about using skills in your agents, see the [Skills example guide](
 
 ## Runtime
 
-You can choose between two Agent Development Kit (ADK) runtimes for declarative agents: **Python** (default) and **Go**.
+You can choose between two Agent Development Kit (ADK) runtimes for declarative agents: **Go** (default) and **Python**.
 
-| Feature | Python ADK | Go ADK |
-|---------|-----------|--------|
-| Startup time | ~15 seconds | ~2 seconds |
-| Ecosystem | Google ADK, LangGraph, CrewAI integrations | Native Go implementation |
-| Resource usage | Higher (Python runtime) | Lower (compiled binary) |
+| Feature | Go ADK | Python ADK |
+|---------|--------|-----------|
+| Startup time | ~2 seconds | ~15 seconds |
+| Ecosystem | Native Go implementation | Google ADK, LangGraph, CrewAI integrations |
+| Resource usage | Lower (compiled binary) | Higher (Python runtime) |
 | Default | Yes | No |
 | Memory support | Yes | Yes |
 | MCP support | Yes | Yes |
 | HITL support | Yes | Yes |
+| File upload in chat | Yes | No |
 
 Select the runtime via the `runtime` field in the declarative agent spec.
 
@@ -248,16 +278,55 @@ Select the runtime via the `runtime` field in the declarative agent spec.
 spec:
   type: Declarative
   declarative:
-    runtime: go  # or "python" (default)
+    runtime: go  # or "python"
     modelConfig: default-model-config
     systemMessage: "You are a helpful agent."
 ```
 
-**Choose Go when** fast startup matters (autoscaling, cold starts), lower resource consumption is important, or you don't need Python-specific framework integrations.
+**Choose Go when** fast startup matters (autoscaling, cold starts), lower resource consumption is important, or you do not need Python-specific framework integrations.
 
 **Choose Python when** you need Google ADK-native features, CrewAI/LangGraph/OpenAI framework integrations, or Python-based custom tools.
 
 For more benchmarks and details, see the [Go vs Python runtime blog post](https://kagent.dev/blog/go-vs-python-runtime).
+
+## Deployment configuration
+
+Control how the agent's Kubernetes Deployment is configured in the `spec.declarative.deployment` stanza.
+
+### Environment variables
+
+Use `env` to set individual environment variables, or `envFrom` to bulk-inject all keys from a ConfigMap or Secret.
+
+```yaml
+spec:
+  declarative:
+    deployment:
+      env:
+        - name: LOG_LEVEL
+          value: debug
+      envFrom:
+        - configMapRef:
+            name: my-agent-config
+        - secretRef:
+            name: my-agent-secrets
+```
+
+### Deployment annotations
+
+Use `deploymentAnnotations` to add annotations to the Deployment object itself. This field is distinct from the `annotations` field, which targets pod template metadata only.
+
+```yaml
+spec:
+  declarative:
+    deployment:
+      deploymentAnnotations:
+        argocd.argoproj.io/sync-wave: "5"
+        notifications.argoproj.io/subscribe.on-degraded.slack: my-channel
+      annotations:
+        prometheus.io/scrape: "true"   # pod template only
+```
+
+`deploymentAnnotations` is useful for GitOps tooling such as Argo CD sync waves and Flux annotations, which key off Deployment-level metadata rather than pod metadata.
 
 ## Memory
 
@@ -292,15 +361,37 @@ Compaction removes older conversation events to free up space in the context win
 
 ## Sandboxed Agents
 
-You can run a declarative agent in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. A `SandboxAgent` runs on [Agent Substrate](/docs/kagent/concepts/agent-substrate): the kagent controller runs it as a gVisor-sandboxed actor instead of a Deployment, snapshotting it to object storage when idle and rehydrating it on demand. The spec mirrors the `Agent` spec, with a few constraints: sandboxed agents always use the Go ADK runtime, and `spec.skills` and `BYO` agents are not supported. Configure substrate placement with the optional `spec.substrate` field (for example, `workerPoolRef`).
+You can run a declarative agent in an isolated sandbox by creating a `SandboxAgent` resource instead of a regular `Agent`. A `SandboxAgent` runs on [Agent Substrate](/docs/kagent/concepts/agent-substrate): the kagent controller runs it as a gVisor-sandboxed actor instead of a Deployment, snapshotting it to object storage when idle and rehydrating it on demand. The spec mirrors the `Agent` spec. All three runtimes are supported: **Go** (default), **Python**, and **BYO**. For Go and Python agents, session history is persisted to a local SQLite database in the agent's `durableDir` volume, so conversation state survives pod restarts and Deployment rollouts. BYO agents do not get local session storage automatically. Configure substrate placement with the optional `spec.substrate` field (for example, `workerPoolRef`).
 
 For setup steps, see the [Agent Substrate example](/docs/kagent/examples/agent-substrate).
+
+## A2A AgentCard metadata
+
+When another agent or client discovers your agent over the [A2A protocol](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
+
+```yaml
+spec:
+  iconUrl: https://example.com/icons/my-agent.png
+  documentationUrl: https://docs.example.com/my-agent/
+  version: "1.0.0"
+  provider:
+    organization: My Organization
+    url: https://example.com
+```
+
+| Field | Description |
+|-------|-------------|
+| `iconUrl` | URL to an icon image representing the agent. Must be a valid URI. |
+| `documentationUrl` | URL to human-readable documentation for the agent. Must be a valid URI. |
+| `version` | Version string for the agent, such as `"1.0.0"`. |
+| `provider.organization` | Name of the organization responsible for the agent. |
+| `provider.url` | URL to the agent provider's website or documentation. Must be a valid URI. |
 
 ## Agents as Tools
 
 kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.
 
-Here's how you could reference an existing agent (`promql-agent`) as a tool:
+The following example shows how to reference an existing agent (`promql-agent`) as a tool:
 
 ```yaml
 ...
@@ -324,6 +415,22 @@ Here's how you could reference an existing agent (`promql-agent`) as a tool:
       agent:
         name: promql-agent
         namespace: other-namespace
+```
+
+### Per-call session isolation
+
+By default, all calls to the same sub-agent share a single session, which preserves stateful continuity across calls. When a coordinator agent calls the same sub-agent in parallel, shared sessions can cause calls to interfere with each other.
+
+Set `isolateSessions: true` on the Agent-type tool to give each call its own fresh session, enabling safe parallel fan-out.
+
+```yaml
+spec:
+  declarative:
+    tools:
+      - type: Agent
+        agent:
+          name: worker-agent
+        isolateSessions: true
 ```
 
 ### MCP server endpoint

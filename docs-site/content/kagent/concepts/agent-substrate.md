@@ -5,7 +5,7 @@ weight: 5
 author: kagent.dev
 ---
 
-Agent Substrate is a Kubernetes-native runtime for running AI agents and other stateful workloads efficiently. Instead of dedicating one pod per agent — which wastes capacity while agents sit idle — Substrate decouples an agent's lifecycle from pod infrastructure. Idle agents are snapshotted to object storage and rehydrated on demand, so a small pool of pre-warmed workers can host far more agents than there are pods.
+Agent Substrate is a Kubernetes-native runtime for running AI agents and other stateful workloads efficiently. Instead of dedicating one pod per agent, which wastes capacity while agents sit idle, Substrate decouples an agent's lifecycle from pod infrastructure. Idle agents are snapshotted to object storage and rehydrated on demand, so a small pool of pre-warmed workers can host far more agents than there are pods.
 
 kagent can run workloads on Agent Substrate in two ways:
 
@@ -14,10 +14,10 @@ kagent can run workloads on Agent Substrate in two ways:
 
 ## Why Agent Substrate
 
-- **Fast startup** — Agents cold-start by restoring a compressed snapshot rather than booting a fresh pod, so they resume in a fraction of the time.
-- **Efficient resource usage** — A pool of pre-warmed workers multiplexes many actors across far fewer pods, persisting idle actors to object storage instead of holding a pod each.
-- **Secure execution** — Each workload runs inside a gVisor sandbox, isolating untrusted agent code from the host and from other actors.
-- **Declarative management** — WorkerPools and ActorTemplates are Kubernetes CRDs, so the runtime is configured and versioned with the same GitOps workflow as the rest of your platform.
+- **Fast startup**: Agents cold-start by restoring a compressed snapshot rather than booting a fresh pod, so they resume in a fraction of the time.
+- **Efficient resource usage**: A pool of pre-warmed workers multiplexes many actors across far fewer pods, persisting idle actors to object storage instead of holding a pod each.
+- **Secure execution**: Each workload runs inside a gVisor sandbox, isolating untrusted agent code from the host and from other actors.
+- **Declarative management**: WorkerPools and ActorTemplates are Kubernetes CRDs, so the runtime is configured and versioned with the same GitOps workflow as the rest of your platform.
 
 ## Core concepts
 
@@ -31,7 +31,7 @@ kagent can run workloads on Agent Substrate in two ways:
 
 ## How it works
 
-When an agent is invoked, Substrate restores its actor onto an available worker from the WorkerPool — rehydrating from a snapshot if the actor was idle. The agent runs inside a gVisor sandbox for the duration of the session. When the actor goes idle, its state is checkpointed back to object storage and the worker is freed to host another actor. This snapshot-and-restore cycle is what lets a single worker pool serve many more agents than a pod-per-agent model.
+When an agent is invoked, Substrate restores its actor onto an available worker from the WorkerPool, rehydrating from a snapshot if the actor was idle. The agent runs inside a gVisor sandbox for the duration of the session. When the actor goes idle, its state is checkpointed back to object storage and the worker is freed to host another actor. This snapshot-and-restore cycle is what lets a single worker pool serve many more agents than a pod-per-agent model.
 
 ## Architecture
 
@@ -56,7 +56,9 @@ Agent Substrate is composed of a control plane, a data plane, and snapshot stora
 
 ### Declarative agents
 
-Run a (Go) declarative agent on Agent Substrate by creating a `SandboxAgent` resource. It carries the same spec as a regular `Agent`, but the kagent controller runs it as a sandboxed workload on the runtime instead of a plain Deployment.
+Run a declarative agent on Agent Substrate by creating a `SandboxAgent` resource. It carries the same spec as a regular `Agent`, but the kagent controller runs it as a sandboxed workload on the runtime instead of a plain Deployment. All three declarative runtimes are supported: **Go** (default), **Python**, and **BYO**.
+
+Session history for Go and Python declarative sandbox agents is persisted to a local SQLite database backed by the agent's `durableDir` volume, so conversation state survives pod restarts and Deployment rollouts. Session metadata is mirrored to PostgreSQL to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store.
 
 ### AgentHarness
 

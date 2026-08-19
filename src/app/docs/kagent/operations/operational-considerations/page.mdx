@@ -92,7 +92,7 @@ urlFile > url > bundled connection string
 | External DB, bundled pod kept running | `true` | set | yes | external |
 | Bundled disabled, no external set | `false` | unset | no | error (misconfigured) |
 
-**Migration**: You can keep the bundled pod running while the controller points at an external database, which is useful for migrating data.
+**Migration**: This means that you can keep the bundled pod running while the controller points at an external database, which is useful for migrating data.
 
 
 ### Bundled PostgreSQL
@@ -224,43 +224,6 @@ spec:
         readOnlyRootFilesystem: false
 ```
 </div>
-
-## Long-running connections
-
-Agents that run multi-step tasks or stream results over SSE can take minutes or longer to respond. To ensure that long-running sessions work correctly from end to end, tune the following timeout values together.
-
-### Streaming timeouts
-
-The UI uses nginx as a sidecar proxy and a client-side EventSource for streaming. Both have independent inactivity timeouts that default to 1800 seconds (30 minutes).
-
-| Helm value | Default | Description |
-|---|---|---|
-| `ui.streamTimeoutSeconds` | `1800` | Client-side EventSource inactivity timeout. |
-| `ui.nginx.proxyReadTimeout` | `1800s` | nginx `proxy_read_timeout` — max time between successive reads from the upstream. |
-| `ui.nginx.proxySendTimeout` | `1800s` | nginx `proxy_send_timeout` — max time between successive writes to the upstream. |
-
-To ensure that the nginx proxy is not the silent limit, set `ui.streamTimeoutSeconds` to a value greater than or equal to `ui.nginx.proxyReadTimeout`. For example, to support 2-hour sessions:
-
-```yaml
-ui:
-  streamTimeoutSeconds: 7200
-  nginx:
-    proxyReadTimeout: 7200s
-    proxySendTimeout: 7200s
-```
-
-On OpenShift, also set the HAProxy route timeout via `ui.openshiftRoute.annotations`. For more information, see [Expose the UI outside the cluster](/docs/kagent/observability/launch-ui#expose-the-ui-outside-the-cluster).
-
-### A2A client timeout
-
-When one agent calls another agent as a tool over the A2A protocol, the request uses an HTTP client with a configurable timeout. The default is no timeout (`""`), which replaced a previous hard-coded 3-minute limit.
-
-If you need to enforce a ceiling on A2A call duration, set `controller.a2aClientTimeout`:
-
-```yaml
-controller:
-  a2aClientTimeout: "10m"  # empty string = no timeout (default)
-```
 
 ## Proxy configuration for agent traffic
 
