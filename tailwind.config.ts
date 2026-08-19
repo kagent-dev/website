@@ -55,6 +55,17 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		typography: {
+  			DEFAULT: {
+  				css: {
+  					// The typography plugin wraps inline <code> in literal backtick
+  					// characters via ::before/::after. We render our own styled
+  					// <code>, so strip them.
+  					'code::before': { content: '""' },
+  					'code::after': { content: '""' }
+  				}
+  			}
   		}
   	}
   },

@@ -4,6 +4,7 @@ import { PlatformTabs, GenericTabs, LLMProviderTabs } from "./components/mdx/pla
 import { Tabs } from "./components/mdx/tabs";
 import SmartLink from "./components/mdx/smart-link";
 import { CodeBlock } from "./components/mdx/code-block";
+import { Mermaid } from "./components/mdx/mermaid";
 import { LabCTA } from "./components/mdx/lab-cta";
 import { Aside } from "./components/mdx/aside";
 import Image from "next/image";
@@ -134,6 +135,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       code: ({ children, className = "", ...props }) => {
         // Extract language from className if present
         const language = className?.replace("language-", "") || "";
+        // Render fenced ```mermaid code blocks as diagrams
+        if (language === "mermaid") {
+          return <Mermaid chart={typeof children === "string" ? children : String(children)} />;
+        }
         return (
           <CodeBlock language={language} className={className} {...props}>
             {children}

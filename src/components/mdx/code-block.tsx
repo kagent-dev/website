@@ -15,13 +15,35 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
 
   const [copied, setCopied] = useState(false);
 
+  const highlightedLines = new Set<number>();
+  const supportsHighlightMarkers = language === 'yaml' || language === 'yml';
+  const code = children.trim().split('\n').map((line, index) => {
+    const marker = supportsHighlightMarkers ? /\s+#\s*\[!code highlight\]\s*$/.exec(line) : null;
+    if (marker) {
+      highlightedLines.add(index);
+      return line.slice(0, marker.index);
+    }
+    return line;
+  }).join('\n');
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(children);
+    navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   if (!language || !className) {
+    const content = typeof children === 'string' ? children : String(children);
+    // A fenced code block without a language (e.g. ASCII diagrams) has no
+    // className but spans multiple lines. Render it in a real <pre> so
+    // whitespace and newlines are preserved instead of collapsing to inline.
+    if (content.includes('\n')) {
+      return (
+        <pre className="overflow-x-auto p-4 text-sm rounded-lg bg-muted font-mono text-foreground whitespace-pre">
+          <code className="font-mono">{content.replace(/\n$/, '')}</code>
+        </pre>
+      );
+    }
     return <code className='font-mono text-foreground'>{children}</code>
   }
 
@@ -42,7 +64,7 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
       </div>
       <Highlight
         theme={resolvedTheme === 'dark' ? themes.jettwaveDark : themes.jettwaveLight}
-        code={children.trim()}
+        code={code}
         language={language}
       >
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
@@ -51,7 +73,11 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
             style={style}
           >
             {tokens.map((line, i) => (
-              <div key={i} {...getLineProps({ line })} className="table-row">
+              <div
+                key={i}
+                {...getLineProps({ line })}
+                className={`table-row ${highlightedLines.has(i) ? 'bg-amber-200/50 dark:bg-amber-400/20' : ''}`}
+              >
 
                 <span className="table-cell">
                   {line.map((token, key) => (

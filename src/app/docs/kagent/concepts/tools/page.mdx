@@ -14,7 +14,7 @@ export const metadata = {
 
 Tools are functions that the agent can use to interact with its environment. For example, a Kubernetes agent might have tools to list pods, get pod logs, and describe services.
 
-Kagent comes with a set of built-in tools that you can use to interact with your environment. Kagent also supports the MCP (Model Configuration Protocol) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports the MCP (Model Configuration Protocol) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
 
 ## Built-in Tools
 
@@ -83,9 +83,13 @@ MCP stands for [Model Context Protocol](https://modelcontextprotocol.io/introduc
 
 **Note:** Double check any community servers before running them in your environment.
 
+### MCP Apps
+
+Some MCP tools ship an interactive UI with their results. kagent detects these tools automatically and renders their widgets inline in the chat, and the dashboard lists them alongside a server's regular tools so you can test them directly. See [MCP Apps](/docs/kagent/concepts/mcp-apps) for details.
+
 ## HTTP Tools
 
-HTTP tools are another way to bring external tools into kagent. Simply put, given a URL and a schema, kagent will send the user query to the URL and return the response. Kagent has the ability to discovery HTTP tools from services running in the cluster, assuming they are OpenAPI Compliant.
+HTTP tools are another way to bring external tools into kagent. Simply put, given a URL and a schema, kagent will send the user query to the URL and return the response. kagent has the ability to discovery HTTP tools from services running in the cluster, assuming they are OpenAPI Compliant.
 
 ## Build your own tools with kmcp
 

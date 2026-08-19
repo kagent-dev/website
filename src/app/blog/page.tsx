@@ -15,6 +15,20 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'dnb-kagent-agentgateway',
+        publishDate: '2026-07-13',
+        title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
+        description: 'Lin spoke with David Karlsen and Ibrahim Umar from DNB about their journey adopting kagent and agentgateway',
+        authorId: 'linsun',
+    },
+    {
+        slug: 'deploy-kagent-with-agent-substrate',
+        publishDate: '2026-07-13',
+        title: 'Code Share: Deploy kagent with Agent Substrate',
+        description: 'Agent sessions are bursty and idle most of the time. Agent Substrate multiplexes gVisor-sandboxed actors onto a small pool of warm workers with sub-second suspend/resume. This guide explains the model, the use cases, and how to stand up kagent OSS with substrate on a kind cluster.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'community-nginx-khook-kagent',
         publishDate: '2025-10-15',
         title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
@@ -84,6 +98,34 @@ const posts = [
         title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
         description: 'Learn how to architect open source and enterprise AI agent meshes for 2026.',
         authorId: "michaellevan",
+    },
+    {
+        slug: 'kagent-v0-9-1-release',
+        publishDate: '2026-05-04',
+        title: "kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI",
+        description: 'kagent v0.9.1 brings AWS Bedrock support for Claude with extended thinking, REST API secret management, sidecar container support, Git-based skill configuration, and a configurable Helm runtime.',
+        authorId: 'sebastianmaniak',
+    },
+    {
+        slug: 'nemoclaw-kagent-sandbox-secure-production-imp',
+        publishDate: '2026-05-07',
+        title: 'NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation',
+        description: 'Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell',
+        authorId: 'michaellevan',
+    },
+    {
+        slug: 'is-pod-right-deployment-unit-ai-agent',
+        publishDate: '2026-06-25',
+        title: 'Is a Pod the Right Deployment Unit for an AI Agent?',
+        description: 'How kagent evolved from one runtime hosting many agents to agent-substrate—and why Pods may be the right execution unit, but not the right deployment model, for AI agents.',
+        authorId: 'linsun',
+    },
+    {
+        slug: 'the-future-of-kagent',
+        publishDate: '2026-08-10',
+        title: 'The future of kagent',
+        description: 'Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent is rebuilding its runtime on Agent Substrate to get there.',
+        authorId: 'eitanya',
     }
 ]
 
@@ -169,7 +211,7 @@ export default async function BlogPage() {
                         })()}
                     </div>
                 </div>
-                
+
                 {/* Community Section */}
                 <div className="py-16 border-t border-border">
                     <div className="max-w-3xl mx-auto px-4 text-center">
@@ -198,4 +240,4 @@ export default async function BlogPage() {
             </div>
         </>
     );
-} 
+}

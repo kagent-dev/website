@@ -34,18 +34,19 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
    ```bash
    git checkout -b feature/your-feature-name
    ```
-5. Install dependencies:
+5. Install dependencies (web + docs npm packages and Hugo modules):
    ```bash
-   npm install
-   # or
-   yarn install
+   make install
    ```
-6. Start the development server:
+6. Start a development server:
    ```bash
-   npm run dev
-   # or
-   yarn dev
+   make serve-web    # Next.js marketing site  -> http://localhost:3000
+   make serve-docs   # Hugo docs               -> http://localhost:1313/docs/
+   make preview      # combined build via wrangler -> http://localhost:3000
    ```
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the full architecture (Next.js marketing
+site + Hugo docs) and authoring conventions.
 
 ## Pull Request Process
 
@@ -139,11 +140,25 @@ To add an existing blog post, you can add a new entry into the `external-blog-po
 
 ## Documentation
 
-- Update documentation for any changes to APIs, CLIs, or user-facing features
-- Add examples for new features
-- Update the README if necessary
-- Add comments to your code explaining complex logic
-- Keep documentation in sync with code changes
+The documentation is a [Hugo](https://gohugo.io/) site under `docs-site/`, built
+with the Hextra theme and the shared `docs-theme-extras` overlay, and served under
+the `/docs` path. To contribute:
+
+- Edit the markdown directly under `docs-site/content/` — the directory tree maps
+  to the URL and drives the sidebar. Preview with `make serve-docs`.
+- Use GitHub-flavored alert blockquotes (`> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`)
+  for callouts; Hextra renders them as callouts and they also render on GitHub.
+- Bump dependency versions in the single snippet file under
+  `docs-site/assets/versions/` and reference them with the
+  `{{</* reuse "versions/agent-substrate.md" */>}}` shortcode rather than
+  hardcoding version numbers.
+- Do not hand-edit the auto-generated reference pages (`kagent/resources/api-ref.md`,
+  `kmcp/reference/api-ref.md`, `kagent/resources/helm.md`); they are regenerated
+  nightly from the source repos.
+- Update documentation for any changes to APIs, CLIs, or user-facing features, and
+  add examples for new features.
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the full authoring conventions.
 
 ## Testing
 

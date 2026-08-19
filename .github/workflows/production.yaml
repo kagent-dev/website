@@ -1,0 +1,61 @@
+name: Production
+
+# Deploys the site to PRODUCTION. `wrangler deploy` promotes the new version to
+# 100% live traffic. Runs on merge to main, or manually via the Actions tab. PR
+# builds use preview.yaml (`versions upload`) and never reach production.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Never run two production deploys at once; do not cancel an in-flight deploy.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.160.1'
+          extended: true
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd docs-site && npm ci
+
+      # Builds the Hugo docs, injects them into public/docs, then builds the
+      # OpenNext Worker (which bundles public/ as static assets). HUGO=hugo uses
+      # the Hugo installed above instead of the local hugo160 alias.
+      - name: Build (Hugo docs + inject into /docs + Worker)
+        run: make build HUGO=hugo
+
+      - name: Deploy to production
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --minify
+
+      - name: Print website URL
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: echo $DEPLOYMENT_URL

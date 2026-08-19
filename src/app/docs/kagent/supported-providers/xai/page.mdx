@@ -1,0 +1,46 @@
+---
+title: "xAI (Grok)"
+pageOrder: 9
+description: "Learn how to configure xAI Grok models for kagent."
+---
+
+export const metadata = {
+  title: "Configuring xAI Grok models in kagent",
+  description: "Learn how to configure xAI Grok models for kagent.",
+  author: "kagent.dev"
+};
+
+
+## Configuring xAI (Grok)
+
+xAI's Grok models are OpenAI-compatible, so you can use the BYO OpenAI-compatible provider configuration.
+
+1. Create a Kubernetes Secret that stores the API key, replace `<your_api_key>` with an actual xAI API key:
+
+```shell
+export XAI_API_KEY=<your_api_key>
+kubectl create secret generic kagent-xai -n kagent --from-literal XAI_API_KEY=$XAI_API_KEY
+```
+
+2. Create a ModelConfig resource that references the secret and specifies the xAI base URL and Grok model:
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: grok-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-xai
+  apiKeySecretKey: XAI_API_KEY
+  model: grok-3
+  provider: OpenAI
+  openAI:
+    baseURL: https://api.x.ai/v1
+```
+
+3. Apply the above resource to the cluster.
+
+Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
+
+![Model selection](/images/modelselection.png "kagent model selection dropdown")

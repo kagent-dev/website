@@ -1,0 +1,18 @@
+---
+title: kmcp completion
+description: kmcp completion command
+weight: 30
+---
+
+Generate the autocompletion script for kmcp for the specified shell. See each sub-command's help for details on how to use the generated script.
+
+```bash
+kmcp completion [flags]
+```
+
+**Subcommands:**
+- `bash` - Generate the autocompletion script for bash
+- `fish` - Generate the autocompletion script for fish
+- `powershell` - Generate the autocompletion script for powershell
+- `zsh` - Generate the autocompletion script for zsh
+

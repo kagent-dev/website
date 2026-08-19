@@ -1,0 +1,49 @@
+---
+title: kmcp deploy
+description: kmcp deploy command
+weight: 10
+---
+
+Deploy an MCP server to Kubernetes by generating the MCPServer CRDs. The command uses the `kmcp.yaml` file in your MCP project to spin up and deploy the MCP server in the environment that you specified. 
+
+```bash
+kmcp deploy [name] [flags]
+```
+
+**Subcommands**: 
+
+* `package [flags]` - Deploys an MCP server instance from an existing npm package. 
+
+**Package flags**: 
+- `--args` - Arguments to pass to the package manager, such as package names (required)
+- `--deployment-name` - Name of the MCP server deployment 
+- `--manager` - Package manager to use (`npx` or `uvx`) (required)
+
+**Flags:**
+- `--args` - Command arguments
+- `--command` - Command to run (overrides project config)
+- `--dry-run` - Generate manifest without applying to cluster
+- `--env` - Environment variables (KEY=VALUE)
+- `--environment` - Target environment for deployment (e.g., staging, production) (default: "staging")
+- `--file, -f` - Path to kmcp.yaml file (default: current directory)
+- `--force` - Force deployment even if validation fails
+- `-h, --help` - Help for the command
+- `--image` - Docker image to deploy (overrides build image)
+- `--namespace, -n` - Kubernetes namespace (default: "default")
+- `--no-inspector` - Do not start the MCP inspector tool when deploying the MCP server
+- `--output, -o` - Output file for the generated YAML
+- `--port` - Container port (default: from project config)
+- `--target-port` - Target port for HTTP transport
+- `--transport` - Transport type (stdio, http)
+
+**Global Flags:**
+- `--verbose, -v` - Show detailed output
+
+## Example
+
+The following example spins up an MCP server in the staging environment with the configuration that is defined in the `my-mcp-server/kmcp.yaml` file. To spin up the server, you use the `my-mcp-server:latest` image. The command automatically opens the MCP inspector tool so that you can test your MCP server.  
+
+```sh
+kmcp deploy --environment staging --file my-mcp-server/kmcp.yaml --image my-mcp-server:latest
+```
+
