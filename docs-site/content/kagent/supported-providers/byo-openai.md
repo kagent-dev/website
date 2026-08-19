@@ -51,6 +51,45 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
 
 Good job! You added a model to kagent. Next, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model.
 
+## Self-hosted vLLM behind an OpenAI-compatible gateway
+
+A common self-hosted pattern places an OpenAI-compatible gateway such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/) in front of a [vLLM](https://docs.vllm.ai/) server (kagent → gateway → vLLM). Configure the gateway as an OpenAI-compatible provider, exactly as shown above, with two extra things to get right.
+
+### Enable tool calling in vLLM
+
+kagent sends a `tools` array with `tool_choice: "auto"` on every request. kagent's runtime registers a built-in `ask_user` tool on every agent, so a `tools` array is always sent, even when you configure no tools yourself. The vLLM backend **must** be launched with automatic tool choice enabled, or every agent turn fails.
+
+```bash
+vllm serve Qwen/Qwen2.5-7B-Instruct \
+  --enable-auto-tool-choice \
+  --tool-call-parser hermes
+```
+
+The correct `--tool-call-parser` depends on your model family. For example, Qwen2.5 uses `hermes` and Llama 3.1 uses `llama3_json`. Parser names change across vLLM releases, so check the [vLLM tool calling docs](https://docs.vllm.ai/en/latest/features/tool_calling.html) for your model's current parser name.
+
+### Use the gateway's model identifier
+
+Set `spec.model` to the identifier your gateway routes on (often provider-prefixed, such as `vllm/Qwen/Qwen2.5-7B-Instruct`), which can differ from the bare model name vLLM serves internally. Point `openAI.baseUrl` at the gateway (LiteLLM defaults to port `4000`, Bifrost to `8080`).
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: qwen-vllm-via-gateway
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-my-provider
+  apiKeySecretKey: ${PROVIDER_API_KEY}
+  provider: OpenAI
+  model: vllm/Qwen/Qwen2.5-7B-Instruct
+  openAI:
+    baseUrl: http://litellm.kagent.svc.cluster.local:4000/v1
+```
+
+### Troubleshooting: `provider API error (status 400)`
+
+If every agent message fails with a generic `status 400`, the most common cause is that vLLM started without `--enable-auto-tool-choice` and a matching `--tool-call-parser`. Because kagent always sends `tool_choice: "auto"`, vLLM rejects the request until automatic tool choice is enabled. Restart vLLM with the flags above and retry.
+
 ## TLS Configuration
 
 To secure communication to LLMs with your own custom certificates, configure the TLS CA details in the `ModelConfig`. Then, your agents communicate with the LLM with those custom certificates. This feature is useful for internal or company-managed LLM servers.
