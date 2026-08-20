@@ -1,12 +1,16 @@
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { visit } from "unist-util-visit";
 
-const require = createRequire(import.meta.url);
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const jiti = require("jiti")(join(__dirname, ".."));
-const { VERSIONS } = jiti(join(__dirname, "../src/app/docs/_constants.ts"));
+const VERSIONS = {
+  kagent: "0.9.9",
+  kmcp: "0.3.0",
+  agentSubstrate: "0.0.6",
+  loki: "6.24.0",
+  tempo: "1.16.0",
+  jaeger: "4.4.7",
+  kubernetesAppsApi: "apps/v1",
+  kubernetesApi: "v1",
+  kagentApi: "kagent.dev/v1alpha2",
+};
 
 const VERSION_PATTERN = /\{VERSIONS\.(\w+)\}/g;
 

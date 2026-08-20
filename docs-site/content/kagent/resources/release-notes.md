@@ -443,8 +443,8 @@ kmcp example:
 ##### HTTP ToolServer moved to RemoteMCPServer
 
 ToolServer resources that used `type: streamableHttp` are now configured as RemoteMCPServer resources. For more detailed information, review the API definitions:
-* ToolServer: [toolserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/controller/api/v1alpha1/toolserver_types.go)
-* RemoteMCPServer: [remotemcpserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/controller/api/v1alpha2/remotemcpserver_types.go)
+* ToolServer: [toolserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/api/v1alpha1/toolserver_types.go)
+* RemoteMCPServer: [remotemcpserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/api/v1alpha2/remotemcpserver_types.go)
 * MCPServer: [mcpserver_types.go](https://github.com/kagent-dev/kmcp/blob/main/api/v1alpha1/mcpserver_types.go)
 
 {{< tabs >}}
@@ -624,7 +624,7 @@ This change supports the new type for BYO agents.
   ```
 {{< /tab >}}
 {{< tab name="New Agent API with inline type" >}}
-[v1alpha2 Example](https://github.com/kagent-dev/kagent/blob/eitanya/byo/helm/agents/k8s/templates/agent.yaml): Note that the entire agent configuration is now nested under the `declarative` setting.
+[v1alpha2 Example](https://kagent.dev/docs/kagent/concepts/agents/): Note that the entire agent configuration is now nested under the `declarative` setting.
   
   ```yaml
   apiVersion: kagent.dev/v1alpha2
