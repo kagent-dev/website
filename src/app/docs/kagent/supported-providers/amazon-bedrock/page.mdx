@@ -62,7 +62,7 @@ If you are using access keys instead of an IAM role, add `apiKeySecret: bedrock-
 | Setting | Description |
 | --- | --- |
 | `provider` | Set to `Bedrock` for the native provider. |
-| `model` | The Bedrock model ID. Use the format from the [AWS Bedrock model IDs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html) (for example, `us.anthropic.claude-sonnet-4-20250514-v1:0`). |
+| `model` | The Bedrock model ID. Use the format from the [AWS Bedrock model IDs](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html) (for example, `us.anthropic.claude-sonnet-4-20250514-v1:0`). |
 | `apiKeySecret` | Optional. Set this when using a Kubernetes secret that contains `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. Omit it when the agent uses the pod's AWS credential chain, such as an IAM role attached to the ServiceAccount. |
 | `bedrock.region` | The AWS region where the Bedrock model is available (for example, `us-east-1`). |
 

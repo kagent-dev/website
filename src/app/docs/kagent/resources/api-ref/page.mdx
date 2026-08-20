@@ -848,7 +848,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `endpoint` _string_ | Endpoint is the Foundry or Azure AI Services account endpoint<br />(e.g., https://my-account.cognitiveservices.azure.com/).<br />Mutually exclusive with EndpointFrom. |  |  |
+| `endpoint` _string_ | Endpoint is the Foundry or Azure AI Services account endpoint<br />(e.g., `https://my-account.cognitiveservices.azure.com/`).<br />Mutually exclusive with EndpointFrom. |  |  |
 | `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
 | `deployment` _string_ | Deployment is the Foundry model deployment name. |  |  |
 | `apiVersion` _string_ | APIVersion is the Foundry OpenAI-compatible data-plane API version. | 2024-10-21 |  |

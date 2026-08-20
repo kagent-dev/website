@@ -12,7 +12,7 @@ export const metadata = {
 
 # Bringing your own CrewAI agent to kagent
 
-Bring your own custom agents. This example uses [CrewAI](https://www.crewai.com/), but you can also try out the [ADK guide](/docs/kagent/examples/a2a-byo/) or [LangGraph guide](/docs/kagent/examples/langchain-byo/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
+Bring your own custom agents. This example uses [CrewAI](https://crewai.com/), but you can also try out the [ADK guide](/docs/kagent/examples/a2a-byo/) or [LangGraph guide](/docs/kagent/examples/langchain-byo/). Such frameworks give you more control over the agent behavior and are well-suited for complex workflows and integration with external systems and APIs.
 
 Unlike declarative agents that are defined by kagent resources with components such as system instructions, models, and tools written inline, these BYO agents give you full control over agent logic. If you have your own agent, no need to decompose its functions into separate kagent resources. kagent can invoke your agent directly through the A2A protocol.
 
@@ -129,7 +129,7 @@ The A2A endpoint is exposed on the port `8083` of the kagent controller service.
    curl localhost:8083/api/a2a/kagent/research-crew/.well-known/agent.json
    ```
 
-   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a-protocol.org/latest/topics/key-concepts/).
 
    ```json
    {

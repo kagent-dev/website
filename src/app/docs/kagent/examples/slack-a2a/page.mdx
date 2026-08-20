@@ -27,13 +27,13 @@ This guide demonstrates how to achieve exactly that. We will explore a two-way i
 1.  **Invoking kagent from Slack:** Learn how to set up a Slack bot that uses kagent's A2A (Agent-to-Agent) protocol to interact with a kagent agent, allowing you to run commands or ask questions about your cluster directly from Slack.
 2.  **Sending messages from kagent to Slack:** Discover how to configure a kagent agent to use an MCP (Model Context Protocol) server to send messages and notifications to specific Slack channels.
 
-To follow along, you'll first need to create a Slack App. We'll cover the necessary steps below, but you can also refer to the official [Slack documentation](https://api.slack.com/quickstart).
+To follow along, you'll first need to create a Slack App. We'll cover the necessary steps below, but you can also refer to the official [Slack documentation](https://docs.slack.dev/quickstart/).
 
 ## Creating a Slack App
 
 You will need a Slack workspace and sufficient permissions to create and install Slack apps. Assuming you have that, you can head over to https://api.slack.com/apps and follow the instructions below. 
 
->Note that these instructions might change, so make sure you check out the latest instructions on the [Slack website](https://api.slack.com/quickstart).
+>Note that these instructions might change, so make sure you check out the latest instructions on the [Slack website](https://docs.slack.dev/quickstart/).
 
 1. From the Your Apps page click the "Create an app" button.
 
@@ -93,12 +93,12 @@ Lastly we'll add a slash command that will allow us to invoke the bot directly u
 
 ## Writing a Slack bot
 
-Armed with two tokens, we can now go and write some code! We'll be using Bolt for Python, but you can also use Bolt for other languages. Start by cloning the [A2A Slack template](https://github.com/kagent-dev/a2a-slack-template.git).
+Armed with two tokens, we can now go and write some code! We'll be using Bolt for Python, but you can also use Bolt for other languages. Start by cloning the [A2A Slack template](https://github.com/kagent-dev/a2a-slack-template).
 
 1. Clone the repository:
 
 ```shell
-git clone https://github.com/kagent-dev/a2a-slack-template.git
+git clone https://github.com/kagent-dev/a2a-slack-template
 cd a2a-slack-template
 ```
 
