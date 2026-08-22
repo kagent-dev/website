@@ -939,7 +939,7 @@ _Appears in:_
 | `seed` _integer_ | Seed value |  |  |
 | `n` _integer_ | N value |  |  |
 | `timeout` _integer_ | Timeout |  |  |
-| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh] <br /> |
+| `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh max] <br /> |
 | `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects which OpenAI HTTP API the runtime uses for this model.<br />chatCompletions (default) posts to /v1/chat/completions.<br />responses posts to /v1/responses. Use responses for OpenAI-compatible<br />gateways or models that require the Responses API. | chatCompletions | Enum: [chatCompletions responses] <br /> |
 | `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
@@ -952,7 +952,7 @@ Supported values vary by model. Set to "none" to disable reasoning; some models 
 require this to use function tools via the Chat Completions API.
 
 _Validation:_
-- Enum: [none minimal low medium high xhigh]
+- Enum: [none minimal low medium high xhigh max]
 
 _Appears in:_
 - [OpenAIConfig](#openaiconfig)
