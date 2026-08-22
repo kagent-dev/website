@@ -13,16 +13,6 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../agents/argo-rollouts | argo-rollouts-agent |  |
-| file://../agents/cilium-debug | cilium-debug-agent |  |
-| file://../agents/cilium-manager | cilium-manager-agent |  |
-| file://../agents/cilium-policy | cilium-policy-agent |  |
-| file://../agents/helm | helm-agent |  |
-| file://../agents/istio | istio-agent |  |
-| file://../agents/k8s | k8s-agent |  |
-| file://../agents/kgateway | kgateway-agent |  |
-| file://../agents/observability | observability-agent |  |
-| file://../agents/promql | promql-agent |  |
 | file://../tools/grafana-mcp | grafana-mcp |  |
 | file://../tools/querydoc | querydoc |  |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
@@ -34,57 +24,17 @@ A Helm chart for kagent, built with Google ADK
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
-| argo-rollouts-agent.enabled | bool | `true` |  |
-| argo-rollouts-agent.memory.enabled | bool | `false` |  |
-| argo-rollouts-agent.memory.modelConfigRef | string | `""` |  |
-| argo-rollouts-agent.memory.ttlDays | int | `15` |  |
-| argo-rollouts-agent.modelConfigRef | string | `""` |  |
-| argo-rollouts-agent.resources.limits.memory | string | `"256Mi"` |  |
-| argo-rollouts-agent.resources.requests.cpu | string | `"50m"` |  |
-| argo-rollouts-agent.resources.requests.memory | string | `"128Mi"` |  |
-| cilium-debug-agent.enabled | bool | `true` |  |
-| cilium-debug-agent.memory.enabled | bool | `false` |  |
-| cilium-debug-agent.memory.modelConfigRef | string | `""` |  |
-| cilium-debug-agent.memory.ttlDays | int | `15` |  |
-| cilium-debug-agent.modelConfigRef | string | `""` |  |
-| cilium-debug-agent.resources.limits.memory | string | `"256Mi"` |  |
-| cilium-debug-agent.resources.requests.cpu | string | `"50m"` |  |
-| cilium-debug-agent.resources.requests.memory | string | `"128Mi"` |  |
-| cilium-manager-agent.enabled | bool | `true` |  |
-| cilium-manager-agent.memory.enabled | bool | `false` |  |
-| cilium-manager-agent.memory.modelConfigRef | string | `""` |  |
-| cilium-manager-agent.memory.ttlDays | int | `15` |  |
-| cilium-manager-agent.modelConfigRef | string | `""` |  |
-| cilium-manager-agent.resources.limits.memory | string | `"256Mi"` |  |
-| cilium-manager-agent.resources.requests.cpu | string | `"50m"` |  |
-| cilium-manager-agent.resources.requests.memory | string | `"128Mi"` |  |
-| cilium-policy-agent.enabled | bool | `true` |  |
-| cilium-policy-agent.memory.enabled | bool | `false` |  |
-| cilium-policy-agent.memory.modelConfigRef | string | `""` |  |
-| cilium-policy-agent.memory.ttlDays | int | `15` |  |
-| cilium-policy-agent.modelConfigRef | string | `""` |  |
-| cilium-policy-agent.resources.limits.memory | string | `"256Mi"` |  |
-| cilium-policy-agent.resources.requests.cpu | string | `"50m"` |  |
-| cilium-policy-agent.resources.requests.memory | string | `"128Mi"` |  |
 | controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
+| controller.a2aGatewayUrl | string | `http://<fullname>-controller.<namespace>.svc:<grpc-port>` | Public gRPC URL advertised by AgentInstance Agent Cards. |
 | controller.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod. |
-| controller.agentDeployment | object | `{"host":"","nodeSelector":{},"podLabels":{},"serviceAccountName":""}` | Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults. |
-| controller.agentDeployment.host | string | "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled) | Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of "0.0.0.0". Automatically set to "::" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag. |
-| controller.agentDeployment.nodeSelector | object | {} (no default nodeSelector) | Default nodeSelector applied to all agent deployments. Useful when admission policies require a nodeSelector on every Deployment, since wizard-created Agents carry none. A per-agent nodeSelector in the Agent CRD takes precedence over these defaults. |
-| controller.agentDeployment.podLabels | object | {} (no extra labels) | Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults. |
-| controller.agentDeployment.serviceAccountName | string | "" (auto-create per-agent ServiceAccount) | Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA. |
-| controller.agentImage.pullPolicy | string | `""` |  |
-| controller.agentImage.pullSecret | string | `""` | Image pull secret name set on agent pods created by the controller |
-| controller.agentImage.registry | string | `""` |  |
-| controller.agentImage.repository | string | `"kagent-dev/kagent/app"` |  |
-| controller.agentImage.tag | string | `""` |  |
+| controller.agentImage | object | `{"registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for declarative agents. |
 | controller.annotations | object | `{}` | Additional annotations to add to the controller Deployment metadata |
 | controller.auth.mode | string | `"unsecure"` |  |
 | controller.auth.userIdClaim | string | `""` |  |
 | controller.env | list | `[]` |  |
 | controller.envFrom | list | `[]` |  |
-| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
+| controller.grpc | object | `{"bindAddress":":8084","maxMessageBytes":16777216,"reflection":false,"tlsCertFile":"","tlsKeyFile":""}` | Native gRPC application API settings. This port is internal unless a separate TLS-capable GRPCRoute or ingress is configured. |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
 | controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
@@ -109,21 +59,17 @@ A Helm chart for kagent, built with Google ADK
 | controller.resources.requests.cpu | string | `"100m"` |  |
 | controller.resources.requests.memory | string | `"128Mi"` |  |
 | controller.service.annotations | object | `{}` |  |
+| controller.service.ports.grpc | int | `8084` |  |
 | controller.service.ports.port | int | `8083` |  |
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
 | controller.serviceAccount | object | `{"annotations":{}}` | ServiceAccount settings for the controller pod |
 | controller.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the controller ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
-| controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
 | controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
 | controller.substrate.ateApiEndpoint | string | `""` |  |
-| controller.substrate.ateApiInsecure | bool | `false` |  |
 | controller.substrate.ateApiServer.namespace | string | `"ate-system"` |  |
 | controller.substrate.ateApiServer.serviceAccount | string | `"ate-api-server"` |  |
-| controller.substrate.ateApiTokenAudience | string | `"api.ate-system.svc"` |  |
-| controller.substrate.ateApiTokenExpirationSeconds | int | `3600` |  |
-| controller.substrate.ateApiTokenFile | string | `"/var/run/secrets/tokens/ate-api/token"` |  |
 | controller.substrate.atenetRouterURL | string | `""` |  |
 | controller.substrate.defaultWorkerPool.name | string | `""` |  |
 | controller.substrate.defaultWorkerPool.namespace | string | `""` |  |
@@ -160,33 +106,9 @@ A Helm chart for kagent, built with Google ADK
 | grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
 | grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
 | grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
-| helm-agent.enabled | bool | `true` |  |
-| helm-agent.memory.enabled | bool | `false` |  |
-| helm-agent.memory.modelConfigRef | string | `""` |  |
-| helm-agent.memory.ttlDays | int | `15` |  |
-| helm-agent.modelConfigRef | string | `""` |  |
-| helm-agent.resources.limits.memory | string | `"256Mi"` |  |
-| helm-agent.resources.requests.cpu | string | `"50m"` |  |
-| helm-agent.resources.requests.memory | string | `"128Mi"` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
 | imagePullSecrets | list | `[]` |  |
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
-| istio-agent.enabled | bool | `true` |  |
-| istio-agent.memory.enabled | bool | `false` |  |
-| istio-agent.memory.modelConfigRef | string | `""` |  |
-| istio-agent.memory.ttlDays | int | `15` |  |
-| istio-agent.modelConfigRef | string | `""` |  |
-| istio-agent.resources.limits.memory | string | `"256Mi"` |  |
-| istio-agent.resources.requests.cpu | string | `"50m"` |  |
-| istio-agent.resources.requests.memory | string | `"128Mi"` |  |
-| k8s-agent.enabled | bool | `true` |  |
-| k8s-agent.memory.enabled | bool | `false` |  |
-| k8s-agent.memory.modelConfigRef | string | `""` |  |
-| k8s-agent.memory.ttlDays | int | `15` |  |
-| k8s-agent.modelConfigRef | string | `""` |  |
-| k8s-agent.resources.limits.memory | string | `"256Mi"` |  |
-| k8s-agent.resources.requests.cpu | string | `"50m"` |  |
-| k8s-agent.resources.requests.memory | string | `"128Mi"` |  |
 | kagent-tools.enabled | bool | `true` |  |
 | kagent-tools.nameOverride | string | `"tools"` |  |
 | kagent-tools.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
@@ -202,14 +124,6 @@ A Helm chart for kagent, built with Google ADK
 | kagent-tools.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
 | kagent-tools.tools.metrics.port | int | `8085` |  |
-| kgateway-agent.enabled | bool | `true` |  |
-| kgateway-agent.memory.enabled | bool | `false` |  |
-| kgateway-agent.memory.modelConfigRef | string | `""` |  |
-| kgateway-agent.memory.ttlDays | int | `15` |  |
-| kgateway-agent.modelConfigRef | string | `""` |  |
-| kgateway-agent.resources.limits.memory | string | `"256Mi"` |  |
-| kgateway-agent.resources.requests.cpu | string | `"50m"` |  |
-| kgateway-agent.resources.requests.memory | string | `"128Mi"` |  |
 | kmcp.enabled | bool | `true` |  |
 | kmcp.fullnameOverride | string | `""` |  |
 | kmcp.nameOverride | string | `"kmcp"` |  |
@@ -252,14 +166,6 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.service.portNumber | int | `4180` |  |
 | oauth2-proxy.service.type | string | `"ClusterIP"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
-| observability-agent.enabled | bool | `true` |  |
-| observability-agent.memory.enabled | bool | `false` |  |
-| observability-agent.memory.modelConfigRef | string | `""` |  |
-| observability-agent.memory.ttlDays | int | `15` |  |
-| observability-agent.modelConfigRef | string | `""` |  |
-| observability-agent.resources.limits.memory | string | `"256Mi"` |  |
-| observability-agent.resources.requests.cpu | string | `"50m"` |  |
-| observability-agent.resources.requests.memory | string | `"128Mi"` |  |
 | otel.logging.enabled | bool | `false` |  |
 | otel.logging.exporter.otlp.endpoint | string | `""` |  |
 | otel.logging.exporter.otlp.insecure | bool | `true` |  |
@@ -272,14 +178,6 @@ A Helm chart for kagent, built with Google ADK
 | podAnnotations | object | `{}` |  |
 | podLabels | object | `{}` | Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods. |
 | podSecurityContext | object | `{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for all pods |
-| promql-agent.enabled | bool | `true` |  |
-| promql-agent.memory.enabled | bool | `false` |  |
-| promql-agent.memory.modelConfigRef | string | `""` |  |
-| promql-agent.memory.ttlDays | int | `15` |  |
-| promql-agent.modelConfigRef | string | `""` |  |
-| promql-agent.resources.limits.memory | string | `"256Mi"` |  |
-| promql-agent.resources.requests.cpu | string | `"50m"` |  |
-| promql-agent.resources.requests.memory | string | `"128Mi"` |  |
 | providers.annotations | object | `{}` | Annotations added to the metadata of the generated default ModelConfig (the one derived from `providers.default`). Omitted from the resource when empty. |
 | providers.anthropic.apiKeySecretKey | string | `"ANTHROPIC_API_KEY"` |  |
 | providers.anthropic.apiKeySecretRef | string | `"kagent-anthropic"` |  |
@@ -296,7 +194,7 @@ A Helm chart for kagent, built with Google ADK
 | providers.default | string | `"openAI"` |  |
 | providers.gemini.apiKeySecretKey | string | `"GOOGLE_API_KEY"` |  |
 | providers.gemini.apiKeySecretRef | string | `"kagent-gemini"` |  |
-| providers.gemini.model | string | `"gemini-2.0-flash-lite"` |  |
+| providers.gemini.model | string | `"gemini-2.5-flash-lite"` |  |
 | providers.gemini.provider | string | `"Gemini"` |  |
 | providers.ollama.config.host | string | `"host.docker.internal:11434"` |  |
 | providers.ollama.config.options.num_ctx | string | `"64000"` |  |
@@ -329,6 +227,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod. |
 | ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
+| ui.backendGrpcUrl | string | `""` |  |
 | ui.backendInternalUrl | string | `""` |  |
 | ui.env | object | `{}` |  |
 | ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
