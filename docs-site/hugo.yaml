@@ -71,6 +71,43 @@ markup:
 enableInlineShortcodes: true
 
 params:
+  # Section registry, alphabetical. A section exists because it is a key here.
+  # See docs-theme-extras USAGE.md, "Versions and sections".
+  #
+  # kagent docs are two parallel doc sets with NO version axis, which is what
+  # `sections` models — the theme resolves them positionally (one segment below
+  # the docs root) precisely because no version can follow them. Registering
+  # them here is what gives this site the navbar section selector, the mobile
+  # drawer's section chips, and a left nav rooted at the CURRENT doc set instead
+  # of at site.Home. Before it, this repo carried a hand-written sidebar
+  # override to get that last part; registering the sections replaced it.
+  #
+  # No `title` on either: both take their label from their landing page's title
+  # ("kagent", "kmcp"), which is where it belongs.
+  #
+  # `icon` keeps the product marks the hand-rolled menu.main dropdown showed.
+  # These are the SAME files navbar-link.html inlines for the marketing nav
+  # (assets/icons/nav-<name>.svg) — the theme's utils/render-icon.html resolves
+  # an `assets/` svg directly, so nothing had to move into static/. Paths are
+  # assets-relative and include the extension; a value the resolver cannot match
+  # falls through to a Material Icons ligature and renders as literal text, so a
+  # typo here shows up on the page rather than failing the build.
+  #
+  # Do NOT add params.versions to make something else work. These sections
+  # resolve through the theme's version-less path, and a single version entry
+  # moves the whole site onto the versioned path, where a section is only
+  # recognized directly above a version tree — of which this site has none.
+  sections:
+    kagent:
+      icon: icons/nav-kagent.svg
+    kmcp:
+      icon: icons/nav-kmcp.svg
+
+  # Label on the section selector button. Without it the button falls back to
+  # site.Title ("kagent docs"), which reads oddly above a menu offering kagent
+  # and kmcp. Matches the "Docs" label the hand-rolled menu dropdown used.
+  product: "Docs"
+
   # Hide the visible "Last updated on <date>" footer (imported OSS content
   # modules ship displayUpdatedDate=true; this overrides it). The git date still
   # feeds the sitemap <lastmod> for SEO.
@@ -119,24 +156,17 @@ menu:
       # or the prefix doubles to /docs/docs/….
       url: /
       weight: 1
-    # Child entries turn "Docs" into a dropdown. Hextra's navbar-link.html
-    # renders any menu item with children as a dropdown toggle (matches agw's
-    # standalone/kubernetes split). kagent docs are unversioned, so these point
-    # straight at each product's section landing.
-    - name: kagent
-      parent: docs
-      url: /kagent
-      weight: 1
-      params:
-        # Matches assets/icons/nav-<icon>.svg; rendered inline by navbar-link.html
-        # so the dropdown carries the same product marks as the JS marketing nav.
-        icon: kagent
-    - name: kmcp
-      parent: docs
-      url: /kmcp
-      weight: 2
-      params:
-        icon: kmcp
+    # NOTE: the kagent / kmcp child entries that used to hang off "Docs" are
+    # gone. They were a hand-rolled stand-in for the theme's section selector,
+    # which now renders from params.sections above — keeping both would put the
+    # same two destinations in the navbar twice. agentgateway.dev registers its
+    # kubernetes/standalone sections the same way and likewise has no menu
+    # children for them.
+    #
+    # The product marks those entries carried are NOT lost: params.sections above
+    # sets the same assets/icons/nav-<name>.svg files via the theme's `icon` key.
+    # navbar-link.html still renders icons for the remaining menu items, so its
+    # `params.icon` handling stays in use (see the GitHub entry below).
     # Marketing pages are served on the SAME origin (the Next.js worker), at the
     # site root — not under the docs' /docs baseURL. Use params.localHref (emitted
     # verbatim by navbar-link.html) so these stay root-relative and clicking stays
