@@ -149,24 +149,25 @@ params:
 # on the Next.js site, so those link out to absolute kagent.dev URLs.
 menu:
   main:
-    - name: Docs
-      identifier: docs
-      # Menu urls are relative to baseURL, so Hugo prepends the /docs subpath
-      # automatically — use logical paths here (/, /kagent, /kmcp), NOT /docs/…,
-      # or the prefix doubles to /docs/docs/….
-      url: /
-      weight: 1
-    # NOTE: the kagent / kmcp child entries that used to hang off "Docs" are
-    # gone. They were a hand-rolled stand-in for the theme's section selector,
-    # which now renders from params.sections above — keeping both would put the
-    # same two destinations in the navbar twice. agentgateway.dev registers its
-    # kubernetes/standalone sections the same way and likewise has no menu
-    # children for them.
+    # NOTE: the whole "Docs" entry is gone, children and parent alike. It used to
+    # be a hand-rolled stand-in for the theme's section selector: a parent named
+    # "Docs" with kagent / kmcp children. params.sections above now renders that
+    # same control, with the same two destinations and the same product marks
+    # (the theme's `icon` key reads the identical assets/icons/nav-<name>.svg
+    # files), and the selector's own button is labelled from params.product —
+    # also "Docs". Keeping the menu entry put TWO buttons reading "Docs" side by
+    # side in the navbar.
     #
-    # The product marks those entries carried are NOT lost: params.sections above
-    # sets the same assets/icons/nav-<name>.svg files via the theme's `icon` key.
-    # navbar-link.html still renders icons for the remaining menu items, so its
-    # `params.icon` handling stays in use (see the GitHub entry below).
+    # Removing the parent costs no navigation. navbar-link.html renders any item
+    # with children as a `<button>`, not an `<a>`, so the old parent's `url: /`
+    # was never followable — the docs landing page was already reachable only
+    # from the selector's items, the sidebar and the logo. Note menu urls are
+    # relative to baseURL, so Hugo prepends the /docs subpath automatically; any
+    # entry added back here wants a logical path (/, /kagent), NOT /docs/….
+    #
+    # navbar-link.html's `params.icon` handling stays in use for the remaining
+    # items (see the GitHub entry below), so nothing there went dead.
+    #
     # Marketing pages are served on the SAME origin (the Next.js worker), at the
     # site root — not under the docs' /docs baseURL. Use params.localHref (emitted
     # verbatim by navbar-link.html) so these stay root-relative and clicking stays
