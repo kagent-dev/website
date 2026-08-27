@@ -63,6 +63,13 @@ export const authors: Author[] = [
     photo: "/images/authors/yanivmn.jpg",
     bio: "Passionate about cloud-native technologies and Kubernetes.",
   },
+  {
+    id: "petrmcallister",
+    name: "Petr McAllister",
+    title: "Engineer at Solo.io",
+    photo: "",
+    bio: "Petr, Engineer at Solo.io, comes from a background as a solution architect and developer, now focusing on Service Mesh technologies with public clouds.",
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
