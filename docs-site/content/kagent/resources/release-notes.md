@@ -678,6 +678,7 @@ For all available fields, see the [Helm reference](/docs/kagent/resources/helm/)
 * **Python dependency CVE patches**: `aiohttp` bumped to 3.14.3 (CVE-2026-69244) and `cryptography` bumped to 50.0.0 (CVE-2026-69247) in the Python ADK container images.
 * **sqlparse CVE patches**: `sqlparse` bumped from 0.5.5 to 0.6.0 to address CVE-2026-54284, CVE-2026-59893, and CVE-2026-71491.
 * **A2A task security scoping**: Task `get`, `create`, and `delete` operations are now scoped to the session owner, preventing one user from accessing another user's A2A tasks.
+* **Starlette CVE patches**: Google ADK bumped to address known Starlette CVEs in the Python ADK container images.
 
 **Helm and configuration**
 
@@ -691,6 +692,8 @@ For all available fields, see the [Helm reference](/docs/kagent/resources/helm/)
 * **Custom annotations on the default ModelConfig**: A new per-provider `annotations` map under `providers.<provider>.annotations` is applied to the Helm-generated default ModelConfig. Useful for downstream tooling or UI extensions that key off resource annotations.
 * **`deploymentAnnotations` for agent deployments**: New `deploymentAnnotations` field on the agent deployment spec sets annotations on the Deployment object itself. The existing `annotations` field targets pod template metadata only. Useful for GitOps tooling such as Argo CD sync waves, Flux, and Kyverno policies that key off Deployment-level annotations.
 * **pgx connection pool tuning**: New Helm values configure the idle connection timeout and check period for the PostgreSQL pgx driver, so that idle database connections are closed after a configurable period rather than held indefinitely.
+* **`env` in bundled agent Helm charts**: All bundled agent Helm charts now accept an `env` list for injecting arbitrary environment variables into agent pods, including entries using `valueFrom` to reference ConfigMaps and Secrets.
+* **`LOG_LEVEL` in Go ADK bundled agents**: The Go ADK runtime now respects the `LOG_LEVEL` environment variable. The `--log-level` CLI flag takes precedence if both are set.
 
 **Agent runtimes and providers**
 
@@ -707,6 +710,9 @@ For all available fields, see the [Helm reference](/docs/kagent/resources/helm/)
 * **OpenTelemetry double-instrumentation fix**: The OpenAI client is no longer double-instrumented on the Go ADK runtime, preventing duplicate spans in OTel traces when using OpenAI with the Go runtime.
 * **Configurable Bedrock read/connect timeout**: New `bedrock.readTimeout` and `bedrock.connectTimeout` fields on `ModelConfig` replace the ~60s botocore default that caused `ReadTimeoutError` on long completions. Both values are in seconds and are optional.
 * **RFC 8707 resource and audience for STS token exchange**: The Go and Python ADK token-propagation plugins now read `KAGENT_STS_RESOURCE` and `KAGENT_STS_AUDIENCE` environment variables to scope issued STS tokens to a specific backend. Backwards compatible so that existing deployments are unaffected when neither variable is set.
+* **Go ADK user identity from A2A context**: Fixed an issue where the Go ADK did not resolve the caller's user identity from the A2A call context, causing identity-aware operations to fall back to an unauthenticated default.
+* **ADK `ask_user` question validation**: The `ask_user` tool now validates that each question is a non-empty string before sending it to the user, preventing malformed prompts from reaching the chat interface.
+* **OpenAI embedding API key passthrough**: Fixed an issue where the API key was not passed through correctly when generating embeddings with OpenAI embedding models via the Go ADK.
 
 **Agent Substrate**
 
@@ -736,6 +742,7 @@ For all available fields, see the [Helm reference](/docs/kagent/resources/helm/)
 * **ADK session state with `num_recent_events`**: Fixed a bug where `session.state` was built from only the last `n` events when `num_recent_events` was set, silently dropping state deltas from older events. Full event history is now always used to compute state; `num_recent_events` only trims the returned events list.
 * **Session sharing nil pointer fix**: Fixed a nil pointer panic on session sharing endpoints caused by `SessionSharesHandler` not being initialized at startup.
 * **OTel traces no longer sent to api.openai.com**: The Python ADK no longer forwards traces to OpenAI's hardcoded endpoint by default, preventing key leakage for proxy or gateway deployments. Set `KAGENT_OPENAI_AGENTS_NATIVE_TRACING=true` to restore the original behavior.
+* **A2A exact task reads from the persistent store**: Single-task `get` calls over A2A now read directly from the persistent task store rather than reconstructing state from event history, improving consistency and performance for long-running sessions.
 
 ## v0.9
 
