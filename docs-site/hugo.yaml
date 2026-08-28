@@ -71,6 +71,43 @@ markup:
 enableInlineShortcodes: true
 
 params:
+  # Section registry, alphabetical. A section exists because it is a key here.
+  # See docs-theme-extras USAGE.md, "Versions and sections".
+  #
+  # kagent docs are two parallel doc sets with NO version axis, which is what
+  # `sections` models — the theme resolves them positionally (one segment below
+  # the docs root) precisely because no version can follow them. Registering
+  # them here is what gives this site the navbar section selector, the mobile
+  # drawer's section chips, and a left nav rooted at the CURRENT doc set instead
+  # of at site.Home. Before it, this repo carried a hand-written sidebar
+  # override to get that last part; registering the sections replaced it.
+  #
+  # No `title` on either: both take their label from their landing page's title
+  # ("kagent", "kmcp"), which is where it belongs.
+  #
+  # `icon` keeps the product marks the hand-rolled menu.main dropdown showed.
+  # These are the SAME files navbar-link.html inlines for the marketing nav
+  # (assets/icons/nav-<name>.svg) — the theme's utils/render-icon.html resolves
+  # an `assets/` svg directly, so nothing had to move into static/. Paths are
+  # assets-relative and include the extension; a value the resolver cannot match
+  # falls through to a Material Icons ligature and renders as literal text, so a
+  # typo here shows up on the page rather than failing the build.
+  #
+  # Do NOT add params.versions to make something else work. These sections
+  # resolve through the theme's version-less path, and a single version entry
+  # moves the whole site onto the versioned path, where a section is only
+  # recognized directly above a version tree — of which this site has none.
+  sections:
+    kagent:
+      icon: icons/nav-kagent.svg
+    kmcp:
+      icon: icons/nav-kmcp.svg
+
+  # Label on the section selector button. Without it the button falls back to
+  # site.Title ("kagent docs"), which reads oddly above a menu offering kagent
+  # and kmcp. Matches the "Docs" label the hand-rolled menu dropdown used.
+  product: "Docs"
+
   # Hide the visible "Last updated on <date>" footer (imported OSS content
   # modules ship displayUpdatedDate=true; this overrides it). The git date still
   # feeds the sitemap <lastmod> for SEO.
@@ -112,31 +149,25 @@ params:
 # on the Next.js site, so those link out to absolute kagent.dev URLs.
 menu:
   main:
-    - name: Docs
-      identifier: docs
-      # Menu urls are relative to baseURL, so Hugo prepends the /docs subpath
-      # automatically — use logical paths here (/, /kagent, /kmcp), NOT /docs/…,
-      # or the prefix doubles to /docs/docs/….
-      url: /
-      weight: 1
-    # Child entries turn "Docs" into a dropdown. Hextra's navbar-link.html
-    # renders any menu item with children as a dropdown toggle (matches agw's
-    # standalone/kubernetes split). kagent docs are unversioned, so these point
-    # straight at each product's section landing.
-    - name: kagent
-      parent: docs
-      url: /kagent
-      weight: 1
-      params:
-        # Matches assets/icons/nav-<icon>.svg; rendered inline by navbar-link.html
-        # so the dropdown carries the same product marks as the JS marketing nav.
-        icon: kagent
-    - name: kmcp
-      parent: docs
-      url: /kmcp
-      weight: 2
-      params:
-        icon: kmcp
+    # NOTE: the whole "Docs" entry is gone, children and parent alike. It used to
+    # be a hand-rolled stand-in for the theme's section selector: a parent named
+    # "Docs" with kagent / kmcp children. params.sections above now renders that
+    # same control, with the same two destinations and the same product marks
+    # (the theme's `icon` key reads the identical assets/icons/nav-<name>.svg
+    # files), and the selector's own button is labelled from params.product —
+    # also "Docs". Keeping the menu entry put TWO buttons reading "Docs" side by
+    # side in the navbar.
+    #
+    # Removing the parent costs no navigation. navbar-link.html renders any item
+    # with children as a `<button>`, not an `<a>`, so the old parent's `url: /`
+    # was never followable — the docs landing page was already reachable only
+    # from the selector's items, the sidebar and the logo. Note menu urls are
+    # relative to baseURL, so Hugo prepends the /docs subpath automatically; any
+    # entry added back here wants a logical path (/, /kagent), NOT /docs/….
+    #
+    # navbar-link.html's `params.icon` handling stays in use for the remaining
+    # items (see the GitHub entry below), so nothing there went dead.
+    #
     # Marketing pages are served on the SAME origin (the Next.js worker), at the
     # site root — not under the docs' /docs baseURL. Use params.localHref (emitted
     # verbatim by navbar-link.html) so these stay root-relative and clicking stays
