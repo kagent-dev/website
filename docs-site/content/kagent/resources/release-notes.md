@@ -13,6 +13,14 @@ For more details on the changes between versions, review the [kagent GitHub rele
 
 Review this summary of significant changes from kagent version 0.9 to v0.10.
 
+### Breaking changes
+
+**Bundled `doc2vec` removed**
+
+The `querydoc` subchart and its bundled `doc2vec` image are removed in v0.10. If you had `querydoc` enabled, the `query_documentation` tool will no longer be available after upgrading, and any agent that references it will fail on reconciliation.
+
+To continue using documentation search, deploy `doc2vec` separately and configure it as an external tool server. See [Documentation search example](/docs/kagent/examples/documentation/) for setup instructions.
+
 ### What's included
 
 **Agent runtimes**
