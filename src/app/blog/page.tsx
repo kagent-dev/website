@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'agents-on-every-cloud',
+        publishDate: '2026-08-27',
+        title: 'Agents on Every Cloud',
+        description: 'The open source distributions of kagent and agentgateway are now on the AWS, Azure, and Google Cloud marketplaces. Deploy both and connect them: from install to an agent served through agentgateway over A2A.',
+        authorId: 'petrmcallister',
+    },
+    {
         slug: 'dnb-kagent-agentgateway',
         publishDate: '2026-07-13',
         title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
