@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'blacksmith-ci',
+        publishDate: '2026-09-04',
+        title: 'Next generation CI using Blacksmith',
+        description: 'Life of a maintainer: How we cut our CI time by 1/3 using Blacksmith',
+        authorId: 'eitanya',
+    },
+    {
         slug: 'agents-on-every-cloud',
         publishDate: '2026-08-27',
         title: 'Agents on Every Cloud',
