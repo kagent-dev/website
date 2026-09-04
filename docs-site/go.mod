@@ -2,4 +2,4 @@ module github.com/kagent-dev/website-docs
 
 go 1.21
 
-require github.com/solo-io/docs-theme-extras v0.1.25 // indirect
+require github.com/solo-io/docs-theme-extras v0.3.3 // indirect
