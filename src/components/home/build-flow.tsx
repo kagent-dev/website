@@ -95,9 +95,9 @@ export function BuildFlow() {
 
       {/* Sticky panel (shown first on small screens) */}
       <div className="-order-1 min-w-0 lg:order-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:justify-center">
-        <div className="overflow-hidden rounded-[10px] border border-white/10 bg-kg-term shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+        <div className="overflow-hidden rounded-[10px] border border-kg-term-bd bg-kg-term shadow-[var(--kg-term-shadow)]">
           {/* Editor: title bar with the file name */}
-          <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-[11px]">
+          <div className="flex items-center gap-2 border-b border-kg-term-bd px-4 py-[11px]">
             <span className="h-[11px] w-[11px] rounded-full bg-[#FF5F57]" />
             <span className="h-[11px] w-[11px] rounded-full bg-[#FEBC2E]" />
             <span className="h-[11px] w-[11px] rounded-full bg-[#28C840]" />
@@ -123,14 +123,14 @@ export function BuildFlow() {
           {/* Status line: the command that ships this manifest, and its result */}
           <div
             key={`status-${active}`}
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/10 bg-black/30 px-[26px] py-3 font-mono text-[12px] leading-[1.6]"
+            className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-kg-term-bd bg-kg-term-bar px-[26px] py-3 font-mono text-[12px] leading-[1.6]"
           >
             <span className="animate-kg-rise text-kg-term-tx">
               <span className="text-kg-acc">$ </span>
               {step.apply.cmd}
             </span>
             <span
-              className={`ml-auto flex items-center gap-2 text-[#7FD1A8] transition-opacity duration-400 ${applied ? "opacity-100" : "opacity-0"}`}
+              className={`ml-auto flex items-center gap-2 text-kg-ystr transition-opacity duration-400 ${applied ? "opacity-100" : "opacity-0"}`}
             >
               <span aria-hidden>✓</span>
               {step.apply.result}

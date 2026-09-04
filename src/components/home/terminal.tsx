@@ -5,7 +5,7 @@ import { useTick } from "./use-tick";
 
 /** Text colour for a terminal line: green for success, dimmed for output, bright for commands. */
 export function termLineClass(l: TermLine) {
-  return l.ok ? "text-[#7FD1A8]" : l.out ? "text-kg-term-dim" : "text-kg-term-tx";
+  return l.ok ? "text-kg-ystr" : l.out ? "text-kg-term-dim" : "text-kg-term-tx";
 }
 
 /** Reveal lines one at a time, then hold on the finished output. */
@@ -26,15 +26,15 @@ export function WindowChrome({ title, className = "" }: { title: string; classNa
 }
 
 /**
- * A self-animating terminal that types out `lines` and loops. Always dark,
- * whatever the page theme, so the command colours stay legible.
+ * A self-animating terminal that types out `lines`. Follows the page theme
+ * through the kg-term tokens: near-black in dark mode, white in light mode.
  */
 export function TerminalRoll({ title, lines, className = "" }: { title: string; lines: TermLine[]; className?: string }) {
   const tick = useTick(340);
   const shown = rollLines(lines, tick);
   return (
-    <div className={`overflow-hidden rounded-lg border border-white/10 bg-kg-term ${className}`}>
-      <WindowChrome title={title} className="border-b border-white/[0.07] px-4 py-[11px] [&>span:last-child]:text-kg-term-dim" />
+    <div className={`overflow-hidden rounded-lg border border-kg-term-bd bg-kg-term ${className}`}>
+      <WindowChrome title={title} className="border-b border-kg-term-bd px-4 py-[11px] [&>span:last-child]:text-kg-term-dim" />
       <div className="px-5 py-[18px] font-mono text-[13px] leading-[1.8]">
         {shown.map((l, i) => (
           <div key={i} className={`animate-kg-rise whitespace-pre-wrap ${termLineClass(l)}`}>

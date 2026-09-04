@@ -169,9 +169,12 @@
   --kg-yval: #3B4258;
   --kg-ystr: #16794B;
   --kg-ycom: #9AA0B5;
-  --kg-term: #0A0D16;
-  --kg-term-tx: #D3D8E8;
-  --kg-term-dim: #6C7390;
+  --kg-term: #FFFFFF;
+  --kg-term-tx: #151927;
+  --kg-term-dim: #6B7289;
+  --kg-term-bd: rgba(15,19,35,0.12);
+  --kg-term-bar: rgba(15,19,35,0.04);
+  --kg-term-shadow: 0 24px 60px rgba(15,19,35,0.12);
 }
 .dark {
   --kg-pg: #0B0E18;
@@ -193,6 +196,9 @@
   --kg-term: #06080F;
   --kg-term-tx: #D3D8E8;
   --kg-term-dim: #6C7390;
+  --kg-term-bd: rgba(255,255,255,0.1);
+  --kg-term-bar: rgba(0,0,0,0.3);
+  --kg-term-shadow: 0 24px 60px rgba(0,0,0,0.4);
 }
 
 
