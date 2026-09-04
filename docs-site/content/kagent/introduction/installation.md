@@ -5,7 +5,7 @@ weight: 1
 author: kagent.dev
 ---
 
-This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, check out our [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterpise offerings, check out [Solo Enterprise for kagent](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
+This guide covers ways to install and configure kagent in your Kubernetes environment. For a quick setup, see the [Quick Start Guide](/docs/kagent/getting-started/quickstart). For enterprise offerings, see [Solo Enterprise for kagent](/docs/kagent/introduction/what-is-kagent/#enterprise-distributions).
 
 ## Installation Methods
 
@@ -43,7 +43,7 @@ Install kagent by using the kagent CLI or Helm.
    kagent installed successfully
    ```
 
-4. Optionally: Open the kagent dashboard.
+4. Optional: Open the kagent dashboard.
    ```bash
    kagent dashboard
    ```
@@ -85,7 +85,7 @@ Another way to install kagent is using Helm.
        --set providers.openAI.apiKey=$OPENAI_API_KEY
    ```
 
-5. Optionally: Port-forward the kagent UI on port 8080. 
+5. Optional: Port-forward the kagent UI on port 8080.
    ```bash
    kubectl port-forward -n kagent svc/kagent-ui 8080:8080
    ```
@@ -108,7 +108,7 @@ Another way to install kagent is using Helm.
        --set providers.anthropic.apiKey=$ANTHROPIC_API_KEY
    ```
 
-5. Optionally: Port-forward the kagent UI on port 8080. 
+5. Optional: Port-forward the kagent UI on port 8080.
    ```bash
    kubectl port-forward -n kagent svc/kagent-ui 8080:8080
    ```
@@ -131,7 +131,7 @@ Another way to install kagent is using Helm.
        --set providers.gemini.apiKey=$GEMINI_API_KEY
    ```
 
-5. Optionally: Port-forward the kagent UI on port 8080. 
+5. Optional: Port-forward the kagent UI on port 8080.
    ```bash
    kubectl port-forward -n kagent svc/kagent-ui 8080:8080
    ```
@@ -154,7 +154,7 @@ Another way to install kagent is using Helm.
        --set providers.azureOpenAI.apiKey=$OPENAI_API_KEY
    ```
 
-5. Optionally: Port-forward the kagent UI on port 8080. 
+5. Optional: Port-forward the kagent UI on port 8080.
    ```bash
    kubectl port-forward -n kagent svc/kagent-ui 8080:8080
    ```
@@ -170,7 +170,7 @@ Another way to install kagent is using Helm.
        --set providers.default=ollama
    ```
 
-4. Optionally: Port-forward the kagent UI on port 8080. 
+4. Optional: Port-forward the kagent UI on port 8080.
    ```bash
    kubectl port-forward -n kagent svc/kagent-ui 8080:8080
    ```
@@ -226,7 +226,7 @@ Review the following advanced configuration options that you might want to set u
    --set substrateWorkerPool.replicas=1
    ```
 
-   Pin the kagent chart to v0.9.9 or later — earlier versions do not include the `controller.substrate.*` and `substrateWorkerPool.*` values.
+   Pin the kagent chart to v0.9.9 or later. Earlier versions do not include the `controller.substrate.*` and `substrateWorkerPool.*` values.
 
 For an end-to-end walkthrough on a kind cluster, see the [Agent Substrate example](/docs/kagent/examples/agent-substrate). For more information about creating harness resources, see [Agent Harness](/docs/kagent/examples/agent-harness).
 
@@ -300,6 +300,173 @@ controller:
 ```
 
 This example loads all key-value pairs from the `controller-secrets` secret as environment variables in the controller pod.
+
+### Customize Kubernetes resources
+
+Use the following Helm values to meet cluster admission policies or integrate with external tooling.
+
+#### Pod labels
+
+Add labels to the pod templates of the controller and UI Deployments. Pod labels can be useful for clusters with policies (OPA Gatekeeper, Kyverno) that require specific labels on every pod.
+
+A global `podLabels` map applies to all component pods; per-component values override it:
+
+```yaml
+podLabels:
+  team: platform
+
+controller:
+  podLabels:
+    cost-center: infra
+
+ui:
+  podLabels:
+    cost-center: frontend
+```
+
+To add labels to all **agent** pods, use `controller.agentDeployment.podLabels`.
+
+#### ServiceAccount annotations
+
+Add annotations to the controller and UI ServiceAccount resources. These annotations are required for cloud provider workload identity integrations (GCP Workload Identity, AWS IRSA, Azure Workload Identity) that grant IAM permissions to workloads by annotating their Kubernetes ServiceAccount.
+
+```yaml
+controller:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+
+ui:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
+```
+
+#### Deployment annotations
+
+Add annotations to the controller and UI Deployment resources. For example, to add annotations for cluster autoscaler or Datadog:
+
+```yaml
+controller:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+
+ui:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+```
+
+To add annotations to the controller **Service** (for AWS Load Balancer Controller or ExternalDNS), use `controller.service.annotations`.
+
+#### Default nodeSelector for agent deployments
+
+Set a default `nodeSelector` that is applied to every agent Deployment that the controller creates. This setting can be useful when admission policies require a `nodeSelector` on all Deployments, since agents created through the UI carry none by default.
+
+```yaml
+controller:
+  agentDeployment:
+    nodeSelector:
+      kubernetes.io/os: linux
+```
+
+Per-agent `nodeSelector` values in the `Agent` spec take precedence over this default.
+
+#### Affinity and topology spread constraints
+
+Use `affinity` and `topologySpreadConstraints` to control pod scheduling for the controller and UI Deployments. Both fields accept standard Kubernetes scheduling objects.
+
+```yaml
+controller:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: controller
+            topologyKey: kubernetes.io/hostname
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: controller
+
+ui:
+  affinity: {}
+  topologySpreadConstraints: []
+```
+
+When unset, no affinity or spread constraints are applied.
+
+#### Deploy companion resources with extraObjects
+
+Use `extraObjects` to deploy arbitrary Kubernetes manifests in the same Helm chart lifecycle as kagent. Entries are rendered through `tpl`, so they can reference the release context.
+
+```yaml
+extraObjects:
+  - apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: kagent-api-key
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        name: my-store
+        kind: ClusterSecretStore
+      target:
+        name: kagent-api-key
+      data:
+        - secretKey: ANTHROPIC_API_KEY
+          remoteRef:
+            key: anthropic-api-key
+```
+
+### Disable the default ModelConfig
+
+By default, kagent creates a `ModelConfig` resource and associated Kubernetes Secret for the provider that you set with `providers.default`. To skip this and manage `ModelConfig` resources entirely outside the Helm chart, set `providers` to null:
+
+```yaml
+providers: null
+```
+
+When `providers` is null (or omitted), kagent does not create the `ModelConfig` or its Secret. Use this setting when you apply `ModelConfig` resources through GitOps, a separate Helm chart, or another external process.
+
+### Private registry and image mirroring
+
+If your cluster cannot pull from `ghcr.io` directly, such as in air-gapped environments, corporate proxies, or mandatory image scanning, you can mirror the kagent images to an internal registry and configure the chart to pull from this registry.
+
+kagent uses three independently configurable image locations:
+
+| Helm value | Default image | Description |
+|---|---|---|
+| `image.registry` | `ghcr.io` | Global registry prefix applied to all images that do not set their own registry. |
+| `controller.agentImage` | `ghcr.io/kagent-dev/kagent/app` | Python ADK runtime image used for Python and BYO declarative agents. |
+| `controller.goAgentImage` | `ghcr.io/kagent-dev/kagent/golang-adk` | Go ADK runtime image used for Go declarative agents. Must be set separately from `agentImage`. |
+
+To redirect all images to an internal mirror, set `image.registry` to your registry and override both agent images:
+
+```yaml
+image:
+  registry: my-registry.example.com
+
+controller:
+  agentImage:
+    registry: my-registry.example.com
+    repository: kagent/app
+    tag: v0.10.0
+  goAgentImage:
+    registry: my-registry.example.com
+    repository: kagent/golang-adk
+    tag: v0.10.0
+```
+
+When unset, the `registry` and `pullPolicy` fields of `agentImage` and `goAgentImage` default to the global `image.registry` and `image.pullPolicy` values. For many mirror setups, setting only `image.registry` and overriding `repository` and `tag` on each image is sufficient.
+
+> **Note**: If you set only `agentImage` without also setting `controller.goAgentImage`, Go declarative agents still try to pull the Go ADK image from its default location, `ghcr.io`. The controller logs a startup warning when the two image registries differ.
 
 ## Uninstallation
 
