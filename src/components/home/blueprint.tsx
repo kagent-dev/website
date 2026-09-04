@@ -22,15 +22,21 @@ export function Handles({ className = "" }: { className?: string }) {
   );
 }
 
-/** A bordered frame with corner handles and an optional mono label sitting on the top edge. */
+/**
+ * A bordered frame with corner handles and an optional mono label sitting on
+ * the top edge. With a label the top border is drawn in two runs either side
+ * of the text, so the label needs no background and works over any ground.
+ */
 export function Frame({ label, className = "", children }: { label?: string; className?: string; children: ReactNode }) {
   return (
-    <div className={`relative border border-kg-bd ${className}`}>
+    <div className={`relative border-kg-bd ${label ? "border-x border-b" : "border"} ${className}`}>
       <Handles />
       {label && (
-        <span className="absolute -top-[9px] left-1/2 -translate-x-1/2 whitespace-nowrap bg-kg-pg px-2 font-mono text-[11.5px] tracking-[0.08em] text-kg-acc">
-          {label}
-        </span>
+        <div className="pointer-events-none absolute -top-[9px] left-0 right-0 flex items-start">
+          <span className="mt-[9px] flex-1 border-t border-kg-bd" />
+          <span className="whitespace-nowrap px-2.5 font-mono text-[11.5px] tracking-[0.08em] text-kg-tx1 dark:text-kg-acc">{label}</span>
+          <span className="mt-[9px] flex-1 border-t border-kg-bd" />
+        </div>
       )}
       {children}
     </div>
