@@ -1,42 +1,27 @@
 ---
 title: kagent install
-description: kagent install command
-weight: 10
+description: Install kagent
+weight: 240
 ---
 
-Install kagent in a Kubernetes cluster.
+Install kagent
 
 ```bash
 kagent install [flags]
 ```
 
 **Flags:**
-- `--profile` - Installation profile (minimal|demo)
+- `-h, --help` - help for install
+- `--profile string` - Installation profile (minimal|demo)
 
 **Global Flags:**
-- `--kagent-url` - kagent URL (default: "http://localhost:8083")
-- `--namespace, -n` - Namespace (default: "kagent")
-- `--output-format, -o` - Output format (default: "table")
-- `--timeout` - Timeout duration (default: 300s)
-- `--verbose, -v` - Verbose output
-
-## Example
-
-Install kagent with the default profile:
-
-```bash
-kagent install
-```
-
-Install kagent with the minimal profile:
-
-```bash
-kagent install --profile minimal
-```
-
-Install kagent with the demo profile:
-
-```bash
-kagent install --profile demo
-```
-
+- `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
+- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
+- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
+- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
+- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
+- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `-n, --namespace string` - Namespace (default "kagent")
+- `-o, --output-format string` - Output format (default "table")
+- `--timeout duration` - Timeout (default 5m0s)
+- `-v, --verbose` - Verbose output

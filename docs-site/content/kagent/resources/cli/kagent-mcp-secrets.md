@@ -1,19 +1,20 @@
 ---
-title: kagent run
-description: Run agent project locally with docker-compose and launch chat interface
-weight: 390
+title: kagent mcp secrets
+description: Manage project secrets
+weight: 370
 ---
 
-Run an agent project locally using docker-compose and launch an interactive chat session.
+Manage secrets for MCP server projects.
 
 ```bash
-kagent run [project-directory] [flags]
+kagent mcp secrets [command]
 ```
 
+**Subcommands:**
+- [`kagent mcp secrets sync`](/docs/kagent/resources/cli/kagent-mcp-secrets-sync/) - Sync secrets to a Kubernetes environment from a local .env file
+
 **Flags:**
-- `--build` - Rebuild the Docker image before running
-- `-h, --help` - help for run
-- `--project-dir string` - Project directory (default: current directory)
+- `-h, --help` - help for secrets
 
 **Global Flags:**
 - `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
@@ -26,10 +27,3 @@ kagent run [project-directory] [flags]
 - `-o, --output-format string` - Output format (default "table")
 - `--timeout duration` - Timeout (default 5m0s)
 - `-v, --verbose` - Verbose output
-
-## Example
-
-```bash
-kagent run ./my-agent
-kagent run .
-```
