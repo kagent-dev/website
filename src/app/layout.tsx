@@ -32,8 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <GoogleTagManager gtmId="GTM-KNRGVQPF" />
-      <body className="min-h-screen bg-background flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <body className="min-h-screen bg-background text-foreground font-body antialiased flex flex-col">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
