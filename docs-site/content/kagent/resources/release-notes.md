@@ -751,6 +751,7 @@ For all available fields, see the [Helm reference](/docs/kagent/resources/helm/)
 * **Session sharing nil pointer fix**: Fixed a nil pointer panic on session sharing endpoints caused by `SessionSharesHandler` not being initialized at startup.
 * **OTel traces no longer sent to api.openai.com**: The Python ADK no longer forwards traces to OpenAI's hardcoded endpoint by default, preventing key leakage for proxy or gateway deployments. Set `KAGENT_OPENAI_AGENTS_NATIVE_TRACING=true` to restore the original behavior.
 * **A2A exact task reads from the persistent store**: Single-task `get` calls over A2A now read directly from the persistent task store rather than reconstructing state from event history, improving consistency and performance for long-running sessions.
+* **oauth2-proxy post-login redirect preserved**: After signing in through oauth2-proxy, users are now redirected back to the page they originally requested instead of always landing on the home page.
 
 ## v0.9
 
