@@ -8,7 +8,7 @@ import { BuildFlow } from "@/components/home/build-flow";
 import { HeroSchematic } from "@/components/home/hero-schematic";
 import { ArchitecturePanel } from "@/components/home/architecture-panel";
 import { dotGrid } from "@/components/home/blueprint";
-import { AdoptersSection, CommunityBand, FeaturesSection, PipelineGrid } from "@/components/home/sections";
+import { AdoptersSection, CommunityBand, FeaturesSection } from "@/components/home/sections";
 
 const h3Cls = "mt-4 font-display text-[clamp(28px,3vw,42px)] font-medium leading-[1.1] tracking-[-0.025em] text-kg-tx1";
 const bodyCls = "mt-[18px] max-w-[46ch] text-[17px] leading-[1.65] text-kg-tx2";
@@ -107,14 +107,6 @@ export default function HomePage() {
       {/* Build walkthrough */}
       <Section id="build" className="pb-6">
         <BuildFlow />
-      </Section>
-
-      {/* After apply */}
-      <Section className="py-24">
-        <h2 className="max-w-[24ch] font-display text-[clamp(28px,3.2vw,44px)] font-medium leading-[1.1] tracking-[-0.028em] text-kg-tx1">
-          What happens after you apply
-        </h2>
-        <PipelineGrid />
       </Section>
 
       <FeaturesSection />
