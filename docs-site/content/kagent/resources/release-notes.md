@@ -9,6 +9,750 @@ The kagent documentation shows information only for the latest release. If you r
 
 For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
 
+## v0.10
+
+Review this summary of significant changes from kagent version 0.9 to v0.10.
+
+### Breaking changes
+
+**Bundled `doc2vec` removed**
+
+The `querydoc` subchart and its bundled `doc2vec` image are removed in v0.10. If you had `querydoc` enabled, the `query_documentation` tool will no longer be available after upgrading, and any agent that references it will fail on reconciliation.
+
+To continue using documentation search, deploy `doc2vec` separately and configure it as an external tool server. See [Documentation search example](/docs/kagent/examples/documentation/) for setup instructions.
+
+### What's included
+
+**Agent runtimes**
+
+* [Go ADK is now the default runtime](#go-adk-is-now-the-default-runtime): New declarative agents use the Go ADK by default.
+* [A2A AgentCard metadata](#a2a-agentcard-metadata): New optional fields on the Agent spec for enriching the A2A AgentCard.
+* [maxOutputTokens for Gemini and Vertex AI](#maxoutputtokens-for-gemini-and-vertex-ai): New `maxOutputTokens` field on Gemini and Vertex AI providers for capping model output length.
+* [AWS Bedrock Guardrails](#aws-bedrock-guardrails): Native guardrail support for the Bedrock provider, enabling content filtering, topic denial, and PII redaction.
+* [Azure AI Foundry](#azure-ai-foundry): New provider for Azure AI Foundry models with Go ADK runtime support and Azure Workload Identity authentication.
+* [OpenAI Responses API](#openai-responses-api): New `openAI.apiFormat: responses` field switches the harness to use the OpenAI Responses API instead of Chat Completions.
+* [Per-call session isolation for Agent tools](#per-call-session-isolation-for-agent-tools): New `isolateSessions` flag gives each call to a sub-agent its own fresh session, enabling safe parallel fan-out.
+* [File upload in agent chat](#file-upload-in-agent-chat): Attach files and images to chat messages for Go declarative agents.
+
+**Helm & configuration**
+
+* [Configurable streaming timeouts](#configurable-streaming-timeouts): New Helm values for nginx proxy and client-side EventSource inactivity timeouts, including OpenShift HAProxy support.
+* [Controller service annotations](#controller-service-annotations): New `controller.service.annotations` Helm value for integrations like AWS Load Balancer Controller and ExternalDNS.
+* [Configurable A2A client timeout](#configurable-a2a-client-timeout): New `controller.a2aClientTimeout` Helm value removes the previous 3-minute hard cutoff for long-running agents.
+* [UI HTTPRoute](#ui-httproute): New `ui.httpRoute` Helm value for fronting the UI with a Gateway API HTTPRoute (kgateway, Istio, Envoy Gateway).
+* [Pod labels for controller and UI](#pod-labels-for-controller-and-ui): New `podLabels`, `controller.podLabels`, and `ui.podLabels` Helm values for pod template labels on the controller and UI Deployments.
+* [Default nodeSelector for agent deployments](#default-nodeselector-for-agent-deployments): New `controller.agentDeployment.nodeSelector` Helm value applies a global default nodeSelector to all agent Deployments created by the controller.
+* [Configurable Go ADK agent image](#configurable-go-adk-agent-image): New `controller.goAgentImage` Helm values configure the Go ADK runtime image independently, fixing mirror registry layouts that the previous derivation could not produce.
+* [Max completion tokens for OpenAI](#max-completion-tokens-for-openai): New `openAI.maxCompletionTokens` field for capping output on reasoning models (o-series, GPT-5), which reject the deprecated `maxTokens` field.
+* [ServiceAccount annotations](#serviceaccount-annotations): New `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations` Helm values for cloud workload identity integrations (GCP, AWS IRSA, Azure).
+* [extraObjects](#extraobjects): New `extraObjects` Helm value for deploying arbitrary Kubernetes manifests in the same chart lifecycle as kagent.
+* [Deployment annotations](#deployment-annotations): New `controller.annotations` and `ui.annotations` Helm values for annotating the controller and UI Deployment resources.
+* [nodeSelector for agent Helm charts](#nodeselector-for-agent-helm-charts): New `nodeSelector` value in every bundled agent Helm chart for pinning agent pods to specific node pools.
+* [envFrom for agent deployments](#envfrom-for-agent-deployments): New `envFrom` field on the agent deployment spec for bulk-injecting environment variables from ConfigMaps and Secrets.
+* [Disable default ModelConfig](#disable-default-modelconfig): Set `providers: null` to suppress the Helm-generated default `ModelConfig` and `Secret`.
+* [Affinity and topologySpreadConstraints](#affinity-and-topologyspreadconstraints): New `controller.affinity`, `controller.topologySpreadConstraints`, `ui.affinity`, and `ui.topologySpreadConstraints` Helm values for advanced pod scheduling.
+* [PodDisruptionBudget](#poddisruptionbudget): Opt-in PDB for the controller and UI Deployments.
+* [Configurable tool refresh interval](#configurable-tool-refresh-interval): Control how often the controller polls tool servers for updated tool lists.
+* [S3 skills](#s3-skills): Load agent skills directly from S3 buckets or archives.
+
+**Agent Substrate**
+
+* [ACP protocol support for substrate agents](#acp-protocol-support-for-substrate-agents): New ACP shim enabling WebSocket-to-stdio translation for agents running on substrate.
+* [Substrate support for BYO and Python agents](#substrate-support-for-byo-and-python-agents): `SandboxAgent` now supports BYO and Python runtime agents in addition to Go declarative agents.
+* [Durable session state for sandbox agents](#durable-session-state-for-sandbox-agents): Go and Python declarative sandbox agents now persist session history to a local SQLite database in the `durableDir` volume, surviving pod restarts and Deployment rollouts.
+
+**UI & auth**
+
+* [Chat session sharing](#chat-session-sharing): Session owners can now generate shareable links in read-only or read-write mode.
+* [SSO session expiry re-authentication](#sso-session-expiry-re-authentication): Expired OIDC proxy sessions now automatically redirect to re-authenticate instead of showing an error.
+* [MCP App chat widgets](#mcp-app-chat-widgets): MCP tools that expose UI resources now render interactive widgets inline in the chat interface.
+
+**Database**
+
+* [Out-of-band database migrations](#out-of-band-database-migrations): New `kagent db migrate` CLI and `database.postgres.skipMigrations` Helm value for managing migrations independently of controller startup.
+* [Database session cleanup](#database-session-cleanup): Automatically purge idle sessions and cascaded data after a configurable retention period.
+
+[**Additional changes**](#additional-changes-in-v010)
+
+### Go ADK is now the default runtime
+
+The default declarative agent runtime is now **Go**. Previously, new declarative agents used the Python ADK unless `runtime: go` was explicitly set. The Go ADK starts in approximately 2 seconds (versus ~15 seconds for Python) and uses fewer resources.
+
+Existing agents with an explicit `runtime: python` are unaffected. Agents that relied on the Python default will now use Go unless you add `runtime: python` to their spec.
+
+For a full comparison, see [Agents — Runtime](/docs/kagent/concepts/agents#runtime).
+
+### A2A AgentCard metadata
+
+You can now enrich your agent's [A2A AgentCard](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card) with optional metadata fields on the `Agent` spec. The AgentCard is served from `/.well-known/agent.json` and is read by other agents and A2A-compatible clients when they discover your agent.
+
+```yaml
+spec:
+  iconUrl: https://example.com/icons/my-agent.png
+  documentationUrl: https://docs.example.com/my-agent/
+  version: "1.0.0"
+  provider:
+    organization: My Organization
+    url: https://example.com
+```
+
+| Field | Description |
+|-------|-------------|
+| `iconUrl` | URL to an icon image representing the agent. |
+| `documentationUrl` | URL to human-readable documentation for the agent. |
+| `version` | Version string for the agent, such as `"1.0.0"`. |
+| `provider.organization` | Name of the organization responsible for the agent. |
+| `provider.url` | URL to the agent provider's website or documentation. |
+
+For more information, see [Agents — A2A AgentCard metadata](/docs/kagent/concepts/agents#a2a-agentcard-metadata).
+
+### Configurable streaming timeouts
+
+New Helm values let you tune how long nginx and the browser keep streaming connections open. The defaults are all set to 1800 seconds (30 minutes).
+
+| Helm value | Default | Description |
+|---|---|---|
+| `ui.streamTimeoutSeconds` | `1800` | Client-side EventSource inactivity timeout. Exposed to the UI container at runtime. |
+| `ui.nginx.proxyReadTimeout` | `1800` | nginx `proxy_read_timeout` for the UI sidecar. |
+| `ui.nginx.proxySendTimeout` | `1800` | nginx `proxy_send_timeout` for the UI sidecar. |
+| `ui.openshiftRoute.annotations` | — | Annotations added to the OpenShift Route resource. Set `haproxy.router.openshift.io/timeout: 120m` to prevent the default 60-second HAProxy timeout from terminating A2A and SSE streams. |
+
+Example for OpenShift deployments:
+
+```yaml
+ui:
+  openshiftRoute:
+    annotations:
+      haproxy.router.openshift.io/timeout: 120m
+```
+
+For tuning timeouts end-to-end for long-running agent sessions, see [Long-running connections](/docs/kagent/operations/operational-considerations#long-running-connections).
+
+### Controller service annotations
+
+You can now add custom annotations to the kagent controller's Kubernetes Service via `controller.service.annotations`. This is useful for integrations such as AWS Load Balancer Controller and ExternalDNS.
+
+```yaml
+controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+      external-dns.alpha.kubernetes.io/hostname: kagent.example.com
+```
+
+### Configurable A2A client timeout
+
+A new `controller.a2aClientTimeout` Helm value (default: `""` — no timeout) lets you override the A2A client HTTP timeout. Previously, the a2a-go SDK applied a hard 3-minute timeout to all A2A client requests, causing `context deadline exceeded` errors during long-running agent interactions or SSE streams.
+
+```yaml
+controller:
+  a2aClientTimeout: "10m"  # or "" for no timeout (default)
+```
+
+For more information, see [Long-running connections](/docs/kagent/operations/operational-considerations#long-running-connections).
+
+### UI HTTPRoute
+
+You can now front the kagent UI by a [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/) `HTTPRoute` instead of a plain `Ingress` or OpenShift `Route`. This is useful when your cluster uses kgateway, Istio, or Envoy Gateway as its traffic management layer.
+
+The HTTPRoute is off by default. Enable it with `ui.httpRoute.enabled: true` and configure `parentRefs` and `hostnames`:
+
+```yaml
+ui:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        namespace: istio-system
+    hostnames:
+      - kagent.example.com
+```
+
+For all UI exposure options including LoadBalancer service and OpenShift Route, see [Expose the UI outside the cluster](/docs/kagent/observability/launch-ui#expose-the-ui-outside-the-cluster).
+
+### Pod labels for controller and UI
+
+You can now add custom labels to the pod templates of the controller and UI Deployments. A global `podLabels` map applies to all component pods, with per-component overrides via `controller.podLabels` and `ui.podLabels` (component keys win on conflict).
+
+```yaml
+podLabels:
+  team: platform
+  environment: production
+
+controller:
+  podLabels:
+    cost-center: infra
+
+ui:
+  podLabels:
+    cost-center: frontend
+```
+
+This is useful for clusters with admission policies (such as OPA Gatekeeper or Kyverno) that require specific labels on every pod template. Note that selector labels always take precedence and cannot be overridden.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+### Default nodeSelector for agent deployments
+
+A new `controller.agentDeployment.nodeSelector` Helm value sets a global default nodeSelector applied to every agent Deployment created by the controller. Per-agent `nodeSelector` values in the `Agent` CRD take precedence over this default (per-key merge, agent wins).
+
+```yaml
+controller:
+  agentDeployment:
+    nodeSelector:
+      kubernetes.io/os: linux
+```
+
+This is useful in clusters where admission policies (Gatekeeper, Kyverno) require a `nodeSelector` on every Deployment. Without this, agents created through the UI wizard carry no nodeSelector and fail admission.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+### Configurable Go ADK agent image
+
+You can now use the `controller.goAgentImage` Helm values to configure the Go ADK runtime image independently of the main agent image. Previously, the controller derived the Go image repository from the Python image by replacing the last path segment with `golang-adk`. This pattern breaks in flat-name mirror registries where the image name cannot be produced by that derivation.
+
+```yaml
+controller:
+  goAgentImage:
+    registry: my-registry.io
+    repository: kagent/golang-adk
+    tag: v0.10.0
+    pullPolicy: IfNotPresent
+```
+
+The `registry` and `pullPolicy` fields default to the global `image.registry` and `image.pullPolicy` values. The `tag` coalesces to the global image tag, then the chart version.
+
+> **Breaking change for mirror registry operators**: If you mirror kagent images and only set `agentImage`, you must now also set `controller.goAgentImage` to point to your mirrored Go ADK image. The controller logs a startup warning when the Go image registry differs from the main image registry, so that a misconfigured mirror is visible before a Go agent fails to pull.
+
+For more information, see [Private registry and image mirroring](/docs/kagent/introduction/installation#private-registry-and-image-mirroring).
+
+### Max completion tokens for OpenAI
+
+OpenAI reasoning models (o-series, GPT-5) reject the `max_tokens` request parameter with a 400 error. Use the new `openAI.maxCompletionTokens` field instead, which maps to OpenAI's `max_completion_tokens` parameter and caps both visible output tokens and internal reasoning tokens.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+    maxCompletionTokens: 16000
+```
+
+The existing `openAI.maxTokens` field is unchanged and continues to work for standard models and OpenAI-compatible endpoints. The two fields are independent: set `maxCompletionTokens` for reasoning models and `maxTokens` only for endpoints that still require `max_tokens`.
+
+For more information, see [Max completion tokens](/docs/kagent/supported-providers/openai#max-completion-tokens).
+
+### ServiceAccount annotations
+
+You can now annotate the controller and UI Kubernetes ServiceAccounts via `controller.serviceAccount.annotations` and `ui.serviceAccount.annotations`. This standard mechanism is required for cloud provider workload identity integrations that grant IAM permissions by annotating a ServiceAccount.
+
+```yaml
+controller:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent@my-project.iam.gserviceaccount.com
+
+ui:
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: kagent-ui@my-project.iam.gserviceaccount.com
+```
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+### extraObjects
+
+A new top-level `extraObjects` Helm value lets you deploy arbitrary Kubernetes manifests in the same chart lifecycle as kagent. Entries are rendered through `tpl`, so they can reference the release context such as `{{ .Release.Namespace }}`.
+
+```yaml
+extraObjects:
+  - apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: kagent-api-key
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        name: my-store
+        kind: ClusterSecretStore
+      target:
+        name: kagent-api-key
+      data:
+        - secretKey: ANTHROPIC_API_KEY
+          remoteRef:
+            key: anthropic-api-key
+```
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+### Deployment annotations
+
+You can now add custom annotations to the kagent controller and UI Deployment resources. A global `annotations` map applies to all deployments, with per-component overrides via `controller.annotations` and `ui.annotations`.
+
+```yaml
+controller:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+
+ui:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+```
+
+This is useful for tools that read Deployment annotations such as cluster autoscaler, Datadog, and Karpenter.
+
+For more information, see [Customize Kubernetes resources](/docs/kagent/introduction/installation#customize-kubernetes-resources).
+
+### nodeSelector for agent Helm charts
+
+Every bundled agent Helm chart now accepts an optional `nodeSelector` value. Use it to constrain agent pods to specific node pools.
+
+```yaml
+# Per-agent chart
+nodeSelector:
+  disktype: ssd
+```
+
+When installing agents through the parent `kagent` chart, pass the value under the dependency name:
+
+```yaml
+helm-agent:
+  nodeSelector:
+    kubernetes.io/os: linux
+k8s-agent:
+  nodeSelector:
+    kubernetes.io/os: linux
+```
+
+When unset, `nodeSelector` is omitted entirely, so there is no change for existing deployments.
+
+### ACP protocol support for substrate agents
+
+kagent now includes an [ACP (Agent Client Protocol)](https://agentclientprotocol.com/) shim in the base images for agents running on substrate. The shim reuses the WebSocket connection from the substrate actor and translates it to stdio, enabling agents built with OpenClaw and Hermes to communicate over the substrate runtime without additional configuration.
+
+For more information, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
+
+### Substrate support for BYO and Python agents
+
+`SandboxAgent` now supports running BYO agents and Python runtime declarative agents on Agent Substrate, in addition to Go declarative agents. This means any `Agent` type can be run as a sandboxed substrate workload.
+
+For setup details, see [Agent Substrate](/docs/kagent/concepts/agent-substrate).
+
+### Durable session state for sandbox agents
+
+Go and Python declarative `SandboxAgent` instances now persist session history to a local SQLite database backed by the agent's `durableDir` volume. Session history survives pod restarts and Deployment rollouts; for example, a previous conversation continues seamlessly after a rollout triggered by a prompt change.
+
+Session metadata is mirrored to the PostgreSQL database to support session-listing APIs. BYO agents do not get local session storage automatically; set the `kagent.dev/local-session-storage` annotation on the `SandboxAgent` if your BYO agent implements its own local store and you want to enable the same behavior.
+
+You can override the session database endpoint with the `KAGENT_SESSION_DB_URL` environment variable.
+
+For more information, see [Agent Substrate — Declarative agents](/docs/kagent/concepts/agent-substrate#declarative-agents).
+
+### Chat session sharing
+
+Session owners can now generate shareable links for any chat session. Shared sessions support two modes:
+
+- **Read-only** (default): Recipients can view the conversation but cannot send messages or respond to tool confirmations. Useful for review, handoff documentation, and broadcasting agent output.
+- **Read-write** (interactive): Recipients can interact with the session as if they were the owner, such as sending messages, approving or rejecting tool calls, and answering agent questions. All parties see the results in real time.
+
+Shared sessions that a user has accessed appear in their sidebar alongside their own sessions, so recipients do not need to keep the original link to return. Agents can also generate and revoke share links as part of their own workflows.
+
+Read-only share tokens can also read A2A tasks on the shared session (`ListTasks`, `GetTask`, `SubscribeToTask`). Mutating operations (`SendMessage`, `CancelTask`) still require a read-write share token.
+
+### SSO session expiry re-authentication
+
+When deployed behind an OIDC proxy (such as oauth2-proxy), expired sessions now trigger an automatic redirect to `/oauth2/start` for re-authentication instead of showing an error. A loop guard prevents infinite redirects if re-authentication fails. Sessions in unsecured (no-proxy) mode are unaffected.
+
+### MCP App chat widgets
+
+MCP tools that expose UI resources (MCP Apps) now render interactive widgets inline in the kagent chat interface. When an agent calls such a tool, the response appears as an embedded widget rather than raw text, and users can interact with it directly in the chat window. The backend compacts MCP App tool responses sent to the model to prevent redundant repeated calls.
+
+### Out-of-band database migrations
+
+Two new features give operators control over when and how database migrations run.
+
+#### kagent db migrate CLI
+
+A new `kagent db migrate` command group lets you apply, inspect, and recover database migrations without relying on controller startup. This is useful for CI/CD pipelines and environments where migration timing must be explicit.
+
+| Subcommand | Description |
+|---|---|
+| `kagent db migrate up` | Apply all pending migrations across all sources. |
+| `kagent db migrate status` | Show applied and pending migration counts per source. |
+| `kagent db migrate version` | Print the highest applied version per source. |
+| `kagent db migrate goto V --source <name>` | Move the schema to version V (forward or backward). Used for rollbacks. |
+| `kagent db migrate down N --source <name>` | Roll back the N most recent migrations on the named source. |
+| `kagent db migrate force V --source <name>` | Mark version V as applied without running SQL. Used to recover from a dirty migration state. |
+
+Set `POSTGRES_DATABASE_URL` or pass `--db-url` to provide the database connection string. If `DATABASE_VECTOR_ENABLED` is not set in the environment, the CLI reads it from the `kagent-controller` ConfigMap in the current cluster context.
+
+#### Skip startup migrations
+
+A new `database.postgres.skipMigrations` Helm value (default: `false`) prevents the controller from running migrations at startup. When enabled, the controller verifies the schema is already fully migrated and exits with an error if it is not. Apply migrations out-of-band before installing or upgrading when this option is set.
+
+For details and usage examples, see [Run migrations out-of-band](/docs/kagent/operations/upgrade#run-migrations-out-of-band).
+
+### maxOutputTokens for Gemini and Vertex AI
+
+The `maxOutputTokens` field is now wired for the native Gemini and Vertex AI providers. Previously, this field was declared on `GeminiVertexAIConfig` but never applied, and `GeminiConfig` did not define this field at all.
+
+```yaml
+spec:
+  provider: Gemini
+  model: gemini-2.5-pro
+  gemini:
+    maxOutputTokens: 8192
+```
+
+```yaml
+spec:
+  provider: GeminiVertexAI
+  model: gemini-2.5-pro
+  geminiVertexAI:
+    project: my-project
+    location: us-central1
+    maxOutputTokens: 8192
+```
+
+A per-request value set by the agent always takes precedence over the model-level default.
+
+For more information, see [Gemini](/docs/kagent/supported-providers/gemini#max-output-tokens) and [Vertex AI](/docs/kagent/supported-providers/google-vertexai).
+
+### AWS Bedrock Guardrails
+
+You can now apply native [AWS Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) directly from `ModelConfig`. The controller passes the guardrail configuration to the Bedrock Converse and ConverseStream APIs, enabling content filtering, topic denial, and PII redaction without an external proxy.
+
+```yaml
+spec:
+  provider: Bedrock
+  model: us.anthropic.claude-sonnet-4-20250514-v1:0
+  bedrock:
+    region: us-east-1
+    guardrail:
+      identifier: "abc123def456"
+      version: "1"
+      trace: "enabled"
+```
+
+| Field | Description |
+|---|---|
+| `identifier` | The guardrail ID or ARN. Required when the `guardrail` block is present. |
+| `version` | The guardrail version to apply. Required when the `guardrail` block is present. |
+| `trace` | Trace mode: `disabled` (default), `enabled`, or `enabled_full`. |
+
+Guardrail interventions apply before content returns to the caller so that blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, allowing the agent loop to continue.
+
+For more information, see [Amazon Bedrock — Bedrock Guardrails](/docs/kagent/supported-providers/amazon-bedrock#bedrock-guardrails).
+
+### envFrom for agent deployments
+
+You can now bulk-inject environment variables from ConfigMaps and Secrets into agent pods using the `envFrom` field on the agent deployment spec. This field complements the existing `env` field, which requires enumerating individual keys.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+spec:
+  declarative:
+    deployment:
+      envFrom:
+        - configMapRef:
+            name: my-agent-config
+        - secretRef:
+            name: my-agent-secrets
+```
+
+For more information, see [Agents — Deployment configuration](/docs/kagent/concepts/agents#deployment-configuration).
+
+### Disable default ModelConfig
+
+To suppress the default `ModelConfig` and its associated `Secret` from being created, set `providers: null` in your Helm values. This setting is useful when you manage `ModelConfig` resources outside of the kagent Helm chart.
+
+```yaml
+providers: null
+```
+
+When `providers` is unset or null, neither the `modelconfig` nor the `modelconfig-secret` templates are rendered. Existing installs that define `providers` are unaffected.
+
+For more information, see [Disable the default ModelConfig](/docs/kagent/introduction/installation#disable-the-default-modelconfig).
+
+### Azure AI Foundry
+
+[Azure AI Foundry](https://ai.azure.com/) is now a supported `ModelConfig` provider. The Foundry provider uses the Azure AI Inference SDK and supports both API key authentication and Azure Workload Identity (`DefaultAzureCredential`) when no key is configured. Only the Go declarative runtime is supported; the controller rejects other runtimes.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: foundry-model-config
+  namespace: kagent
+spec:
+  provider: Foundry
+  model: gpt-5.4-mini
+  foundry:
+    endpoint: https://my-hub.services.ai.azure.com/models
+    deployment: my-deployment
+    apiVersion: "2025-01-01-preview"
+```
+
+To authenticate with an API key, create a Kubernetes Secret with the key stored as `FOUNDRY_API_KEY` and reference it via `spec.apiKeySecret`. To use Azure Workload Identity instead, omit `apiKeySecret` and annotate the agent's ServiceAccount with the appropriate IAM role.
+
+| Field | Description |
+|---|---|
+| `foundry.endpoint` | The Azure AI Foundry endpoint URL. |
+| `foundry.endpointFrom` | Reference to a ConfigMap key containing the endpoint URL. Use with Azure Service Operator to inject the endpoint without hardcoding it. |
+| `foundry.deployment` | The deployment name within the Foundry project. |
+| `foundry.apiVersion` | The Azure AI Inference API version (for example, `2025-01-01-preview`). |
+
+Memory embeddings are supported and use 768-dimensional vectors. Anthropic (Claude) models on Foundry are not yet supported.
+
+For more information, see [Azure AI Foundry](/docs/kagent/supported-providers/azure-ai-foundry).
+
+### OpenAI Responses API
+
+You can now switch the harness to use the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) instead of Chat Completions by setting `openAI.apiFormat: responses` on a `ModelConfig`. This is also compatible with gateways such as AgentGateway that expose the Responses API.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: gpt-5.4-mini
+  openAI:
+    apiFormat: responses
+```
+
+Omit `apiFormat` (or set it to `chatCompletions`) to continue using Chat Completions, which remains the default. Native tool use and stateful Responses API chaining are not yet supported.
+
+For more information, see [OpenAI — Responses API](/docs/kagent/supported-providers/openai#responses-api).
+
+### Per-call session isolation for Agent tools
+
+When a coordinator agent calls the same sub-agent in parallel, all calls previously shared a single session, causing them to interfere with each other. Setting `isolateSessions: true` on an Agent-type tool gives each call its own fresh `context_id`, enabling safe parallel fan-out.
+
+```yaml
+spec:
+  declarative:
+    tools:
+      - type: Agent
+        agent:
+          name: worker-agent
+        isolateSessions: true
+```
+
+The default (`isolateSessions: false`) preserves the existing behavior where calls to the same sub-agent share a session for stateful continuity.
+
+For more information, see [Agents — Per-call session isolation](/docs/kagent/concepts/agents#per-call-session-isolation).
+
+### Affinity and topologySpreadConstraints
+
+New Helm values let you configure pod affinity rules and topology spread constraints for the controller and UI Deployments.
+
+```yaml
+controller:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: controller
+            topologyKey: kubernetes.io/hostname
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: controller
+
+ui:
+  affinity: {}
+  topologySpreadConstraints: []
+```
+
+Both fields accept standard Kubernetes scheduling objects. When unset, no affinity or spread constraints are applied and existing behavior is unchanged.
+
+For more information, see [Installing kagent — Affinity and topology spread constraints](/docs/kagent/introduction/installation#affinity-and-topology-spread-constraints).
+
+### S3 skills
+
+You can now load agent skills directly from S3 — either a folder prefix (containing a `SKILL.md` and siblings) or a single `.zip` archive. Credentials use the AWS SDK default credential chain, supplied via environment variables on the skills init container.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: s3-skills-agent
+  namespace: kagent
+spec:
+  skills:
+    s3Refs:
+      - uri: s3://kagent-skills-bucket/team-a/kebab-maker   # S3 folder prefix
+        name: kebab-maker
+      - uri: s3://kagent-skills-bucket/bundles/ops.zip       # Zipped archive
+        region: us-east-1
+    initContainer:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-creds
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-creds
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_REGION
+          value: us-west-2
+  type: Declarative
+  declarative:
+    systemMessage: You are a helpful assistant with skills.
+    modelConfig: default-model-config
+    tools: []
+```
+
+For the full field reference, see [S3SkillRef](/docs/kagent/resources/api-ref/#s3skillref) in the API reference.
+
+### File upload in agent chat
+
+The kagent UI now supports attaching files and images to chat messages for agents that use the Go declarative runtime. You can attach files using the paperclip button, by dragging and dropping onto the chat window, or by selecting from previously uploaded files.
+
+Files are forwarded to the model using the provider's native document support. The following table summarizes what each provider accepts:
+
+| Provider | Images | Documents |
+|---|---|---|
+| OpenAI (Chat Completions / Azure / Foundry) | `image/*` | PDF only; text extracted from plain text files |
+| OpenAI (Responses) | `image/*` | PDF, text, markdown, CSV, HTML, JSON, Word, PowerPoint, and more |
+| Anthropic | `image/*` | PDF, `text/plain`, `text/markdown` |
+| Bedrock | `image/png`, `image/jpeg`, `image/gif`, `image/webp` | PDF, TXT, MD, CSV, HTML, DOC/DOCX, XLS/XLSX |
+| Ollama | `image/*` | — |
+
+File upload is available only for Go declarative agents. Python ADK agents do not yet support file attachments.
+
+### Database session cleanup
+
+kagent can now automatically delete idle sessions and their cascaded data — including events, tasks, checkpoints, shares, push notifications, memory, and flow states — after a configurable number of days of inactivity. Idle time is measured from the session's last write (`session.updated_at`), so active sessions are not affected.
+
+To enable cleanup, set `database.postgres.sessionRetentionDays` in your Helm values:
+
+```yaml
+database:
+  postgres:
+    sessionRetentionDays: 30
+```
+
+A value of `0` (the default) disables cleanup. Existing installs are unaffected unless you set this value.
+
+### Configurable tool refresh interval
+
+The `RemoteMCPServer`, `MCPServer`, and `Service` controllers periodically re-poll each tool server to discover and record updated tool lists. This interval was previously fixed at 60 seconds. You can now configure it with the `controller.toolRefreshInterval` Helm value:
+
+```yaml
+controller:
+  toolRefreshInterval: "15m"
+```
+
+The value accepts Go duration strings (for example `30s`, `5m`, `1h`). Increasing the interval reduces API server load in large clusters; decreasing it makes newly registered tools available faster.
+
+### PodDisruptionBudget
+
+You can now create a `PodDisruptionBudget` for the kagent controller and UI Deployments. PDBs are disabled by default because both components default to `replicas: 1`, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, which causes node drains and cluster upgrades to hang indefinitely.
+
+To enable a PDB, set `controller.pdb.enabled: true` and `ui.pdb.enabled: true`. The default budget uses `maxUnavailable: 1`, which is safe at any replica count:
+
+```yaml
+controller:
+  pdb:
+    enabled: true
+    maxUnavailable: 1   # default; safe at replicas >= 1
+
+ui:
+  pdb:
+    enabled: true
+    maxUnavailable: 1
+```
+
+To use `minAvailable` instead, set `maxUnavailable: null` and specify `minAvailable`. Note that `minAvailable` and `maxUnavailable` are mutually exclusive — the Helm chart fails at template time if both are set.
+
+For all available fields, see the [Helm reference](/docs/kagent/resources/helm/).
+
+### Additional changes in v0.10
+
+**Security**
+
+* **CVE patches**: Critical and high CVEs patched in the Go ADK and app container images.
+* **Python dependency CVE patches**: `aiohttp` bumped to 3.14.3 (CVE-2026-69244) and `cryptography` bumped to 50.0.0 (CVE-2026-69247) in the Python ADK container images.
+* **sqlparse CVE patches**: `sqlparse` bumped from 0.5.5 to 0.6.0 to address CVE-2026-54284, CVE-2026-59893, and CVE-2026-71491.
+* **A2A task security scoping**: Task `get`, `create`, and `delete` operations are now scoped to the session owner, preventing one user from accessing another user's A2A tasks.
+* **Starlette CVE patches**: Google ADK bumped to address known Starlette CVEs in the Python ADK container images.
+
+**Helm and configuration**
+
+* **Image registry updated to ghcr.io**: The `cr.kagent.dev` registry alias is removed. All default image references now use `ghcr.io/kagent-dev/kagent`. If you pinned images using the `cr.kagent.dev` alias, update your references to `ghcr.io`.
+* **Helm image registry fixes**: Helm charts for the grafana-mcp and querydoc subcharts now correctly handle an empty `image.registry` value, avoiding malformed image paths in air-gapped or registry-less deployments.
+* **Declarative agents referenced by tag**: Regular declarative agent images are now referenced by tag (`registry/repository:tag`) rather than digest, so they respect `IMAGE_TAG` overrides. Digest pinning is kept for sandbox agents where Substrate requires it. New controller flags (`--app-image-digest`, `--golang-adk-image-digest`, and their `-full` variants) let operators override baked-in sandbox digests when using a mirror registry.
+* **Configurable cluster DNS domain**: A `clusterDomain` controller setting (default `cluster.local`) makes the in-cluster service URLs configurable for clusters that use a non-standard DNS domain.
+* **`kgateway.dev/a2a` appProtocol for BYO agents**: The controller now sets `kgateway.dev/a2a` as the `appProtocol` on the Service for BYO agents, which is required for A2A routing to work correctly in kgateway environments.
+* **`nodeSelector` and `tolerations` for `kagent-tools` subchart**: The `kagent-tools` bundled subchart now accepts `nodeSelector` and `tolerations` values, so tools pods can be placed on specific nodes or tolerate taints.
+* **oauth2-proxy subchart updated to ~10.7.0**: The bundled oauth2-proxy dependency is bumped to the 10.7.x chart series.
+* **Custom annotations on the default ModelConfig**: A new per-provider `annotations` map under `providers.<provider>.annotations` is applied to the Helm-generated default ModelConfig. Useful for downstream tooling or UI extensions that key off resource annotations.
+* **`deploymentAnnotations` for agent deployments**: New `deploymentAnnotations` field on the agent deployment spec sets annotations on the Deployment object itself. The existing `annotations` field targets pod template metadata only. Useful for GitOps tooling such as Argo CD sync waves, Flux, and Kyverno policies that key off Deployment-level annotations.
+* **pgx connection pool tuning**: New Helm values configure the idle connection timeout and check period for the PostgreSQL pgx driver, so that idle database connections are closed after a configurable period rather than held indefinitely.
+* **`env` in bundled agent Helm charts**: All bundled agent Helm charts now accept an `env` list for injecting arbitrary environment variables into agent pods, including entries using `valueFrom` to reference ConfigMaps and Secrets.
+* **`LOG_LEVEL` in Go ADK bundled agents**: The Go ADK runtime now respects the `LOG_LEVEL` environment variable. The `--log-level` CLI flag takes precedence if both are set.
+
+**Agent runtimes and providers**
+
+* **Go ADK v2.0.0**: The Go Agent Development Kit is upgraded to v2.0.0.
+* **Anthropic thinking blocks in Python ADK**: Google ADK bumped to 1.32.0, enabling Anthropic thinking block support for agents using the Python runtime.
+* **Go ADK OpenAI embeddings**: Fixed embeddings generation when using the OpenAI provider with the Go ADK runtime.
+* **Python ADK minimum version is now 3.11**: The Python Agent Development Kit now requires Python 3.11 or later.
+* **Claude ACP sandbox image**: A new `acp-sandbox-claude` image wraps the Claude Agent SDK behind the ACP protocol, enabling Claude-based agents to run in the ACP sandbox alongside the existing openclaw and hermes targets. Authenticate via `ANTHROPIC_API_KEY` at runtime.
+* **`none` reasoning effort**: `none` is now a valid option for reasoning effort on `ModelConfig`, in addition to the existing `low`, `medium`, and `high` values.
+* **`xhigh` reasoning effort**: `xhigh` is now a valid value for `openAI.reasoningEffort`, in addition to `none`, `minimal`, `low`, `medium`, and `high`.
+* **Bedrock nil tool-call args fix**: Nil tool-call arguments from the Bedrock API are now coerced to an empty JSON object before processing, preventing a nil-pointer panic in the Go ADK runtime.
+* **Azure OpenAI secretKeyRef fix**: Fixed an issue where an empty `secretKeyRef` was generated for Azure OpenAI model configurations that do not use a Kubernetes secret for credentials.
+* **Azure OpenAI API key env var name**: The `AZURE_OPENAI_API_KEY` environment variable name is now used consistently throughout the codebase, fixing providers that were reading a mismatched key name.
+* **OpenTelemetry double-instrumentation fix**: The OpenAI client is no longer double-instrumented on the Go ADK runtime, preventing duplicate spans in OTel traces when using OpenAI with the Go runtime.
+* **Configurable Bedrock read/connect timeout**: New `bedrock.readTimeout` and `bedrock.connectTimeout` fields on `ModelConfig` replace the ~60s botocore default that caused `ReadTimeoutError` on long completions. Both values are in seconds and are optional.
+* **RFC 8707 resource and audience for STS token exchange**: The Go and Python ADK token-propagation plugins now read `KAGENT_STS_RESOURCE` and `KAGENT_STS_AUDIENCE` environment variables to scope issued STS tokens to a specific backend. Backwards compatible so that existing deployments are unaffected when neither variable is set.
+* **Go ADK user identity from A2A context**: Fixed an issue where the Go ADK did not resolve the caller's user identity from the A2A call context, causing identity-aware operations to fall back to an unauthenticated default.
+* **ADK `ask_user` question validation**: The `ask_user` tool now validates that each question is a non-empty string before sending it to the user, preventing malformed prompts from reaching the chat interface.
+* **OpenAI embedding API key passthrough**: Fixed an issue where the API key was not passed through correctly when generating embeddings with OpenAI embedding models via the Go ADK.
+
+**Agent Substrate**
+
+* **Substrate actor namespace scoping**: Actors created by `SandboxAgent` and `AgentHarness` are now isolated per Kubernetes namespace, so that actors in different namespaces cannot see or conflict with each other. Also fixes an infinite `ActorTemplate` delete/recreate loop caused by `SnapshotsConfig` defaults drift.
+* **SandboxAgent readiness gating**: `SandboxAgent` actors are now only marked ready once the agent application is confirmed to be serving traffic, preventing requests from reaching actors that have started but are not yet initialized.
+* **Agent Substrate bumped to v0.0.9**: The bundled Agent Substrate runtime is updated to v0.0.9.
+* **Substrate badge on agent cards**: Sandbox agents running on Agent Substrate are now visually marked in the UI agent card list.
+* **OTel trace flush for substrate agents**: Trace spans are now force-flushed before the A2A response completes for substrate agents, ensuring spans are not lost at the end of a session.
+
+**Database**
+
+* **Migration orchestrator**: The internal database migration runner is refactored from two hardcoded tracks to an extensible orchestrator with ordered source registration and coordinated rollback. No change to the `kagent db migrate` CLI.
+* **Concurrent memory search deadlock fix**: Fixed intermittent PostgreSQL deadlocks when concurrent memory searches (such as `PrefetchMemoryTool` fan-out) updated overlapping rows. Row locks are now acquired in ID order and access-count updates are best-effort.
+* **Memory vector search normalization**: Agent names are now normalized before querying the memory vector index, fixing cases where a name stored in mixed case would miss records indexed under a different casing.
+* **Database checkpoint write performance**: Session checkpoint writes are now batched, removing an N+1 query pattern that caused performance degradation for long conversations.
+
+**Reliability and UI**
+
+* **MCP server startup resilience**: An MCP toolset is no longer silently dropped when an MCP server is unreachable at agent startup. The error is surfaced rather than causing tools to disappear.
+* **Agent ready on first available replica**: An agent is now marked ready as soon as at least one replica is available, rather than waiting for all replicas.
+* **A2A `ListTasks` served from the task store**: `ListTasks` calls over A2A now return results from a persistent task store rather than being rebuilt from event history, improving reliability and performance for long sessions.
+* **UI tool call grouping**: Tool calls in the chat interface are now visually grouped, making it easier to follow multi-step agent reasoning.
+* **Model config name editing fix**: Fixed an issue where the model name field could not be edited on the model configuration form in the UI.
+* **UI rendering optimization**: Redundant background fetches in the chat interface are reduced, improving rendering performance for long sessions.
+* **ADK token refresh loop resilience**: Exceptions during token reads in the Python ADK no longer kill the background refresh goroutine. Failed reads are logged and the loop continues on the next cycle instead of silently stopping.
+* **ACP shim teardown deadlock fix**: Fixed a deadlock where `terminate()` could hang indefinitely when a WebSocket client stalled, blocking the stdout reader goroutine on a full channel and preventing the shim from shutting down.
+* **ADK session state with `num_recent_events`**: Fixed a bug where `session.state` was built from only the last `n` events when `num_recent_events` was set, silently dropping state deltas from older events. Full event history is now always used to compute state; `num_recent_events` only trims the returned events list.
+* **Session sharing nil pointer fix**: Fixed a nil pointer panic on session sharing endpoints caused by `SessionSharesHandler` not being initialized at startup.
+* **OTel traces no longer sent to api.openai.com**: The Python ADK no longer forwards traces to OpenAI's hardcoded endpoint by default, preventing key leakage for proxy or gateway deployments. Set `KAGENT_OPENAI_AGENTS_NATIVE_TRACING=true` to restore the original behavior.
+* **A2A exact task reads from the persistent store**: Single-task `get` calls over A2A now read directly from the persistent task store rather than reconstructing state from event history, improving consistency and performance for long-running sessions.
+* **oauth2-proxy post-login redirect preserved**: After signing in through oauth2-proxy, users are now redirected back to the page they originally requested instead of always landing on the home page.
+
 ## v0.9
 
 Review this summary of significant changes from kagent version 0.8 to v0.9.

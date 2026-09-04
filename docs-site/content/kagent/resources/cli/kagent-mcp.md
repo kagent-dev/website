@@ -1,42 +1,35 @@
 ---
 title: kagent mcp
-description: kagent mcp command
-weight: 10
+description: MCP (Model Context Protocol) server management
+weight: 260
 ---
 
-Model Context Protocol (MCP) server management commands for creating and managing MCP servers with dynamic tool loading.
+MCP server management commands for creating and managing
+Model Context Protocol servers with dynamic tool loading.
 
 ```bash
-kagent mcp [subcommand] [flags]
+kagent mcp [command]
 ```
 
 **Subcommands:**
-- `init` - Initialize a new MCP server project
-- `build` - Build a Docker image for your MCP server
-- `deploy` - Deploy your MCP server to a Kubernetes cluster
-- `add-tool` - Generate an MCP tool boilerplate
-- `run` - Run an MCP server locally
-- `secrets` - Manage secrets for MCP server projects
+- [`kagent mcp add-tool`](/docs/kagent/resources/cli/kagent-mcp-add-tool/) - Add a new MCP tool to your project
+- [`kagent mcp build`](/docs/kagent/resources/cli/kagent-mcp-build/) - Build MCP server as a Docker image
+- [`kagent mcp deploy`](/docs/kagent/resources/cli/kagent-mcp-deploy/) - Deploy MCP server to Kubernetes
+- [`kagent mcp init`](/docs/kagent/resources/cli/kagent-mcp-init/) - Initialize a new MCP server project
+- [`kagent mcp run`](/docs/kagent/resources/cli/kagent-mcp-run/) - Run MCP server locally
+- [`kagent mcp secrets`](/docs/kagent/resources/cli/kagent-mcp-secrets/) - Manage project secrets
+
+**Flags:**
+- `-h, --help` - help for mcp
 
 **Global Flags:**
-- `--kagent-url` - kagent URL (default: "http://localhost:8083")
-- `--namespace, -n` - Namespace (default: "kagent")
-- `--output-format, -o` - Output format (default: "table")
-- `--timeout` - Timeout duration (default: 300s)
-- `--verbose, -v` - Verbose output
-
-## About `kagent mcp`
-
-The `kagent mcp` command provides a set of subcommands for managing MCP servers. This is useful for creating and managing tools that can be used by kagent agents.
-
-## Example
-
-See the kagent mcp documentation for detailed examples of each subcommand:
-
-- [kagent mcp init](/docs/kmcp/reference/kmcp-init) - Create a scaffold for your MCP server
-- [kagent mcp build](/docs/kmcp/reference/kmcp-build) - Build a Docker image
-- [kagent mcp deploy](/docs/kmcp/reference/kmcp-deploy) - Deploy to Kubernetes
-- [kagent mcp add-tool](/docs/kmcp/reference/kmcp-add-tool) - Generate tool boilerplate
-- [kagent mcp run](/docs/kmcp/reference/kmcp-run) - Run locally
-- [kagent mcp secrets](/docs/kmcp/reference/kmcp-secrets) - Manage secrets
-
+- `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
+- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
+- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
+- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
+- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
+- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `-n, --namespace string` - Namespace (default "kagent")
+- `-o, --output-format string` - Output format (default "table")
+- `--timeout duration` - Timeout (default 5m0s)
+- `-v, --verbose` - Verbose output

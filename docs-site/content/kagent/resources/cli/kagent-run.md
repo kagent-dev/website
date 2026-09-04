@@ -1,62 +1,35 @@
 ---
 title: kagent run
-description: kagent run command
-weight: 10
+description: Run agent project locally with docker-compose and launch chat interface
+weight: 390
 ---
 
-Run an agent project locally with docker-compose and launch an interactive chat interface.
+Run an agent project locally using docker-compose and launch an interactive chat session.
 
 ```bash
 kagent run [project-directory] [flags]
 ```
 
-**Arguments:**
-- `project-directory` - The directory containing the agent project (default: current directory)
-
 **Flags:**
 - `--build` - Rebuild the Docker image before running
-- `--project-dir` - Project directory (default: current directory)
+- `-h, --help` - help for run
+- `--project-dir string` - Project directory (default: current directory)
 
 **Global Flags:**
-- `--kagent-url` - kagent URL (default: "http://localhost:8083")
-- `--namespace, -n` - Namespace (default: "kagent")
-- `--output-format, -o` - Output format (default: "table")
-- `--timeout` - Timeout duration (default: 300s)
-- `--verbose, -v` - Verbose output
-
-## About `kagent run`
-
-The `kagent run` command runs an agent project locally using `docker-compose` and launches an interactive chat session. This way, you can test and interact with your agent before deploying it to a Kubernetes cluster.
-
-### Rebuilding before running
-
-Use the `--build` flag to rebuild the Docker image before running the agent. This is useful when you've made changes to your agent code and want to test the updated version without manually running `kagent build` first.
-
-```bash
-kagent run --build
-```
-
-This command rebuilds the agent image and then starts the interactive chat interface. It's equivalent to running `kagent build` followed by `kagent run`.
+- `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
+- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
+- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
+- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
+- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
+- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `-n, --namespace string` - Namespace (default "kagent")
+- `-o, --output-format string` - Output format (default "table")
+- `--timeout duration` - Timeout (default 5m0s)
+- `-v, --verbose` - Verbose output
 
 ## Example
 
-Run an agent project from the current directory:
-
-```bash
-kagent run
-```
-
-Run an agent project from a specific directory:
-
 ```bash
 kagent run ./my-agent
+kagent run .
 ```
-
-Rebuild the image and run the agent:
-
-```bash
-kagent run --build
-```
-
-This is useful after making code changes to ensure you're testing the latest version of your agent.
-

@@ -30,6 +30,10 @@ jobs:
       KAGENT_API_PAGE: docs-site/content/kagent/resources/api-ref.md
       KMCP_API_PAGE: docs-site/content/kmcp/reference/api-ref.md
       HELM_PAGE: docs-site/content/kagent/resources/helm.md
+      KAGENT_CLI_DIR: docs-site/content/kagent/resources/cli
+      KMCP_CLI_DIR: docs-site/content/kmcp/reference/cli
+      KAGENT_CLI_URL_PREFIX: /docs/kagent/resources/cli
+      KMCP_CLI_URL_PREFIX: /docs/kmcp/reference/cli
 
     steps:
       - name: Checkout kagent repository
@@ -53,7 +57,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: 'stable'
           cache: false
 
       - name: Set kagent commit SHA
@@ -374,16 +378,59 @@ jobs:
             echo "Final generated file contents (first 50 lines):"
             head -50 "$HELM_PAGE"
 
+      - name: Install Python deps for CLI doc generation
+        run: pip3 install --user pyyaml
+
+      - name: Build kagent CLI binary
+        run: |
+          # kagent is a single-module monorepo rooted at go/, not the repo root.
+          cd "$GITHUB_WORKSPACE/kagent/go"
+          go build -o /tmp/kagent-cli ./core/cli/cmd/kagent
+          /tmp/kagent-cli --help > /dev/null
+          echo "kagent CLI binary built and smoke-tested successfully"
+
+      - name: Build kmcp CLI binary
+        run: |
+          cd "$GITHUB_WORKSPACE/kmcp"
+          go build -o /tmp/kmcp-cli ./cmd/kmcp
+          /tmp/kmcp-cli --help > /dev/null
+          echo "kmcp CLI binary built and smoke-tested successfully"
+
+      - name: Generate kagent CLI reference docs
+        run: |
+          cd "$GITHUB_WORKSPACE/website"
+          mkdir -p "$KAGENT_CLI_DIR"
+          python3 scripts/generate-cli-docs.py \
+            --binary /tmp/kagent-cli \
+            --display-name kagent \
+            --out-dir "$KAGENT_CLI_DIR" \
+            --url-prefix "$KAGENT_CLI_URL_PREFIX"
+
+      - name: Generate kmcp CLI reference docs
+        run: |
+          cd "$GITHUB_WORKSPACE/website"
+          mkdir -p "$KMCP_CLI_DIR"
+          python3 scripts/generate-cli-docs.py \
+            --binary /tmp/kmcp-cli \
+            --display-name kmcp \
+            --out-dir "$KMCP_CLI_DIR" \
+            --url-prefix "$KMCP_CLI_URL_PREFIX"
+
+      - name: Audit generated CLI docs
+        run: |
+          cd "$GITHUB_WORKSPACE/website"
+          python3 scripts/audit-cli-docs.py "$KAGENT_CLI_DIR" "$KMCP_CLI_DIR"
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website
-          commit-message: "docs: Update kagent and kmcp API reference docs"
+          commit-message: "docs: Update kagent and kmcp API, Helm, and CLI reference docs"
           signoff: true
-          title: "Update kagent and kmcp API reference docs"
+          title: "Update kagent and kmcp API, Helm, and CLI reference docs"
           body: |
-            Automated API and kagent Helm chart documentation update based on the latest commits:
+            Automated API, kagent Helm chart, and CLI reference documentation update based on the latest commits:
             - **kagent**: [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }})
             - **kmcp**: [`${{ env.KMCP_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kmcp/commit/${{ env.KMCP_COMMIT }})
 

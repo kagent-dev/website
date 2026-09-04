@@ -99,6 +99,51 @@ spec:
 
 If you want to use one shared ServiceAccount for multiple agents, you can also set `controller.agentDeployment.serviceAccountName` in the [Helm chart configuration](/docs/kagent/resources/helm).
 
+## Bedrock Guardrails
+
+You can apply [AWS Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) directly from the native Bedrock `ModelConfig` to enable content filtering, topic denial, and PII redaction. The guardrail applies on every request to the Converse and ConverseStream APIs.
+
+```yaml
+spec:
+  provider: Bedrock
+  model: us.anthropic.claude-sonnet-4-20250514-v1:0
+  bedrock:
+    region: us-east-1
+    guardrail:
+      identifier: "abc123def456"
+      version: "1"
+      trace: "enabled"
+```
+
+| Field | Description |
+|---|---|
+| `bedrock.guardrail.identifier` | The guardrail ID or ARN. Required when the `guardrail` block is present. |
+| `bedrock.guardrail.version` | The guardrail version to apply. Required when the `guardrail` block is present. |
+| `bedrock.guardrail.trace` | Trace mode: `disabled` (default), `enabled`, or `enabled_full`. |
+
+Guardrail interventions apply before content returns to the caller so that blocked content does not leak to the stream. Interventions surface in the response content rather than as hard errors, allowing the agent loop to continue.
+
+## Request timeouts
+
+By default, the Bedrock client uses botocore's ~60 second read timeout, which can cause `ReadTimeoutError` on long completions. To override these values, use `bedrock.readTimeout` and `bedrock.connectTimeout`.
+
+```yaml
+spec:
+  provider: Bedrock
+  model: us.anthropic.claude-sonnet-4-20250514-v1:0
+  bedrock:
+    region: us-east-1
+    readTimeout: 1800
+    connectTimeout: 30
+```
+
+| Field | Description |
+|---|---|
+| `bedrock.readTimeout` | Maximum seconds to wait for a response chunk. Minimum: 1. |
+| `bedrock.connectTimeout` | Maximum seconds to wait for the initial connection. Minimum: 1. Optional. |
+
+Both fields are optional. When neither is set, botocore defaults apply and existing behavior is unchanged.
+
 ## Option 2: OpenAI-compatible API
 
 You can also use Bedrock models via the [OpenAI Chat Completions API](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html). This option is useful when you need compatibility with the OpenAI API format or when using Bedrock's inference profiles.
