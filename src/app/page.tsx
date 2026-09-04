@@ -5,6 +5,9 @@ import Discord from "@/components/icons/discord";
 import { ArrowLink, ArrowList, Eyebrow, ghostBtn, primaryBtn, Section } from "@/components/home/primitives";
 import { DensityPanel, EgressPanel, ResumePanel } from "@/components/home/substrate-panels";
 import { BuildFlow } from "@/components/home/build-flow";
+import { HeroSchematic } from "@/components/home/hero-schematic";
+import { ArchitecturePanel } from "@/components/home/architecture-panel";
+import { dotGrid } from "@/components/home/blueprint";
 import { AdoptersSection, CommunityBand, FeaturesSection, PipelineGrid } from "@/components/home/sections";
 
 const h3Cls = "mt-4 font-display text-[clamp(28px,3vw,42px)] font-medium leading-[1.1] tracking-[-0.025em] text-kg-tx1";
@@ -17,8 +20,9 @@ export default function HomePage() {
       {/* Hero */}
       <section id="top" className="relative flex justify-center overflow-hidden px-8 pb-6 pt-16">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_80%_at_50%_-20%,rgba(139,47,232,0.22),rgba(0,0,0,0)_65%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/images/brand/binary-purple.svg')] bg-[length:340px_auto] bg-repeat opacity-[var(--kg-pat)]" />
+        <div className={`pointer-events-none absolute inset-0 ${dotGrid} [mask-image:linear-gradient(to_bottom,black_40%,transparent)]`} />
         <div className="relative w-full max-w-[1160px]">
+          <HeroSchematic />
           <h1 className="mx-auto mt-[26px] max-w-[17ch] text-balance text-center font-display text-[clamp(46px,6.6vw,104px)] font-medium leading-[0.96] tracking-[-0.035em] text-kg-tx1">
             Agents on Kubernetes
           </h1>
@@ -51,6 +55,7 @@ export default function HomePage() {
           Agents resume in milliseconds, hold nothing while idle, and run sandboxed from the first instruction. Substrate&apos;s core is
           built on Kubernetes, so this is the platform you already operate.
         </p>
+        <ArchitecturePanel className="mt-14" />
       </Section>
 
       {/* Suspend & resume */}

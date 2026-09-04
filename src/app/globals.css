@@ -175,6 +175,7 @@
   --kg-term-bd: rgba(15,19,35,0.12);
   --kg-term-bar: rgba(15,19,35,0.04);
   --kg-term-shadow: 0 24px 60px rgba(15,19,35,0.12);
+  --kg-dot: rgba(15, 19, 35, 0.14);
 }
 .dark {
   --kg-pg: #0B0E18;
@@ -199,6 +200,7 @@
   --kg-term-bd: rgba(255,255,255,0.1);
   --kg-term-bar: rgba(0,0,0,0.3);
   --kg-term-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  --kg-dot: rgba(255, 255, 255, 0.13);
 }
 
 

@@ -55,6 +55,7 @@ export default {
   				'term-dim': 'var(--kg-term-dim)',
   				'term-bd': 'var(--kg-term-bd)',
   				'term-bar': 'var(--kg-term-bar)',
+  				dot: 'var(--kg-dot)',
   				ykey: 'var(--kg-ykey)',
   				yval: 'var(--kg-yval)',
   				ystr: 'var(--kg-ystr)',

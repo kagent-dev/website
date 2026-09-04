@@ -1,10 +1,49 @@
 import Image from "next/image";
+import {
+  Activity,
+  Boxes,
+  Braces,
+  Cpu,
+  Database,
+  FileText,
+  GitBranch,
+  HardDrive,
+  Layers,
+  Lock,
+  Minimize2,
+  Network,
+  Shield,
+  ShieldCheck,
+  UserCheck,
+  Workflow,
+} from "lucide-react";
 import { FEATURES, PIPELINE } from "@/data/home-content";
 import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
 import adoptersYaml from "@/data/adopters.yaml";
 import Github from "@/components/icons/github";
 import Discord from "@/components/icons/discord";
 import { ArrowLink, ghostBtn, primaryBtn, Section } from "./primitives";
+import { HairlineCell, HairlineGrid, dotGrid } from "./blueprint";
+
+/** One icon per FEATURES entry, in order. */
+const FEATURE_ICONS = [
+  Workflow,
+  Cpu,
+  Layers,
+  Boxes,
+  Database,
+  UserCheck,
+  Network,
+  GitBranch,
+  FileText,
+  Minimize2,
+  Shield,
+  Activity,
+  HardDrive,
+  ShieldCheck,
+  Lock,
+  Braces,
+];
 
 type Adopter = { name: string; website: string; logo?: string; logo_light?: string; logo_dark?: string };
 const ADOPTERS: Adopter[] = (adoptersYaml as { adopters: Adopter[] }).adopters;
@@ -12,22 +51,22 @@ const ADOPTERS: Adopter[] = (adoptersYaml as { adopters: Adopter[] }).adopters;
 /** The four "what happens after you apply" cards. */
 export function PipelineGrid({ numbered = false }: { numbered?: boolean }) {
   return (
-    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <HairlineGrid cols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" className="mt-10">
       {PIPELINE.map((p) => (
-        <div key={p.num} className="min-h-[148px] rounded-lg border border-kg-bd-soft bg-kg-pg px-6 py-[26px]">
+        <HairlineCell key={p.num} className="min-h-[148px] px-6 py-[26px]">
           {numbered && <div className="mb-3.5 font-mono text-[11px] tracking-[0.06em] text-kg-acc">{p.num}</div>}
           <div className="font-display text-[19px] font-medium tracking-[-0.02em] text-kg-tx1">{p.title}</div>
           <div className="mt-2.5 text-[14.5px] leading-[1.55] text-kg-tx3">{p.body}</div>
-        </div>
+        </HairlineCell>
       ))}
-    </div>
+    </HairlineGrid>
   );
 }
 
 /** "And much more" — the capability grid. */
 export function FeaturesSection() {
   return (
-    <Section id="features" className="pb-24">
+    <Section id="features" className={`${dotGrid} pb-24 pt-20`}>
       <h2 className="font-display text-[clamp(30px,3.6vw,48px)] font-medium leading-[1.08] tracking-[-0.03em] text-kg-tx1">
         And much more
       </h2>
@@ -35,14 +74,18 @@ export function FeaturesSection() {
         Every capability works with a single <span className="font-mono text-[15px] text-kg-tx1">helm install</span>. No add-ons, no
         extra databases, no waiting for enterprise.
       </p>
-      <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-[30px] sm:grid-cols-2 lg:grid-cols-4">
-        {FEATURES.map((f) => (
-          <div key={f.title}>
-            <div className="font-display text-base font-medium tracking-[-0.02em] text-kg-tx1">{f.title}</div>
-            <div className="mt-[7px] text-[13.5px] leading-[1.55] text-kg-tx3">{f.body}</div>
-          </div>
-        ))}
-      </div>
+      <HairlineGrid cols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" className="mt-12">
+        {FEATURES.map((f, i) => {
+          const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length];
+          return (
+            <HairlineCell key={f.title} className="min-h-[176px] px-7 py-7">
+              <Icon className="h-5 w-5 text-kg-tx1" strokeWidth={1.6} />
+              <div className="mt-4 font-display text-base font-medium tracking-[-0.02em] text-kg-tx1">{f.title}</div>
+              <div className="mt-[7px] text-[13.5px] leading-[1.55] text-kg-tx3">{f.body}</div>
+            </HairlineCell>
+          );
+        })}
+      </HairlineGrid>
     </Section>
   );
 }
