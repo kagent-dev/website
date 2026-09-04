@@ -6,7 +6,6 @@ import { ArrowLink, ArrowList, Eyebrow, ghostBtn, primaryBtn, Section } from "@/
 import { DensityPanel, EgressPanel, ResumePanel } from "@/components/home/substrate-panels";
 import { BuildFlow } from "@/components/home/build-flow";
 import { HeroSchematic } from "@/components/home/hero-schematic";
-import { ArchitecturePanel } from "@/components/home/architecture-panel";
 import { dotGrid } from "@/components/home/blueprint";
 import { AdoptersSection, CommunityBand, FeaturesSection } from "@/components/home/sections";
 
@@ -55,7 +54,6 @@ export default function HomePage() {
           Agents resume in milliseconds, hold nothing while idle, and run sandboxed from the first instruction. Substrate&apos;s core is
           built on Kubernetes, so this is the platform you already operate.
         </p>
-        <ArchitecturePanel className="mt-14" />
       </Section>
 
       {/* Suspend & resume */}
@@ -79,7 +77,7 @@ export default function HomePage() {
       <Section className="py-[60px]" innerClassName={rowCls}>
         <div>
           <Eyebrow>density</Eyebrow>
-          <h3 className={h3Cls}>250 agents on 8 pods</h3>
+          <h3 className={h3Cls}>30× with Agent Substrate</h3>
           <p className={bodyCls}>
             Agents share pools of workers instead of getting their own dedicated compute. Substrate packs more agents onto the system
             than it has compute for, because agents that aren&apos;t running don&apos;t hold any.

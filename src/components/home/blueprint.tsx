@@ -43,11 +43,20 @@ export function Frame({ label, className = "", children }: { label?: string; cla
   );
 }
 
-/** Dashed accent tile with an icon: "a unit of user code". */
-export function Chip({ icon: Icon, className = "" }: { icon: ComponentType<{ className?: string }>; className?: string }) {
+/** Dashed accent tile with an icon: "a unit of user code". `muted` draws it as an outline, for a unit that is idle. */
+export function Chip({
+  icon: Icon,
+  muted = false,
+  className = "",
+}: {
+  icon: ComponentType<{ className?: string }>;
+  muted?: boolean;
+  className?: string;
+}) {
+  const tone = muted ? "border-kg-bd text-kg-tx4" : "border-kg-acc bg-[rgba(139,47,232,0.12)] text-kg-acc";
   return (
     <span
-      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] border border-dashed border-kg-acc bg-[rgba(139,47,232,0.12)] text-kg-acc ${className}`}
+      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] border border-dashed transition-colors duration-500 ${tone} ${className}`}
     >
       <Icon className="h-[18px] w-[18px]" />
     </span>
