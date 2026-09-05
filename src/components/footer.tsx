@@ -1,187 +1,47 @@
 import Link from "next/link";
-import KagentLogo from "./icons/kagent-logo";
-import { GITHUB_LINK, DISCORD_LINK, X_LINK, LINKEDIN_LINK, YOUTUBE_LINK } from "@/data/links";
-import { Separator } from "./ui/separator";
-import Github from "./icons/github";
-import DiscordIcon from "./icons/discord";
-import Twitter from "./icons/twitter";
-import LinkedIn from "./icons/linkedin";
-import Youtube from "./icons/youtube";
+import Image from "next/image";
+
+const footerLinks = [
+  { href: "/docs/kagent", label: "Docs" },
+  { href: "/blog", label: "Blog" },
+  { href: "/agents", label: "Agents" },
+  { href: "/tools", label: "Tools" },
+  { href: "/enterprise", label: "Enterprise" },
+];
+
+const extLink = "underline-offset-2 transition-colors hover:text-kg-tx2 hover:underline";
 
 export default function Footer() {
   return (
-    <footer className="mt-auto py-16 border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Getting Started Section */}
-          <div>
-            <h3 className="text-sm font-semibold mb-4">Getting Started</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/docs/kagent/introduction/installation" className="text-sm text-muted-foreground hover:text-primary">
-                  Installing kagent
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/getting-started/quickstart" className="text-sm text-muted-foreground hover:text-primary">
-                  Quick Start
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/getting-started/first-agent" className="text-sm text-muted-foreground hover:text-primary">
-                  First Agent Guide
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/getting-started/first-mcp-tool" className="text-sm text-muted-foreground hover:text-primary">
-                  First MCP Tool
-                </Link>
-              </li>
-            </ul>
-          </div>
+    <footer className="mt-auto flex justify-center border-t border-kg-bd-soft px-8 py-11">
+      <div className="flex w-full max-w-[1160px] flex-wrap items-center gap-6">
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/images/brand/kagent-mark-purple.svg" alt="" width={24} height={24} />
+          <span className="font-display text-lg font-medium tracking-[-0.02em] text-kg-tx1">kagent</span>
+        </Link>
 
-          {/* Documentation Section */}
-          <div>
-            <h3 className="text-sm font-semibold mb-4">Documentation</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/docs/kagent/introduction/what-is-kagent" className="text-sm text-muted-foreground hover:text-primary">
-                  What is kagent
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/concepts/architecture" className="text-sm text-muted-foreground hover:text-primary">
-                  Architecture
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/concepts" className="text-sm text-muted-foreground hover:text-primary">
-                  Core Concepts
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/supported-providers" className="text-sm text-muted-foreground hover:text-primary">
-                  Configuring LLM Providers
-                </Link>
-              </li>
-            </ul>
-          </div>
+        <nav className="flex flex-wrap gap-[22px] text-sm">
+          {footerLinks.map((l) => (
+            <Link key={l.href} href={l.href} className="text-kg-tx3 transition-colors hover:text-kg-tx1">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
 
-          {/* Examples Section */}
-          <div>
-            <h3 className="text-sm font-semibold mb-4">Examples</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/tools" className="text-sm text-muted-foreground hover:text-primary">
-                  Tools
-                </Link>
-              </li>
-              <li>
-                <Link href="/agents" className="text-sm text-muted-foreground hover:text-primary">
-                  Agents
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/examples/a2a-agents" className="text-sm text-muted-foreground hover:text-primary">
-                  A2A Agents
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/examples/documentation" className="text-sm text-muted-foreground hover:text-primary">
-                  Documentation Agent
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/examples/slack-a2a" className="text-sm text-muted-foreground hover:text-primary">
-                  Slack and A2A
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/examples/discord-a2a" className="text-sm text-muted-foreground hover:text-primary">
-                  Discord and A2A
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Community Section */}
-          <div>
-            <h3 className="text-sm font-semibold mb-4">Community</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/blog" className="text-sm text-muted-foreground hover:text-primary">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
-                  Discord
-                </Link>
-              </li>
-              <li>
-                <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
-                  GitHub
-                </Link>
-              </li>
-              <li>
-                <Link href="https://github.com/kagent-dev/kagent/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
-                  Contributing
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/resources/faq" className="text-sm text-muted-foreground hover:text-primary">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="https://github.com/orgs/kagent-dev/projects/3" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary">
-                  Roadmap
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <Separator className="mb-8" />
-
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
-            <KagentLogo animate={true} className="h-6 w-6 text-[#942DE7]" />
-            <p>was created at
-              <Link href="https://solo.io/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
-                Solo.io 
-              </Link>{' '}
-            and is a
-            <Link href="https://cncf.io/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
-                Cloud Native Computing Foundation
-              </Link>{' '}
-            sandbox project</p>
-          </div>
-          <div className="flex flex-col items-center md:items-end gap-4">
-            <div className="flex items-center gap-4">
-              <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                <Github className="h-5 w-5" />
-              </Link>
-              <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                <DiscordIcon className="h-5 w-5" />
-              </Link>
-              <Link href={X_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link href={LINKEDIN_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                <LinkedIn className="h-5 w-5" />
-              </Link>
-              <Link href={YOUTUBE_LINK} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                <Youtube className="h-5 w-5" />
-              </Link>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} kagent, a Series of LF Projects, LLC.
-              <Link href="https://lfprojects.org/policies/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary ml-1">
-                Trademark Usage
-              </Link>
-            </div>
-          </div>
+        <div className="flex w-full flex-wrap items-center gap-3.5 font-mono text-[11.5px] tracking-[0.05em] text-kg-tx4 xl:ml-auto xl:w-auto">
+          <a href="https://cncf.io/" target="_blank" rel="noopener noreferrer" className="opacity-50 transition-opacity hover:opacity-80">
+            <Image src="/images/brand/cncf.svg" alt="CNCF" width={106} height={20} className="h-5 w-auto" />
+          </a>
+          <span>
+            created at{" "}
+            <a href="https://solo.io/" target="_blank" rel="noopener noreferrer" className={extLink}>
+              Solo.io
+            </a>{" "}
+            · CNCF sandbox project · © {new Date().getFullYear()} kagent, a Series of LF Projects, LLC. ·{" "}
+            <a href="https://lfprojects.org/policies/" target="_blank" rel="noopener noreferrer" className={extLink}>
+              Trademark usage
+            </a>
+          </span>
         </div>
       </div>
     </footer>
