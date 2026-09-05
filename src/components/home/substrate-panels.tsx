@@ -27,7 +27,7 @@ export function ResumePanel() {
   const last = agents.find((a) => a.justResumed) ?? agents.find((a) => a.running);
 
   return (
-    <Frame label="worker pool · suspend & resume" className={`${dotGrid} px-5 py-10 sm:px-7`}>
+    <Frame label="agentinstances · suspend & resume" className={`${dotGrid} px-5 py-10 sm:px-7`}>
       <div className="flex flex-wrap items-start justify-center gap-x-10 gap-y-8">
         <figure className="m-0 flex flex-col items-center gap-5">
           <div className="border border-kg-bd bg-kg-panel p-3.5">
@@ -48,7 +48,7 @@ export function ResumePanel() {
             </div>
           </div>
           <figcaption className="text-center font-mono text-[11.5px] leading-[1.5] tracking-[0.06em] text-kg-tx3">
-            agent substrate worker pool
+            one worker pool · {AGENTS} instances
             <br />
             <span className="tabular-nums">
               {runningCount} running · {AGENTS - runningCount} suspended
@@ -129,7 +129,7 @@ export function DensityPanel() {
           </div>
           <figcaption className="text-center font-mono text-[11.5px] leading-[1.5] tracking-[0.06em] text-kg-acc">
             agent substrate worker pool
-            <br />9 agents · 1× overhead
+            <br />9 instances · 1× overhead
           </figcaption>
         </figure>
       </div>
@@ -141,7 +141,7 @@ export function DensityPanel() {
         </div>
         <ul className="m-0 flex list-none flex-wrap items-center gap-x-6 gap-y-3 p-0 font-mono text-[12px] tracking-[0.05em] text-kg-tx2">
           <li className="flex items-center gap-3">
-            <Chip icon={Bot} /> agent
+            <Chip icon={Bot} /> instance
           </li>
           <li className="flex items-center gap-3">
             <Overhead /> pod overhead
@@ -158,7 +158,7 @@ const HOSTS = ["api.github.com", "registry.k8s.io", "10.0.0.0/8", "pypi.org", "1
 export function EgressPanel() {
   const t = useTick();
   return (
-    <Frame label="sandbox · egress policy" className={`${dotGrid} px-5 py-10 sm:px-7`}>
+    <Frame label="agentinstance · sandbox · egress" className={`${dotGrid} px-5 py-10 sm:px-7`}>
       <div className="flex flex-wrap items-center justify-center gap-x-0 gap-y-8">
         <figure className="m-0 flex flex-col items-center gap-4">
           <div className={`${podCls} h-[132px] w-[132px] items-center justify-center gap-3 p-3`}>
@@ -166,7 +166,7 @@ export function EgressPanel() {
             <span className="font-mono text-[10.5px] tracking-[0.04em] text-kg-tx3">triage-agent</span>
           </div>
           <figcaption className="max-w-[132px] text-center font-mono text-[11.5px] leading-[1.5] tracking-[0.06em] text-kg-tx3">
-            sandbox · own fs · no privilege escalation
+            one actor · own fs · no privilege escalation
           </figcaption>
         </figure>
 

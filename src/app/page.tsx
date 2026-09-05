@@ -7,7 +7,7 @@ import { DensityPanel, EgressPanel, ResumePanel } from "@/components/home/substr
 import { BuildFlow } from "@/components/home/build-flow";
 import { HeroSchematic } from "@/components/home/hero-schematic";
 import { dotGrid } from "@/components/home/blueprint";
-import { AdoptersSection, CommunityBand, FeaturesSection } from "@/components/home/sections";
+import { AdoptersSection, CommunityBand, FeaturesSection, ModelGrid } from "@/components/home/sections";
 
 const h3Cls = "mt-4 font-display text-[clamp(28px,3vw,42px)] font-medium leading-[1.1] tracking-[-0.025em] text-kg-tx1";
 const bodyCls = "mt-[18px] max-w-[46ch] text-[17px] leading-[1.65] text-kg-tx2";
@@ -26,8 +26,8 @@ export default function HomePage() {
             Agents on Kubernetes
           </h1>
           <p className="mx-auto mt-7 max-w-[60ch] text-center text-[19px] leading-[1.6] text-kg-tx2">
-            Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent runs on Agent Substrate — the
-            runtime built for what agents become next.
+            A template for what an agent can do, a harness for how it runs. Every conversation is a Substrate actor: thousands per
+            cluster, resuming in milliseconds, sandboxed by default.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="/docs/kagent/getting-started/quickstart" className={primaryBtn}>
@@ -45,15 +45,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Substrate intro */}
-      <Section id="substrate" className="py-10">
-        <h2 className="mt-5 max-w-[20ch] font-display text-[clamp(34px,4.2vw,60px)] font-medium leading-[1.05] tracking-[-0.03em] text-kg-tx1">
-          A runtime built for how agents actually run
+      {/* The model */}
+      <Section id="model" className="py-10">
+        <h2 className="mt-5 max-w-[22ch] font-display text-[clamp(34px,4.2vw,60px)] font-medium leading-[1.05] tracking-[-0.03em] text-kg-tx1">
+          An agent is a template for what it can do, and a harness for how it runs
         </h2>
         <p className="mt-[22px] max-w-[64ch] text-lg leading-[1.6] text-kg-tx2">
-          Agents resume in milliseconds, hold nothing while idle, and run sandboxed from the first instruction. Substrate&apos;s core is
-          built on Kubernetes, so this is the platform you already operate.
+          Open the agent and start a conversation, and kagent creates an AgentInstance, scheduled onto a harness worker as a Substrate
+          actor. The runtime underneath is what every one of those conversations gets.
         </p>
+        <ModelGrid />
+      </Section>
+
+      {/* Substrate */}
+      <Section id="substrate" className="pt-10">
+        <h2 className="max-w-[20ch] font-display text-[clamp(28px,3.2vw,44px)] font-medium leading-[1.1] tracking-[-0.028em] text-kg-tx1">
+          A runtime built for how agents actually run
+        </h2>
       </Section>
 
       {/* Suspend & resume */}
@@ -62,8 +70,8 @@ export default function HomePage() {
           <Eyebrow>suspend &amp; resume</Eyebrow>
           <h3 className={h3Cls}>Sub-100ms resume, on demand</h3>
           <p className={bodyCls}>
-            Agents don&apos;t usually need to run 24/7, so reserving constant compute for them is very inefficient. Suspend an agent and
-            it holds nothing. Resume it and it is back before anyone notices.
+            A conversation doesn&apos;t need to run 24/7, so reserving constant compute for it is very inefficient. Suspend an instance
+            and it holds nothing. Resume it and it is back before anyone notices.
           </p>
           <ArrowList
             className="mt-[26px]"
@@ -79,8 +87,8 @@ export default function HomePage() {
           <Eyebrow>density</Eyebrow>
           <h3 className={h3Cls}>30× with Agent Substrate</h3>
           <p className={bodyCls}>
-            Agents share pools of workers instead of getting their own dedicated compute. Substrate packs more agents onto the system
-            than it has compute for, because agents that aren&apos;t running don&apos;t hold any.
+            Instances share a harness&apos;s pool of workers instead of getting their own dedicated compute. Substrate packs more of them
+            onto the system than it has compute for, because instances that aren&apos;t running don&apos;t hold any.
           </p>
           <ArrowLink href="https://www.solo.io/topics/ai-infrastructure/how-google-agent-substrate-works" className="mt-[26px]">
             See how the density works
@@ -95,8 +103,8 @@ export default function HomePage() {
           <Eyebrow>isolation</Eyebrow>
           <h3 className={h3Cls}>Sandboxed by default</h3>
           <p className={bodyCls}>
-            Agents can be very dangerous. All compute inside Substrate runs in a sandbox runtime, and Substrate controls all network
-            traffic in and out of the agent — nothing gets in or out without explicit permission.
+            Agents can be very dangerous. Every instance runs as its own actor in a sandbox, and Substrate controls all network traffic
+            in and out of it — nothing gets in or out without explicit permission.
           </p>
         </div>
         <EgressPanel />

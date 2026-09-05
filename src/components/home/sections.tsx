@@ -1,6 +1,8 @@
 import Image from "next/image";
 import {
   Activity,
+  Bot,
+  BookOpen,
   Boxes,
   Braces,
   Cpu,
@@ -17,13 +19,13 @@ import {
   UserCheck,
   Workflow,
 } from "lucide-react";
-import { FEATURES, PIPELINE } from "@/data/home-content";
+import { FEATURES, MODEL, PIPELINE } from "@/data/home-content";
 import { GITHUB_LINK, DISCORD_LINK } from "@/data/links";
 import adoptersYaml from "@/data/adopters.yaml";
 import Github from "@/components/icons/github";
 import Discord from "@/components/icons/discord";
 import { ArrowLink, ghostBtn, primaryBtn, Section } from "./primitives";
-import { HairlineCell, HairlineGrid, dotGrid } from "./blueprint";
+import { Chip, HairlineCell, HairlineGrid, dotGrid } from "./blueprint";
 
 /** One icon per FEATURES entry, in order. */
 const FEATURE_ICONS = [
@@ -47,6 +49,30 @@ const FEATURE_ICONS = [
 
 type Adopter = { name: string; website: string; logo?: string; logo_light?: string; logo_dark?: string };
 const ADOPTERS: Adopter[] = (adoptersYaml as { adopters: Adopter[] }).adopters;
+
+const MODEL_ICONS = [BookOpen, Boxes, Bot];
+
+/** The three objects an agent is made of, as a hairline grid with node dots. */
+export function ModelGrid() {
+  return (
+    <HairlineGrid cols="grid-cols-1 md:grid-cols-3" className="mt-12">
+      {MODEL.map((m, i) => {
+        const Icon = MODEL_ICONS[i];
+        return (
+          <HairlineCell key={m.kind} className="min-h-[220px] px-7 py-7">
+            <div className="flex items-center justify-between">
+              <Chip icon={Icon} />
+              <span className="font-mono text-[11px] tracking-[0.08em] text-kg-tx4">0{i + 1}</span>
+            </div>
+            <div className="mt-5 font-mono text-[13px] tracking-[0.04em] text-kg-acc">{m.kind}</div>
+            <h3 className="mt-1.5 font-display text-[22px] font-medium leading-[1.2] tracking-[-0.02em] text-kg-tx1">{m.title}</h3>
+            <p className="mt-2.5 text-[15px] leading-[1.6] text-kg-tx2">{m.body}</p>
+          </HairlineCell>
+        );
+      })}
+    </HairlineGrid>
+  );
+}
 
 /** The four "what happens after you apply" cards. */
 export function PipelineGrid({ numbered = false }: { numbered?: boolean }) {

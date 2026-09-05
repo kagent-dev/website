@@ -9,7 +9,7 @@ import { AdoptersSection, CommunityBand, FeaturesSection, PipelineGrid } from "@
 export const metadata: Metadata = {
   title: "Build agents the way you ship everything else | kagent",
   description:
-    "Skills, tools and agents are Kubernetes resources. Write them, apply them, review them in a pull request. No framework to learn, no glue code to maintain.",
+    "Templates, harnesses and tools are Kubernetes resources. Write them, apply them, review them in a pull request. No framework to learn, no glue code to maintain.",
 };
 
 export default function BuildPage() {
@@ -28,8 +28,8 @@ export default function BuildPage() {
             Build agents the way you ship <span className="text-kg-acc">everything else</span>
           </h1>
           <p className="mt-7 max-w-[60ch] text-[19px] leading-[1.6] text-kg-tx2">
-            Skills, tools and agents are Kubernetes resources. Write them, apply them, review them in a pull request. No framework to
-            learn, no glue code to maintain.
+            Templates, harnesses and tools are Kubernetes resources. Write them, apply them, review them in a pull request. No framework
+            to learn, no glue code to maintain.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link href="/docs/kagent/getting-started/quickstart" className={primaryBtn}>
