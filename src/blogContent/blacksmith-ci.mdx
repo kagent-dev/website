@@ -62,15 +62,12 @@ those jobs generally start within seconds.
 
 The workloads on our critical path also ran faster:
 
-  Job                 Before    Blacksmith    Reduction
-━━━━━━━━━━━━━━━━━━  ━━━━━━━━  ━━━━━━━━━━━━  ━━━━━━━━━━━
-  UI tests             9m57s         7m31s        24.5%
-──────────────────  ────────  ────────────  ───────────
-  End-to-end tests    16m21s        12m22s        24.3%
-──────────────────  ────────  ────────────  ───────────
-  Runner pickup        1m22s           16s        80.5%
-──────────────────  ────────  ────────────  ───────────
-  Full CI             23m16s        14m10s        39.1%
+| Job | Before | Blacksmith | Reduction |
+| ----| :-------:|:-----------:|:------------:|
+| UI tests| 9m57s| 7m31s|24.5%|
+|  End-to-end tests|16m21s|12m22s|24.3%|
+| Runner pickup|1m22s|16s|80.5%|
+|  Full CI|23m16s|14m10s|39.1%|
 
 ## CI feels responsive again
 
@@ -88,8 +85,8 @@ The measurements use GitHub Actions timestamps from September 1–3, 2026:
 
 - Full-CI medians: five successful main runs before migration and eleven after.
 - Pickup latency: 85 successful dependent jobs before and 110 after.
-- Job duration: completed_at - started_at.
-- Pickup latency: dependent job started_at - setup.completed_at.
+- Job duration: `completed_at - started_at`.
+- Pickup latency: `dependent job started_at - setup.completed_at`.
 - Controlled baseline: GitHub-hosted run
   (https://github.com/kagent-dev/kagent/actions/runs/33634657352).
 
