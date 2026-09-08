@@ -3,12 +3,12 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const PROJECT_ROOT = process.cwd();
-const SOURCE_EXTENSIONS = ['.mdx', '.tsx'];
+const SOURCE_EXTENSIONS = ['.md', '.mdx', '.tsx'];
 const IGNORE_DIRS = ['node_modules', '.git', 'dist', 'build', '.next', '.cache'];
 
 const NAVIGATION_JSON_PATH = path.join(PROJECT_ROOT, 'src/config/navigation.json');
 const DOCS_ROUTE_PREFIX = '/docs';
-const ACTUAL_DOCS_FILESYSTEM_ROOT = path.join(PROJECT_ROOT, 'src/app/docs');
+const ACTUAL_DOCS_FILESYSTEM_ROOT = path.join(PROJECT_ROOT, 'docs-site/content');
 
 const IMAGES_ROUTE_PREFIX = '/images';
 const ACTUAL_IMAGES_FILESYSTEM_ROOT = path.join(PROJECT_ROOT, 'public/images');
@@ -82,10 +82,19 @@ async function extractLinksFromFile(filePath) {
     const content = await fs.readFile(filePath, 'utf-8');
     const links = new Set();
     let match;
-    if (filePath.endsWith('.mdx')) {
-        while ((match = MD_LINK_REGEX.exec(content)) !== null) links.add(match[1]);
+
+    // Extract Markdown links from .md and .mdx files
+    if (filePath.endsWith('.md') || filePath.endsWith('.mdx')) {
+        while ((match = MD_LINK_REGEX.exec(content)) !== null) {
+            links.add(match[1]);
+        }
     }
-    while ((match = HTML_A_HREF_REGEX.exec(content)) !== null) links.add(match[2]);
+
+    // Extract HTML <a href=""> links
+    while ((match = HTML_A_HREF_REGEX.exec(content)) !== null) {
+        links.add(match[2]);
+    }
+
     return Array.from(links);
 }
 
