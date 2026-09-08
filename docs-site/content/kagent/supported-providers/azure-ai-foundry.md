@@ -7,7 +7,13 @@ author: kagent.dev
 
 ## Configuring Azure AI Foundry
 
-> **Note:** Foundry chat models and memory embeddings require the Go agent runtime (`runtime: go`). Chat models must be available through Foundry's OpenAI-compatible chat completions API. Claude and other models are not yet supported.
+> [!NOTE]
+> Foundry chat models and memory embeddings require the Go agent runtime (`runtime: go`).
+
+Azure AI Foundry supports two API formats in kagent:
+
+- OpenAI-compatible models use the OpenAI chat completions API.
+- Claude models use the Anthropic Messages API.
 
 The following steps use API key authentication. To authenticate without an API key, see [Workload Identity](#workload-identity).
 
@@ -21,7 +27,9 @@ kubectl create secret generic foundry-api-key \
   --from-literal=api-key="${FOUNDRY_API_KEY}"
 ```
 
-2. Create a `ModelConfig` for your Foundry deployment.
+2. Create a `ModelConfig` for your Foundry deployment by using one of the following API formats.
+
+### OpenAI-compatible models
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -40,7 +48,36 @@ spec:
     apiVersion: "2024-10-21"
 ```
 
-3. Reference the `ModelConfig` from an agent that uses the Go runtime.
+> [!NOTE]
+> The Azure AI Foundry UI might display the full chat completions URL, such as `https://<account>.cognitiveservices.azure.com/openai/deployments/<deployment>/chat/completions?api-version=<api-version>`. Set `foundry.endpoint` to only the account endpoint. Configure the deployment and API version separately with `foundry.deployment` and `foundry.apiVersion`. kagent constructs the full request URL.
+
+### Anthropic models
+
+Claude models on Azure AI Foundry use the Anthropic Messages API instead of the OpenAI-compatible chat completions API. Set `foundry.apiFormat` to `Anthropic` and use the name of your Claude deployment in `foundry.deployment`.
+
+```yaml
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: foundry-claude
+  namespace: kagent
+spec:
+  provider: Foundry
+  model: claude-sonnet-4-6
+  apiKeySecret: foundry-api-key
+  apiKeySecretKey: api-key
+  foundry:
+    endpoint: https://my-foundry-account.services.ai.azure.com/
+    deployment: claude-sonnet-4-6
+    apiFormat: Anthropic
+```
+
+> [!NOTE]
+> The Azure AI Foundry UI displays the full Claude Messages endpoint, such as `https://<account>.services.ai.azure.com/anthropic/v1/messages`. Set `foundry.endpoint` to only the account endpoint, `https://<account>.services.ai.azure.com/`. kagent and the Anthropic SDK add `/anthropic/v1/messages` when they send a request.
+
+The `apiVersion` field is not used with the Anthropic API format.
+
+3. Reference the selected `ModelConfig` from an agent that uses the Go runtime. The following example uses `foundry-chat`. To use the Claude configuration, set `modelConfig` to `foundry-claude`.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -71,10 +108,11 @@ Alternatively, apply only `foundry-model.yaml`, then select the `ModelConfig` fr
 | --- | --- | --- |
 | `spec.provider` | Always | Must be `Foundry`. |
 | `spec.model` | Always | Model name reported to the runtime, such as `gpt-4.1-nano`. This can differ from the Azure deployment name. |
-| `spec.foundry.endpoint` | Exactly one endpoint field | Account endpoint, such as `https://<account>.cognitiveservices.azure.com/`. |
+| `spec.foundry.endpoint` | Exactly one endpoint field | Azure account endpoint without an API path or query string. Remove `/openai/...` or `/anthropic/...` from the full endpoint displayed in Azure AI Foundry. Examples include `https://<account>.cognitiveservices.azure.com/` and `https://<account>.services.ai.azure.com/`. |
 | `spec.foundry.endpointFrom` | Exactly one endpoint field | Resolve the endpoint from a ConfigMap key. See [Endpoint from a ConfigMap](#endpoint-from-a-configmap). |
 | `spec.foundry.deployment` | Always | Foundry model deployment name. |
-| `spec.foundry.apiVersion` | Optional | Azure AI Foundry data-plane API version. Defaults to `2024-10-21`. |
+| `spec.foundry.apiFormat` | Optional | Foundry API format. Set to `Anthropic` for Claude models. Defaults to `OpenAI`. |
+| `spec.foundry.apiVersion` | Optional | Azure AI Foundry OpenAI-compatible data-plane API version. Defaults to `2024-10-21`. Ignored when `apiFormat` is `Anthropic`. |
 | `spec.apiKeySecret` | Optional | Secret that contains the API key. Omit both this field and `apiKeyPassthrough` to use Workload Identity. Mutually exclusive with `apiKeyPassthrough`. |
 | `spec.apiKeySecretKey` | With `apiKeySecret` | Key within `apiKeySecret` that contains the API key. |
 | `spec.apiKeyPassthrough` | Optional | Let each caller supply its own Foundry API key instead of using a shared Secret. Mutually exclusive with `apiKeySecret`. See [Token passthrough](#token-passthrough). |
