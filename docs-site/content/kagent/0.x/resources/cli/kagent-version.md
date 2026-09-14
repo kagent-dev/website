@@ -1,31 +1,26 @@
 ---
 title: kagent version
-description: kagent version command
-weight: 10
+description: Print the kagent version
+weight: 410
 ---
 
-Print the kagent version information.
+Print the kagent version
 
 ```bash
 kagent version [flags]
 ```
 
+**Flags:**
+- `-h, --help` - help for version
+
 **Global Flags:**
-- `--kagent-url` - kagent URL (default: "http://localhost:8083")
-- `--namespace, -n` - Namespace (default: "kagent")
-- `--output-format, -o` - Output format (default: "table")
-- `--timeout` - Timeout duration (default: 300s)
-- `--verbose, -v` - Verbose output
-
-## About `kagent version`
-
-This command prints the kagent CLI version. The CLI attempts to connect to the kagent server to retrieve server version information. Versions unable to be obtained from the remote kagent server are reported as "unknown".
-
-## Example
-
-Print version information:
-
-```bash
-kagent version
-```
-
+- `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
+- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
+- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
+- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
+- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
+- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `-n, --namespace string` - Namespace (default "kagent")
+- `-o, --output-format string` - Output format (default "table")
+- `--timeout duration` - Timeout (default 5m0s)
+- `-v, --verbose` - Verbose output

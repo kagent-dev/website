@@ -14,7 +14,7 @@ export OPENAI_API_KEY=<your_api_key>
 kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_KEY=$OPENAI_API_KEY
 ```
 
-2. Create a ModelConfig resource that references the secret and key name:
+2. Create a `ModelConfig` resource that references the secret and key name. For standard models such as GPT-4 and GPT-3.5, kagent automatically configures the appropriate model capabilities.
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2
@@ -30,8 +30,51 @@ spec:
   openAI: {}
 ```
 
-For OpenAI's standard models like GPT-4 and GPT-3.5, kagent automatically configures the appropriate model capabilities.
-
-3. Apply the above resource to the cluster.
+3. Apply the resource to the cluster.
 
 Once the resource is applied, you can select the model from the Model dropdown in the UI when creating or updating agents.
+
+## Reasoning effort
+
+For OpenAI reasoning models (o-series, GPT-5), you can control how many reasoning tokens the model generates before producing a response with the `openAI.reasoningEffort` field. Valid values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+
+For models that require reasoning to be explicitly disabled (such as some GPT-5 variants), set `reasoningEffort: none`. For standard models that do not support it, omit the field.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+```
+
+## Max completion tokens
+
+For OpenAI reasoning models (o-series, GPT-5), use `openAI.maxCompletionTokens` to cap the total number of tokens the model can generate in a response, including both visible output tokens and reasoning tokens.
+
+> **Note**: Do not use `openAI.maxTokens` for reasoning models. OpenAI deprecated `max_tokens` for the Chat Completions API, and reasoning models reject it outright with a 400 error. Use `maxCompletionTokens` instead.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: o3
+  openAI:
+    reasoningEffort: medium
+    maxCompletionTokens: 16000
+```
+
+For standard (non-reasoning) models and OpenAI-compatible endpoints, `openAI.maxTokens` continues to work as before. The two fields are independent.
+
+## Responses API
+
+By default, kagent uses the [Chat Completions API](https://platform.openai.com/docs/api-reference/chat). To switch to the [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) instead, set `openAI.apiFormat: responses` on the `ModelConfig`. This is also compatible with gateways such as AgentGateway that expose the Responses API.
+
+```yaml
+spec:
+  provider: OpenAI
+  model: gpt-4o
+  openAI:
+    apiFormat: responses
+```
+
+Omit `apiFormat` (or set it to `chatCompletions`) to continue using Chat Completions. Native tool use and stateful Responses API chaining are not yet supported.

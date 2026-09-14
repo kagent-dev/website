@@ -1,36 +1,26 @@
 ---
 title: kagent bug-report
-description: kagent bug-report command
-weight: 10
+description: Generate a bug report
+weight: 20
 ---
 
-Generate a bug report for troubleshooting.
+Generate a bug report
 
 ```bash
 kagent bug-report [flags]
 ```
 
+**Flags:**
+- `-h, --help` - help for bug-report
+
 **Global Flags:**
-- `--kagent-url` - kagent URL (default: "http://localhost:8083")
-- `--namespace, -n` - Namespace (default: "kagent")
-- `--output-format, -o` - Output format (default: "table")
-- `--timeout` - Timeout duration (default: 300s)
-- `--verbose, -v` - Verbose output
-
-## About `kagent bug-report`
-
-This command generates a comprehensive bug report that includes:
-- kagent CLI version
-- kagent server version
-- Kubernetes cluster information
-- Resource status and logs
-- Configuration details
-
-## Example
-
-Generate a bug report:
-
-```bash
-kagent bug-report
-```
-
+- `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
+- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
+- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
+- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
+- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
+- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `-n, --namespace string` - Namespace (default "kagent")
+- `-o, --output-format string` - Output format (default "table")
+- `--timeout duration` - Timeout (default 5m0s)
+- `-v, --verbose` - Verbose output
