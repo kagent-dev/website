@@ -29,7 +29,7 @@ AgentTemplate defines portable agent behavior.
 | `kind` _string_ | `AgentTemplate` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  |  |
 | `status` _[AgentTemplateStatus](#agenttemplatestatus)_ |  |  |  |
 
@@ -58,7 +58,7 @@ _Appears in:_
 | `desiredRevision` _string_ |  |  | MinLength: 1 <br /> |
 | `latestSuccessfulRevision` _string_ |  |  | MinLength: 1 <br /> |
 | `warnings` _string array_ | Warnings reports non-blocking compatibility decisions made while compiling<br />this AgentTemplate for the Harness. |  | MaxItems: 100 <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
 
 #### AgentTemplatePromptSource
 
@@ -104,7 +104,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfig` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | ModelConfig is required by managed harnesses and optional for BYO harnesses. |  |  |
+| `modelConfig` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfig is required by managed harnesses and optional for BYO harnesses. |  |  |
 | `description` _string_ |  |  |  |
 | `systemPrompt` _string_ |  |  |  |
 | `systemPromptFrom` _[AgentTemplateConfigMapKeyReference](#agenttemplateconfigmapkeyreference)_ | SystemPromptFrom references prompt text in a same-namespace ConfigMap. |  |  |
@@ -136,7 +136,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ |  |  | MinLength: 1 <br /> |
 | `description` _string_ | Description tells the parent when to route work to this binding. |  | MinLength: 1 <br /> |
-| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ |  |  |  |
+| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  |  |
 | `isolation` _[AgentToolIsolation](#agenttoolisolation)_ |  | Shared | Enum: [Shared Dedicated] <br /> |
 
 #### AgentToolIsolation
@@ -170,7 +170,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `from` _[FromNamespaces](#fromnamespaces)_ | From indicates where references to this resource can originate.<br />Possible values are:<br />* All: References from all namespaces are allowed.<br />* Same: Only references from the same namespace are allowed (default).<br />* Selector: References from namespaces matching the selector are allowed. | Same | Enum: [All Same Selector] <br /> |
-| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta)_ | Selector is a label selector for namespaces that are allowed to reference this resource.<br />Only used when From is set to "Selector". |  |  |
+| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#labelselector-v1-meta)_ | Selector is a label selector for namespaces that are allowed to reference this resource.<br />Only used when From is set to "Selector". |  |  |
 
 #### AnthropicConfig
 
@@ -266,7 +266,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  |  |
-| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
+| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
 | `promptCaching` _boolean_ | PromptCaching enables Bedrock prompt caching by appending a CachePoint<br />block at the end of the Converse request's `system` content array and<br />the end of the `toolConfig.tools` array. Bedrock will cache the prefix up to and<br />including those cache points across requests in the same region for<br />roughly 5 minutes after first use, billing the cached portion at a<br />reduced rate on cache hits.<br /><br />Recommended for tool-using agents that make many Converse calls per<br />task with a stable system prompt and tool set — the per-call input<br />token count can drop by 70-90% on hit. Has no effect on models that<br />don't support caching; the marker is ignored by Bedrock for those.<br /><br />See https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html<br />for the current list of supported models and minimum prefix sizes. | false |  |
 | `cacheTTL` _string_ | CacheTTL controls how long Bedrock retains a cached prefix when<br />PromptCaching is enabled. Only meaningful when PromptCaching is true.<br /><br />  - "5m" (default): Bedrock's standard 5-minute sliding cache. Each cache<br />    hit refreshes the window. Supported by all prompt-caching models.<br />  - "1h": extended-TTL caching, useful for tasks whose Converse calls are<br />    spaced more than 5 minutes apart.<br /><br />NOTE: "1h" is NOT strictly better than "5m". Extended-TTL cache writes are<br />billed at a higher per-token rate than 5-minute writes, and 1h is supported<br />on a narrower set of models. Only choose "1h" when calls are spaced far<br />enough apart that a 5-minute cache would expire between them; otherwise the<br />higher write cost is wasted. See the AWS prompt-caching docs above. | 5m | Enum: [5m 1h] <br /> |
 | `guardrail` _[BedrockGuardrailConfig](#bedrockguardrailconfig)_ |  |  |  |
@@ -339,7 +339,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `endpoint` _string_ | Endpoint is the Foundry or Azure AI Services account endpoint<br />(e.g., https://my-account.cognitiveservices.azure.com/).<br />Mutually exclusive with EndpointFrom. |  |  |
-| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
+| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
 | `deployment` _string_ | Deployment is the Foundry model deployment name. |  |  |
 | `apiVersion` _string_ | APIVersion is the Foundry OpenAI-compatible data-plane API version.<br />Ignored when APIFormat is Anthropic (the Messages surface is versioned via<br />the anthropic-version header instead). | 2024-10-21 |  |
 | `apiFormat` _[FoundryAPIFormat](#foundryapiformat)_ | APIFormat selects the Foundry API format: "OpenAI" (default, chat<br />completions) or "Anthropic" (Claude models served over the Anthropic<br />Messages API). | OpenAI | Enum: [OpenAI Anthropic] <br /> |
@@ -427,7 +427,7 @@ Harness defines a reusable agent runtime and infrastructure policy.
 | `kind` _string_ | `Harness` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[HarnessSpec](#harnessspec)_ |  |  |  |
 | `status` _[HarnessStatus](#harnessstatus)_ |  |  |  |
 
@@ -441,7 +441,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta)_ | Selector selects admitted AgentTemplates in the Harness namespace. |  |  |
+| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#labelselector-v1-meta)_ | Selector selects admitted AgentTemplates in the Harness namespace. |  |  |
 
 #### HarnessCapabilities
 
@@ -478,7 +478,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ |  |  | MinLength: 1 <br /> |
 | `value` _string_ | Value is a literal value, including an empty string. |  |  |
-| `credentialRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core)_ | CredentialRef references a key in a same-namespace Secret. |  |  |
+| `credentialRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | CredentialRef references a key in a same-namespace Secret. |  |  |
 
 #### HarnessSnapshotPolicy
 
@@ -520,7 +520,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | ObservedGeneration is the latest Harness generation observed by the controller. |  |  |
 | `capabilities` _[HarnessCapabilities](#harnesscapabilities)_ | Capabilities is the single capability record for the selected runtime. |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions report adapter and dependency health. |  | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions report adapter and dependency health. |  | MaxItems: 8 <br /> |
 
 #### HarnessSubstratePolicy
 
@@ -531,7 +531,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `workerPoolRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | WorkerPoolRef references a WorkerPool in the Harness namespace. |  |  |
+| `workerPoolRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | WorkerPoolRef references a WorkerPool in the Harness namespace. |  |  |
 | `snapshotPolicy` _[HarnessSnapshotPolicy](#harnesssnapshotpolicy)_ | SnapshotPolicy configures runtime snapshot storage. |  |  |
 
 #### HarnessWorkload
@@ -567,7 +567,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | ModelConfigRef references the embedding ModelConfig in the Harness namespace. |  |  |
+| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfigRef references the embedding ModelConfig in the Harness namespace. |  |  |
 | `ttlDays` _integer_ | TTLDays controls how many days a stored memory entry remains valid. |  | Minimum: 1 <br /> |
 
 #### MCPTool
@@ -589,7 +589,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `server` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#typedlocalobjectreference-v1-core)_ |  |  |  |
+| `server` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#typedlocalobjectreference-v1-core)_ |  |  |  |
 | `tools` _string array_ | Tools optionally limits which server tools are exposed. An omitted or empty<br />list exposes every tool. Harnesses that cannot enforce a partial selection<br />may expose the whole server and report a warning. |  | MaxItems: 50 <br /> |
 | `requireApproval` _boolean_ | RequireApproval pauses before each invocation of a tool exposed by this<br />binding. It applies to the selected tools, or to every server tool when<br />Tools is omitted or empty. |  |  |
 
@@ -603,7 +603,7 @@ ModelConfig is the Schema for the modelconfigs API.
 | `kind` _string_ | `ModelConfig` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[ModelConfigSpec](#modelconfigspec)_ |  |  |  |
 | `status` _[ModelConfigStatus](#modelconfigstatus)_ |  |  |  |
 
@@ -643,7 +643,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 | `observedGeneration` _integer_ |  |  |  |
 | `secretHash` _string_ | The secret hash stores a hash of any secrets required by the model config (i.e. api key, tls cert) to ensure agents referencing this model config detect changes to these secrets and restart if necessary. |  |  |
 
@@ -684,7 +684,7 @@ It represents a model provider configuration with automatic model discovery.
 | `kind` _string_ | `ModelProviderConfig` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[ModelProviderConfigSpec](#modelproviderconfigspec)_ |  |  |  |
 | `status` _[ModelProviderConfigStatus](#modelproviderconfigstatus)_ |  |  |  |
 
@@ -711,10 +711,10 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | ObservedGeneration reflects the generation of the most recently observed ModelProviderConfig spec |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions represent the latest available observations of the ModelProviderConfig's state |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions represent the latest available observations of the ModelProviderConfig's state |  |  |
 | `discoveredModels` _string array_ | DiscoveredModels is the cached list of model IDs available from this model provider |  |  |
 | `modelCount` _integer_ | ModelCount is the number of discovered models (for kubectl display) |  |  |
-| `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
+| `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
 | `secretHash` _string_ | SecretHash is a hash of the referenced secret data, used to detect secret changes |  |  |
 
 #### OllamaConfig
@@ -806,7 +806,7 @@ RemoteMCPServer is the Schema for the RemoteMCPServers API.
 | `kind` _string_ | `RemoteMCPServer` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[RemoteMCPServerSpec](#remotemcpserverspec)_ |  |  |  |
 | `status` _[RemoteMCPServerStatus](#remotemcpserverstatus)_ |  |  |  |
 
@@ -838,8 +838,8 @@ _Appears in:_
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
 | `url` _string_ |  |  | MinLength: 1 <br /> |
 | `headersFrom` _[ValueRef](#valueref) array_ |  |  |  |
-| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  | 30s |  |
-| `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
+| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  | 30s |  |
+| `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment<br /><br />A cross-namespace-permitting value (from: All or from: Selector) is<br />mutually exclusive with spec.tls.caCertSecretRef (enforced by a spec-level<br />XValidation rule): a pinned CA Secret is mounted onto the consuming agent's<br />pod by bare name and Kubernetes resolves it in the agent's namespace, not<br />this RemoteMCPServer's, so a CA-pinning RemoteMCPServer cannot be referenced<br />cross-namespace. from: Same (the default) is always allowed. |  |  |
 | `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />Use this for HTTPS upstreams that present a certificate the agent's<br />system trust store does not include (corporate CA, self-signed cert<br />on a test fixture, internal MCP gateway). Reuses the same TLSConfig<br />type as ModelConfig.spec.tls — disableVerify turns off certificate<br />validation entirely, caCertSecretRef + caCertSecretKey point at a<br />PEM bundle Secret in the same namespace, and disableSystemCAs<br />trusts only the named bundle.<br /><br />Note one asymmetry with ModelConfig: a spec-level XValidation rule<br />on RemoteMCPServer rejects spec.tls when spec.url has the http://<br />scheme (a TLS opinion contradicts a plaintext URL). ModelConfig has<br />no equivalent rule, so a TLS block can sit alongside any baseUrl. |  |  |
@@ -854,7 +854,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  |  |
 | `secretHash` _string_ | SecretHash stores a hash of the TLS Secret referenced by spec.tls so<br />agents that consume this RemoteMCPServer can detect cert rotation and<br />roll on the next reconcile. Empty when spec.tls.caCertSecretRef is unset. |  |  |
 

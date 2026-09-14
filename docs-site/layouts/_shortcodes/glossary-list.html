@@ -8,7 +8,7 @@
        Sorted case-insensitively, so "gVisor" lands with the g's rather than
        last. Each <dt> carries an anchorized id, so a term is linkable. */ -}}
 {{- $terms := slice -}}
-{{- range $key, $entry := site.Data.glossary -}}
+{{- range $key, $entry := hugo.Data.glossary -}}
   {{- $terms = $terms | append (dict "key" $key "short" $entry.short "link" $entry.link "sortKey" (lower $key)) -}}
 {{- end -}}
 <dl class="glossary-entries">

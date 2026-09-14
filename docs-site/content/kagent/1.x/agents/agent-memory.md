@@ -142,7 +142,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
    ```
 
 > [!NOTE]
-> Only the `kagent` runtime supports memory. The `spec.kagent` runtime block is the only runtimes that has settings, so a Harness that selects `codex`, `claude`, or `byo` has settings to configure memory.
+> Only the `kagent` runtime supports memory. The `memory` block exists only under `spec.kagent`, so a Harness that selects `codex`, `claude`, or `byo` has no settings to configure memory.
 
 ## Verify that memory works
 

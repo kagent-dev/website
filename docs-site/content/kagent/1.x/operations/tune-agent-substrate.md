@@ -51,7 +51,7 @@ Read the current state of the runtime before you change it. Three values from th
          "namespace": "kagent",
          "name": "kagent-default",
          "replicas": 8,
-         "ateomImage": "ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.26"
+         "ateomImage": "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
        }
      ],
      "actors": [

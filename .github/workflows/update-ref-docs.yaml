@@ -18,6 +18,16 @@ concurrency:
 #   - kagent Helm ref    -> docs-site/content/kagent/1.x/reference/helm.md
 # Each page uses plain Hugo YAML frontmatter (no MDX `export const metadata`).
 #
+# It also refreshes the version conrefs under
+# docs-site/assets/kagent-docs/versions/ (plus the second copy of the Kubernetes
+# version at public/docs/versions/max-kube.md). Those steps run first, because
+# the API reference is generated against the Kubernetes version they write.
+# Conrefs and reference pages share ONE pull request on purpose: this repo
+# already receives a dozen or so automated PRs a day, and splitting these would
+# add another for a diff that is usually empty. When a conref does move, the PR
+# title and body say so, because that case needs the guides re-tested rather
+# than a routine review.
+#
 # Retargeted from 0.x to 1.x on 2026-09-11. This job generates from kagent
 # main, so it can only ever be correct for the tree that main actually ships.
 # main dropped go/api/v1alpha2 in kagent 7bf6a6cd (#2696) on 2026-09-04 and
@@ -50,6 +60,14 @@ jobs:
       KAGENT_API_PAGE: docs-site/content/kagent/1.x/reference/api-ref.md
       KMCP_API_PAGE: docs-site/content/kmcp/reference/api-ref.md
       HELM_PAGE: docs-site/content/kagent/1.x/reference/helm.md
+      VERSIONS_DIR: website/docs-site/assets/kagent-docs/versions
+      # The second, easily-missed copy of the Kubernetes version. "Read max
+      # Kubernetes version" below feeds THIS file to crd-ref-docs as
+      # KUBE_VERSION, while the docs render the assets/ copy. Same fact, two
+      # committed files, so the conref step writes both. They had already
+      # drifted when this was wired up -- assets/ said 1.35 and public/ said
+      # 1.31, silently pinning every Kubernetes API link in api-ref.md to 1.31.
+      KUBE_VERSION_FILE: website/public/docs/versions/max-kube.md
 
     steps:
       - name: Checkout kagent repository
@@ -81,6 +99,217 @@ jobs:
 
       - name: Set kmcp commit SHA
         run: echo "KMCP_COMMIT=$(cd kmcp && git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      # ---------------------------------------------------------------------
+      # Version conrefs.
+      #
+      # These run BEFORE "Read max Kubernetes version" on purpose: that step
+      # feeds public/docs/versions/max-kube.md to crd-ref-docs as KUBE_VERSION,
+      # so correcting the conrefs first means the API reference is generated
+      # against the fresh value in the same run rather than a run later.
+      #
+      # Each value is read from the same place kagent's own build reads it, so
+      # the docs and the release artifact cannot disagree. helm/kagent/Chart.yaml
+      # is NOT a source: it is gitignored and generated from Chart-template.yaml
+      # by envsubst, so a checkout never carries a useful value.
+      #
+      # Deliberately not automated: kagent.md names the UPCOMING release while
+      # `git describe` on main yields a dev tag, so it stays editorial until 1.0
+      # ships; and jaeger / loki / tempo / otel-collector are pinned nowhere in
+      # kagent, so the only source is "latest upstream", which would assert
+      # chart versions no guide was tested against.
+      # ---------------------------------------------------------------------
+      - name: Read versions from kagent
+        run: |
+          set -euo pipefail
+
+          MAKEFILE="kagent/Makefile"
+          GOMOD="kagent/go/go.mod"
+          CHART_TEMPLATE="kagent/helm/kagent/Chart-template.yaml"
+
+          for f in "$MAKEFILE" "$GOMOD" "$CHART_TEMPLATE"; do
+            if [ ! -f "$f" ]; then
+              echo "Error: expected $f in the kagent checkout"
+              exit 1
+            fi
+          done
+
+          # Field 5 of the replace directive:
+          #   replace github.com/agent-substrate/substrate => github.com/kagent-dev/substrate v0.0.29
+          SUBSTRATE_VERSION=$(awk '/github\.com\/kagent-dev\/substrate/ { print substr($5, 2) }' "$GOMOD" | head -1)
+          # Field 2 of the require line.
+          KMCP_VERSION=$(awk '/github\.com\/kagent-dev\/kmcp/ { print substr($2, 2) }' "$GOMOD" | head -1)
+          # kagent-tools carries a literal version in the template, not a ${VAR}.
+          KAGENT_TOOLS_VERSION=$(awk '/name: kagent-tools/{f=1} f&&/version:/{print $2; exit}' "$CHART_TEMPLATE")
+          # KIND_IMAGE_VERSION is a full x.y.z; the conref carries major.minor.
+          MAX_KUBE=$(sed -n 's/^KIND_IMAGE_VERSION[[:space:]]*?*=[[:space:]]*\([0-9]*\.[0-9]*\).*/\1/p' "$MAKEFILE" | head -1)
+
+          # Fail loudly on an unexpected shape. An empty value would otherwise
+          # blank a conref and silently break every command that reuses it.
+          check() {
+            if ! printf '%s' "$2" | grep -Eq "$3"; then
+              echo "Error: $1 extracted as '$2', which does not match $3."
+              echo "The source file's shape likely changed in kagent. Fix the extraction here rather than editing the conref by hand."
+              exit 1
+            fi
+            echo "  $1 = $2"
+          }
+
+          echo "Extracted from kagent ${KAGENT_COMMIT}:"
+          check SUBSTRATE_VERSION    "$SUBSTRATE_VERSION"    '^[0-9]+\.[0-9]+\.[0-9]+$'
+          check KMCP_VERSION         "$KMCP_VERSION"         '^[0-9]+\.[0-9]+\.[0-9]+$'
+          check KAGENT_TOOLS_VERSION "$KAGENT_TOOLS_VERSION" '^[0-9]+\.[0-9]+\.[0-9]+$'
+          check MAX_KUBE             "$MAX_KUBE"             '^[0-9]+\.[0-9]+$'
+
+          {
+            echo "SUBSTRATE_VERSION=$SUBSTRATE_VERSION"
+            echo "KMCP_VERSION=$KMCP_VERSION"
+            echo "KAGENT_TOOLS_VERSION=$KAGENT_TOOLS_VERSION"
+            echo "MAX_KUBE=$MAX_KUBE"
+          } >> $GITHUB_ENV
+
+      - name: Cross-check kmcp against its own latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # versions/kmcp.md is reused by BOTH the kagent 1.x support matrix and
+          # the standalone kmcp install guides, which want subtly different
+          # things: what kagent bundles, versus what kmcp last released. The two
+          # agree today (both 0.3.0). This job writes the kagent-pinned value,
+          # because the guides that install kmcp inside kagent outnumber the
+          # standalone ones and must match the bundled chart. A divergence is
+          # surfaced here rather than silently resolved -- if it ever fires, the
+          # real fix is to split the conref by version the way
+          # versions/agent-substrate.md already does.
+          KMCP_LATEST=$(gh release view \
+            --repo "${{ github.repository_owner }}/kmcp" \
+            --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)
+
+          if [ -z "$KMCP_LATEST" ]; then
+            echo "Note: could not read kmcp's latest release; skipping the cross-check."
+            echo "KMCP_MISMATCH=" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          if [ "$KMCP_LATEST" != "$KMCP_VERSION" ]; then
+            echo "::warning::kagent pins kmcp $KMCP_VERSION but kmcp's latest release is $KMCP_LATEST. Writing the pinned value; the standalone kmcp install guides may now understate."
+            echo "KMCP_MISMATCH=kagent pins \`$KMCP_VERSION\`, kmcp's latest release is \`$KMCP_LATEST\`. The pinned value was written. Consider splitting \`versions/kmcp.md\` by version." >> $GITHUB_ENV
+          else
+            echo "kmcp cross-check OK: pinned and latest release both $KMCP_VERSION"
+            echo "KMCP_MISMATCH=" >> $GITHUB_ENV
+          fi
+
+      - name: Update version conrefs
+        run: |
+          set -euo pipefail
+
+          if [ ! -d "$VERSIONS_DIR" ]; then
+            echo "Error: $VERSIONS_DIR not found in the docs checkout"
+            exit 1
+          fi
+
+          # These files carry NO trailing newline, and must not gain one: they
+          # render inline into shell commands like `--version {{< reuse ... >}} \`,
+          # where a newline would split the command. Always printf, never echo.
+          write_conref() {
+            local file="$1" value="$2"
+            if [ ! -f "$file" ]; then
+              echo "Error: expected conref $file"
+              exit 1
+            fi
+            local before
+            before=$(cat "$file")
+            printf '%s' "$value" > "$file"
+            if [ "$before" != "$value" ]; then
+              echo "  $(basename "$file"): $before -> $value"
+            else
+              echo "  $(basename "$file"): unchanged ($value)"
+            fi
+          }
+
+          echo "Plain-value conrefs:"
+          write_conref "$VERSIONS_DIR/kmcp.md"         "$KMCP_VERSION"
+          write_conref "$VERSIONS_DIR/kagent-tools.md" "$KAGENT_TOOLS_VERSION"
+          write_conref "$VERSIONS_DIR/max-kube.md"     "$MAX_KUBE"
+          write_conref "$KUBE_VERSION_FILE"            "$MAX_KUBE"
+
+          # agent-substrate.md is version-split and 0.x is FROZEN:
+          #   {{< version include-if="0.x" >}}0.0.6{{< /version >}}{{< version include-if="1.x" >}}0.0.26{{< /version >}}
+          # Replace only the 1.x span. The 0.x value documents what kagent 0.9.x
+          # shipped against and must never be rewritten from main.
+          SUBSTRATE_CONREF="$VERSIONS_DIR/agent-substrate.md"
+          if [ ! -f "$SUBSTRATE_CONREF" ]; then
+            echo "Error: expected conref $SUBSTRATE_CONREF"
+            exit 1
+          fi
+
+          # Read, substitute, then printf the result back, rather than sed -i.
+          # Whether sed -i appends a trailing newline to a file that lacked one
+          # is unspecified by POSIX and varies between implementations; $( )
+          # strips trailing newlines and printf '%s' writes none, so the byte
+          # layout is deterministic either way.
+          SUBSTRATE_BEFORE=$(cat "$SUBSTRATE_CONREF")
+          SUBSTRATE_AFTER=$(printf '%s' "$SUBSTRATE_BEFORE" \
+            | sed -E "s|(include-if=\"1\.x\" >\}\})[^{]*(\{\{< /version >\}\})|\1${SUBSTRATE_VERSION}\2|")
+          printf '%s' "$SUBSTRATE_AFTER" > "$SUBSTRATE_CONREF"
+
+          # Prove the surgery did what it claims: the 1.x span now holds the new
+          # value, and the 0.x span is byte-identical to what it was. -F because
+          # the needle is a literal containing regex metacharacters.
+          if ! printf '%s' "$SUBSTRATE_AFTER" | grep -qF "include-if=\"1.x\" >}}${SUBSTRATE_VERSION}{{< /version >}}"; then
+            echo "Error: the 1.x span of agent-substrate.md did not take the new value."
+            echo "  before: $SUBSTRATE_BEFORE"
+            echo "  after:  $SUBSTRATE_AFTER"
+            exit 1
+          fi
+          BEFORE_0X=$(printf '%s' "$SUBSTRATE_BEFORE" | sed -E 's|(\{\{< version include-if="1\.x").*||')
+          AFTER_0X=$(printf '%s' "$SUBSTRATE_AFTER" | sed -E 's|(\{\{< version include-if="1\.x").*||')
+          if [ "$BEFORE_0X" != "$AFTER_0X" ]; then
+            echo "Error: the frozen 0.x span of agent-substrate.md changed. Refusing to continue."
+            echo "  before: $BEFORE_0X"
+            echo "  after:  $AFTER_0X"
+            exit 1
+          fi
+
+          echo "Version-split conref:"
+          if [ "$SUBSTRATE_BEFORE" != "$SUBSTRATE_AFTER" ]; then
+            echo "  agent-substrate.md 1.x span -> $SUBSTRATE_VERSION (0.x span untouched)"
+          else
+            echo "  agent-substrate.md: unchanged ($SUBSTRATE_VERSION)"
+          fi
+
+      - name: Flag whether the conrefs moved
+        run: |
+          set -euo pipefail
+          cd website
+          # Drives the re-test callout in the PR body below. Most nights this is
+          # empty and the PR is a routine reference regeneration.
+          if git diff --quiet -- docs-site/assets/kagent-docs/versions public/docs/versions; then
+            echo "CONREFS_CHANGED=" >> $GITHUB_ENV
+            echo "CONREF_NOTE=" >> $GITHUB_ENV
+            echo "No conref changes this run; this is a routine reference regeneration."
+          else
+            echo "CONREFS_CHANGED=1" >> $GITHUB_ENV
+            echo "Conref changes in this run:"
+            git diff --stat -- docs-site/assets/kagent-docs/versions public/docs/versions
+            # Multi-line env value, so the PR body can carry a real callout.
+            {
+              echo "CONREF_NOTE<<CONREF_NOTE_EOF"
+              echo "> [!IMPORTANT]"
+              echo "> **A version conref moved in this run, so this is not a routine regeneration.**"
+              echo "> These values render into \`helm install --version\` lines that readers copy out of"
+              echo "> \`setup/installation.md\`, \`observability/tracing.md\`, and \`observability/audit-prompts.md\`."
+              echo "> Merging asserts the guides work against the versions below, so re-test the affected"
+              echo "> guides rather than merging on green CI alone."
+              echo ""
+              echo '```diff'
+              git diff -- docs-site/assets/kagent-docs/versions public/docs/versions | sed -n 's/^\([+-][^+-]\)/\1/p'
+              echo '```'
+              echo "CONREF_NOTE_EOF"
+            } >> $GITHUB_ENV
+          fi
 
       - name: Verify API directory exists
         run: |
@@ -399,11 +628,24 @@ jobs:
           path: website
           commit-message: "docs: Update kagent 1.x and kmcp reference docs"
           signoff: true
-          title: "Update kagent 1.x and kmcp reference docs"
+          title: "Update kagent 1.x and kmcp reference docs${{ env.CONREFS_CHANGED && ' (version conrefs changed)' || '' }}"
           body: |
-            Automated update of the kagent 1.x API and Helm references and the kmcp API reference, based on the latest commits:
+            Automated update of the kagent 1.x API and Helm references, the kmcp API reference, and the version conrefs, based on the latest commits:
             - **kagent**: [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }})
             - **kmcp**: [`${{ env.KMCP_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kmcp/commit/${{ env.KMCP_COMMIT }})
+
+            ${{ env.CONREF_NOTE }}
+
+            Version conrefs in this run, each read from the same place kagent's own build reads it:
+
+            | Conref | Value | Source in kagent |
+            | ------ | ----- | ---------------- |
+            | `agent-substrate` (1.x span only) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target |
+            | `kmcp` | `${{ env.KMCP_VERSION }}` | `go/go.mod` require |
+            | `kagent-tools` | `${{ env.KAGENT_TOOLS_VERSION }}` | `helm/kagent/Chart-template.yaml` |
+            | `max-kube` (both committed copies) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
+
+            Unchanged conref values are normal: most runs touch only the generated reference pages.
 
             This PR was automatically generated by the [**Update Reference documentation** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/update-ref-docs.yaml).
           branch: api-gen-update

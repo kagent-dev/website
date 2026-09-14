@@ -42,10 +42,8 @@ kagent 1.0 is a deliberate clean break from the 0.10.x line, and the compatibili
 Moving from 0.10.x therefore means standing up a new installation and recreating your resources on it, rather than running `helm upgrade`. For the procedure, see [Upgrade]({{< link path="operations/upgrade" >}}).
 
 <!--TODO
-Update the conrefs, not this page, when versions change:
-- docs-site/assets/kagent-docs/versions/kagent.md
-- docs-site/assets/kagent-docs/versions/agent-substrate.md   (also sourced from helm/kagent/Chart.yaml)
-- docs-site/assets/kagent-docs/versions/kmcp.md              (also sourced from helm/kagent/Chart.yaml)
-- docs-site/assets/kagent-docs/versions/kagent-tools.md      (also sourced from helm/kagent/Chart.yaml)
-- docs-site/assets/kagent-docs/versions/max-kube.md          (KIND_IMAGE_VERSION in the kagent Makefile)
+The agent-substrate, kmcp, kagent-tools, and max-kube conrefs are overwritten
+nightly by the update-version-conrefs job in .github/workflows/update-ref-docs.yaml.
+Correct a wrong value in that job, not in the conref, or the next run reverts it.
+kagent.md is the exception and is hand-maintained.
 -->
