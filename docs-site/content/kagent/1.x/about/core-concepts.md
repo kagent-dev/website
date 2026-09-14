@@ -5,7 +5,9 @@ weight: 20
 author: kagent.dev
 ---
 
-kagent 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, and **AgentInstance**, running on [Agent Substrate]({{< link path="about/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use.
+## kagent 1.0
+
+kagent 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, and **AgentInstance**, running on [Agent Substrate]({{< link path="about/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
 
 The new model separates what an agent can do from how it is allowed to run:
 

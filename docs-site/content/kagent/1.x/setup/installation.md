@@ -7,6 +7,9 @@ author: kagent.dev
 
 kagent 1.0 runs every agent on [Agent Substrate]({{< link path="about/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on, and kagent provides the Harness, AgentTemplate, and AgentInstance API that you author against. Install Agent Substrate first, because the kagent controller connects to it at startup.
 
+> [!NOTE]
+> These steps install kagent 1.0 fresh. kagent 1.0 has no in-place upgrade from the 0.10.x version line, and installing its custom resource definitions replaces the ones that a 0.10.x installation uses. To move an existing installation, start with [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}).
+
 ## Before you begin
 
 1. Install the following CLI tools.
