@@ -15,7 +15,7 @@ A kagent installation authenticates three different kinds of caller, and each on
 
 Harness and AgentTemplate are Kubernetes custom resources, so Kubernetes role-based access control (RBAC) governs who can create, read, edit, or delete them with `kubectl`. A cluster's existing roles and bindings decide who authors an agent's runtime and its behavior on that path.
 
-kagent's gRPC API reaches the same two resources by a second path. `kagent apply -f`, and the AgentTemplate and Harness services behind it, create, update, and delete these resources through the kagent controller. The controller writes them with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent plane authorizes this path instead.
+kagent's gRPC API reaches the same two resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent plane authorizes this path instead.
 
 > [!WARNING]
 > Because the open source build's authorizer permits every check, any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster.
