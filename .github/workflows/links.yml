@@ -9,6 +9,16 @@ name: Links
 # docs-site/. The whole Hugo build IS the docs (it is served under /docs/), so
 # all of public/**/*.html is scanned.
 #
+# Output formats: hugo.yaml gives every page an HTML *and* a markdown output,
+# plus llms.txt per section, so one page ships at two different URL shapes:
+#   HTML     /docs/kagent/resources/cli/kagent-get/      (directory URL)
+#   markdown /docs/kagent/resources/cli/kagent-get.md    (file URL)
+# A relative link resolves differently in each, so scanning only *.html misses
+# a whole class of broken link. It did: the generated CLI pages in #470 shipped
+# "../kagent-get-agent/" links that were correct in HTML and 404 in the .md
+# export, and this job passed green. Scanning that same build with *.md added
+# reports 36 errors. All three formats are therefore in the input list below.
+#
 # Subpath quirk: docs-site's baseURL is https://kagent.dev/docs/, but Hugo emits
 # the pages at the ROOT of public/ (public/kagent/, public/kmcp/), NOT under a
 # public/docs/ subdirectory. So links have to be remapped two ways:
@@ -119,6 +129,16 @@ jobs:
           #      -> public/… by stripping the extra /docs segment
           #   3. marketing chrome links -> production URLs (checked live on the
           #      schedule, excluded as external on PRs)
+          #
+          # The file:// exclude is specific to scanning the markdown outputs.
+          # Lychee auto-links bare URLs in markdown, and the generated Helm page
+          # publishes a helm-docs "Requirements" table whose Repository column
+          # holds local sub-chart paths written as literal "file://../agents/k8s"
+          # text. Those are chart dependency paths, not links: the HTML renders
+          # them as plain text, so the HTML scan never saw them. Only the
+          # scheme-prefixed relative form is excluded — a genuinely broken
+          # relative link in a .md export resolves against the containing file
+          # and is reported as an absolute path, so it is still caught.
           LYCHEE_COMMON=(lychee
             --verbose
             --config docs-link-checking/lychee.toml
@@ -127,10 +147,13 @@ jobs:
             --remap "^https://kagent\.dev/docs/ file://${{ github.workspace }}/docs-site/public/"
             --remap "^file://${{ github.workspace }}/docs-site/public/docs(/.*)?\$ file://${{ github.workspace }}/docs-site/public\$1"
             --remap "^file://${{ github.workspace }}/docs-site/public/(agents|blog|community|enterprise|tools)/?\$ https://kagent.dev/\$1"
+            --exclude '^file://\.\.'
             --format json
             --user-agent curl/8.4.0
             --output "${{ github.workspace }}/artifacts/kagent-oss-links.json"
             docs-site/public/**/*.html
+            docs-site/public/**/*.md
+            docs-site/public/**/llms*.txt
           )
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then

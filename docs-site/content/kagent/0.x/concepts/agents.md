@@ -387,6 +387,28 @@ spec:
 | `provider.organization` | Name of the organization responsible for the agent. |
 | `provider.url` | URL to the agent provider's website or documentation. Must be a valid URI. |
 
+## A2A AgentCard metadata
+
+When another agent or client discovers your agent over the [A2A protocol](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
+
+```yaml
+spec:
+  iconUrl: https://example.com/icons/my-agent.png
+  documentationUrl: https://docs.example.com/my-agent/
+  version: "1.0.0"
+  provider:
+    organization: My Organization
+    url: https://example.com
+```
+
+| Field | Description |
+|-------|-------------|
+| `iconUrl` | URL to an icon image representing the agent. Must be a valid URI. |
+| `documentationUrl` | URL to human-readable documentation for the agent. Must be a valid URI. |
+| `version` | Version string for the agent, such as `"1.0.0"`. |
+| `provider.organization` | Name of the organization responsible for the agent. |
+| `provider.url` | URL to the agent provider's website or documentation. Must be a valid URI. |
+
 ## Agents as Tools
 
 kagent also supports using agents as tools. Any agent you create can be referenced and used by other agents you have. An example use case would be to have a PromQL agent that knows how to create PromQL queries from natural language. Then you'd create a second agent that would use the PromQL agent whenever it needs to create a PromQL query.

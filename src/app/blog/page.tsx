@@ -15,6 +15,20 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'blacksmith-ci',
+        publishDate: '2026-09-04',
+        title: 'Next generation CI using Blacksmith',
+        description: 'Life of a maintainer: How we cut our CI time by 1/3 using Blacksmith',
+        authorId: 'eitanya',
+    },
+    {
+        slug: 'agents-on-every-cloud',
+        publishDate: '2026-08-27',
+        title: 'Agents on Every Cloud',
+        description: 'The open source distributions of kagent and agentgateway are now on the AWS, Azure, and Google Cloud marketplaces. Deploy both and connect them: from install to an agent served through agentgateway over A2A.',
+        authorId: 'petrmcallister',
+    },
+    {
         slug: 'dnb-kagent-agentgateway',
         publishDate: '2026-07-13',
         title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
