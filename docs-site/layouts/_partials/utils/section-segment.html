@@ -1,0 +1,210 @@
+{{- /*
+  section-segment.html — detect an optional content-division path segment
+  (e.g. "kubernetes"/"standalone" for agentgateway, "envoy"/"agentgateway"
+  for kgateway) that a product opts into by registering keys under
+  site.Params.sections.
+
+  Products nest their version trees directly under the product root
+  (/<product>/<version>/…). A product with more than one parallel
+  documentation section can instead nest version trees under a section
+  segment (/<product>/<section>/<version>/…), matching how OSS sites lay
+  theirs out. Every file that parses Page.RelPermalink to find the version
+  segment needs to know whether a section segment is in the way; this
+  partial is the one place that answers "is there one, and where."
+
+  A section registers by existing as a key under site.Params.sections, even
+  with no fields set (e.g. `[params.sections.kubernetes]` with nothing under
+  it). See docs-theme-extras USAGE.md, "Versions and sections", for the full
+  contract. (The table used to be able to carry a `.versions` override too;
+  that shape was removed in 0.2.2 — see utils/resolve-section-versions.html.)
+
+  A consumer that IMPORTS a module which declares its own sections inherits
+  them, because Hugo deep-merges an imported module's params into the project's.
+  Decline that with stock Hugo config-merge control rather than anything in this
+  theme — `[params.sections]` with `_merge = "none"`. See docs-theme-extras
+  USAGE.md, "Versions and sections".
+
+  Input: a Page (passed as `.`)
+  Output: dict:
+    segment  string — the matched section string, or "" if none/not
+                       configured
+    index    int    — the index of that segment within
+                       split(trim(.RelPermalink, "/"), "/"), i.e. 0 for the
+                       first path segment after the domain/baseURL. -1 if
+                       no match.
+
+  Products that don't set site.Params.sections get segment="" always, so
+  every caller's existing math is unchanged for them.
+*/ -}}
+{{- $page := . -}}
+{{- $segment := "" -}}
+{{- $index := -1 -}}
+{{- if site.Params.sections -}}
+  {{- $parts := split (strings.Trim $page.RelPermalink "/") "/" -}}
+
+  {{- /* Same shape fallback as utils/version-root.html, for a version segment
+         that matches no configured entry. */ -}}
+  {{- $versionShapeRE := `^(?:\d+\.\d+\.(?:x|\d+)|latest|main)$` -}}
+  {{- $known := slice -}}
+  {{- range site.Params.versions -}}
+    {{- with (.linkVersion | default .version) -}}{{- $known = $known | append . -}}{{- end -}}
+  {{- end -}}
+
+  {{- /* VERSION-LESS SITES. A site can ship parallel doc sets with no version
+         axis at all — kagent's docs are `kagent` and `kmcp`, neither versioned.
+         Such a site has nothing for conditions (a) or (b) below to key off: no
+         version ever follows the section segment, so (a) never fires, and every
+         page below the section fails (b) because the section is not the last
+         segment. Without a third condition, registering sections on a
+         version-less site silently does nothing.
+
+         The third condition is POSITIONAL, deliberately, and only applies when
+         the site declares NO versions whatsoever. A section on a version-less
+         site sits exactly one segment below the docs root, and $docsRootDepth is
+         how many URL segments precede that root:
+
+           home /            depth 0   → section at /<section>/
+           home /docs/       depth 1   → section at /docs/<section>/   (kagent)
+           home /agentgateway/ depth 1 → section at /<product>/<section>/
+           home /ja/         depth 1   → section at /<lang>/<section>/
+
+         Reading it off site.Home.RelPermalink absorbs a baseURL subpath, a
+         per-product hub baseURL and a language prefix without this partial
+         having to know which one it is looking at. The `docs` alternative below
+         covers the OSS shape where the docs root is a content directory rather
+         than the baseURL (home is the MARKETING page at /, docs live at /docs/).
+
+         Keeping it positional is what stops this from reintroducing the
+         match-anywhere bug documented below: on a version-less site
+         /docs/kagent/reference/kagent/ still resolves `kagent` only at index 1,
+         never at index 3. */ -}}
+  {{- $versionless := not site.Params.versions -}}
+  {{- $homeTrim := strings.Trim site.Home.RelPermalink "/" -}}
+  {{- $docsRootDepth := 0 -}}
+  {{- if $homeTrim -}}
+    {{- $docsRootDepth = len (split $homeTrim "/") -}}
+  {{- end -}}
+
+  {{- range $i, $p := $parts -}}
+    {{- if and (eq $segment "") (isset site.Params.sections $p) -}}
+      {{- /* POSITION MATTERS. A registered key is only a SECTION where a section
+             can legitimately sit: immediately above a version tree. Matching the
+             key wherever it appears makes any ordinary content directory that
+             shares a section's name break that page.
+
+             That is not hypothetical. solo-io/docs imports
+             github.com/kgateway-dev/kgateway.dev for content and therefore
+             inherits its `sections.envoy` key (Hugo deep-merges an imported
+             module's params). The hub also ships
+             content/en/kgateway/2.3.x/setup/customize/envoy/ — eight real pages.
+             Matching by name alone made version-root.html build
+             lookupPath="/envoy/2.3.x/", site.GetPage resolved nothing, and those
+             pages rendered with a COMPLETELY EMPTY left nav. No error, no
+             warning; it reads as a content problem.
+
+             Two positions qualify:
+
+               (a) the next segment is a version — /<section>/<version>/…
+               (b) it is the LAST segment and no version precedes it — the
+                   section landing page, /<product>/<section>/
+
+             (b) needs the "no version precedes it" half, or
+             /kgateway/2.3.x/setup/customize/envoy/ (the _index.md of that content
+             directory) reads as a section landing page and has its nav
+             suppressed — trading an empty nav for a missing one on the same
+             pages. A section sits ABOVE version trees, never below one.
+
+               (c) the site declares NO versions and the key sits exactly one
+                   segment below the docs root — see $docsRootDepth above. Gated
+                   on version-less-ness so that no site with versions changes
+                   behavior at all. */ -}}
+      {{- $next := "" -}}
+      {{- if lt (add $i 1) (len $parts) -}}{{- $next = index $parts (add $i 1) -}}{{- end -}}
+      {{- $nextIsVersion := or (in $known $next) (and $next (findRE $versionShapeRE $next)) -}}
+
+      {{- $versionPrecedes := false -}}
+      {{- range $j, $q := $parts -}}
+        {{- if lt $j $i -}}
+          {{- if or (in $known $q) (findRE $versionShapeRE $q) -}}
+            {{- $versionPrecedes = true -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+
+      {{- $isLanding := and (eq $i (sub (len $parts) 1)) (not $versionPrecedes) -}}
+
+      {{- /* (c). The `docs` alternative is index-guarded because $docsRootDepth
+             is derived from the home page and $parts from the page being
+             rendered — on a shallower URL than the home path the index would be
+             out of range and abort the build. */ -}}
+      {{- $atDocsRoot := eq $i $docsRootDepth -}}
+      {{- if and (not $atDocsRoot) (eq $i (add $docsRootDepth 1)) (lt $docsRootDepth (len $parts)) -}}
+        {{- if eq (index $parts $docsRootDepth) "docs" -}}
+          {{- $atDocsRoot = true -}}
+        {{- end -}}
+      {{- end -}}
+
+      {{- /* A VERSION-LESS SITE USES (c) ALONE — it does not also get (a) and
+             (b), and that exclusivity is the fix for a real hole.
+
+             (b) accepts "last segment, and no version precedes it". On a
+             VERSIONED site the second half carries the weight: almost every
+             content page sits under a version, so a trailing segment that
+             happens to share a section's name is rejected. Remove versions from
+             the site and nothing ever has a version before it — so (b) starts
+             accepting a registered name as a section at ANY depth, purely for
+             being last.
+
+             Caught by the fixture's /docs/topics/alpha/, where `topics` is not a
+             section and `alpha` is: it resolved to section `alpha` at index 2
+             and rendered the alpha tree on a page that belongs to neither doc
+             set. (a) is likewise vacuous here, since no segment can be a
+             version. So on a version-less site the positional test is the only
+             meaningful one, and making it the only one applied is both simpler
+             and tighter. */ -}}
+      {{- /* kagent project override — the ONLY change to this file. Upstream:
+
+               {{- if $versionless -}}
+                 {{- $accept = $atDocsRoot -}}
+               {{- else -}}
+                 {{- $accept = or $nextIsVersion $isLanding -}}
+               {{- end -}}
+
+             Upstream treats a site as EITHER version-less (positional test (c)
+             alone) or versioned ((a) or (b)). This site is both at once: kagent
+             nests 0.x and 1.x under /docs/kagent/, kmcp has no version axis at
+             all, and they share one Hugo build. Declaring kagent's versions --
+             which is mandatory, since site.Params.versions is the only list the
+             module reads -- puts the whole site on the versioned branch, where
+             kmcp satisfies (a) nowhere and (b) only on /docs/kmcp/ itself. Every
+             kmcp page below that resolved to NO section, which drops kmcp and
+             kagent to one entry in utils/resolve-sections.html and so renders no
+             section selector: from any kmcp page there was no way back to the
+             kagent docs through the navbar.
+
+             Folding (c) in ungated fixes that, and is safe for the reason
+             upstream's own header gives for keeping (c) positional: it accepts a
+             registered key at exactly one segment below the docs root and
+             nowhere else, so it cannot reintroduce the match-anywhere bug. The
+             `$versionless` gate exists to stop (b) over-matching on a site with
+             no versions; (c) has no such failure mode, and (a) still resolves
+             every kagent page identically -- /docs/kagent/0.x/... matches (a) at
+             index 1 and (c) at index 1.
+
+             Retire this override if the module makes (c) unconditional, or if
+             kmcp ever nests a version tree of its own. */ -}}
+      {{- $accept := false -}}
+      {{- if $versionless -}}
+        {{- $accept = $atDocsRoot -}}
+      {{- else -}}
+        {{- $accept = or $nextIsVersion $isLanding $atDocsRoot -}}
+      {{- end -}}
+
+      {{- if $accept -}}
+        {{- $segment = $p -}}
+        {{- $index = $i -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return (dict "segment" $segment "index" $index) -}}

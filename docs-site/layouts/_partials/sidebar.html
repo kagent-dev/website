@@ -18,8 +18,8 @@
   sidebar-children, data-sidebar-item, sidebar-mobile-panel) so the toggle JS and
   mobile drawer in docs-theme-extras keep working.
 
-  kagent (unlike kmcp) is also versioned (0.x, 1.x — see
-  sections.kagent.versions in hugo.yaml). .FirstSection alone would root the
+  kagent (unlike kmcp) is also versioned (0.x, 1.x — see the params.versions
+  entries tagged `sections: ["kagent"]` in hugo.yaml). .FirstSection alone would root the
   tree at the "kagent" product page, whose direct children are now the 0.x
   and 1.x version pages themselves — so BOTH versions' full trees would
   render side by side, and the version switcher (navbar.html) would have no
@@ -43,9 +43,18 @@
   {{- $navRoot := $context.FirstSection -}}
   {{- $suppress := false -}}
 
+  {{- /* Versions resolve through the module's utils/resolve-section-versions.html,
+         the one place that knows which entries in site.Params.versions apply to a
+         section. Reading site.Params.sections.<x>.versions directly — as this did
+         through docs-theme-extras v0.2.0 — stopped working in v0.2.2, when that
+         per-section list was removed in favour of tagging entries in the single
+         top-level list. The failure is silent: the lookup yields nothing, the
+         version branch never runs, and the sidebar roots at the product page, so
+         0.x and 1.x render as one 197-item tree and the version switcher stops
+         affecting the nav. */ -}}
   {{- $sectionKey := $context.Section -}}
   {{- if and $sectionKey (isset $context.Site.Params.sections $sectionKey) -}}
-    {{- with (index $context.Site.Params.sections $sectionKey).versions -}}
+    {{- with partial "utils/resolve-section-versions.html" $sectionKey -}}
       {{- $segments := split (strings.Trim $context.RelPermalink "/") "/" -}}
       {{- $sectionIdx := -1 -}}
       {{- range $i, $seg := $segments -}}

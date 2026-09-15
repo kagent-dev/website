@@ -70,6 +70,15 @@ markup:
 
 enableInlineShortcodes: true
 
+# kmcp is registered under params.sections to scope the version dropdown (so
+# kagent's 0.x/1.x never appear on kmcp pages) and to put both doc sets in the
+# navbar section selector. It nests no version tree of its own, which is the
+# shape docs-theme-extras warns about on every build. That registration is
+# deliberate here, and the module documents allowlisting the warning as the way
+# to say so.
+ignoreLogs:
+  - extras-section-hollow
+
 params:
   # Section registry, alphabetical. A section exists because it is a key here.
   # See docs-theme-extras USAGE.md, "Versions and sections".
@@ -93,20 +102,87 @@ params:
   # falls through to a Material Icons ligature and renders as literal text, so a
   # typo here shows up on the page rather than failing the build.
   #
-  # Do NOT add params.versions to make something else work. These sections
-  # resolve through the theme's version-less path, and a single version entry
-  # moves the whole site onto the versioned path, where a section is only
-  # recognized directly above a version tree — of which this site has none.
+  # Registration only — a section's version list is NOT a sub-key here. The
+  # `sections.<x>.versions` shape this file used through docs-theme-extras
+  # v0.2.0 was removed in v0.2.2; every version now lives in the single
+  # top-level `versions` list below and names the sections it belongs to. See
+  # `versions` for why that single list is load-bearing, and the module's
+  # utils/resolve-section-versions.html for the removal rationale.
   sections:
     kagent:
       icon: icons/nav-kagent.svg
     kmcp:
       icon: icons/nav-kmcp.svg
 
+  # THE version list — docs-theme-extras reads this key and no other. Each entry
+  # names the sections it applies to, and an entry with no `sections` applies to
+  # every section. kagent is the only versioned doc set on this site, so its
+  # entries are tagged `[kagent]` and kmcp — the other product built into this
+  # same Hugo site — resolves to an empty list and renders no version dropdown.
+  #
+  # Tagging is what keeps this ONE list rather than two. Before v0.2.2 a section
+  # could carry its own `sections.<x>.versions`, and everything that reads
+  # site.Params.versions directly was blind to it: the `version` shortcode (so
+  # every {{< version include-if="1.x" >}} inside assets/kagent-docs/versions/*.md
+  # rendered EMPTY, blanking the version table on reference/versions.md with no
+  # error), flexsearch's visibleVersions, the version banner, and the noindex
+  # partial. A clean build with blank version numbers is the failure mode this
+  # single list prevents.
+  #
+  # 0.x is the frozen pre-1.0 doc set (moved verbatim from the former flat
+  # content/kagent/ tree); 1.x is the in-progress v1alpha3/Agent Substrate
+  # rewrite and carries an in-development banner until it's ready to become
+  # the default.
+  #
+  # Declaring versions at all moves section resolution off the theme's
+  # version-less positional path (utils/section-segment.html condition (c)) and
+  # onto the versioned path, where a section is recognized only directly above a
+  # version tree — condition (a) — or as its own landing page — condition (b).
+  # kagent satisfies (a): /docs/kagent/<0.x|1.x>/…. kmcp has no version tree, so
+  # it satisfies (a) nowhere and (b) only on its own landing page, /docs/kmcp/.
+  # Every kmcp page below that resolves to no section and falls back to a left
+  # nav rooted at site.Home — which is why layouts/_partials/sidebar.html carries
+  # a local override. Verify a kmcp sub-page's sidebar after any change here.
+  versions:
+    - version: "0.x"
+      dropdown: "0.x (current)"
+      linkVersion: "0.x"
+      url: "/kagent/0.x"
+      sections: ["kagent"]
+    # The "1.x" entry is deliberately absent until the 1.0 release is announced.
+    # This list drives the version switcher independently of whether the pages
+    # exist, so leaving the entry here while the content is drafted publishes a
+    # "1.x (preview)" menu item pointing at a 404. hugo.preview.yaml layers it
+    # back for local authoring; restore it here alongside dropping the draft keys
+    # in content/kagent/1.x/_index.md:
+    #
+    #   - version: "1.x"
+    #     dropdown: "1.x (preview)"
+    #     linkVersion: "1.x"
+    #     url: "/kagent/1.x"
+    #     sections: ["kagent"]
+    #     banner: "This is preview documentation for the upcoming kagent 1.0 release. It is incomplete and may change without notice."
+
   # Label on the section selector button. Without it the button falls back to
   # site.Title ("kagent docs"), which reads oddly above a menu offering kagent
   # and kmcp. Matches the "Docs" label the hand-rolled menu dropdown used.
   product: "Docs"
+
+  # The docs root segment, as it appears in every page's RelPermalink. It comes
+  # from the /docs/ path on baseURL, not from a content directory, but the theme
+  # cannot tell those apart: navbar.html finds the version segment by counting
+  # segments from the left, and it counts one for `folder` only when this is set
+  # AND the URL actually starts with it. Unset, the count is one short on this
+  # site — /docs/kagent/0.x/… yields "kagent" as the version, nothing matches,
+  # and the version dropdown silently does not render at all.
+  #
+  # `hugo server` keeps the path component of baseURL, so the prefix test holds
+  # locally as well as in production.
+  #
+  # This is NOT where the PDF link's product segment comes from, even though
+  # `folder` sits in that fallback chain — pdfDownload.product below is set
+  # explicitly and wins.
+  folder: docs
 
   # Hide the visible "Last updated on <date>" footer (imported OSS content
   # modules ship displayUpdatedDate=true; this overrides it). The git date still
@@ -172,36 +248,6 @@ params:
   theme:
     # Auto-render the light/dark toggle in the navbar
     displayToggle: true
-
-  # Per-section version lists, consumed by the local navbar.html override
-  # (layouts/_partials/navbar.html) and by docs-theme-extras' version-cards
-  # shortcode. Scoped under sections.kagent rather than the top-level
-  # `versions` key so kmcp — the other product built into this same Hugo
-  # site — never picks up kagent's version dropdown. See the navbar.html
-  # override's header comment for why that scoping is necessary here.
-  #
-  # 0.x is the frozen pre-1.0 doc set (moved verbatim from the former flat
-  # content/kagent/ tree); 1.x is the in-progress v1alpha3/Agent Substrate
-  # rewrite and carries an in-development banner until it's ready to become
-  # the default.
-  sections:
-    kagent:
-      versions:
-        - version: "0.x"
-          dropdown: "0.x (current)"
-          linkVersion: "0.x"
-          url: "/kagent/0.x"
-        # The "1.x" entry is deliberately absent until the 1.0 release is
-        # announced. This list drives the version switcher independently of
-        # whether the pages exist, so leaving the entry here while the content
-        # is drafted publishes a "1.x (preview)" menu item pointing at a 404.
-        # Restore it alongside the draft keys in content/kagent/1.x/_index.md:
-        #
-        #   - version: "1.x"
-        #     dropdown: "1.x (preview)"
-        #     linkVersion: "1.x"
-        #     url: "/kagent/1.x"
-        #     banner: "This is preview documentation for the upcoming kagent 1.0 release. It is incomplete and may change without notice."
 
 # Top nav — mirrors kagent.dev. Docs is local; the marketing/blog sections stay
 # on the Next.js site, so those link out to absolute kagent.dev URLs.
