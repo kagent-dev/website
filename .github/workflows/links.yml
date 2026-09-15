@@ -1,7 +1,9 @@
 name: Links
 
 # Scheduled: full check on all built docs pages, creates an issue, posts to Slack.
-# Pull request: local links only on changed files, no issue or Slack.
+# Pull request: local links only, across the whole build — the paths filter
+# below decides whether the job runs, not which pages it scans. No issue or
+# Slack; the job fails the check instead.
 #
 # Scope: kagent-dev/website is a mixed repo — a Next.js marketing worker at the
 # root and a Hugo docs site under docs-site/ that consumes docs-theme-extras.
@@ -48,6 +50,7 @@ on:
       - 'docs-site/layouts/**'
       - 'docs-site/static/**'
       - 'docs-site/hugo.yaml'
+      - 'docs-site/hugo.preview.yaml'
       - 'docs-site/go.mod'
       - 'docs-site/go.sum'
       - '.github/workflows/links.yml'
@@ -108,7 +111,17 @@ jobs:
           # docs-site's CSS pipeline shells out to tooling in its own
           # devDependencies, so install them first so Hugo finds the binaries.
           npm ci
-          hugo --config hugo.yaml --gc --minify
+          # The preview overlay and -D are what put content/kagent/1.x/ in this
+          # build at all. That section is withheld from production by a draft
+          # cascade in 1.x/_index.md, so a plain `hugo --config hugo.yaml`
+          # renders ZERO 1.x pages and this job passes green having scanned
+          # none of them. The overlay also restores the 1.x entry in
+          # params.versions, without which every {{< version include-if="1.x" >}}
+          # renders empty. Both are temporary: at the 1.0 release the draft keys
+          # and hugo.preview.yaml go away, and this line reverts to
+          # `hugo --config hugo.yaml --gc --minify`. The Makefile and
+          # preview.yaml layer the overlay the same way.
+          hugo --config hugo.yaml,hugo.preview.yaml -D --gc --minify
 
       - name: Prepare workspace
         run: mkdir -p artifacts

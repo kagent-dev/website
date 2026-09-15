@@ -367,7 +367,7 @@ For setup steps, see the [Agent Substrate example]({{< link path="examples/agent
 
 ## A2A AgentCard metadata
 
-When another agent or client discovers your agent over the [A2A protocol](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
+When another agent or client discovers your agent over the [A2A protocol](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
 
 ```yaml
 spec:
@@ -389,7 +389,7 @@ spec:
 
 ## A2A AgentCard metadata
 
-When another agent or client discovers your agent over the [A2A protocol](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
+When another agent or client discovers your agent over the [A2A protocol](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card), it reads a machine-readable AgentCard from your agent's `/.well-known/agent.json` endpoint. You can enrich that card with optional metadata fields on the `Agent` spec.
 
 ```yaml
 spec:

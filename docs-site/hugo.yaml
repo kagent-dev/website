@@ -149,6 +149,22 @@ params:
       linkVersion: "0.x"
       url: "/kagent/0.x"
       sections: ["kagent"]
+      # `latest` marks the current release, and it is one of only two signals
+      # docs-theme-extras' utils/version-noindex.html accepts (the other is a
+      # `linkVersion: "latest"` URL segment, which this site does not use).
+      # Without it the partial matches nothing and emits no robots meta at all,
+      # so no version is ever marked as superseding another. 0.x is correct
+      # today: kagent v0.10.1 is the released chart.
+      #
+      # It changes nothing in the current production build, because 1.x is
+      # draft and no second version is rendered. It starts mattering the moment
+      # 1.x publishes: the partial noindexes a NON-latest page whenever the same
+      # page exists in the latest version, so with `latest` left here, 1.x pages
+      # that duplicate a 0.x page would be noindexed — the theme's deliberate
+      # "unreleased docs should not outrank the current release" behavior.
+      # Whether 1.0 takes `latest` over at release is an open decision; see
+      # RELEASE-1.0-CHECKLIST.md.
+      latest: true
     # The "1.x" entry is deliberately absent until the 1.0 release is announced.
     # This list drives the version switcher independently of whether the pages
     # exist, so leaving the entry here while the content is drafted publishes a

@@ -23,7 +23,7 @@ Clicking an app opens a standalone testing page where you can invoke the tool wi
 
 ## Try it out
 
-The [Server Everything](https://servereverything.dev/mcp) reference MCP server exposes a `show-weather-dashboard` MCP App. Connect it to kagent with a `RemoteMCPServer`:
+The [Server Everything](https://servereverything.dev/) reference MCP server exposes a `show-weather-dashboard` MCP App. Connect it to kagent with a `RemoteMCPServer`:
 
 ```yaml
 apiVersion: kagent.dev/v1alpha2

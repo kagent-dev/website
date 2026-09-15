@@ -84,7 +84,7 @@ For a full comparison, see [Agents — Runtime]({{< link path="concepts/agents#r
 
 ### A2A AgentCard metadata
 
-You can now enrich your agent's [A2A AgentCard](https://google.github.io/A2A/specification/#5-agent-discovery-using-an-agent-card) with optional metadata fields on the `Agent` spec. The AgentCard is served from `/.well-known/agent.json` and is read by other agents and A2A-compatible clients when they discover your agent.
+You can now enrich your agent's [A2A AgentCard](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card) with optional metadata fields on the `Agent` spec. The AgentCard is served from `/.well-known/agent.json` and is read by other agents and A2A-compatible clients when they discover your agent.
 
 ```yaml
 spec:
@@ -1187,8 +1187,8 @@ kmcp example:
 ##### HTTP ToolServer moved to RemoteMCPServer
 
 ToolServer resources that used `type: streamableHttp` are now configured as RemoteMCPServer resources. For more detailed information, review the API definitions:
-* ToolServer: [toolserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/api/v1alpha1/toolserver_types.go)
-* RemoteMCPServer: [remotemcpserver_types.go](https://github.com/kagent-dev/kagent/blob/main/go/api/v1alpha2/remotemcpserver_types.go)
+* ToolServer: [toolserver_types.go](https://github.com/kagent-dev/kagent/blob/v0.10.1/go/api/v1alpha1/toolserver_types.go)
+* RemoteMCPServer: [remotemcpserver_types.go](https://github.com/kagent-dev/kagent/blob/v0.10.1/go/api/v1alpha2/remotemcpserver_types.go)
 * MCPServer: [mcpserver_types.go](https://github.com/kagent-dev/kmcp/blob/main/api/v1alpha1/mcpserver_types.go)
 
 {{< tabs >}}
@@ -1348,7 +1348,7 @@ This change supports the new type for BYO agents.
 
 {{< tabs >}}
 {{< tab name="Old Agent API" >}}
-[v1alpha1 Example](https://github.com/kagent-dev/kagent/blob/main/helm/agents/k8s/templates/agent.yaml):
+[v1alpha1 Example](https://github.com/kagent-dev/kagent/blob/v0.10.1/helm/agents/k8s/templates/agent.yaml):
   
   ```yaml
   apiVersion: kagent.dev/v1alpha2

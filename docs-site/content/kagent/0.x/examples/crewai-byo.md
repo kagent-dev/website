@@ -123,7 +123,7 @@ The A2A endpoint is exposed on the port `8083` of the kagent controller service.
    curl localhost:8083/api/a2a/kagent/research-crew/.well-known/agent.json
    ```
 
-   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a.guide/protocol/agent-card.html).
+   Example output: This JSON object describes the agent as per the [A2A protocol](https://a2a-protocol.org/latest/specification/#8-agent-discovery-the-agent-card).
 
    ```json
    {

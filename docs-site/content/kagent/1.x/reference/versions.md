@@ -39,7 +39,7 @@ kagent 1.0 is a deliberate clean break from the 0.10.x line, and the compatibili
 | 1.0 back to 0.10.x | No. Downgrade across the 1.0 boundary is unsupported. |
 | 1.0 forward to a later minor release | Yes. From 1.0 onward, migrations are append-only and each minor release retains compatibility with the previous release line. |
 
-Moving from 0.10.x therefore means standing up a new installation and recreating your resources on it, rather than running `helm upgrade`. For the procedure, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}).
+Moving from 0.10.x therefore means standing up a new installation and recreating your resources on it, rather than running `helm upgrade`. For the procedure, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}). For the resources that 1.0 replaces or removes, see [Release notes]({{< link path="reference/release-notes/1.0#removed-and-replaced-resources" >}}).
 
 <!--TODO
 The agent-substrate, kmcp, kagent-tools, and max-kube conrefs are overwritten

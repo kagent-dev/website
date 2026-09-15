@@ -23,6 +23,11 @@ params:
       linkVersion: "0.x"
       url: "/kagent/0.x"
       sections: ["kagent"]
+      # Restated from hugo.yaml along with the rest of this entry, since Hugo
+      # replaces a list-valued param rather than merging it. Marking the current
+      # release is what makes version-noindex.html do anything at all; see the
+      # long note on the same key in hugo.yaml.
+      latest: true
     - version: "1.x"
       dropdown: "1.x (preview)"
       linkVersion: "1.x"

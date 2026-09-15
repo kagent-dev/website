@@ -5,7 +5,7 @@ weight: 40
 author: kagent.dev
 ---
 
-kagent 1.0 has no in-place upgrade path from the 0.10.x line. Moving to 1.0 means installing kagent fresh against a new database, and recreating your resources on it. When your installation runs 1.0, you can perform regular in-place upgrades for later minor releases. To review upgrade paths and versions, see [Version support]({{< link path="reference/versions#release-support-and-compatibility" >}}).
+kagent 1.0 has no in-place upgrade path from the 0.10.x line. Moving to 1.0 means installing kagent fresh against a new database, and recreating your resources on it. When your installation runs 1.0, you can perform regular in-place upgrades for later minor releases. To review upgrade paths and versions, see [Version support]({{< link path="reference/versions#release-support-and-compatibility" >}}). For a summary of what 1.0 changes before you plan the move, see [Release notes]({{< link path="reference/release-notes/1.0#100" >}}).
 
 ## In-place upgrade blockers
 
