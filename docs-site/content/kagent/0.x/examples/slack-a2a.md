@@ -6,8 +6,6 @@ weight: 3
 author: kagent.dev
 ---
 
-};
-
 kagent enables you to create AI agents that run inside your Kubernetes cluster. They have access to a variety of [built-in tools]({{< link path="concepts/tools" >}}) like Kubernetes, Istio, Grafana, Prometheus, Argo and can be extended with any other tools [using MCP]({{< link path="examples/documentation" >}}).
 
 ![Slack - A2A - MCP - kagent](/images/slack-a2a/slack-a2a-kagent.png)
@@ -135,7 +133,7 @@ If you go to the Slack channel where you installed the app, you should see the b
 
 ## Deploying an agent
 
-Before deploying an agent, make sure you have installed kagent in your cluster. If you haven't, you can install it by following the instructions [here](https://kagent.dev/docs/kagent/getting-started/quickstart). Make sure that you also install the `kmcp` CRDs as shown in that guide so that you can create an MCPServer.
+Before deploying an agent, make sure you have installed kagent in your cluster. If you haven't, you can install it by following the instructions [here]({{< link path="getting-started/quickstart" >}}). Make sure that you also install the `kmcp` CRDs as shown in that guide so that you can create an MCPServer.
 
 Next, we'll deploy a sample agent to the cluster that will be exposed through the A2A protocol and then we'll be able to call it from the Slack bot. The agent is a simple Kubernetes agent that has access to a couple of tools and is configured to answer questions about Kubernetes.
 

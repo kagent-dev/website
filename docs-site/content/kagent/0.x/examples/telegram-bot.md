@@ -36,7 +36,7 @@ Here’s what we’re building:
 
 ### Step 2: Deploy a kagent Agent
 
-> **Prerequisite:** kagent running in your cluster with `kmcp` CRDs installed. If not, hit the [quickstart](https://kagent.dev/docs/kagent/getting-started/quickstart) first.
+> **Prerequisite:** kagent running in your cluster with `kmcp` CRDs installed. If not, hit the [quickstart]({{< link path="getting-started/quickstart" >}}) first.
 
 This agent has Kubernetes tools, Helm tools, and Prometheus — and it's exposed over A2A so any client (our Telegram bot, or anything else) can talk to it. Feel free to make changes as you please:
 

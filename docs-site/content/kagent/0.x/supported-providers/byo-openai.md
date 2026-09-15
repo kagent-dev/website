@@ -38,7 +38,7 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
    EOF
    ```
 
-   Review the following table to understand this configuration. For more information, see the [API docs](https://kagent.dev/docs/kagent/resources/api-ref#openaiconfig).
+   Review the following table to understand this configuration. For more information, see the [API docs]({{< link path="resources/api-ref#openaiconfig" >}}).
 
    | Setting | Description |
    | --- | --- |
@@ -49,7 +49,7 @@ You can bring your own model from an [OpenAI API-compatible](https://platform.op
    | `openAI` | Additional provider details. For available settings, consult your LLM provider's documentation. At the least, you must configure the `baseUrl` setting to point to the endpoint of your LLM provider. |
    | `baseUrl` | The base URL of your LLM provider. Note that the LLM provider might have a special base URL for OpenAI compatibility, such as `"https://api.cohere.ai/compatibility/v1"` for [Cohere AI](https://cohere.com/). |
 
-Good job! You added a model to kagent. Next, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model.
+Good job! You added a model to kagent. Next, you can [create or update an agent]({{< link path="getting-started/first-agent" >}}) to use this model.
 
 ## Self-hosted vLLM behind an OpenAI-compatible gateway
 
@@ -152,7 +152,7 @@ spec:
 
 ### TLS Configuration Settings
 
-Review the following table to understand the TLS configuration options. For more information, see the [API docs](https://kagent.dev/docs/kagent/resources/api-ref#modelconfigspec).
+Review the following table to understand the TLS configuration options. For more information, see the [API docs]({{< link path="resources/api-ref#modelconfigspec" >}}).
 
 | Setting | Description |
 | --- | --- |

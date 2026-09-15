@@ -242,4 +242,4 @@ EOF
 
 ## Next steps
 
-Now that you configured your Bedrock model, you can [create or update an agent](https://kagent.dev/docs/kagent/getting-started/first-agent) to use this model configuration.
+Now that you configured your Bedrock model, you can [create or update an agent]({{< link path="getting-started/first-agent" >}}) to use this model configuration.

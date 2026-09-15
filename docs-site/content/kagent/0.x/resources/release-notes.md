@@ -1368,7 +1368,7 @@ This change supports the new type for BYO agents.
   ```
 {{< /tab >}}
 {{< tab name="New Agent API with inline type" >}}
-[v1alpha2 Example](https://kagent.dev/docs/kagent/concepts/agents/): Note that the entire agent configuration is now nested under the `declarative` setting.
+[v1alpha2 Example]({{< link path="concepts/agents/" >}}): Note that the entire agent configuration is now nested under the `declarative` setting.
   
   ```yaml
   apiVersion: kagent.dev/v1alpha2
