@@ -35,10 +35,33 @@ concurrency:
 # this retarget the job failed every night on the missing v1alpha2 directory.
 #
 # 0.x is FROZEN and is no longer generated here. Its committed pages
-# (0.x/resources/api-ref.md and 0.x/resources/helm.md) describe v1alpha2 and
-# the 0.5.x chart, neither of which main still contains, so regenerating them
-# from main would overwrite correct frozen content with 1.0 values. Both are
-# still linked from 0.x pages, so leave them in place rather than deleting.
+# (0.x/resources/api-ref.md, 0.x/resources/helm.md and 0.x/resources/cli/) all
+# describe kagent v0.10.1 -- the newest 0.x release -- so they document
+# v1alpha2, the 0.10.1 chart and the v0.10.1 CLI, none of which main still
+# contains. Regenerating them from main overwrites correct frozen content with
+# 1.0 values. All are still linked from 0.x pages, so leave them in place rather
+# than deleting.
+#
+# That is not hypothetical -- it happened to all three before this job was
+# retargeted, in three different shapes, none of which failed a build:
+#
+#   - cli/    gained the gRPC transport flags (--kagent-grpc-url and friends,
+#             kagent #2362) across 42 pages. Real flags, wrong release line.
+#   - helm.md LOST all ten agent subcharts and their values -- 258 documented
+#             keys where the 0.10.1 chart has 337.
+#   - api-ref.md kept the right API version (v1alpha2) and so looked clean, but
+#             carried topologySpreadConstraints (absent at v0.10.1), missed
+#             executeCodeBlocks (present at v0.10.1), and pinned every
+#             Kubernetes doc link to v1.31 from the old max-kube drift.
+#
+# All three were regenerated from the v0.10.1 tag on 2026-09-15. Regenerate from
+# that TAG, never from main, if they ever need rebuilding. For the CLI pages:
+#
+#   git -C kagent worktree add --detach /tmp/kagent-0x v0.10.1
+#   (cd /tmp/kagent-0x/go && go build -o /tmp/kagent-cli-0x ./core/cli/cmd/kagent)
+#   python3 scripts/generate-cli-docs.py --binary /tmp/kagent-cli-0x \
+#     --display-name kagent --out-dir docs-site/content/kagent/0.x/resources/cli \
+#     --url-prefix /docs/kagent/0.x/resources/cli --weight 1
 #
 # The section is named reference/ in 1.x, not resources/ as in 0.x, and the
 # provider pages link to crd-ref-docs anchors (#modelconfigspec, #openaiconfig,
@@ -644,6 +667,12 @@ jobs:
           echo "kmcp CLI binary built and smoke-tested successfully"
 
       - name: Generate kagent CLI reference docs
+        # --weight 30 slots CLI docs into the 1.x reference section after
+        # api-ref (10) and helm (20). The generator's default of 1 would tie
+        # with nothing and sort CLI docs above the API reference, and kagent's
+        # reference section is the only one where that ordering is wrong --
+        # kmcp's section deliberately leads with the CLI, so its step below
+        # keeps the default.
         run: |
           cd "$GITHUB_WORKSPACE/website"
           mkdir -p "$KAGENT_CLI_DIR"
@@ -651,7 +680,8 @@ jobs:
             --binary /tmp/kagent-cli \
             --display-name kagent \
             --out-dir "$KAGENT_CLI_DIR" \
-            --url-prefix "$KAGENT_CLI_URL_PREFIX"
+            --url-prefix "$KAGENT_CLI_URL_PREFIX" \
+            --weight 30
 
       - name: Generate kmcp CLI reference docs
         run: |

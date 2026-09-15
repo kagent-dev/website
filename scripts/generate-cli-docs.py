@@ -285,6 +285,25 @@ def slugify(display_name: str, path: list[str]) -> str:
     return "-".join(parts)
 
 
+def as_sentence(text: str) -> str:
+    """Terminate a Cobra Short string so it reads as a frontmatter description.
+
+    Every description on these pages is a Cobra `Short`, which by convention is
+    an unterminated fragment ("Invoke an AgentInstance"). The site's frontmatter
+    descriptions are full sentences ending in a period, and they surface far
+    from the CLI -- search results, social cards, the section index -- where the
+    missing period reads as truncation rather than as convention.
+
+    Only the terminator is added. A Short that is already imperative stays as
+    written, and one that is not is a wording fix in kagent or kmcp, not
+    something to paper over here.
+    """
+    text = text.strip()
+    if not text or text[-1] in ".!?":
+        return text
+    return text + "."
+
+
 def render_flags(flags: list[tuple[str, str]]) -> str:
     if not flags:
         return ""
@@ -342,7 +361,7 @@ def render_page(display_name: str, node: CommandNode, weight: int, description: 
     # is not under this script's control; the first Cobra Short that
     # contains ": " (or a leading quote, #, etc.) would otherwise produce
     # invalid or silently misparsed YAML in an unattended nightly job.
-    frontmatter_data = {"title": title, "description": description, "weight": weight}
+    frontmatter_data = {"title": title, "description": as_sentence(description), "weight": weight}
     frontmatter = "---\n" + yaml.safe_dump(frontmatter_data, sort_keys=False, allow_unicode=True) + "---\n\n"
     return frontmatter + body
 
@@ -363,6 +382,16 @@ def main() -> int:
             "or as a flat file (the site's parallel .md export of every "
             "page); a same-level or ../-relative link only resolves "
             "correctly for one of those two forms."
+        ),
+    )
+    parser.add_argument(
+        "--weight",
+        type=int,
+        default=1,
+        help=(
+            "Hugo weight for the section's _index.md, i.e. where CLI docs sit "
+            "among their siblings. Defaults to 1 (first). The per-page weights "
+            "below are independent of this and always start at 10."
         ),
     )
     args = parser.parse_args()
@@ -400,8 +429,8 @@ def main() -> int:
     weight = 10
     index_frontmatter_data = {
         "title": "CLI docs",
-        "description": f"Complete reference docs for the {args.display_name} CLI commands",
-        "weight": 1,
+        "description": f"Review the reference docs for the {args.display_name} CLI commands.",
+        "weight": args.weight,
     }
     index_lines = [
         "---",

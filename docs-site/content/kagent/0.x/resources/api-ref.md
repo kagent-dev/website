@@ -40,7 +40,7 @@ Agent is the Schema for the agents API.
 | `kind` _string_ | `Agent` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AgentSpec](#agentspec)_ |  |  |  |
 | `status` _[AgentStatus](#agentstatus)_ |  |  |  |
 
@@ -55,7 +55,7 @@ backend (OpenClaw or Hermes) running on Agent Substrate.
 | `kind` _string_ | `AgentHarness` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AgentHarnessSpec](#agentharnessspec)_ |  |  |  |
 | `status` _[AgentHarnessStatus](#agentharnessstatus)_ |  |  |  |
 
@@ -212,7 +212,7 @@ _Appears in:_
 | `substrate` _[AgentHarnessSubstrateSpec](#agentharnesssubstratespec)_ | Substrate configures the Agent Substrate provisioning stack. Required. |  |  |
 | `description` _string_ | Description is a short human-readable summary shown in the UI (e.g. agents list). |  |  |
 | `image` _string_ | Image is the container image to run in the harness VM, if the backend<br />supports per-resource images. Backend openclaw pins the image<br />to the OpenClaw sandbox base when this field is empty; backend hermes pins<br />to the Hermes sandbox base image when empty. |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env is a list of environment variables injected into the harness workload.<br />Values use the Kubernetes EnvVar shape; ValueFrom references are<br />resolved server-side where supported. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envvar-v1-core) array_ | Env is a list of environment variables injected into the harness workload.<br />Values use the Kubernetes EnvVar shape; ValueFrom references are<br />resolved server-side where supported. |  |  |
 | `modelConfigRef` _string_ | ModelConfigRef is the reference to the ModelConfig used to configure the harness.<br />The controller registers the gateway provider and, after the harness is Ready,<br />writes OpenClaw config inside the VM (~/.openclaw/openclaw.json) and starts the gateway. |  |  |
 | `channels` _[AgentHarnessChannel](#agentharnesschannel) array_ | Channels configures Telegram and Slack integrations for OpenClaw inside the harness VM. |  | MaxItems: 1024 <br /> |
 
@@ -226,7 +226,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ |  |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 | `backendRef` _[AgentHarnessStatusRef](#agentharnessstatusref)_ | BackendRef points at the harness instance on the backend control<br />plane, once Ensure has succeeded at least once. |  |  |
 | `connection` _[AgentHarnessConnection](#agentharnessconnection)_ | Connection is populated by the controller when the harness is ready. |  |  |
 
@@ -348,7 +348,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ |  |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 
 #### AgentType
 
@@ -384,7 +384,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `from` _[FromNamespaces](#fromnamespaces)_ | From indicates where references to this resource can originate.<br />Possible values are:<br />* All: References from all namespaces are allowed.<br />* Same: Only references from the same namespace are allowed (default).<br />* Selector: References from namespaces matching the selector are allowed. | Same | Enum: [All Same Selector] <br /> |
-| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta)_ | Selector is a label selector for namespaces that are allowed to reference this resource.<br />Only used when From is set to "Selector". |  |  |
+| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#labelselector-v1-meta)_ | Selector is a label selector for namespaces that are allowed to reference this resource.<br />Only used when From is set to "Selector". |  |  |
 
 #### AnthropicConfig
 
@@ -468,7 +468,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  |  |
-| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
+| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
 | `promptCaching` _boolean_ | PromptCaching enables Bedrock prompt caching by appending a CachePoint<br />block at the end of the Converse request's `system` content array and<br />the end of the `toolConfig.tools` array. Bedrock will cache the prefix up to and<br />including those cache points across requests in the same region for<br />roughly 5 minutes after first use, billing the cached portion at a<br />reduced rate on cache hits.<br /><br />Recommended for tool-using agents that make many Converse calls per<br />task with a stable system prompt and tool set — the per-call input<br />token count can drop by 70-90% on hit. Has no effect on models that<br />don't support caching; the marker is ignored by Bedrock for those.<br /><br />See https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html<br />for the current list of supported models and minimum prefix sizes. | false |  |
 | `cacheTTL` _string_ | CacheTTL controls how long Bedrock retains a cached prefix when<br />PromptCaching is enabled. Only meaningful when PromptCaching is true.<br /><br />  - "5m" (default): Bedrock's standard 5-minute sliding cache. Each cache<br />    hit refreshes the window. Supported by all prompt-caching models.<br />  - "1h": extended-TTL caching, useful for tasks whose Converse calls are<br />    spaced more than 5 minutes apart.<br /><br />NOTE: "1h" is NOT strictly better than "5m". Extended-TTL cache writes are<br />billed at a higher per-token rate than 5-minute writes, and 1h is supported<br />on a narrower set of models. Only choose "1h" when calls are spaced far<br />enough apart that a 5-minute cache would expire between them; otherwise the<br />higher write cost is wasted. See the AWS prompt-caching docs above. | 5m | Enum: [5m 1h] <br /> |
 | `guardrail` _[BedrockGuardrailConfig](#bedrockguardrailconfig)_ |  |  |  |
@@ -498,25 +498,24 @@ _Appears in:_
 | `args` _string array_ | Args are the arguments passed to the container entrypoint. |  |  |
 | `workingDir` _string_ | workingDir sets the container working directory. Defaults to the image WORKDIR when omitted. |  |  |
 | `replicas` _integer_ | Replicas is the number of desired agent pods. Defaults to 1. |  |  |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
-| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
-| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
 | `deploymentAnnotations` _object (keys:string, values:string)_ | DeploymentAnnotations are additional annotations added to the agent Deployment<br />object itself. Unlike Annotations, which apply to the agent pods, these apply to<br />the Deployment metadata. Keys set here take precedence over annotations inherited<br />from the agent resource metadata. This has no effect when the agent runs with the<br />Sandbox workload mode, as no Deployment is created in that mode. |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
-| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
-| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
-| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
-| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
-| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints describes how a group of pods ought to spread across topology<br />domains. All topologySpreadConstraints are ANDed. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#pullpolicy-v1-core)_ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core)_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#affinity-v1-core)_ |  |  |  |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
-| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
-| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#securitycontext-v1-core)_ |  |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
 | `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
-| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
+| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
 
 #### ContextCompressionConfig
 
@@ -573,6 +572,7 @@ _Appears in:_
 | `tools` _[Tool](#tool) array_ |  |  | MaxItems: 20 <br /> |
 | `a2aConfig` _[A2AConfig](#a2aconfig)_ | A2AConfig instantiates an A2A server for this agent,<br />served on the HTTP port of the kagent kubernetes<br />controller (default 8083).<br />The A2A server URL will be served at<br />&lt;kagent-controller-ip&gt;:8083/api/a2a/&lt;agent-namespace&gt;/&lt;agent-name&gt;<br />Read more about the A2A protocol here: https://github.com/a2aproject/A2A |  |  |
 | `deployment` _[DeclarativeDeploymentSpec](#declarativedeploymentspec)_ |  |  |  |
+| `executeCodeBlocks` _boolean_ | Allow code execution for python code blocks with this agent.<br />If true, the agent will automatically execute python code blocks in the LLM responses.<br />Code will be executed in a sandboxed environment.<br />due to a bug in adk (https://github.com/google/adk-python/issues/3921 ), this field is ignored for now. |  |  |
 | `memory` _[MemorySpec](#memoryspec)_ | Memory configuration for the agent. |  |  |
 | `shareTools` _boolean_ | ShareTools enables the built-in share link tools for this agent.<br />When true, the agent gains create_share_link, list_share_links, and delete_share_link tools<br />that allow it to manage share tokens for the current session. |  |  |
 | `context` _[ContextConfig](#contextconfig)_ | Context configures context management for this agent.<br />This includes event compaction (compression) and context caching. |  |  |
@@ -586,25 +586,24 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `imageRegistry` _string_ |  |  |  |
 | `replicas` _integer_ | Replicas is the number of desired agent pods. Defaults to 1. |  |  |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
-| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
-| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
 | `deploymentAnnotations` _object (keys:string, values:string)_ | DeploymentAnnotations are additional annotations added to the agent Deployment<br />object itself. Unlike Annotations, which apply to the agent pods, these apply to<br />the Deployment metadata. Keys set here take precedence over annotations inherited<br />from the agent resource metadata. This has no effect when the agent runs with the<br />Sandbox workload mode, as no Deployment is created in that mode. |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
-| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
-| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
-| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
-| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
-| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints describes how a group of pods ought to spread across topology<br />domains. All topologySpreadConstraints are ANDed. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#pullpolicy-v1-core)_ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core)_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#affinity-v1-core)_ |  |  |  |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
-| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
-| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#securitycontext-v1-core)_ |  |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
 | `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
-| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
+| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
 
 #### DeclarativeRuntime
 
@@ -639,7 +638,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `endpoint` _string_ | Endpoint is the Foundry or Azure AI Services account endpoint<br />(e.g., https://my-account.cognitiveservices.azure.com/).<br />Mutually exclusive with EndpointFrom. |  |  |
-| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
+| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
 | `deployment` _string_ | Deployment is the Foundry model deployment name. |  |  |
 | `apiVersion` _string_ | APIVersion is the Foundry OpenAI-compatible data-plane API version. | 2024-10-21 |  |
 
@@ -765,7 +764,7 @@ ModelConfig is the Schema for the modelconfigs API.
 | `kind` _string_ | `ModelConfig` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[ModelConfigSpec](#modelconfigspec)_ |  |  |  |
 | `status` _[ModelConfigStatus](#modelconfigstatus)_ |  |  |  |
 
@@ -805,7 +804,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 | `observedGeneration` _integer_ |  |  |  |
 | `secretHash` _string_ | The secret hash stores a hash of any secrets required by the model config (i.e. api key, tls cert) to ensure agents referencing this model config detect changes to these secrets and restart if necessary. |  |  |
 
@@ -846,7 +845,7 @@ It represents a model provider configuration with automatic model discovery.
 | `kind` _string_ | `ModelProviderConfig` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[ModelProviderConfigSpec](#modelproviderconfigspec)_ |  |  |  |
 | `status` _[ModelProviderConfigStatus](#modelproviderconfigstatus)_ |  |  |  |
 
@@ -873,10 +872,10 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | ObservedGeneration reflects the generation of the most recently observed ModelProviderConfig spec |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ | Conditions represent the latest available observations of the ModelProviderConfig's state |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions represent the latest available observations of the ModelProviderConfig's state |  |  |
 | `discoveredModels` _string array_ | DiscoveredModels is the cached list of model IDs available from this model provider |  |  |
 | `modelCount` _integer_ | ModelCount is the number of discovered models (for kubectl display) |  |  |
-| `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
+| `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
 | `secretHash` _string_ | SecretHash is a hash of the referenced secret data, used to detect secret changes |  |  |
 
 #### NetworkConfig
@@ -906,7 +905,7 @@ _Appears in:_
 
 _Underlying type:_ _string_
 
-OpenAIAPIFormat selects the OpenAI HTTP API shape used by the Go ADK runtime.
+OpenAIAPIFormat selects the OpenAI HTTP API shape used by the ADK runtime.
 
 _Validation:_
 - Enum: [chatCompletions responses]
@@ -994,7 +993,7 @@ RemoteMCPServer is the Schema for the RemoteMCPServers API.
 | `kind` _string_ | `RemoteMCPServer` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[RemoteMCPServerSpec](#remotemcpserverspec)_ |  |  |  |
 | `status` _[RemoteMCPServerStatus](#remotemcpserverstatus)_ |  |  |  |
 
@@ -1026,8 +1025,8 @@ _Appears in:_
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
 | `url` _string_ |  |  | MinLength: 1 <br /> |
 | `headersFrom` _[ValueRef](#valueref) array_ |  |  |  |
-| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  | 30s |  |
-| `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#duration-v1-meta)_ |  |  |  |
+| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  | 30s |  |
+| `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
 | `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment<br /><br />A cross-namespace-permitting value (from: All or from: Selector) is<br />mutually exclusive with spec.tls.caCertSecretRef (enforced by a spec-level<br />XValidation rule): a pinned CA Secret is mounted onto the consuming agent's<br />pod by bare name and Kubernetes resolves it in the agent's namespace, not<br />this RemoteMCPServer's, so a CA-pinning RemoteMCPServer cannot be referenced<br />cross-namespace. from: Same (the default) is always allowed. |  |  |
 | `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />Use this for HTTPS upstreams that present a certificate the agent's<br />system trust store does not include (corporate CA, self-signed cert<br />on a test fixture, internal MCP gateway). Reuses the same TLSConfig<br />type as ModelConfig.spec.tls — disableVerify turns off certificate<br />validation entirely, caCertSecretRef + caCertSecretKey point at a<br />PEM bundle Secret in the same namespace, and disableSystemCAs<br />trusts only the named bundle.<br /><br />Note one asymmetry with ModelConfig: a spec-level XValidation rule<br />on RemoteMCPServer rejects spec.tls when spec.url has the http://<br />scheme (a TLS opinion contradicts a plaintext URL). ModelConfig has<br />no equivalent rule, so a TLS block can sit alongside any baseUrl. |  |  |
@@ -1042,7 +1041,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#condition-v1-meta) array_ |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  |  |
 | `secretHash` _string_ | SecretHash stores a hash of the TLS Secret referenced by spec.tls so<br />agents that consume this RemoteMCPServer can detect cert rotation and<br />roll on the next reconcile. Empty when spec.tls.caCertSecretRef is unset. |  |  |
 
@@ -1086,7 +1085,7 @@ SandboxAgent declares an agent that runs in an isolated sandbox on Agent Substra
 | `kind` _string_ | `SandboxAgent` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[SandboxAgentSpec](#sandboxagentspec)_ |  |  |  |
 | `status` _[AgentStatus](#agentstatus)_ |  |  |  |
 
@@ -1168,25 +1167,24 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `replicas` _integer_ | Replicas is the number of desired agent pods. Defaults to 1. |  |  |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
-| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
-| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core) array_ | ImagePullSecrets are references to secrets in the agent's namespace<br />used for pulling the agent container image. |  |  |
+| `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#volume-v1-core) array_ | Volumes are additional volumes added to the agent pod. |  |  |
+| `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#volumemount-v1-core) array_ | VolumeMounts are additional volume mounts added to the agent container. |  |  |
 | `labels` _object (keys:string, values:string)_ | Labels are additional labels added to the agent pods. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Annotations are additional annotations added to the agent pods. |  |  |
 | `deploymentAnnotations` _object (keys:string, values:string)_ | DeploymentAnnotations are additional annotations added to the agent Deployment<br />object itself. Unlike Annotations, which apply to the agent pods, these apply to<br />the Deployment metadata. Keys set here take precedence over annotations inherited<br />from the agent resource metadata. This has no effect when the agent runs with the<br />Sandbox workload mode, as no Deployment is created in that mode. |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
-| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
-| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#pullpolicy-v1-core)_ |  |  |  |
-| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ |  |  |  |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
-| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#affinity-v1-core)_ |  |  |  |
-| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints describes how a group of pods ought to spread across topology<br />domains. All topologySpreadConstraints are ANDed. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envvar-v1-core) array_ | Env are additional environment variables set on the agent container. |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envfromsource-v1-core) array_ | EnvFrom are sources (ConfigMaps/Secrets) used to populate environment variables<br />on the agent container. Values defined in Env with a duplicate key take precedence. |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#pullpolicy-v1-core)_ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core)_ |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#toleration-v1-core) array_ | Tolerations applied to the agent pods. |  |  |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#affinity-v1-core)_ |  |  |  |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector restricts the nodes the agent pods can be scheduled on. |  |  |
-| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ |  |  |  |
-| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#podsecuritycontext-v1-core)_ |  |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#securitycontext-v1-core)_ |  |  |  |
+| `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podsecuritycontext-v1-core)_ |  |  |  |
 | `serviceAccountName` _string_ | ServiceAccountName specifies the name of an existing ServiceAccount to use.<br />If this field is set, the Agent controller will not create a ServiceAccount for the agent.<br />This field is mutually exclusive with ServiceAccountConfig. |  |  |
 | `serviceAccountConfig` _[ServiceAccountConfig](#serviceaccountconfig)_ | ServiceAccountConfig configures the ServiceAccount created by the Agent controller.<br />This field can only be used when ServiceAccountName is not set.<br />If ServiceAccountName is not set, a default ServiceAccount (named after the agent)<br />is created, and this config will be applied to it. |  |  |
-| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
+| `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#container-v1-core) array_ | ExtraContainers is a list of additional containers to run alongside the main agent container.<br />Useful for sidecars such as token proxies, log shippers, or security agents. |  |  |
 
 #### SkillForAgent
 
@@ -1198,8 +1196,8 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `insecureSkipVerify` _boolean_ | Fetch images insecurely from registries (allowing HTTP and skipping TLS verification).<br />Meant for development and testing purposes only. |  |  |
 | `refs` _string array_ | The list of skill images to fetch. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
-| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core) array_ | ImagePullSecrets is a list of references to secrets in the same namespace to use for<br />pulling skill images from private registries. Each referenced secret must be of type<br />kubernetes.io/dockerconfigjson. The credentials from all secrets are merged and made<br />available to the skills-init container at /.kagent/.docker/config.json; krane will<br />use them automatically when pulling images. |  | MaxItems: 20 <br /> |
-| `gitAuthSecretRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#localobjectreference-v1-core)_ | Reference to a Secret containing git credentials.<br />Applied to all gitRefs entries.<br />The secret should contain a `token` key for HTTPS auth,<br />or `ssh-privatekey` for SSH auth. |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core) array_ | ImagePullSecrets is a list of references to secrets in the same namespace to use for<br />pulling skill images from private registries. Each referenced secret must be of type<br />kubernetes.io/dockerconfigjson. The credentials from all secrets are merged and made<br />available to the skills-init container at /.kagent/.docker/config.json; krane will<br />use them automatically when pulling images. |  | MaxItems: 20 <br /> |
+| `gitAuthSecretRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | Reference to a Secret containing git credentials.<br />Applied to all gitRefs entries.<br />The secret should contain a `token` key for HTTPS auth,<br />or `ssh-privatekey` for SSH auth. |  |  |
 | `gitRefs` _[GitRepo](#gitrepo) array_ | Git repositories to fetch skills from. |  | MaxItems: 20 <br />MinItems: 1 <br /> |
 | `s3Refs` _[S3SkillRef](#s3skillref) array_ | S3 object prefixes or archives to fetch skills from.<br />Auth uses the AWS SDK default credential chain (typically static keys via<br />skills.initContainer.env: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION). |  | MaxItems: 20 <br />MinItems: 1 <br /> |
 | `initContainer` _[SkillsInitContainer](#skillsinitcontainer)_ | Configuration for the skills-init init container. |  |  |
@@ -1213,8 +1211,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core)_ | Resource requirements for the skills-init init container. |  |  |
-| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core) array_ | Additional environment variables for the skills-init init container. |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core)_ | Resource requirements for the skills-init init container. |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#envvar-v1-core) array_ | Additional environment variables for the skills-init init container. |  |  |
 
 #### TLSConfig
 

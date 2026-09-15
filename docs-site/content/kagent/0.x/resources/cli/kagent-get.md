@@ -1,6 +1,6 @@
 ---
 title: kagent get
-description: Get a kagent resource
+description: Get a kagent resource.
 weight: 190
 ---
 
@@ -12,20 +12,16 @@ kagent get [command]
 ```
 
 **Subcommands:**
-- [`kagent get agent`]({{< link path="resources/cli/kagent-get-agent/" >}}) - Get an agent or list all agents
-- [`kagent get session`]({{< link path="resources/cli/kagent-get-session/" >}}) - Get a session or list all sessions
-- [`kagent get tool`]({{< link path="resources/cli/kagent-get-tool/" >}}) - Get tools
+- [`kagent get agent`](/docs/kagent/0.x/resources/cli/kagent-get-agent/) - Get an agent or list all agents
+- [`kagent get session`](/docs/kagent/0.x/resources/cli/kagent-get-session/) - Get a session or list all sessions
+- [`kagent get tool`](/docs/kagent/0.x/resources/cli/kagent-get-tool/) - Get tools
 
 **Flags:**
 - `-h, --help` - help for get
 
 **Global Flags:**
 - `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
-- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
-- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
-- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
-- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
-- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `--kagent-url string` - KAgent URL (default "http://localhost:8083")
 - `-n, --namespace string` - Namespace (default "kagent")
 - `-o, --output-format string` - Output format (default "table")
 - `--timeout duration` - Timeout (default 5m0s)

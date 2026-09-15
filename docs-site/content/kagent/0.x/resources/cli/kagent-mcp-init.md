@@ -1,6 +1,6 @@
 ---
 title: kagent mcp init
-description: Initialize a new MCP server project
+description: Initialize a new MCP server project.
 weight: 310
 ---
 
@@ -15,10 +15,10 @@ kagent mcp init [command]
 ```
 
 **Subcommands:**
-- [`kagent mcp init go`]({{< link path="resources/cli/kagent-mcp-init-go/" >}}) - Initialize a new Go MCP server project
-- [`kagent mcp init java`]({{< link path="resources/cli/kagent-mcp-init-java/" >}}) - Initialize a new Java MCP server project
-- [`kagent mcp init python`]({{< link path="resources/cli/kagent-mcp-init-python/" >}}) - Initialize a new Python MCP server project
-- [`kagent mcp init typescript`]({{< link path="resources/cli/kagent-mcp-init-typescript/" >}}) - Initialize a new TypeScript MCP server project
+- [`kagent mcp init go`](/docs/kagent/0.x/resources/cli/kagent-mcp-init-go/) - Initialize a new Go MCP server project
+- [`kagent mcp init java`](/docs/kagent/0.x/resources/cli/kagent-mcp-init-java/) - Initialize a new Java MCP server project
+- [`kagent mcp init python`](/docs/kagent/0.x/resources/cli/kagent-mcp-init-python/) - Initialize a new Python MCP server project
+- [`kagent mcp init typescript`](/docs/kagent/0.x/resources/cli/kagent-mcp-init-typescript/) - Initialize a new TypeScript MCP server project
 
 **Flags:**
 - `--author string` - Author name for the project
@@ -32,11 +32,7 @@ kagent mcp init [command]
 
 **Global Flags:**
 - `--config string` - config file (default is $HOME/.kagent/config.yaml) (default "$HOME/.kagent/config.yaml")
-- `--kagent-grpc-ca-file string` - CA certificate file for KAgent gRPC
-- `--kagent-grpc-server-name string` - TLS server name for KAgent gRPC
-- `--kagent-grpc-tls` - Use TLS for KAgent gRPC
-- `--kagent-grpc-url string` - KAgent gRPC target (default "localhost:8084")
-- `--kagent-url string` - KAgent REST URL (default "http://localhost:8083")
+- `--kagent-url string` - KAgent URL (default "http://localhost:8083")
 - `-o, --output-format string` - Output format (default "table")
 - `--timeout duration` - Timeout (default 5m0s)
 - `-v, --verbose` - Verbose output
