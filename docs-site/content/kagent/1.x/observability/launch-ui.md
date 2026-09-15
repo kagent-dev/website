@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-The kagent UI is a read-and-write console for everything the controller knows about: the agents you have defined, the conversations they are holding, and the Agent Substrate capacity those conversations run on. The kagent chart installs it alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already has one running.
+The kagent UI is a read-and-write console for everything the controller knows about: the agents you defined, the conversations the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
 
 ## Before you begin
 
@@ -26,11 +26,11 @@ The kagent UI is a read-and-write console for everything the controller knows ab
 
 ## Open the dashboard
 
-The UI service is `ClusterIP` by default, so it is reachable from inside the cluster only. Forward it to your machine with the kagent CLI or with `kubectl`. Both routes end at the same address, `http://localhost:8082`.
+The UI service is a `ClusterIP` by default, so it is reachable only from inside the cluster. Forward it to your machine with the kagent CLI or with `kubectl`. Both routes end at the same address, `http://localhost:8082`.
 
 {{< tabs >}}
 {{% tab name="kagent CLI" %}}
-1. Run the dashboard command. It forwards the service and opens the dashboard in your default browser.
+1. Run the dashboard command to forward the service and open the dashboard in your default browser.
 
    ```bash
    kagent dashboard
@@ -66,21 +66,21 @@ The dashboard opens on a summary of what the controller has loaded. A fresh inst
 {{< reuse-image-light src="img/kagent-ui-dashboard.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-dashboard-dark.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 
-## Find your way around
+## Explore the UI
 
-The left rail groups the console by the resource each page reads, so the page you want follows from the resource you are asking about.
+The left menu groups the console by the resource each page reads, so the page you want follows from the resource you are asking about.
 
 | Page | Shows |
 | ---- | ----- |
-| **Dashboard** | Counts of agents, model configurations, MCP servers, and discovered tools, plus recent conversations |
-| **Agents** | Every {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} and {{< gloss "Harness" >}}Harness{{< /gloss >}} pairing, and the conversations held with each |
-| **Schedules** | Agents that run automatically, each execution starting a new conversation |
-| **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents name, and the providers behind them |
-| **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each |
-| **Prompts** | Prompt libraries, which hold reusable fragments that an AgentTemplate includes in its instructions |
-| **Substrate** | WorkerPools, Actors, and Workers, read from both Kubernetes and the Agent Substrate API |
+| **Dashboard** | Counts of agents, model configurations, MCP servers, and discovered tools, plus recent conversations. |
+| **Agents** | Every {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} and {{< gloss "Harness" >}}Harness{{< /gloss >}} pairing, and the conversations held with each. |
+| **Schedules** | Agents that run automatically, each execution starting a new conversation. |
+| **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents name, and the providers behind them. |
+| **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each. |
+| **Prompts** | Prompt libraries, which hold reusable fragments that an AgentTemplate includes in its instructions. |
+| **Substrate** | WorkerPools, Actors, and Workers, read from both Kubernetes and the Agent Substrate API. |
 
-The Agents page is the one to start from, because an agent in kagent 1.0 is a pairing rather than a single resource. An AgentTemplate says what an agent can do, a Harness says how it runs, and the page lists the derived pairs across its **Agents**, **Templates**, and **Harnesses** tabs.
+Start at the **Agents** page to review the agents and their backing pairs of AgentTempate and Harness resources. The page lists the derived pairs across its **Agents**, **Templates**, and **Harnesses** tabs.
 
 {{< reuse-image-light src="img/kagent-ui-agents.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-agents-dark.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
@@ -97,7 +97,7 @@ Opening an agent and sending a message creates an {{< gloss "AgentInstance" >}}A
 
 Two controls under the transcript branch the conversation rather than continue it.
 
-- **Checkpoint** pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript had advanced. Agent Substrate does not collect a pinned snapshot, so the point stays available to return to. For how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
+- **Checkpoint** pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript advanced. Agent Substrate does not collect a pinned snapshot, so the point stays available to return to. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
 - **Fork** creates a second AgentInstance from a checkpoint, continuing from the point that the checkpoint pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the checkpoint's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
 
 > [!NOTE]
@@ -105,7 +105,7 @@ Two controls under the transcript branch the conversation rather than continue i
 
 ## Check Agent Substrate capacity
 
-The Substrate page answers the question that the other pages cannot: whether there is capacity for an agent to run at all. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
+The **Substrate** page shows whether there is capacity for an agent to run. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
 
 {{< reuse-image-light src="img/kagent-ui-substrate.png" alt="The Substrate page, showing one worker pool and an idle worker" caption="Figure: The Substrate page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-substrate-dark.png" alt="The Substrate page, showing one worker pool and an idle worker" caption="Figure: The Substrate page" >}}
@@ -115,14 +115,14 @@ Read the page from the top tiles down.
 | Tile | Means |
 | ---- | ----- |
 | **Worker pools** | {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}} that an operator has provisioned. No Harness can run an agent until at least one exists. |
-| **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated |
-| **Actors running** | Live Actors, each one an AgentInstance holding a conversation |
-| **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned |
+| **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated. |
+| **Actors running** | Live Actors, each one an AgentInstance holding a conversation. |
+| **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
 
 A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The Workers table still lists the pool's worker as `idle`. That idle worker confirms that capacity is provisioned and waiting for the first agent.
 
 > [!NOTE]
-> An empty Actors table on a cluster that does have agents points at the Agent Substrate API rather than at kagent. The page reports `ate-api reported no actors in this scope` when it reached the API and got an empty answer, so check the scope selector before investigating further.
+> An empty Actors table on a cluster that does have agents indicates an issue at the level of the Agent Substrate API rather than at kagent. The page reports `ate-api reported no actors in this scope` when it reaches the API and gets an empty answer, so check the scope selector before investigating further.
 
 ## Expose the UI outside the cluster
 
@@ -161,7 +161,7 @@ To front the UI with your own ingress instead, set `ui.route.enabled: false` to 
 
 ### Gateway API HTTPRoute
 
-On a cluster that runs a Gateway API implementation such as kgateway, Istio, or Envoy Gateway, publish the UI through an `HTTPRoute`.
+On a cluster that runs a Kubernetes Gateway API implementation such as kgateway, Istio, or Envoy Gateway, publish the UI through an `HTTPRoute`.
 
 ```yaml
 ui:
