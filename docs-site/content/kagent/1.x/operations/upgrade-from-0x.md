@@ -106,7 +106,7 @@ A 0.10.x `Agent` described both what the agent does and how it runs. In 1.0 thes
 | `spec.declarative.memory` | `Harness.spec.kagent.memory`, so memory is now a property of the runtime rather than of one agent |
 | `spec.declarative.runtime` | `Harness.spec.workload.image`, through the runtime that the Harness selects |
 | `spec.declarative.deployment` | `Harness.spec.workload` and `Harness.spec.substrate`. Agents no longer run as Deployments. |
-| `spec.type`, `spec.byo` | The `byo` runtime on a Harness. See [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
+| `spec.type`, `spec.byo` | The `byo` runtime on a Harness. For more information, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
 | `spec.declarative.a2aConfig` | Nothing. A2A is always on, and callers address an AgentInstance by ID. |
 | `spec.iconUrl`, `spec.documentationUrl`, `spec.version`, `spec.provider` | Nothing. kagent builds the agent card from the AgentTemplate's name and description. |
 | `spec.declarative.stream`, `executeCodeBlocks`, `shareTools`, `context` | Nothing. `v1alpha3` has no equivalent field. |
@@ -123,7 +123,7 @@ Four resource kinds are removed rather than replaced, so plan for each one befor
 | Removed resource | What to do |
 | ---------------- | ---------- |
 | `AgentHarness` | No equivalent. It provisioned OpenClaw and Hermes coding-agent sandboxes with Slack and Telegram channels. 1.0's `Harness` shares part of the name and nothing else. |
-| `Memory` | Configure memory on the Harness with `spec.kagent.memory` instead. See [Agent memory]({{< link path="agents/agent-memory#enable-memory" >}}). |
+| `Memory` | Configure memory on the Harness with `spec.kagent.memory` instead. For more information, see [Agent memory]({{< link path="agents/agent-memory#enable-memory" >}}). |
 | `SandboxAgent` | No equivalent, and none is needed. Every 1.0 agent runs in a gVisor sandbox by default. |
 | `ToolServer` | Use `RemoteMCPServer`, which 0.10.x already served alongside it. |
 
@@ -148,7 +148,7 @@ Confirm that the resources resolved before you retire anything, because a Harnes
 
 ## Retire the 0.10.x installation
 
-Once the new installation answers correctly, remove the old one. Follow the 0.x procedure rather than the one in these docs: a 0.10.x installation has no Agent Substrate, no `ate.dev` resources, and no identity material to clean up. See [Uninstall kagent]({{< relref "/kagent/0.x/operations/uninstall" >}}#uninstall-with-helm) in the 0.x documentation.
+Once the new installation answers correctly, remove the old one. Follow the 0.x procedure rather than the one in these docs: a 0.10.x installation has no Agent Substrate, no `ate.dev` resources, and no identity material to clean up. For those steps, see [Uninstall kagent]({{< relref "/kagent/0.x/operations/uninstall" >}}#uninstall-with-helm) in the 0.x documentation.
 
 Keep the database backup after the uninstall for your own records. It is the only remaining copy of the 0.10.x conversation history, and nothing in 1.0 can read it.
 

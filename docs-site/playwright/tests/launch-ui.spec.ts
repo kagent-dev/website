@@ -13,7 +13,15 @@ import { test, expect, gotoUI, settle } from '../fixtures/test';
  *   UI_BASE_URL=http://localhost:8082 npm run update:launch-ui
  *
  * Relative timestamps ("2 minutes ago") are left visible rather than masked — see the
- * note on `mask` in fixtures/test.ts for why, and what to do if one proves unstable.
+ * note on `mask` in fixtures/test.ts for why, and what to do if one proves unstable. In
+ * practice none of these three pages renders one.
+ *
+ * The Substrate capture DOES carry one volatile value: the worker pod name, which ends in
+ * a ReplicaSet hash and a random suffix and so differs on every freshly created cluster.
+ * It is deliberately not masked. The changed pixels are a fraction of a percent of a
+ * full-page shot, well inside the tolerance, and a reader's own pod name will differ
+ * anyway — so a magenta rectangle would cost more than it buys. Re-captures against the
+ * SAME cluster are byte-identical, which is what the regression check actually watches.
  *
  * The conversation capture is NOT here. A live agent's reply is different text every
  * run, which is far past the 1% diff tolerance and cannot be a regression baseline, so

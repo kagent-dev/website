@@ -138,11 +138,21 @@ jobs:
   # ---------------------------------------------------------------------------------
   # Live-cluster captures.
   #
-  # DISPATCH ONLY, and not yet verified on a hosted runner. Agent Substrate runs its
-  # workers on gVisor (ateom-gvisor), which needs kernel features a GitHub-hosted runner
-  # may not provide, and the install also needs a model provider key. Until somebody has
-  # watched this go green, running it on every push would mean a permanently red required
-  # check on a docs branch. Promote it to the `push` trigger once it is proven.
+  # DISPATCH ONLY. Two separate reasons, and the first one is currently fatal:
+  #
+  # 1. THE CHART THIS INSTALLS DOES NOT EXIST YET. `versions/kagent.md` pins
+  #    `1.0.0-beta0`; the newest published kagent chart is `0.10.1`. This job therefore
+  #    fails at the provisioner's kagent step until 1.0 ships. It deliberately still
+  #    installs the published chart rather than building from source the way the
+  #    provisioner's local KAGENT_CHART_DIR mode can: CI exists to capture what a reader
+  #    installs, and a source build would quietly defeat that.
+  # 2. Even once the chart exists, this is unverified on a hosted runner. Agent Substrate
+  #    runs workers under gVisor nested inside the worker pod, and its own reference
+  #    environment is a GKE node pool, so kind-in-Docker-on-a-runner is an open question.
+  #
+  # Promote it to the `push` trigger once a dispatch run has gone green, and move the
+  # provisioner and version-conref paths onto that trigger at the same time — today they
+  # sit on the push filter but can only affect this job.
   # ---------------------------------------------------------------------------------
   cluster:
     if: github.event_name == 'workflow_dispatch' && (inputs.capture == 'cluster' || inputs.capture == 'both')
