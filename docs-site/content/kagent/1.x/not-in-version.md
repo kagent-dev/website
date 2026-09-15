@@ -5,4 +5,4 @@ build:
   list: never
 ---
 
-This topic doesn't exist in this version of the kagent docs yet. Use the version switcher to go back to a version where it's available, or browse the [kagent 1.0 (preview)]({{< link path="" >}}) landing page.
+This topic doesn't exist in this version of the kagent docs yet. Use the version switcher to go back to a version where it's available, or browse the [kagent docs](https://kagent.dev/docs/) landing page.
