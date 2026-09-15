@@ -1,0 +1,245 @@
+name: Refresh kagent UI screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      capture:
+        description: Which captures to run
+        type: choice
+        default: mock
+        options: [mock, cluster, both]
+  push:
+    branches:
+      # The 1.x docs live on this branch until the 1.0 release; retarget to main
+      # when 1.x is published and the draft cascade is dropped.
+      - kagent-1-0-docs
+    paths:
+      # Only the inputs that actually determine the pixels. Everything else in the
+      # repo can change without a capture being stale.
+      - docs-site/playwright/tests/**
+      - docs-site/playwright/fixtures/**
+      - docs-site/playwright/playwright.config.ts
+      - docs-site/playwright/docs-image-map.json
+      - docs-site/playwright/package.json
+      - docs-site/playwright/provisioners/**
+      - docs-site/assets/kagent-docs/versions/kagent.md
+      - docs-site/assets/kagent-docs/versions/agent-substrate.md
+      - .github/workflows/playwright-screenshots.yaml
+
+# Queue overlapping runs so two of them can't force-push the same PR branch at once.
+concurrency:
+  group: playwright-screenshots
+  cancel-in-progress: false
+
+# Deliberately NO cron. The chart versions are read from the docs conrefs and released
+# charts are immutable, so a fixed version plus a fixed fixture renders identically every
+# run — nothing changes until an input file changes, and that is a git event. A cron here
+# would produce a nightly no-op or a stream of empty PRs. This is also why
+# @playwright/test is pinned exactly (no caret) in docs-site/playwright/package.json: a
+# caret could pull a different Chromium with no git event, breaking the premise.
+
+env:
+  NODE_VERSION: '24.13.0'   # the kagent UI's own engine floor; its build tooling fails on 18
+  PW_DIR: docs-site/playwright
+
+jobs:
+  # ---------------------------------------------------------------------------------
+  # Mock-backed captures. No cluster, no API key, no cloud dependencies — so this is the
+  # job that can run on every input change.
+  # ---------------------------------------------------------------------------------
+  mock:
+    if: github.event_name == 'push' || inputs.capture == 'mock' || inputs.capture == 'both'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the website
+        uses: actions/checkout@v4
+        with:
+          path: website
+
+      # The mock backend is a service worker the released image does not ship, so the
+      # capture needs the UI source, not a published image.
+      - name: Check out kagent (for the UI source)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/kagent
+          path: kagent
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install the kagent UI
+        working-directory: kagent/ui
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Install the harness
+        working-directory: website/${{ env.PW_DIR }}
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Serve the UI from its mock backend
+        working-directory: kagent/ui
+        run: |
+          # vite directly, not `yarn dev`: one less toolchain pin between here and a
+          # screenshot. Backgrounded because the capture needs it to outlive this step.
+          VITE_API_MODE=mock ./node_modules/.bin/vite --port 8101 > /tmp/ui-dev.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8101/ >/dev/null; then echo "UI up after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          echo "UI did not come up:"; cat /tmp/ui-dev.log; exit 1
+
+      - name: Capture
+        working-directory: website/${{ env.PW_DIR }}
+        run: UI_BASE_URL=http://localhost:8101 npm run update:chat
+
+      - name: Publish into the docs img tree
+        working-directory: website/${{ env.PW_DIR }}
+        # sync-docs exits nonzero when the cluster-captured baselines are absent, which
+        # they legitimately are in this job. Publish what this job captured and move on.
+        run: npm run sync-docs || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-mock
+          path: website/${{ env.PW_DIR }}/playwright-report
+          retention-days: 7
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: website
+          commit-message: "docs: Refresh kagent UI screenshots (mock)"
+          signoff: true
+          title: "[Automated] Refresh kagent UI screenshots (mock-backed)"
+          body: |
+            Automated refresh of the mock-backed kagent UI screenshots.
+
+            **A diff here means the kagent UI changed.** Review the images before merging, and
+            check whether the prose in the guides that embed them is now wrong too — that
+            judgment is the point of this PR and cannot be automated.
+
+            Captured against the kagent UI's in-browser mock backend, so the fixtures are fixed
+            and the browser clock is pinned: any diff is a real UI change, not drift.
+
+            Generated by the [**Refresh kagent UI screenshots** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/playwright-screenshots.yaml).
+          branch: playwright/screenshot-refresh-mock
+          delete-branch: true
+          base: kagent-1-0-docs
+          labels: |
+            documentation
+            automated pr
+
+  # ---------------------------------------------------------------------------------
+  # Live-cluster captures.
+  #
+  # DISPATCH ONLY, and not yet verified on a hosted runner. Agent Substrate runs its
+  # workers on gVisor (ateom-gvisor), which needs kernel features a GitHub-hosted runner
+  # may not provide, and the install also needs a model provider key. Until somebody has
+  # watched this go green, running it on every push would mean a permanently red required
+  # check on a docs branch. Promote it to the `push` trigger once it is proven.
+  # ---------------------------------------------------------------------------------
+  cluster:
+    if: github.event_name == 'workflow_dispatch' && (inputs.capture == 'cluster' || inputs.capture == 'both')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the website
+        uses: actions/checkout@v4
+        with:
+          path: website
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install cluster tooling
+        run: |
+          go install sigs.k8s.io/kind@latest || curl -fsSL -o /usr/local/bin/kind \
+            https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
+          chmod +x /usr/local/bin/kind || true
+          kind --version
+
+      - name: Install kubectl-ate
+        working-directory: website/docs-site
+        run: |
+          # The same version the install guide tells a reader to download, read from the
+          # same conref, so the tooling matches the charts the provisioner installs.
+          version="$(python3 - assets/kagent-docs/versions/agent-substrate.md <<'PY'
+          import re, sys
+          txt = open(sys.argv[1]).read()
+          m = re.search(r'include-if="[^"]*\b1\.x\b[^"]*"[^>]*>}}([^<{]+)', txt)
+          print((m.group(1) if m else txt).strip())
+          PY
+          )"
+          curl -fsSL -o kubectl-ate \
+            "https://github.com/kagent-dev/substrate/releases/download/v${version}/kubectl-ate-linux-amd64"
+          chmod +x kubectl-ate && sudo mv kubectl-ate /usr/local/bin/
+
+      - name: Stand up the cluster at the docs-pinned versions
+        working-directory: website/${{ env.PW_DIR }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: ./provisioners/kagent-kind.sh
+
+      - name: Install the harness
+        working-directory: website/${{ env.PW_DIR }}
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Port-forward the UI
+        run: |
+          kubectl port-forward -n kagent svc/kagent-ui 8082:8080 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8082/ >/dev/null; then echo "UI up after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          echo "port-forward never became reachable"; exit 1
+
+      - name: Capture
+        working-directory: website/${{ env.PW_DIR }}
+        run: UI_BASE_URL=http://localhost:8082 npm run update:launch-ui
+
+      - name: Publish into the docs img tree
+        working-directory: website/${{ env.PW_DIR }}
+        run: npm run sync-docs || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-cluster
+          path: website/${{ env.PW_DIR }}/playwright-report
+          retention-days: 7
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: website
+          commit-message: "docs: Refresh kagent UI screenshots (cluster)"
+          signoff: true
+          title: "[Automated] Refresh kagent UI screenshots (live cluster)"
+          body: |
+            Automated refresh of the live-cluster kagent UI screenshots.
+
+            **A diff here means the kagent UI changed.** Review the images before merging, and
+            check whether the prose in the guides that embed them is now wrong too.
+
+            Captured against a kind cluster running the chart versions the install guide pins,
+            so these images show what a reader who follows the docs actually gets.
+
+            Relative timestamps ("2 minutes ago") are left visible rather than masked, so a
+            small diff confined to those is expected and not a UI change.
+
+            Generated by the [**Refresh kagent UI screenshots** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/playwright-screenshots.yaml).
+          branch: playwright/screenshot-refresh-cluster
+          delete-branch: true
+          base: kagent-1-0-docs
+          labels: |
+            documentation
+            automated pr
