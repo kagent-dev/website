@@ -17,15 +17,17 @@
        Upstream's `lookupPath` comment calls the prefix "genuinely part of the
        path" on an OSS site, which holds where contentDir is the repo root. It
        does not hold here, so every lookup missed, no duplicate was ever found,
-       and the partial emitted nothing on any page. That was invisible while
-       `latest` sat on the 0.x entry and 1.x was withheld by a draft cascade —
-       the partial had nothing to mark either way. It stops being invisible at
-       the 1.0 release, which is when this override was added.
+       and the partial emitted nothing on any page. That was invisible while 1.x
+       was withheld by a draft cascade: one rendered version gave the partial
+       nothing to mark either way. It stops being invisible now that 1.x
+       publishes, which is when this override was added.
 
        Fix: strip the site's own home prefix before the GetPage lookup, and
        nothing else. Every other line matches upstream, including the
-       duplicates-only behavior — a 0.x page with NO 1.x equivalent is left
-       indexable on purpose, so features dropped in 1.0 stay findable.
+       duplicates-only behavior — a non-latest page with no equivalent in the
+       latest version is left indexable on purpose. `latest` sits on the 0.x
+       entry while 1.0 is in beta, so today that spares every 1.x page the 0.x
+       tree has no counterpart for.
 
        Re-check this against the pinned module on any docs-theme-extras bump: if
        upstream learns to resolve a baseURL path prefix itself, this override
