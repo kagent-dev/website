@@ -9,6 +9,26 @@ The kagent documentation shows information only for the latest release. If you r
 
 For more details on the changes between versions, review the [kagent GitHub releases](https://github.com/kagent-dev/kagent/releases).
 
+## v0.10.1
+
+Review this summary of changes in the v0.10.1 patch release. Every user-facing change in v0.10.1 applies to agents that run on the Python ADK runtime, and agents on the Go ADK runtime are unaffected.
+
+### Responses API for Python ADK agents
+
+v0.10 added the `openAI.apiFormat: responses` field to `ModelConfig`, but only the Go ADK runtime read it. Python ADK agents ignored the field and called Chat Completions instead, so a request to a model that sets a reasoning effort failed. Python ADK agents now use the Responses API when the `ModelConfig` that they reference sets `apiFormat: responses`.
+
+For more information, see [OpenAI — Responses API]({{< link path="supported-providers/openai#responses-api" >}}).
+
+### Human-in-the-loop resume for Python ADK agents
+
+Google ADK 1.38 requires a dynamically confirmed tool to have recorded its confirmation request in the session history. The Python executor paused the agent before it persisted that event, so every `ask_user` answer and every tool approval failed when the agent resumed. The executor now persists the confirmation response before it pauses. The Python memory service is also updated to the current Google ADK interface.
+
+For more information, see [Agents — Human-in-the-Loop]({{< link path="concepts/agents#human-in-the-loop" >}}).
+
+### A2A user identity in the Python runtime
+
+Resuming a persisted A2A task issues a new request that a different process can handle, and task resolution can run before the executor establishes the caller's identity. Owner-scoped reads therefore fell back to the runtime service account and reported an existing task as not found. Python task-store callbacks now take the user from the A2A server call context, scope that identity around the controller call, and restore the previous context afterward. v0.10 fixed the equivalent problem in the Go ADK runtime.
+
 ## v0.10
 
 Review this summary of significant changes from kagent version 0.9 to v0.10.
