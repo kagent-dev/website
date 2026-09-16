@@ -129,10 +129,10 @@ params:
   # partial. A clean build with blank version numbers is the failure mode this
   # single list prevents.
   #
-  # 0.x is the frozen pre-1.0 doc set (moved verbatim from the former flat
-  # content/kagent/ tree); 1.x is the in-progress v1alpha3/Agent Substrate
-  # rewrite and carries an in-development banner until it's ready to become
-  # the default.
+  # 1.x is the current doc set, written against the v1alpha3/Agent Substrate
+  # API. 0.x is the frozen pre-1.0 set (moved verbatim from the former flat
+  # content/kagent/ tree) and carries a superseded-version banner pointing at
+  # 1.x.
   #
   # Declaring versions at all moves section resolution off the theme's
   # version-less positional path (utils/section-segment.html condition (c)) and
@@ -144,40 +144,46 @@ params:
   # nav rooted at site.Home — which is why layouts/_partials/sidebar.html carries
   # a local override. Verify a kmcp sub-page's sidebar after any change here.
   versions:
+    # ORDER IS LOAD-BEARING, beyond the order of the dropdown itself.
+    # utils/resolve-latest-version.html picks the entry whose `linkVersion` is
+    # literally "latest" and, finding none — this site versions by 0.x/1.x, not
+    # by a /latest/ segment — falls back to the FIRST entry. That string is what
+    # the PDF cover page and the print-book running footer print. 1.x first is
+    # what makes the manual say 1.x.
+    #
+    # Note that partial keys off `linkVersion`, NOT the `latest: true` flag
+    # below; the two are read by different templates and are not interchangeable.
+    - version: "1.x"
+      dropdown: "1.x (current)"
+      linkVersion: "1.x"
+      url: "/kagent/1.x"
+      sections: ["kagent"]
+      # `latest` marks the current release. It is one of only two signals
+      # utils/version-noindex.html accepts, and the only one available to this
+      # site (the other is a `linkVersion: "latest"` URL segment, which this
+      # site does not use). Without it that partial matches nothing and emits no
+      # robots meta at all, so no version is ever marked as superseding another.
+      #
+      # EXACTLY ONE entry may carry it. On both, or on neither, the partial
+      # silently does nothing.
+      #
+      # It moved here from 0.x at the 1.0 release. The partial noindexes a
+      # NON-latest page whenever the same page exists in the latest version, so
+      # a 0.x page with a 1.x equivalent now gets `noindex, follow` and 1.x is
+      # what search surfaces. A 0.x page with NO 1.x equivalent — something 1.0
+      # dropped — is deliberately left indexable, so removed features stay
+      # findable.
+      latest: true
     - version: "0.x"
-      dropdown: "0.x (current)"
+      dropdown: "0.x"
       linkVersion: "0.x"
       url: "/kagent/0.x"
       sections: ["kagent"]
-      # `latest` marks the current release, and it is one of only two signals
-      # docs-theme-extras' utils/version-noindex.html accepts (the other is a
-      # `linkVersion: "latest"` URL segment, which this site does not use).
-      # Without it the partial matches nothing and emits no robots meta at all,
-      # so no version is ever marked as superseding another. 0.x is correct
-      # today: kagent v0.10.1 is the released chart.
-      #
-      # It changes nothing in the current production build, because 1.x is
-      # draft and no second version is rendered. It starts mattering the moment
-      # 1.x publishes: the partial noindexes a NON-latest page whenever the same
-      # page exists in the latest version, so with `latest` left here, 1.x pages
-      # that duplicate a 0.x page would be noindexed — the theme's deliberate
-      # "unreleased docs should not outrank the current release" behavior.
-      # Whether 1.0 takes `latest` over at release is an open decision; see
-      # RELEASE-1.0-CHECKLIST.md.
-      latest: true
-    # The "1.x" entry is deliberately absent until the 1.0 release is announced.
-    # This list drives the version switcher independently of whether the pages
-    # exist, so leaving the entry here while the content is drafted publishes a
-    # "1.x (preview)" menu item pointing at a 404. hugo.preview.yaml layers it
-    # back for local authoring; restore it here alongside dropping the draft keys
-    # in content/kagent/1.x/_index.md:
-    #
-    #   - version: "1.x"
-    #     dropdown: "1.x (preview)"
-    #     linkVersion: "1.x"
-    #     url: "/kagent/1.x"
-    #     sections: ["kagent"]
-    #     banner: "This is preview documentation for the upcoming kagent 1.0 release. It is incomplete and may change without notice."
+      # Superseded-version banner. Rendered by the local
+      # layouts/partials/version-banner.html override, which matches an entry by
+      # exact path segment and runs the text through `markdownify` — so the
+      # link below works, and a kmcp page matches nothing and shows no banner.
+      banner: "This documentation is for kagent 0.x. kagent 1.x is the current release — see the [1.x docs](/docs/kagent/1.x/)."
 
   # Label on the section selector button. Without it the button falls back to
   # site.Title ("kagent docs"), which reads oddly above a menu offering kagent

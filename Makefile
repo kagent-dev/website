@@ -37,12 +37,9 @@ install: ## Install web + docs dependencies (npm) and Hugo modules
 
 # ── Docs (Hugo) ────────────────────────────────────────────────────────────
 .PHONY: build-docs
-# HUGO_CONFIG and HUGO_FLAGS let a preview build layer hugo.preview.yaml and pass
-# -D without changing the production defaults. See docs-site/hugo.preview.yaml.
+# HUGO_CONFIG and HUGO_FLAGS let a caller layer an extra config file or pass
+# extra flags without changing the production defaults.
 HUGO_CONFIG ?= hugo.yaml
-# serve-docs layers the preview overlay by default: without it, local authoring
-# renders every {{< version include-if="1.x" >}} conref empty. See docs-site/hugo.preview.yaml.
-HUGO_CONFIG_PREVIEW ?= hugo.yaml,hugo.preview.yaml
 HUGO_FLAGS ?=
 
 build-docs: ## Build the Hugo docs site -> docs-site/public
@@ -63,7 +60,7 @@ inject-docs: ## Copy built docs into public/docs (preserves tracked assets, e.g.
 # back but the stylesheets never do, and the preview degrades edit by edit
 # instead of failing outright. Rendering to memory removes the shared directory.
 serve-docs: ## Preview the docs alone at http://localhost:1313/docs/
-	cd $(DOCS_DIR) && $(HUGO) server --config $(HUGO_CONFIG_PREVIEW) -D --disableFastRender --renderToMemory
+	cd $(DOCS_DIR) && $(HUGO) server --config $(HUGO_CONFIG) --disableFastRender --renderToMemory
 
 # ── Web (Next.js) ──────────────────────────────────────────────────────────
 .PHONY: serve-web
