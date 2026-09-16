@@ -43,6 +43,10 @@ on:
       - 'docs-site/go.mod'
       - 'docs-site/go.sum'
       - 'docs-site/hugo.yaml'
+      # Layered on top of hugo.yaml by the build step below, so a change to it
+      # changes what this job renders. Drop this line when the overlay goes
+      # away at the 1.0 release.
+      - 'docs-site/hugo.preview.yaml'
       - 'docs-site/.docs-test.toml'
       - '.github/workflows/framework-tests.yml'
   workflow_dispatch:
@@ -117,9 +121,22 @@ jobs:
           # devDependencies, so install them first so Hugo finds the binaries.
           npm ci
           # Capture the build log so hugo-warnings.spec can scan it for ERROR /
-          # WARN lines; surface it and fail if the build itself fails. Mirrors
-          # the Makefile's build-docs target (hugo --config hugo.yaml --gc --minify).
-          hugo --config hugo.yaml --gc --minify > .build.log 2>&1 || { cat .build.log; exit 1; }
+          # WARN lines; surface it and fail if the build itself fails.
+          #
+          # The preview overlay and -D are what put content/kagent/1.x/ in this
+          # build at all. That section is withheld from production by a draft
+          # cascade in 1.x/_index.md, so a plain `hugo --config hugo.yaml`
+          # renders ZERO 1.x pages and the `content` scanners below pass green
+          # having walked none of them — which is the whole reason this job
+          # includes docs-site/content/** in its path filter. The overlay also
+          # restores the 1.x entry in params.versions, without which every
+          # {{< version include-if="1.x" >}} renders empty and hugo-warnings
+          # sees a clean log for a build that is quietly missing a docset.
+          # Both are temporary: at the 1.0 release the draft keys and
+          # hugo.preview.yaml go away, and this line reverts to
+          # `hugo --config hugo.yaml --gc --minify`. links.yml and the
+          # Makefile's serve-docs target layer the overlay the same way.
+          hugo --config hugo.yaml,hugo.preview.yaml -D --gc --minify > .build.log 2>&1 || { cat .build.log; exit 1; }
 
       - name: Install harness dependencies
         working-directory: docs-theme-extras
