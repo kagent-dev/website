@@ -1,10 +1,12 @@
-{{- /* kagent override of docs-theme-extras' gloss shortcode.
+{{- /* kagent override of docs-theme-extras' gloss shortcode. Re-synced against
+       upstream v0.3.12.
 
        Why this exists: upstream hardcodes target="_blank" on the optional
-       "Learn more" link, which is right for an external reference and wrong
-       for a link to another page in this docset — it strands the reader in a
-       new tab for an ordinary cross-reference. That single attribute was the
-       reason data/glossary.yaml carried no `link` values at all.
+       "Learn more" link, which suits an external reference and misfires on a
+       link to another page in this docset — it strands the reader in a new tab
+       for an ordinary cross-reference. Every `link` value in data/glossary.yaml
+       is an internal /docs/kagent/… path, so upstream's markup would open a new
+       tab for all of them.
 
        Fix: open a new tab only for an absolute http(s) destination, and add
        rel="noopener" while doing so. An internal, root-relative link opens in
@@ -16,7 +18,30 @@
        never reaches this template — the override must carry the rename itself
        or break when the removal lands. Re-sync when extras converts.
 
-       Everything else is byte-for-byte identical to upstream v0.2.0. */ -}}
+       Those two lines are the whole delta. Everything else matches upstream
+       v0.3.12. */ -}}
+{{- /* KEEP THE TERM MARKUP BELOW ON ONE LINE, with no whitespace between its
+       tags. This is not a formatting preference, and the reason is carried from
+       upstream, where reformatting breaks two things in the same edit, silently:
+
+         - `utils/md-strip-glossary.html` matches
+           `<span class="tooltip-content"><strong>` and `</strong><span>` as
+           LITERAL adjacencies. Indented markup stops being stripped, and the
+           whole definition reappears inline in every `.md` URL and
+           Copy-as-Markdown payload — the bug that partial exists to fix.
+           page-to-markdown.html runs that strip on every page, and kagent emits
+           `markdown` for both `page` and `section` (hugo.yaml `outputs`), so
+           this build depends on it.
+         - upstream's `glossary-tooltip-inlined` scan in copy-md-fidelity.spec.ts
+           keys on the bolded key ABUTTING the display text, and that scan is
+           what guards the strip. It runs against upstream's own fixture, never
+           against this file, so on the kagent side the leak has no test behind
+           it — the markup itself is the only safeguard.
+
+       The conditional target/rel added below sits inside the optional `<a>`,
+       which the strip regex absorbs as `<a[^>]*>`, so the override's extra
+       attributes are safe. The adjacencies ahead of it are the part to leave
+       alone. */ -}}
 {{- $key := .Get 0 -}}
 {{- $entry := index hugo.Data.glossary $key -}}
 {{- if $entry -}}
