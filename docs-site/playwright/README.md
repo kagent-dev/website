@@ -67,7 +67,19 @@ Two constraints on the mock path:
   (`ui/package.json`), and its build tooling fails on Node 18 with a `styleText` import error
   from `node:util` that does not name the cause.
 - For live-cluster captures: `kind`, `helm`, `kubectl`, `kubectl-ate`, `jq`, `openssl`, and a
-  model provider API key.
+  model provider API key. The provisioner checks for all of these before it touches the cluster
+  and names whichever is missing, so you find out up front rather than half way through an
+  install.
+- **`kubectl-ate` is not on most machines and must match the Agent Substrate version** the
+  capture installs, because it writes that version's identity material. It is published per
+  release rather than through a package manager:
+  ```sh
+  curl -sSL -o kubectl-ate \
+    "https://github.com/kagent-dev/substrate/releases/download/v<SUBSTRATE_VERSION>/kubectl-ate-$(uname -s | tr '[:upper:]' '[:lower:]')-amd64"
+  chmod +x kubectl-ate && mv kubectl-ate /usr/local/bin/   # or anywhere on PATH
+  ```
+  Read `<SUBSTRATE_VERSION>` from `assets/kagent-docs/versions/agent-substrate.md`, which is the
+  same conref the provisioner reads.
 - One-time setup:
   ```sh
   cd docs-site/playwright

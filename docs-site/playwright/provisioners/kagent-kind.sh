@@ -140,6 +140,24 @@ if $DELETE; then
   exit 0
 fi
 
+# Fail on a missing tool up front, naming it. Without this the first absent tool
+# surfaces mid-run as its own unhelpful error -- a missing kubectl-ate reads as
+# `unknown command "ate" for "kubectl"` -- and by then Agent Substrate is installed,
+# so the cluster is half-built. kubectl-ate must match SUBSTRATE_VERSION; it is
+# published at https://github.com/kagent-dev/substrate/releases.
+if ! $DRY_RUN; then
+  missing=()
+  for tool in kind helm kubectl jq openssl; do
+    command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
+  done
+  kubectl ate --help >/dev/null 2>&1 || missing+=("kubectl-ate")
+  if (( ${#missing[@]} )); then
+    echo "Missing required tool(s): ${missing[*]}" >&2
+    echo "See the Prerequisites section of docs-site/playwright/README.md." >&2
+    exit 1
+  fi
+fi
+
 if ! $DRY_RUN && [[ -z "${OPENAI_API_KEY:-}" ]]; then
   echo "OPENAI_API_KEY is required (the kagent chart needs a model provider key)." >&2
   echo "Re-run with --dry-run to see the commands without installing." >&2
@@ -170,9 +188,19 @@ echo
 # Skip creation when the cluster is already there, so a re-run after a failed install
 # picks up where it left off instead of dying on `kind create`. Every step below is a
 # `helm upgrade --install` or a `kubectl create` for the same reason.
+#
+# Reuse it only when it also ANSWERS. `kind get clusters` lists a cluster whose node
+# container is stopped -- which is what Docker Desktop leaves behind when it restarts --
+# and installing into that one sends every step at an unreachable API server, failing
+# with `Kubernetes cluster unreachable` once per step rather than once up front.
 if ! $NO_CLUSTER && ! $DRY_RUN && kind get clusters 2>/dev/null | grep -qx "$CLUSTER_NAME"; then
-  echo "kind cluster '${CLUSTER_NAME}' already exists; skipping create."
-  NO_CLUSTER=true
+  if kubectl --context "kind-${CLUSTER_NAME}" cluster-info >/dev/null 2>&1; then
+    echo "kind cluster '${CLUSTER_NAME}' already exists and is reachable; skipping create."
+    NO_CLUSTER=true
+  else
+    echo "kind cluster '${CLUSTER_NAME}' exists but does not answer; recreating it." >&2
+    run kind delete cluster --name "$CLUSTER_NAME"
+  fi
 fi
 
 if ! $NO_CLUSTER; then
@@ -236,11 +264,18 @@ kubectl create secret generic actor-id-ca-certs -n ${ATE_NAMESPACE} \
 "
 
 run_sh "kubectl create configmap ate-api-authentication" "
+set -euo pipefail
+# Ask the cluster for its issuer rather than assuming one. kind 1.37 advertises
+# https://kubernetes.default.svc.cluster.local, while the older hardcoded value was
+# https://kubernetes.default.svc; a mismatch is accepted at install time and only shows
+# up later as \`token issuer ... not trusted\` on every kubectl-ate and ateapi call.
+# kagent's own setup-cluster.sh derives it the same way (kagent#2763, fixed in #2770).
+k8s_issuer=\"\$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)\"
 kubectl create configmap ate-api-authentication -n ${ATE_NAMESPACE} \
   --from-literal=authentication.yaml='actorIdentityJWTProvider: kubernetes
 jwtProviders:
 - name: kubernetes
-  issuer: https://kubernetes.default.svc
+  issuer: '\"\${k8s_issuer}\"'
   audiences: [api.${ATE_NAMESPACE}.svc]
   certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
   discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
