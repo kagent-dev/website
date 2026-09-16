@@ -411,8 +411,8 @@ When an agent pauses to ask something, the task's status becomes `input_required
    }
    ```
 
-> [!WARNING]
-> A response whose key does not match the `inputRequests` key is discarded silently. The call still returns `{ "resultType": "complete" }`, but the agent never receives the answer and the task stays `input_required` until something answers it under the right key or cancels it. Read the key from `tasks/get` rather than reusing a task ID or a checkpoint ID.
+> [!NOTE]
+> A response whose key does not match the `inputRequests` key is rejected with an `Invalid params` error (`-32602`) naming the key that the task expects, and the task stays `input_required`. A value that is not an elicitation result is rejected the same way. Read the key from `tasks/get` rather than reusing a task ID or a checkpoint ID.
 
 For the pause types, the approval model, and what the agent receives, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
