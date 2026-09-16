@@ -1,0 +1,19 @@
+{{- /* Renders every entry in data/glossary.yaml as a description list.
+
+       Why a shortcode rather than a hand-written page: the same file feeds the
+       inline {{< gloss >}} tooltips, so generating the page from it keeps the
+       two from drifting. Adding a term to the data file publishes it here with
+       no edit to the page.
+
+       Sorted case-insensitively, so "gVisor" lands with the g's rather than
+       last. Each <dt> carries an anchorized id, so a term is linkable. */ -}}
+{{- $terms := slice -}}
+{{- range $key, $entry := hugo.Data.glossary -}}
+  {{- $terms = $terms | append (dict "key" $key "short" $entry.short "link" $entry.link "sortKey" (lower $key)) -}}
+{{- end -}}
+<dl class="glossary-entries">
+{{- range sort $terms "sortKey" }}
+  <dt id="{{ anchorize .key }}">{{ .key }}</dt>
+  <dd>{{ .short }}{{ with .link }} <a href="{{ . }}">Learn more</a>{{ end }}</dd>
+{{- end }}
+</dl>

@@ -264,7 +264,7 @@ export default function RedesignPage() {
               already trusts. Open source. Production grade. Built by the founders of Istio.
             </p>
             <div className="rd-hero-ctas">
-              <Link href="/docs/kagent/getting-started/quickstart" className="rd-btn rd-btn--purple">
+              <Link href="/docs/kagent/0.x/getting-started/quickstart" className="rd-btn rd-btn--purple">
                 Get Started
                 <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </Link>
@@ -680,7 +680,7 @@ export default function RedesignPage() {
             <h2>Run your first agent on Kubernetes today.</h2>
             <p className="rd-lead">One Helm chart. One CRD. One namespace. You&apos;ll be looking at agent traces before your coffee gets cold.</p>
             <div className="rd-hero-ctas">
-              <Link href="/docs/kagent/getting-started/quickstart" className="rd-btn rd-btn--purple">
+              <Link href="/docs/kagent/0.x/getting-started/quickstart" className="rd-btn rd-btn--purple">
                 Get Started
                 <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </Link>

@@ -50,7 +50,7 @@ jobs:
       # OpenNext Worker (which bundles public/ as static assets). HUGO=hugo uses
       # the Hugo installed above instead of the local hugo160 alias.
       - name: Build (Hugo docs + inject into /docs + Worker)
-        run: make build HUGO=hugo
+        run: make build HUGO=hugo HUGO_CONFIG=hugo.yaml,hugo.preview.yaml HUGO_FLAGS=-D
 
       # Derive a stable preview alias from the PR branch name. Cloudflare preview
       # aliases must be a valid subdomain label (lowercase alphanumerics and

@@ -23,3 +23,57 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+{{- /* Mermaid light-theme colors.
+
+  Mermaid's stock "default" (light) theme fills clusters pale yellow (#ffffde)
+  and nodes lavender (#ECECFF), which is not the house palette. Its "dark" theme
+  is already correct: a gray cluster with the node reading as the page behind it.
+
+  This cannot be fixed from CSS or from a classDef:
+    - Mermaid emits classDef rules as `#mermaid-<id> .cls>*{...!important}`.
+      That is ID-scoped, so no class-based rule in custom.css can outrank it.
+    - `fill:var(--x)` inside a classDef is a parse error — the parentheses break
+      Mermaid's classDef grammar — so the color cannot be a CSS variable.
+    - `fill:transparent` is not "the page" inside nested subgraphs: SVG
+      composites, so a transparent node shows the stacked cluster tints behind
+      it rather than the panel color.
+
+  So the light values are supplied as themeVariables, the same mechanism
+  Mermaid's dark theme uses. docs-theme-extras owns the Mermaid partial and
+  re-runs mermaid.initialize() on every theme switch, so this wraps initialize
+  rather than calling it, and stays correct across toggles without forking that
+  partial. Kept in this file (not a new _partials/custom/head-end.html) because
+  Hugo prefers _partials/ over partials/, so a second file would shadow this one
+  and drop the themeExtras bootstrap above. */ -}}
+<script>
+  (function () {
+    var LIGHT = {
+      mainBkg: "#ffffff",        /* node fill: the page */
+      nodeBorder: "#6b7280",
+      clusterBkg: "#f3f4f6",     /* cluster fill: a light gray panel */
+      clusterBorder: "#9ca3af",
+      titleColor: "#111827",
+      edgeLabelBackground: "#f3f4f6"
+    };
+    var held;
+    Object.defineProperty(window, "mermaid", {
+      configurable: true,
+      get: function () { return held; },
+      set: function (m) {
+        held = m;
+        if (m && typeof m.initialize === "function" && !m.__kagentThemed) {
+          var orig = m.initialize.bind(m);
+          m.initialize = function (cfg) {
+            cfg = cfg || {};
+            if (!document.documentElement.classList.contains("dark")) {
+              cfg.themeVariables = Object.assign({}, LIGHT, cfg.themeVariables);
+            }
+            return orig(cfg);
+          };
+          m.__kagentThemed = true;
+        }
+      }
+    });
+  })();
+</script>

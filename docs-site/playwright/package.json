@@ -1,0 +1,18 @@
+{
+  "name": "kagent-docs-ui-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Playwright screenshot automation for the kagent product UI. Attaches to an already-running UI (a port-forwarded cluster install, or the UI's own mock dev server) and publishes the captures into docs-site/assets/img.",
+  "scripts": {
+    "test": "playwright test",
+    "test:launch-ui": "playwright test tests/launch-ui.spec.ts",
+    "update:launch-ui": "playwright test tests/launch-ui.spec.ts --update-snapshots",
+    "test:chat": "playwright test tests/chat.spec.ts",
+    "update:chat": "playwright test tests/chat.spec.ts --update-snapshots",
+    "sync-docs": "node scripts/sync-docs-images.mjs",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.0"
+  }
+}

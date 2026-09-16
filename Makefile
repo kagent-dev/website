@@ -37,8 +37,16 @@ install: ## Install web + docs dependencies (npm) and Hugo modules
 
 # ── Docs (Hugo) ────────────────────────────────────────────────────────────
 .PHONY: build-docs
+# HUGO_CONFIG and HUGO_FLAGS let a preview build layer hugo.preview.yaml and pass
+# -D without changing the production defaults. See docs-site/hugo.preview.yaml.
+HUGO_CONFIG ?= hugo.yaml
+# serve-docs layers the preview overlay by default: without it, local authoring
+# renders every {{< version include-if="1.x" >}} conref empty. See docs-site/hugo.preview.yaml.
+HUGO_CONFIG_PREVIEW ?= hugo.yaml,hugo.preview.yaml
+HUGO_FLAGS ?=
+
 build-docs: ## Build the Hugo docs site -> docs-site/public
-	cd $(DOCS_DIR) && $(HUGO) --config hugo.yaml $(if $(DOCS_BASEURL),--baseURL "$(DOCS_BASEURL)") --gc --minify
+	cd $(DOCS_DIR) && $(HUGO) --config $(HUGO_CONFIG) $(HUGO_FLAGS) $(if $(DOCS_BASEURL),--baseURL "$(DOCS_BASEURL)") --gc --minify
 
 .PHONY: inject-docs
 inject-docs: ## Copy built docs into public/docs (preserves tracked assets, e.g. versions/)
@@ -47,8 +55,15 @@ inject-docs: ## Copy built docs into public/docs (preserves tracked assets, e.g.
 	  $(DOCS_OUT)/ $(WEB_DOCS)/
 
 .PHONY: serve-docs
+# --renderToMemory keeps the preview out of $(DOCS_OUT) entirely. Hugo's server
+# otherwise renders to disk and serves from there, so it shares one directory
+# with `build-docs`/`clean`. Anything that empties that directory mid-session --
+# a `make clean` or `make build` in a second terminal -- strands the running
+# server: each later save re-renders only the pages it touched, so pages come
+# back but the stylesheets never do, and the preview degrades edit by edit
+# instead of failing outright. Rendering to memory removes the shared directory.
 serve-docs: ## Preview the docs alone at http://localhost:1313/docs/
-	cd $(DOCS_DIR) && $(HUGO) server --config hugo.yaml -D --disableFastRender
+	cd $(DOCS_DIR) && $(HUGO) server --config $(HUGO_CONFIG_PREVIEW) -D --disableFastRender --renderToMemory
 
 # ── Web (Next.js) ──────────────────────────────────────────────────────────
 .PHONY: serve-web

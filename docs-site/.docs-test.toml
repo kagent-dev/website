@@ -6,11 +6,10 @@
 # against this file's directory (docs-site/). The harness does NOT build the
 # site — `hugo --config hugo.yaml` runs first and writes to builtRoot.
 #
-# NOTE: docs-site/content is GENERATED from the Next.js MDX source under
-# src/app/docs by `make gen-docs` (scripts/mdx-to-hugo.mjs --out docs-site/content).
-# These checks run against the generated Hugo output, which is the right place
-# to catch shortcode/rendering breaks — but a content fix must land in the MDX
-# source (or the converter), not in docs-site/content, or `gen-docs` overwrites it.
+# docs-site/content is hand-authored Markdown and is the source of truth (the
+# former MDX source under src/app/docs and its mdx-to-hugo.mjs converter were
+# removed once the one-time conversion landed — see "Remove the src/apps/docs
+# directory"). Edit pages directly under docs-site/content.
 
 version = "1"
 name    = "kagent-oss"
@@ -35,10 +34,14 @@ scanRoots = [
   "./content",
 ]
 
-# NOTE: kagent docs are a flat, unversioned set (/<section>/<page>/) with no
-# version segment. There is intentionally no [versioning] block — version-aware
-# specs detect the absence and skip gracefully (same mechanism agentregistry's
-# and ambientmesh's flat docs rely on).
+# kagent docs are versioned (0.x frozen, 1.x in-progress rewrite), nested
+# under /docs/kagent/<version>/... . kmcp, the other product built into this
+# same Hugo site, stays flat/unversioned — see the sections.kagent.versions
+# comment in hugo.yaml for why versions are scoped per-section rather than
+# site-wide.
+[versioning]
+versionFromPath = "^/docs/kagent/(?<version>[^/]+)/"
+versions        = ["0.x", "1.x"]
 
 # All checks default to enabled. No [checks] overrides are needed: kagent runs
 # the full default set. (The former `smoke`/`crossBrowser` toggles were removed

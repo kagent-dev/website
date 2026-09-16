@@ -1,0 +1,127 @@
+# Glossary terms for the {{< gloss >}} shortcode, which docs-theme-extras
+# provides along with the tooltip behavior (glossary.js) and styling
+# (glossary.css). Both load automatically through themeExtras/head-end.html.
+#
+# Usage is a PAIRED shortcode; the unclosed form is a build error:
+#   {{< gloss "Atespace" >}}atespace{{< /gloss >}}
+# The key is the tooltip heading, so it is capitalized. The inner text is what
+# appears in the sentence, so it carries the prose's own casing and plurality.
+#
+# Gloss the FIRST instance of a term on a page only. Repeating it on every
+# occurrence adds underlines without adding information.
+#
+# A key that is missing here renders as plain text with no tooltip and no
+# warning, so check spelling against this file when a tooltip does not appear.
+#
+# Most entries carry a `link` as well as a `short`, which renders a "Learn more"
+# link in the tooltip and on the glossary page. Upstream's shortcode hardcodes
+# target="_blank" on that link, which strands a reader in a new tab for an
+# ordinary cross-reference, so `layouts/_shortcodes/gloss.html` overrides it to
+# open a new tab only for an absolute http(s) destination. That override is the
+# reason these links can point inside the docset at all.
+#
+# Links are root-relative and hardcode the 1.x segment. That is safe because
+# {{< gloss >}} is used in 1.x content only, and nowhere in 0.x or kmcp. Check
+# with: grep -rl "{{< gloss " content/ | grep -v 1.x
+#
+# `Revision` and `Transcript` carry no `link` on purpose: no page in 1.x defines
+# either term, so there is nowhere to send the reader. Add the link when a page
+# claims them.
+
+Actor:
+  short: "The sandboxed unit of compute, provided by Agent Substrate, that runs an AgentInstance's conversation loop. Every AgentInstance is backed by one."
+  link: "/docs/kagent/1.x/about/core-concepts/#actor"
+
+Atespace:
+  short: "The isolation boundary that an Actor belongs to, and the first half of its identity. Global-scoped in Agent Substrate, not a Kubernetes namespace."
+  link: "/docs/kagent/1.x/about/agent-substrate/#atespaces"
+
+Agent Substrate:
+  short: "The runtime that kagent runs agents on. It multiplexes many sandboxed Actors onto a smaller pool of pre-started Workers, suspending idle ones to snapshots."
+  link: "/docs/kagent/1.x/about/agent-substrate/"
+
+ActorTemplate:
+  short: "The compiled, immutable definition that the kagent controller produces from a Harness and AgentTemplate pair. Every Actor is created from one."
+  link: "/docs/kagent/1.x/about/agent-substrate/#actortemplate"
+
+AgentInstance:
+  short: "A running, conversational pairing of a Harness and an AgentTemplate. Unlike the two, it is not a Kubernetes resource: kagent's gRPC API creates it and its database tracks it."
+  link: "/docs/kagent/1.x/about/core-concepts/#agentinstance"
+
+Checkpoint:
+  short: "A durable pin on the snapshot that an AgentInstance most recently suspended to, and a record of how far its transcript had advanced. Not a new state: tagging copies the snapshot so that Agent Substrate does not collect it, and a second AgentInstance can be forked from it."
+  link: "/docs/kagent/1.x/substrate-runtime/suspend-and-resume/#checkpoints"
+
+AgentTemplate:
+  short: "A Kubernetes custom resource defining what an agent does: its model, system prompt, tools, skills, and plugins. It runs only once a Harness accepts it."
+  link: "/docs/kagent/1.x/about/core-concepts/#agenttemplate"
+
+Harness:
+  short: "A Kubernetes custom resource defining how an agent is allowed to run: its runtime, workload image, WorkerPool and snapshot storage, and which AgentTemplates it accepts."
+  link: "/docs/kagent/1.x/about/core-concepts/#harness"
+
+Worker:
+  short: "A pre-started, sandboxed pod that hosts at most one Actor at a time. Actors are multiplexed across a pool of Workers over time."
+  link: "/docs/kagent/1.x/about/agent-substrate/#workers-and-workerpools"
+
+WorkerPool:
+  short: "A Kubernetes custom resource declaring how many Workers to keep running and which sandbox class they use. An operator must provision one before any Harness can create AgentInstances."
+  link: "/docs/kagent/1.x/about/agent-substrate/#workers-and-workerpools"
+
+
+# Added when the glossary widened from Substrate and Harness-model vocabulary to
+# any important concept. Same rules apply: gloss the first instance on a page only.
+
+ModelConfig:
+  short: "A Kubernetes custom resource naming one model at one provider, along with the credentials to reach it. An AgentTemplate references one by name, and every agent compiled from that template calls the model that it names."
+  link: "/docs/kagent/1.x/setup/model-providers/about-model-providers/#how-a-modelconfig-reaches-an-agent"
+
+RemoteMCPServer:
+  short: "A Kubernetes custom resource pointing at a Model Context Protocol server that the cluster can reach. It is the only server kind that an AgentTemplate tool binding accepts."
+  link: "/docs/kagent/1.x/skills-and-mcp/about-tools/#mcp-tools"
+
+Revision:
+  short: "The compiled, immutable output of one Harness and AgentTemplate pairing, identified by a content digest. An AgentInstance runs the revision it was created from for its whole life, so editing either resource affects only instances created afterward."
+
+Snapshot:
+  short: "The stored state that an Actor suspends to, held in object storage. Resuming restores the Actor from its most recent snapshot, which is what makes suspending idle agents cheap."
+  link: "/docs/kagent/1.x/substrate-runtime/suspend-and-resume/#what-a-snapshot-captures"
+
+Tag:
+  short: "An Agent Substrate resource that gives one snapshot a stable, human-meaningful name, so callers do not need to track Substrate's internal snapshot identity. It also acts as a retention pin: Agent Substrate does not collect a snapshot while a tag names it, and only the tag's visibility scope can change afterward."
+  link: "/docs/kagent/1.x/about/agent-substrate/#suspend-snapshot-and-resume"
+
+Fork:
+  short: "A second AgentInstance created from a checkpoint, continuing the conversation from the point that the checkpoint pinned. A fork inherits the checkpoint's revision, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork, leaving the original's history untouched."
+  link: "/docs/kagent/1.x/examples/agent-substrate/#fork-the-conversation-into-a-second-agent"
+
+Transcript:
+  short: "The record of an AgentInstance's conversation, held server-side and append-only. It survives the Actor suspending between turns, and a resumed runtime cannot shrink it."
+
+Skill:
+  short: "A packaged piece of know-how that an agent can pick up: a directory holding a SKILL.md file of instructions, plus any scripts or reference files those instructions use. An AgentTemplate attaches skills by naming where each one comes from."
+  link: "/docs/kagent/1.x/skills-and-mcp/skills/"
+
+Plugin package:
+  short: "A bundle that an AgentTemplate attaches with spec.plugins, carrying skills and optionally declaring Model Context Protocol servers. Packages follow the Agent Plugins format, which kagent consumes rather than defines."
+  link: "/docs/kagent/1.x/skills-and-mcp/plugins/"
+
+Tool binding:
+  short: "One entry in an AgentTemplate's spec.tools list. Each binding selects exactly one source: tools from a Model Context Protocol server, or another AgentTemplate used as a tool."
+  link: "/docs/kagent/1.x/skills-and-mcp/about-tools/"
+
+Model Context Protocol:
+  short: "An open protocol for exposing tools and resources to a model. kagent reaches an MCP server through a RemoteMCPServer resource, and an AgentTemplate binds individual tools from it."
+  link: "/docs/kagent/1.x/skills-and-mcp/about-tools/#mcp-tools"
+
+MCP:
+  short: "Model Context Protocol, an open protocol for exposing tools and resources to a model. kagent reaches an MCP server through a RemoteMCPServer resource, and an AgentTemplate binds individual tools from it."
+  link: "/docs/kagent/1.x/skills-and-mcp/about-tools/#mcp-tools"
+
+A2A:
+  short: "The Agent-to-Agent protocol, which callers and other agents use to talk to an AgentInstance. The conversation's context identifier is the AgentInstance ID, so a second message on the same ID continues the same conversation."
+  link: "/docs/kagent/1.x/examples/a2a-agents/#about-the-kagent-a2a-service"
+
+gVisor:
+  short: "A user-space kernel that isolates a workload from the host kernel by intercepting its system calls. kagent compiles every ActorTemplate to the gvisor sandbox class."
+  link: "/docs/kagent/1.x/substrate-runtime/sandboxing/#sandbox-classes"

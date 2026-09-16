@@ -1,0 +1,26 @@
+{{- /* kagent override of docs-theme-extras' gloss shortcode.
+
+       Why this exists: upstream hardcodes target="_blank" on the optional
+       "Learn more" link, which is right for an external reference and wrong
+       for a link to another page in this docset — it strands the reader in a
+       new tab for an ordinary cross-reference. That single attribute was the
+       reason data/glossary.yaml carried no `link` values at all.
+
+       Fix: open a new tab only for an absolute http(s) destination, and add
+       rel="noopener" while doing so. An internal, root-relative link opens in
+       place like every other link on the page.
+
+       Data lookup: the glossary reads hugo.Data, where upstream still reads
+       site.Data. Hugo deprecated .Site.Data in v0.156.0 and will remove it in
+       a later release. This file shadows upstream's, so an extras-side rename
+       never reaches this template — the override must carry the rename itself
+       or break when the removal lands. Re-sync when extras converts.
+
+       Everything else is byte-for-byte identical to upstream v0.2.0. */ -}}
+{{- $key := .Get 0 -}}
+{{- $entry := index hugo.Data.glossary $key -}}
+{{- if $entry -}}
+<span class="glossary-term" tabindex="0" data-glossary-term="{{ $key }}">{{ .Inner | default $key }}<span class="tooltip-content"><strong>{{ $key }}</strong><span>{{ $entry.short }}</span>{{- if $entry.link }}<a href="{{ $entry.link }}" class="tooltip-link"{{ if strings.HasPrefix $entry.link "http" }} target="_blank" rel="noopener"{{ end }}>Learn more</a>{{- end }}</span></span>
+{{- else -}}
+{{ .Inner | default $key }}
+{{- end -}}

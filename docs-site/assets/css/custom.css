@@ -434,3 +434,64 @@ h6 {
   :where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-light"] { display: none; }
   :where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-dark"]  { display: block; }
 }
+
+/* ── Mermaid diagram alignment ────────────────────────────────────────────
+   Hextra renders every diagram into a full-width <pre class="mermaid"> that
+   carries the code-block background, while Mermaid sizes its own SVG to the
+   diagram's natural width. A narrow diagram therefore sits against the left
+   edge of a wide, mostly empty panel. Center it instead.
+
+   Note: the panel itself cannot be shrunk to fit from CSS. Mermaid sets
+   width="100%" on the SVG and records the real size only in an inline
+   max-width, so width:fit-content has no definite width to measure and
+   collapses every diagram to the 300px SVG default. Shrinking the panel would
+   require Mermaid's useMaxWidth:false, which means overriding the theme's
+   scripts/mermaid.html partial. */
+pre.mermaid {
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Glossary term indicator ──────────────────────────────────────────────
+   docs-theme-extras marks a {{< gloss >}} term with `border-bottom: 1px
+   dotted #666` and defines no dark-mode variant. Two problems: that color
+   lands near 3:1 on this site's dark page, and a 1px dotted rule is only
+   about half coverage, so it reads as a hairline whatever its contrast.
+
+   Swap the border for a text-decoration underline, which allows a real
+   thickness and an offset that lifts the dots off the baseline, and raise
+   the color per theme. Hover and focus use the OSS brand color in place of
+   the theme's hardcoded #007acc.
+
+   The `html` prefix is load-bearing: glossary.css is a separate <link> that
+   loads AFTER custom.css in both the production and dev pipelines, so a bare
+   `.glossary-term` would lose the cascade at equal specificity. */
+html .glossary-term {
+  border-bottom: none;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-decoration-color: #4b5563;
+}
+html.dark .glossary-term {
+  text-decoration-color: #9ca3af;
+}
+html .glossary-term:hover,
+html .glossary-term:focus {
+  text-decoration-color: var(--theme-primary, #0060cf);
+}
+
+/* Glossary tooltip: keep the definition at normal weight.
+
+   extras' glossary.css sets font-weight on the tooltip's term (`> span strong`)
+   but never on the definition (`> span span`), so the definition inherits from
+   whatever surrounds the trigger. A term glossed inside a bold run — a bold
+   step lead-in, or a `**first mention**` — therefore renders its whole
+   definition bold and loses the term/definition contrast the markup intends.
+
+   Same `html` prefix requirement as above: glossary.css loads after this file,
+   so a bare selector would lose the cascade at equal specificity. */
+html .glossary-term > span span {
+  font-weight: 400;
+}

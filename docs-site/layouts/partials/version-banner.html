@@ -1,0 +1,49 @@
+{{- /* kagent override of docs-theme-extras' version-banner.html.
+
+       Why this exists: upstream matches against `.FirstSection.RelPermalink`
+       (always the top-level section, e.g. "/kagent/") checked as a substring
+       against `.linkVersion`, which can't see a version segment nested a
+       level deeper (content/kagent/0.x/…) — the substring check would never
+       fire. It also reads only the site-wide Site.Params.versions, which
+       kagent leaves unset (see the navbar.html override) since this build
+       also serves kmcp, an unrelated, unversioned product.
+
+       Fix: resolve versions the same way navbar.html's override and
+       version-cards.html do (Site.Params.sections.<currentSection>.versions,
+       falling back to the site-wide list), and match by checking whether any
+       exact path segment of the current page's own RelPermalink equals
+       `.linkVersion` — correct regardless of nesting depth, folder prefix,
+       or language prefix, and still no-ops on kmcp pages since none of their
+       segments will ever equal "0.x"/"1.x".
+
+       Everything below the resolution step (the bannerID/i18n handling,
+       markdownify, markup) matches upstream. */ -}}
+{{- $currentSection := .Section -}}
+{{- $versions := slice -}}
+{{- if and $currentSection (isset .Site.Params.sections $currentSection) -}}
+  {{- with (index .Site.Params.sections $currentSection).versions -}}
+    {{- $versions = . -}}
+  {{- end -}}
+{{- end -}}
+{{- if eq (len $versions) 0 -}}
+  {{- with .Site.Params.versions -}}
+    {{- $versions = . -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $segments := split (strings.Trim .RelPermalink "/") "/" -}}
+{{- $bannerText := "" -}}
+{{- range $versions -}}
+  {{- if and (not $bannerText) .banner (in $segments .linkVersion) -}}
+    {{- $bannerText = .banner -}}
+    {{- if .bannerID -}}
+      {{- $translated := i18n .bannerID . -}}
+      {{- if $translated -}}{{- $bannerText = $translated -}}{{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- with $bannerText }}
+<div class="version-banner">
+  {{ . | markdownify }}
+</div>
+{{- end -}}

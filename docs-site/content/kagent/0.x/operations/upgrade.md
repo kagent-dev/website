@@ -1,0 +1,228 @@
+---
+title: Upgrade kagent
+description: Upgrade a kagent release with Helm, verify the new version is running, and roll back if the upgrade goes wrong.
+weight: 1
+author: kagent.dev
+---
+
+Follow these steps to upgrade kagent to the latest version and keep your cluster up to date with new features and bug fixes.
+
+## Before you begin
+
+1. Save the version that you want to upgrade to in an environment variable. For available versions, refer to the [kagent releases](https://github.com/kagent-dev/kagent/releases).
+
+   ```bash
+   export NEW_VERSION=<version-number>
+   ```
+
+2. Read the [release notes]({{< link path="resources/release-notes" >}}) for the version you are upgrading to. Pay attention to any breaking changes or deprecations that might affect your configuration.
+
+3. Back up your current configuration, including the following:
+    - Agent definitions
+    - Any custom settings
+    - PostgreSQL database: You can take a snapshot now so that you have a restore point if the upgrade fails. For the database connection string, see [Database configuration]({{< link path="operations/operational-considerations#database-configuration" >}}).
+
+   ```bash
+   pg_dump "postgres://<user>:<password>@<host>:5432/<dbname>" \
+     --format=custom \
+     --file=kagent-pre-upgrade-snapshot.dump
+   ```
+
+4. **v0.9.0 and later**: You must be running at least v0.8.0 before upgrading to v0.9.0. Check the [release notes]({{< link path="resources/release-notes#v09" >}}) for 0.9-specific upgrades related to database migrations and RBAC scope.
+
+5. **v0.10.0 and later (mirror registry operators)**: If you mirror kagent images and previously relied on `agentImage` alone, you must now also set `controller.goAgentImage` to point to your mirrored Go ADK image. In v0.10, the controller no longer derives the Go image location from the Python image path. If `controller.goAgentImage` is unset and you overrode `agentImage`, the controller will fall back to pulling `ghcr.io/kagent-dev/kagent/golang-adk` directly. The controller logs a startup warning when the two registries differ. For details, see [Private registry and image mirroring]({{< link path="introduction/installation#private-registry-and-image-mirroring" >}}).
+
+5. **v0.10.0 and later (mirror registry operators)**: If you mirror kagent images and previously relied on `agentImage` alone, you must now also set `controller.goAgentImage` to point to your mirrored Go ADK image. In v0.10, the controller no longer derives the Go image location from the Python image path. If `controller.goAgentImage` is unset and you overrode `agentImage`, the controller will fall back to pulling `ghcr.io/kagent-dev/kagent/golang-adk` directly. The controller logs a startup warning when the two registries differ. For details, see [Private registry and image mirroring]({{< link path="introduction/installation#private-registry-and-image-mirroring" >}}).
+
+## Upgrade kagent
+
+1. Get the Helm values file for your current kagent release.
+
+   ```bash
+   helm get values kagent -n kagent -o yaml > values.yaml
+   ```
+
+2. Compare your current Helm chart values with the version that you want to upgrade to. 
+
+   * **Show all values**:
+
+     ```bash
+     helm show values oci://ghcr.io/kagent-dev/kagent/helm/kagent --version $NEW_VERSION
+     ```
+
+   * **Get a file with all values**
+
+     ```bash
+     helm pull oci://ghcr.io/kagent-dev/kagent/helm/kagent --version $NEW_VERSION
+     tar -xvf kagent-$NEW_VERSION.tgz
+     open kagent/values.yaml
+     ```
+
+3. Make any changes that you want by editing your `values.yaml` Helm values file or preparing `--set` flags for the upgrade commands.
+
+   > **Note**: As of [version 0.7]({{< link path="resources/release-notes#kmcp-installed-by-default" >}}), the kmcp subproject is included by default with kagent. To use an existing kmcp installation that you already set up separately, set `kmcp.enabled=false` in your `values.yaml` file or `--set` commands for both the `kagent` and `kagent-crds` charts.
+
+4. Upgrade the kagent-crds chart.
+
+   ```bash
+   helm upgrade kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --namespace kagent \
+     --version $NEW_VERSION
+   ```
+
+5. Upgrade the kagent chart. If you made changes to your values, add them with `--set` flags or `-f values.yaml`.
+
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     -f values.yaml \
+     --version $NEW_VERSION
+   ```
+
+## Verify the upgrade
+
+After upgrading, verify that kagent is running.
+
+```bash
+kubectl get pods -n kagent
+```
+
+## Run migrations out-of-band
+
+By default, kagent runs database migrations automatically at controller startup. You can disable this behavior and manage migrations separately, for example, from a CI/CD pipeline or a Helm pre-upgrade hook.
+
+### Skip startup migrations
+
+Set `database.postgres.skipMigrations: true` in your Helm values file:
+
+```yaml
+database:
+  postgres:
+    skipMigrations: true
+```
+
+When enabled, the controller does not run migrations at startup. Instead, it verifies that the schema is already fully migrated and exits with an error if it is not. Apply all pending migrations before installing or upgrading kagent.
+
+### Apply migrations
+
+Use `kagent db migrate up` to apply all pending migrations before starting or upgrading the controller. Set `POSTGRES_DATABASE_URL` to your database connection string (see [Database configuration]({{< link path="operations/operational-considerations#database-configuration" >}})).
+
+```bash
+export POSTGRES_DATABASE_URL="postgres://<user>:<password>@<host>:5432/<dbname>"
+kagent db migrate up
+```
+
+### Check migration status
+
+```bash
+kagent db migrate status
+```
+
+Example output:
+```
+9 migration(s) applied, 0 pending
+  core: 6 applied (at v6), 0 pending
+  vector: 3 applied (at v3), 0 pending
+```
+
+## Roll back kagent
+
+If you need to roll back to a previous version after a successful upgrade, use the following steps.
+
+### Rollback compatibility window
+
+As of v0.9, kagent guarantees `n-1` application compatibility with the database: an application at version `n-1` can start against a database schema applied by version `n`. This means that you can roll back the application without manually resetting the database first, as long as you stay within the supported window:
+
+- **Supported**: Roll back one minor version (for example, `v0.10.x` → `v0.9.x`).
+- **Requires DB reset, one minor at a time**: Roll back more than one minor version. Be sure to roll back only one minor version at a time, as skipping a minor version can result in data loss.
+
+When the controller detects that the database schema is ahead of its own migration files, it starts in compatibility mode and skips migration application. The database schema is left unchanged.
+
+### Steps to roll back
+
+1. Save the kagent version you want to roll back to in an environment variable.
+   ```bash
+   export ROLLBACK_VERSION=<previous-version>
+   ```
+
+2. Roll back the kagent chart.
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent \
+     -f values.yaml \
+     --version $ROLLBACK_VERSION
+   ```
+
+3. Roll back the kagent-crds chart.
+   ```bash
+   helm upgrade kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --namespace kagent \
+     --version $ROLLBACK_VERSION
+   ```
+
+4. Verify that the rollback succeeded.
+   ```bash
+   kubectl get pods -n kagent
+   ```
+
+### Reset the database before rolling back further
+
+If you need to roll back more than one minor kagent version, be sure to roll back one minor version at a time. Kagent guarantees backwards compatibility of only one minor version, so skipping minor versions can result in data loss.
+
+You have two options for resetting the database schema at each step.
+
+#### Option 1: Restore from snapshot
+
+If you took a snapshot before upgrading, you can restore it directly. This is simpler than running down migrations, but any data written after the snapshot was taken is lost.
+
+```bash
+pg_restore \
+  --clean \
+  --dbname="postgres://<user>:<password>@<host>:5432/<dbname>" \
+  kagent-pre-upgrade-snapshot.dump
+```
+
+After restoring, follow the steps to [roll back the kagent application](#steps-to-roll-back).
+
+#### Option 2: Use the kagent CLI
+
+Use the `kagent db migrate` command to run down migrations one minor version at a time. This preserves data written after the snapshot but requires more steps.
+
+The target is the highest migration sequence number present in the version that you are rolling back to. For example, `v0.9.9` has migrations up to `000005_a2a_protocol_version.up.sql` and `v0.9.3` has migrations up to `000004_feedback_single_pk.up.sql`. To roll back from `v0.9.9` to `v0.9.3`, you set `ROLLBACK_VERSION=0.9.3` and run `goto 4` because you want to go back to migration sequence 4 (v0.9.3's `000004`).
+
+1. Save the version you want to roll back to in an environment variable.
+   ```bash
+   export ROLLBACK_VERSION=<previous-version>
+   ```
+
+2. Stop the kagent controller.
+   ```bash
+   kubectl -n kagent scale deploy/kagent-controller --replicas=0
+   ```
+
+3. Open the core migration directory for your rollback version and save the sequence number of the highest-numbered file in an environment variable.
+   ```bash
+   open "https://github.com/kagent-dev/kagent/tree/v${ROLLBACK_VERSION}/go/core/pkg/migrations/core/"
+   ```
+   ```bash
+   export ROLLBACK_MIGRATION_VERSION=<sequence-number>
+   ```
+
+4. Reset the core track. For the database connection string, see [Database configuration]({{< link path="operations/operational-considerations#database-configuration" >}}).
+   ```bash
+   export POSTGRES_DATABASE_URL="postgres://<user>:<password>@<host>:5432/<dbname>"
+   kagent db migrate goto $ROLLBACK_MIGRATION_VERSION --source core
+   ```
+
+5. If vector features are enabled, reset the vector track as well.
+   1. Open the vector migration directory for your rollback version and save the sequence number of the highest-numbered file.
+      ```bash
+      open "https://github.com/kagent-dev/kagent/tree/v${ROLLBACK_VERSION}/go/core/pkg/migrations/vector/"
+      export ROLLBACK_VECTOR_MIGRATION_VERSION=<sequence-number>
+      ```
+   2. Reset the vector track.
+      ```bash
+      kagent db migrate goto $ROLLBACK_VECTOR_MIGRATION_VERSION --source vector
+      ```
+
+6. After the database is at the correct schema version, follow the steps to [roll back the kagent application](#steps-to-roll-back).
