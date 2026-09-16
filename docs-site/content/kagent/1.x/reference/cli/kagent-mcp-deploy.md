@@ -28,7 +28,7 @@ kagent mcp deploy [command]
 ```
 
 **Subcommands:**
-- [`kagent mcp deploy package`](/docs/kagent/1.x/reference/cli/kagent-mcp-deploy-package/) - Deploy an MCP server using a package manager (npx, uvx)
+- [`kagent mcp deploy package`]({{< link path="reference/cli/kagent-mcp-deploy-package" >}}) - Deploy an MCP server using a package manager (npx, uvx)
 
 **Flags:**
 - `--args strings` - Command arguments

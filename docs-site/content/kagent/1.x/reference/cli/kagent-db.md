@@ -11,7 +11,7 @@ kagent db [command]
 ```
 
 **Subcommands:**
-- [`kagent db migrate`](/docs/kagent/1.x/reference/cli/kagent-db-migrate/) - Apply, roll back, and inspect database migrations
+- [`kagent db migrate`]({{< link path="reference/cli/kagent-db-migrate" >}}) - Apply, roll back, and inspect database migrations
 
 **Flags:**
 - `-h, --help` - help for db

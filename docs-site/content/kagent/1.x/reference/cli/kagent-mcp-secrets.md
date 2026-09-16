@@ -11,7 +11,7 @@ kagent mcp secrets [command]
 ```
 
 **Subcommands:**
-- [`kagent mcp secrets sync`](/docs/kagent/1.x/reference/cli/kagent-mcp-secrets-sync/) - Sync secrets to a Kubernetes environment from a local .env file
+- [`kagent mcp secrets sync`]({{< link path="reference/cli/kagent-mcp-secrets-sync" >}}) - Sync secrets to a Kubernetes environment from a local .env file
 
 **Flags:**
 - `-h, --help` - help for secrets

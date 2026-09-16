@@ -63,6 +63,9 @@ concurrency:
 #     --display-name kagent --out-dir docs-site/content/kagent/0.x/resources/cli \
 #     --url-prefix /docs/kagent/0.x/resources/cli --weight 1
 #
+# No --link-prefix there on purpose: 0.x is frozen and is not rebased into the
+# enterprise hub, so its generated cross-links stay root-relative URLs.
+#
 # The section is named reference/ in 1.x, not resources/ as in 0.x, and the
 # provider pages link to crd-ref-docs anchors (#modelconfigspec, #openaiconfig,
 # ...), so keep that renderer and its anchor naming.
@@ -94,6 +97,11 @@ jobs:
       KAGENT_CLI_DIR: docs-site/content/kagent/1.x/reference/cli
       KMCP_CLI_DIR: docs-site/content/kmcp/reference/cli
       KAGENT_CLI_URL_PREFIX: /docs/kagent/1.x/reference/cli
+      # Version-root-relative path behind the `link` shortcode in the
+      # generated kagent pages. kagent is versioned and its pages are
+      # rebased into the enterprise docs hub, so its cross-links must not
+      # hardcode the 1.x segment. kmcp is unversioned and passes none.
+      KAGENT_CLI_LINK_PREFIX: reference/cli
       KMCP_CLI_URL_PREFIX: /docs/kmcp/reference/cli
 
     steps:
@@ -681,6 +689,7 @@ jobs:
             --display-name kagent \
             --out-dir "$KAGENT_CLI_DIR" \
             --url-prefix "$KAGENT_CLI_URL_PREFIX" \
+            --link-prefix "$KAGENT_CLI_LINK_PREFIX" \
             --weight 30
 
       - name: Generate kmcp CLI reference docs

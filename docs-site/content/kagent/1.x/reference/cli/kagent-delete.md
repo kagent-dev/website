@@ -12,7 +12,7 @@ kagent delete [command]
 ```
 
 **Subcommands:**
-- [`kagent delete agent-instance`](/docs/kagent/1.x/reference/cli/kagent-delete-agent-instance/) - Delete an AgentInstance
+- [`kagent delete agent-instance`]({{< link path="reference/cli/kagent-delete-agent-instance" >}}) - Delete an AgentInstance
 
 **Flags:**
 - `-h, --help` - help for delete
