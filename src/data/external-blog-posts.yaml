@@ -16,6 +16,14 @@ externalPosts:
     publishDate: "2025-05-08"
     url: "https://chrismatcham.dev/Exploring-ArgoCD-s-New-MCP-Server-with-Kagent/"
     author: "Chris Matcham"
+  - title: "kagent 0.10 Ships Audience-Bound Agent Tokens, Off By Default"
+    description: "kagent v0.10.0 GA can bind an agent's exchanged token to one backend using RFC 8707 resource indicators. Two environment variables, both empty by default."
+    publishDate: "2026-09-08"
+    url: "https://webofmike.com/kagent-audience-bound-agent-tokens/"
+    author: "Mike Moore"
 
-
-
+  - title: "Thousands of AI Agents on Tens of Pods: kagent Agent Substrate"
+    description: "kagent Agent Substrate is built to run thousands of AI agents on tens of pods. I stood it up on kind: snapshot restores, autoscaling, and every gotcha I hit."
+    publishDate: "2026-08-27"
+    url: "https://webofmike.com/kagent-agent-substrate/"
+    author: "Mike Moore"
