@@ -167,7 +167,7 @@ params:
       # override, which matches an entry by exact path segment and runs the text
       # through `markdownify` — so the link below works, and a kmcp page matches
       # nothing and shows no banner. Delete this line at GA.
-      banner: "This documentation covers the kagent 1.0 beta. For the current supported release, see the [0.x docs](/docs/kagent/0.x/)."
+      banner: "This documentation covers the kagent 1.0 beta. For the latest 0.x release, see the [0.x docs](/docs/kagent/0.x/)."
     - version: "0.x"
       dropdown: "0.x (current)"
       linkVersion: "0.x"

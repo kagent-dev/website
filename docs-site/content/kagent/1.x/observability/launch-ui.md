@@ -14,14 +14,14 @@ The kagent UI is a read-and-write console for everything the controller knows ab
 2. Confirm that the UI service exists.
 
    ```bash
-   kubectl get svc -n kagent kagent-ui
+   kubectl get svc -n kagent {{< reuse "kagent-docs/snippets/name-ui.md" >}}
    ```
 
    Example output:
 
    ```console
    NAME        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
-   kagent-ui   ClusterIP   10.96.174.203   <none>        8080/TCP   3m
+   {{< reuse "kagent-docs/snippets/name-ui.md" >}}   ClusterIP   10.96.174.203   <none>        8080/TCP   3m
    ```
 
 ## Open the dashboard
@@ -49,10 +49,10 @@ The UI service is a `ClusterIP` by default, so it is reachable only from inside 
 > `kagent dashboard` opens a browser only on macOS. On Linux and Windows the command prints the `kubectl` port-forward command and exits, so follow the port-forward steps instead.
 {{% /tab %}}
 {{% tab name="Port-forward for local testing" %}}
-1. Forward the `kagent-ui` service to your machine, and leave the command running.
+1. Forward the `{{< reuse "kagent-docs/snippets/name-ui.md" >}}` service to your machine, and leave the command running.
 
    ```bash
-   kubectl port-forward -n kagent service/kagent-ui 8082:8080
+   kubectl port-forward -n kagent service/{{< reuse "kagent-docs/snippets/name-ui.md" >}} 8082:8080
    ```
 
 2. Open [http://localhost:8082](http://localhost:8082) in your browser.
@@ -141,7 +141,7 @@ ui:
 Then read the external address from the service.
 
 ```bash
-kubectl get svc -n kagent kagent-ui
+kubectl get svc -n kagent {{< reuse "kagent-docs/snippets/name-ui.md" >}}
 ```
 
 ### OpenShift route
