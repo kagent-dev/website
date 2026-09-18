@@ -12,12 +12,12 @@ kagent mcp [command]
 ```
 
 **Subcommands:**
-- [`kagent mcp add-tool`](/docs/kagent/1.x/reference/cli/kagent-mcp-add-tool/) - Add a new MCP tool to your project
-- [`kagent mcp build`](/docs/kagent/1.x/reference/cli/kagent-mcp-build/) - Build MCP server as a Docker image
-- [`kagent mcp deploy`](/docs/kagent/1.x/reference/cli/kagent-mcp-deploy/) - Deploy MCP server to Kubernetes
-- [`kagent mcp init`](/docs/kagent/1.x/reference/cli/kagent-mcp-init/) - Initialize a new MCP server project
-- [`kagent mcp run`](/docs/kagent/1.x/reference/cli/kagent-mcp-run/) - Run MCP server locally
-- [`kagent mcp secrets`](/docs/kagent/1.x/reference/cli/kagent-mcp-secrets/) - Manage project secrets
+- [`kagent mcp add-tool`]({{< link path="reference/cli/kagent-mcp-add-tool" >}}) - Add a new MCP tool to your project
+- [`kagent mcp build`]({{< link path="reference/cli/kagent-mcp-build" >}}) - Build MCP server as a Docker image
+- [`kagent mcp deploy`]({{< link path="reference/cli/kagent-mcp-deploy" >}}) - Deploy MCP server to Kubernetes
+- [`kagent mcp init`]({{< link path="reference/cli/kagent-mcp-init" >}}) - Initialize a new MCP server project
+- [`kagent mcp run`]({{< link path="reference/cli/kagent-mcp-run" >}}) - Run MCP server locally
+- [`kagent mcp secrets`]({{< link path="reference/cli/kagent-mcp-secrets" >}}) - Manage project secrets
 
 **Flags:**
 - `-h, --help` - help for mcp

@@ -11,8 +11,8 @@ As your kagent deployment grows, you might need governance over how your agents 
 ## Prerequisites
 
 1. A running kagent installation. If you haven't installed kagent yet, follow the [quick start]({{< link path="getting-started/quickstart" >}}) guide first.
-2. Follow the [agentgateway installation guide](https://agentgateway.dev/docs/kubernetes/latest/quickstart/install/) to install agentgateway in your cluster.
-3. Set up an LLM provider with agentgateway. This guide uses [the Ollama setup](https://agentgateway.dev/docs/kubernetes/latest/llm/providers/ollama/) as an example.
+2. Follow the [agentgateway installation guide](https://agentgateway.dev/docs/kubernetes/latest/documentation/quickstart/install/) to install agentgateway in your cluster.
+3. Set up an LLM provider with agentgateway. This guide uses [the Ollama setup](https://agentgateway.dev/docs/kubernetes/latest/integrations/llm/providers/ollama/) as an example.
 
 ## Architecture
 
@@ -97,7 +97,7 @@ With agentgateway in place, you can now apply policies to govern how your kagent
 
 ### Block requests with PII
 
-1. Create an `AgentgatewayPolicy` resource to reject any request that contains PII, such as an email address. For more policy examples, see the [agentgateway guardrails docs](https://agentgateway.dev/docs/kubernetes/latest/llm/guardrails/regex/#block-requests-with-pii).
+1. Create an `AgentgatewayPolicy` resource to reject any request that contains PII, such as an email address. For more policy examples, see the [agentgateway guardrails docs](https://agentgateway.dev/docs/kubernetes/latest/documentation/llm/guardrails/regex/#block-requests-with-pii).
 
    ```yaml
    kubectl apply -f - <<EOF
@@ -136,6 +136,6 @@ With agentgateway in place, you can now apply policies to govern how your kagent
    kubectl delete modelconfig llama3-model-config -n kagent
    ```
 
-2. If you no longer need agentgateway, [uninstall agentgateway](https://agentgateway.dev/docs/kubernetes/latest/operations/uninstall/).
+2. If you no longer need agentgateway, [uninstall agentgateway](https://agentgateway.dev/docs/kubernetes/latest/documentation/operations/uninstall/).
 
 3. Upgrade your kagent installation to unset agentgateway as the proxy in front of your LLM provider.

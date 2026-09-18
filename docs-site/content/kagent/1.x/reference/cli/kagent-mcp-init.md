@@ -15,10 +15,10 @@ kagent mcp init [command]
 ```
 
 **Subcommands:**
-- [`kagent mcp init go`](/docs/kagent/1.x/reference/cli/kagent-mcp-init-go/) - Initialize a new Go MCP server project
-- [`kagent mcp init java`](/docs/kagent/1.x/reference/cli/kagent-mcp-init-java/) - Initialize a new Java MCP server project
-- [`kagent mcp init python`](/docs/kagent/1.x/reference/cli/kagent-mcp-init-python/) - Initialize a new Python MCP server project
-- [`kagent mcp init typescript`](/docs/kagent/1.x/reference/cli/kagent-mcp-init-typescript/) - Initialize a new TypeScript MCP server project
+- [`kagent mcp init go`]({{< link path="reference/cli/kagent-mcp-init-go" >}}) - Initialize a new Go MCP server project
+- [`kagent mcp init java`]({{< link path="reference/cli/kagent-mcp-init-java" >}}) - Initialize a new Java MCP server project
+- [`kagent mcp init python`]({{< link path="reference/cli/kagent-mcp-init-python" >}}) - Initialize a new Python MCP server project
+- [`kagent mcp init typescript`]({{< link path="reference/cli/kagent-mcp-init-typescript" >}}) - Initialize a new TypeScript MCP server project
 
 **Flags:**
 - `--author string` - Author name for the project

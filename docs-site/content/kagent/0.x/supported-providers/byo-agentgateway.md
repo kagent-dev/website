@@ -12,7 +12,7 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
 > [!NOTE]
 > The `AgentgatewayModel` feature is experimental and disabled by default. You must enable it when you install agentgateway by passing `--set agentgatewayModels.enabled=true` to the control plane Helm chart.
 
-1. Install agentgateway in your cluster. For more information, see the [agentgateway documentation](https://agentgateway.dev/docs/kubernetes/latest/setup/). Add `--set agentgatewayModels.enabled=true` to the Helm command for the agentgateway control plane.
+1. Install agentgateway in your cluster. For more information, see the [agentgateway documentation](https://agentgateway.dev/docs/kubernetes/latest/documentation/setup/). Add `--set agentgatewayModels.enabled=true` to the Helm command for the agentgateway control plane.
 
 2. Create a `Gateway` resource for model routing.
    ```yaml
@@ -39,7 +39,13 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
    EOF
    ```
 
-3. Create an `AgentgatewayModel` resource for each model that you want kagent to access. The resource name becomes the model name that kagent sends in requests, so it must match `spec.model` in the kagent `ModelConfig`. The following example routes requests for `gpt-4o-mini` to the OpenAI provider. For more provider options and authentication configuration, see the [agentgateway model documentation](https://docs.solo.io/agentgateway/latest/llm/models/).
+3. Store the provider credentials that agentgateway uses to call the model. Agentgateway authenticates to the provider on your agents' behalf, so this key belongs to the gateway rather than to kagent. The value is read from the Secret's `Authorization` key by default.
+   ```bash
+   kubectl create secret generic openai-key -n agentgateway-system \
+     --from-file=Authorization=<path-to-a-file-holding-your-api-key>
+   ```
+
+4. Create an `AgentgatewayModel` resource for each model that you want kagent to access. The resource name becomes the model name that kagent sends in requests, so it must match `spec.model` in the kagent `ModelConfig`. The following example routes requests for `gpt-4o-mini` to the OpenAI provider. For more provider options and authentication configuration, see the [agentgateway model documentation](https://docs.solo.io/agentgateway/kubernetes/latest/documentation/llm/models/).
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: agentgateway.dev/v1alpha1
@@ -54,12 +60,19 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
        name: agentgateway-proxy
        sectionName: http
      provider: OpenAI
+     policies:
+       auth:
+         secretRef:
+           name: openai-key
    EOF
    ```
 
-4. Save the agentgateway Gateway service address in an environment variable.
+   > [!NOTE]
+   > `policies.auth` gives the gateway the credentials that it needs to reach the provider. A model with no `auth` is still accepted and programmed, and every request through it returns the provider's own `401`, because agentgateway forwards the call with no credentials.
+
+5. Save the agentgateway Gateway service address in an environment variable. The `/v1` suffix is required: kagent appends `/chat/completions` to this value, and agentgateway serves that endpoint at `/v1/chat/completions`. Without the suffix, every model call returns `404 Not Found`.
    ```sh
-   export AGENTGATEWAY_URL=http://agentgateway-proxy.agentgateway-system.svc.cluster.local
+   export AGENTGATEWAY_URL=http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1
    ```
 
 ## Connect to an agentgateway endpoint {#connect}
@@ -90,7 +103,7 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
    | --- | --- |
    | `provider` | Set to `OpenAI`, because agentgateway exposes an OpenAI-compatible API. |
    | `model` | The model name to request from agentgateway. This value must match the name of an `AgentgatewayModel` resource in your agentgateway deployment. |
-   | `openAI.baseUrl` | The Kubernetes service address of your agentgateway Gateway, set in `$AGENTGATEWAY_URL`. |
+   | `openAI.baseUrl` | The Kubernetes service address of your agentgateway Gateway, including the `/v1` path, set in `$AGENTGATEWAY_URL`. |
    {{% /tab %}}
    {{% tab name="API key authentication" %}}
    If your agentgateway deployment applies an `apiKeyAuthentication` policy with `mode: Strict`, you must provide an API key in the `ModelConfig`.
@@ -128,7 +141,7 @@ You can route model requests through an [agentgateway](https://agentgateway.dev/
    | `model` | The model name to request from agentgateway. This value must match the name of an `AgentgatewayModel` resource in your agentgateway deployment. |
    | `apiKeySecret` | The name of the Kubernetes secret that stores your agentgateway API key. |
    | `apiKeySecretKey` | The key in the secret that stores your API key. |
-   | `openAI.baseUrl` | The Kubernetes service address of your agentgateway Gateway, set in `$AGENTGATEWAY_URL`. |
+   | `openAI.baseUrl` | The Kubernetes service address of your agentgateway Gateway, including the `/v1` path, set in `$AGENTGATEWAY_URL`. |
    {{% /tab %}}
    {{< /tabs >}}
 

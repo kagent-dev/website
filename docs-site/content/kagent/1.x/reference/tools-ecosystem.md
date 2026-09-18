@@ -297,7 +297,7 @@ kagent's repository carries example servers in [contrib/tools](https://github.co
 To register any other MCP server, write a RemoteMCPServer that points at its URL. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-your-own-mcp-server" >}}) works through a complete example.
 
 > [!NOTE]
-> A RemoteMCPServer takes a URL, so kagent connects only to servers that speak streamable HTTP or Server-Sent Events (SSE). To reach a server that runs over stdio, wrap it in a deployment that exposes an HTTP endpoint. [kmcp](/docs/kmcp/) builds and runs such servers.
+> A RemoteMCPServer takes a URL, so kagent connects only to servers that speak streamable HTTP or Server-Sent Events (SSE). To reach a server that runs over stdio, wrap it in a deployment that exposes an HTTP endpoint. [kmcp](https://kagent.dev/docs/kmcp/) builds and runs such servers.
 
 ## Next steps
 

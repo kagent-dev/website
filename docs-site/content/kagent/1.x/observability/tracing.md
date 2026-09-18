@@ -36,7 +36,10 @@ flowchart LR
 A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) connection to the AgentInstance's Actor and injects a `traceparent` header into that call. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
 
 > [!IMPORTANT]
-> The controller passes its tracing configuration only to the `kagent` runtime. An agent on the `codex`, `claude`, or `byo` runtime produces no runtime spans, and its half of the trace is missing. For a `byo` image that implements OTel itself, set the exporter variables in the Harness `spec.env` instead. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+> The controller passes its tracing configuration to the `kagent`, `codex`, and `claude` runtimes. Each of the three exports on its own instrumentation, so the span names in this page describe the `kagent` runtime and do not carry over to the other two. An agent on the `byo` runtime receives no tracing configuration, and its half of the trace is missing. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+
+> [!NOTE]
+> A `byo` image that implements OTel itself reads the exporter variables from the Harness `spec.env`, which the controller leaves alone for this runtime. Its spans still do not reach a collector inside the cluster, because kagent adds the collector to an Actor's egress allowlist only for the runtimes it configures, and no field adds a host to that list by hand. For more information, see [Networking and egress control]({{< link path="substrate-runtime/networking-and-egress#what-kagent-puts-in-the-policy" >}}).
 
 Both processes report themselves as separate OpenTelemetry (OTel) services. A tracing backend uses these service names to group the spans.
 
@@ -48,7 +51,7 @@ Both processes report themselves as separate OpenTelemetry (OTel) services. A tr
 
 ### Spans
 
-The agent runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the service name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following spans appear in nesting order, from the span that accepts the request down to the model and tool calls that serve it.
+The `kagent` runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the service name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following spans appear in nesting order, from the span that accepts the request down to the model and tool calls that serve it.
 
 | Span | When it is created |
 | ---- | ------------------ |
@@ -73,7 +76,7 @@ A trace tells you which request you are looking at through attributes on its spa
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invocation` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> Spans for a model call carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes. Prompts and replies therefore reach your tracing backend. Payloads larger than 32 KiB are truncated to a prefix. To keep this content out of traces, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` to `false` in the Harness `spec.env`. Note that the same variable has the opposite default for audit logging, where content is withheld until you set it to `true`. For more information, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> Spans for a model call carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes. Prompts and replies therefore reach your tracing backend. Payloads larger than 32 KiB are truncated to a prefix. To keep this content out of traces, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` to `false` in the Harness `spec.env`. Note that the same variable has the opposite default for audit logging, where content is withheld until you set it to `true`. For more information, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). The `codex` and `claude` runtimes do not read this variable. On those two runtimes, the `otel.captureSensitiveContent` Helm setting controls the same content, as described in the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
 ## Before you begin
 
@@ -187,7 +190,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 
 Agent Substrate {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} an Actor as soon as the response body closes, which is sooner than a batching span exporter normally sends its buffer. Spans still in the buffer at that moment freeze inside the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and reach the backend only when the session next resumes, or never at all for a conversation's last message.
 
-To avoid losing them, the controller sets `KAGENT_PRE_RESPONSE_TRACE_FLUSH` to `true` on every agent runtime it starts, and the runtime flushes its span buffer before each response completes. The flush waits up to three seconds, which you can change with `KAGENT_TRACE_FLUSH_TIMEOUT_MS` in the Harness `spec.env`.
+To avoid losing them, the controller sets `KAGENT_PRE_RESPONSE_TRACE_FLUSH` to `true` on the `kagent` and `codex` runtimes, and the runtime flushes its span buffer before each response completes. The flush waits up to three seconds, which you can change with `KAGENT_TRACE_FLUSH_TIMEOUT_MS` in the Harness `spec.env`. The `claude` runtime gets no such flush, so its spans arrive on its exporter's own schedule and a conversation's last turn can lose them.
 
 This behavior allows a kagent trace to arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
 

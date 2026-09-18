@@ -12,10 +12,10 @@ kagent completion [command]
 ```
 
 **Subcommands:**
-- [`kagent completion bash`](/docs/kagent/1.x/reference/cli/kagent-completion-bash/) - Generate the autocompletion script for bash
-- [`kagent completion fish`](/docs/kagent/1.x/reference/cli/kagent-completion-fish/) - Generate the autocompletion script for fish
-- [`kagent completion powershell`](/docs/kagent/1.x/reference/cli/kagent-completion-powershell/) - Generate the autocompletion script for powershell
-- [`kagent completion zsh`](/docs/kagent/1.x/reference/cli/kagent-completion-zsh/) - Generate the autocompletion script for zsh
+- [`kagent completion bash`]({{< link path="reference/cli/kagent-completion-bash" >}}) - Generate the autocompletion script for bash
+- [`kagent completion fish`]({{< link path="reference/cli/kagent-completion-fish" >}}) - Generate the autocompletion script for fish
+- [`kagent completion powershell`]({{< link path="reference/cli/kagent-completion-powershell" >}}) - Generate the autocompletion script for powershell
+- [`kagent completion zsh`]({{< link path="reference/cli/kagent-completion-zsh" >}}) - Generate the autocompletion script for zsh
 
 **Flags:**
 - `-h, --help` - help for completion

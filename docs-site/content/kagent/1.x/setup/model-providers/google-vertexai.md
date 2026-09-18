@@ -60,7 +60,7 @@ The difference is how each runtime receives the Google credentials. Vertex AI au
    spec:
      claude: {}
      workload:
-       image: <claude-runtime-image>@sha256:<digest>
+       image: {{< reuse "kagent-docs/versions/runtime-image-claude.md" >}}
    ```
 
 ### What kagent checks before it compiles

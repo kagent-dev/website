@@ -1,0 +1,64 @@
+{{- /* kagent override of docs-theme-extras' utils/version-noindex.html.
+
+       Why this exists: the upstream partial builds the current-version
+       equivalent of the page from `utils/version-root.html`'s `lookupPath` and
+       passes it straight to `site.GetPage`. That works on the two site shapes
+       upstream handles, and silently fails on this one.
+
+       kagent's baseURL is https://kagent.dev/docs/, so every RelPermalink
+       starts with a "/docs/" segment that comes from the baseURL PATH, not from
+       a content directory — content/kagent/1.x/... is served at
+       /docs/kagent/1.x/.... `site.GetPage` resolves paths relative to
+       contentDir, so it never matches a path carrying that prefix:
+
+         site.GetPage "/docs/kagent/1.x/observability/tracing"  -> nil
+         site.GetPage "/kagent/1.x/observability/tracing"       -> the page
+
+       Upstream's `lookupPath` comment calls the prefix "genuinely part of the
+       path" on an OSS site, which holds where contentDir is the repo root. It
+       does not hold here, so every lookup missed, no duplicate was ever found,
+       and the partial emitted nothing on any page. That was invisible while 1.x
+       was withheld by a draft cascade: one rendered version gave the partial
+       nothing to mark either way. It stops being invisible now that 1.x
+       publishes, which is when this override was added.
+
+       Fix: strip the site's own home prefix before the GetPage lookup, and
+       nothing else. Every other line matches upstream, including the
+       duplicates-only behavior — a non-latest page with no equivalent in the
+       latest version is left indexable on purpose. `latest` sits on the 0.x
+       entry while 1.0 is in beta, so today that spares every 1.x page the 0.x
+       tree has no counterpart for.
+
+       Re-check this against the pinned module on any docs-theme-extras bump: if
+       upstream learns to resolve a baseURL path prefix itself, this override
+       should be deleted rather than left to rot. */ -}}
+
+{{- $root := partial "utils/version-root.html" . -}}
+{{- with partial "utils/resolve-section-versions.html" $root.section -}}
+  {{- /* The current version's URL segment. `latest = true` is the only signal
+         available on this site; the upstream fallback is a `linkVersion` of
+         literally "latest", which kagent does not use. Exactly one entry may
+         carry the flag — on both, or on neither, this partial does nothing. */ -}}
+  {{- $latestSeg := "" -}}
+  {{- range . -}}{{ if eq (.latest | default false) true }}{{ $latestSeg = .linkVersion | default .version }}{{ end }}{{- end -}}
+  {{- if not $latestSeg -}}
+    {{- range . -}}{{ if eq (.linkVersion | default "") "latest" }}{{ $latestSeg = "latest" }}{{ end }}{{- end -}}
+  {{- end -}}
+
+  {{- if and $latestSeg $root.isVersioned (ne $root.currentVersion $latestSeg) -}}
+    {{- $lookupPrefix := strings.TrimSuffix (printf "%s/" $root.currentVersion) $root.lookupPath -}}
+    {{- $latestEquiv := printf "%s%s/%s" $lookupPrefix $latestSeg $root.pathAfterVersion -}}
+    {{- $latestEquiv = strings.TrimRight "/" $latestEquiv -}}
+
+    {{- /* THE OVERRIDE. site.Home.RelPermalink is "/docs/" here and "/" on a
+           site served from the root, where this is a no-op. */ -}}
+    {{- $homePrefix := strings.TrimSuffix "/" site.Home.RelPermalink -}}
+    {{- if and $homePrefix (hasPrefix $latestEquiv (printf "%s/" $homePrefix)) -}}
+      {{- $latestEquiv = strings.TrimPrefix $homePrefix $latestEquiv -}}
+    {{- end -}}
+
+    {{- if site.GetPage $latestEquiv -}}
+  <meta name="robots" content="noindex, follow" />
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

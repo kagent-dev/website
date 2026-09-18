@@ -30,15 +30,21 @@ An audit returns more than the prompts that your team wrote. A `gen_ai.system.me
 > [!NOTE]
 > The runtime labels every history entry as `gen_ai.user.message`, including the agent's own earlier turns and tool results. The `content.role` field in the event body names the speaker. To select only the messages that a person sent, filter on `content.role` instead of on the event name. Each turn also re-emits the full history, so a long conversation produces repeated events. Account for that volume when you set a retention period.
 
-### Environment variables
+### Configuration
 
-Two environment variables on the agent runtime control the audit output.
+Audit output comes from two places. The kagent Helm chart decides whether the runtime exports events and where it sends them. The {{< gloss "Harness" >}}Harness{{< /gloss >}} decides whether those events carry message content.
 
-- **`OTEL_LOGGING_ENABLED`**: Whether the runtime installs a log exporter. The default value is `false`, and the runtime then emits no audit events.
-- **`OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`**: Whether the events include message content. The default value for log events is `false`, and the runtime then replaces each message body with `<elided>`. The event metadata remains.
+| Setting | Where you set it | What it does |
+| ------- | ---------------- | ------------ |
+| `otel.logging.enabled` | kagent Helm chart | Installs the log exporter in the agent runtime. The default value is `false`, and the runtime then emits no audit events, regardless of the other settings. |
+| `otel.logging.exporter.otlp.endpoint` | kagent Helm chart | The address that the runtime exports events to. Set it to the address of your collector. |
+| `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | `Harness.spec.env` | Includes message content in the events. The default value is `false`, and the runtime then replaces each message body with `<elided>`. The event metadata and the trace IDs remain. Those fields still record which agent handled a request, and when. |
 
 > [!IMPORTANT]
-> The `otel.logging` settings in the kagent Helm chart configure the controller only. The controller passes a fixed list of tracing variables to the agent runtimes that it starts. That list holds no logging variable. As a result, `otel.logging.enabled=true` alone produces no audit events for an AgentInstance. Set the logging variables on the {{< gloss "Harness" >}}Harness{{< /gloss >}} instead, as shown in the following steps. A Harness `spec.env` entry for a logging variable takes effect as written. An entry for a tracing variable does not, because the controller's own value overrides it.
+> The chart's `otel.captureSensitiveContent` setting does not reach the `kagent` runtime. It applies to the Claude and Codex runtimes only. To include message content in an audit of a `kagent` agent, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` on the Harness, as shown in the following steps.
+
+> [!NOTE]
+> The controller compiles the chart's logging settings into every runtime revision, and its values override a Harness `spec.env` entry for the same variable. The variables it owns are `OTEL_LOGGING_ENABLED`, `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT`, and `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL`, together with their tracing equivalents and the endpoint and protocol variables that cover both signals. If `otel.logging.enabled` is `false`, the controller compiles no logging variable, and a `spec.env` entry takes effect as written.
 
 ### Runtime support
 
@@ -201,9 +207,21 @@ Export to a collector rather than directly to the backend. The collector holds t
 
 ## Turn on audit logging
 
-Add the audit variables to the Harness that your agents run on. The runtime then audits every AgentTemplate that the Harness admits. Auditing therefore applies to an entire Harness, not to a single agent.
+Turning on auditing takes two changes. The chart setting installs the log exporter in every agent runtime that the controller starts, and the Harness setting decides whether the exported events carry message content. A Harness applies to every AgentTemplate that it admits, so auditing covers an entire Harness rather than a single agent.
 
-1. Add the three environment variables to the Harness. Keep the rest of its configuration unchanged.
+1. Upgrade kagent to export audit events to the collector. The controller compiles these settings into every runtime revision that it builds from now on.
+   ```bash
+   helm upgrade kagent \
+     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent --reuse-values \
+     --set otel.logging.enabled=true \
+     --set otel.logging.exporter.otlp.endpoint=http://opentelemetry-collector-audit.telemetry.svc.cluster.local:4317
+   ```
+
+   To export over HTTP instead of gRPC, add `--set otel.logging.exporter.otlp.protocol=http/protobuf` and use port `4318`.
+
+2. Add the message content variable to the Harness. Keep the rest of its configuration unchanged.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: kagent.dev/v1alpha3
@@ -214,12 +232,8 @@ Add the audit variables to the Harness that your agents run on. The runtime then
    spec:
      kagent: {}
      workload:
-       image: <runtime-image>@sha256:<digest>
+       image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
      env:
-       - name: OTEL_LOGGING_ENABLED
-         value: "true"
-       - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-         value: http://opentelemetry-collector-audit.telemetry.svc.cluster.local:4317
        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
          value: "true"
      substrate:
@@ -234,15 +248,9 @@ Add the audit variables to the Harness that your agents run on. The runtime then
    EOF
    ```
 
-   {{< reuse "kagent-docs/snippets/review-table.md" >}} The first two variables enable auditing and set its destination. The third variable controls whether the events include message content. For every other field that a Harness takes, see [Agent harness]({{< link path="agents/agent-harness" >}}).
+   The `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` variable includes message content in the events. If you omit it, each event body reads `<elided>`, and the runtime exports only the metadata and the trace IDs. Those fields still record which agent handled a request, and when. Set the export destination through the chart rather than here, because the controller's compiled values override a `spec.env` entry for a variable that it owns. For every other field that a Harness takes, see [Agent harness]({{< link path="agents/agent-harness" >}}).
 
-   | Variable | Description |
-   | -------- | ----------- |
-   | `OTEL_LOGGING_ENABLED` | Installs the log exporter in the agent runtime. If omitted, the runtime emits no audit events, regardless of the other variables. |
-   | `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | The address that the runtime exports events to. Set it to the address of the collector. To export over HTTP instead of gRPC, set `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` to `http/protobuf` and use port `4318`. |
-   | `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | Includes message content in the events. If omitted, each event body reads `<elided>`, and the runtime exports only the metadata and the trace IDs. Those fields still record which agent handled a request, and when. |
-
-2. Confirm that kagent compiled a new {{< gloss "Revision" >}}revision{{< /gloss >}} for the edited Harness. The Harness is current when `latestSuccessfulRevision` matches `desiredRevision`.
+3. Confirm that kagent compiled a new {{< gloss "Revision" >}}revision{{< /gloss >}} for the edited Harness. The Harness is current when `latestSuccessfulRevision` matches `desiredRevision`.
    ```bash
    kubectl get agenttemplate my-first-agent -n kagent \
      -o jsonpath='{range .status.harnesses[*]}{.harness}{"\t"}{.desiredRevision}{"\t"}{.latestSuccessfulRevision}{"\n"}{end}'
@@ -253,7 +261,7 @@ Add the audit variables to the Harness that your agents run on. The runtime then
    my-first-harness	4b8e1d3f5a7c9e2b0d4f6a8c1e3b5d7f9a2c4e6b8d0f2a4c6e8b0d2f4a6c8e0b	4b8e1d3f5a7c9e2b0d4f6a8c1e3b5d7f9a2c4e6b8d0f2a4c6e8b0d2f4a6c8e0b
    ```
 
-3. Create a new AgentInstance. An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} pins the revision that it was created from, so an existing instance continues to run without the audit variables.
+4. Create a new AgentInstance. An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} pins the revision that it was created from, so an existing instance continues to run without auditing.
    ```bash
    kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
    ```
@@ -368,11 +376,20 @@ To follow a request from its audit records into its trace, take the `trace_id` f
 
 ## Turn off audit logging
 
-1. Remove the three environment variables from the `spec.env` field of the Harness.
+1. Turn the log exporter off again.
+   ```bash
+   helm upgrade kagent \
+     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent --reuse-values \
+     --set otel.logging.enabled=false
+   ```
 
-2. Create a new AgentInstance, so that its Actor starts without the audit variables.
+2. Remove the `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` variable from the `spec.env` field of the Harness.
 
-3. Remove the collector and the logging backend.
+3. Create a new AgentInstance, so that its Actor starts without auditing.
+
+4. Remove the collector and the logging backend.
    ```bash
    helm uninstall opentelemetry-collector-audit -n telemetry
    helm uninstall loki -n telemetry

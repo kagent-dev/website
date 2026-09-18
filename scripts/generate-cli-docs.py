@@ -311,7 +311,24 @@ def render_flags(flags: list[tuple[str, str]]) -> str:
     return "\n".join(lines)
 
 
-def render_page(display_name: str, node: CommandNode, weight: int, description: str, url_prefix: str) -> str:
+def cli_link(url_prefix: str, link_prefix: str | None, slug: str) -> str:
+    """Return the link destination for one generated CLI page.
+
+    With `link_prefix` set, emit the theme's version- and product-aware `link`
+    shortcode. A hardcoded root-relative URL bakes in the OSS version segment
+    (/docs/kagent/1.x/...), which is correct upstream and wrong anywhere the
+    page is reused: the enterprise docs hub rebases these pages under its own
+    version, and the shortcode is what lets one source resolve in both.
+
+    Without it, fall back to the root-relative URL. kmcp has no version tree,
+    so it has nothing for the shortcode to resolve against and keeps the URL.
+    """
+    if link_prefix:
+        return '{{< link path="%s/%s" >}}' % (link_prefix, slug)
+    return f"{url_prefix}/{slug}/"
+
+
+def render_page(display_name: str, node: CommandNode, weight: int, description: str, url_prefix: str, link_prefix: str | None) -> str:
     full_use = " ".join([display_name, *node.path])
     title = full_use
 
@@ -327,13 +344,13 @@ def render_page(display_name: str, node: CommandNode, weight: int, description: 
         body_parts.append("**Subcommands:**")
         for child in node.children:
             child_full = " ".join([display_name, *node.path, child])
-            # Root-relative link, not "../"-prefixed. The site publishes
-            # both an HTML version of every page (served at a pretty-URL
-            # directory, where "../" resolves correctly) and a raw .md
-            # version (served at a flat file URL, where "../" resolves one
-            # level too far up and 404s). A root-relative link resolves
-            # identically in both.
-            body_parts.append(f"- [`{child_full}`]({url_prefix}/{slugify(display_name, node.path + [child])}/) - {node.child_short[child]}")
+            # Never a "../"-prefixed link. The site publishes both an HTML
+            # version of every page (served at a pretty-URL directory, where
+            # "../" resolves correctly) and a raw .md version (served at a flat
+            # file URL, where "../" resolves one level too far up and 404s).
+            # Both forms cli_link can return resolve identically in both.
+            dest = cli_link(url_prefix, link_prefix, slugify(display_name, node.path + [child]))
+            body_parts.append(f"- [`{child_full}`]({dest}) - {node.child_short[child]}")
         body_parts.append("")
 
     if node.flags:
@@ -382,6 +399,17 @@ def main() -> int:
             "or as a flat file (the site's parallel .md export of every "
             "page); a same-level or ../-relative link only resolves "
             "correctly for one of those two forms."
+        ),
+    )
+    parser.add_argument(
+        "--link-prefix",
+        default=None,
+        help=(
+            "Section path relative to the version root, e.g. reference/cli. "
+            "When set, subcommand and _index.md links are emitted as the "
+            "version-aware `link` shortcode instead of a root-relative URL, so "
+            "they resolve correctly both here and wherever the page is reused "
+            "downstream. Omit for an unversioned section such as kmcp."
         ),
     )
     parser.add_argument(
@@ -451,7 +479,7 @@ def main() -> int:
         # description across several lines in --help output.
         parent = nodes[tuple(path[:-1])]
         description = parent.child_short[path[-1]]
-        page = render_page(args.display_name, node, w, description, url_prefix)
+        page = render_page(args.display_name, node, w, description, url_prefix, args.link_prefix)
         filename = f"{slugify(args.display_name, path)}.md"
         (out_dir / filename).write_text(page)
         w += 10
@@ -463,7 +491,8 @@ def main() -> int:
         # Root-relative, same reasoning as the Subcommands links in
         # render_page: resolves correctly for both the HTML (pretty-URL
         # directory) and the parallel .md export (flat file) of this page.
-        index_lines.append(f"- [`{args.display_name} {child}`]({url_prefix}/{slugify(args.display_name, [child])}/) - {root.child_short[child]}")
+        dest = cli_link(url_prefix, args.link_prefix, slugify(args.display_name, [child]))
+        index_lines.append(f"- [`{args.display_name} {child}`]({dest}) - {root.child_short[child]}")
         weight = write_subtree([child], weight)
 
     (out_dir / "_index.md").write_text("\n".join(index_lines) + "\n")

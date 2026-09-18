@@ -12,7 +12,7 @@ kagent create [command]
 ```
 
 **Subcommands:**
-- [`kagent create agent-instance`](/docs/kagent/1.x/reference/cli/kagent-create-agent-instance/) - Create an AgentInstance
+- [`kagent create agent-instance`]({{< link path="reference/cli/kagent-create-agent-instance" >}}) - Create an AgentInstance
 
 **Flags:**
 - `-h, --help` - help for create

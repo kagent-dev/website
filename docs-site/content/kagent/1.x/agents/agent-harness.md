@@ -22,7 +22,7 @@ spec:
   # Exactly one runtime block: kagent, codex, claude, or byo.
   kagent: {}
   workload:
-    image: <runtime-image>@sha256:<digest>
+    image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
   env:
     - name: LOG_LEVEL
       value: info
@@ -129,6 +129,26 @@ The coding-agent runtimes also constrain what an AgentTemplate can ask for.
 | A `RemoteMCPServer` must use the `STREAMABLE_HTTP` protocol. `SSE` is rejected. | `codex` |
 
 The `kagent` and `byo` runtimes take the full set. For more information about what an AgentTemplate can bind, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
+
+## Telemetry content settings
+
+Tracing and audit logging both carry the prompts and replies that an agent exchanges with a model. Two settings in the kagent Helm chart decide whether that content leaves the runtime, and each one reaches a different set of runtimes. Both default to `false`, and both take effect only where tracing or audit logging is already enabled.
+
+```yaml
+otel:
+  captureSensitiveContent: false
+  logging:
+    captureRawApiBodies: false
+```
+
+| Setting | What it includes | Applies to |
+| ------- | ---------------- | ---------- |
+| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `claude` runtime, tool results require tracing, and assistant replies require audit logging. | `codex`, `claude` |
+| `otel.logging.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.captureSensitiveContent` does, and it takes effect only when `otel.logging.enabled` is `true`. | `claude` |
+
+The `kagent` runtime honors neither setting. To include message content for an agent on that runtime, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in the Harness `spec.env` field. That variable defaults differently for each signal, so check the [audit prompt onfiguration]({{< link path="observability/audit-prompts#configuration" >}}) before you set it.
+
+The controller sends the `byo` runtime no telemetry configuration, so neither setting reaches it. A `byo` image that implements OpenTelemetry itself reads whatever the Harness `spec.env` field holds. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 
 ## Check that a Harness is ready
 

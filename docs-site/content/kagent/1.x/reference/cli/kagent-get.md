@@ -12,8 +12,8 @@ kagent get [command]
 ```
 
 **Subcommands:**
-- [`kagent get agent-instance`](/docs/kagent/1.x/reference/cli/kagent-get-agent-instance/) - Get an AgentInstance or list your AgentInstances
-- [`kagent get agent-template`](/docs/kagent/1.x/reference/cli/kagent-get-agent-template/) - Get an AgentTemplate or list AgentTemplates
+- [`kagent get agent-instance`]({{< link path="reference/cli/kagent-get-agent-instance" >}}) - Get an AgentInstance or list your AgentInstances
+- [`kagent get agent-template`]({{< link path="reference/cli/kagent-get-agent-template" >}}) - Get an AgentTemplate or list AgentTemplates
 
 **Flags:**
 - `-h, --help` - help for get
