@@ -148,11 +148,17 @@ jobs:
       # is NOT a source: it is gitignored and generated from Chart-template.yaml
       # by envsubst, so a checkout never carries a useful value.
       #
-      # Deliberately not automated: kagent.md names the UPCOMING release while
-      # `git describe` on main yields a dev tag, so it stays editorial until 1.0
-      # ships; and jaeger / loki / tempo / otel-collector are pinned nowhere in
-      # kagent, so the only source is "latest upstream", which would assert
-      # chart versions no guide was tested against.
+      # Deliberately not automated: kagent.md names the release the docs
+      # DESCRIBE, while `git describe` on main yields a dev tag. That stayed
+      # editorial through 1.0 and should stay editorial now, for a second reason
+      # it did not have before -- the runtime image step below resolves its
+      # digests at the tag this conref names, so this one file is what decides
+      # which release the whole 1.x doc set pins to. Bumping it by hand is the
+      # release switch; everything else follows on the next run.
+      #
+      # Also not automated: jaeger / loki / tempo / otel-collector are pinned
+      # nowhere in kagent, so the only source is "latest upstream", which would
+      # assert chart versions no guide was tested against.
       # ---------------------------------------------------------------------
       - name: Read versions from kagent
         run: |
@@ -190,10 +196,18 @@ jobs:
             echo "  $1 = $2"
           }
 
+          # x.y.z with an OPTIONAL prerelease suffix. The suffix is not
+          # hypothetical: kagent 1.0 pins Agent Substrate at 0.2.0-beta4, and a
+          # bare-triple pattern rejected it and killed this step -- and with it
+          # the API reference regeneration downstream, which runs later in the
+          # same job. Component versions go through prerelease lines routinely;
+          # only the value's SHAPE is being guarded here, not its maturity.
+          SEMVER='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+
           echo "Extracted from kagent ${KAGENT_COMMIT}:"
-          check SUBSTRATE_VERSION    "$SUBSTRATE_VERSION"    '^[0-9]+\.[0-9]+\.[0-9]+$'
-          check KMCP_VERSION         "$KMCP_VERSION"         '^[0-9]+\.[0-9]+\.[0-9]+$'
-          check KAGENT_TOOLS_VERSION "$KAGENT_TOOLS_VERSION" '^[0-9]+\.[0-9]+\.[0-9]+$'
+          check SUBSTRATE_VERSION    "$SUBSTRATE_VERSION"    "$SEMVER"
+          check KMCP_VERSION         "$KMCP_VERSION"         "$SEMVER"
+          check KAGENT_TOOLS_VERSION "$KAGENT_TOOLS_VERSION" "$SEMVER"
           check MAX_KUBE             "$MAX_KUBE"             '^[0-9]+\.[0-9]+$'
 
           {
@@ -202,6 +216,110 @@ jobs:
             echo "KAGENT_TOOLS_VERSION=$KAGENT_TOOLS_VERSION"
             echo "MAX_KUBE=$MAX_KUBE"
           } >> $GITHUB_ENV
+
+      # ---------------------------------------------------------------------
+      # Runtime image conrefs.
+      #
+      # versions/runtime-image.md and versions/runtime-image-claude.md hold a
+      # FULL digest-pinned reference (repository@sha256:...), not a version,
+      # because a Harness `workload.image` rejects a bare tag -- a revision has
+      # to be reproducible. Pages reuse the whole string, so the repository name
+      # is not hardcoded on any page either.
+      #
+      # A digest exists only once the image is pushed, so unlike every value
+      # above this one is read from the REGISTRY rather than from a file in the
+      # kagent tree. The tag to resolve comes from versions/kagent.md, not from
+      # `git describe` on main: that conref names the release the docs describe,
+      # so resolving against it is what keeps the image a reader pins consistent
+      # with the chart version the install page tells them to install. It also
+      # means these two follow automatically whenever kagent.md is bumped by
+      # hand, which is the reason that one stays editorial.
+      #
+      # Image names are NOT the ones the kagent tree suggests. The kagent
+      # runtime is golang-adk (values.yaml calls it `agentImage`); the claude
+      # runtime is claude-harness. The `claude-adk` and `codex-adk` strings in
+      # kagent are build stages, and nothing is published under those names.
+      #
+      # 0.x needs no equivalent: it predates Harness and pins no runtime image.
+      # ---------------------------------------------------------------------
+      - name: Resolve runtime image digests
+        run: |
+          set -euo pipefail
+
+          KAGENT_CONREF="$VERSIONS_DIR/kagent.md"
+          if [ ! -f "$KAGENT_CONREF" ]; then
+            echo "Error: expected conref $KAGENT_CONREF"
+            exit 1
+          fi
+
+          # The 1.x span of:
+          #   {{< version include-if="0.x" >}}0.10.1{{< /version >}}{{< version include-if="1.x" >}}1.0.0-alpha1{{< /version >}}
+          IMAGE_TAG=$(sed -E 's|.*include-if="1\.x" >\}\}([^{]*)\{\{< /version >\}\}.*|\1|' "$KAGENT_CONREF")
+
+          if ! printf '%s' "$IMAGE_TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "Error: read the image tag as '$IMAGE_TAG' from $KAGENT_CONREF, which is not a version."
+            echo "The conref's shape likely changed. Fix the extraction here rather than editing the conref by hand."
+            exit 1
+          fi
+          echo "Resolving runtime images at tag $IMAGE_TAG (from versions/kagent.md)"
+
+          # Anonymous pull token; these packages are public. Deliberately not
+          # crane or `docker buildx imagetools`: neither is on this runner, and
+          # a HEAD against the registry needs no setup step.
+          ghcr_digest() {
+            local repo="$1" tag="$2" token
+            token=$(curl -fsS "https://ghcr.io/token?scope=repository:${repo}:pull&service=ghcr.io" \
+              | sed -n 's/.*"token":"\([^"]*\)".*/\1/p') || return 1
+            [ -n "$token" ] || return 1
+            # Index media types FIRST. These images are multi-arch and the value
+            # to pin is the index digest; an Accept header that omits the index
+            # types still succeeds but hands back ONE platform's digest, which
+            # would pin every reader to the runner's architecture.
+            curl -fsSI -H "Authorization: Bearer ${token}" \
+              -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
+              "https://ghcr.io/v2/${repo}/manifests/${tag}" \
+              | awk -F': ' 'tolower($1)=="docker-content-digest"{gsub(/\r/,"");print $2}'
+          }
+
+          # conref basename : GHCR repository
+          RUNTIME_IMAGES="runtime-image:kagent-dev/kagent/golang-adk
+          runtime-image-claude:kagent-dev/kagent/claude-harness"
+
+          UNRESOLVED=""
+          while IFS= read -r line; do
+            line=$(printf '%s' "$line" | tr -d '[:space:]')
+            [ -n "$line" ] || continue
+            name="${line%%:*}"
+            repo="${line#*:}"
+
+            digest=$(ghcr_digest "$repo" "$IMAGE_TAG" || true)
+
+            # An unresolved digest is NOT fatal. versions/kagent.md is editorial
+            # and may legitimately name a release whose images are not pushed
+            # yet. Writing an empty conref would blank a `workload.image` line
+            # on four pages, so the conref is left alone and the miss is
+            # surfaced in the PR body instead -- same shape as the kmcp
+            # cross-check above.
+            if ! printf '%s' "$digest" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+              echo "::warning::Could not resolve a digest for ${repo}:${IMAGE_TAG}. Leaving its conref unchanged."
+              UNRESOLVED="${UNRESOLVED}\`${repo}:${IMAGE_TAG}\` "
+              continue
+            fi
+
+            # runtime-image -> RUNTIME_IMAGE, runtime-image-claude -> RUNTIME_IMAGE_CLAUDE
+            var=$(printf '%s' "$name" | tr 'a-z-' 'A-Z_')
+            # ghcr.io/ is prepended here rather than carried in the table
+            # above, because the table's value doubles as the registry API path,
+            # which takes the repository WITHOUT the host.
+            echo "  ${name}.md = ghcr.io/${repo}@${digest}"
+            echo "${var}=ghcr.io/${repo}@${digest}" >> $GITHUB_ENV
+          done <<< "$RUNTIME_IMAGES"
+
+          if [ -n "$UNRESOLVED" ]; then
+            echo "RUNTIME_IMAGE_NOTE=> [!WARNING] No digest resolved for ${UNRESOLVED}- those conrefs keep their previous value. Expected when versions/kagent.md names a release whose images are not published yet." >> $GITHUB_ENV
+          else
+            echo "RUNTIME_IMAGE_NOTE=" >> $GITHUB_ENV
+          fi
 
       - name: Cross-check kmcp against its own latest release
         env:
@@ -269,6 +387,23 @@ jobs:
           write_conref "$VERSIONS_DIR/kagent-tools.md" "$KAGENT_TOOLS_VERSION"
           write_conref "$VERSIONS_DIR/max-kube.md"     "$MAX_KUBE"
           write_conref "$KUBE_VERSION_FILE"            "$MAX_KUBE"
+
+          # Runtime image conrefs, written only when the digest resolved. An
+          # empty value would blank the `workload.image` line on four 1.x pages,
+          # so an unresolved lookup keeps the previous value rather than writing
+          # a broken one. The miss was already warned about upstream and is
+          # repeated in the PR body.
+          echo "Runtime image conrefs:"
+          if [ -n "${RUNTIME_IMAGE:-}" ]; then
+            write_conref "$VERSIONS_DIR/runtime-image.md" "$RUNTIME_IMAGE"
+          else
+            echo "  runtime-image.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image.md")"
+          fi
+          if [ -n "${RUNTIME_IMAGE_CLAUDE:-}" ]; then
+            write_conref "$VERSIONS_DIR/runtime-image-claude.md" "$RUNTIME_IMAGE_CLAUDE"
+          else
+            echo "  runtime-image-claude.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image-claude.md")"
+          fi
 
           # agent-substrate.md is version-split and 0.x is FROZEN:
           #   {{< version include-if="0.x" >}}0.0.6{{< /version >}}{{< version include-if="1.x" >}}0.0.26{{< /version >}}
@@ -722,14 +857,18 @@ jobs:
 
             ${{ env.CONREF_NOTE }}
 
-            Version conrefs in this run, each read from the same place kagent's own build reads it:
+            ${{ env.RUNTIME_IMAGE_NOTE }}
 
-            | Conref | Value | Source in kagent |
-            | ------ | ----- | ---------------- |
+            Version conrefs in this run. Each is read from the same place kagent's own build reads it, except the two runtime images, which are resolved from the registry because a digest exists only once the image is pushed:
+
+            | Conref | Value | Source |
+            | ------ | ----- | ------ |
             | `agent-substrate` (1.x span only) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target |
             | `kmcp` | `${{ env.KMCP_VERSION }}` | `go/go.mod` require |
             | `kagent-tools` | `${{ env.KAGENT_TOOLS_VERSION }}` | `helm/kagent/Chart-template.yaml` |
             | `max-kube` (both committed copies) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
+            | `runtime-image` | `${{ env.RUNTIME_IMAGE }}` | GHCR, at the tag in `versions/kagent.md` |
+            | `runtime-image-claude` | `${{ env.RUNTIME_IMAGE_CLAUDE }}` | GHCR, at the tag in `versions/kagent.md` |
 
             Unchanged conref values are normal: most runs touch only the generated reference pages.
 

@@ -32,8 +32,8 @@ This guide walks you through creating an agent, from applying a Harness and an A
    spec:
      kagent: {}
      workload:
-       # Your kagent release's runtime image
-       image: <runtime-image>@sha256:<digest>
+       # kagent's native runtime image, pinned by digest
+       image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
      substrate:
        workerPoolRef:
          name: kagent-default

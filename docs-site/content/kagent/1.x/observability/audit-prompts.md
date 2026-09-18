@@ -232,7 +232,7 @@ Turning on auditing takes two changes. The chart setting installs the log export
    spec:
      kagent: {}
      workload:
-       image: <runtime-image>@sha256:<digest>
+       image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
      env:
        - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
          value: "true"

@@ -22,7 +22,7 @@ spec:
   # Exactly one runtime block: kagent, codex, claude, or byo.
   kagent: {}
   workload:
-    image: <runtime-image>@sha256:<digest>
+    image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
   env:
     - name: LOG_LEVEL
       value: info

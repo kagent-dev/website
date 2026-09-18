@@ -129,10 +129,10 @@ params:
   # partial. A clean build with blank version numbers is the failure mode this
   # single list prevents.
   #
-  # 1.x documents the kagent 1.0 beta, written against the v1alpha3/Agent
+  # 1.x documents the kagent 1.0 alpha, written against the v1alpha3/Agent
   # Substrate API. 0.x is the frozen pre-1.0 set (moved verbatim from the former
   # flat content/kagent/ tree) and stays the current supported release while 1.0
-  # is in beta.
+  # is in alpha.
   #
   # Declaring versions at all moves section resolution off the theme's
   # version-less positional path (utils/section-segment.html condition (c)) and
@@ -156,25 +156,25 @@ params:
     # That partial keys off `linkVersion`, NOT the `latest: true` flag below;
     # the two are read by different templates and are not interchangeable.
     - version: "1.x"
-      dropdown: "1.x (beta)"
+      dropdown: "1.x (alpha)"
       linkVersion: "1.x"
       url: "/kagent/1.x"
       sections: ["kagent"]
-      # kagent 1.0 ships as a beta, so this entry deliberately does not carry
+      # kagent 1.0 ships as an alpha, so this entry deliberately does not carry
       # `latest`. The flag stays on the 0.x entry below; move it here at 1.0 GA.
       #
-      # Beta banner. Rendered by the local layouts/partials/version-banner.html
+      # Alpha banner. Rendered by the local layouts/partials/version-banner.html
       # override, which matches an entry by exact path segment and runs the text
       # through `markdownify` — so the link below works, and a kmcp page matches
       # nothing and shows no banner. Delete this line at GA.
-      banner: "This documentation covers the kagent 1.0 beta. For the latest 0.x release, see the [0.x docs](/docs/kagent/0.x/)."
+      banner: "This documentation covers the kagent 1.0 alpha. For the latest 0.x release, see the [0.x docs](/docs/kagent/0.x/)."
     - version: "0.x"
       dropdown: "0.x (current)"
       linkVersion: "0.x"
       url: "/kagent/0.x"
       sections: ["kagent"]
       # `latest` marks the current release, and v0.10.1 is still that release
-      # while 1.0 is in beta. It is one of only two signals
+      # while 1.0 is in alpha. It is one of only two signals
       # utils/version-noindex.html accepts, and the only one available to this
       # site (the other is a `linkVersion: "latest"` URL segment, which this
       # site does not use). Without it that partial matches nothing and emits no
@@ -192,9 +192,9 @@ params:
       # release" behavior. Moving the flag to the 1.x entry at GA reverses the
       # polarity, and 0.x pages get noindexed instead.
       latest: true
-      # Beta announcement banner, rendered by the same override as the 1.x
+      # Alpha announcement banner, rendered by the same override as the 1.x
       # banner above. Replace it with a superseded-version notice at GA.
-      banner: "kagent 1.0 is available as a beta release. To read its documentation, see the [1.x docs](/docs/kagent/1.x/)."
+      banner: "kagent 1.0 is available as an alpha release. To read its documentation, see the [1.x docs](/docs/kagent/1.x/)."
 
   # Label on the section selector button. Without it the button falls back to
   # site.Title ("kagent docs"), which reads oddly above a menu offering kagent
