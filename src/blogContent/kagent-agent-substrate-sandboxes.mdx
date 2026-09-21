@@ -1,0 +1,176 @@
+export const metadata = {
+  title: "Kagent and Agent Substrate: Running AI Agent Sandboxes on Kubernetes",
+  publishDate: "2026-09-21T00:00:00Z",
+  description:
+    "Isolation, security, and scale are what stand between an agent demo and an agent in production. Here is how Agent Substrate sandboxes agents with gVisor and microVMs, and how to run those sandboxed agents with kagent.",
+  author: "Michael Levan",
+  authorIds: ["michaellevan"],
+};
+
+# Kagent and Agent Substrate: Running AI Agent Sandboxes on Kubernetes
+
+Isolation. Security. Scale.
+
+Without these three things, Agents cannot be properly implemented in a controlled environment, they will not have policy enforcement to ensure they do what they're supposed to do, and there's zero way of ensuring that the Agent will be readily available when needed.
+
+Kagent as the runtime for declarative and BYO (covering frameworks like langgraph/ADK) Agents combined with Agent Substrate for the underlying sandbox environment ensures that you can implement all three production-level needs when running agentic workloads.
+
+In this blog post, you'll learn the key concepts to agent sandboxing, how Substrate is used, and implementing it with kagent.
+
+## Prerequisites
+
+To follow along with this blog post in a hands-on fashion, you will need:
+
+1. A Kubernetes cluster (local cluster like Kind or Minikube is fine).
+
+If you do not have a k8s cluster, you can follow along from a theoretical perspective for the learnings until you have a cluster readily available.
+
+## Agent sandboxing as a whole
+
+If you spin up Docker or whatever containerization engine you prefer, create a container, and run a workload in it, technically speaking the workload is "sandboxed". However, that level of sandboxing might as well not even exist. Ingress and egress is wide open, the workload can send packets to whatever it likes, and there's zero policy enforcement. Of course there are ways to tighten this up (network policies, segmentation, routing rules, etc.), but that doesn't change the fact that sandboxing as a whole is "flat" by nature.
+
+![Flat container sandboxing with no real boundary](/images/blog/kagent-agent-substrate-sandboxes/sandbox-boundary.jpeg)
+
+Sandboxing an Agent in a secure and effective fashion means:
+
+- Agents don't run untrusted logic.
+- The blast radius for a harness is minimized.
+- The Agent that holds onto model output, possibly credentials, and tool calls is within an isolated boundary.
+- Agents are snapshotted so it knows where to pick up where it left off (where the state exists).
+- Agent multiplexing (routing traffic to multiple Agents) in a multi-tenant environment is isolated and has a boundary.
+
+To ensure that the above can be properly implemented, you need the ability to isolate Agents at both the hardware and software level along with policy enforcement at the AI Gateway for when Agent traffic is reaching its destination.
+
+## Where does Agent Substrate fit in?
+
+Container isolation (and software-level isolation to that point) stops at your kernel. Everything is running in said kernel (in the user space), which can be sufficient for some, but how that isolation is implemented matters. How the client routes to the Agent and what is in the middle facilitating that routing is what counts when it comes to isolation.
+
+That's where Agent Substrate comes into play.
+
+![Agent Substrate architecture: workers, actors, and the ateapi control plane](/images/blog/kagent-agent-substrate-sandboxes/agent-substrate-architecture.png)
+
+With Agent Substrate, all Agents are running in Workers, which are Pods. The Agents are facilitated via Actors, which are managed by the ateapi (Agent Substrates Control Plane). Where the isolation comes into play is with software and hardware-level isolation. gVisor is used for software-level isolation and microVM is used for hardware-level isolation.
+
+![gVisor software-level isolation compared with microVM hardware-level isolation](/images/blog/kagent-agent-substrate-sandboxes/gvisor-microvm-isolation.gif)
+
+With software-level isolation, the isolated workload runs inside of the user space using a dedicated user-space app kernel called Sentry that intercepts and handles system calls. With microVM (hardware isolation) the kernel itself where the workload runs is at the CPU chip level. With that chip level isolation, all workloads run on the physical chip, not in the user space.
+
+## Using Substrate in kagent
+
+In the previous sections, you learned about the architecture, design, and system choices for why sandboxing an Agent is important. In the upcoming sections, you'll learn how to do it in a hands-on fashion with kagent and Agent Substrate.
+
+The interaction points you'll see here are: kagent is the runtime, Agent Substrate is the platform sitting underneath to help implement and facilitate sandboxing. Without kagent, the only real entry point to interact with Agent Substrate is via a programmatic call with something like a curl to interact with the Actor. Kagent allows you to interact with Agents running in Actors via Substrate in a way that the industry is comfortable with (a UI and in a declarative fashion).
+
+### Installation and configuration
+
+There are a few steps to installing kagent v1.0 and Agent Substrate, including:
+
+1. Configuring kubectl-ate (to interact with Agent Substrate via the CLI).
+2. The installation of Agent Substrate itself.
+3. Installing kagent.
+
+To get a play-by-play, step-by-step instruction set, you can take a look at the guide found [here](https://kagent.dev/docs/kagent/1.x/setup/installation/).
+
+Once you're up and running, you'll see that with the Helm installation of kagent by default, one WorkerPool gets created with two Workers (Pods). The WorkerPool gets created with the `substrateWorkerPool.create=true` setting on the Helm Chart.
+
+### Creating an Agent programmatically
+
+With kagent + Agent Substrate installed, you can now create an Agent (Actor) and an Agent Template. The AgentTemplate is like a "golden image" (although, "image" feels a bit too heavy of wording) that contains the configurations for your Agent and can be reused across Agents that you deploy. The Harness is the Actor (Agent) itself. This can be something like a Harness (Codex, Claude Code, etc.) or a BYO Agent using a framework like langgraph.
+
+Run the below to declaratively create the Harness and AgentTemplate using the kagent CRDs.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: kagent
+  namespace: kagent
+spec:
+  kagent: {}
+  workload:
+    image: PATH_TO_YOUR_AGENT_IMAGE
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+    snapshotPolicy:
+      location: gs://ate-snapshots-PATH_TO_YOUR_SNAPSHOTS
+  allowedAgentTemplates:
+    selector:
+      matchLabels:
+        kagent.dev/harness: kagent
+---
+apiVersion: kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: assistant
+  namespace: kagent
+  labels:
+    kagent.dev/harness: kagent
+spec:
+  modelConfig:
+    name: default-model-config
+  description: A substrate-backed assistant used to verify this main build.
+  systemPrompt: You are a helpful assistant running on kagent.
+EOF
+```
+
+Once deployed, you'll see the Agent running in kagent along with the template.
+
+![The Agent created and running in the kagent UI](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-agent-created.png)
+
+![The AgentTemplate created in the kagent UI](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-template-created.png)
+
+### Creating an Agent in the UI
+
+Aside from creating an Agent in a declarative fashion, you can also create one in the UI.
+
+1. Within the UI, click on the **Agents** pane.
+
+![The Agents pane in the kagent UI](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-agents-pane.png)
+
+2. Click the purple **+ New template** button.
+
+![The purple New template button](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-new-template-button.png)
+
+You can then define the template like how you did in the YAML within the previous section.
+
+![Defining a new Agent template in the kagent UI](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-new-agent-template.png)
+
+3. Go into the Harness configuration via the purple **+ New Harness** section.
+
+![Creating a new Harness in the kagent UI](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-new-harness.png)
+
+Within there is where you can define the harness like you did declaratively in the previous section to point to the Namespace that you want the Actor/Agent deployed in, the name, runtime adapter, and the location where the image exists.
+
+### Using a sandboxed Agent
+
+When you open the Agents tab, you'll see the `assistant` Agent.
+
+![The assistant Agent in the Agents tab](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-agents-tab-assistant.png)
+
+Then, go over to the Substrate tab. Notice how it says 0/8 Actors running? That's because an Actor is only running when there's an active session (this ties back to the efficiency of hardware resources when using Agent Substrate).
+
+![The Substrate tab showing 0/8 Actors running](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-substrate-tab-8-actors.png)
+
+Next, open your Agent and prompt it with whatever you'd like.
+
+![Prompting the sandboxed Agent in a session](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-agent-session.png)
+
+You'll now see that there are 0/9 Actors. The reason why is because when you start a new session, a new Actor spins up. It then spins down once the session is complete (the session being what you're asking the Agent and when it responds).
+
+![The Substrate tab showing 0/9 Actors after starting a session](/images/blog/kagent-agent-substrate-sandboxes/kagent-ui-substrate-9-actors.png)
+
+If you open a new session and prompt the Agent, you'll see 0/10. If you use an existing session, the Actor count won't change because it's still the same session. This is important because it can look like "every time I use an Agent, a new Actor spins up and that's a lot of resources to manage", but it's only when a new session occurs.
+
+## Wrapping up
+
+In this post, you not only learned about why sandboxing is important and the key projects driving sandboxing forward, but how to deploy Actors within kagent using Agent Substrate as the sandbox platform/architecture. Moving forward for engineering teams and enterprises alike, having the ability to isolate, secure, govern, and control Agents will be key to truly understanding what your Agents can and can't do, which is a key holding point today for many organizations when implementing Agents.
+
+If you want to learn more about Agent Substrate, there are key live events going on, which you can watch for free.
+
+1. The Agent Substrate 101 series:
+   1. [Not all sandboxes are the same](https://www.solo.io/resources/webinar/agent-substrate-101-not-all-sandboxes-are-the-same)
+   2. [Scaling agents changes the Kubernetes equation](https://www.solo.io/resources/webinar/agent-substrate-101-scaling-agents-changes-the-kubernetes-equation)
+   3. [Stop paying for agents that aren't doing anything](https://www.solo.io/resources/webinar/agent-substrate-101-stop-paying-for-agents-that-arent-doing-anything)
+2. [Run AI Agents at Scale with kagent](https://www.solo.io/resources/workshop/getting-started-with-agent-substrate-run-ai-agents-at-scale-with-kagent)
