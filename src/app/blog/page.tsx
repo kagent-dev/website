@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'kagent-agent-substrate-sandboxes',
+        publishDate: '2026-09-21',
+        title: 'Kagent and Agent Substrate: Running AI Agent Sandboxes on Kubernetes',
+        description: "Isolation, security, and scale are what stand between an agent demo and an agent in production. Here is how Agent Substrate sandboxes agents with gVisor and microVMs, and how to run those sandboxed agents with kagent.",
+        authorId: 'michaellevan',
+    },
+    {
         slug: 'blacksmith-ci',
         publishDate: '2026-09-04',
         title: 'Next generation CI using Blacksmith',
