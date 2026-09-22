@@ -70,22 +70,27 @@ concurrency:
 # provider pages link to crd-ref-docs anchors (#modelconfigspec, #openaiconfig,
 # ...), so keep that renderer and its anchor naming.
 #
-# crd-ref-docs is pinned at v0.2.0, and the floor is not negotiable: Setup Go
+# crd-ref-docs is pinned at v0.3.0, and the floor is not negotiable: Setup Go
 # below asks for 'stable', so every `go run <tool>@<pin>` here is rebuilt
 # against whatever Go the runner has that morning. v0.1.0 depends on
 # golang.org/x/tools v0.19.0, whose internal/tokeninternal carries a
 # compile-time size assertion on go/token.File. Go 1.27 changed that struct, so
 # from 2026-09-22 the build died with "invalid array length -delta * delta"
-# before generating anything. x/tools dropped the file in v0.35.0, which is
-# what v0.2.0 depends on. Do not pin back below v0.2.0.
+# before generating anything. x/tools dropped the file in v0.35.0, so v0.2.0 is
+# the oldest release that builds at all. Do not pin back below it.
 #
-# v0.3.0 also builds, and was left on the table on purpose: it appends
-# `Required: {}` / `Optional: {}` to all 244 rows of the Validation column,
-# which Hextra renders as literal braces. All 74 headings are identical across
-# v0.1.0, v0.2.0 and v0.3.0, so the provider-page anchors above survive either
-# choice. The one thing v0.2.0 costs is paragraph breaks inside long Go doc
-# comments -- it collapses blank lines, so <br /><br /> flattens to <br /> in
-# about seven prose-heavy fields.
+# All 74 headings are identical across v0.1.0, v0.2.0 and v0.3.0, so the
+# provider-page anchors above survive any of them. The versions differ only in
+# the table bodies:
+#
+#   - v0.2.0 collapses blank lines inside Go doc comments, so <br /><br />
+#     flattens to <br /> in about seven prose-heavy fields. v0.3.0 does the
+#     same; there is no version that both builds and keeps those breaks.
+#   - v0.3.0 marks required fields, which nothing before it did. That is the
+#     reason for preferring it: the reference had no way to tell a required
+#     field from an optional one. It pays for that by stamping all 244 rows of
+#     the Validation column, so the generation steps below normalize the
+#     markers -- see the comment there.
 #
 # Frontmatter lives in the heredocs below, not in the generated pages: every
 # run overwrites it. Descriptions follow the 1.x convention of an imperative
@@ -141,7 +146,7 @@ jobs:
           path: website
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 'stable'
           cache: false
@@ -533,7 +538,7 @@ jobs:
           cat crd-ref-docs-config.yaml
 
           # Generate API docs
-          go run github.com/elastic/crd-ref-docs@v0.2.0 \
+          go run github.com/elastic/crd-ref-docs@v0.3.0 \
             --source-path="$GITHUB_WORKSPACE/kagent/go/api/v1alpha3/" \
             --renderer=markdown \
             --output-path ./ \
@@ -547,6 +552,23 @@ jobs:
 
           # Remove the temporary config file so it is not included in the PR
           rm -f crd-ref-docs-config.yaml
+
+          # crd-ref-docs stamps every row of the Validation column with
+          # `Required: \{\}` or `Optional: \{\}`. Hextra renders those escaped
+          # braces as a literal `{}`, and optional is the default anyway, so drop
+          # the optional marker outright and render the required one as bold
+          # text. Marking required fields is the only thing v0.3.0 adds over
+          # v0.2.0; without this normalization it adds 244 rows of noise instead.
+          echo "Normalizing required/optional field markers..."
+          python3 - <<'PY_MARKERS'
+          from pathlib import Path
+
+          path = Path("out.md")
+          text = path.read_text()
+          text = text.replace("Optional: \\{\\} <br />", "")
+          text = text.replace("Required: \\{\\} <br />", "**Required** <br />")
+          path.write_text(text)
+          PY_MARKERS
 
           # Fix problematic angle brackets in the generated markdown.
           # Goldmark (unsafe: true) would otherwise treat stray <...> as raw HTML
@@ -627,7 +649,7 @@ jobs:
           cat crd-ref-docs-config.yaml
 
           # Generate KMCP API docs
-          go run github.com/elastic/crd-ref-docs@v0.2.0 \
+          go run github.com/elastic/crd-ref-docs@v0.3.0 \
             --source-path="$GITHUB_WORKSPACE/kmcp/api/v1alpha1/" \
             --renderer=markdown \
             --output-path ./ \
@@ -641,6 +663,23 @@ jobs:
 
           # Remove the temporary config file so it is not included in the PR
           rm -f crd-ref-docs-config.yaml
+
+          # crd-ref-docs stamps every row of the Validation column with
+          # `Required: \{\}` or `Optional: \{\}`. Hextra renders those escaped
+          # braces as a literal `{}`, and optional is the default anyway, so drop
+          # the optional marker outright and render the required one as bold
+          # text. Marking required fields is the only thing v0.3.0 adds over
+          # v0.2.0; without this normalization it adds 244 rows of noise instead.
+          echo "Normalizing required/optional field markers..."
+          python3 - <<'PY_MARKERS'
+          from pathlib import Path
+
+          path = Path("out.md")
+          text = path.read_text()
+          text = text.replace("Optional: \\{\\} <br />", "")
+          text = text.replace("Required: \\{\\} <br />", "**Required** <br />")
+          path.write_text(text)
+          PY_MARKERS
 
           # Fix problematic angle brackets (see the kagent step for rationale).
           echo "Fixing problematic angle brackets in generated markdown..."
