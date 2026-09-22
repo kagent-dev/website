@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-A trace records one agent request as a tree of timed spans, so you can see where a slow or failed request spent its time and which model and tool calls it made along the way. In kagent 1.0 a single request crosses two processes, the controller and the {{< gloss "Actor" >}}Actor{{< /gloss >}} that runs the agent, and a trace ties both halves together.
+A trace records one agent request as a tree of timed spans, so you can see where a slow or failed request spent its time and which model and tool calls it made along the way. In {{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 a single request crosses two processes, the controller and the {{< gloss "Actor" >}}Actor{{< /gloss >}} that runs the agent, and a trace ties both halves together.
 
 ## About trace coverage
 
@@ -151,7 +151,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 3. Upgrade the kagent Helm release.
    ```bash
    helm upgrade kagent \
-     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent \
      --values values.yaml
@@ -199,7 +199,7 @@ This behavior allows a kagent trace to arrive promptly rather than on the export
 1. Disable tracing in the kagent Helm release.
    ```bash
    helm upgrade kagent \
-     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
      --set otel.tracing.enabled=false

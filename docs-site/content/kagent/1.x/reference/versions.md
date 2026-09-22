@@ -5,7 +5,7 @@ weight: 60
 author: kagent.dev
 ---
 
-Only the latest kagent release is supported. The versions on this page apply to that release.
+Only the latest {{< reuse "kagent-docs/snippets/name-product.md" >}} release is supported. The versions on this page apply to that release.
 
 ## What a kagent release includes
 

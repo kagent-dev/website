@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-Audit every prompt (input) and reply (output) that passes between your agents and their models. Security and compliance teams use these records to review how people use your kagent environment. For example, you can confirm that no request sends personally identifiable information (PII) to a model. You can also reconstruct the instructions that an agent received in an earlier conversation.
+Audit every prompt (input) and reply (output) that passes between your agents and their models. Security and compliance teams use these records to review how people use your {{< reuse "kagent-docs/snippets/name-product.md" >}} environment. For example, you can confirm that no request sends personally identifiable information (PII) to a model. You can also reconstruct the instructions that an agent received in an earlier conversation.
 
 ## About prompt auditing
 
@@ -212,7 +212,7 @@ Turning on auditing takes two changes. The chart setting installs the log export
 1. Upgrade kagent to export audit events to the collector. The controller compiles these settings into every runtime revision that it builds from now on.
    ```bash
    helm upgrade kagent \
-     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
      --set otel.logging.enabled=true \
@@ -379,7 +379,7 @@ To follow a request from its audit records into its trace, take the `trace_id` f
 1. Turn the log exporter off again.
    ```bash
    helm upgrade kagent \
-     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
      --set otel.logging.enabled=false

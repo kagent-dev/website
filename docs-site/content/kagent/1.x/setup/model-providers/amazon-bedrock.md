@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-Amazon Bedrock serves models from several families behind one AWS API. kagent reaches it two ways: the native `Bedrock` provider, which is the fuller integration, and Bedrock's OpenAI-compatible endpoint through the `OpenAI` provider.
+Amazon Bedrock serves models from several families behind one AWS API. {{< reuse "kagent-docs/snippets/name-product.md" >}} reaches it two ways: the native `Bedrock` provider, which is the fuller integration, and Bedrock's OpenAI-compatible endpoint through the `OpenAI` provider.
 
 Prefer the native provider. If you need the OpenAI request format, or an inference profile that only that endpoint exposes, use the OpenAI-compatible path.
 

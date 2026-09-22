@@ -1,0 +1,1 @@
+oci://ghcr.io/kagent-dev/kagent/helm

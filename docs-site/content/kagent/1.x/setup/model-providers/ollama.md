@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-[Ollama](https://ollama.com) runs large language models on hardware that you control. The `Ollama` provider points kagent at an Ollama server rather than at a hosted API, so it needs a host address instead of an API key.
+[Ollama](https://ollama.com) runs large language models on hardware that you control. The `Ollama` provider points {{< reuse "kagent-docs/snippets/name-product.md" >}} at an Ollama server rather than at a hosted API, so it needs a host address instead of an API key.
 
 > [!IMPORTANT]
 > kagent agents call tools, so choose a model that supports function calling. A model without tool support connects successfully and then fails to use any tool that you bind to it.

@@ -5,6 +5,6 @@ weight: 90
 author: kagent.dev
 ---
 
-kagent 1.0 introduces vocabulary that the rest of these docs use without re-explaining: the resources you author, the runtime objects that the controller compiles them into, and the Agent Substrate primitives that run them.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 introduces vocabulary that the rest of these docs use without re-explaining: the resources you author, the runtime objects that the controller compiles them into, and the Agent Substrate primitives that run them.
 
 {{< glossary-list >}}

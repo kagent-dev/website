@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-kagent is an open-source, Kubernetes-native platform for running AI agents. It defines an agent's runtime and behavior as ordinary Kubernetes custom resources, governed by the same GitOps and observability that you already use for your other workloads, and runs each agent's conversation inside [Agent Substrate]({{< link path="about/agent-substrate" >}}), a sandboxed, suspend-and-resume compute layer built for bursty, mostly idle agent workloads. kagent works with every major large language model (LLM) provider. Agents run on kagent's own Go and Python engines, which build on Google's Agent Development Kit (ADK), on the Codex or Claude coding agents, or on an image of your own.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} is an open-source, Kubernetes-native platform for running AI agents. It defines an agent's runtime and behavior as ordinary Kubernetes custom resources, governed by the same GitOps and observability that you already use for your other workloads, and runs each agent's conversation inside [Agent Substrate]({{< link path="about/agent-substrate" >}}), a sandboxed, suspend-and-resume compute layer built for bursty, mostly idle agent workloads. kagent works with every major large language model (LLM) provider. Agents run on kagent's own Go and Python engines, which build on Google's Agent Development Kit (ADK), on the Codex or Claude coding agents, or on an image of your own.
 
 kagent was created at [Solo.io](https://www.solo.io) in 2025 and is a [Cloud Native Computing Foundation](https://www.cncf.io) sandbox project.
 

@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-A kagent installation authenticates three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation authenticates three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
 
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
 - A caller creating or talking to an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is authenticated by [kagent's own gRPC API](#the-kagent-plane).

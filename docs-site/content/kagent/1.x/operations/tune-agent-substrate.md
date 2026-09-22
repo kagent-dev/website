@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-kagent runs every agent on [Agent Substrate]({{< link path="about/agent-substrate" >}}), and a fresh installation is deliberately small: one {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} holding a single Worker, snapshots in whichever object storage the Agent Substrate installation was given, and the `gvisor` sandbox class.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} runs every agent on [Agent Substrate]({{< link path="about/agent-substrate" >}}), and a fresh installation is deliberately small: one {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} holding a single Worker, snapshots in whichever object storage the Agent Substrate installation was given, and the `gvisor` sandbox class.
 
 When preparing for real traffic to your agents, you can size the pool and check where snapshots land. Leave the sandbox class on `gvisor`. A pool set to any other class sits idle while turns time out.
 

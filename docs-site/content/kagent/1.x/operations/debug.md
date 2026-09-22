@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-Most kagent failures surface in one place: the readiness conditions that a {{< gloss "Harness" >}}Harness{{< /gloss >}} writes onto the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} that it admits. This page explains where to read those conditions, how to tell the real failure from the ones that follow it, and how to work back from the symptoms that report nothing useful on their own.
+Most {{< reuse "kagent-docs/snippets/name-product.md" >}} failures surface in one place: the readiness conditions that a {{< gloss "Harness" >}}Harness{{< /gloss >}} writes onto the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} that it admits. This page explains where to read those conditions, how to tell the real failure from the ones that follow it, and how to work back from the symptoms that report nothing useful on their own.
 
 ## Where kagent reports status
 

@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-Every {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. kagent uses the A2A protocol for its own agent traffic, rather than an extra interface beside it. The CLI, the [MCP server]({{< link path="examples/agents-via-mcp" >}}), and any client you write all take the same path.
+Every {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. {{< reuse "kagent-docs/snippets/name-product.md" >}} uses the A2A protocol for its own agent traffic, rather than an extra interface beside it. The CLI, the [MCP server]({{< link path="examples/agents-via-mcp" >}}), and any client you write all take the same path.
 
 This example uses [grpcurl](https://github.com/fullstorydev/grpcurl) to show the requests and replies directly. Real callers use an A2A client library rather than assembling requests by hand.
 

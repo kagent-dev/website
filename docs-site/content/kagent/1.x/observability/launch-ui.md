@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-The kagent UI is a read-and-write console for everything the controller knows about: the agents you defined, the conversations the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
+The {{< reuse "kagent-docs/snippets/name-product.md" >}} UI is a read-and-write console for everything the controller knows about: the agents you defined, the conversations the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
 
 ## Before you begin
 

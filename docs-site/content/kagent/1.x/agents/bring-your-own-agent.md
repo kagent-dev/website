@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-The `byo` runtime runs a container image that you build, and treats what is inside it as opaque. kagent still compiles the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} into a {{< gloss "Revision" >}}revision{{< /gloss >}}, schedules that revision onto {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}}, and routes conversations to it. What the image does with a message is yours to decide. Choose this runtime when you have an agent framework that kagent does not adapt, and you would rather bring the image than the integration.
+The `byo` runtime runs a container image that you build, and treats what is inside it as opaque. {{< reuse "kagent-docs/snippets/name-product.md" >}} still compiles the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} into a {{< gloss "Revision" >}}revision{{< /gloss >}}, schedules that revision onto {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}}, and routes conversations to it. What the image does with a message is yours to decide. Choose this runtime when you have an agent framework that kagent does not adapt, and you would rather bring the image than the integration.
 
 ## What kagent runs and what your image runs
 

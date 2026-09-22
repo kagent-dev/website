@@ -8,7 +8,7 @@ author: kagent.dev
 
 ## How do I get started with kagent?
 
-Install kagent first, with a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} provisioned, by following [Install kagent]({{< link path="setup/installation" >}}). Then work through [Your first agent]({{< link path="get-started/your-first-agent" >}}), which applies a Harness and an AgentTemplate and holds a conversation with the AgentInstance that they produce. Those two resources and that conversation are the model that the rest of these docs assume. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}) then gives that agent a tool.
+Install {{< reuse "kagent-docs/snippets/name-product.md" >}} first, with a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} provisioned, by following [Install kagent]({{< link path="setup/installation" >}}). Then work through [Your first agent]({{< link path="get-started/your-first-agent" >}}), which applies a Harness and an AgentTemplate and holds a conversation with the AgentInstance that they produce. Those two resources and that conversation are the model that the rest of these docs assume. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}) then gives that agent a tool.
 
 ## What makes kagent different from other agent frameworks?
 

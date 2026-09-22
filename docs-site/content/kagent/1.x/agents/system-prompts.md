@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s system prompt defines the agent's role and how it should behave. kagent resolves the prompt when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}}, so the text that an agent runs with is fixed for the life of an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}. Editing the prompt affects instances created after the edit compiles, but not ones that are already running.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s system prompt defines the agent's role and how it should behave. {{< reuse "kagent-docs/snippets/name-product.md" >}} resolves the prompt when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}}, so the text that an agent runs with is fixed for the life of an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}. Editing the prompt affects instances created after the edit compiles, but not ones that are already running.
 
 ## Write an effective prompt
 

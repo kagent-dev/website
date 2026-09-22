@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-A default kagent installation is built for evaluation. It runs one controller replica against a bundled database, and places no constraints on the nodes that run agents. Production changes each of those.
+A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation is built for evaluation. It runs one controller replica against a bundled database, and places no constraints on the nodes that run agents. Production changes each of those.
 
 ## Choose a database
 
@@ -69,7 +69,7 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
 
    ```bash
    helm upgrade --install kagent \
-     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent \
      --values kagent.yaml
