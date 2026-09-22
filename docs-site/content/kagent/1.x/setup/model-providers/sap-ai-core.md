@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-kagent reaches SAP AI Core through its [Orchestration Service](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/orchestration), a single endpoint that serves models from several families, including Anthropic, OpenAI, Gemini, Amazon, Meta, and Mistral. Authentication uses OAuth2 client credentials from your SAP AI Core service key.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} reaches SAP AI Core through its [Orchestration Service](https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/orchestration), a single endpoint that serves models from several families, including Anthropic, OpenAI, Gemini, Amazon, Meta, and Mistral. Authentication uses OAuth2 client credentials from your SAP AI Core service key.
 
 ## Create the ModelConfig
 

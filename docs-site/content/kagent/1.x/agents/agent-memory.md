@@ -62,7 +62,7 @@ Memories are scoped to the agent and to the user who created them, and carry the
 3. Upgrade your kagent installation with the values file. The `--reuse-values` flag keeps every value that you installed kagent with, such as the Agent Substrate settings, and adds only the values in this file.
    ```bash
    helm upgrade kagent \
-     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --timeout 10m --reuse-values \
      -f kagent-memory-values.yaml

@@ -5,7 +5,7 @@ weight: 40
 author: kagent.dev
 ---
 
-A kagent installation ships with two {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers already registered, and you can register more of your own. This page is the catalog: what is installed, what each server serves, and how to narrow the set. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with two {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers already registered, and you can register more of your own. This page is the catalog: what is installed, what each server serves, and how to narrow the set. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
 
 ## Servers that a kagent installation registers
 

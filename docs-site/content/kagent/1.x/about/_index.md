@@ -5,4 +5,4 @@ weight: 20
 author: kagent.dev
 ---
 
-Learn what changed in kagent 1.0 and the vocabulary the rest of these docs build on.
+Learn what changed in {{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 and the vocabulary the rest of these docs build on.
