@@ -446,30 +446,49 @@ jobs:
         run: |
           set -euo pipefail
 
-          # versions/kmcp.md is reused by BOTH the kagent 1.x support matrix and
-          # the standalone kmcp install guides, which want subtly different
-          # things: what kagent bundles, versus what kmcp last released. The two
-          # agree today (both 0.3.0). This job writes the kagent-pinned value,
-          # because the guides that install kmcp inside kagent outnumber the
-          # standalone ones and must match the bundled chart. A divergence is
-          # surfaced here rather than silently resolved -- if it ever fires, the
-          # real fix is to split the conref by version the way
-          # versions/agent-substrate.md already does.
+          # kagent's pinned kmcp and kmcp's own latest release are two different
+          # facts, and each has pages that need it:
+          #
+          #   versions/kmcp.md        what kagent bundles, from go/go.mod.
+          #                           Read by the kagent 1.x support matrix,
+          #                           which describes the release kagent ships.
+          #   versions/kmcp-latest.md kmcp's newest release. Read by the
+          #                           standalone kmcp quickstart and install
+          #                           guide, both of which render it inside
+          #                           sample CLI output reading "No version
+          #                           specified, using latest: v...". That line
+          #                           is a claim about what kmcp resolves to, so
+          #                           kagent's pin would be wrong there.
+          #
+          # They were one file until 2026-09-22, carrying the kagent-pinned
+          # value, and agreed only because kagent happened to pin kmcp's newest
+          # release. kmcp 0.4.0 broke the tie: kagent alpha1 and alpha2 both pin
+          # 0.3.0. Splitting is what the single-file version of this step
+          # already recommended doing if the two ever diverged.
           KMCP_LATEST=$(gh release view \
             --repo "${{ github.repository_owner }}/kmcp" \
             --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)
 
+          # Empty would blank the conref and break the sample output on two
+          # pages, so an unreadable release leaves kmcp-latest.md alone.
           if [ -z "$KMCP_LATEST" ]; then
-            echo "Note: could not read kmcp's latest release; skipping the cross-check."
+            echo "::warning::Could not read kmcp's latest release. Leaving versions/kmcp-latest.md unchanged."
+            echo "KMCP_LATEST=" >> $GITHUB_ENV
             echo "KMCP_MISMATCH=" >> $GITHUB_ENV
             exit 0
           fi
 
+          echo "KMCP_LATEST=$KMCP_LATEST" >> $GITHUB_ENV
+
+          # A divergence is now expected and handled, so it is reported rather
+          # than warned about. It is still worth saying out loud: it means the
+          # kagent support matrix and the kmcp guides name different versions on
+          # purpose, which looks like a bug to anyone who has not read this.
           if [ "$KMCP_LATEST" != "$KMCP_VERSION" ]; then
-            echo "::warning::kagent pins kmcp $KMCP_VERSION but kmcp's latest release is $KMCP_LATEST. Writing the pinned value; the standalone kmcp install guides may now understate."
-            echo "KMCP_MISMATCH=kagent pins \`$KMCP_VERSION\`, kmcp's latest release is \`$KMCP_LATEST\`. The pinned value was written. Consider splitting \`versions/kmcp.md\` by version." >> $GITHUB_ENV
+            echo "kmcp split: kagent pins $KMCP_VERSION, kmcp's latest release is $KMCP_LATEST. Writing both."
+            echo "KMCP_MISMATCH=\`versions/kmcp.md\` is \`$KMCP_VERSION\` (what kagent bundles) and \`versions/kmcp-latest.md\` is \`$KMCP_LATEST\` (kmcp's newest release). The two naming different versions is expected -- the kagent support matrix and the standalone kmcp guides are answering different questions." >> $GITHUB_ENV
           else
-            echo "kmcp cross-check OK: pinned and latest release both $KMCP_VERSION"
+            echo "kmcp: kagent's pin and kmcp's latest release are both $KMCP_VERSION."
             echo "KMCP_MISMATCH=" >> $GITHUB_ENV
           fi
 
@@ -503,6 +522,12 @@ jobs:
 
           echo "Plain-value conrefs:"
           write_conref "$VERSIONS_DIR/kmcp.md"         "$KMCP_VERSION"
+          # Only when it resolved; see the cross-check step above.
+          if [ -n "${KMCP_LATEST:-}" ]; then
+            write_conref "$VERSIONS_DIR/kmcp-latest.md" "$KMCP_LATEST"
+          else
+            echo "  kmcp-latest.md: SKIPPED, kmcp's latest release was unreadable. Left at $(cat "$VERSIONS_DIR/kmcp-latest.md")"
+          fi
           write_conref "$VERSIONS_DIR/kagent-tools.md" "$KAGENT_TOOLS_VERSION"
           write_conref "$VERSIONS_DIR/max-kube.md"     "$MAX_KUBE"
           write_conref "$KUBE_VERSION_FILE"            "$MAX_KUBE"
@@ -1055,7 +1080,8 @@ jobs:
             | Conref | Value | Source |
             | ------ | ----- | ------ |
             | `agent-substrate` (1.x span only) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target |
-            | `kmcp` | `${{ env.KMCP_VERSION }}` | `go/go.mod` require |
+            | `kmcp` | `${{ env.KMCP_VERSION }}` | `go/go.mod` require (what kagent bundles) |
+            | `kmcp-latest` | `${{ env.KMCP_LATEST }}` | kmcp's latest release (what the kmcp guides show) |
             | `kagent-tools` | `${{ env.KAGENT_TOOLS_VERSION }}` | `helm/kagent/Chart-template.yaml` |
             | `max-kube` (both committed copies) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
             | `kagent` (1.x span only) | `${{ env.KAGENT_VERSION }}` | the release tag this run documents |
