@@ -1,6 +1,6 @@
 ---
 title: kmcp completion bash
-description: Generate the autocompletion script for bash
+description: Generate the autocompletion script for bash.
 weight: 40
 ---
 

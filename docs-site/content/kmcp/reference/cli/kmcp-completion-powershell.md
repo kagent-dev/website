@@ -1,6 +1,6 @@
 ---
 title: kmcp completion powershell
-description: Generate the autocompletion script for powershell
+description: Generate the autocompletion script for powershell.
 weight: 60
 ---
 

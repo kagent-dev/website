@@ -30,7 +30,7 @@ AgentTemplate defines portable agent behavior.
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  |  |
+| `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  | **Required** <br /> |
 | `status` _[AgentTemplateStatus](#agenttemplatestatus)_ |  |  |  |
 
 #### AgentTemplateConfigMapKeyReference
@@ -42,8 +42,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br /> |
-| `key` _string_ |  |  | MinLength: 1 <br /> |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 
 #### AgentTemplateHarnessStatus
 
@@ -54,8 +54,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `harness` _string_ | Harness names a same-namespace Harness whose admission selector matches<br />this AgentTemplate. |  | MinLength: 1 <br /> |
-| `desiredRevision` _string_ |  |  | MinLength: 1 <br /> |
+| `harness` _string_ | Harness names a same-namespace Harness whose admission selector matches<br />this AgentTemplate. |  | MinLength: 1 <br />**Required** <br /> |
+| `desiredRevision` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `latestSuccessfulRevision` _string_ |  |  | MinLength: 1 <br /> |
 | `warnings` _string array_ | Warnings reports non-blocking compatibility decisions made while compiling<br />this AgentTemplate for the Harness. |  | MaxItems: 100 <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
@@ -69,7 +69,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br /> |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `alias` _string_ | Alias is the name used by include. The ConfigMap name is used when omitted. |  | MinLength: 1 <br /> |
 
 #### AgentTemplatePromptTemplateSpec
@@ -92,8 +92,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br /> |
-| `source` _[ArtifactSource](#artifactsource)_ |  |  |  |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `source` _[ArtifactSource](#artifactsource)_ |  |  | **Required** <br /> |
 
 #### AgentTemplateSpec
 
@@ -134,9 +134,9 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br /> |
-| `description` _string_ | Description tells the parent when to route work to this binding. |  | MinLength: 1 <br /> |
-| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  |  |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `description` _string_ | Description tells the parent when to route work to this binding. |  | MinLength: 1 <br />**Required** <br /> |
+| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  | **Required** <br /> |
 | `isolation` _[AgentToolIsolation](#agenttoolisolation)_ |  | Shared | Enum: [Shared Dedicated] <br /> |
 
 #### AgentToolIsolation
@@ -194,8 +194,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `projectID` _string_ | The project ID |  |  |
-| `location` _string_ | The project location |  |  |
+| `projectID` _string_ | The project ID |  | **Required** <br /> |
+| `location` _string_ | The project location |  | **Required** <br /> |
 | `temperature` _string_ | Temperature |  |  |
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `topK` _string_ | Top-k sampling parameter |  |  |
@@ -226,8 +226,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `azureEndpoint` _string_ | Endpoint for the Azure OpenAI API |  |  |
-| `apiVersion` _string_ | API version for the Azure OpenAI API |  |  |
+| `azureEndpoint` _string_ | Endpoint for the Azure OpenAI API |  | **Required** <br /> |
+| `apiVersion` _string_ | API version for the Azure OpenAI API |  | **Required** <br /> |
 | `azureDeployment` _string_ | Deployment name for the Azure OpenAI API |  |  |
 | `azureAdToken` _string_ | Azure AD token for authentication |  |  |
 | `temperature` _string_ | Temperature for sampling |  |  |
@@ -249,8 +249,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `projectID` _string_ | The project ID |  |  |
-| `location` _string_ | The project location |  |  |
+| `projectID` _string_ | The project ID |  | **Required** <br /> |
+| `location` _string_ | The project location |  | **Required** <br /> |
 | `temperature` _string_ | Temperature |  |  |
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `topK` _string_ | Top-k sampling parameter |  |  |
@@ -265,10 +265,10 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  |  |
+| `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  | **Required** <br /> |
 | `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
-| `promptCaching` _boolean_ | PromptCaching enables Bedrock prompt caching by appending a CachePoint<br />block at the end of the Converse request's `system` content array and<br />the end of the `toolConfig.tools` array. Bedrock will cache the prefix up to and<br />including those cache points across requests in the same region for<br />roughly 5 minutes after first use, billing the cached portion at a<br />reduced rate on cache hits.<br /><br />Recommended for tool-using agents that make many Converse calls per<br />task with a stable system prompt and tool set — the per-call input<br />token count can drop by 70-90% on hit. Has no effect on models that<br />don't support caching; the marker is ignored by Bedrock for those.<br /><br />See https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html<br />for the current list of supported models and minimum prefix sizes. | false |  |
-| `cacheTTL` _string_ | CacheTTL controls how long Bedrock retains a cached prefix when<br />PromptCaching is enabled. Only meaningful when PromptCaching is true.<br /><br />  - "5m" (default): Bedrock's standard 5-minute sliding cache. Each cache<br />    hit refreshes the window. Supported by all prompt-caching models.<br />  - "1h": extended-TTL caching, useful for tasks whose Converse calls are<br />    spaced more than 5 minutes apart.<br /><br />NOTE: "1h" is NOT strictly better than "5m". Extended-TTL cache writes are<br />billed at a higher per-token rate than 5-minute writes, and 1h is supported<br />on a narrower set of models. Only choose "1h" when calls are spaced far<br />enough apart that a 5-minute cache would expire between them; otherwise the<br />higher write cost is wasted. See the AWS prompt-caching docs above. | 5m | Enum: [5m 1h] <br /> |
+| `promptCaching` _boolean_ | PromptCaching enables Bedrock prompt caching by appending a CachePoint<br />block at the end of the Converse request's `system` content array and<br />the end of the `toolConfig.tools` array. Bedrock will cache the prefix up to and<br />including those cache points across requests in the same region for<br />roughly 5 minutes after first use, billing the cached portion at a<br />reduced rate on cache hits.<br />Recommended for tool-using agents that make many Converse calls per<br />task with a stable system prompt and tool set — the per-call input<br />token count can drop by 70-90% on hit. Has no effect on models that<br />don't support caching; the marker is ignored by Bedrock for those.<br />See https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html<br />for the current list of supported models and minimum prefix sizes. | false |  |
+| `cacheTTL` _string_ | CacheTTL controls how long Bedrock retains a cached prefix when<br />PromptCaching is enabled. Only meaningful when PromptCaching is true.<br />  - "5m" (default): Bedrock's standard 5-minute sliding cache. Each cache<br />    hit refreshes the window. Supported by all prompt-caching models.<br />  - "1h": extended-TTL caching, useful for tasks whose Converse calls are<br />    spaced more than 5 minutes apart.<br />NOTE: "1h" is NOT strictly better than "5m". Extended-TTL cache writes are<br />billed at a higher per-token rate than 5-minute writes, and 1h is supported<br />on a narrower set of models. Only choose "1h" when calls are spaced far<br />enough apart that a 5-minute cache would expire between them; otherwise the<br />higher write cost is wasted. See the AWS prompt-caching docs above. | 5m | Enum: [5m 1h] <br /> |
 | `guardrail` _[BedrockGuardrailConfig](#bedrockguardrailconfig)_ |  |  |  |
 | `readTimeout` _integer_ | ReadTimeout is the Bedrock HTTP client read timeout in seconds, applied by<br />both the Python and Go ADK runtimes. Raise this for agents that make long<br />Converse calls (large tool-augmented turns, extended reasoning). On the<br />Python ADK it overrides botocore's ~60s read timeout, which otherwise<br />aborts long completions with a ReadTimeoutError; on the Go ADK it bounds<br />the whole Converse request (default 30m). When unset, each runtime's<br />default is used. |  | Minimum: 1 <br /> |
 | `connectTimeout` _integer_ | ConnectTimeout is the Bedrock HTTP client connection-establishment timeout<br />in seconds, applied by both the Python and Go ADK runtimes. It bounds<br />connection setup only, not the response read. When unset, each runtime's<br />default is used (Python ADK: botocore; Go ADK: net dialer). |  | Minimum: 1 <br /> |
@@ -280,8 +280,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `identifier` _string_ | Identifier is the guardrail ID or full ARN. AWS accepts either a bare<br />guardrail ID or an arn:aws:bedrock:...:guardrail/... ARN, so the value is<br />only length-bounded here (AWS caps guardrailIdentifier at 2048 chars). |  | MaxLength: 2048 <br />MinLength: 1 <br /> |
-| `version` _string_ | Version is the guardrail version: a numeric version (e.g. "1") or "DRAFT". |  | MaxLength: 8 <br />MinLength: 1 <br /> |
+| `identifier` _string_ | Identifier is the guardrail ID or full ARN. AWS accepts either a bare<br />guardrail ID or an arn:aws:bedrock:...:guardrail/... ARN, so the value is<br />only length-bounded here (AWS caps guardrailIdentifier at 2048 chars). |  | MaxLength: 2048 <br />MinLength: 1 <br />**Required** <br /> |
+| `version` _string_ | Version is the guardrail version: a numeric version (e.g. "1") or "DRAFT". |  | MaxLength: 8 <br />MinLength: 1 <br />**Required** <br /> |
 | `trace` _string_ |  | disabled | Enum: [disabled enabled enabled_full] <br /> |
 
 #### BucketArtifact
@@ -293,7 +293,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `s3` _[S3Object](#s3object)_ |  |  |  |
+| `s3` _[S3Object](#s3object)_ |  |  | **Required** <br /> |
 
 #### ClaudeHarness
 
@@ -339,8 +339,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `endpoint` _string_ | Endpoint is the Foundry or Azure AI Services account endpoint<br />(e.g., https://my-account.cognitiveservices.azure.com/).<br />Mutually exclusive with EndpointFrom. |  |  |
-| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br /><br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
-| `deployment` _string_ | Deployment is the Foundry model deployment name. |  |  |
+| `endpointFrom` _[ConfigMapKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#configmapkeyselector-v1-core)_ | EndpointFrom resolves the Foundry endpoint from a ConfigMap key, such as<br />one written by Azure Service Operator. Mutually exclusive with Endpoint.<br />The selector's optional flag only controls how a missing key is handled: when<br />set to true, the missing key is ignored while reading the ConfigMap, but a<br />Foundry endpoint must always be supplied, so an unresolved endpointFrom still<br />leaves the model unusable and the agent fails to start. |  |  |
+| `deployment` _string_ | Deployment is the Foundry model deployment name. |  | **Required** <br /> |
 | `apiVersion` _string_ | APIVersion is the Foundry OpenAI-compatible data-plane API version.<br />Ignored when APIFormat is Anthropic (the Messages surface is versioned via<br />the anthropic-version header instead). | 2024-10-21 |  |
 | `apiFormat` _[FoundryAPIFormat](#foundryapiformat)_ | APIFormat selects the Foundry API format: "OpenAI" (default, chat<br />completions) or "Anthropic" (Claude models served over the Anthropic<br />Messages API). | OpenAI | Enum: [OpenAI Anthropic] <br /> |
 
@@ -373,7 +373,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `audience` _string_ | Audience is the token exchange audience URL (the GDC inference gateway base URL) |  |  |
+| `audience` _string_ | Audience is the token exchange audience URL (the GDC inference gateway base URL) |  | **Required** <br /> |
 
 #### GeminiConfig
 
@@ -395,8 +395,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `projectID` _string_ | The project ID |  |  |
-| `location` _string_ | The project location |  |  |
+| `projectID` _string_ | The project ID |  | **Required** <br /> |
+| `location` _string_ | The project location |  | **Required** <br /> |
 | `temperature` _string_ | Temperature |  |  |
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `topK` _string_ | Top-k sampling parameter |  |  |
@@ -414,8 +414,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `url` _string_ |  |  | MinLength: 1 <br />Pattern: `^https?://[^[:space:]]+$` <br /> |
-| `commit` _string_ |  |  | Pattern: `^([0-9a-fA-F]\{40\}\|[0-9a-fA-F]\{64\})$` <br /> |
+| `url` _string_ |  |  | MinLength: 1 <br />Pattern: `^https?://[^[:space:]]+$` <br />**Required** <br /> |
+| `commit` _string_ |  |  | Pattern: `^([0-9a-fA-F]\{40\}\|[0-9a-fA-F]\{64\})$` <br />**Required** <br /> |
 
 #### Harness
 
@@ -428,7 +428,7 @@ Harness defines a reusable agent runtime and infrastructure policy.
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[HarnessSpec](#harnessspec)_ |  |  |  |
+| `spec` _[HarnessSpec](#harnessspec)_ |  |  | **Required** <br /> |
 | `status` _[HarnessStatus](#harnessstatus)_ |  |  |  |
 
 #### HarnessAgentTemplateAdmission
@@ -441,7 +441,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#labelselector-v1-meta)_ | Selector selects admitted AgentTemplates in the Harness namespace. |  |  |
+| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#labelselector-v1-meta)_ | Selector selects admitted AgentTemplates in the Harness namespace. |  | **Required** <br /> |
 
 #### HarnessCapabilities
 
@@ -453,19 +453,19 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `version` _string_ | Version identifies the controller capability catalog entry. |  | MinLength: 1 <br /> |
-| `nativeAgentTools` _boolean_ |  |  |  |
-| `maxNativeAgentDepth` _integer_ |  |  | Minimum: 0 <br /> |
-| `dedicatedAgentTools` _boolean_ |  |  |  |
-| `mcpInjection` _boolean_ |  |  |  |
-| `streaming` _boolean_ |  |  |  |
-| `interruption` _boolean_ |  |  |  |
-| `inputRequired` _boolean_ |  |  |  |
-| `approvals` _boolean_ |  |  |  |
+| `version` _string_ | Version identifies the controller capability catalog entry. |  | MinLength: 1 <br />**Required** <br /> |
+| `nativeAgentTools` _boolean_ |  |  | **Required** <br /> |
+| `maxNativeAgentDepth` _integer_ |  |  | Minimum: 0 <br />**Required** <br /> |
+| `dedicatedAgentTools` _boolean_ |  |  | **Required** <br /> |
+| `mcpInjection` _boolean_ |  |  | **Required** <br /> |
+| `streaming` _boolean_ |  |  | **Required** <br /> |
+| `interruption` _boolean_ |  |  | **Required** <br /> |
+| `inputRequired` _boolean_ |  |  | **Required** <br /> |
+| `approvals` _boolean_ |  |  | **Required** <br /> |
 | `inputModalities` _string array_ |  |  | MaxItems: 16 <br /> |
 | `outputModalities` _string array_ |  |  | MaxItems: 16 <br /> |
-| `resume` _boolean_ |  |  |  |
-| `checkpoint` _boolean_ |  |  |  |
+| `resume` _boolean_ |  |  | **Required** <br /> |
+| `checkpoint` _boolean_ |  |  | **Required** <br /> |
 
 #### HarnessEnvVar
 
@@ -476,7 +476,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br /> |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `value` _string_ | Value is a literal value, including an empty string. |  |  |
 | `credentialRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | CredentialRef references a key in a same-namespace Secret. |  |  |
 
@@ -489,7 +489,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `location` _string_ | Location is the snapshot storage location used by Substrate. |  | Pattern: `^[^[:space:]]+$` <br /> |
+| `location` _string_ | Location is the snapshot storage location used by Substrate. |  | Pattern: `^[^[:space:]]+$` <br />**Required** <br /> |
 
 #### HarnessSpec
 
@@ -504,9 +504,9 @@ _Appears in:_
 | `codex` _[CodexHarness](#codexharness)_ |  |  |  |
 | `claude` _[ClaudeHarness](#claudeharness)_ |  |  |  |
 | `byo` _[BYOHarness](#byoharness)_ |  |  |  |
-| `workload` _[HarnessWorkload](#harnessworkload)_ |  |  |  |
+| `workload` _[HarnessWorkload](#harnessworkload)_ |  |  | **Required** <br /> |
 | `env` _[HarnessEnvVar](#harnessenvvar) array_ |  |  | MaxItems: 100 <br /> |
-| `substrate` _[HarnessSubstratePolicy](#harnesssubstratepolicy)_ |  |  |  |
+| `substrate` _[HarnessSubstratePolicy](#harnesssubstratepolicy)_ |  |  | **Required** <br /> |
 | `allowedAgentTemplates` _[HarnessAgentTemplateAdmission](#harnessagenttemplateadmission)_ | AllowedAgentTemplates selects AgentTemplates this Harness admits.<br />When omitted, the Harness admits none. |  |  |
 
 #### HarnessStatus
@@ -531,8 +531,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `workerPoolRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | WorkerPoolRef references a WorkerPool in the Harness namespace. |  |  |
-| `snapshotPolicy` _[HarnessSnapshotPolicy](#harnesssnapshotpolicy)_ | SnapshotPolicy configures runtime snapshot storage. |  |  |
+| `workerPoolRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | WorkerPoolRef references a WorkerPool in the Harness namespace. |  | **Required** <br /> |
+| `snapshotPolicy` _[HarnessSnapshotPolicy](#harnesssnapshotpolicy)_ | SnapshotPolicy configures runtime snapshot storage. |  | **Required** <br /> |
 
 #### HarnessWorkload
 
@@ -543,7 +543,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `image` _string_ | Image is an OCI image reference pinned by sha256 digest. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br /> |
+| `image` _string_ | Image is an OCI image reference pinned by sha256 digest. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br />**Required** <br /> |
 | `command` _string array_ | Command overrides the image entrypoint when set. |  | MaxItems: 32 <br /> |
 | `args` _string array_ | Args overrides the image command arguments when set. |  | MaxItems: 64 <br /> |
 
@@ -557,6 +557,27 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `memory` _[KagentHarnessMemory](#kagentharnessmemory)_ | Memory enables long-term memory for agents using this Harness. |  |  |
+| `compaction` _[KagentHarnessCompaction](#kagentharnesscompaction)_ | Compaction summarizes older session events so the prompt stays small as<br />a conversation grows. Omitted leaves the history uncompacted. |  |  |
+
+#### KagentHarnessCompaction
+
+KagentHarnessCompaction selects the compaction strategies and the model that
+writes the summaries. The sliding window (compactionInterval, overlapSize)
+summarizes each group of completed invocations; tail retention
+(tokenThreshold, eventRetentionSize) bounds the prompt by summarizing
+everything but the most recent events once the prompt grows past a token
+count. At least one strategy must be configured.
+
+_Appears in:_
+- [KagentHarness](#kagentharness)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `compactionInterval` _integer_ | CompactionInterval is the number of new user-initiated invocations that,<br />once fully represented in the session, triggers a sliding-window<br />compaction of those invocations. |  | Minimum: 1 <br /> |
+| `overlapSize` _integer_ | OverlapSize is the number of already-compacted invocations pulled back<br />into the next sliding window so consecutive summaries overlap. |  | Minimum: 0 <br /> |
+| `tokenThreshold` _integer_ | TokenThreshold is the prompt token count at which tail-retention<br />compaction summarizes the history before the next model call. |  | Minimum: 1 <br /> |
+| `eventRetentionSize` _integer_ | EventRetentionSize is the number of most recent events that tail<br />retention keeps uncompacted. |  | Minimum: 1 <br /> |
+| `summarizer` _[KagentHarnessSummarizer](#kagentharnesssummarizer)_ | Summarizer selects the model and prompt that write the summaries.<br />Omitted summarizes with the agent's own model and the runtime's default<br />prompt. |  |  |
 
 #### KagentHarnessMemory
 
@@ -567,8 +588,20 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfigRef references the embedding ModelConfig in the Harness namespace. |  |  |
+| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfigRef references the embedding ModelConfig in the Harness namespace. |  | **Required** <br /> |
 | `ttlDays` _integer_ | TTLDays controls how many days a stored memory entry remains valid. |  | Minimum: 1 <br /> |
+
+#### KagentHarnessSummarizer
+
+KagentHarnessSummarizer configures the model that summarizes compacted events.
+
+_Appears in:_
+- [KagentHarnessCompaction](#kagentharnesscompaction)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfigRef references the ModelConfig in the Harness namespace that<br />writes the summaries. Omitted uses the agent's own model. |  |  |
+| `promptTemplate` _string_ | PromptTemplate replaces the runtime's default summarization prompt. It<br />must contain \{conversation_history\}, which the runtime replaces with the<br />rendered events. |  | MinLength: 1 <br /> |
 
 #### MCPTool
 
@@ -577,8 +610,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  |  |
-| `description` _string_ |  |  |  |
+| `name` _string_ |  |  | **Required** <br /> |
+| `description` _string_ |  |  | **Required** <br /> |
 
 #### MCPToolBinding
 
@@ -589,8 +622,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `server` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#typedlocalobjectreference-v1-core)_ |  |  |  |
-| `tools` _string array_ | Tools optionally limits which server tools are exposed. An omitted or empty<br />list exposes every tool. Harnesses that cannot enforce a partial selection<br />may expose the whole server and report a warning. |  | MaxItems: 50 <br /> |
+| `server` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#typedlocalobjectreference-v1-core)_ |  |  | **Required** <br /> |
+| `tools` _string array_ | Tools optionally limits which server tools are exposed. An omitted or empty<br />list exposes every tool. Harnesses that cannot enforce a partial selection<br />may expose the whole server and report a warning. |  | MaxItems: 50 <br />items:MinLength: 1 <br /> |
 | `requireApproval` _boolean_ | RequireApproval pauses before each invocation of a tool exposed by this<br />binding. It applies to the selected tools, or to every server tool when<br />Tools is omitted or empty. |  |  |
 
 #### ModelConfig
@@ -616,7 +649,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `model` _string_ |  |  |  |
+| `model` _string_ |  |  | **Required** <br /> |
 | `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig.<br />For the SAPAICore provider, the secret must contain two keys: "client_id" and "client_secret"<br />(the OAuth2 client credentials for SAP AI Core). The apiKeySecretKey field is not used for SAPAICore. |  |  |
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
 | `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
@@ -697,7 +730,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry] <br /> |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry] <br />**Required** <br /> |
 | `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
 | `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
 
@@ -793,8 +826,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `source` _[ArtifactSource](#artifactsource)_ |  |  |  |
-| `skills` _string array_ | An empty selection enables nothing. |  | MaxItems: 50 <br /> |
+| `source` _[ArtifactSource](#artifactsource)_ |  |  | **Required** <br /> |
+| `skills` _string array_ | An empty selection enables nothing. |  | MaxItems: 50 <br />items:MinLength: 1 <br /> |
 
 #### RemoteMCPServer
 
@@ -834,15 +867,15 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `description` _string_ |  |  |  |
+| `description` _string_ |  |  | **Required** <br /> |
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
-| `url` _string_ |  |  | MinLength: 1 <br /> |
+| `url` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `headersFrom` _[ValueRef](#valueref) array_ |  |  |  |
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  | 30s |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
-| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment<br /><br />A cross-namespace-permitting value (from: All or from: Selector) is<br />mutually exclusive with spec.tls.caCertSecretRef (enforced by a spec-level<br />XValidation rule): a pinned CA Secret is mounted onto the consuming agent's<br />pod by bare name and Kubernetes resolves it in the agent's namespace, not<br />this RemoteMCPServer's, so a CA-pinning RemoteMCPServer cannot be referenced<br />cross-namespace. from: Same (the default) is always allowed. |  |  |
-| `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />Use this for HTTPS upstreams that present a certificate the agent's<br />system trust store does not include (corporate CA, self-signed cert<br />on a test fixture, internal MCP gateway). Reuses the same TLSConfig<br />type as ModelConfig.spec.tls — disableVerify turns off certificate<br />validation entirely, caCertSecretRef + caCertSecretKey point at a<br />PEM bundle Secret in the same namespace, and disableSystemCAs<br />trusts only the named bundle.<br /><br />Note one asymmetry with ModelConfig: a spec-level XValidation rule<br />on RemoteMCPServer rejects spec.tls when spec.url has the http://<br />scheme (a TLS opinion contradicts a plaintext URL). ModelConfig has<br />no equivalent rule, so a TLS block can sit alongside any baseUrl. |  |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment<br />A cross-namespace-permitting value (from: All or from: Selector) is<br />mutually exclusive with spec.tls.caCertSecretRef (enforced by a spec-level<br />XValidation rule): a pinned CA Secret is mounted onto the consuming agent's<br />pod by bare name and Kubernetes resolves it in the agent's namespace, not<br />this RemoteMCPServer's, so a CA-pinning RemoteMCPServer cannot be referenced<br />cross-namespace. from: Same (the default) is always allowed. |  |  |
+| `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />Use this for HTTPS upstreams that present a certificate the agent's<br />system trust store does not include (corporate CA, self-signed cert<br />on a test fixture, internal MCP gateway). Reuses the same TLSConfig<br />type as ModelConfig.spec.tls — disableVerify turns off certificate<br />validation entirely, caCertSecretRef + caCertSecretKey point at a<br />PEM bundle Secret in the same namespace, and disableSystemCAs<br />trusts only the named bundle.<br />Note one asymmetry with ModelConfig: a spec-level XValidation rule<br />on RemoteMCPServer rejects spec.tls when spec.url has the http://<br />scheme (a TLS opinion contradicts a plaintext URL). ModelConfig has<br />no equivalent rule, so a TLS block can sit alongside any baseUrl. |  |  |
 
 #### RemoteMCPServerStatus
 
@@ -867,10 +900,10 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `endpoint` _string_ | Endpoint is the HTTP(S) endpoint of an AWS or S3-compatible service. |  | Pattern: `^https?://[^[:space:]]+$` <br /> |
-| `bucket` _string_ |  |  | MinLength: 1 <br /> |
-| `key` _string_ |  |  | MinLength: 1 <br /> |
-| `versionId` _string_ |  |  | MinLength: 1 <br /> |
+| `endpoint` _string_ | Endpoint is the HTTP(S) endpoint of an AWS or S3-compatible service. |  | Pattern: `^https?://[^[:space:]]+$` <br />**Required** <br /> |
+| `bucket` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `versionId` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `region` _string_ | Region is used for request signing when required by the service. |  |  |
 
 #### SAPAICoreConfig
@@ -882,7 +915,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `baseUrl` _string_ | Base URL for the SAP AI Core API (e.g., https://api.ai.prod.eu-central-1.aws.ml.hana.ondemand.com) |  |  |
+| `baseUrl` _string_ | Base URL for the SAP AI Core API (e.g., https://api.ai.prod.eu-central-1.aws.ml.hana.ondemand.com) |  | **Required** <br /> |
 | `resourceGroup` _string_ | Resource group in SAP AI Core | default |  |
 | `authUrl` _string_ | OAuth2 token endpoint URL (e.g., https://tenant.authentication.eu10.hana.ondemand.com) |  |  |
 
@@ -896,7 +929,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ | Name is the name of the secret in the same namespace as the ModelProviderConfig. |  |  |
+| `name` _string_ | Name is the name of the secret in the same namespace as the ModelProviderConfig. |  | **Required** <br /> |
 
 #### TLSConfig
 
@@ -925,7 +958,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[TokenExchangeType](#tokenexchangetype)_ |  |  | Enum: [GDCHServiceAccount] <br /> |
+| `type` _[TokenExchangeType](#tokenexchangetype)_ |  |  | Enum: [GDCHServiceAccount] <br />**Required** <br /> |
 | `gdchServiceAccount` _[GDCHServiceAccountConfig](#gdchserviceaccountconfig)_ |  |  |  |
 
 #### TokenExchangeType
@@ -965,7 +998,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  |  |
+| `name` _string_ |  |  | **Required** <br /> |
 | `value` _string_ |  |  |  |
 | `valueFrom` _[ValueSource](#valuesource)_ |  |  |  |
 
@@ -978,9 +1011,9 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ValueSourceType](#valuesourcetype)_ |  |  | Enum: [ConfigMap Secret] <br /> |
-| `name` _string_ | The name of the ConfigMap or Secret. |  | MaxLength: 253 <br /> |
-| `key` _string_ | The key of the ConfigMap or Secret. |  | MaxLength: 253 <br /> |
+| `type` _[ValueSourceType](#valuesourcetype)_ |  |  | Enum: [ConfigMap Secret] <br />**Required** <br /> |
+| `name` _string_ | The name of the ConfigMap or Secret. |  | MaxLength: 253 <br />**Required** <br /> |
+| `key` _string_ | The key of the ConfigMap or Secret. |  | MaxLength: 253 <br />**Required** <br /> |
 
 #### ValueSourceType
 

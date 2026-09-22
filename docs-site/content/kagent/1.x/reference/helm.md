@@ -12,7 +12,7 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 0.10.0-rc1 |
+| file://../tools/grafana-mcp | grafana-mcp |  |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
@@ -39,6 +39,19 @@ A Helm chart for kagent, built with Google ADK
 | controller.loglevel | string | `"info"` |  |
 | controller.mcpEgressPlaintext | bool | `false` | Rewrite RemoteMCPServer tool URLs and the controller's tool-discovery dial from `https://host[:port]` to `http://host:<port-or-443>` so MCP traffic egresses in plaintext to a proxy that originates TLS upstream off by default. |
 | controller.metrics | object | disabled | Prometheus-style /metrics endpoint for the controller manager. When enabled, provisions a dedicated metrics Service plus the ClusterRoles required for authenticated scrapes. Bind `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant scrape access. Use `bindAddress` for any port change: the Service `targetPort` and the pod `containerPort` are derived from it at template time, so overriding `METRICS_BIND_ADDRESS` via `controller.env` shifts only the runtime listener and leaves the rendered Service pointing at the chart-time port. Setting `bindAddress: "0"` (or empty) is treated as a disable signal — equivalent to `enabled: false` — to keep faith with the controller binary's documented contract for `--metrics-bind-address`. |
+| controller.metrics.serviceMonitor | object | disabled | Prometheus Operator `ServiceMonitor` for the metrics `Service`. Requires `controller.metrics.enabled` and the `monitoring.coreos.com/v1` CRDs; the chart only renders it when the target cluster serves that API, so enabling it on a cluster without the Prometheus Operator is a no-op rather than a failed install (`helm template` needs `--api-versions monitoring.coreos.com/v1`). The endpoint follows `secureServing`: port name, scheme, bearer token and TLS settings are all derived from it, so flipping `secureServing` alone keeps the scrape working. With `secureServing` enabled the scrape is also authorized only once `<fullname>-metrics-reader` is bound to the Prometheus ServiceAccount; set `prometheusServiceAccount` below and the chart renders that binding for you. |
+| controller.metrics.serviceMonitor.annotations | object | `{}` | Annotations for the `ServiceMonitor`. |
+| controller.metrics.serviceMonitor.bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | Token presented to the authenticated metrics endpoint. Only used when `secureServing` is enabled; set to `""` to omit it. |
+| controller.metrics.serviceMonitor.honorLabels | bool | `false` | Keep the scraped labels when they collide with server-side ones. |
+| controller.metrics.serviceMonitor.interval | string | `""` | Scrape interval. Prometheus' global default when empty. |
+| controller.metrics.serviceMonitor.labels | object | `{}` | Extra labels for the `ServiceMonitor` (merged with the chart labels). Set whatever label your Prometheus `serviceMonitorSelector` matches on. |
+| controller.metrics.serviceMonitor.metricRelabelings | list | `[]` | `metricRelabelings` applied to the scraped samples. |
+| controller.metrics.serviceMonitor.namespace | string | the release namespace | Namespace to create the `ServiceMonitor` in. The scrape target stays the release namespace either way. |
+| controller.metrics.serviceMonitor.prometheusServiceAccount | object | `{"name":"","namespace":""}` | ServiceAccount Prometheus scrapes with. When `name` is set and `secureServing` is enabled, the chart binds `<fullname>-metrics-reader` to it with a `ClusterRoleBinding` so the scrape does not fail with 403. Leave `name` empty to manage the binding yourself. |
+| controller.metrics.serviceMonitor.prometheusServiceAccount.namespace | string | `serviceMonitor.namespace`, then the release namespace | Namespace of the Prometheus ServiceAccount. |
+| controller.metrics.serviceMonitor.relabelings | list | `[]` | `relabelings` applied to the scrape targets. |
+| controller.metrics.serviceMonitor.scrapeTimeout | string | `""` | Scrape timeout. Prometheus' global default when empty. |
+| controller.metrics.serviceMonitor.tlsConfig | object | insecureSkipVerify: true | `tlsConfig` for the scrape. Only used when `secureServing` is enabled, where the controller serves a self-signed certificate. |
 | controller.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.pdb | object | `{"annotations":{},"enabled":false,"labels":{},"maxUnavailable":1,"minAvailable":null,"unhealthyPodEvictionPolicy":""}` | [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the controller pods. Disabled by default: `controller.replicas` is 1, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, so node drains and cluster upgrades hang indefinitely. Raise `controller.replicas` before switching to `minAvailable`. |
 | controller.pdb.annotations | object | `{}` | Annotations for the controller PodDisruptionBudget. |
@@ -73,11 +86,11 @@ A Helm chart for kagent, built with Google ADK
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
-| database.postgres.bundled | object | `{"affinity":{},"enabled":true,"image":{"name":"postgres","pullPolicy":"IfNotPresent","registry":"docker.io","repository":"library","tag":"18.6-alpine3.23"},"nodeSelector":{},"podLabels":{},"podSecurityContext":{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"storage":"500Mi","storageClassName":"","tolerations":[]}` | Bundled PostgreSQL instance — for development and evaluation only. Not suitable for production. Deployed when enabled is true and url/urlFile are not set. |
+| database.postgres.bundled | object | `{"affinity":{},"enabled":true,"image":{"name":"postgres","pullPolicy":"","registry":"docker.io","repository":"library","tag":"18.6-alpine3.23"},"nodeSelector":{},"podLabels":{},"podSecurityContext":{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"storage":"500Mi","storageClassName":"","tolerations":[]}` | Bundled PostgreSQL instance — for development and evaluation only. Not suitable for production. Deployed when enabled is true and url/urlFile are not set. |
 | database.postgres.bundled.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the bundled PostgreSQL pod. |
 | database.postgres.bundled.enabled | bool | `true` | Set to false to disable the bundled database and provide your own via url or urlFile. |
 | database.postgres.bundled.image.name | string | `"postgres"` | Bundled PostgreSQL image name |
-| database.postgres.bundled.image.pullPolicy | string | `"IfNotPresent"` | Bundled PostgreSQL image pull policy |
+| database.postgres.bundled.image.pullPolicy | string | `""` | Bundled PostgreSQL image pull policy. Empty falls back to the top-level imagePullPolicy, then global.imagePullPolicy, then IfNotPresent. A declared default here would shadow both fallbacks. |
 | database.postgres.bundled.image.registry | string | `"docker.io"` | Bundled PostgreSQL image registry |
 | database.postgres.bundled.image.repository | string | `"library"` | Bundled PostgreSQL image repository (org/namespace) |
 | database.postgres.bundled.image.tag | string | `"18.6-alpine3.23"` | Bundled PostgreSQL image tag |
@@ -96,6 +109,10 @@ A Helm chart for kagent, built with Google ADK
 | database.postgres.vectorEnabled | bool | `false` | Enable the pgvector migration Required to use features that depend on database vector capability. (e.g. long-term memory) Set to true when using an external PostgreSQL that has the pgvector extension installed. |
 | extraObjects | list | [] | Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.:   extraObjects:     - apiVersion: external-secrets.io/v1       kind: ExternalSecret       metadata:         name: '`{{ include "kagent.fullname" . }}`-openai'         namespace: '`{{ .Release.Namespace }}`'       spec:         secretStoreRef:           name: aws-secretsmanager           kind: ClusterSecretStore         target:           name: kagent-openai         data:           - secretKey: OPENAI_API_KEY             remoteRef:               key: prod/kagent/openai               property: api_key |
 | fullnameOverride | string | `""` |  |
+| global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
+| global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
+| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, ui, bundled postgres, grafana-mcp, and substrateWorkerPool.workerImage. The vendored subcharts (kagent-tools, kmcp, substrate) adopt it when their pinned versions bump. |
+| global.watchNamespaces | list | `[]` | Namespace scope for the whole install. A non-empty list replaces ClusterRoles with Roles and scopes the controller's watch. Both derive from this one value, so they cannot disagree. Prefer this value over the per-surface keys. rbac.namespaces overrides it when the key is present. An explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in controller.watchNamespaces is validated: the watch must stay inside the RBAC scope. A watched namespace without a Role is a permanent Forbidden loop at runtime. |
 | grafana-mcp.enabled | bool | `true` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
 | grafana-mcp.grafana.url | string | `"grafana.kagent:3000/api"` |  |
@@ -103,7 +120,7 @@ A Helm chart for kagent, built with Google ADK
 | grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
 | grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
 | grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
-| imagePullPolicy | string | `"IfNotPresent"` |  |
+| imagePullPolicy | string | `""` | Pull policy for all containers. Empty falls back to global.imagePullPolicy, then IfNotPresent. |
 | imagePullSecrets | list | `[]` |  |
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
 | kagent-tools.enabled | bool | `true` |  |
@@ -165,9 +182,12 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.service.portNumber | int | `4180` |  |
 | oauth2-proxy.service.type | string | `"ClusterIP"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
+| otel.captureSensitiveContent | bool | `false` | Include prompts, tool details, and assistant responses in agent telemetry. This may expose sensitive user or model content. |
+| otel.logging.captureRawApiBodies | bool | `false` | Include complete provider API request and response bodies in Claude logs. This is more verbose than captureSensitiveContent. |
 | otel.logging.enabled | bool | `false` |  |
 | otel.logging.exporter.otlp.endpoint | string | `""` |  |
 | otel.logging.exporter.otlp.insecure | bool | `true` |  |
+| otel.logging.exporter.otlp.protocol | string | `"grpc"` |  |
 | otel.logging.exporter.otlp.timeout | int | `15000` |  |
 | otel.tracing.enabled | bool | `false` |  |
 | otel.tracing.exporter.otlp.endpoint | string | `""` |  |
@@ -204,9 +224,11 @@ A Helm chart for kagent, built with Google ADK
 | providers.openAI.model | string | `"gpt-4.1-mini"` |  |
 | providers.openAI.provider | string | `"OpenAI"` |  |
 | proxy.url | string | `""` |  |
-| rbac.namespaces | list | `[]` | Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence). |
+| rbac | object | `{}` |  |
 | registry | string | `"ghcr.io"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
+| substrate.ateApi.extraArgs[0] | string | `"--template-resync-interval=250ms"` |  |
+| substrate.credentialProvider.namespacePolicies | list | `[]` |  |
 | substrate.enabled | bool | `false` |  |
 | substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
 | tag | string | `""` |  |

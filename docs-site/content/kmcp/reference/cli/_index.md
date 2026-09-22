@@ -1,6 +1,6 @@
 ---
 title: CLI docs
-description: Complete reference docs for the kmcp CLI commands
+description: Review the reference docs for the kmcp CLI commands.
 weight: 1
 ---
 
