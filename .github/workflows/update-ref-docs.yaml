@@ -70,6 +70,23 @@ concurrency:
 # provider pages link to crd-ref-docs anchors (#modelconfigspec, #openaiconfig,
 # ...), so keep that renderer and its anchor naming.
 #
+# crd-ref-docs is pinned at v0.2.0, and the floor is not negotiable: Setup Go
+# below asks for 'stable', so every `go run <tool>@<pin>` here is rebuilt
+# against whatever Go the runner has that morning. v0.1.0 depends on
+# golang.org/x/tools v0.19.0, whose internal/tokeninternal carries a
+# compile-time size assertion on go/token.File. Go 1.27 changed that struct, so
+# from 2026-09-22 the build died with "invalid array length -delta * delta"
+# before generating anything. x/tools dropped the file in v0.35.0, which is
+# what v0.2.0 depends on. Do not pin back below v0.2.0.
+#
+# v0.3.0 also builds, and was left on the table on purpose: it appends
+# `Required: {}` / `Optional: {}` to all 244 rows of the Validation column,
+# which Hextra renders as literal braces. All 74 headings are identical across
+# v0.1.0, v0.2.0 and v0.3.0, so the provider-page anchors above survive either
+# choice. The one thing v0.2.0 costs is paragraph breaks inside long Go doc
+# comments -- it collapses blank lines, so <br /><br /> flattens to <br /> in
+# about seven prose-heavy fields.
+#
 # Frontmatter lives in the heredocs below, not in the generated pages: every
 # run overwrites it. Descriptions follow the 1.x convention of an imperative
 # verb and a full sentence.
@@ -516,7 +533,7 @@ jobs:
           cat crd-ref-docs-config.yaml
 
           # Generate API docs
-          go run github.com/elastic/crd-ref-docs@v0.1.0 \
+          go run github.com/elastic/crd-ref-docs@v0.2.0 \
             --source-path="$GITHUB_WORKSPACE/kagent/go/api/v1alpha3/" \
             --renderer=markdown \
             --output-path ./ \
@@ -610,7 +627,7 @@ jobs:
           cat crd-ref-docs-config.yaml
 
           # Generate KMCP API docs
-          go run github.com/elastic/crd-ref-docs@v0.1.0 \
+          go run github.com/elastic/crd-ref-docs@v0.2.0 \
             --source-path="$GITHUB_WORKSPACE/kmcp/api/v1alpha1/" \
             --renderer=markdown \
             --output-path ./ \
