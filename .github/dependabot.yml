@@ -1,0 +1,101 @@
+version: 2
+
+# Replaces Snyk's automatic upgrade PRs. Snyk's `security/snyk` and
+# `license/snyk` checks still run on every PR; only the PR-opening
+# automation moves here. Dependabot commits are authored by
+# dependabot[bot], a Bot-type account, which the DCO app exempts by
+# default -- snyk-bot is a User-type account, so its commits never
+# satisfied DCO.
+#
+# Reviewers come from CODEOWNERS, which already covers this repo.
+
+updates:
+  # GitHub Actions -- keep CI workflows up to date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # npm -- Next.js marketing site at the repo root
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps):"
+    ignore:
+      # Majors (Next.js, React) are migrations, not routine bumps. Raise
+      # them deliberately; minor/patch still flows through the group below.
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # npm -- Hugo docs site toolchain
+  - package-ecosystem: "npm"
+    directory: "/docs-site"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps):"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      docs-site-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # npm -- Playwright screenshot harness
+  - package-ecosystem: "npm"
+    directory: "/docs-site/playwright"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps):"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      playwright-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
