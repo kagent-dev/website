@@ -11,13 +11,10 @@ on:
   repository_dispatch:
     types: [kagent-release]
 
-# There is deliberately NO schedule here. A nightly run can only ever ask "what
-# does kagent look like now", and the answer drifts ahead of what anyone can
-# install. This workflow runs when a release happens and at no other time.
-#
-# The release lives in kagent-dev/kagent, so `on: release` cannot fire in this
-# repo -- kagent has to tell us. Until its tag.yaml sends the dispatch, cut a
-# release and then run this workflow from the Actions tab.
+# There is deliberately NO schedule: a nightly run can only ask what kagent
+# looks like now, which drifts ahead of what anyone can install. The release
+# lives in kagent-dev/kagent, so `on: release` cannot fire here -- kagent has to
+# tell us. Until its tag.yaml sends the dispatch, run this from the Actions tab.
 
 # Queue overlapping runs (e.g. a re-dispatch racing the first) so they don't
 # force-push the same PR branch concurrently.
@@ -42,24 +39,10 @@ concurrency:
 # title and body say so, because that case needs the guides re-tested rather
 # than a routine review.
 #
-# This job generates from a kagent RELEASE TAG, never from main, and that is
-# the whole point of its trigger shape. It ran nightly against main until
-# 2026-09-22, which meant the 1.x reference described code no released kagent
-# contained while the install commands on the same pages pinned an older
-# release. That is not hypothetical: the 2026-09-22 run documented
-# KagentHarnessCompaction and KagentHarnessSummarizer, both added after
-# v1.0.0-alpha1, on pages whose `helm install --version` line said alpha1. The
-# same run moved the Agent Substrate conref to 0.2.0-beta5, which alpha1 does
-# not pin either.
-#
-# So the tag is resolved first and everything follows from it: both checkouts,
-# every version conref, the runtime image digests, and the CLI binaries. A
-# reader who installs the version these pages name gets the tree these pages
-# describe.
-#
-# Retargeted from 0.x to 1.x on 2026-09-11, back when this still tracked main.
-# main dropped go/api/v1alpha2 in kagent 7bf6a6cd (#2696) on 2026-09-04 and
-# now ships v1alpha3, which is what 1.x documents.
+# This job generates from a kagent RELEASE TAG, never from main. It ran nightly
+# against main until 2026-09-22, and the 2026-09-22 run is what that cost:
+# KagentHarnessCompaction and KagentHarnessSummarizer documented on pages whose
+# `helm install --version` line said alpha1, a release neither type exists in.
 #
 # 0.x is FROZEN and is no longer generated here. Its committed pages
 # (0.x/resources/api-ref.md, 0.x/resources/helm.md and 0.x/resources/cli/) all
@@ -277,12 +260,9 @@ jobs:
       # is NOT a source: it is gitignored and generated from Chart-template.yaml
       # by envsubst, so a checkout never carries a useful value.
       #
-      # kagent.md was editorial until 2026-09-22, because `git describe` on main
-      # yields a dev tag and this job ran from main. Generating from a release
-      # tag removes that objection: the tag IS the release the docs describe, so
-      # the conref is now written from it like every other value here. Keeping
-      # it manual under the new trigger would only let the install command drift
-      # away from the reference pages regenerated beside it.
+      # kagent.md was editorial while this ran from main, where `git describe`
+      # only yields a dev tag. A release tag IS the release the docs describe,
+      # so it is written from that like everything else here.
       #
       # Also not automated: jaeger / loki / tempo / otel-collector are pinned
       # nowhere in kagent, so the only source is "latest upstream", which would
@@ -412,13 +392,11 @@ jobs:
 
             digest=$(ghcr_digest "$repo" "$IMAGE_TAG" || true)
 
-            # An unresolved digest is NOT fatal. A GitHub release can be
-            # published before its images finish pushing, so a run triggered by
-            # that release can legitimately arrive early. Writing an empty
+            # NOT fatal: a release can be published before its images finish
+            # pushing, so a run triggered by it can arrive early. An empty
             # conref would blank a `workload.image` line on four pages, so the
-            # conref is left alone and the miss is surfaced in the PR body
-            # instead -- same shape as the kmcp cross-check above. Re-dispatch
-            # the workflow once the images land.
+            # value is left alone and the miss goes in the PR body instead.
+            # Re-dispatch once the images land.
             if ! printf '%s' "$digest" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
               echo "::warning::Could not resolve a digest for ${repo}:${IMAGE_TAG}. Leaving its conref unchanged."
               UNRESOLVED="${UNRESOLVED}\`${repo}:${IMAGE_TAG}\` "
@@ -446,25 +424,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          # kagent's pinned kmcp and kmcp's own latest release are two different
-          # facts, and each has pages that need it:
-          #
-          #   versions/kmcp.md        what kagent bundles, from go/go.mod.
-          #                           Read by the kagent 1.x support matrix,
-          #                           which describes the release kagent ships.
-          #   versions/kmcp-latest.md kmcp's newest release. Read by the
-          #                           standalone kmcp quickstart and install
-          #                           guide, both of which render it inside
-          #                           sample CLI output reading "No version
-          #                           specified, using latest: v...". That line
-          #                           is a claim about what kmcp resolves to, so
-          #                           kagent's pin would be wrong there.
-          #
-          # They were one file until 2026-09-22, carrying the kagent-pinned
-          # value, and agreed only because kagent happened to pin kmcp's newest
-          # release. kmcp 0.4.0 broke the tie: kagent alpha1 and alpha2 both pin
-          # 0.3.0. Splitting is what the single-file version of this step
-          # already recommended doing if the two ever diverged.
+          # Two different facts, split into two conrefs in 2026-09-22 when kmcp
+          # 0.4.0 broke the tie that had made them look like one (kagent alpha1
+          # and alpha2 both pin 0.3.0). kmcp.md is what kagent bundles, for the
+          # 1.x support matrix. kmcp-latest.md is kmcp's newest release, for the
+          # standalone kmcp guides, which render it inside sample CLI output
+          # reading "using latest: v..." -- a claim kagent's pin would falsify.
           KMCP_LATEST=$(gh release view \
             --repo "${{ github.repository_owner }}/kmcp" \
             --json tagName -q .tagName 2>/dev/null | sed 's/^v//' || true)
