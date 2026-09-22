@@ -1,6 +1,6 @@
 ---
 title: kmcp install
-description: Install the KMCP controller on a Kubernetes cluster
+description: Install the KMCP controller on a Kubernetes cluster.
 weight: 150
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: kmcp init go
-description: Initialize a new Go MCP server project
+description: Initialize a new Go MCP server project.
 weight: 110
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: kmcp build
-description: Build MCP server as a Docker image
+description: Build MCP server as a Docker image.
 weight: 20
 ---
 

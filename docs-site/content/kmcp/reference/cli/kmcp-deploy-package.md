@@ -1,6 +1,6 @@
 ---
 title: kmcp deploy package
-description: Deploy an MCP server using a package manager (npx, uvx)
+description: Deploy an MCP server using a package manager (npx, uvx).
 weight: 90
 ---
 

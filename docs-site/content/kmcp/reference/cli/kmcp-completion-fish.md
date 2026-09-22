@@ -1,6 +1,6 @@
 ---
 title: kmcp completion fish
-description: Generate the autocompletion script for fish
+description: Generate the autocompletion script for fish.
 weight: 50
 ---
 

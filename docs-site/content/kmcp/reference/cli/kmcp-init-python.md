@@ -1,6 +1,6 @@
 ---
 title: kmcp init python
-description: Initialize a new Python MCP server project
+description: Initialize a new Python MCP server project.
 weight: 130
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: kmcp add-tool
-description: Add a new MCP tool to your project
+description: Add a new MCP tool to your project.
 weight: 10
 ---
 

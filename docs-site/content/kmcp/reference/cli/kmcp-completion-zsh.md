@@ -1,6 +1,6 @@
 ---
 title: kmcp completion zsh
-description: Generate the autocompletion script for zsh
+description: Generate the autocompletion script for zsh.
 weight: 70
 ---
 

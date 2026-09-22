@@ -1,6 +1,6 @@
 ---
 title: kmcp init
-description: Initialize a new MCP server project
+description: Initialize a new MCP server project.
 weight: 100
 ---
 

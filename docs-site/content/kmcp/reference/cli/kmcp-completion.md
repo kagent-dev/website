@@ -1,6 +1,6 @@
 ---
 title: kmcp completion
-description: Generate the autocompletion script for the specified shell
+description: Generate the autocompletion script for the specified shell.
 weight: 30
 ---
 
