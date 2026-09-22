@@ -1,12 +1,26 @@
 name: Update Reference Documentation
 
 on:
-  workflow_dispatch:  # Allow manual triggers
-  schedule:
-    # Nightly at 06:30 UTC: regenerate API/Helm docs from the latest kagent/kmcp main so docs don't drift from code.
-    - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'kagent release to generate from, e.g. 1.0.0-alpha2. Defaults to kagent''s latest release.'
+        required: false
+  # For kagent's release workflow to fire directly. Send {"version": "1.0.0-alpha2"}
+  # in client_payload, or omit it to use kagent's latest release.
+  repository_dispatch:
+    types: [kagent-release]
 
-# Queue overlapping runs (e.g. nightly cron + a manual dispatch) so they don't force-push the same PR branch concurrently.
+# There is deliberately NO schedule here. A nightly run can only ever ask "what
+# does kagent look like now", and the answer drifts ahead of what anyone can
+# install. This workflow runs when a release happens and at no other time.
+#
+# The release lives in kagent-dev/kagent, so `on: release` cannot fire in this
+# repo -- kagent has to tell us. Until its tag.yaml sends the dispatch, cut a
+# release and then run this workflow from the Actions tab.
+
+# Queue overlapping runs (e.g. a re-dispatch racing the first) so they don't
+# force-push the same PR branch concurrently.
 concurrency:
   group: update-ref-docs
   cancel-in-progress: false
@@ -28,11 +42,24 @@ concurrency:
 # title and body say so, because that case needs the guides re-tested rather
 # than a routine review.
 #
-# Retargeted from 0.x to 1.x on 2026-09-11. This job generates from kagent
-# main, so it can only ever be correct for the tree that main actually ships.
+# This job generates from a kagent RELEASE TAG, never from main, and that is
+# the whole point of its trigger shape. It ran nightly against main until
+# 2026-09-22, which meant the 1.x reference described code no released kagent
+# contained while the install commands on the same pages pinned an older
+# release. That is not hypothetical: the 2026-09-22 run documented
+# KagentHarnessCompaction and KagentHarnessSummarizer, both added after
+# v1.0.0-alpha1, on pages whose `helm install --version` line said alpha1. The
+# same run moved the Agent Substrate conref to 0.2.0-beta5, which alpha1 does
+# not pin either.
+#
+# So the tag is resolved first and everything follows from it: both checkouts,
+# every version conref, the runtime image digests, and the CLI binaries. A
+# reader who installs the version these pages name gets the tree these pages
+# describe.
+#
+# Retargeted from 0.x to 1.x on 2026-09-11, back when this still tracked main.
 # main dropped go/api/v1alpha2 in kagent 7bf6a6cd (#2696) on 2026-09-04 and
-# now ships v1alpha3, which is what 1.x documents. Between that removal and
-# this retarget the job failed every night on the missing v1alpha2 directory.
+# now ships v1alpha3, which is what 1.x documents.
 #
 # 0.x is FROZEN and is no longer generated here. Its committed pages
 # (0.x/resources/api-ref.md, 0.x/resources/helm.md and 0.x/resources/cli/) all
@@ -96,7 +123,78 @@ concurrency:
 # run overwrites it. Descriptions follow the 1.x convention of an imperative
 # verb and a full sentence.
 jobs:
+  # Decides WHICH kagent release this run documents, and whether there is
+  # anything to do. Split into its own job so the answer is available to the
+  # checkout steps below, which run before any script could compute it.
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      kagent_tag: ${{ steps.pick.outputs.kagent_tag }}
+      kagent_version: ${{ steps.pick.outputs.kagent_version }}
+      kmcp_tag: ${{ steps.pick.outputs.kmcp_tag }}
+      proceed: ${{ steps.pick.outputs.proceed }}
+    steps:
+      - name: Resolve the kagent release to document
+        id: pick
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REQUESTED: ${{ github.event.inputs.version || github.event.client_payload.version || '' }}
+        run: |
+          set -euo pipefail
+
+          # An explicit version wins, from either dispatch shape. Otherwise take
+          # kagent's latest release. `gh release view` with no tag returns the
+          # release marked Latest, which excludes drafts but INCLUDES
+          # prereleases -- deliberate while 1.0 is still on alpha tags.
+          if [ -n "$REQUESTED" ]; then
+            KAGENT_TAG="v${REQUESTED#v}"
+            echo "Version requested explicitly: $KAGENT_TAG"
+          else
+            KAGENT_TAG=$(gh release view --repo "$OWNER/kagent" --json tagName -q .tagName)
+            echo "Using kagent's latest release: $KAGENT_TAG"
+          fi
+
+          KAGENT_VERSION="${KAGENT_TAG#v}"
+          if ! printf '%s' "$KAGENT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "Error: resolved '$KAGENT_VERSION', which is not a version. Refusing to generate."
+            exit 1
+          fi
+
+          # Refuse to document a 0.x release. 0.x is frozen at v0.10.1 and its
+          # pages are regenerated by hand from that tag; a dispatch naming a 0.x
+          # version would otherwise overwrite 1.x content with 0.x values.
+          case "$KAGENT_VERSION" in
+            0.*) echo "Error: $KAGENT_VERSION is a 0.x release. 0.x is frozen; see the header comment."; exit 1 ;;
+          esac
+
+          # Prove the tag exists before four later steps assume it does.
+          if ! gh api "repos/$OWNER/kagent/git/ref/tags/$KAGENT_TAG" >/dev/null 2>&1; then
+            echo "Error: $OWNER/kagent has no tag $KAGENT_TAG."
+            exit 1
+          fi
+
+          # kmcp is unversioned in the docs and released on its own cadence, so
+          # it gets its own latest release rather than anything derived from the
+          # kagent tag. Still a release, not main, for the same reason.
+          KMCP_TAG=$(gh release view --repo "$OWNER/kmcp" --json tagName -q .tagName)
+          echo "Using kmcp's latest release: $KMCP_TAG"
+
+          {
+            echo "kagent_tag=$KAGENT_TAG"
+            echo "kagent_version=$KAGENT_VERSION"
+            echo "kmcp_tag=$KMCP_TAG"
+          } >> "$GITHUB_OUTPUT"
+
+          # Every trigger this workflow has is deliberate, so every run proceeds.
+          # Re-running the same release is fine and sometimes necessary -- to
+          # pick up images that were still pushing, or to regenerate after a
+          # docs-side change like a renderer bump.
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
   generate-api-docs:
+    needs: resolve
+    if: needs.resolve.outputs.proceed == 'true'
     runs-on: ubuntu-latest
 
     permissions:
@@ -105,6 +203,11 @@ jobs:
 
     # Target Hugo content paths (relative to the website checkout).
     env:
+      # The release this run documents. Every conref, both checkouts, the
+      # runtime image digests and the CLI binaries derive from it.
+      KAGENT_VERSION: ${{ needs.resolve.outputs.kagent_version }}
+      KAGENT_TAG: ${{ needs.resolve.outputs.kagent_tag }}
+      KMCP_TAG: ${{ needs.resolve.outputs.kmcp_tag }}
       KAGENT_API_PAGE: docs-site/content/kagent/1.x/reference/api-ref.md
       KMCP_API_PAGE: docs-site/content/kmcp/reference/api-ref.md
       HELM_PAGE: docs-site/content/kagent/1.x/reference/helm.md
@@ -127,16 +230,20 @@ jobs:
       KMCP_CLI_URL_PREFIX: /docs/kmcp/reference/cli
 
     steps:
+      # Both checkouts are pinned to a release tag. Checking out main here is
+      # what let the reference describe unreleased code; see the header comment.
       - name: Checkout kagent repository
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/kagent
+          ref: ${{ needs.resolve.outputs.kagent_tag }}
           path: kagent
 
       - name: Checkout kmcp repository
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/kmcp
+          ref: ${{ needs.resolve.outputs.kmcp_tag }}
           path: kmcp
 
       - name: Checkout docs repository
@@ -170,13 +277,12 @@ jobs:
       # is NOT a source: it is gitignored and generated from Chart-template.yaml
       # by envsubst, so a checkout never carries a useful value.
       #
-      # Deliberately not automated: kagent.md names the release the docs
-      # DESCRIBE, while `git describe` on main yields a dev tag. That stayed
-      # editorial through 1.0 and should stay editorial now, for a second reason
-      # it did not have before -- the runtime image step below resolves its
-      # digests at the tag this conref names, so this one file is what decides
-      # which release the whole 1.x doc set pins to. Bumping it by hand is the
-      # release switch; everything else follows on the next run.
+      # kagent.md was editorial until 2026-09-22, because `git describe` on main
+      # yields a dev tag and this job ran from main. Generating from a release
+      # tag removes that objection: the tag IS the release the docs describe, so
+      # the conref is now written from it like every other value here. Keeping
+      # it manual under the new trigger would only let the install command drift
+      # away from the reference pages regenerated beside it.
       #
       # Also not automated: jaeger / loki / tempo / otel-collector are pinned
       # nowhere in kagent, so the only source is "latest upstream", which would
@@ -268,22 +374,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          KAGENT_CONREF="$VERSIONS_DIR/kagent.md"
-          if [ ! -f "$KAGENT_CONREF" ]; then
-            echo "Error: expected conref $KAGENT_CONREF"
-            exit 1
-          fi
-
-          # The 1.x span of:
-          #   {{< version include-if="0.x" >}}0.10.1{{< /version >}}{{< version include-if="1.x" >}}1.0.0-alpha1{{< /version >}}
-          IMAGE_TAG=$(sed -E 's|.*include-if="1\.x" >\}\}([^{]*)\{\{< /version >\}\}.*|\1|' "$KAGENT_CONREF")
-
-          if ! printf '%s' "$IMAGE_TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
-            echo "Error: read the image tag as '$IMAGE_TAG' from $KAGENT_CONREF, which is not a version."
-            echo "The conref's shape likely changed. Fix the extraction here rather than editing the conref by hand."
-            exit 1
-          fi
-          echo "Resolving runtime images at tag $IMAGE_TAG (from versions/kagent.md)"
+          # The release being documented, not whatever versions/kagent.md holds.
+          # This step used to read the conref, which worked only while that file
+          # was editorial and updated ahead of the run. Now that the same run
+          # writes it, reading it here would pin the images one release behind.
+          IMAGE_TAG="$KAGENT_VERSION"
+          echo "Resolving runtime images at tag $IMAGE_TAG (the release being documented)"
 
           # Anonymous pull token; these packages are public. Deliberately not
           # crane or `docker buildx imagetools`: neither is on this runner, and
@@ -316,12 +412,13 @@ jobs:
 
             digest=$(ghcr_digest "$repo" "$IMAGE_TAG" || true)
 
-            # An unresolved digest is NOT fatal. versions/kagent.md is editorial
-            # and may legitimately name a release whose images are not pushed
-            # yet. Writing an empty conref would blank a `workload.image` line
-            # on four pages, so the conref is left alone and the miss is
-            # surfaced in the PR body instead -- same shape as the kmcp
-            # cross-check above.
+            # An unresolved digest is NOT fatal. A GitHub release can be
+            # published before its images finish pushing, so a run triggered by
+            # that release can legitimately arrive early. Writing an empty
+            # conref would blank a `workload.image` line on four pages, so the
+            # conref is left alone and the miss is surfaced in the PR body
+            # instead -- same shape as the kmcp cross-check above. Re-dispatch
+            # the workflow once the images land.
             if ! printf '%s' "$digest" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
               echo "::warning::Could not resolve a digest for ${repo}:${IMAGE_TAG}. Leaving its conref unchanged."
               UNRESOLVED="${UNRESOLVED}\`${repo}:${IMAGE_TAG}\` "
@@ -470,6 +567,42 @@ jobs:
             echo "  agent-substrate.md 1.x span -> $SUBSTRATE_VERSION (0.x span untouched)"
           else
             echo "  agent-substrate.md: unchanged ($SUBSTRATE_VERSION)"
+          fi
+
+          # kagent.md is version-split the same way, and 0.x is FROZEN at the
+          # v0.10.1 value. This is the conref that decides which release the 1.x
+          # install commands name, so writing it from the tag we generated
+          # everything else from is what keeps the pages self-consistent.
+          KAGENT_CONREF="$VERSIONS_DIR/kagent.md"
+          if [ ! -f "$KAGENT_CONREF" ]; then
+            echo "Error: expected conref $KAGENT_CONREF"
+            exit 1
+          fi
+
+          KAGENT_BEFORE=$(cat "$KAGENT_CONREF")
+          KAGENT_AFTER=$(printf '%s' "$KAGENT_BEFORE" \
+            | sed -E "s|(include-if=\"1\.x\" >\}\})[^{]*(\{\{< /version >\}\})|\1${KAGENT_VERSION}\2|")
+          printf '%s' "$KAGENT_AFTER" > "$KAGENT_CONREF"
+
+          if ! printf '%s' "$KAGENT_AFTER" | grep -qF "include-if=\"1.x\" >}}${KAGENT_VERSION}{{< /version >}}"; then
+            echo "Error: the 1.x span of kagent.md did not take the new value."
+            echo "  before: $KAGENT_BEFORE"
+            echo "  after:  $KAGENT_AFTER"
+            exit 1
+          fi
+          KAGENT_BEFORE_0X=$(printf '%s' "$KAGENT_BEFORE" | sed -E 's|(\{\{< version include-if="1\.x").*||')
+          KAGENT_AFTER_0X=$(printf '%s' "$KAGENT_AFTER" | sed -E 's|(\{\{< version include-if="1\.x").*||')
+          if [ "$KAGENT_BEFORE_0X" != "$KAGENT_AFTER_0X" ]; then
+            echo "Error: the frozen 0.x span of kagent.md changed. Refusing to continue."
+            echo "  before: $KAGENT_BEFORE_0X"
+            echo "  after:  $KAGENT_AFTER_0X"
+            exit 1
+          fi
+
+          if [ "$KAGENT_BEFORE" != "$KAGENT_AFTER" ]; then
+            echo "  kagent.md 1.x span -> $KAGENT_VERSION (0.x span untouched)"
+          else
+            echo "  kagent.md: unchanged ($KAGENT_VERSION)"
           fi
 
       - name: Flag whether the conrefs moved
@@ -907,15 +1040,17 @@ jobs:
           signoff: true
           title: "Update kagent 1.x and kmcp reference docs${{ env.CONREFS_CHANGED && ' (version conrefs changed)' || '' }}"
           body: |
-            Automated update of the kagent 1.x API and Helm references, the kmcp API reference, and the version conrefs, based on the latest commits:
-            - **kagent**: [`${{ env.KAGENT_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kagent/commit/${{ env.KAGENT_COMMIT }})
-            - **kmcp**: [`${{ env.KMCP_COMMIT }}`](https://github.com/${{ github.repository_owner }}/kmcp/commit/${{ env.KMCP_COMMIT }})
+            Regenerates the kagent 1.x API and Helm references, the kmcp API reference, and the version conrefs at a released tag. Everything below was generated from these, and nothing here was read from either repository's `main`:
+            - **kagent**: [`${{ env.KAGENT_TAG }}`](https://github.com/${{ github.repository_owner }}/kagent/releases/tag/${{ env.KAGENT_TAG }}) (`${{ env.KAGENT_COMMIT }}`)
+            - **kmcp**: [`${{ env.KMCP_TAG }}`](https://github.com/${{ github.repository_owner }}/kmcp/releases/tag/${{ env.KMCP_TAG }}) (`${{ env.KMCP_COMMIT }}`)
+
+            `versions/kagent.md` moves to `${{ env.KAGENT_VERSION }}` in this run, so the `helm install --version` lines on the 1.x pages and the reference content beside them describe the same release.
 
             ${{ env.CONREF_NOTE }}
 
             ${{ env.RUNTIME_IMAGE_NOTE }}
 
-            Version conrefs in this run. Each is read from the same place kagent's own build reads it, except the two runtime images, which are resolved from the registry because a digest exists only once the image is pushed:
+            Version conrefs in this run. Each is read from the same place kagent's own build reads it, at the tag above, except the two runtime images, which are resolved from the registry because a digest exists only once the image is pushed:
 
             | Conref | Value | Source |
             | ------ | ----- | ------ |
@@ -923,8 +1058,9 @@ jobs:
             | `kmcp` | `${{ env.KMCP_VERSION }}` | `go/go.mod` require |
             | `kagent-tools` | `${{ env.KAGENT_TOOLS_VERSION }}` | `helm/kagent/Chart-template.yaml` |
             | `max-kube` (both committed copies) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
-            | `runtime-image` | `${{ env.RUNTIME_IMAGE }}` | GHCR, at the tag in `versions/kagent.md` |
-            | `runtime-image-claude` | `${{ env.RUNTIME_IMAGE_CLAUDE }}` | GHCR, at the tag in `versions/kagent.md` |
+            | `kagent` (1.x span only) | `${{ env.KAGENT_VERSION }}` | the release tag this run documents |
+            | `runtime-image` | `${{ env.RUNTIME_IMAGE }}` | GHCR, at `${{ env.KAGENT_TAG }}` |
+            | `runtime-image-claude` | `${{ env.RUNTIME_IMAGE_CLAUDE }}` | GHCR, at `${{ env.KAGENT_TAG }}` |
 
             Unchanged conref values are normal: most runs touch only the generated reference pages.
 
