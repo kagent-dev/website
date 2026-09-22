@@ -1,6 +1,6 @@
 ---
 title: kmcp init typescript
-description: Initialize a new TypeScript MCP server project
+description: Initialize a new TypeScript MCP server project.
 weight: 140
 ---
 

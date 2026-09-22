@@ -1,6 +1,6 @@
 ---
 title: kmcp secrets
-description: Manage project secrets
+description: Manage project secrets.
 weight: 170
 ---
 

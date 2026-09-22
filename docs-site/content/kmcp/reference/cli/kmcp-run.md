@@ -1,6 +1,6 @@
 ---
 title: kmcp run
-description: Run MCP server locally
+description: Run MCP server locally.
 weight: 160
 ---
 

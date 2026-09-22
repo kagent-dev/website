@@ -1,6 +1,6 @@
 ---
 title: kmcp init java
-description: Initialize a new Java MCP server project
+description: Initialize a new Java MCP server project.
 weight: 120
 ---
 

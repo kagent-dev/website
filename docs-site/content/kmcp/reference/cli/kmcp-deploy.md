@@ -1,6 +1,6 @@
 ---
 title: kmcp deploy
-description: Deploy MCP server to Kubernetes
+description: Deploy MCP server to Kubernetes.
 weight: 80
 ---
 
