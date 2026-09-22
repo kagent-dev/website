@@ -5,9 +5,9 @@ weight: 80
 author: kagent.dev
 ---
 
-An agent sends every turn of a conversation to a model provider, and each of those requests carries whatever the person typed. When agentgateway routes that traffic, the gateway sees each request before the provider does, so you can inspect and stop a prompt at the gateway. This example adds a prompt guard to the model that an agent calls, then watches the gateway reject a prompt that carries an email address.
+An agent sends every turn of a conversation to a model provider, and each of those requests carries whatever the person typed, personally identifiable information (PII) included. When agentgateway routes that traffic, the gateway sees each request before the provider does, so you can inspect and stop a prompt at the gateway. This example adds a prompt guard to the model that an agent calls, then watches the gateway reject a prompt that carries an email address.
 
-[Agentgateway model routing]({{< link path="setup/model-providers/byo-agentgateway#set-up-agentgateway-model-routing" >}}) sets up the routing that this example governs. Read that page first, because the steps here extend the `AgentgatewayModel` and the {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that it creates.
+This guide builds on the routing configured in [Agentgateway model routing]({{< link path="setup/model-providers/byo-agentgateway#set-up-agentgateway-model-routing" >}}), including extending the `AgentgatewayModel` and the {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that those steps create.
 
 ## About prompt guards on a model
 
@@ -15,10 +15,10 @@ A prompt guard inspects the body of an OpenAI-compatible request as the request 
 
 A guard can live in two places, and the choice follows the routing that you already use:
 
-- **On the `AgentgatewayModel`**, under `spec.policies.promptGuard`. The guard applies to that one model, and no other resource is involved. This example uses this form, because the routing that `byo-agentgateway.md` documents attaches models straight to a `Gateway` listener.
-- **On an `AgentgatewayPolicy`** that targets an `HTTPRoute`. An `AgentgatewayPolicy` cannot name an `AgentgatewayModel` in its `targetRefs`, so this form requires the model to hang off an HTTPRoute rather than off the listener. For that variant, see [Attach the guard to a route instead](#attach-the-guard-to-a-route-instead).
+- **On the `AgentgatewayModel`**, under `spec.policies.promptGuard`. The guard applies to that one model, and no other resource is involved. This example uses this form, because [agentgateway model routing]({{< link path="setup/model-providers/byo-agentgateway#set-up-agentgateway-model-routing" >}}) attaches models straight to a `Gateway` listener.
+- **On an `AgentgatewayPolicy`** that targets an `HTTPRoute`. An `AgentgatewayPolicy` cannot name an `AgentgatewayModel` in its `targetRefs`, so this form requires the model to attach to an HTTPRoute rather than to the listener. For more information about this variant, see [Attach the guard to a route instead](#attach-the-guard-to-a-route-instead).
 
-The following `AgentgatewayModel` carries the guard that the rest of this example applies. `provider` and `parentRefs` route the model, and `policies` adds the guard.
+The following `AgentgatewayModel` carries the guard that the rest of this example applies.
 
 ```yaml
 apiVersion: agentgateway.dev/v1alpha1
@@ -34,6 +34,9 @@ spec:
     sectionName: http
   provider: OpenAI
   policies:
+    auth:
+      secretRef:
+        name: openai-key
     promptGuard:
       request:
       - regex:
@@ -46,13 +49,15 @@ spec:
           message: The prompt contained personally identifiable information.
 ```
 
-A guard needs only `regex`. The remaining fields take defaults, and those defaults are permissive, so a guard that omits `action` masks the match rather than rejecting the request.
+Only `policies.promptGuard` is new in this example. The routing fields and `policies.auth` come from the prerequisite setup, and they appear here because a reapply must carry them.
 
 | Field | Description |
 | ----- | ----------- |
-| `policies.promptGuard.request[]` | The guards to apply to requests that the agent sends. A separate `response` list guards what the provider sends back. |
-| `regex.builtins` | Built-in patterns for common personally identifiable information (PII). The five values are `Email`, `Ssn`, `CreditCard`, `PhoneNumber`, and `CaSin`. To add your own patterns, use `regex.matches`, which holds a list of regular expressions and is additive with `builtins`. |
-| `regex.action` | What to do with a match, either `Reject` or `Mask`. Omit to default to `Mask`, which is also the safer choice for an agent. A `Reject` guard ends the conversation permanently, for the reason described in [Mask instead of reject](#mask-instead-of-reject). |
+| `parentRefs` and `provider` | Route the model to a `Gateway` listener, and name the provider that agentgateway calls. |
+| `policies.auth` | The Secret holding the credentials that agentgateway uses to reach the provider. |
+| `policies.promptGuard.request[]` | The guards to apply to requests that the agent sends. Each entry sets exactly one guard kind: `regex` matches patterns in the gateway itself, while `webhook`, `openAIModeration`, `bedrockGuardrails`, and `googleModelArmor` hand the content to an external service instead. A separate `response` list guards what the provider sends back. |
+| `regex.builtins` | Built-in patterns for common kinds of PII. The five values are `Email`, `Ssn`, `CreditCard`, `PhoneNumber`, and `CaSin`. To add your own patterns, use `regex.matches`, which holds a list of regular expressions and is additive with `builtins`. |
+| `regex.action` | What to do with a match, one of `Mask`, `Reject`, and `Audit`. Omit to default to `Mask`, which is also the safer choice for an agent. `Audit` records the action that the guard would have taken and lets the content through, so use it to trial a guard before you enforce it. A `Reject` guard ends the conversation permanently, for the reason described in [Mask instead of reject](#mask-instead-of-reject). |
 | `response.message` | The message that the gateway returns to the caller on a rejection. Omit to default to `The request was rejected due to inappropriate content`. A sibling `response.statusCode` field sets the status code, and defaults to `403`. |
 
 > [!IMPORTANT]
@@ -68,7 +73,7 @@ A guard needs only `regex`. The remaining fields take defaults, and those defaul
 
 ## Add the prompt guard to the model
 
-Adding `policies` to a model that already routes traffic changes nothing about the routing, so you reapply the same resource with the guard attached.
+Adding `promptGuard` to a model that already routes traffic changes nothing about the routing, so you reapply the same resource with the guard attached. Keep `policies.auth` in the resource that you reapply, because an apply replaces `policies` wholesale. A model that loses its `auth` is still accepted and programmed, and every request through it returns the provider's own `401`.
 
 1. Reapply the `AgentgatewayModel` with a request guard that rejects three kinds of PII.
    ```bash
@@ -86,6 +91,9 @@ Adding `policies` to a model that already routes traffic changes nothing about t
        sectionName: http
      provider: OpenAI
      policies:
+       auth:
+         secretRef:
+           name: openai-key
        promptGuard:
          request:
          - regex:
@@ -112,7 +120,7 @@ Adding `policies` to a model that already routes traffic changes nothing about t
 
 ## Watch the gateway reject a prompt
 
-Two checks are worth running in order. Calling the gateway directly isolates the guard from anything that kagent does, and sending the same content through an agent then shows what a person talking to the agent experiences.
+Two paths are worth checking in order. Calling the gateway directly isolates the guard from anything that kagent does, and sending the same content through an agent then shows what a person talking to the agent experiences.
 
 1. Reach the gateway. Choose the tab that matches your cluster.
 
@@ -145,7 +153,7 @@ Two checks are worth running in order. Calling the gateway directly isolates the
    The prompt contained personally identifiable information.
    ```
 
-3. Send a prompt that carries no PII, to confirm that ordinary traffic still reaches the provider.
+3. To confirm that ordinary traffic still reaches the provider, send a prompt that carries no PII.
    ```bash
    curl -i http://$AGENTGATEWAY_ADDRESS/v1/chat/completions \
      -H "Content-Type: application/json" \
@@ -209,7 +217,7 @@ Two checks are worth running in order. Calling the gateway directly isolates the
 
 ## Mask instead of reject
 
-Masking is the better default for an agent, for the reason the preceding section demonstrates: a `Reject` guard ends the conversation for good, while a `Mask` guard lets the turn through with the matched text replaced. Reserve `Reject` for a policy that forbids PII outright and accepts a dead conversation as the price.
+A `Reject` guard ends the conversation for good, as the [previous section](#watch-the-gateway-reject-a-prompt) demonstrates. A `Mask` guard instead lets the turn through with the matched text replaced. Masking is therefore the better default for an agent, and `Reject` belongs to a policy that forbids PII outright and accepts a dead conversation as the price.
 
 Masking also repairs a conversation that a `Reject` guard already stopped. Changing the action re-masks the offending message on the next turn rather than rejecting it, so the stranded AgentInstance answers again without being recreated.
 
@@ -225,14 +233,14 @@ Masking also repairs a conversation that a `Reject` guard already stopped. Chang
      --task "Summarize this ticket: alex@example.com reports that checkout returns 503 errors during peak hours."
    ```
 
-   The turn succeeds this time. The agent answers, or asks a follow-up question, and the address never reaches the provider. The patch replaces the whole `request` list, so it also drops the `response.message` that the rejection used; a `Mask` guard returns no message, because it rejects nothing.
+   The turn succeeds this time. The agent answers, or asks a follow-up question, and the address never reaches the provider. The patch replaces the whole `request` list, so it also drops the `response.message` that the rejection used. A `Mask` guard returns no message, because it rejects nothing.
 
 > [!WARNING]
 > **A guard on the response does not inspect streamed content unless you enable it.** Prompt guards default to skipping streaming responses to preserve throughput. Set `policies.promptGuard.streaming: Enabled` to guard them, and note that `Mask` is never applied to a streamed response even then: a guard can reject streamed content, and matched text in a stream that is not rejected passes through unmodified.
 
 ## Guard what an agent's tools send
 
-An agent differs from a chat client in that a good deal of its traffic originates from tools rather than from a person. A tool that reads a ticket, a database row, or a Kubernetes resource can feed PII back to the model, and the default scope does not inspect that content.
+An agent differs from a chat client in that much of its traffic originates from tools rather than from a person. A tool that reads a ticket, a database row, or a Kubernetes resource can feed PII back to the model, and the default scope does not inspect that content.
 
 Add `scope` to the guard to cover tool traffic. `ToolOutput` covers the results that a tool feeds back to the model, and `ToolInput` covers the arguments that the model produces for a tool call.
 
@@ -289,8 +297,14 @@ An `AgentgatewayPolicy` holds the same `promptGuard` configuration, and one poli
        kind: HTTPRoute
        name: model-traffic
      provider: OpenAI
+     policies:
+       auth:
+         secretRef:
+           name: openai-key
    EOF
    ```
+
+   The model keeps `policies.auth` and drops `policies.promptGuard`, because the `AgentgatewayPolicy` that you create next carries the guard. The `parentRef` needs no `sectionName`, because the route has exactly one rule.
 
 2. Create the `AgentgatewayPolicy` that targets the route rule.
    ```bash
@@ -339,15 +353,33 @@ An `AgentgatewayPolicy` holds the same `promptGuard` configuration, and one poli
    kubectl delete agenttemplate support-triage -n kagent
    ```
 
-2. Remove the guard from the model, leaving the routing and the provider credentials in place. The path names `promptGuard` rather than `policies`, because `policies` also holds the `auth` that lets the gateway reach the provider.
+2. Remove the guard from the model, leaving the routing and the provider credentials in place. The patch names `promptGuard` rather than `policies`, because `policies` also holds the `auth` that lets the gateway reach the provider. A merge patch also succeeds when the model carries no guard, which is the case if you followed [Attach the guard to a route instead](#attach-the-guard-to-a-route-instead).
    ```bash
-   kubectl patch agentgatewaymodel gpt-4o-mini -n agentgateway-system --type json -p '[{"op":"remove","path":"/spec/policies/promptGuard"}]'
+   kubectl patch agentgatewaymodel gpt-4o-mini -n agentgateway-system --type merge -p '{"spec":{"policies":{"promptGuard":null}}}'
    ```
 
 3. If you followed [Attach the guard to a route instead](#attach-the-guard-to-a-route-instead), delete the policy and the route, and repoint the model at the Gateway listener.
    ```bash
    kubectl delete agentgatewaypolicy block-pii -n agentgateway-system
    kubectl delete httproute model-traffic -n agentgateway-system
+   kubectl apply -f - <<EOF
+   apiVersion: agentgateway.dev/v1alpha1
+   kind: AgentgatewayModel
+   metadata:
+     name: gpt-4o-mini
+     namespace: agentgateway-system
+   spec:
+     parentRefs:
+     - group: gateway.networking.k8s.io
+       kind: Gateway
+       name: agentgateway-proxy
+       sectionName: http
+     provider: OpenAI
+     policies:
+       auth:
+         secretRef:
+           name: openai-key
+   EOF
    ```
 
 ## Next steps

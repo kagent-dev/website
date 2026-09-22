@@ -39,7 +39,7 @@ A caller reaches the gRPC API on the kagent controller, which starts the trace. 
 > The controller passes its tracing configuration to the `kagent`, `codex`, and `claude` runtimes. Each of the three exports on its own instrumentation, so the span names in this page describe the `kagent` runtime and do not carry over to the other two. An agent on the `byo` runtime receives no tracing configuration, and its half of the trace is missing. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 > [!NOTE]
-> A `byo` image that implements OTel itself reads the exporter variables from the Harness `spec.env`, which the controller leaves alone for this runtime. Its spans still do not reach a collector inside the cluster, because kagent adds the collector to an Actor's egress allowlist only for the runtimes it configures, and no field adds a host to that list by hand. For more information, see [Networking and egress control]({{< link path="substrate-runtime/networking-and-egress#what-kagent-puts-in-the-policy" >}}).
+> A `byo` image that implements OTel itself reads the exporter variables from the Harness `spec.env`, which the controller leaves alone for this runtime. Its spans still do not reach a collector inside the cluster, because kagent adds the collector to an Actor's egress allowlist only for the runtimes it configures, and no field adds a host to that list by hand. For more information, see [Networking and egress control]({{< link path="substrate-runtime/networking-and-egress#policy-generation" >}}).
 
 Both processes report themselves as separate OpenTelemetry (OTel) services. A tracing backend uses these service names to group the spans.
 
