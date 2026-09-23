@@ -15,7 +15,7 @@ author: kagent.dev
 1. Install the following CLI tools.
    * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
    * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
-   * [`jq`](https://jqlang.org/download/), to read the root certificate out of the generated CA pool.
+   * [`jq`](https://jqlang.org/download/), to read the cluster's token issuer and the root certificate out of the generated CA pool.
    * [`openssl`](https://www.openssl.org), to convert that certificate to PEM format.
    * [`kubectl-ate`](https://github.com/kagent-dev/substrate/releases), the Agent Substrate command line tool, published as a `kubectl` plugin with each Agent Substrate release.
      ```bash
@@ -128,17 +128,19 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
      --from-literal=ca.crt="${actor_id_ca_root}"
    ```
 
-6. Create the authentication configuration. The `kubernetes` provider accepts Kubernetes ServiceAccount tokens that are issued for the Agent Substrate API server audience.
+6. Create the authentication configuration. The `kubernetes` provider accepts Kubernetes ServiceAccount tokens that are issued for the Agent Substrate API server audience. Kubernetes distributions advertise different issuers, so read the issuer from the cluster rather than naming one. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and surfaces later as `token issuer ... not trusted` on every `kubectl ate` call.
    ```bash
+   k8s_issuer="$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)"
+
    kubectl create configmap ate-api-authentication -n ate-system \
-     --from-literal=authentication.yaml='actorIdentityJWTProvider: kubernetes
+     --from-literal=authentication.yaml="actorIdentityJWTProvider: kubernetes
    jwtProviders:
    - name: kubernetes
-     issuer: https://kubernetes.default.svc
+     issuer: ${k8s_issuer}
      audiences: [api.ate-system.svc]
      certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
      discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-   '
+   "
    ```
 
 7. Roll Agent Substrate out again so that its pods mount the identity material, and wait for them to become ready.
