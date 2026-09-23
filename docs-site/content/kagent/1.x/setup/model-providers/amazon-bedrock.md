@@ -10,27 +10,36 @@ Amazon Bedrock serves models from several families behind one AWS API. {{< reuse
 Prefer the native provider. If you need the OpenAI request format, or an inference profile that only that endpoint exposes, use the OpenAI-compatible path.
 
 > [!NOTE]
-> Bedrock is the only provider that every runtime supports. A `codex` Harness accepts only OpenAI `gpt-*` model IDs, and both `codex` and `claude` accept no `bedrock` settings beyond `region`. For more information, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
+> Bedrock is the only provider that every runtime supports, and on every one of them the credential must be a bearer token. A `codex` Harness accepts only OpenAI `gpt-*` model IDs, and both `codex` and `claude` accept no `bedrock` settings beyond `region`. For more information, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 
 > [!IMPORTANT]
 > Both paths authenticate with credentials from a Kubernetes Secret. Attaching an AWS IAM role to the agent, such as with [EKS IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), is not currently supported: an agent runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to attach a role to.
 
 ## Before you begin
 
-1. Create an IAM user or role with permissions for Bedrock. At minimum you need `bedrock:InvokeModel` for the models that you use. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
+1. Grant the identity that issues your API key permission to call Bedrock. At minimum you need `bedrock:InvokeModel` for the models that you use. For more information, see the [AWS Bedrock model access docs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
 
 2. Choose an AWS region and a Bedrock model, and confirm that your account has access to that model in that region. For the available models, see the [AWS Bedrock supported models docs](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html).
 
 ## Native Bedrock provider
 
-1. Create a Kubernetes Secret that stores your AWS access keys. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+The native provider authenticates with a Bedrock API key, which kagent sends as a bearer token.
+
+1. Create a Bedrock API key. For more information, see the [AWS Bedrock API keys guide](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html).
    ```bash
-   kubectl create secret generic bedrock-credentials -n kagent \
-     --from-literal AWS_ACCESS_KEY_ID=<your-access-key> \
-     --from-literal AWS_SECRET_ACCESS_KEY=<your-secret-key>
+   export AWS_BEARER_TOKEN_BEDROCK=<your-bedrock-api-key>
    ```
 
-2. Create a `ModelConfig` that uses the `Bedrock` provider.
+2. Create a Kubernetes Secret that holds the token under the key `AWS_BEARER_TOKEN_BEDROCK`. kagent looks that key up by name, so no other key works. Create the Secret in the same namespace as the AgentTemplates that use it, such as `kagent`.
+   ```bash
+   kubectl create secret generic bedrock-credentials -n kagent \
+     --from-literal AWS_BEARER_TOKEN_BEDROCK=$AWS_BEARER_TOKEN_BEDROCK
+   ```
+
+   > [!IMPORTANT]
+   > A Secret that holds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead does not work on any runtime. IAM credentials sign each request locally, and an agent reaches its provider through an egress gateway that injects a static header, so kagent rejects the ModelConfig at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the message `environment credential "AWS_ACCESS_KEY_ID" cannot use gateway header injection`. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+
+3. Create a `ModelConfig` that uses the `Bedrock` provider.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: kagent.dev/v1alpha3
@@ -49,7 +58,7 @@ Prefer the native provider. If you need the OpenAI request format, or an inferen
 
    | Field | Description |
    | ----- | ----------- |
-   | `apiKeySecret` | The name of the Kubernetes Secret that holds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. |
+   | `apiKeySecret` | The name of the Kubernetes Secret that holds `AWS_BEARER_TOKEN_BEDROCK`. |
    | `model` | The Bedrock model ID. For the format, see the [AWS Bedrock model IDs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). |
    | `provider` | The provider to use, `Bedrock`. |
    | `bedrock.region` | The AWS region that serves the model. This field is required. |
