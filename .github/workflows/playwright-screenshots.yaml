@@ -55,19 +55,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: website
 
       # The mock backend is a service worker the released image does not ship, so the
       # capture needs the UI source, not a published image.
       - name: Check out kagent (for the UI source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/kagent
           path: kagent
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -105,7 +105,7 @@ jobs:
         # they legitimately are in this job. Publish what this job captured and move on.
         run: npm run sync-docs || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-mock
@@ -113,7 +113,7 @@ jobs:
           retention-days: 7
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website
@@ -141,17 +141,15 @@ jobs:
   # ---------------------------------------------------------------------------------
   # Live-cluster captures.
   #
-  # DISPATCH ONLY. Two separate reasons, and the first one is currently fatal:
+  # DISPATCH ONLY, for one remaining reason: this is unverified on a hosted runner.
+  # Agent Substrate runs workers under gVisor nested inside the worker pod, and its own
+  # reference environment is a GKE node pool, so kind-in-Docker-on-a-runner is an open
+  # question.
   #
-  # 1. THE CHART THIS INSTALLS DOES NOT EXIST YET. `versions/kagent.md` pins
-  #    `1.0.0-beta0`; the newest published kagent chart is `0.10.1`. This job therefore
-  #    fails at the provisioner's kagent step until 1.0 ships. It deliberately still
-  #    installs the published chart rather than building from source the way the
-  #    provisioner's local KAGENT_CHART_DIR mode can: CI exists to capture what a reader
-  #    installs, and a source build would quietly defeat that.
-  # 2. Even once the chart exists, this is unverified on a hosted runner. Agent Substrate
-  #    runs workers under gVisor nested inside the worker pod, and its own reference
-  #    environment is a GKE node pool, so kind-in-Docker-on-a-runner is an open question.
+  # The chart this installs now exists — `versions/kagent.md` pins a published 1.x chart —
+  # so the job no longer fails at the provisioner's kagent step. It installs the published
+  # chart on purpose: CI exists to capture what a reader installs, and a source build would
+  # quietly defeat that.
   #
   # Promote it to the `push` trigger once a dispatch run has gone green, and move the
   # provisioner and version-conref paths onto that trigger at the same time — today they
@@ -162,11 +160,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: website
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -222,7 +220,7 @@ jobs:
         working-directory: website/${{ env.PW_DIR }}
         run: npm run sync-docs || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-cluster
@@ -230,7 +228,7 @@ jobs:
           retention-days: 7
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website

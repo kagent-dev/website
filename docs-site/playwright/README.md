@@ -116,46 +116,10 @@ npm run sync-docs
 `8082` is the port `kagent dashboard` forwards to, so the harness default matches what the
 docs tell a reader to open.
 
-### Source-build mode — temporary, delete when 1.0 ships
-
-**As of 2026-09-15 the chart the 1.x docs pin does not exist.** `versions/kagent.md` pins
-`1.0.0-beta0`; the newest published kagent chart is `0.10.1`, and there is no 1.x tag, release
-branch, or floating image tag anywhere. The command above therefore fails at the kagent install
-with `FetchReference … not found`. Agent Substrate `0.0.26` is published and unaffected.
-
-Until 1.0 ships, `KAGENT_CHART_DIR` installs a checkout's own charts instead:
-
-```sh
-# Build the two images the install actually instantiates. Everything else the chart
-# deploys is published and pulls normally.
-cd <kagent checkout>
-V=$(git describe --tags --always | grep v)
-docker buildx build --load --platform linux/amd64 --build-arg VERSION=$V \
-  -t localhost:5001/kagent-dev/kagent/ui:$V -f ui/Dockerfile ./ui
-docker buildx build --load --platform linux/amd64 --build-arg VERSION=$V \
-  --build-arg BUILD_PACKAGE=core/cmd/controller/main.go \
-  -t localhost:5001/kagent-dev/kagent/controller:$V -f go/Dockerfile ./go
-
-cd <website>/docs-site/playwright
-KAGENT_CHART_DIR=<kagent checkout> KAGENT_IMAGE_TAG=$V \
-  OPENAI_API_KEY=… ./provisioners/kagent-kind.sh
-```
-
-The provisioner side-loads those images with `kind load docker-image`, so **no local registry
-is needed** — unlike the kagent repo's own dev loop, nothing is ever pulled for them.
-
-Three things to know about this mode:
-
-- **A source build is not what a reader gets.** Any baseline captured this way must be
-  re-captured from the published chart once 1.0 is out. Record which build a baseline came
-  from; the enterprise agentgateway standalone harness hit exactly this situation ahead of a
-  release and its README carries the same warning.
-- **The model provider key need not be real for these captures.** The chart's `check-api-key`
-  only tests that the variable is non-empty, and the Launch the UI captures are of a freshly
-  installed cluster — dashboard, agents list, substrate page — none of which invokes a model.
-  Use a real key only for a capture that shows an agent doing something.
-- **Delete this mode** when `versions/kagent.md` points at a chart that actually pulls. It
-  exists to unblock one release, not as a supported second path.
+**The model provider key need not be real for these captures.** The chart's `check-api-key`
+only tests that the variable is non-empty, and the Launch the UI captures are of a freshly
+installed cluster — dashboard, agents list, substrate page — none of which invokes a model.
+Use a real key only for a capture that shows an agent doing something.
 
 ## Task: capture against the mock backend
 
@@ -268,15 +232,16 @@ Screenshots are pixel-compared, so captures must be stable across runs.
 | `kagent-ui-chat` | kagent UI mock backend, `yarn dev` at kagent `42d3301d` | 2026-09-15 |
 | `kagent-ui-dashboard` / `-agents` / `-substrate` | **source build** at kagent `42d3301d`, chart `helm/kagent` from that checkout, on kind 1.37.0 | 2026-09-15 |
 
-**The three cluster captures did NOT come from the published chart**, because there isn't
-one — see "Source-build mode" above. They show a real, fully working install (Agent
-Substrate `0.0.26` published charts, one ready gVisor worker, 189 discovered tools, zero
-agents), so they are honest about what a fresh install looks like. They are not honest
-about *which build* a reader gets.
+**The three cluster captures did not come from the published chart.** They predate it: when
+they were taken, the chart the 1.x docs pin had no published tag, so they came from a source
+build through a `KAGENT_CHART_DIR` mode this harness no longer carries. They show a real,
+fully working install (Agent Substrate `0.0.26` published charts, one ready gVisor worker,
+189 discovered tools, zero agents), so they are honest about what a fresh install looks like.
+They are not honest about *which build* a reader gets.
 
-**Re-capture all three from the published chart once 1.0 ships**, and delete source-build
-mode at the same time. Until then, expect the cluster CI job to fail rather than to refresh
-these — it installs the published chart on purpose.
+**Re-capture all three from the published chart.** `versions/kagent.md` now pins a 1.x
+chart that publishes and pulls, so the cluster job can install exactly what a reader installs.
+The job has not yet had a green dispatch run, so these captures still stand.
 
 The chat capture needs no such caveat going forward: it will always come from source,
 because the released image ships no mock service worker.

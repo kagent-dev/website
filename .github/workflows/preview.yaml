@@ -11,6 +11,7 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
     branches:
       - main
 
@@ -22,16 +23,21 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Declared explicitly so the comment step below does not depend on whatever
+    # the repo-wide default token permission happens to be.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: '1.24'
 
@@ -58,8 +64,10 @@ jobs:
       # sanitize and cap the length.
       - name: Compute preview alias from branch name
         id: alias
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          alias=$(echo "${{ github.head_ref }}" \
+          alias=$(echo "$HEAD_REF" \
             | tr '[:upper:]' '[:lower:]' \
             | sed 's/[^a-z0-9-]/-/g; s/-\{2,\}/-/g; s/^-*//; s/-*$//' \
             | cut -c1-40)
@@ -92,3 +100,41 @@ jobs:
         run: |
           echo "Version Preview URL: ${VERSION_URL}"
           echo "Version Preview Alias URL: https://${ALIAS}-kagent-website.solo-io.workers.dev"
+
+      # Put the same URLs on the PR itself, so a reviewer never has to open this
+      # job's log to find the preview. The comment is keyed on an HTML marker:
+      # the first push creates it, every later push edits that same comment in
+      # place rather than piling up a new one per run.
+      #
+      # Fork PRs are skipped. They cannot reach the Cloudflare secrets, so the
+      # upload step above fails before this one runs; the guard just makes the
+      # intent explicit.
+      - name: Comment preview URLs on the PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          VERSION_URL: ${{ steps.deploy.outputs.deployment-url }}
+          ALIAS: ${{ steps.alias.outputs.alias }}
+          COMMIT: ${{ github.event.pull_request.head.sha }}
+        run: |
+          MARKER='<!-- preview-urls -->'
+          BODY=$(cat <<EOF
+          $MARKER
+          ### Docs preview
+
+          | Link | Points at |
+          | --- | --- |
+          | [Branch preview](https://${ALIAS}-kagent-website.solo-io.workers.dev) | The newest push to this branch. Updates in place. |
+          | [Commit preview](${VERSION_URL}) | \`${COMMIT:0:7}\` only. Frozen. |
+
+          Both are uploaded Worker versions and serve no production traffic.
+          EOF
+          )
+          ID=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"${MARKER}\"))) | .id" | head -1)
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${ID}" -f body="$BODY"
+          else
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" -f body="$BODY"
+          fi

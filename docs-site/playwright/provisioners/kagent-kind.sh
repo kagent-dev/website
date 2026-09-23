@@ -34,38 +34,7 @@
 #   SUBSTRATE_VERSION Agent Substrate chart version         (default: read from docs conref)
 #   NODE_IMAGE        kind node image                       (default: kindest/node:v1.37.0)
 #   OPENAI_API_KEY    model provider key (required unless --dry-run)
-#
-# TEMPORARY source-build mode (see "Source-build mode" below):
-#   KAGENT_CHART_DIR  path to a kagent checkout; installs its local charts instead
-#                     of the published ones, for use before 1.0 is released
-#   KAGENT_IMAGE_REGISTRY / KAGENT_IMAGE_TAG   the locally built images to run
 set -euo pipefail
-
-# --- Source-build mode ------------------------------------------------------------
-#
-# Set KAGENT_CHART_DIR to install kagent from a checkout's `helm/` directory rather
-# than from the published OCI charts.
-#
-# This exists because, as of 2026-09-15, THE CHART THE 1.x DOCS PIN DOES NOT EXIST.
-# `versions/kagent.md` pins `1.0.0-beta0`; the newest published tag is `0.10.1` and
-# there is no 1.x tag, branch, or floating image tag anywhere. So the normal path —
-# install exactly what a reader installs — has nothing to install, and the captures
-# would otherwise be blocked until 1.0 ships.
-#
-# The tradeoff is the one this harness otherwise exists to avoid: a source build is
-# NOT what a reader gets, so any baseline captured this way must be RE-CAPTURED from
-# the published chart once 1.0 is out. Record which build a baseline came from.
-# Precedent: the enterprise agentgateway standalone harness did exactly this ahead of
-# a release, and its README carries the same warning.
-#
-# Delete this mode when `versions/kagent.md` points at a chart that actually pulls.
-KAGENT_CHART_DIR="${KAGENT_CHART_DIR:-}"
-SOURCE_BUILD=false
-if [[ -n "$KAGENT_CHART_DIR" ]]; then
-  SOURCE_BUILD=true
-  KAGENT_IMAGE_REGISTRY="${KAGENT_IMAGE_REGISTRY:-localhost:5001}"
-  KAGENT_IMAGE_TAG="${KAGENT_IMAGE_TAG:-}"
-fi
 
 CLUSTER_NAME="${CLUSTER_NAME:-kagent-shots}"
 NAMESPACE="${NAMESPACE:-kagent}"
@@ -164,23 +133,7 @@ if ! $DRY_RUN && [[ -z "${OPENAI_API_KEY:-}" ]]; then
   exit 1
 fi
 
-if $SOURCE_BUILD; then
-  if [[ ! -d "${KAGENT_CHART_DIR}/helm/kagent" ]]; then
-    echo "KAGENT_CHART_DIR=${KAGENT_CHART_DIR} has no helm/kagent directory." >&2
-    exit 1
-  fi
-  if [[ -z "$KAGENT_IMAGE_TAG" ]]; then
-    # The chart's default tag is the chart version, which for a source build is a
-    # `git describe` stamp that matches nothing in any registry. Make the caller say
-    # which locally built images to run rather than failing later on ImagePullBackOff.
-    echo "KAGENT_IMAGE_TAG is required in source-build mode (the tag of your locally built images)." >&2
-    exit 1
-  fi
-  echo "kagent chart:          ${KAGENT_CHART_DIR}/helm  (SOURCE BUILD — not what a reader installs)"
-  echo "kagent images:         ${KAGENT_IMAGE_REGISTRY}/kagent-dev/kagent/*:${KAGENT_IMAGE_TAG}"
-else
-  echo "kagent chart:          ${KAGENT_VERSION}"
-fi
+echo "kagent chart:          ${KAGENT_VERSION}"
 echo "Agent Substrate chart: ${SUBSTRATE_VERSION}"
 echo
 
@@ -213,20 +166,6 @@ runtimeConfig:
   \"certificates.k8s.io/v1beta1\": \"true\"
 EOF
 "
-fi
-
-# Side-load the locally built images into the node's containerd. This is why
-# source-build mode needs no local registry: nothing is ever pulled, so the whole
-# registry-plus-containerd-mirror arrangement the kagent dev loop uses is unnecessary.
-# Only the controller and the UI are built — every other image the chart instantiates
-# (Substrate workers, kagent-tools, kmcp, postgres) is published and pulls normally,
-# and golang-adk is referenced as per-agent runtime config rather than deployed.
-if $SOURCE_BUILD; then
-  for image in controller ui; do
-    run kind load docker-image \
-      "${KAGENT_IMAGE_REGISTRY}/kagent-dev/kagent/${image}:${KAGENT_IMAGE_TAG}" \
-      --name "$CLUSTER_NAME"
-  done
 fi
 
 # --- Agent Substrate ----------------------------------------------------------------
@@ -265,11 +204,11 @@ kubectl create secret generic actor-id-ca-certs -n ${ATE_NAMESPACE} \
 
 run_sh "kubectl create configmap ate-api-authentication" "
 set -euo pipefail
-# Ask the cluster for its issuer rather than assuming one. kind 1.37 advertises
-# https://kubernetes.default.svc.cluster.local, while the older hardcoded value was
-# https://kubernetes.default.svc; a mismatch is accepted at install time and only shows
-# up later as \`token issuer ... not trusted\` on every kubectl-ate and ateapi call.
-# kagent's own setup-cluster.sh derives it the same way (kagent#2763, fixed in #2770).
+# Ask the cluster for its issuer rather than assuming one: kind 1.37 advertises
+# https://kubernetes.default.svc.cluster.local, and a mismatch is accepted at install
+# time, surfacing later as \`token issuer ... not trusted\` on every kubectl-ate and
+# ateapi call. kagent's own setup-cluster.sh and the install guide both derive it
+# (kagent#2763, fixed in #2770).
 k8s_issuer=\"\$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)\"
 kubectl create configmap ate-api-authentication -n ${ATE_NAMESPACE} \
   --from-literal=authentication.yaml='actorIdentityJWTProvider: kubernetes
@@ -288,33 +227,15 @@ run helm upgrade substrate "$SUBSTRATE_CHART" \
   --reuse-values --wait --timeout 10m
 
 # --- kagent --------------------------------------------------------------------------
-# A source build installs the checkout's chart directories and pins the images to the
-# ones built from it. Everything downstream of here is identical either way, so the two
-# modes differ only in these four values.
-if $SOURCE_BUILD; then
-  CRDS_REF="${KAGENT_CHART_DIR}/helm/kagent-crds"
-  CHART_REF="${KAGENT_CHART_DIR}/helm/kagent"
-  VERSION_FLAG=""
-  # IfNotPresent, because the images were side-loaded into the node with
-  # `kind load docker-image` rather than pushed anywhere. The chart's default of Always
-  # would send containerd to a registry that has never heard of this tag.
-  IMAGE_FLAGS="--set registry=${KAGENT_IMAGE_REGISTRY} --set tag=${KAGENT_IMAGE_TAG} --set imagePullPolicy=IfNotPresent"
-else
-  CRDS_REF="$KAGENT_CRDS_CHART"
-  CHART_REF="$KAGENT_CHART"
-  VERSION_FLAG="--version ${KAGENT_VERSION}"
-  IMAGE_FLAGS=""
-fi
-
-run_sh "helm upgrade --install kagent-crds ${CRDS_REF} ${VERSION_FLAG}" "
-helm upgrade --install kagent-crds ${CRDS_REF} ${VERSION_FLAG} \
+run_sh "helm upgrade --install kagent-crds ${KAGENT_CRDS_CHART} --version ${KAGENT_VERSION}" "
+helm upgrade --install kagent-crds ${KAGENT_CRDS_CHART} --version ${KAGENT_VERSION} \
   --namespace ${NAMESPACE} --create-namespace --wait
 "
 
 # The key is interpolated inside the heredoc, so the printed form is the redacted one.
-run_sh "helm upgrade --install kagent ${CHART_REF} ${VERSION_FLAG} ${IMAGE_FLAGS} -f - (apiKey redacted)" "
-helm upgrade --install kagent ${CHART_REF} \
-  ${VERSION_FLAG} ${IMAGE_FLAGS} \
+run_sh "helm upgrade --install kagent ${KAGENT_CHART} --version ${KAGENT_VERSION} -f - (apiKey redacted)" "
+helm upgrade --install kagent ${KAGENT_CHART} \
+  --version ${KAGENT_VERSION} \
   --namespace ${NAMESPACE} --create-namespace --timeout 10m \
   -f - <<EOF
 providers:
