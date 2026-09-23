@@ -216,21 +216,21 @@ jobs:
       # Both checkouts are pinned to a release tag. Checking out main here is
       # what let the reference describe unreleased code; see the header comment.
       - name: Checkout kagent repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/kagent
           ref: ${{ needs.resolve.outputs.kagent_tag }}
           path: kagent
 
       - name: Checkout kmcp repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/kmcp
           ref: ${{ needs.resolve.outputs.kmcp_tag }}
           path: kmcp
 
       - name: Checkout docs repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/website
           path: website
