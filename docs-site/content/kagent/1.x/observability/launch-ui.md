@@ -95,16 +95,18 @@ Opening an agent and sending a message creates an {{< gloss "AgentInstance" >}}A
 {{< reuse-image-light src="img/kagent-ui-chat.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-chat-dark.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 
-The UI names a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} a *snapshot*. To take one, select the save icon beside the message box. kagent pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript advanced. Agent Substrate does not collect a pinned snapshot, so the point stays available to return to. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
+The UI labels a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} **Snapshot**. The label names the pin, not the Agent Substrate {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} beneath it. Agent Substrate writes a snapshot each time an Actor suspends, and a checkpoint pins one of those snapshots so that Agent Substrate does not collect it.
 
-A snapshot appears in the transcript as a mark carrying its name and three controls. Select the mark itself to open the record behind it, which holds the snapshot's ID, turn, state, and age.
+To take a checkpoint, select the save icon beside the message box. kagent pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript advanced. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
 
-- **Fork** creates a second AgentInstance from the snapshot, continuing from the point that the snapshot pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the snapshot's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork. The fork takes the snapshot's name as its own. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
-- **Rename** replaces the name that kagent generates on creation from the AgentInstance ID and the turn the snapshot pins. Clearing the name restores that generated default.
-- **Delete** removes the snapshot and the runtime state stored with it.
+A checkpoint appears in the transcript as a mark carrying the snapshot name and three controls. Select the mark to open the record behind it. The record holds the checkpoint's ID, turn, state, and age.
+
+- **Fork** creates a second AgentInstance from the checkpoint, continuing from the point that the checkpoint pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the checkpoint's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork. The fork takes the snapshot name as its own. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
+- **Rename** replaces the snapshot name that kagent generates on creation from the AgentInstance ID and the turn the checkpoint pins. Clearing the name restores that generated default.
+- **Delete** removes the checkpoint and releases the snapshot it pinned. Agent Substrate is then free to collect that snapshot.
 
 > [!NOTE]
-> A snapshot is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
+> A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
 
 ## Check Agent Substrate capacity
 

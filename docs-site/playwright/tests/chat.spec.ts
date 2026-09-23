@@ -9,6 +9,11 @@ import { test, expect, gotoUI, pinClock, settle } from '../fixtures/test';
  * seeded conversation has a fixed transcript, a checkpoint and a share
  * (ui/src/mocks/state.ts), which is exactly the 1.0 chat surface this page needs to show.
  *
+ * The chat labels that checkpoint "Snapshot" and carries Fork, Rename and Delete on its
+ * mark (kagent-dev/kagent#2847). That card is taller than the strip it replaced, so it
+ * pushes the transcript's tool call above the fold: `fullPage` does not recover it,
+ * because the transcript scrolls in its own container rather than with the page.
+ *
  * Run it against a dev server from a kagent checkout, NOT against a cluster:
  *
  *   cd <kagent>/ui && VITE_API_MODE=mock yarn dev --port 8101
