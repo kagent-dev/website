@@ -239,9 +239,9 @@ fully working install (Agent Substrate `0.0.26` published charts, one ready gVis
 189 discovered tools, zero agents), so they are honest about what a fresh install looks like.
 They are not honest about *which build* a reader gets.
 
-**Re-capture all three from the published chart.** `versions/kagent.md` now pins
-`1.0.0-alpha2`, which publishes and pulls, so the cluster job installs exactly what a reader
-installs and a dispatch run refreshes these.
+**Re-capture all three from the published chart.** `versions/kagent.md` now pins a 1.x
+chart that publishes and pulls, so the cluster job can install exactly what a reader installs.
+The job has not yet had a green dispatch run, so these captures still stand.
 
 The chat capture needs no such caveat going forward: it will always come from source,
 because the released image ships no mock service worker.

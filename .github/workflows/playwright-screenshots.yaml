@@ -113,7 +113,7 @@ jobs:
           retention-days: 7
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website
@@ -146,10 +146,10 @@ jobs:
   # reference environment is a GKE node pool, so kind-in-Docker-on-a-runner is an open
   # question.
   #
-  # The chart this installs now exists — `versions/kagent.md` pins `1.0.0-alpha2`, which
-  # publishes and pulls — so the job no longer fails at the provisioner's kagent step. It
-  # installs the published chart on purpose: CI exists to capture what a reader installs,
-  # and a source build would quietly defeat that.
+  # The chart this installs now exists — `versions/kagent.md` pins a published 1.x chart —
+  # so the job no longer fails at the provisioner's kagent step. It installs the published
+  # chart on purpose: CI exists to capture what a reader installs, and a source build would
+  # quietly defeat that.
   #
   # Promote it to the `push` trigger once a dispatch run has gone green, and move the
   # provisioner and version-conref paths onto that trigger at the same time — today they
@@ -228,7 +228,7 @@ jobs:
           retention-days: 7
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website

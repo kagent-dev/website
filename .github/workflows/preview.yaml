@@ -11,6 +11,7 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
     branches:
       - main
 
@@ -63,8 +64,10 @@ jobs:
       # sanitize and cap the length.
       - name: Compute preview alias from branch name
         id: alias
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          alias=$(echo "${{ github.head_ref }}" \
+          alias=$(echo "$HEAD_REF" \
             | tr '[:upper:]' '[:lower:]' \
             | sed 's/[^a-z0-9-]/-/g; s/-\{2,\}/-/g; s/^-*//; s/-*$//' \
             | cut -c1-40)
@@ -129,7 +132,7 @@ jobs:
           EOF
           )
           ID=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
-            --jq "map(select(.body | startswith(\"${MARKER}\"))) | .[0].id // empty")
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"${MARKER}\"))) | .id" | head -1)
           if [ -n "$ID" ]; then
             gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${ID}" -f body="$BODY"
           else
