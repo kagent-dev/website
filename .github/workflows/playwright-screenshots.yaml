@@ -53,6 +53,17 @@ jobs:
   mock:
     if: github.event_name == 'push' || inputs.capture == 'mock' || inputs.capture == 'both'
     runs-on: ubuntu-latest
+
+    # Without this the job captures correctly and then throws the result away:
+    # create-pull-request gets a read-only GITHUB_TOKEN and the branch push dies with
+    # `Permission to kagent-dev/website.git denied to github-actions[bot]` (exit 128).
+    # Every run between 2026-09-16 and 2026-09-23 failed exactly there. Same pair as
+    # update-ref-docs.yaml, which has been opening PRs from this bot all along -- so the
+    # org-level "allow Actions to create pull requests" setting was never the problem.
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Check out the website
         uses: actions/checkout@v7
@@ -141,23 +152,37 @@ jobs:
   # ---------------------------------------------------------------------------------
   # Live-cluster captures.
   #
-  # DISPATCH ONLY, for one remaining reason: this is unverified on a hosted runner.
-  # Agent Substrate runs workers under gVisor nested inside the worker pod, and its own
-  # reference environment is a GKE node pool, so kind-in-Docker-on-a-runner is an open
-  # question.
+  # RUNS ON PUSH as of 2026-09-23. It was dispatch-only, and that combination was a silent
+  # trap: `provisioners/**` and both version conrefs sat on the push filter while the only
+  # job that reads them never ran on a push. So bumping `versions/kagent.md` to
+  # 1.0.0-alpha2 started a run, executed the mock job (which reads no versions at all),
+  # and left the three cluster screenshots showing Agent Substrate v0.0.26 for eight days.
+  # Nothing failed; the trigger just fired a job that could not act on it.
   #
-  # The chart this installs now exists — `versions/kagent.md` pins a published 1.x chart —
-  # so the job no longer fails at the provisioner's kagent step. It installs the published
-  # chart on purpose: CI exists to capture what a reader installs, and a source build would
-  # quietly defeat that.
+  # It installs the published chart on purpose: CI exists to capture what a reader
+  # installs, and a source build would quietly defeat that.
   #
-  # Promote it to the `push` trigger once a dispatch run has gone green, and move the
-  # provisioner and version-conref paths onto that trigger at the same time — today they
-  # sit on the push filter but can only affect this job.
+  # Both jobs deliberately share one path filter rather than splitting per job. Over-
+  # triggering costs a ~15m no-op run; under-triggering is the bug above, and it is
+  # invisible. The refreshed images land under `__screenshots__/` and `assets/img/`,
+  # neither of which is on the filter, so a merged refresh PR cannot re-trigger this.
+  #
+  # Still unproven on a hosted runner: Agent Substrate runs workers under gVisor nested
+  # inside the worker pod, and its reference environment is a GKE node pool. The full
+  # path was verified on kind under Docker locally on 2026-09-23, which removes the
+  # likeliest reason it would fail here but not the question itself.
   # ---------------------------------------------------------------------------------
   cluster:
-    if: github.event_name == 'workflow_dispatch' && (inputs.capture == 'cluster' || inputs.capture == 'both')
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.capture == 'cluster' || inputs.capture == 'both'))
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Check out the website
         uses: actions/checkout@v7
@@ -169,10 +194,17 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install cluster tooling
+        # Pinned, not @latest. This workflow's whole premise is that nothing changes
+        # without a git event -- the same reasoning that pins @playwright/test exactly.
+        # kind decides the node's container runtime and default image, so a floating
+        # version can move pixels (or break the install) with no commit to point at.
+        # v0.32.0 is the version the 2026-09-23 local verification ran on.
+        env:
+          KIND_VERSION: v0.32.0
         run: |
-          go install sigs.k8s.io/kind@latest || curl -fsSL -o /usr/local/bin/kind \
-            https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
-          chmod +x /usr/local/bin/kind || true
+          curl -fsSL -o /tmp/kind \
+            "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          sudo install -m 0755 /tmp/kind /usr/local/bin/kind
           kind --version
 
       - name: Install kubectl-ate
@@ -194,7 +226,11 @@ jobs:
       - name: Stand up the cluster at the docs-pinned versions
         working-directory: website/${{ env.PW_DIR }}
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # The chart's check-api-key only tests that this is non-empty, and these
+          # captures (dashboard, agents list, substrate page on a fresh install) invoke
+          # no model. So a placeholder is correct here, not a workaround -- and it keeps
+          # a missing or rotated secret from failing a run that never needed one.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-placeholder-for-screenshots' }}
         run: ./provisioners/kagent-kind.sh
 
       - name: Install the harness
@@ -218,7 +254,11 @@ jobs:
 
       - name: Publish into the docs img tree
         working-directory: website/${{ env.PW_DIR }}
-        run: npm run sync-docs || true
+        # No `|| true` here, unlike the mock job. That guard exists because the mock job
+        # legitimately has no cluster baselines to publish; this job captures all of
+        # launch-ui and the chat pair is already in the checkout, so every mapped image
+        # resolves. A nonzero exit here is a real failure and should fail the run.
+        run: npm run sync-docs
 
       - uses: actions/upload-artifact@v7
         if: always()

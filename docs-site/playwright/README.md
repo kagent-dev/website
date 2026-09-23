@@ -229,19 +229,33 @@ Screenshots are pixel-compared, so captures must be stable across runs.
 
 | Capture | Source | Date |
 | --- | --- | --- |
-| `kagent-ui-chat` | kagent UI mock backend, `yarn dev` at kagent `42d3301d` | 2026-09-15 |
-| `kagent-ui-dashboard` / `-agents` / `-substrate` | **source build** at kagent `42d3301d`, chart `helm/kagent` from that checkout, on kind 1.37.0 | 2026-09-15 |
+| `kagent-ui-chat` | kagent UI mock backend, `vite` at kagent tag `v1.0.0-alpha2` (`373b56be`) | 2026-09-23 |
+| `kagent-ui-dashboard` / `-agents` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-15, re-verified 2026-09-23 |
+| `kagent-ui-substrate` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-23 |
 
-**The three cluster captures did not come from the published chart.** They predate it: when
-they were taken, the chart the 1.x docs pin had no published tag, so they came from a source
-build through a `KAGENT_CHART_DIR` mode this harness no longer carries. They show a real,
-fully working install (Agent Substrate `0.0.26` published charts, one ready gVisor worker,
-189 discovered tools, zero agents), so they are honest about what a fresh install looks like.
-They are not honest about *which build* a reader gets.
+**The cluster captures now come from the published chart**, which closes the caveat these
+notes carried since 2026-09-15. A fresh `kagent-shots` cluster installed exactly what
+`versions/kagent.md` and `versions/agent-substrate.md` pin, and the capture ran against that.
 
-**Re-capture all three from the published chart.** `versions/kagent.md` now pins a 1.x
-chart that publishes and pulls, so the cluster job can install exactly what a reader installs.
-The job has not yet had a green dispatch run, so these captures still stand.
+**`-dashboard` and `-agents` were re-verified, not rewritten.** They still match byte-for-byte
+against the published chart, so those two surfaces did not move between the 2026-09-15 source
+build and `1.0.0-alpha2`, and the old images were honest after all. Only `-substrate` changed
+(see below), so only that pair carries the new date.
+
+**What moved on the Substrate page at `1.0.0-alpha2`** — the page grew 1247px to 1308px, and
+these are the changes a reader sees:
+
+- the single **Scope** selector became two filters, **Kubernetes namespace** and **ATE atespace**;
+- the **Actor templates** table dropped its **Harness** column;
+- the **Workers** table replaced its **Actor** column (which read `idle`) with **IP**;
+- the Actors and Workers panels lost their per-panel search boxes, gained `N on this page`
+  counts and a `read just now` line, and the empty state changed from
+  `ate-api reported no actors in this scope` to `No actors on this page.`;
+- the page description dropped the internal name `ate-api` in favour of `Substrate`.
+
+Three of those falsified prose in `observability/launch-ui.md`, which was corrected in the
+same change. **`read just now` is a new volatile string** — it has held across re-captures so
+far, but it is the thing to suspect first if this capture ever starts flapping.
 
 The chat capture needs no such caveat going forward: it will always come from source,
 because the released image ships no mock service worker.
@@ -253,11 +267,15 @@ because the released image ships no mock service worker.
   theme-aware pair. Version is not a baseline axis because only 1.x uses these images (see
   "If a version line ever diverges"). Adding the version to a project name renames every
   committed baseline, so leave it until a second version is genuinely being captured.
-- **`@playwright/test` is pinned exactly (`1.49.0`, no caret).** CI triggers on input changes
-  rather than on a cron, and that reasoning only holds if nothing can change without a git
-  event. A caret would let `npm ci` pull a new minor with a different Chromium, shifting pixels
+- **`@playwright/test` is pinned exactly (no caret).** CI triggers on input changes rather
+  than on a cron, and that reasoning only holds if nothing can change without a git event. A
+  caret would let `npm ci` pull a new minor with a different Chromium, shifting pixels
   silently. The agentgateway harness gets away with `^1.49.0` only because it re-captures
-  nightly, which turns a browser bump into a reviewable PR.
+  nightly, which turns a browser bump into a reviewable PR. The pin works as designed:
+  Dependabot moved it 1.49.0 -> 1.63.0 on 2026-09-23 as a reviewable commit, and `package.json`
+  is on the workflow's path filter so the bump triggers a re-capture. That bump shifted no
+  pixels beyond tolerance — all eight baselines passed under the new Chromium before anything
+  was rewritten — so a browser bump is not automatically a re-baseline.
 - **`workers: 1`.** The specs drive a real cluster and captures can create resources, so
   concurrent runs would race each other.
 - **There is no `update:all`.** The two specs need different backends, so a single command that
@@ -267,9 +285,9 @@ because the released image ships no mock service worker.
 
 ## CI
 
-`.github/workflows/playwright-screenshots.yml` — `workflow_dispatch` plus a push to the docs
-branch touching any input that determines the screenshots (the version conrefs, the specs, the
-fixtures, the config, the provisioner).
+`.github/workflows/playwright-screenshots.yaml` — `workflow_dispatch` plus a push to `main`
+touching any input that determines the screenshots (the version conrefs, the specs, the
+fixtures, the config, the provisioner). **Both jobs run on a matching push** as of 2026-09-23.
 
 **Deliberately no cron.** The chart versions are pinned to exact docs releases and released
 charts are immutable, so a fixed version plus a fixed fixture renders identically every run.
@@ -277,7 +295,29 @@ Nothing changes until an input file changes, and that is a git event — so the 
 on the event rather than polling. A cron here would produce a nightly no-op, or a stream of
 empty PRs.
 
-Needs a model provider API key as an Actions secret, and a token that can open PRs.
+**One path filter serves both jobs, on purpose.** Over-triggering costs a ~15m no-op; under-
+triggering is invisible, and it already bit once — see below. Refreshed images land under
+`__screenshots__/` and `assets/img/`, neither of which is on the filter, so a merged refresh
+PR cannot re-trigger the workflow.
+
+Needs no secrets. A model provider key is read from `secrets.OPENAI_API_KEY` if one is set, but
+the job falls back to a placeholder, which is correct rather than a workaround: the chart's
+`check-api-key` only tests for non-emptiness and these captures invoke no model.
+
+### Two failures worth not re-introducing
+
+- **The cluster job was `workflow_dispatch`-only while `provisioners/**` and the version conrefs
+  sat on the `push` filter.** Only that job reads them, so a version bump started a run,
+  executed the *mock* job — which reads no versions at all — and finished green while the three
+  cluster screenshots stayed eight days stale. Nothing failed; the trigger fired a job that
+  could not act on it. **A path filter is only as good as the job it can reach.**
+- **Neither job declared `permissions:`,** so `create-pull-request` got a read-only
+  `GITHUB_TOKEN` and every run died at the branch push with `Permission to
+  kagent-dev/website.git denied to github-actions[bot]`. The capture itself succeeded every
+  time and the result was discarded, which is why it read as a screenshot problem. Both jobs now
+  declare `contents: write` + `pull-requests: write`, the same pair `update-ref-docs.yaml` has
+  always used — that workflow opens PRs from this bot routinely, so the org-level "allow Actions
+  to create pull requests" setting was never the cause.
 
 ## Files
 

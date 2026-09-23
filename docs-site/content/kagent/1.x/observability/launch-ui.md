@@ -107,8 +107,8 @@ Two controls under the transcript branch the conversation rather than continue i
 
 The **Substrate** page shows whether there is capacity for an agent to run. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
 
-{{< reuse-image-light src="img/kagent-ui-substrate.png" alt="The Substrate page, showing one worker pool and an idle worker" caption="Figure: The Substrate page" >}}
-{{< reuse-image-dark srcDark="img/kagent-ui-substrate-dark.png" alt="The Substrate page, showing one worker pool and an idle worker" caption="Figure: The Substrate page" >}}
+{{< reuse-image-light src="img/kagent-ui-substrate.png" alt="The Substrate page, showing one worker pool and no running actors" caption="Figure: The Substrate page" >}}
+{{< reuse-image-dark srcDark="img/kagent-ui-substrate-dark.png" alt="The Substrate page, showing one worker pool and no running actors" caption="Figure: The Substrate page" >}}
 
 Read the page from the top tiles down.
 
@@ -119,10 +119,10 @@ Read the page from the top tiles down.
 | **Actors running** | Live Actors, each one an AgentInstance holding a conversation. |
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
 
-A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The Workers table still lists the pool's worker as `idle`. That idle worker confirms that capacity is provisioned and waiting for the first agent.
+A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent.
 
 > [!NOTE]
-> An empty Actors table on a cluster that does have agents indicates an issue at the level of the Agent Substrate API rather than at kagent. The page reports `ate-api reported no actors in this scope` when it reaches the API and gets an empty answer, so check the scope selector before investigating further.
+> An empty Actors table on a cluster that does have agents indicates an issue at the level of the Agent Substrate API rather than at kagent. The page reports `No actors in this scope.` when it reaches the API and gets an empty answer, so check the **Kubernetes namespace** and **ATE atespace** filters before investigating further.
 
 ## Expose the UI outside the cluster
 
