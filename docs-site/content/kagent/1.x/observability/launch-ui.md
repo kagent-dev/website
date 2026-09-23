@@ -92,16 +92,19 @@ Start at the **Agents** page to review the agents and their backing pairs of Age
 
 Opening an agent and sending a message creates an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}, which is one conversation scheduled onto a Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the controls that branch the conversation.
 
-{{< reuse-image-light src="img/kagent-ui-chat.png" alt="A conversation with an agent, showing a tool call and a checkpoint" caption="Figure: A conversation with an agent" >}}
-{{< reuse-image-dark srcDark="img/kagent-ui-chat-dark.png" alt="A conversation with an agent, showing a tool call and a checkpoint" caption="Figure: A conversation with an agent" >}}
+{{< reuse-image-light src="img/kagent-ui-chat.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
+{{< reuse-image-dark srcDark="img/kagent-ui-chat-dark.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 
-Two controls under the transcript branch the conversation rather than continue it.
+The UI names a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} a *snapshot*. To take one, select the save icon beside the message box. kagent pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript advanced. Agent Substrate does not collect a pinned snapshot, so the point stays available to return to. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
 
-- **Checkpoint** pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript advanced. Agent Substrate does not collect a pinned snapshot, so the point stays available to return to. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
-- **Fork** creates a second AgentInstance from a checkpoint, continuing from the point that the checkpoint pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the checkpoint's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
+A snapshot appears in the transcript as a mark carrying its name and three controls. Select the mark itself to open the record behind it, which holds the snapshot's ID, turn, state, and age.
+
+- **Fork** creates a second AgentInstance from the snapshot, continuing from the point that the snapshot pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the snapshot's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork. The fork takes the snapshot's name as its own. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
+- **Rename** replaces the name that kagent generates on creation from the AgentInstance ID and the turn the snapshot pins. Clearing the name restores that generated default.
+- **Delete** removes the snapshot and the runtime state stored with it.
 
 > [!NOTE]
-> A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
+> A snapshot is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
 
 ## Check Agent Substrate capacity
 
