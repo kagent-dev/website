@@ -55,14 +55,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: website
 
       # The mock backend is a service worker the released image does not ship, so the
       # capture needs the UI source, not a published image.
       - name: Check out kagent (for the UI source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ github.repository_owner }}/kagent
           path: kagent
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: website
 
