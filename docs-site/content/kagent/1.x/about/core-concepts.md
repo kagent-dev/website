@@ -69,7 +69,7 @@ An **AgentTemplate** is a Kubernetes custom resource that defines _what an agent
 
 - **Model configuration**: The large language model (LLM) provider and model the agent uses. This is the only field an AgentTemplate strictly requires.
 - **System prompt**: A literal prompt, or a Go-templated one that can `include` shared ConfigMaps.
-- **Tools**: A list of {{< gloss "Tool binding" >}}tool bindings{{< /gloss >}} that the agent can call. Each binding is either a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server, or another AgentTemplate used as an agent tool (see [Agent tools](#agent-tools-shared-vs-dedicated)).
+- **Tools**: A list of {{< gloss "Tool binding" >}}tool bindings{{< /gloss >}} that the agent can call. Each binding is either a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server, or another AgentTemplate used as an agent tool (see [Agent tools](#agent-tools)).
 - **Skills** and **plugins**: Reusable capability packages, sourced from an Open Container Initiative (OCI) registry, Git, or S3.
 
 An AgentTemplate does nothing on its own. It becomes runnable once it is paired with a Harness whose `allowedAgentTemplates` selector accepts it.
@@ -101,13 +101,10 @@ An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{<
 
 Actors are the reason why AgentInstances can suspend and resume cheaply instead of staying resident. An idle Actor can be snapshotted and torn down, then resumed from that snapshot on demand. To understand the full mechanics ({{< gloss "Worker" >}}Workers{{< /gloss >}}, {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}}, ActorTemplates, and snapshotting), see [Agent Substrate architecture]({{< link path="about/agent-substrate" >}}).
 
-## Agent tools: Shared vs. Dedicated
+## Agent tools
 
-An AgentTemplate's tools are not limited to MCP servers. A tool binding can also point at another AgentTemplate, letting one agent call another agent as a tool. Each agent-tool binding picks an isolation mode:
+An AgentTemplate's tools are not limited to MCP servers. A tool binding can also point at another AgentTemplate, which lets one agent hand work to a specialist agent.
 
-- **Shared** (default): The child agent runs inside the same Actor as its parent. This option is cheaper, but the child shares its parent's fate: if the parent's Actor is suspended or crashes, so does the child.
-- **Dedicated**: The child agent gets its own Actor, isolated from its parent. This option is more expensive, but a crash or a long-running task in the child cannot take down the parent, and the child can be scaled, suspended, or resumed independently.
+Every agent-tool binding carries an isolation mode, and `Shared` is the only mode that kagent implements today. A `Shared` binding runs the bound agent inside its parent's Actor, so the nesting costs no extra compute and the two agents share one sandbox. The schema also accepts `Dedicated`, which would give the bound agent an Actor of its own, but a binding that sets it fails to compile and the pair never becomes ready. For both modes and the state of `Dedicated`, see [Shared and Dedicated isolation]({{< link path="skills-and-mcp/about-tools#shared-and-dedicated-isolation" >}}).
 
-Shared nesting never goes more than one level deep. A Shared agent tool can have Dedicated agent tools beneath it, but it cannot contain another Shared one.
-
-This limit keeps the model predictable. A Dedicated binding gives the child its own Actor. A Shared binding puts the child in its parent's Actor, and because Shared bindings cannot chain, that parent always has an Actor of its own. Working out where any agent runs is therefore never more than a single step.
+Because a `Shared` binding nests one agent inside another's runtime boundary, the compiler constrains the shape of the resulting tree. Nesting stops at one level, so a bound agent cannot itself bind a third. That cap keeps the model predictable: every agent runs either in its own Actor or in the Actor of the agent that bound it, so working out where any agent runs is never more than a single step. For the rest of the rules that a tree must satisfy, see [What a Shared tree allows]({{< link path="skills-and-mcp/about-tools#what-a-shared-tree-allows" >}}).
