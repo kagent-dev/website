@@ -1,0 +1,7 @@
+# Lets a maintainer retroactively sign off on a contributor's commit by
+# pushing a follow-up commit, instead of asking them to rebase.
+# The DCO app already exempts Bot-type accounts (dependabot[bot]); this
+# covers human drive-by contributions that arrive without a Signed-off-by.
+allowRemediationCommits:
+  individual: true
+  thirdParty: true
