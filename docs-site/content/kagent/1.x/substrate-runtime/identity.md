@@ -1,14 +1,14 @@
 ---
 title: Identity
-description: Understand how kagent authenticates callers, scopes an AgentInstance to its creator, and how Agent Substrate identifies its own components.
+description: Understand how kagent resolves a caller's identity, scopes an AgentInstance to its creator, and how Agent Substrate identifies its own components.
 weight: 30
 author: kagent.dev
 ---
 
-A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation authenticates three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
 
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
-- A caller creating or talking to an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is authenticated by [kagent's own gRPC API](#the-kagent-plane).
+- A caller creating or talking to an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is assigned a principal by [kagent's own gRPC API](#the-kagent-plane).
 - The components inside [Agent Substrate](#the-agent-substrate-plane) authenticate each other.
 
 ## The Kubernetes plane
@@ -18,24 +18,27 @@ Harness and AgentTemplate are Kubernetes custom resources, so Kubernetes role-ba
 kagent's gRPC API reaches the same two resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent plane authorizes this path instead.
 
 > [!WARNING]
-> Because the open source build's authorizer permits every check, any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster.
+> The open source build neither authenticates nor authorizes this path: the authenticator it installs admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that the open source build gives an anonymous caller, see [The kagent plane](#the-kagent-plane).
 
 A Harness's `allowedAgentTemplates` selector adds a second, narrower control on top of RBAC. Whoever holds edit access on a Harness decides which AgentTemplates that Harness admits. In this way, RBAC governs who can write the resources, and the selector governs which pairs can run. For more information on the one-way match, see the [Harness core concept]({{< link path="about/core-concepts/#harness" >}}).
 
 ## The kagent plane
 
-An AgentInstance is not a Kubernetes resource. kagent's gRPC API creates the AgentInstance and kagent's database tracks it, so Kubernetes RBAC does not reach it. kagent authenticates these calls itself.
+An AgentInstance is not a Kubernetes resource. kagent's gRPC API creates the AgentInstance and kagent's database tracks it, so Kubernetes RBAC does not reach it. kagent resolves a principal for these calls itself.
 
-Every call on the AgentInstance API requires an authenticated principal. A call that arrives without one is rejected as unauthenticated before any other check runs.
+Every call on the AgentInstance API carries a principal. An authenticator resolves one before the request reaches the service, and a call that the authenticator declines is rejected as unauthenticated before any other check runs.
+
+> [!WARNING]
+> The authenticator that the open source build installs declines nothing. On the gRPC API, it reads the caller's identity from the `X-User-Id` header. The same authenticator guards the controller's `/mcp` endpoint, where it also reads a `user_id` query parameter that takes precedence over the header. It verifies neither value, and it names a caller that supplies neither `admin@kagent.dev`. A caller therefore selects its own principal. Treat the principal on a call as a label that the caller chose, and restrict network access to both endpoints rather than relying on it.
 
 ### Creator ownership
 
-kagent records a **creator** on every AgentInstance, taken from the authenticated principal that created it. That creator is then part of the database query for every read, so a caller who asks for an AgentInstance that another principal created receives a not-found response rather than a permission error.
+kagent records a **creator** on every AgentInstance, taken from the principal on the call that created it. That creator is then part of the database query for every read, so a caller who asks for an AgentInstance that another principal created receives a not-found response rather than a permission error.
 
 Listing behaves the same way. A list returns the caller's own AgentInstances by default. A caller that sets the request's all-creators flag asks to widen that to every creator in the namespace, and kagent authorizes that request separately from an ordinary list.
 
 > [!IMPORTANT]
-> Creator ownership is the boundary that the open source build enforces. kagent calls an authorizer before every AgentInstance operation. However, the authorizer that this build installs permits every check, so a widened list is available to any authenticated caller. Treat authentication and creator scoping as the guarantees that this build makes.
+> Creator ownership separates callers in the open source build without containing them. kagent calls an authorizer before every AgentInstance operation. The authorizer that this build installs permits every check, so any caller can widen a list. The same build also lets a caller name its own principal. A caller that presents another creator's identifier reads that creator's AgentInstances. Creator scoping keeps one user's conversations out of another user's list. It is not a security boundary.
 
 ### Shares
 
