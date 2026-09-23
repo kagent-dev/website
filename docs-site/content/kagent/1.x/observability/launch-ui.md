@@ -118,11 +118,12 @@ Read the page from the top tiles down.
 | **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated. |
 | **Actors running** | Live Actors, each one an AgentInstance holding a conversation. |
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
+| **Scope** | The filters this page asked for, rather than what the API returned. Reads `all` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`. |
 
-A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent.
+A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors on this page.`
 
 > [!NOTE]
-> An empty Actors table on a cluster that does have agents indicates an issue at the level of the Agent Substrate API rather than at kagent. The page reports `No actors in this scope.` when it reaches the API and gets an empty answer, so check the **Kubernetes namespace** and **ATE atespace** filters before investigating further.
+> When the Substrate page cannot reach the Agent Substrate API, it reports the failure rather than an empty result. A warning above the tables carries the error, and the Actors table reads `This read could not reach ate-api, so there may be actors it did not see.` On a cluster that does have agents, `No actors on this page.` means that the read succeeded and matched nothing, so check the **Kubernetes namespace** and **ATE atespace** filters.
 
 ## Expose the UI outside the cluster
 

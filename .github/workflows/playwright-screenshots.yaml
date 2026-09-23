@@ -112,9 +112,13 @@ jobs:
 
       - name: Publish into the docs img tree
         working-directory: website/${{ env.PW_DIR }}
-        # sync-docs exits nonzero when the cluster-captured baselines are absent, which
-        # they legitimately are in this job. Publish what this job captured and move on.
-        run: npm run sync-docs || true
+        # No `|| true`. sync-docs publishes from `__screenshots__/`, which is committed,
+        # so every mapped image resolves here even though this job captures only the chat
+        # pair -- the cluster baselines it also copies are the ones already in the tree.
+        # A nonzero exit therefore means a baseline is genuinely missing, which is a real
+        # failure and should fail the run. The guard that used to sit here claimed the
+        # cluster baselines were absent in this job; they never were.
+        run: npm run sync-docs
 
       - uses: actions/upload-artifact@v7
         if: always()
@@ -226,10 +230,12 @@ jobs:
       - name: Stand up the cluster at the docs-pinned versions
         working-directory: website/${{ env.PW_DIR }}
         env:
-          # The chart's check-api-key only tests that this is non-empty, and these
-          # captures (dashboard, agents list, substrate page on a fresh install) invoke
-          # no model. So a placeholder is correct here, not a workaround -- and it keeps
-          # a missing or rotated secret from failing a run that never needed one.
+          # The provisioner only tests that this is non-empty before writing it into a
+          # ModelProviderConfig, and these captures (dashboard, agents list, substrate
+          # page on a fresh install) invoke no model. So a placeholder is correct here,
+          # not a workaround -- and it keeps a missing or rotated secret from failing a
+          # run that never needed one. (kagent's `make check-api-key` tests the same
+          # emptiness, but it is a Makefile target and nothing in this job runs it.)
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-placeholder-for-screenshots' }}
         run: ./provisioners/kagent-kind.sh
 
@@ -254,10 +260,9 @@ jobs:
 
       - name: Publish into the docs img tree
         working-directory: website/${{ env.PW_DIR }}
-        # No `|| true` here, unlike the mock job. That guard exists because the mock job
-        # legitimately has no cluster baselines to publish; this job captures all of
-        # launch-ui and the chat pair is already in the checkout, so every mapped image
-        # resolves. A nonzero exit here is a real failure and should fail the run.
+        # No `|| true`, for the reason spelled out on the mock job's copy of this step:
+        # sync-docs publishes committed baselines, so every mapped image resolves in
+        # either job and a nonzero exit is a real failure.
         run: npm run sync-docs
 
       - uses: actions/upload-artifact@v7

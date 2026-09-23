@@ -229,7 +229,7 @@ Screenshots are pixel-compared, so captures must be stable across runs.
 
 | Capture | Source | Date |
 | --- | --- | --- |
-| `kagent-ui-chat` | kagent UI mock backend, `vite` at kagent tag `v1.0.0-alpha2` (`373b56be`) | 2026-09-23 |
+| `kagent-ui-chat` | kagent UI mock backend, `vite` at kagent tag `v1.0.0-alpha2` (`373b56be`) | 2026-09-15, re-verified 2026-09-23 |
 | `kagent-ui-dashboard` / `-agents` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-15, re-verified 2026-09-23 |
 | `kagent-ui-substrate` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-23 |
 
