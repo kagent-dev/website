@@ -177,19 +177,46 @@ run helm upgrade --install substrate-crds "$SUBSTRATE_CRDS_CHART" \
 run helm upgrade --install substrate "$SUBSTRATE_CHART" \
   --version "$SUBSTRATE_VERSION" --namespace "$ATE_NAMESPACE"
 
-# CA pools that sign service DNS and pod identity certificates. No Helm chart creates
-# these; Agent Substrate authenticates its components with mTLS and the material comes
-# from the kubectl-ate plugin.
-run kubectl ate admin make-ca-pool --ca-id=1 \
-  --name=service-dns-ca-pool --secret-namespace=podcertificate-controller-system
-run kubectl ate admin make-ca-pool --ca-id=1 \
-  --name=pod-identity-ca-pool --secret-namespace=podcertificate-controller-system
+# CA and JWT pools that sign service DNS, pod identity, actor identity and egress
+# certificates. No Helm chart creates these; Agent Substrate authenticates its
+# components with mTLS and the material comes from the kubectl-ate plugin.
+#
+# `make-ca-pool` and `make-jwt-pool` are NOT idempotent -- they exit nonzero with
+# `secrets "<name>" already exists` rather than no-opping. That breaks the re-run the
+# cluster-reuse branch above promises, and it breaks it at the FIRST pool, so a
+# re-run after any later failure never reaches the step that failed. Create only what
+# is missing; rotating a pool means deleting its secret and re-running.
+ensure_pool() {
+  local kind="$1" name="$2" ns="$3"
+  shift 3
+  if ! $DRY_RUN && kubectl get secret "$name" -n "$ns" >/dev/null 2>&1; then
+    echo "+ pool ${ns}/${name} already exists; skipping."
+    return
+  fi
+  if [[ "$kind" == jwt ]]; then
+    run kubectl ate admin make-jwt-pool --key-id=1 --name="$name" --secret-namespace="$ns" "$@"
+  else
+    run kubectl ate admin make-ca-pool --ca-id=1 --name="$name" --secret-namespace="$ns" "$@"
+  fi
+}
+
+# The pod-certificate-controller deployment hardcodes its namespace, so these two do
+# NOT follow the release namespace.
+ensure_pool ca  service-dns-ca-pool  podcertificate-controller-system
+ensure_pool ca  pod-identity-ca-pool podcertificate-controller-system
 
 # Actor identity pools.
-run kubectl ate admin make-jwt-pool --key-id=1 \
-  --name=actor-id-jwt-pool --secret-namespace="$ATE_NAMESPACE"
-run kubectl ate admin make-ca-pool --ca-id=1 \
-  --name=actor-id-ca-pool --secret-namespace="$ATE_NAMESPACE"
+ensure_pool jwt actor-id-jwt-pool    "$ATE_NAMESPACE"
+ensure_pool ca  actor-id-ca-pool     "$ATE_NAMESPACE"
+
+# The egress gateway terminates HTTPS from actors and re-signs it with this pool, which
+# Agent Substrate mounts as a REQUIRED volume from the 0.2.x line on. Omitting it does
+# not fail loudly: atenet-egress sits in ContainerCreating on `secret
+# "egress-mitm-ca-pool" not found`, the --wait below burns its full 10m timeout, and the
+# run dies before installing kagent at all. ECDSA P-256 is what substrate's own cluster
+# setup uses here, and the key type is not negotiable -- the gateway reads tls.crt and
+# tls.key straight out of this secret.
+ensure_pool ca  egress-mitm-ca-pool  "$ATE_NAMESPACE" --key-type=ECDSAP256
 
 run_sh "kubectl create secret generic actor-id-ca-certs (from the actor-id-ca-pool root)" "
 set -euo pipefail
