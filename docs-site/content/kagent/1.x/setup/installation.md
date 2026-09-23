@@ -142,6 +142,8 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
      discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
    "
    ```
+   > [!NOTE]
+   > An in-cluster issuer, such as `https://kubernetes.default.svc` or `https://kubernetes.default.svc.cluster.local`, publishes no discovery document that a public client can reach, so `certificateAuthorityFile` and `discoveryTokenFile` point the API server at its own projected ServiceAccount certificate authority and token. Omit both lines on a cluster that advertises an external issuer, such as a GKE cluster. `certificateAuthorityFile` replaces the client's root certificate authorities with the cluster's own, so retaining it fails the Transport Layer Security (TLS) handshake against an external issuer.
 
 7. Roll Agent Substrate out again so that its pods mount the identity material, and wait for them to become ready.
    ```bash

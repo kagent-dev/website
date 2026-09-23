@@ -1,14 +1,14 @@
 ---
 title: Identity
-description: Understand how kagent authenticates callers, scopes an AgentInstance to its creator, and how Agent Substrate identifies its own components.
+description: Understand how kagent resolves a caller's identity, scopes an AgentInstance to its creator, and how Agent Substrate identifies its own components.
 weight: 30
 author: kagent.dev
 ---
 
-A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation authenticates three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
 
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
-- A caller creating or talking to an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is authenticated by [kagent's own gRPC API](#the-kagent-plane).
+- A caller creating or talking to an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is assigned a principal by [kagent's own gRPC API](#the-kagent-plane).
 - The components inside [Agent Substrate](#the-agent-substrate-plane) authenticate each other.
 
 ## The Kubernetes plane
@@ -24,16 +24,16 @@ A Harness's `allowedAgentTemplates` selector adds a second, narrower control on 
 
 ## The kagent plane
 
-An AgentInstance is not a Kubernetes resource. kagent's gRPC API creates the AgentInstance and kagent's database tracks it, so Kubernetes RBAC does not reach it. kagent authenticates these calls itself.
+An AgentInstance is not a Kubernetes resource. kagent's gRPC API creates the AgentInstance and kagent's database tracks it, so Kubernetes RBAC does not reach it. kagent resolves a principal for these calls itself.
 
 Every call on the AgentInstance API carries a principal. An authenticator resolves one before the request reaches the service, and a call that the authenticator declines is rejected as unauthenticated before any other check runs.
 
 > [!WARNING]
-> The authenticator that the open source build installs declines nothing. It reads the caller's identity from the `X-User-Id` header or the `user_id` query parameter, and verifies neither. When both are absent, it names the caller `admin@kagent.dev`. A caller therefore selects its own principal. The same authenticator guards the controller's `/mcp` endpoint. kagent's core library takes its authenticator from the program that embeds it. A distribution that verifies caller identity supplies one of its own.
+> The authenticator that the open source build installs declines nothing. On the gRPC API, it reads the caller's identity from the `X-User-Id` header. The same authenticator guards the controller's `/mcp` endpoint, where it also reads a `user_id` query parameter that takes precedence over the header. It verifies neither value, and it names a caller that supplies neither `admin@kagent.dev`. A caller therefore selects its own principal. Treat the principal on a call as a label that the caller chose, and restrict network access to both endpoints rather than relying on it.
 
 ### Creator ownership
 
-kagent records a **creator** on every AgentInstance, taken from the authenticated principal that created it. That creator is then part of the database query for every read, so a caller who asks for an AgentInstance that another principal created receives a not-found response rather than a permission error.
+kagent records a **creator** on every AgentInstance, taken from the principal on the call that created it. That creator is then part of the database query for every read, so a caller who asks for an AgentInstance that another principal created receives a not-found response rather than a permission error.
 
 Listing behaves the same way. A list returns the caller's own AgentInstances by default. A caller that sets the request's all-creators flag asks to widen that to every creator in the namespace, and kagent authorizes that request separately from an ordinary list.
 
