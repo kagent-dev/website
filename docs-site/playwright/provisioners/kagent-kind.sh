@@ -265,11 +265,11 @@ kubectl create secret generic actor-id-ca-certs -n ${ATE_NAMESPACE} \
 
 run_sh "kubectl create configmap ate-api-authentication" "
 set -euo pipefail
-# Ask the cluster for its issuer rather than assuming one. kind 1.37 advertises
-# https://kubernetes.default.svc.cluster.local, while the older hardcoded value was
-# https://kubernetes.default.svc; a mismatch is accepted at install time and only shows
-# up later as \`token issuer ... not trusted\` on every kubectl-ate and ateapi call.
-# kagent's own setup-cluster.sh derives it the same way (kagent#2763, fixed in #2770).
+# Ask the cluster for its issuer rather than assuming one: kind 1.37 advertises
+# https://kubernetes.default.svc.cluster.local, and a mismatch is accepted at install
+# time, surfacing later as \`token issuer ... not trusted\` on every kubectl-ate and
+# ateapi call. kagent's own setup-cluster.sh and the install guide both derive it
+# (kagent#2763, fixed in #2770).
 k8s_issuer=\"\$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)\"
 kubectl create configmap ate-api-authentication -n ${ATE_NAMESPACE} \
   --from-literal=authentication.yaml='actorIdentityJWTProvider: kubernetes
