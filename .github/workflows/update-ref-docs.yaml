@@ -6,17 +6,17 @@ on:
       version:
         description: 'kagent release to generate from, e.g. 1.0.0-alpha2. Defaults to kagent''s latest release.'
         required: false
-  # For kagent's release workflow to fire directly. Send {"version": "1.0.0-alpha2"}
-  # in client_payload, or omit it to use kagent's latest release.
-  repository_dispatch:
-    types: [kagent-release]
+  # Publishing a release HERE is the switch. Tag it with the kagent release the
+  # docs should describe (v1.0.0-alpha2) and the job below reads that tag name.
+  # Same pattern as agentgateway/website and kgateway-dev/kgateway.dev, both of
+  # which cut a "Docs for vX" release rather than wiring cross-repo credentials.
+  release:
+    types: [published]
 
 # There is deliberately NO schedule: a nightly run can only ask what kagent
-# looks like now, which drifts ahead of what anyone can install. The release
-# lives in kagent-dev/kagent, so `on: release` cannot fire here -- kagent has to
-# tell us. Until its tag.yaml sends the dispatch, run this from the Actions tab.
+# looks like now, which drifts ahead of what anyone can install.
 
-# Queue overlapping runs (e.g. a re-dispatch racing the first) so they don't
+# Queue overlapping runs (e.g. a manual re-run racing a release) so they don't
 # force-push the same PR branch concurrently.
 concurrency:
   group: update-ref-docs
@@ -44,13 +44,17 @@ concurrency:
 # KagentHarnessCompaction and KagentHarnessSummarizer documented on pages whose
 # `helm install --version` line said alpha1, a release neither type exists in.
 #
-# 0.x is FROZEN and is no longer generated here. Its committed pages
-# (0.x/resources/api-ref.md, 0.x/resources/helm.md and 0.x/resources/cli/) all
-# describe kagent v0.10.1 -- the newest 0.x release -- so they document
-# v1alpha2, the 0.10.1 chart and the v0.10.1 CLI, none of which main still
-# contains. Regenerating them from main overwrites correct frozen content with
-# 1.0 values. All are still linked from 0.x pages, so leave them in place rather
-# than deleting.
+# BOTH documented lines are generated here, each from its own release tag.
+# 0.10.x is the stable line and still takes patches -- v0.10.2 landed on
+# 2026-09-23 -- so it is not frozen, and the by-hand regeneration it used to
+# need is what let its pages drift in the first place. Publishing a docs
+# release tagged v0.10.2 regenerates 0.x; v1.0.0-alphaN regenerates 1.x.
+#
+# The two must never write each other's values. Every conref a page of either
+# line reads is version-split, and the conref helper refuses to continue if a
+# span outside the running line moves. The conrefs that are still flat --
+# kmcp, kagent-tools, the runtime images -- are read only by 1.x pages, so a
+# 0.x run skips them entirely rather than filling them from the 0.10.x tree.
 #
 # That is not hypothetical -- it happened to all three before this job was
 # retargeted, in three different shapes, none of which failed a build:
@@ -73,8 +77,8 @@ concurrency:
 #     --display-name kagent --out-dir docs-site/content/kagent/0.x/resources/cli \
 #     --url-prefix /docs/kagent/0.x/resources/cli --weight 1
 #
-# No --link-prefix there on purpose: 0.x is frozen and is not rebased into the
-# enterprise hub, so its generated cross-links stay root-relative URLs.
+# No --link-prefix on 0.x: it is not rebased into the enterprise hub, so its
+# generated cross-links stay root-relative URLs. The job sets that per line.
 #
 # The section is named reference/ in 1.x, not resources/ as in 0.x, and the
 # provider pages link to crd-ref-docs anchors (#modelconfigspec, #openaiconfig,
@@ -114,6 +118,7 @@ jobs:
     outputs:
       kagent_tag: ${{ steps.pick.outputs.kagent_tag }}
       kagent_version: ${{ steps.pick.outputs.kagent_version }}
+      line: ${{ steps.pick.outputs.line }}
       kmcp_tag: ${{ steps.pick.outputs.kmcp_tag }}
       proceed: ${{ steps.pick.outputs.proceed }}
     steps:
@@ -122,20 +127,36 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
-          REQUESTED: ${{ github.event.inputs.version || github.event.client_payload.version || '' }}
+          # A docs release's tag names the kagent release to document; a manual
+          # run can name one directly. Neither is set on a re-run with no input,
+          # which falls through to kagent's latest release below.
+          REQUESTED: ${{ github.event.release.tag_name || github.event.inputs.version || '' }}
         run: |
           set -euo pipefail
 
-          # An explicit version wins, from either dispatch shape. Otherwise take
-          # kagent's latest release. `gh release view` with no tag returns the
-          # release marked Latest, which excludes drafts but INCLUDES
-          # prereleases -- deliberate while 1.0 is still on alpha tags.
+          # An explicit version wins, whether it came from a docs release tag or
+          # a manual run.
+          #
+          # The fallback avoids `gh release view`, which returns the release
+          # GitHub marks "Latest" -- the newest STABLE release. That is
+          # correctly a 0.10.x one today: 0.10.x is the stable line, and 1.0 is
+          # still shipping as alpha prereleases, which should not be Latest. It
+          # is simply the answer to a different question than this job asks.
+          # These are the 1.x pages, so it wants the newest 1.x release whether
+          # or not that line is the stable one.
           if [ -n "$REQUESTED" ]; then
             KAGENT_TAG="v${REQUESTED#v}"
             echo "Version requested explicitly: $KAGENT_TAG"
           else
-            KAGENT_TAG=$(gh release view --repo "$OWNER/kagent" --json tagName -q .tagName)
-            echo "Using kagent's latest release: $KAGENT_TAG"
+            KAGENT_TAG=$(gh release list --repo "$OWNER/kagent" --limit 50 \
+              --json tagName,isDraft \
+              -q '[.[] | select(.isDraft == false) | select(.tagName | startswith("v1."))] | .[0].tagName')
+            if [ -z "$KAGENT_TAG" ]; then
+              echo "Error: no 1.x release found in $OWNER/kagent. Name a version explicitly."
+              exit 1
+            fi
+            echo "Using kagent's newest 1.x release: $KAGENT_TAG"
+            echo "Name a 0.10.x version explicitly to regenerate the 0.x line instead."
           fi
 
           KAGENT_VERSION="${KAGENT_TAG#v}"
@@ -144,12 +165,17 @@ jobs:
             exit 1
           fi
 
-          # Refuse to document a 0.x release. 0.x is frozen at v0.10.1 and its
-          # pages are regenerated by hand from that tag; a dispatch naming a 0.x
-          # version would otherwise overwrite 1.x content with 0.x values.
+          # Which documented line this release belongs to. Both are live: 0.10.x
+          # is the stable line and still takes patches, 1.0 is the alpha line.
+          # Everything downstream -- page paths, API version, frontmatter,
+          # which conrefs are in scope -- follows from this.
           case "$KAGENT_VERSION" in
-            0.*) echo "Error: $KAGENT_VERSION is a 0.x release. 0.x is frozen; see the header comment."; exit 1 ;;
+            0.*) LINE=0.x ;;
+            1.*) LINE=1.x ;;
+            *)   echo "Error: $KAGENT_VERSION belongs to no documented line. Only 0.x and 1.x exist."; exit 1 ;;
           esac
+          echo "Documenting the $LINE line."
+          echo "line=$LINE" >> "$GITHUB_OUTPUT"
 
           # Prove the tag exists before four later steps assume it does.
           if ! gh api "repos/$OWNER/kagent/git/ref/tags/$KAGENT_TAG" >/dev/null 2>&1; then
@@ -191,26 +217,19 @@ jobs:
       KAGENT_VERSION: ${{ needs.resolve.outputs.kagent_version }}
       KAGENT_TAG: ${{ needs.resolve.outputs.kagent_tag }}
       KMCP_TAG: ${{ needs.resolve.outputs.kmcp_tag }}
-      KAGENT_API_PAGE: docs-site/content/kagent/1.x/reference/api-ref.md
+      LINE: ${{ needs.resolve.outputs.line }}
+      # kagent paths are per-line and set by "Resolve line configuration"
+      # below. kmcp is unversioned, so its targets are fixed.
       KMCP_API_PAGE: docs-site/content/kmcp/reference/api-ref.md
-      HELM_PAGE: docs-site/content/kagent/1.x/reference/helm.md
-      VERSIONS_DIR: website/docs-site/assets/kagent-docs/versions
-      # The second, easily-missed copy of the Kubernetes version. "Read max
-      # Kubernetes version" below feeds THIS file to crd-ref-docs as
-      # KUBE_VERSION, while the docs render the assets/ copy. Same fact, two
-      # committed files, so the conref step writes both. They had already
-      # drifted when this was wired up -- assets/ said 1.35 and public/ said
-      # 1.31, silently pinning every Kubernetes API link in api-ref.md to 1.31.
-      KUBE_VERSION_FILE: website/public/docs/versions/max-kube.md
-      KAGENT_CLI_DIR: docs-site/content/kagent/1.x/reference/cli
       KMCP_CLI_DIR: docs-site/content/kmcp/reference/cli
-      KAGENT_CLI_URL_PREFIX: /docs/kagent/1.x/reference/cli
-      # Version-root-relative path behind the `link` shortcode in the
-      # generated kagent pages. kagent is versioned and its pages are
-      # rebased into the enterprise docs hub, so its cross-links must not
-      # hardcode the 1.x segment. kmcp is unversioned and passes none.
-      KAGENT_CLI_LINK_PREFIX: reference/cli
       KMCP_CLI_URL_PREFIX: /docs/kmcp/reference/cli
+      VERSIONS_DIR: website/docs-site/assets/kagent-docs/versions
+      # A second copy of the Kubernetes version that nothing but this workflow
+      # reads -- the docs render the assets/ conref. Kept in step with the 1.x
+      # value and not written on 0.x runs, so the two lines cannot fight over
+      # one flat file. It used to be fed to crd-ref-docs as KUBE_VERSION; that
+      # round-trip is gone, the value now comes straight from the resolved tree.
+      KUBE_VERSION_FILE: website/public/docs/versions/max-kube.md
 
     steps:
       # Both checkouts are pinned to a release tag. Checking out main here is
@@ -246,6 +265,85 @@ jobs:
 
       - name: Set kmcp commit SHA
         run: echo "KMCP_COMMIT=$(cd kmcp && git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      # Everything that differs between the two documented lines, in one place.
+      # 0.x and 1.x disagree on more than a path segment: the section is named
+      # resources/ in 0.x and reference/ in 1.x, 0.x ships v1alpha2 where 1.x
+      # ships v1alpha3, the frontmatter differs down to linkTitle and weight,
+      # and 0.x predates Harness so it pins no runtime images.
+      - name: Resolve line configuration
+        run: |
+          set -euo pipefail
+
+          case "$LINE" in
+            0.x)
+              SECTION=resources
+              API_DIR=go/api/v1alpha2
+              API_TITLE="API Reference"
+              API_LINK_TITLE="API docs"
+              API_DESC="kagent API reference documentation"
+              API_WEIGHT=1
+              HELM_TITLE="kagent"
+              HELM_LINK_TITLE="Helm Chart Configuration"
+              HELM_DESC="kagent Helm chart configuration reference"
+              HELM_WEIGHT=2
+              CLI_WEIGHT=1
+              # No --link-prefix on 0.x: it is not rebased into the enterprise
+              # hub, so its generated cross-links stay root-relative URLs.
+              KAGENT_CLI_LINK_PREFIX=""
+              # 0.x predates Harness and pins no runtime image, and its pages
+              # read none of the 1.x-only conrefs.
+              WITH_RUNTIME_IMAGES=false
+              WITH_KMCP=false
+              ;;
+            1.x)
+              SECTION=reference
+              API_DIR=go/api/v1alpha3
+              API_TITLE="API reference"
+              API_LINK_TITLE=""
+              API_DESC="Look up every field in the kagent v1alpha3 custom resources, including AgentTemplate, Harness, ModelConfig, and RemoteMCPServer."
+              API_WEIGHT=10
+              HELM_TITLE="Helm reference"
+              HELM_LINK_TITLE=""
+              HELM_DESC="Look up the configurable values in the kagent Helm chart, including their defaults and types."
+              HELM_WEIGHT=20
+              # --weight 30 slots CLI docs after api-ref (10) and helm (20).
+              CLI_WEIGHT=30
+              # Version-root-relative path behind the `link` shortcode. 1.x
+              # pages are rebased into the enterprise docs hub, so their
+              # cross-links must not hardcode the 1.x segment.
+              KAGENT_CLI_LINK_PREFIX=reference/cli
+              WITH_RUNTIME_IMAGES=true
+              WITH_KMCP=true
+              ;;
+            *)
+              echo "Error: unknown line '$LINE'."
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "SECTION=$SECTION"
+            echo "API_DIR=$API_DIR"
+            echo "KAGENT_API_PAGE=docs-site/content/kagent/$LINE/$SECTION/api-ref.md"
+            echo "HELM_PAGE=docs-site/content/kagent/$LINE/$SECTION/helm.md"
+            echo "KAGENT_CLI_DIR=docs-site/content/kagent/$LINE/$SECTION/cli"
+            echo "KAGENT_CLI_URL_PREFIX=/docs/kagent/$LINE/$SECTION/cli"
+            echo "KAGENT_CLI_LINK_PREFIX=$KAGENT_CLI_LINK_PREFIX"
+            echo "API_TITLE=$API_TITLE"
+            echo "API_LINK_TITLE=$API_LINK_TITLE"
+            echo "API_DESC=$API_DESC"
+            echo "API_WEIGHT=$API_WEIGHT"
+            echo "HELM_TITLE=$HELM_TITLE"
+            echo "HELM_LINK_TITLE=$HELM_LINK_TITLE"
+            echo "HELM_DESC=$HELM_DESC"
+            echo "HELM_WEIGHT=$HELM_WEIGHT"
+            echo "CLI_WEIGHT=$CLI_WEIGHT"
+            echo "WITH_RUNTIME_IMAGES=$WITH_RUNTIME_IMAGES"
+            echo "WITH_KMCP=$WITH_KMCP"
+          } >> $GITHUB_ENV
+
+          echo "Line $LINE -> content/kagent/$LINE/$SECTION/, $API_DIR"
 
       # ---------------------------------------------------------------------
       # Version conrefs.
@@ -351,6 +449,7 @@ jobs:
       # 0.x needs no equivalent: it predates Harness and pins no runtime image.
       # ---------------------------------------------------------------------
       - name: Resolve runtime image digests
+        if: env.WITH_RUNTIME_IMAGES == 'true'
         run: |
           set -euo pipefail
 
@@ -396,7 +495,7 @@ jobs:
             # pushing, so a run triggered by it can arrive early. An empty
             # conref would blank a `workload.image` line on four pages, so the
             # value is left alone and the miss goes in the PR body instead.
-            # Re-dispatch once the images land.
+            # Re-run this workflow once the images land.
             if ! printf '%s' "$digest" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
               echo "::warning::Could not resolve a digest for ${repo}:${IMAGE_TAG}. Leaving its conref unchanged."
               UNRESOLVED="${UNRESOLVED}\`${repo}:${IMAGE_TAG}\` "
@@ -419,6 +518,7 @@ jobs:
           fi
 
       - name: Cross-check kmcp against its own latest release
+        if: env.WITH_KMCP == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -485,114 +585,140 @@ jobs:
             fi
           }
 
-          echo "Plain-value conrefs:"
-          write_conref "$VERSIONS_DIR/kmcp.md"         "$KMCP_VERSION"
-          # Only when it resolved; see the cross-check step above.
-          if [ -n "${KMCP_LATEST:-}" ]; then
-            write_conref "$VERSIONS_DIR/kmcp-latest.md" "$KMCP_LATEST"
+          # Version-split conrefs. Each carries one span per documented line:
+          #   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="1.x" >}}B{{< /version >}}
+          # Only this run's span is written, and the helper refuses to continue
+          # if any other span moved -- that assertion is the whole safety net
+          # keeping a 0.10.x run from rewriting 1.x values and vice versa.
+          #
+          # Read, substitute and write the whole file rather than sed -i:
+          # whether sed -i appends a trailing newline to a file that lacked one
+          # is unspecified by POSIX, and these files must never gain one. They
+          # render inline into shell commands like `--version {{< reuse ... >}} \`,
+          # where a newline would split the command.
+          write_span_conref() {
+            local file="$1" span="$2" value="$3"
+            if [ ! -f "$file" ]; then
+              echo "Error: expected conref $file"
+              exit 1
+            fi
+            python3 - "$file" "$span" "$value" <<'PY_SPAN'
+          import re, sys
+
+          path, span, value = sys.argv[1], sys.argv[2], sys.argv[3]
+          pattern = re.compile(r'\{\{< version include-if="([^"]+)" >\}\}(.*?)\{\{< /version >\}\}')
+
+          text = open(path).read()
+          before = dict(pattern.findall(text))
+          if span not in before:
+              sys.exit(f"Error: {path} has no {span} span. Found: {sorted(before)}")
+
+          def sub(m):
+              return m.group(0) if m.group(1) != span else (
+                  f'{{{{< version include-if="{span}" >}}}}{value}{{{{< /version >}}}}')
+
+          new = pattern.sub(sub, text)
+          after = dict(pattern.findall(new))
+
+          if after[span] != value:
+              sys.exit(f"Error: the {span} span of {path} did not take {value!r}.")
+          moved = [k for k in before if k != span and before[k] != after.get(k)]
+          if moved:
+              sys.exit(f"Error: {path} changed spans this run must not touch: {moved}. Refusing to continue.")
+
+          open(path, "w").write(new)
+          name = path.rsplit("/", 1)[-1]
+          others = ", ".join(f"{k} left at {before[k]}" for k in sorted(before) if k != span)
+          if before[span] != value:
+              print(f"  {name} {span} span: {before[span]} -> {value} ({others})")
+          else:
+              print(f"  {name} {span} span: unchanged ({value})")
+          PY_SPAN
+          }
+
+          echo "Version-split conrefs (writing the $LINE span):"
+          write_span_conref "$VERSIONS_DIR/kagent.md"          "$LINE" "$KAGENT_VERSION"
+          write_span_conref "$VERSIONS_DIR/agent-substrate.md" "$LINE" "$SUBSTRATE_VERSION"
+          write_span_conref "$VERSIONS_DIR/max-kube.md"        "$LINE" "$MAX_KUBE"
+
+          # Flat conrefs, read only by 1.x pages. On a 0.x run their values
+          # would come from the 0.10.x tree and silently replace what the 1.x
+          # pages render, so they are not in scope for that line at all.
+          if [ "$WITH_KMCP" != "true" ]; then
+            echo "Flat conrefs: SKIPPED. No 0.x page reads kmcp, kagent-tools or the runtime images."
           else
-            echo "  kmcp-latest.md: SKIPPED, kmcp's latest release was unreadable. Left at $(cat "$VERSIONS_DIR/kmcp-latest.md")"
-          fi
-          write_conref "$VERSIONS_DIR/kagent-tools.md" "$KAGENT_TOOLS_VERSION"
-          write_conref "$VERSIONS_DIR/max-kube.md"     "$MAX_KUBE"
-          write_conref "$KUBE_VERSION_FILE"            "$MAX_KUBE"
+            # No trailing newline here either; see write_span_conref above.
+            write_conref() {
+              local file="$1" value="$2"
+              if [ ! -f "$file" ]; then
+                echo "Error: expected conref $file"
+                exit 1
+              fi
+              local before
+              before=$(cat "$file")
+              printf '%s' "$value" > "$file"
+              if [ "$before" != "$value" ]; then
+                echo "  $(basename "$file"): $before -> $value"
+              else
+                echo "  $(basename "$file"): unchanged ($value)"
+              fi
+            }
 
-          # Runtime image conrefs, written only when the digest resolved. An
-          # empty value would blank the `workload.image` line on four 1.x pages,
-          # so an unresolved lookup keeps the previous value rather than writing
-          # a broken one. The miss was already warned about upstream and is
-          # repeated in the PR body.
-          echo "Runtime image conrefs:"
-          if [ -n "${RUNTIME_IMAGE:-}" ]; then
-            write_conref "$VERSIONS_DIR/runtime-image.md" "$RUNTIME_IMAGE"
+            echo "Flat conrefs:"
+            write_conref "$VERSIONS_DIR/kmcp.md"         "$KMCP_VERSION"
+            # Only when it resolved; see the cross-check step above.
+            if [ -n "${KMCP_LATEST:-}" ]; then
+              write_conref "$VERSIONS_DIR/kmcp-latest.md" "$KMCP_LATEST"
+            else
+              echo "  kmcp-latest.md: SKIPPED, kmcp's latest release was unreadable. Left at $(cat "$VERSIONS_DIR/kmcp-latest.md")"
+            fi
+            write_conref "$VERSIONS_DIR/kagent-tools.md" "$KAGENT_TOOLS_VERSION"
+            # Nothing but this workflow reads this copy; kept level with 1.x.
+            write_conref "$KUBE_VERSION_FILE"            "$MAX_KUBE"
+
+            # Written only when the digest resolved. An empty value would blank
+            # the `workload.image` line on four 1.x pages, so an unresolved
+            # lookup keeps the previous value rather than writing a broken one.
+            # The miss was already warned about upstream and is repeated in the
+            # PR body.
+            echo "Runtime image conrefs:"
+            if [ -n "${RUNTIME_IMAGE:-}" ]; then
+              write_conref "$VERSIONS_DIR/runtime-image.md" "$RUNTIME_IMAGE"
+            else
+              echo "  runtime-image.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image.md")"
+            fi
+            if [ -n "${RUNTIME_IMAGE_CLAUDE:-}" ]; then
+              write_conref "$VERSIONS_DIR/runtime-image-claude.md" "$RUNTIME_IMAGE_CLAUDE"
+            else
+              echo "  runtime-image-claude.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image-claude.md")"
+            fi
+          fi
+
+      # Three fragments of the PR body that exist only on a 1.x run. Built here
+      # rather than inline, because a GitHub expression string cannot span
+      # lines and these are table rows.
+      - name: Compose the line-dependent PR body fragments
+        run: |
+          set -euo pipefail
+
+          if [ "$WITH_KMCP" = "true" ]; then
+            {
+              echo "KMCP_SOURCE_LINE=- **kmcp**: [\`${KMCP_TAG}\`](https://github.com/${{ github.repository_owner }}/kmcp/releases/tag/${KMCP_TAG}) (\`${KMCP_COMMIT}\`)"
+              echo "LINE_SCOPE_NOTE="
+              echo "FLAT_CONREF_ROWS<<ROWS_EOF"
+              echo "| \`kmcp\` | \`${KMCP_VERSION}\` | \`go/go.mod\` require (what kagent bundles) |"
+              echo "| \`kmcp-latest\` | \`${KMCP_LATEST:-unresolved}\` | kmcp's latest release (what the kmcp guides show) |"
+              echo "| \`kagent-tools\` | \`${KAGENT_TOOLS_VERSION}\` | \`helm/kagent/Chart-template.yaml\` |"
+              echo "| \`runtime-image\` | \`${RUNTIME_IMAGE:-unresolved}\` | GHCR, at \`${KAGENT_TAG}\` |"
+              echo "| \`runtime-image-claude\` | \`${RUNTIME_IMAGE_CLAUDE:-unresolved}\` | GHCR, at \`${KAGENT_TAG}\` |"
+              echo "ROWS_EOF"
+            } >> $GITHUB_ENV
           else
-            echo "  runtime-image.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image.md")"
-          fi
-          if [ -n "${RUNTIME_IMAGE_CLAUDE:-}" ]; then
-            write_conref "$VERSIONS_DIR/runtime-image-claude.md" "$RUNTIME_IMAGE_CLAUDE"
-          else
-            echo "  runtime-image-claude.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image-claude.md")"
-          fi
-
-          # agent-substrate.md is version-split and 0.x is FROZEN:
-          #   {{< version include-if="0.x" >}}0.0.6{{< /version >}}{{< version include-if="1.x" >}}0.0.26{{< /version >}}
-          # Replace only the 1.x span. The 0.x value documents what kagent 0.9.x
-          # shipped against and must never be rewritten from main.
-          SUBSTRATE_CONREF="$VERSIONS_DIR/agent-substrate.md"
-          if [ ! -f "$SUBSTRATE_CONREF" ]; then
-            echo "Error: expected conref $SUBSTRATE_CONREF"
-            exit 1
-          fi
-
-          # Read, substitute, then printf the result back, rather than sed -i.
-          # Whether sed -i appends a trailing newline to a file that lacked one
-          # is unspecified by POSIX and varies between implementations; $( )
-          # strips trailing newlines and printf '%s' writes none, so the byte
-          # layout is deterministic either way.
-          SUBSTRATE_BEFORE=$(cat "$SUBSTRATE_CONREF")
-          SUBSTRATE_AFTER=$(printf '%s' "$SUBSTRATE_BEFORE" \
-            | sed -E "s|(include-if=\"1\.x\" >\}\})[^{]*(\{\{< /version >\}\})|\1${SUBSTRATE_VERSION}\2|")
-          printf '%s' "$SUBSTRATE_AFTER" > "$SUBSTRATE_CONREF"
-
-          # Prove the surgery did what it claims: the 1.x span now holds the new
-          # value, and the 0.x span is byte-identical to what it was. -F because
-          # the needle is a literal containing regex metacharacters.
-          if ! printf '%s' "$SUBSTRATE_AFTER" | grep -qF "include-if=\"1.x\" >}}${SUBSTRATE_VERSION}{{< /version >}}"; then
-            echo "Error: the 1.x span of agent-substrate.md did not take the new value."
-            echo "  before: $SUBSTRATE_BEFORE"
-            echo "  after:  $SUBSTRATE_AFTER"
-            exit 1
-          fi
-          BEFORE_0X=$(printf '%s' "$SUBSTRATE_BEFORE" | sed -E 's|(\{\{< version include-if="1\.x").*||')
-          AFTER_0X=$(printf '%s' "$SUBSTRATE_AFTER" | sed -E 's|(\{\{< version include-if="1\.x").*||')
-          if [ "$BEFORE_0X" != "$AFTER_0X" ]; then
-            echo "Error: the frozen 0.x span of agent-substrate.md changed. Refusing to continue."
-            echo "  before: $BEFORE_0X"
-            echo "  after:  $AFTER_0X"
-            exit 1
-          fi
-
-          echo "Version-split conref:"
-          if [ "$SUBSTRATE_BEFORE" != "$SUBSTRATE_AFTER" ]; then
-            echo "  agent-substrate.md 1.x span -> $SUBSTRATE_VERSION (0.x span untouched)"
-          else
-            echo "  agent-substrate.md: unchanged ($SUBSTRATE_VERSION)"
-          fi
-
-          # kagent.md is version-split the same way, and 0.x is FROZEN at the
-          # v0.10.1 value. This is the conref that decides which release the 1.x
-          # install commands name, so writing it from the tag we generated
-          # everything else from is what keeps the pages self-consistent.
-          KAGENT_CONREF="$VERSIONS_DIR/kagent.md"
-          if [ ! -f "$KAGENT_CONREF" ]; then
-            echo "Error: expected conref $KAGENT_CONREF"
-            exit 1
-          fi
-
-          KAGENT_BEFORE=$(cat "$KAGENT_CONREF")
-          KAGENT_AFTER=$(printf '%s' "$KAGENT_BEFORE" \
-            | sed -E "s|(include-if=\"1\.x\" >\}\})[^{]*(\{\{< /version >\}\})|\1${KAGENT_VERSION}\2|")
-          printf '%s' "$KAGENT_AFTER" > "$KAGENT_CONREF"
-
-          if ! printf '%s' "$KAGENT_AFTER" | grep -qF "include-if=\"1.x\" >}}${KAGENT_VERSION}{{< /version >}}"; then
-            echo "Error: the 1.x span of kagent.md did not take the new value."
-            echo "  before: $KAGENT_BEFORE"
-            echo "  after:  $KAGENT_AFTER"
-            exit 1
-          fi
-          KAGENT_BEFORE_0X=$(printf '%s' "$KAGENT_BEFORE" | sed -E 's|(\{\{< version include-if="1\.x").*||')
-          KAGENT_AFTER_0X=$(printf '%s' "$KAGENT_AFTER" | sed -E 's|(\{\{< version include-if="1\.x").*||')
-          if [ "$KAGENT_BEFORE_0X" != "$KAGENT_AFTER_0X" ]; then
-            echo "Error: the frozen 0.x span of kagent.md changed. Refusing to continue."
-            echo "  before: $KAGENT_BEFORE_0X"
-            echo "  after:  $KAGENT_AFTER_0X"
-            exit 1
-          fi
-
-          if [ "$KAGENT_BEFORE" != "$KAGENT_AFTER" ]; then
-            echo "  kagent.md 1.x span -> $KAGENT_VERSION (0.x span untouched)"
-          else
-            echo "  kagent.md: unchanged ($KAGENT_VERSION)"
+            {
+              echo "KMCP_SOURCE_LINE="
+              echo "LINE_SCOPE_NOTE=No kmcp, kagent-tools or runtime-image conref is touched on a $LINE run: no $LINE page reads them, and their values would come from the ${KAGENT_VERSION%%.*}.x tree."
+              echo "FLAT_CONREF_ROWS="
+            } >> $GITHUB_ENV
           fi
 
       - name: Flag whether the conrefs moved
@@ -628,22 +754,21 @@ jobs:
 
       - name: Verify API directory exists
         run: |
-          if [ ! -d "$GITHUB_WORKSPACE/kagent/go/api/v1alpha3" ]; then
-            echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/go/api/v1alpha3"
+          if [ ! -d "$GITHUB_WORKSPACE/kagent/$API_DIR" ]; then
+            echo "Error: API directory not found at $GITHUB_WORKSPACE/kagent/$API_DIR"
+            echo "The $LINE line expects $API_DIR at tag $KAGENT_TAG."
             ls -la "$GITHUB_WORKSPACE/kagent/go/api/"
             exit 1
           fi
-          echo "API directory found and verified"
+          echo "API directory $API_DIR found and verified"
 
-      - name: Read max Kubernetes version
+      - name: Set the Kubernetes version for generation
         run: |
-          if [ ! -f "website/public/docs/versions/max-kube.md" ]; then
-            echo "Error: max-kube.md file not found"
-            exit 1
-          fi
-          KUBE_VERSION=$(cat website/public/docs/versions/max-kube.md | tr -d '\n')
-          echo "KUBE_VERSION=$KUBE_VERSION" >> $GITHUB_ENV
-          echo "Using Kubernetes version: $KUBE_VERSION"
+          # Straight from the tag being documented, not from a committed file.
+          # This used to read public/docs/versions/max-kube.md, which is flat
+          # and shared, so a 0.x run would have generated 1.x's value.
+          echo "KUBE_VERSION=$MAX_KUBE" >> $GITHUB_ENV
+          echo "Generating against Kubernetes $MAX_KUBE (from $KAGENT_TAG)"
 
       - name: Generate API Reference
         run: |
@@ -662,7 +787,7 @@ jobs:
 
           # Generate API docs
           go run github.com/elastic/crd-ref-docs@v0.3.0 \
-            --source-path="$GITHUB_WORKSPACE/kagent/go/api/v1alpha3/" \
+            --source-path="$GITHUB_WORKSPACE/kagent/$API_DIR/" \
             --renderer=markdown \
             --output-path ./ \
             --config=crd-ref-docs-config.yaml
@@ -722,15 +847,17 @@ jobs:
 
           # Write the Hugo page: plain YAML frontmatter + generated body.
           mkdir -p "$(dirname "$KAGENT_API_PAGE")"
-          cat > "$KAGENT_API_PAGE" <<'EOF'
-          ---
-          title: API reference
-          description: Look up every field in the kagent v1alpha3 custom resources, including AgentTemplate, Harness, ModelConfig, and RemoteMCPServer.
-          weight: 10
-          author: kagent.dev
-          ---
-
-          EOF
+          # Frontmatter is per-line; linkTitle exists only on 0.x.
+          {
+            echo "---"
+            echo "title: $API_TITLE"
+            [ -n "$API_LINK_TITLE" ] && echo "linkTitle: $API_LINK_TITLE"
+            echo "description: $API_DESC"
+            echo "weight: $API_WEIGHT"
+            echo "author: kagent.dev"
+            echo "---"
+            echo
+          } > "$KAGENT_API_PAGE"
           cat "./out.md" >> "$KAGENT_API_PAGE"
           rm -f "./out.md"
 
@@ -748,6 +875,7 @@ jobs:
           echo "API docs generated and processed successfully"
 
       - name: Verify KMCP API directory exists
+        if: env.WITH_KMCP == 'true'
         run: |
           if [ ! -d "$GITHUB_WORKSPACE/kmcp/api/v1alpha1" ]; then
             echo "Error: KMCP API directory not found at $GITHUB_WORKSPACE/kmcp/api/v1alpha1"
@@ -757,6 +885,7 @@ jobs:
           echo "KMCP API directory found and verified"
 
       - name: Generate KMCP API Reference
+        if: env.WITH_KMCP == 'true'
         run: |
           # Substitute KUBE_VERSION in the config template and write to a temp file
           cd "$GITHUB_WORKSPACE/website"
@@ -951,15 +1080,16 @@ jobs:
 
             # Write the Hugo page: plain YAML frontmatter + generated body.
             mkdir -p "$(dirname "$HELM_PAGE")"
-            cat > "$HELM_PAGE" <<'EOF'
-            ---
-            title: Helm reference
-            description: Look up the configurable values in the kagent Helm chart, including their defaults and types.
-            weight: 20
-            author: kagent.dev
-            ---
-
-            EOF
+            {
+              echo "---"
+              echo "title: $HELM_TITLE"
+              [ -n "$HELM_LINK_TITLE" ] && echo "linkTitle: $HELM_LINK_TITLE"
+              echo "description: $HELM_DESC"
+              echo "weight: $HELM_WEIGHT"
+              echo "author: kagent.dev"
+              echo "---"
+              echo
+            } > "$HELM_PAGE"
             cat "helm-temp.md" >> "$HELM_PAGE"
             rm -f "helm-temp.md"
 
@@ -982,6 +1112,7 @@ jobs:
           echo "kagent CLI binary built and smoke-tested successfully"
 
       - name: Build kmcp CLI binary
+        if: env.WITH_KMCP == 'true'
         run: |
           cd "$GITHUB_WORKSPACE/kmcp"
           go build -o /tmp/kmcp-cli ./cmd/kmcp
@@ -989,24 +1120,31 @@ jobs:
           echo "kmcp CLI binary built and smoke-tested successfully"
 
       - name: Generate kagent CLI reference docs
-        # --weight 30 slots CLI docs into the 1.x reference section after
-        # api-ref (10) and helm (20). The generator's default of 1 would tie
-        # with nothing and sort CLI docs above the API reference, and kagent's
-        # reference section is the only one where that ordering is wrong --
+        # CLI_WEIGHT is 30 on 1.x, slotting these after api-ref (10) and helm
+        # (20); the generator's default of 1 would sort them above the API
+        # reference. 0.x keeps 1, which is how its committed pages are ordered.
         # kmcp's section deliberately leads with the CLI, so its step below
-        # keeps the default.
+        # keeps the default either way.
         run: |
           cd "$GITHUB_WORKSPACE/website"
           mkdir -p "$KAGENT_CLI_DIR"
+          # --link-prefix only on 1.x. 0.x is not rebased into the enterprise
+          # hub, so its generated cross-links stay root-relative URLs, and
+          # passing an empty prefix is not the same as passing none.
+          LINK_PREFIX_ARG=()
+          if [ -n "$KAGENT_CLI_LINK_PREFIX" ]; then
+            LINK_PREFIX_ARG=(--link-prefix "$KAGENT_CLI_LINK_PREFIX")
+          fi
           python3 scripts/generate-cli-docs.py \
             --binary /tmp/kagent-cli \
             --display-name kagent \
             --out-dir "$KAGENT_CLI_DIR" \
             --url-prefix "$KAGENT_CLI_URL_PREFIX" \
-            --link-prefix "$KAGENT_CLI_LINK_PREFIX" \
-            --weight 30
+            "${LINK_PREFIX_ARG[@]}" \
+            --weight "$CLI_WEIGHT"
 
       - name: Generate kmcp CLI reference docs
+        if: env.WITH_KMCP == 'true'
         run: |
           cd "$GITHUB_WORKSPACE/website"
           mkdir -p "$KMCP_CLI_DIR"
@@ -1019,22 +1157,29 @@ jobs:
       - name: Audit generated CLI docs
         run: |
           cd "$GITHUB_WORKSPACE/website"
-          python3 scripts/audit-cli-docs.py "$KAGENT_CLI_DIR" "$KMCP_CLI_DIR"
+          # Audit only what this run generated; on 0.x the kmcp pages are untouched.
+          if [ "$WITH_KMCP" = "true" ]; then
+            python3 scripts/audit-cli-docs.py "$KAGENT_CLI_DIR" "$KMCP_CLI_DIR"
+          else
+            python3 scripts/audit-cli-docs.py "$KAGENT_CLI_DIR"
+          fi
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: website
-          commit-message: "docs: Update kagent 1.x and kmcp reference docs"
+          commit-message: "docs: Update kagent ${{ env.LINE }} reference docs at ${{ env.KAGENT_TAG }}"
           signoff: true
-          title: "Update kagent 1.x and kmcp reference docs${{ env.CONREFS_CHANGED && ' (version conrefs changed)' || '' }}"
+          title: "Update kagent ${{ env.LINE }} reference docs at ${{ env.KAGENT_TAG }}${{ env.CONREFS_CHANGED && ' (version conrefs changed)' || '' }}"
           body: |
-            Regenerates the kagent 1.x API and Helm references, the kmcp API reference, and the version conrefs at a released tag. Everything below was generated from these, and nothing here was read from either repository's `main`:
+            Regenerates the kagent **${{ env.LINE }}** API and Helm references, its CLI pages, and the version conrefs at a released tag. Nothing here was read from either repository's `main`:
             - **kagent**: [`${{ env.KAGENT_TAG }}`](https://github.com/${{ github.repository_owner }}/kagent/releases/tag/${{ env.KAGENT_TAG }}) (`${{ env.KAGENT_COMMIT }}`)
-            - **kmcp**: [`${{ env.KMCP_TAG }}`](https://github.com/${{ github.repository_owner }}/kmcp/releases/tag/${{ env.KMCP_TAG }}) (`${{ env.KMCP_COMMIT }}`)
+            ${{ env.KMCP_SOURCE_LINE }}
 
-            `versions/kagent.md` moves to `${{ env.KAGENT_VERSION }}` in this run, so the `helm install --version` lines on the 1.x pages and the reference content beside them describe the same release.
+            The `${{ env.LINE }}` span of `versions/kagent.md` moves to `${{ env.KAGENT_VERSION }}`, so the `helm install --version` lines on those pages and the reference content beside them describe the same release. Only this line's spans were written; the other line's are asserted unchanged.
+
+            ${{ env.LINE_SCOPE_NOTE }}
 
             ${{ env.CONREF_NOTE }}
 
@@ -1044,19 +1189,17 @@ jobs:
 
             | Conref | Value | Source |
             | ------ | ----- | ------ |
-            | `agent-substrate` (1.x span only) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target |
-            | `kmcp` | `${{ env.KMCP_VERSION }}` | `go/go.mod` require (what kagent bundles) |
-            | `kmcp-latest` | `${{ env.KMCP_LATEST }}` | kmcp's latest release (what the kmcp guides show) |
-            | `kagent-tools` | `${{ env.KAGENT_TOOLS_VERSION }}` | `helm/kagent/Chart-template.yaml` |
-            | `max-kube` (both committed copies) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
-            | `kagent` (1.x span only) | `${{ env.KAGENT_VERSION }}` | the release tag this run documents |
-            | `runtime-image` | `${{ env.RUNTIME_IMAGE }}` | GHCR, at `${{ env.KAGENT_TAG }}` |
-            | `runtime-image-claude` | `${{ env.RUNTIME_IMAGE_CLAUDE }}` | GHCR, at `${{ env.KAGENT_TAG }}` |
+            | `kagent` (${{ env.LINE }} span) | `${{ env.KAGENT_VERSION }}` | the release tag this run documents |
+            | `agent-substrate` (${{ env.LINE }} span) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target |
+            | `max-kube` (${{ env.LINE }} span) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
+            ${{ env.FLAT_CONREF_ROWS }}
 
             Unchanged conref values are normal: most runs touch only the generated reference pages.
 
             This PR was automatically generated by the [**Update Reference documentation** workflow](https://github.com/${{ github.repository_owner }}/website/actions/workflows/update-ref-docs.yaml).
-          branch: api-gen-update
+          # One branch per line: a 0.x run must not force-push over an open 1.x
+          # regeneration PR, and the two carry unrelated diffs.
+          branch: api-gen-update-${{ env.LINE }}
           delete-branch: true
           base: main
           labels: |
