@@ -26,10 +26,6 @@ spec:
   env:
     - name: LOG_LEVEL
       value: info
-    - name: MY_API_KEY
-      credentialRef:
-        name: my-secret
-        key: api-key
   substrate:
     workerPoolRef:
       name: kagent-default
@@ -50,7 +46,7 @@ EOF
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. |
-| `env` | No | Environment variables for the runtime, up to 100. Each entry sets either a literal `value` or a `credentialRef` naming a key in a same-namespace Secret, never both. |
+| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`. A `credentialRef` is accepted by the API and then rejected at compile time on every runtime, so put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 | `allowedAgentTemplates.selector` | No | A label selector naming which AgentTemplates this Harness admits. Omitting it admits none, which makes the Harness unusable. Admission is a one-way match. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} has no field naming a Harness, so whoever controls a Harness's selector decides what it accepts. |
@@ -97,13 +93,15 @@ The runtime that a Harness selects decides which ModelConfig its AgentTemplates 
 | `OpenAI` | ✅ | ✅ | ✅ | ❌ |
 | `Anthropic` | ✅ | ✅ | ❌ | ✅ |
 | `Bedrock` | ✅ | ✅ | ✅ | ✅ |
-| `AnthropicVertexAI` | ❌ | ❌ | ❌ | ✅ |
+| `AnthropicVertexAI` | ❌ | ❌ | ❌ | ❌ |
 | `GeminiVertexAI` | ❌ | ❌ | ❌ | ❌ |
 | `AzureOpenAI` | ✅ | ✅ | ❌ | ❌ |
 | `Gemini` | ✅ | ✅ | ❌ | ❌ |
 | `Ollama` | ✅ | ✅ | ❌ | ❌ |
-| `SAPAICore` | ✅ | ✅ | ❌ | ❌ |
+| `SAPAICore` | ❌ | ❌ | ❌ | ❌ |
 | `Foundry` | ✅ | ✅ | ❌ | ❌ |
+
+`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` run on no runtime today. Each authenticates with a credential that the egress gateway cannot place in an HTTP header, so kagent rejects the ModelConfig before it compiles. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
 Some supported combinations still carry restrictions.
 
@@ -113,10 +111,10 @@ Some supported combinations still carry restrictions.
 | `codex` with `Bedrock` | Accepts only OpenAI `gpt-*` model IDs, and no `bedrock` settings beyond `region`. |
 | `claude` with `Anthropic` | Accepts no `anthropic` settings beyond `baseUrl`. |
 | `claude` with `Bedrock` | Accepts no `bedrock` settings beyond `region`. |
-| `claude` with `AnthropicVertexAI` | Accepts only `projectID` and `location`. The Secret must hold a `service_account` key whose `project_id` matches and whose `token_uri` is `https://oauth2.googleapis.com`. |
+| `Bedrock` on any runtime | The Secret must hold an `AWS_BEARER_TOKEN_BEDROCK` key. A Secret of IAM access keys is rejected, because IAM signs each request locally. |
 
 > [!IMPORTANT]
-> Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. Separately, the `kagent` and `byo` runtimes cannot use a ModelConfig whose credential is a file rather than a string. This restriction rules out both Vertex AI providers there. For more information about that limitation, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
+> Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. Separately, every runtime rejects a credential that the egress gateway cannot place in an HTTP header, such as an IAM key pair or a Google service account key. For more information about that limitation, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
 ## Tool and skill support
 

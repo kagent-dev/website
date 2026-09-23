@@ -1,86 +1,35 @@
 ---
 title: Google Vertex AI
-description: Configure kagent to use Claude models through Google Cloud Vertex AI on a Claude harness.
+description: Understand why Vertex AI models do not run on kagent 1.0, and which providers serve the same models instead.
 weight: 20
 author: kagent.dev
 ---
 
-Google Cloud Vertex AI serves both Gemini and Claude models, and the {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} schema has a provider for each: `GeminiVertexAI` and `AnthropicVertexAI`. Which of them works depends on the runtime that your {{< gloss "Harness" >}}Harness{{< /gloss >}} selects.
+Neither Vertex AI provider runs on kagent 1.0. `AnthropicVertexAI` and `GeminiVertexAI` both authenticate with a Google service account key, and such a key is signed locally to obtain an access token. An agent reaches its model provider through the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway, which injects a static credential into an HTTP header and performs no signing, so kagent rejects a Vertex AI {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} rather than passing the key to the runtime.
 
-| Provider | Harness runtime | Supported |
-| -------- | --------------- | --------- |
-| `AnthropicVertexAI` | `claude` | Yes |
-| `AnthropicVertexAI` | `kagent` or `byo` | No |
-| `GeminiVertexAI` | any | No |
+The rejection happens at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from it. On a `claude` {{< gloss "Harness" >}}Harness{{< /gloss >}} the message names the credential.
 
-For the full provider matrix across all four runtimes, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
+```
+environment credential "KAGENT_CLAUDE_GOOGLE_CREDENTIALS_JSON" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported
+```
 
-The difference is how each runtime receives the Google credentials. Vertex AI authenticates with a service account key, which is a JSON document rather than a single string. The `claude` runtime takes that document as an environment variable. The `kagent` runtime instead writes it to a file and mounts it, and an agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files.
+On the `kagent` and `byo` runtimes the same ModelConfig fails for a second reason as well, because those runtimes mount the key as a file: `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`.
 
-## Claude models on a Claude harness
+## Reach the same models another way
 
-1. Create a [Google service account key](https://cloud.google.com/iam/docs/keys-create-delete) with access to Vertex AI, and store the JSON in a Kubernetes Secret. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
-   ```bash
-   kubectl create secret generic kagent-vertex -n kagent \
-     --from-file=credentials.json=<path-to-your-service-account-key>.json
-   ```
+Vertex AI serves two model families, and a provider that authenticates with an API key is available for each.
 
-2. Create a `ModelConfig` that uses the `AnthropicVertexAI` provider.
-   ```yaml
-   kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
-   kind: ModelConfig
-   metadata:
-     name: vertex-model-config
-     namespace: kagent
-   spec:
-     apiKeySecret: kagent-vertex
-     apiKeySecretKey: credentials.json
-     model: claude-sonnet-4@20250514
-     provider: AnthropicVertexAI
-     anthropicVertexAI:
-       projectID: my-gcp-project
-       location: us-east5
-   EOF
-   ```
+| To run | Use | Guide |
+| ------ | --- | ----- |
+| Claude models | `Anthropic`, or `Bedrock` on a `claude` Harness | [Anthropic]({{< link path="setup/model-providers/anthropic" >}}), [Amazon Bedrock]({{< link path="setup/model-providers/amazon-bedrock" >}}) |
+| Gemini models | `Gemini`, which serves the same family through the Google AI Studio API | [Gemini]({{< link path="setup/model-providers/gemini" >}}) |
 
-   | Field | Description |
-   | ----- | ----------- |
-   | `apiKeySecret` | The name of the Kubernetes Secret that holds the service account key. |
-   | `apiKeySecretKey` | The key within that Secret that holds the JSON document. |
-   | `model` | The Vertex AI model ID, such as `claude-sonnet-4@20250514`. |
-   | `provider` | The provider to use, `AnthropicVertexAI`. |
-   | `anthropicVertexAI.projectID` | Your Google Cloud project ID. This field is required, and must match the `project_id` inside the service account key. |
-   | `anthropicVertexAI.location` | The Vertex AI region, such as `us-east5`. This field is required. |
-
-   The `claude` runtime accepts no other settings in the `anthropicVertexAI` block yet, and rejects a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. For every field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#anthropicvertexaiconfig" >}}).
-
-3. Pair the ModelConfig with a Harness that selects the `claude` runtime.
-   ```yaml
-   spec:
-     claude: {}
-     workload:
-       image: {{< reuse "kagent-docs/versions/runtime-image-claude.md" >}}
-   ```
-
-### What kagent checks before it compiles
-
-kagent validates the service account key at compile time rather than failing at run time, so a malformed credential surfaces on the AgentTemplate's `Compatible` condition.
-
-- The Secret key must hold valid JSON.
-- The document must be a `service_account` key. Other credential types are not accepted yet.
-- Its `project_id` must match `anthropicVertexAI.projectID`.
-- Its `token_uri` must be `https://oauth2.googleapis.com`.
-
-## Gemini models on Vertex AI
-
-The `GeminiVertexAI` provider does not compile on any runtime. On a `kagent` Harness it fails with `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`, and the `claude` runtime does not accept the provider at all.
-
-To reach Gemini models, use the [Gemini]({{< link path="setup/model-providers/gemini" >}}) provider, which serves the same model family through the Google AI Studio API and authenticates with an ordinary API key.
+For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
 ## Next steps
 
 {{< cards >}}
   {{< card link=`{{< link path="setup/model-providers/gemini" >}}` title="Gemini" subtitle="Reach Gemini models with an API key instead." >}}
-  {{< card link=`{{< link path="setup/model-providers/about-model-providers" >}}` title="About model providers" subtitle="Understand which provider configurations a Harness can run." >}}
+  {{< card link=`{{< link path="setup/model-providers/anthropic" >}}` title="Anthropic" subtitle="Reach Claude models with an Anthropic API key." >}}
+  {{< card link=`{{< link path="setup/model-providers/about-model-providers" >}}` title="About model providers" subtitle="Understand which credentials a Harness can run." >}}
 {{< /cards >}}

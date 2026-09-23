@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-The `Gemini` provider reaches Google's Gemini models through the Google AI Studio API, authenticating with a single API key. To reach Gemini through Google Cloud instead, see [Google Vertex AI]({{< link path="setup/model-providers/google-vertexai" >}}).
+The `Gemini` provider reaches Google's Gemini models through the Google AI Studio API, authenticating with a single API key. Gemini models served through Google Cloud Vertex AI do not run on 1.0. For the reason, see [Google Vertex AI]({{< link path="setup/model-providers/google-vertexai" >}}).
 
 ## Before you begin
 
