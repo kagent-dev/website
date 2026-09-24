@@ -143,10 +143,10 @@ otel:
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `claude` runtime, tool results require tracing, and assistant replies require audit logging. | `codex`, `claude` |
+| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require audit logging. | `kagent`, `codex`, `claude` |
 | `otel.logging.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.captureSensitiveContent` does, and it takes effect only when `otel.logging.enabled` is `true`. | `claude` |
 
-The `kagent` runtime honors neither setting. To include message content for an agent on that runtime, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in the Harness `spec.env` field.
+The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.captureSensitiveContent`, so setting that variable in the Harness `spec.env` field has no effect.
 
 The controller sends the `byo` runtime no telemetry configuration, so neither setting reaches it. A `byo` image that implements OpenTelemetry itself reads whatever the Harness `spec.env` field holds. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 

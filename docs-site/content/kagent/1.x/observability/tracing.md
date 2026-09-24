@@ -82,7 +82,7 @@ A trace tells you which request you are looking at through attributes on its spa
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invocation` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> Spans for a model call carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes. Prompts and replies therefore reach your tracing backend. Payloads larger than 32 KiB are truncated to a prefix. To keep this content out of traces, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` to `false` in the Harness `spec.env`. The `codex` and `claude` runtimes do not read this variable. On those two runtimes, the `otel.captureSensitiveContent` Helm setting controls the same content, as described in the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
+> When the `otel.captureSensitiveContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how the setting applies to each runtime, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
 ## Before you begin
 
