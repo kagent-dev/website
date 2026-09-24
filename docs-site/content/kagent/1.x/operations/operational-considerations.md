@@ -116,13 +116,13 @@ kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{
 
 A new revision does not reach the AgentInstances that are already running. An AgentInstance is pinned to the revision that it was created from and keeps that revision for life. To move an existing conversation onto new configuration, create a new AgentInstance.
 
-The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so running AgentInstances use a rotated key too.
+The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so a rotated key reaches running AgentInstances after you restart the egress gateway. See [Rotate the model provider API key](#rotate-the-model-provider-api-key).
 
 This behavior differs from kagent 0.x, where an agent ran as a Deployment and a secret change restarted its pods.
 
 ### Rotate the model provider API key
 
-How you rotate the key depends on who owns the Secret. When you set `providers.<provider>.apiKey` in your Helm values, as the [installation guide]({{< link path="setup/installation" >}}) does, the kagent chart creates the Secret and Helm owns it. Rotate the key through Helm, not by editing the Secret. A direct edit makes the next `helm upgrade` fail with a field ownership conflict on the Secret, and an upgrade with `--reuse-values` writes the previous key back.
+How you rotate the key depends on who owns the Secret. When you set `providers.<provider>.apiKey` in your Helm values, as the [installation guide]({{< link path="setup/installation#install-kagent" >}}) does, the kagent chart creates the Secret and Helm owns it. Rotate the key through Helm, not by editing the Secret, because a direct edit does not last. With Helm 3, the next `helm upgrade --reuse-values` writes the previous key back. With Helm 4, which applies changes on the server side, the next upgrade fails with a field ownership conflict on the Secret.
 
 1. Update the key.
    {{< tabs >}}

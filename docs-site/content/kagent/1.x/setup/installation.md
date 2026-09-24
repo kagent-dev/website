@@ -231,8 +231,6 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    ```
    The `controller.grpc.reflection` setting lets a gRPC client discover the controller's methods without a local copy of kagent's proto files. The kagent CLI does not need it, because the CLI ships with generated clients for every kagent API. Leave reflection on to explore the API with a general-purpose client such as [grpcurl](https://github.com/fullstorydev/grpcurl), and turn it off for a production installation.
 
-   The chart stores the API key in the `kagent-openai` Secret in the `kagent` namespace, and Helm owns that Secret. To change the key later, see [Rotate the model provider API key]({{< link path="operations/operational-considerations#rotate-the-model-provider-api-key" >}}).
-
    <!--
    > [!NOTE]
    > The kagent chart carries two settings that enable something called `substrate`, and this step sets only the one nested under `controller`. `controller.substrate.enabled` turns on the controller's Agent Substrate integration, which is what lets a Harness run an agent. The top-level `substrate.enabled` is a different toggle that installs Agent Substrate as a subchart of the kagent release, which places most of its resources in the `kagent` namespace while parts of the chart still reference `ate-system`. Leave the top-level setting at its default of `false`, because the preceding steps install Agent Substrate into `ate-system` themselves.
@@ -296,4 +294,5 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
   {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Your first agent" subtitle="Apply a Harness and AgentTemplate, and talk to the AgentInstance they produce." >}}
   {{< card link=`{{< link path="setup/model-providers" >}}` title="Configure model providers" subtitle="Point kagent at OpenAI, Anthropic, Gemini, or a provider of your own." >}}
   {{< card link=`{{< link path="operations/operational-considerations" >}}` title="Operational considerations" subtitle="Replace the evaluation defaults for the database, controller replicas, and Worker node pools." >}}
+  {{< card link=`{{< link path="operations/operational-considerations#rotate-the-model-provider-api-key" >}}` title="Rotate the model provider API key" subtitle="Change the API key in the kagent-openai Secret, which Helm owns, without breaking running agents." >}}
 {{< /cards >}}
