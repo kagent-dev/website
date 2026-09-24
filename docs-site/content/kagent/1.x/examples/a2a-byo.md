@@ -33,7 +33,7 @@ The agent that you build here calls no model and binds no tools. It answers ever
    Example output:
    ```console
    WORKERPOOL       SNAPSHOT
-   kagent-default   s3://<your-bucket>/kagent/
+   kagent-default   s3://ate-snapshots/kagent/
    ```
 
 ## Build the agent image
@@ -85,7 +85,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
        workerPoolRef:
          name: kagent-default
        snapshotPolicy:
-         location: s3://<your-bucket>/kagent/
+         location: s3://ate-snapshots/kagent/
      allowedAgentTemplates:
        selector:
          matchLabels:

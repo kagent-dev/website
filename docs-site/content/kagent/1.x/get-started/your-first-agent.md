@@ -40,7 +40,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
        snapshotPolicy:
          # The bucket that the Agent Substrate chart creates in its bundled object store.
          # If your Substrate installation uses your own object storage, use that location instead.
-         location: s3://<your-bucket>/kagent/
+         location: s3://ate-snapshots/kagent/
      allowedAgentTemplates:
        selector:
          matchLabels:
