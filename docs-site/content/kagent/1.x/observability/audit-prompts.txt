@@ -1,7 +1,7 @@
 ---
 title: Audit prompts
 description: Export the prompts and replies that your agents exchange with a model as OpenTelemetry log events, then query them in a logging backend.
-weight: 30
+weight: 50
 author: kagent.dev
 ---
 
@@ -304,10 +304,10 @@ Turning on auditing takes two changes. The chart setting installs the log export
    kubectl port-forward -n telemetry svc/loki 3100:3100
    ```
 
-4. Query the events for the agent's service. The runtime builds the service name from the AgentTemplate name and the Harness name, and replaces each hyphen with an underscore. For example, `my-first-agent` on `my-first-harness` reports as `my_first_agent_my_first_harness`.
+4. Query the events for the agent's service. The runtime builds the service name from the AgentTemplate name and the Harness name. For example, `my-first-agent` on `my-first-harness` reports as `my-first-agent-my-first-harness`.
    ```bash
    curl -s -G 'http://localhost:3100/loki/api/v1/query_range' \
-     --data-urlencode 'query={service_name="my_first_agent_my_first_harness"}' \
+     --data-urlencode 'query={service_name="my-first-agent-my-first-harness"}' \
      --data-urlencode "start=$(( $(date +%s) - 3600 ))000000000" \
      --data-urlencode "end=$(date +%s)000000000" | jq
    ```
@@ -321,7 +321,7 @@ Turning on auditing takes two changes. The chart setting installs the log export
        "result": [
          {
            "stream": {
-             "service_name": "my_first_agent_my_first_harness",
+             "service_name": "my-first-agent-my-first-harness",
              "service_namespace": "kagent",
              "scope_name": "gcp.vertex.agent",
              "trace_id": "3d34d2f1b74f30a5cce0d5ed8571e928",

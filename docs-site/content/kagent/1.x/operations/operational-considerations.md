@@ -131,17 +131,7 @@ The controller rewrites internally built Kubernetes URLs to the proxy and sets t
 
 ## Scrape controller metrics
 
-The controller serves a Prometheus-style `/metrics` endpoint, turned off by default. Enabling it provisions a dedicated metrics Service and the ClusterRoles that an authenticated scrape needs.
-
-```yaml
-controller:
-  metrics:
-    enabled: true
-    bindAddress: ":8443"
-    secureServing: true
-```
-
-Bind the `<fullname>-metrics-reader` ClusterRole to your Prometheus ServiceAccount to grant scrape access. Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
+The controller serves a Prometheus `/metrics` endpoint, turned off by default. To enable it, grant Prometheus access, and review the metrics that it reports, see [Metrics]({{< link path="observability/metrics" >}}).
 
 ## Isolate what an agent can do
 

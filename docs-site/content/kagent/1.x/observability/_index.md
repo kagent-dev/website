@@ -1,6 +1,6 @@
 ---
 title: Observability
-description: Open the kagent UI, trace agent requests across the controller and the Actors that run your agents, and audit the prompts your agents send.
+description: Open the kagent UI, set up an OpenTelemetry stack, and review the traces, metrics, and audit events that kagent and Agent Substrate report.
 weight: 70
 author: kagent.dev
 ---
