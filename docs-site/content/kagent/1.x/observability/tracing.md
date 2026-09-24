@@ -223,7 +223,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 
 ## Agent Substrate traces
 
-Agent Substrate records traces for its own work, such as scheduling an Actor onto a Worker and restoring it from a snapshot. These traces are separate from the agent request trace. They do not share its trace ID, so a request trace does not show how long the Actor took to resume. To investigate a slow start, look up the Agent Substrate traces from the same time window.
+Agent Substrate records traces for its own work, such as scheduling an Actor onto a Worker and restoring it from a snapshot. These traces are separate from the agent request trace. They do not share its trace ID, so a request trace does not show how long the Actor took to resume. To investigate a slow start, look up the Agent Substrate traces from the same time window, or read the Actor's [suspend and resume records]({{< link path="observability/substrate-telemetry#suspend-and-resume-records" >}}), which carry the trace ID of each operation.
 
 | Service | Reports |
 | ------- | ------- |
