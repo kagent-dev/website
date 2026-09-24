@@ -95,7 +95,7 @@ Example output:
 
 | `message` | Written when |
 | --------- | ------------ |
-| `Actor restoring` | A Worker begins to restore the Actor from a snapshot. An AgentInstance's Actor restores even for its first turn, from the snapshot that kagent built for the pair, so this is the first record for every AgentInstance. |
+| `Actor restoring` | A Worker begins to restore the Actor from a snapshot. An AgentInstance's Actor restores even for its first turn, from the snapshot that kagent built for the pair, so `Actor restoring` is the first record for every AgentInstance. |
 | `Actor restored` | The restore finishes and the Actor can serve the request. |
 | `Actor checkpointing` | The Actor begins to suspend, and Agent Substrate begins to write its snapshot. |
 | `Actor checkpointed` | The snapshot is written. The Actor is suspended, and the Worker is free for another Actor. |
@@ -104,7 +104,7 @@ Each turn produces one cycle of the four records. The time between `Actor restor
 
 The Actor that builds a pair's first snapshot, in the `ate-golden` atespace, writes `Actor starting` and `Actor started` instead of the restore records, because it has no snapshot to restore from.
 
-Each record also carries `trace_id`, `span_id`, and `trace_flags`, which join it to the Agent Substrate trace for the same operation. A `trace_flags` value of `01` means that the trace was sampled and is in your tracing backend. A value of `00` means that the trace was not sampled, which is the case for most requests at the default ratio of `0.01`.
+Each record also carries `trace_id`, `span_id`, and `trace_flags`, which join the record to the Agent Substrate trace for the same operation. A `trace_flags` value of `01` means that the trace was sampled and is in your tracing backend. A value of `00` means that the trace was not sampled, which is the case for most requests at the default ratio of `0.01`.
 
 ## Learn more
 

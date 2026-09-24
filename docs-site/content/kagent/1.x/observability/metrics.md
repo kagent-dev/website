@@ -62,7 +62,7 @@ To send metrics somewhere other than traces and logs, set `otel.metrics.endpoint
 
 ### Metric reference
 
-The collector's Prometheus exporter converts each OpenTelemetry metric name to a Prometheus name. It replaces dots with underscores, and adds a unit suffix, such as `_seconds` or `_bytes`, and a `_total` suffix for counters. The following table lists the Prometheus names. Every metric also carries a `service_name` label for the Agent Substrate component that reported it, when the collector copies resource attributes to labels, as both stack guides configure.
+The collector's Prometheus exporter converts each OpenTelemetry metric name to a Prometheus name. The exporter replaces dots with underscores, and adds a unit suffix, such as `_seconds` or `_bytes`, and a `_total` suffix for counters. The following table lists the Prometheus names. Every metric also carries a `service_name` label for the Agent Substrate component that reported it, when the collector copies resource attributes to labels, as both stack guides configure.
 
 | Metric | Reported by | Type | Measures |
 | ------ | ----------- | ---- | -------- |

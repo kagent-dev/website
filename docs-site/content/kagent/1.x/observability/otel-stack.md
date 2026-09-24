@@ -374,7 +374,7 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
-4. Wait for kagent to recompile the pair. The controller rebuilds each pair after it restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
+4. Wait for kagent to recompile the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
    ```bash
    for i in $(seq 1 60); do
      [ "$(kubectl get agenttemplate my-first-agent -n kagent \

@@ -92,7 +92,7 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 
 ## Enable tracing
 
-Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes it to the agent runtimes it starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
+Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
 
 1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent recompiles the pair with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -143,7 +143,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
      --values values.yaml
    ```
 
-5. Wait for kagent to recompile the pair. The controller rebuilds each pair after it restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
+5. Wait for kagent to recompile the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
    ```bash
    for i in $(seq 1 60); do
      [ "$(kubectl get agenttemplate my-first-agent -n kagent \
@@ -223,7 +223,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 
 ## Agent Substrate traces
 
-Agent Substrate records traces for its own work, such as scheduling an Actor onto a Worker and restoring it from a snapshot. These traces are separate from the agent request trace. They do not share its trace ID, so a request trace does not show how long the Actor took to resume. To investigate a slow start, look up the Agent Substrate traces from the same time window, or read the Actor's [suspend and resume records]({{< link path="observability/substrate-telemetry#suspend-and-resume-records" >}}), which carry the trace ID of each operation.
+Agent Substrate records traces for its own work, such as scheduling an Actor onto a Worker and restoring it from a snapshot. These traces are separate from the agent request trace. Agent Substrate traces do not share the request trace's ID, so a request trace does not show how long the Actor took to resume. To investigate a slow start, look up the Agent Substrate traces from the same time window, or read the Actor's [suspend and resume records]({{< link path="observability/substrate-telemetry#suspend-and-resume-records" >}}), which carry the trace ID of each operation.
 
 | Service | Reports |
 | ------- | ------- |
@@ -241,7 +241,7 @@ Agent Substrate {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} an Actor as 
 
 To avoid losing them, the controller sets `KAGENT_PRE_RESPONSE_TRACE_FLUSH` to `true` on the `kagent` and `codex` runtimes, and the runtime flushes its span buffer before each response completes. The flush waits up to three seconds, which you can change with `KAGENT_TRACE_FLUSH_TIMEOUT_MS` in the Harness `spec.env`. The `claude` runtime gets no such flush, so its spans arrive on its exporter's own schedule and a conversation's last turn can lose them.
 
-This behavior allows a kagent trace to arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
+The flush lets a kagent trace arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
 
 ## Turn tracing off
 

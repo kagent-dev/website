@@ -116,7 +116,7 @@ Some supported combinations still carry restrictions.
 | `claude` with `AnthropicVertexAI` | Accepts only `projectID` and `location`. The Secret must hold a `service_account` key whose `project_id` matches and whose `token_uri` is `https://oauth2.googleapis.com`. |
 
 > [!IMPORTANT]
-> Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. Separately, the `kagent` and `byo` runtimes cannot use a ModelConfig whose credential is a file rather than a string. This restriction rules out both Vertex AI providers there. For more information about that limitation, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
+> Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. Separately, the `kagent` and `byo` runtimes cannot use a ModelConfig whose credential is a file rather than a string. The file credential restriction rules out both Vertex AI providers on the `kagent` and `byo` runtimes. For more information about that limitation, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
 
 ## Tool and skill support
 

@@ -131,7 +131,7 @@ The controller rewrites internally built Kubernetes URLs to the proxy and sets t
 
 ## Scrape controller metrics
 
-The controller serves a Prometheus `/metrics` endpoint, turned off by default. To enable it, grant Prometheus access, and review the metrics that it reports, see [Metrics]({{< link path="observability/metrics" >}}).
+The controller serves a Prometheus `/metrics` endpoint, turned off by default. To enable the endpoint, grant Prometheus access to it, and review the metrics that the controller reports, see [Metrics]({{< link path="observability/metrics" >}}).
 
 ## Isolate what an agent can do
 
