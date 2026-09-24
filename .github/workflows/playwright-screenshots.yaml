@@ -168,13 +168,15 @@ jobs:
   #
   # Both jobs deliberately share one path filter rather than splitting per job. Over-
   # triggering costs a ~15m no-op run; under-triggering is the bug above, and it is
-  # invisible. The refreshed images land under `__screenshots__/` and `assets/img/`,
-  # neither of which is on the filter, so a merged refresh PR cannot re-trigger this.
+  # invisible. The refreshed IMAGES land under `__screenshots__/` and `assets/img/`,
+  # neither of which is on the filter, so a pure image refresh cannot re-trigger this.
+  # A refresh PR that also edits a spec does re-trigger it, because `tests/**` is on the
+  # filter: #523 carried an edit to `chat.spec.ts`, and its merge started the run that
+  # produced #526. That is intended -- a spec edit can move the pixels.
   #
-  # Still unproven on a hosted runner: Agent Substrate runs workers under gVisor nested
-  # inside the worker pod, and its reference environment is a GKE node pool. The full
-  # path was verified on kind under Docker locally on 2026-09-23, which removes the
-  # likeliest reason it would fail here but not the question itself.
+  # PROVEN on a hosted runner 2026-09-23: the first push-triggered run stood up kind,
+  # installed the published charts and captured all six baselines in under four minutes.
+  # The gVisor-nested-in-the-worker-pod question is settled for this runner.
   # ---------------------------------------------------------------------------------
   cluster:
     if: >-
@@ -254,6 +256,27 @@ jobs:
           done
           echo "port-forward never became reachable"; exit 1
 
+      # `--update-snapshots` takes no value here, so Playwright runs it in `changed` mode:
+      # it rewrites only the baselines that FAIL the comparison, and the comparison applies
+      # playwright.config.ts's `maxDiffPixelRatio` (0.01). The step is therefore already
+      # gated on tolerance, and no `test:` pass belongs in front of it.
+      #
+      # That matters because a fresh kind cluster hands this job a new ReplicaSet hash, a
+      # new pod IP and a moving "read N ago" line every run. Those three sit under 1%, so
+      # they are absorbed rather than committed: the run of 2026-09-23T20:17, the first
+      # after the Linux baselines landed in #526, rewrote nothing and opened no PR. The
+      # run before it rewrote four of six -- dashboard passed on its macOS render, agents
+      # and substrate did not -- which is the same mechanism seen from the other side.
+      #
+      # Masking those three regions would be the alternative and is wrong here: these
+      # images are published to readers, and Playwright's `mask` paints boxes over what it
+      # masks. A docs screenshot cannot carry a rectangle where the pod name should be.
+      #
+      # Two ways to lose this. Passing `--update-snapshots=all` drops to a raw byte
+      # comparison and rewrites all six every run; and `changed` is the preset for a bare
+      # flag in 1.63.0, the version @playwright/test is pinned to exactly, so a floating
+      # range could land on a runtime that presets something else. Either brings the
+      # contentless PRs straight back.
       - name: Capture
         working-directory: website/${{ env.PW_DIR }}
         run: UI_BASE_URL=http://localhost:8082 npm run update:launch-ui
