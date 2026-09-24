@@ -231,7 +231,7 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    ```
    The `controller.grpc.reflection` setting lets a gRPC client discover the controller's methods without a local copy of kagent's proto files. The kagent CLI does not need it, because the CLI ships with generated clients for every kagent API. Leave reflection on to explore the API with a general-purpose client such as [grpcurl](https://github.com/fullstorydev/grpcurl), and turn it off for a production installation.
 
-   The chart stores the API key in the `kagent-openai` Secret in the `kagent` namespace. To change the key later, see [How configuration changes reach agents]({{< link path="operations/operational-considerations#how-configuration-changes-reach-agents" >}}).
+   The chart stores the API key in the `kagent-openai` Secret in the `kagent` namespace, and Helm owns that Secret. To change the key later, see [Rotate the model provider API key]({{< link path="operations/operational-considerations#rotate-the-model-provider-api-key" >}}).
 
    <!--
    > [!NOTE]

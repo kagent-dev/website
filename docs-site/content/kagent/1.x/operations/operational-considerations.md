@@ -116,13 +116,36 @@ kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{
 
 A new revision does not reach the AgentInstances that are already running. An AgentInstance is pinned to the revision that it was created from and keeps that revision for life. To move an existing conversation onto new configuration, create a new AgentInstance.
 
-The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so running AgentInstances use a rotated key too. The egress gateway can keep sending the previous key after the Secret changes, so restart it after you rotate a key.
-
-```bash
-kubectl rollout restart deployment/atenet-egress -n ate-system
-```
+The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so running AgentInstances use a rotated key too.
 
 This behavior differs from kagent 0.x, where an agent ran as a Deployment and a secret change restarted its pods.
+
+### Rotate the model provider API key
+
+How you rotate the key depends on who owns the Secret. When you set `providers.<provider>.apiKey` in your Helm values, as the [installation guide]({{< link path="setup/installation" >}}) does, the kagent chart creates the Secret and Helm owns it. Rotate the key through Helm, not by editing the Secret. A direct edit makes the next `helm upgrade` fail with a field ownership conflict on the Secret, and an upgrade with `--reuse-values` writes the previous key back.
+
+1. Update the key.
+   {{< tabs >}}
+   {{% tab name="Helm manages the Secret" %}}
+   Upgrade the kagent release with the new key. The following example uses OpenAI. For another provider, replace `openAI` with the provider's key in the `providers` values.
+   ```bash
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent \
+     --reuse-values \
+     --set-string providers.openAI.apiKey="${NEW_OPENAI_API_KEY}"
+   ```
+   {{% /tab %}}
+   {{% tab name="You manage the Secret" %}}
+   When `providers.<provider>.apiKey` is empty and `apiKeySecretRef` names a Secret that you create, such as one that an ExternalSecret syncs, the chart does not render the Secret. Update the Secret wherever you manage it.
+   {{% /tab %}}
+   {{< /tabs >}}
+
+2. Restart the Agent Substrate egress gateway. The egress gateway can keep sending the previous key after the Secret changes, and a restart makes it use the new key right away.
+   ```bash
+   kubectl rollout restart deployment/atenet-egress -n ate-system
+   ```
 
 ## Route agent traffic through a proxy
 
