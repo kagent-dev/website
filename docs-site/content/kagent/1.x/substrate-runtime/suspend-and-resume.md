@@ -56,8 +56,9 @@ spec:
     workerPoolRef:
       name: kagent-default
     snapshotPolicy:
-      # The object storage location your cluster's Substrate installation uses
-      location: gs://<your-bucket>/kagent/
+      # The bucket that the Agent Substrate chart creates in its bundled object store.
+      # If your Substrate installation uses your own object storage, use that location instead.
+      location: s3://<your-bucket>/kagent/
 ```
 
 ## Suspension between turns

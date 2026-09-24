@@ -38,8 +38,9 @@ This guide walks you through creating an agent, from applying a Harness and an A
        workerPoolRef:
          name: kagent-default
        snapshotPolicy:
-         # The object storage location your cluster's Substrate installation uses for Actor snapshots
-         location: gs://<your-bucket>/kagent/
+         # The bucket that the Agent Substrate chart creates in its bundled object store.
+         # If your Substrate installation uses your own object storage, use that location instead.
+         location: s3://<your-bucket>/kagent/
      allowedAgentTemplates:
        selector:
          matchLabels:
@@ -81,7 +82,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
    +----------------+------------------+-------+----------------------+
    ```
 
-   An empty `HARNESS` column with a `READY` value of `UNKNOWN` means that the kagent controller has not yet reconciled the pair. Wait a few seconds, then check again. If `READY` stays `FALSE`, inspect the individual conditions to find which stage failed.
+   An empty `HARNESS` column with a `READY` value of `UNKNOWN` means that the kagent controller has not yet reconciled the pair. Wait a few seconds, then check again. A `READY` value of `FALSE` right after you apply the pair is also expected, because kagent builds a snapshot of the agent's runtime before it reports the pair ready. This step can take a minute. If `READY` stays `FALSE`, inspect the individual conditions to find which stage failed.
    ```bash
    kagent get agent-template my-first-agent -o json
    ```

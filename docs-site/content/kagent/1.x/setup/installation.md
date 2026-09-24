@@ -90,11 +90,19 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
    ```
 
 2. Install the Agent Substrate control plane and data plane. Do not add `--wait` to this command, because the pods cannot become ready until you create the identity material in the following steps.
+
+   The `credentialProvider.namespacePolicies` value lets agents use the model provider API key. Agents do not hold the key themselves. Instead, the Agent Substrate egress gateway reads the key from a Kubernetes Secret and adds it to each model request. By default, Agent Substrate denies every agent access to every Secret. The following grant lets agents in the `kagent` atespace read Secrets in the `kagent` namespace, where the kagent chart stores the key. Without this grant, all pods report healthy, but every model call fails with a `403` error.
    ```bash
    helm upgrade --install substrate \
      oci://ghcr.io/kagent-dev/substrate/helm/substrate \
      --version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} \
-     --namespace ate-system
+     --namespace ate-system \
+     -f - <<EOF
+   credentialProvider:
+     namespacePolicies:
+     - atespace: kagent
+       allowedNamespaces: [kagent]
+   EOF
    ```
 
 3. Create the CA pools that sign service DNS and pod identity certificates.
@@ -117,7 +125,15 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
      --secret-namespace=ate-system
    ```
 
-5. Extract the actor identity root certificate and store it in the secret that the Agent Substrate API server reads.
+5. Create the CA pool for the egress gateway. The egress gateway intercepts HTTPS requests from agents so that it can inject credentials, and it signs a certificate for each destination from this pool. The pool uses an ECDSA P-256 key rather than the default key type, because the clients inside an agent sandbox might not support Ed25519 certificates. Without this pool, the `atenet-egress` pod cannot start, and the rollout in a later step times out.
+   ```bash
+   kubectl ate admin make-ca-pool --ca-id=1 \
+     --name=egress-mitm-ca-pool \
+     --secret-namespace=ate-system \
+     --key-type=ECDSAP256
+   ```
+
+6. Extract the actor identity root certificate and store it in the secret that the Agent Substrate API server reads.
    ```bash
    actor_id_ca_root="$(kubectl get secret actor-id-ca-pool -n ate-system \
      -o jsonpath='{.data.pool}' | base64 --decode \
@@ -128,7 +144,7 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
      --from-literal=ca.crt="${actor_id_ca_root}"
    ```
 
-6. Create the authentication configuration. The `kubernetes` provider accepts Kubernetes ServiceAccount tokens that are issued for the Agent Substrate API server audience. Kubernetes distributions advertise different issuers, so read the issuer from the cluster rather than naming one. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and surfaces later as `token issuer ... not trusted` on every `kubectl ate` call.
+7. Create the authentication configuration. The `kubernetes` provider accepts Kubernetes ServiceAccount tokens that are issued for the Agent Substrate API server audience. Kubernetes distributions advertise different issuers, so read the issuer from the cluster rather than naming one. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and surfaces later as `token issuer ... not trusted` on every `kubectl ate` call.
    ```bash
    k8s_issuer="$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)"
 
@@ -145,7 +161,7 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
    > [!NOTE]
    > An in-cluster issuer, such as `https://kubernetes.default.svc` or `https://kubernetes.default.svc.cluster.local`, publishes no discovery document that a public client can reach, so `certificateAuthorityFile` and `discoveryTokenFile` point the API server at its own projected ServiceAccount certificate authority and token. Omit both lines on a cluster that advertises an external issuer, such as a GKE cluster. `certificateAuthorityFile` replaces the client's root certificate authorities with the cluster's own, so retaining it fails the Transport Layer Security (TLS) handshake against an external issuer.
 
-7. Roll Agent Substrate out again so that its pods mount the identity material, and wait for them to become ready.
+8. Roll Agent Substrate out again so that its pods mount the identity material, and wait for them to become ready.
    ```bash
    helm upgrade substrate \
      oci://ghcr.io/kagent-dev/substrate/helm/substrate \
@@ -153,23 +169,23 @@ Deploy the Agent Substrate control plane and data plane into the `ate-system` na
      --namespace ate-system --reuse-values --wait --timeout 10m
    ```
 
-8. Verify that Agent Substrate is running.
+9. Verify that Agent Substrate is running.
    ```bash
    kubectl get pods -n ate-system
    ```
    Example output:
    ```console
-   NAME                              READY   STATUS      RESTARTS   AGE
-   ate-api-server-59fccdf6dc-f77h6   1/1     Running     3          9m
-   ate-api-server-59fccdf6dc-q49hv   1/1     Running     3          9m
-   ate-controller-6c788456f8-zh2rm   1/1     Running     0          9m
-   atelet-wxm5s                      1/1     Running     0          9m
-   atenet-egress-66f5699886-6rgg9    2/2     Running     0          9m
-   atenet-router-645bd98bdd-dlrv2    2/2     Running     0          9m
-   dns-6bf4fff5bb-zqsnm              2/2     Running     0          9m
-   postgres-0                        2/2     Running     0          9m
-   rustfs-56cdbc9dcb-2ntck           1/1     Running     0          9m
-   rustfs-bucket-init-4pxgt          0/1     Completed   0          9m
+   NAME                                      READY   STATUS      RESTARTS   AGE
+   ate-api-server-7b66644b7d-87gcr           1/1     Running     0          12m
+   ate-api-server-7b66644b7d-hxfnp           1/1     Running     0          12m
+   ate-controller-5dd748fd67-pzg9x           1/1     Running     0          12m
+   atelet-9qbx8                              1/1     Running     0          12m
+   atenet-egress-68bd5b8768-9pjsp            2/2     Running     0          12m
+   atenet-router-555b6598fb-vzp6w            2/2     Running     0          12m
+   k8s-credential-provider-8cf8d559f-ntgtq   1/1     Running     0          12m
+   postgres-0                                2/2     Running     0          12m
+   rustfs-6c4c677cb6-5c42d                   1/1     Running     0          12m
+   rustfs-bucket-init-qbbln                  0/1     Completed   0          12m
    ```
 
 ## Install kagent
@@ -213,8 +229,9 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
      workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
    EOF
    ```
-   > [!NOTE]
-   > `controller.grpc.reflection` lets a gRPC client discover the controller's methods without a local copy of kagent's proto files. The kagent CLI does not need it, because the CLI ships with generated clients for every kagent API. Leave reflection on to explore the API with a general-purpose client such as [grpcurl](https://github.com/fullstorydev/grpcurl), and turn it off for a production installation.
+   The `controller.grpc.reflection` setting lets a gRPC client discover the controller's methods without a local copy of kagent's proto files. The kagent CLI does not need it, because the CLI ships with generated clients for every kagent API. Leave reflection on to explore the API with a general-purpose client such as [grpcurl](https://github.com/fullstorydev/grpcurl), and turn it off for a production installation.
+
+   The chart stores the API key in the `kagent-openai` Secret in the `kagent` namespace. To change the key later, see [How configuration changes reach agents]({{< link path="operations/operational-considerations#how-configuration-changes-reach-agents" >}}).
 
    <!--
    > [!NOTE]
@@ -226,8 +243,7 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
-> [!NOTE]
-> The kagent controller can restart a few times during a first install while it waits for its bundled PostgreSQL database to accept connections. The controller logs `dial tcp ...:5432: connect: connection refused` and then recovers on its own. A restart loop that reports an `ate-api` dial failure instead indicates an incomplete identity bootstrap.
+   The controller can restart a few times during a first install while it waits for its bundled PostgreSQL database to accept connections. The controller logs `dial tcp ...:5432: connect: connection refused` and then recovers on its own. A restart loop that reports an `ate-api` dial failure instead indicates an incomplete identity bootstrap.
 
 ## Verify the installation
 
@@ -238,10 +254,13 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    Example output:
    ```console
    NAME                                              READY   STATUS    RESTARTS   AGE
-   kagent-controller-659b58768b-2k6h4                1/1     Running   3          2m
-   kagent-default-864fdc4c94-xbsl9                   1/1     Running   0          2m
-   kagent-kmcp-controller-manager-6676b45958-knkzd   1/1     Running   0          2m
-   kagent-postgresql-65cc684b78-9qbh2                1/1     Running   0          2m
+   kagent-controller-56c67b6cd7-hqj5z                1/1     Running   3          2m
+   kagent-default-774d4496bd-sfx4b                   1/1     Running   0          2m
+   kagent-grafana-mcp-7c67f5697c-4mf78               1/1     Running   0          2m
+   kagent-kmcp-controller-manager-6676b45958-zcvrp   1/1     Running   0          2m
+   kagent-postgresql-856b475f59-n258n                1/1     Running   0          2m
+   kagent-tools-54959b659c-lfkrz                     1/1     Running   0          2m
+   kagent-ui-5fdb6fd85c-vzb2z                        1/1     Running   0          2m
    ```
 
 2. Confirm that the WorkerPool reports a ready replica.
