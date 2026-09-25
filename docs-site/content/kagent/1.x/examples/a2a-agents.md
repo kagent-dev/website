@@ -121,7 +121,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
    * The `id` identifies one turn, and every message returns a new one.
    * The `contextId` identifies the conversation, and matches the AgentInstance's own ID. A second message to the same instance therefore continues the conversation rather than starting a new one.
 
-   Each artifact also carries runtime metadata under `adk_` keys, including the token counts for that turn.
+   Task metadata uses the `kagent.dev/a2a/` namespace. An artifact carries `kagent.dev/a2a/timeline-position`, an RFC 3339 timestamp that orders task history, and the task itself carries `kagent.dev/a2a/task-created-at`. A runtime that reports model usage publishes it as `kagent.dev/a2a/usage` on a task event rather than on the artifact.
 
 2. Save the task's `id` so that you can read the task again later.
    ```bash

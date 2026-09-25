@@ -48,12 +48,14 @@ EOF
 | ----- | -------- | ----------- |
 | One of `kagent`, `codex`, `claude`, `byo` | Yes | The runtime that executes the agent. Naming none, or more than one, is rejected. For the available runtimes, see [Choose a runtime](#choose-a-runtime). |
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
-| `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. |
-| `workload.args` | No | Overrides the image arguments, up to 64 entries. |
+| `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, whatever language its image is written in. |
+| `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
 | `env` | No | Environment variables for the runtime, up to 100. Each entry sets either a literal `value` or a `credentialRef` naming a key in a same-namespace Secret, never both. |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 | `allowedAgentTemplates.selector` | No | A label selector naming which AgentTemplates this Harness admits. Omitting it admits none, which makes the Harness unusable. Admission is a one-way match. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} has no field naming a Harness, so whoever controls a Harness's selector decides what it accepts. |
+
+A command or argument override belongs to the revision that kagent prepares, so changing one prepares a new revision rather than altering a running agent. An AgentInstance pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
 
 ## Choose a runtime
 

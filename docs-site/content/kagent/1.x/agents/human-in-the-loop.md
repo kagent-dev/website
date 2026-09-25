@@ -8,7 +8,7 @@ author: kagent.dev
 An agent that only answers questions can run unattended. An agent that takes action often should not. The human in the loop (HITL) mechanism lets an agent stop mid-turn, return a question or a pending tool call to a person, and continue once that person answers.
 
 > [!IMPORTANT]
-> HITL has two halves, and a working setup needs both. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} decides which tool calls pause through `requireApproval` on a tool binding. The **client** decides whether it can answer a pause by negotiating the HITL extension on each call. A client that does not request the extension still gets the pause, as the agent stops and the task waits. That client cannot answer, because the request reaches it as bare text with no correlation `id`.
+> HITL has two halves, and a working setup needs both. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} decides which tool calls pause through `requireApproval` on a tool binding. The **client** decides whether it can answer a pause by negotiating the HITL extension on each call. A client that does not request the extension still gets the pause, as the agent stops and the task waits. That client cannot answer, because the request reaches it as text with no correlation `id`.
 
 ## How a pause works
 
@@ -45,6 +45,17 @@ An agent pauses either to get permission before it acts or to ask a question. Ea
 | `ask_user_request` | The agent calls the built-in `ask_user` tool because it needs information only a person has. | `ask_user_response` |
 
 Both use the same pause and resume mechanism, so a client that handles one can handle the other with a different payload.
+
+Every pause also puts a text part on its status message, and every runtime composes it the same way, so a client that never activated the extension still learns why the agent stopped.
+
+| Pause | Text |
+| ----- | ---- |
+| `ask_user` | The questions the agent asked, joined with `; `. |
+| A tool pause whose tools supplied hints | The hints, followed by the tool names in parentheses, such as `Deleting this file requires approval (delete_file, restart_pod)`. |
+| A tool pause with no hints | `Approval is required for tool(s): delete_file` |
+| A pause carrying no tool call | `Human input is required before the agent can continue.` |
+
+The `hint` field of an activated payload holds that same string.
 
 The `kagent` and `codex` runtimes both raise `ask_user_request`. The `claude` runtime does not, because the upstream Claude Code tool that backed it was removed, so a `claude` agent pauses for tool approval only.
 
@@ -102,7 +113,7 @@ HITL is an [A2A](https://a2a-protocol.org) message extension, identified by a ve
 A2A-Extensions: https://kagent.dev/extensions/hitl/v1
 ```
 
-kagent activates the extension only for calls that request it, and echoes the activated URI back. A client that never requests the extension sees ordinary turns until the agent needs a person. The turn then pauses like any other, and that client has no way to answer the request.
+kagent activates the extension only for calls that request it, and echoes the activated URI back. An agent's card declares the extension, so a client can discover HITL support before it sends a message. A client that never requests the extension sees ordinary turns until the agent needs a person. The turn then pauses like any other, and that client has no way to answer the request.
 
 A call from outside the cluster addresses the agent with two more headers, because the gateway routes on metadata rather than on a path. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
 
