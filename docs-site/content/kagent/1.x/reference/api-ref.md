@@ -33,18 +33,6 @@ AgentTemplate defines portable agent behavior.
 | `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  | **Required** <br /> |
 | `status` _[AgentTemplateStatus](#agenttemplatestatus)_ |  |  |  |
 
-#### AgentTemplateConfigMapKeyReference
-
-AgentTemplateConfigMapKeyReference identifies a key in a same-namespace ConfigMap.
-
-_Appears in:_
-- [AgentTemplateSpec](#agenttemplatespec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-
 #### AgentTemplateHarnessStatus
 
 AgentTemplateHarnessStatus reports runtime revision state for one admitting Harness.
@@ -107,7 +95,9 @@ _Appears in:_
 | `modelConfig` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfig is required by managed harnesses and optional for BYO harnesses. |  |  |
 | `description` _string_ |  |  |  |
 | `systemPrompt` _string_ |  |  |  |
-| `systemPromptFrom` _[AgentTemplateConfigMapKeyReference](#agenttemplateconfigmapkeyreference)_ | SystemPromptFrom references prompt text in a same-namespace ConfigMap. |  |  |
+| `systemPromptFrom` _[ConfigMapKeyReference](#configmapkeyreference)_ | SystemPromptFrom references prompt text in a same-namespace ConfigMap. |  |  |
+| `outputSchema` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | OutputSchema constrains successful terminal output when this template is<br />compiled as the root agent. |  | Type: object <br /> |
+| `outputSchemaFrom` _[ConfigMapKeyReference](#configmapkeyreference)_ | OutputSchemaFrom references a JSON Schema stored as JSON in a<br />same-namespace ConfigMap key. |  |  |
 | `promptTemplate` _[AgentTemplatePromptTemplateSpec](#agenttemplateprompttemplatespec)_ |  |  |  |
 | `tools` _[ToolBinding](#toolbinding) array_ |  |  | MaxItems: 50 <br /> |
 | `skills` _[AgentTemplateSkill](#agenttemplateskill) array_ |  |  | MaxItems: 50 <br /> |
@@ -309,6 +299,18 @@ CodexHarness selects the Codex runtime adapter.
 _Appears in:_
 - [HarnessSpec](#harnessspec)
 
+#### ConfigMapKeyReference
+
+ConfigMapKeyReference identifies a key in a same-namespace ConfigMap.
+
+_Appears in:_
+- [AgentTemplateSpec](#agenttemplatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+
 #### FoundryAPIFormat
 
 _Underlying type:_ _string_
@@ -462,6 +464,7 @@ _Appears in:_
 | `interruption` _boolean_ |  |  | **Required** <br /> |
 | `inputRequired` _boolean_ |  |  | **Required** <br /> |
 | `approvals` _boolean_ |  |  | **Required** <br /> |
+| `structuredOutput` _boolean_ | StructuredOutput reports whether the pinned adapter can enforce a root<br />JSON output contract and emit it as an A2A DataPart. |  | **Required** <br /> |
 | `inputModalities` _string array_ |  |  | MaxItems: 16 <br /> |
 | `outputModalities` _string array_ |  |  | MaxItems: 16 <br /> |
 | `resume` _boolean_ |  |  | **Required** <br /> |
@@ -626,6 +629,23 @@ _Appears in:_
 | `tools` _string array_ | Tools optionally limits which server tools are exposed. An omitted or empty<br />list exposes every tool. Harnesses that cannot enforce a partial selection<br />may expose the whole server and report a warning. |  | MaxItems: 50 <br />items:MinLength: 1 <br /> |
 | `requireApproval` _boolean_ | RequireApproval pauses before each invocation of a tool exposed by this<br />binding. It applies to the selected tools, or to every server tool when<br />Tools is omitted or empty. |  |  |
 
+#### MistralConfig
+
+MistralConfig contains Mistral-specific configuration options.
+Mistral exposes an OpenAI-compatible wire protocol; the runtime posts to
+{baseURL}/chat/completions with a Bearer token from MISTRAL_API_KEY.
+
+_Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `baseUrl` _string_ | Base URL for the Mistral API (overrides default https://api.mistral.ai/v1) |  |  |
+| `temperature` _string_ | Temperature for sampling |  |  |
+| `topP` _string_ | Top-p sampling parameter |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate |  | Minimum: 1 <br /> |
+| `timeout` _integer_ | Timeout in seconds for the underlying HTTP client |  | Minimum: 1 <br /> |
+
 #### ModelConfig
 
 ModelConfig is the Schema for the modelconfigs API.
@@ -654,7 +674,7 @@ _Appears in:_
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
 | `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
-| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry] <br /> |
+| `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral] <br /> |
 | `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
 | `anthropic` _[AnthropicConfig](#anthropicconfig)_ | Anthropic-specific configuration |  |  |
 | `azureOpenAI` _[AzureOpenAIConfig](#azureopenaiconfig)_ | Azure OpenAI-specific configuration |  |  |
@@ -665,6 +685,7 @@ _Appears in:_
 | `bedrock` _[BedrockConfig](#bedrockconfig)_ | AWS Bedrock-specific configuration |  |  |
 | `sapAICore` _[SAPAICoreConfig](#sapaicoreconfig)_ | SAP AI Core-specific configuration |  |  |
 | `foundry` _[FoundryConfig](#foundryconfig)_ | Azure AI Foundry-specific configuration |  |  |
+| `mistral` _[MistralConfig](#mistralconfig)_ | Mistral-specific configuration |  |  |
 | `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for provider connections.<br />Enables agents to connect to internal LiteLLM gateways or other providers<br />that use self-signed certificates or custom certificate authorities. |  |  |
 
 #### ModelConfigStatus
@@ -687,7 +708,7 @@ _Underlying type:_ _string_
 ModelProvider represents the model provider type
 
 _Validation:_
-- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry]
+- Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral]
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
@@ -705,6 +726,7 @@ _Appears in:_
 | `Bedrock` |  |
 | `SAPAICore` |  |
 | `Foundry` |  |
+| `Mistral` |  |
 
 #### ModelProviderConfig
 
@@ -730,7 +752,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry] <br />**Required** <br /> |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral] <br />**Required** <br /> |
 | `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
 | `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
 
