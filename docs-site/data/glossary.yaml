@@ -34,15 +34,15 @@ Actor:
 
 Atespace:
   short: "The isolation boundary that an Actor belongs to, and the first half of its identity. Global-scoped in Agent Substrate, not a Kubernetes namespace."
-  link: "/docs/kagent/1.x/about/agent-substrate/#atespaces"
+  link: "/docs/kagent/1.x/about/architecture/agent-substrate/#atespaces"
 
 Agent Substrate:
   short: "The runtime that kagent runs agents on. It multiplexes many sandboxed Actors onto a smaller pool of pre-started Workers, suspending idle ones to snapshots."
-  link: "/docs/kagent/1.x/about/agent-substrate/"
+  link: "/docs/kagent/1.x/about/architecture/agent-substrate/"
 
 ActorTemplate:
   short: "The compiled, immutable definition that the kagent controller produces from a Harness and AgentTemplate pair. Every Actor is created from one."
-  link: "/docs/kagent/1.x/about/agent-substrate/#actortemplate"
+  link: "/docs/kagent/1.x/about/architecture/agent-substrate/#actortemplate"
 
 AgentInstance:
   short: "A running, conversational pairing of a Harness and an AgentTemplate. Unlike the two, it is not a Kubernetes resource: kagent's gRPC API creates it and its database tracks it."
@@ -62,11 +62,11 @@ Harness:
 
 Worker:
   short: "A pre-started, sandboxed pod that hosts at most one Actor at a time. Actors are multiplexed across a pool of Workers over time."
-  link: "/docs/kagent/1.x/about/agent-substrate/#workers-and-workerpools"
+  link: "/docs/kagent/1.x/about/architecture/agent-substrate/#workers-and-workerpools"
 
 WorkerPool:
   short: "A Kubernetes custom resource declaring how many Workers to keep running and which sandbox class they use. An operator must provision one before any Harness can create AgentInstances."
-  link: "/docs/kagent/1.x/about/agent-substrate/#workers-and-workerpools"
+  link: "/docs/kagent/1.x/about/architecture/agent-substrate/#workers-and-workerpools"
 
 
 # Added when the glossary widened from Substrate and Harness-model vocabulary to
@@ -89,7 +89,7 @@ Snapshot:
 
 Tag:
   short: "An Agent Substrate resource that gives one snapshot a stable, human-meaningful name, so callers do not need to track Substrate's internal snapshot identity. It also acts as a retention pin: Agent Substrate does not collect a snapshot while a tag names it, and only the tag's visibility scope can change afterward."
-  link: "/docs/kagent/1.x/about/agent-substrate/#suspend-snapshot-and-resume"
+  link: "/docs/kagent/1.x/about/architecture/agent-substrate/#suspend-snapshot-and-resume"
 
 Fork:
   short: "A second AgentInstance created from a checkpoint, continuing the conversation from the point that the checkpoint pinned. A fork inherits the checkpoint's revision, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork, leaving the original's history untouched."

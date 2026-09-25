@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-An agent is a program that decides at run time what to do next. It runs the commands that a model asks for, and it calls the tools it can access. [Agent Substrate]({{< link path="about/agent-substrate" >}}) runs each agent inside an **Actor**, its own unit of compute, and it does not run that Actor as an ordinary container process. Each Actor runs inside its own **sandbox**, on a {{< gloss "Worker" >}}Worker{{< /gloss >}} that hosts one Actor at a time. This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it.
+An agent is a program that decides at run time what to do next. It runs the commands that a model asks for, and it calls the tools it can access. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, its own unit of compute, and it does not run that Actor as an ordinary container process. Each Actor runs inside its own **sandbox**, on a {{< gloss "Worker" >}}Worker{{< /gloss >}} that hosts one Actor at a time. This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it.
 </br></br>
 
 ```mermaid

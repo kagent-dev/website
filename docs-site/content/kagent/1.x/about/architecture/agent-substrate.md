@@ -3,9 +3,11 @@ title: Agent Substrate architecture
 description: See how Agent Substrate runs, suspends, and resumes the Actors behind every AgentInstance.
 weight: 40
 author: kagent.dev
+aliases:
+  - /kagent/1.x/about/agent-substrate/
 ---
 
-The [kagent architecture]({{< link path="about/architecture" >}}) page established that every {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} runs on an Actor. This page explains what an Actor is built from and what it runs on: the ActorTemplate that it is created from, the compute that hosts it, the atespace that identifies it, the sandbox that isolates it, and the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} cycle that lets it suspend when idle and resume on demand.
+The [kagent architecture]({{< link path="about/architecture/kagent" >}}) page established that every {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} runs on an Actor. This page explains what an Actor is built from and what it runs on: the ActorTemplate that it is created from, the compute that hosts it, the atespace that identifies it, the sandbox that isolates it, and the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} cycle that lets it suspend when idle and resume on demand.
 
 ## ActorTemplate
 
