@@ -12,7 +12,7 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha2 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha3 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
@@ -215,6 +215,10 @@ A Helm chart for kagent, built with Google ADK
 | providers.gemini.apiKeySecretRef | string | `"kagent-gemini"` |  |
 | providers.gemini.model | string | `"gemini-2.5-flash-lite"` |  |
 | providers.gemini.provider | string | `"Gemini"` |  |
+| providers.mistral.apiKeySecretKey | string | `"MISTRAL_API_KEY"` |  |
+| providers.mistral.apiKeySecretRef | string | `"kagent-mistral"` |  |
+| providers.mistral.model | string | `"mistral-large-latest"` |  |
+| providers.mistral.provider | string | `"Mistral"` |  |
 | providers.ollama.config.host | string | `"host.docker.internal:11434"` |  |
 | providers.ollama.config.options.num_ctx | string | `"64000"` |  |
 | providers.ollama.model | string | `"llama3.2"` |  |
@@ -237,6 +241,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod. |
 | ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
+| ui.basePath | string | `""` | Prefix a reverse proxy strips before forwarding, e.g. `/ui`; root-relative URLs such as `publicBackendUrl` get it too. With oauth2-proxy, set `OIDC_REDIRECT_URL` under it and restart oauth2-proxy after changing it. |
 | ui.env | list | `[]` | Extra environment variables for the UI container: a list of `{name, value}` entries, spliced into its `env:` verbatim. An installed app extension's own settings go here, named `EXTENSION_*`; the container's startup script copies those onto `window.environmentVariables` for the browser to read. |
 | ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
 | ui.httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":[],"labels":{},"parentRefs":[],"rules":[]}` | Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via `parentRefs`. Disabled by default; enable to front the UI with a Gateway API implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the OpenShift Route or bundled oauth2-proxy. |
