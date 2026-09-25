@@ -7,7 +7,7 @@ author: kagent.dev
 
 ## kagent 1.0
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, and **AgentInstance**, running on [Agent Substrate]({{< link path="about/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, and **AgentInstance**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
 
 The new model separates what an agent can do from how it is allowed to run:
 
@@ -46,7 +46,7 @@ A **Harness** is a Kubernetes custom resource that defines _how an agent is allo
 
 - **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own Go and Python engines, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
 - **Workload**: The container image and environment the runtime runs in.
-- **Substrate policy**: The [WorkerPool]({{< link path="about/agent-substrate#workers-and-workerpools" >}}) that the Harness's Actors are scheduled onto, and where their {{< gloss "Snapshot" >}}snapshots{{< /gloss >}} are stored.
+- **Substrate policy**: The [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) that the Harness's Actors are scheduled onto, and where their {{< gloss "Snapshot" >}}snapshots{{< /gloss >}} are stored.
 - **Allowed AgentTemplates**: A selector that names which AgentTemplates are permitted to run on this Harness.
 
 That last point is a one-way match, not a mutual handshake. An AgentTemplate has no field naming a Harness. Instead, a Harness's `allowedAgentTemplates` selector matches on labels, and any AgentTemplate in the same namespace carrying a matching label becomes eligible to run on it. Whoever controls a Harness's selector decides which AgentTemplates it accepts.
@@ -97,9 +97,9 @@ For the AgentInstance gRPC service definition, see the [API reference]({{< link 
 
 ## Actor
 
-An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{< link path="about/agent-substrate" >}}), that _runs an AgentInstance's conversation loop_. Every AgentInstance is backed by an Actor.
+An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), that _runs an AgentInstance's conversation loop_. Every AgentInstance is backed by an Actor.
 
-Actors are the reason why AgentInstances can suspend and resume cheaply instead of staying resident. An idle Actor can be snapshotted and torn down, then resumed from that snapshot on demand. To understand the full mechanics ({{< gloss "Worker" >}}Workers{{< /gloss >}}, {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}}, ActorTemplates, and snapshotting), see [Agent Substrate architecture]({{< link path="about/agent-substrate" >}}).
+Actors are the reason why AgentInstances can suspend and resume cheaply instead of staying resident. An idle Actor can be snapshotted and torn down, then resumed from that snapshot on demand. To understand the full mechanics ({{< gloss "Worker" >}}Workers{{< /gloss >}}, {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}}, ActorTemplates, and snapshotting), see [Agent Substrate architecture]({{< link path="about/architecture/agent-substrate" >}}).
 
 ## Agent tools
 

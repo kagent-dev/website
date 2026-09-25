@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-An agent spends most of its life waiting. It waits on a person to reply, and it waits on a large language model (LLM) to answer. [Agent Substrate]({{< link path="about/agent-substrate" >}}) runs each agent inside an **Actor**, the unit that it suspends and resumes, and it treats that idle time as reclaimable: it suspends an idle Actor into a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, frees the {{< gloss "Worker" >}}Worker{{< /gloss >}} that the Actor was running on, and restores the Actor when traffic arrives for it. This page explains what a snapshot captures, when kagent suspends an Actor, and what happens when a suspended Actor is addressed again.
+An agent spends most of its life waiting. It waits on a person to reply, and it waits on a large language model (LLM) to answer. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, the unit that it suspends and resumes, and it treats that idle time as reclaimable: it suspends an idle Actor into a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, frees the {{< gloss "Worker" >}}Worker{{< /gloss >}} that the Actor was running on, and restores the Actor when traffic arrives for it. This page explains what a snapshot captures, when kagent suspends an Actor, and what happens when a suspended Actor is addressed again.
 
 ## Actor lifecycle operations
 

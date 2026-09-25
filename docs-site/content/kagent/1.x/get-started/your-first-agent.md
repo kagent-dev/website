@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the AgentInstance that they produce. You apply the Harness and the AgentTemplate as Kubernetes resources, and you create and talk to the AgentInstance with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
+This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the AgentInstance that they produce. You apply the Harness and the AgentTemplate as Kubernetes resources, and you create and talk to the AgentInstance with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture/kagent" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
 
 ## Before you begin
 
@@ -22,7 +22,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
 
 ## Create a Harness and an AgentTemplate
 
-1. Apply a `Harness` that uses kagent's native runtime. Its `substrate` section names the [WorkerPool]({{< link path="about/agent-substrate#workers-and-workerpools" >}}) that this Harness's Actors run on, and the object storage location for their [snapshots]({{< link path="about/agent-substrate#suspend-snapshot-and-resume" >}}).
+1. Apply a `Harness` that uses kagent's native runtime. Its `substrate` section names the [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) that this Harness's Actors run on, and the object storage location for their [snapshots]({{< link path="about/architecture/agent-substrate#suspend-snapshot-and-resume" >}}).
    ```yaml
    apiVersion: kagent.dev/v1alpha3
    kind: Harness
@@ -174,7 +174,7 @@ To remove the resources, follow these steps.
 
 {{< cards >}}
   {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Bind a Model Context Protocol tool so that your agent can act on live cluster data." >}}
-  {{< card link=`{{< link path="about/agent-substrate" >}}` title="Agent Substrate architecture" subtitle="Understand what happens to your AgentInstance's Actor when it sits idle." >}}
+  {{< card link=`{{< link path="about/architecture/agent-substrate" >}}` title="Agent Substrate architecture" subtitle="Understand what happens to your AgentInstance's Actor when it sits idle." >}}
   {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Choose from the full set of Harness runtime options." >}}
   {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Give your agent capabilities beyond its system prompt." >}}
 {{< /cards >}}
