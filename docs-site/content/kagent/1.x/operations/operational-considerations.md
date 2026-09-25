@@ -122,7 +122,7 @@ This behavior differs from kagent 0.x, where an agent ran as a Deployment and a 
 
 ### Rotate the model provider API key
 
-How you rotate the key depends on who owns the Secret. When you set `providers.<provider>.apiKey` in your Helm values, as the [installation guide]({{< link path="setup/installation#install-kagent" >}}) does, the kagent chart creates the Secret and Helm owns it. Rotate the key through Helm, not by editing the Secret, because a direct edit does not last. With Helm 3, the next `helm upgrade --reuse-values` writes the previous key back. With Helm 4, which applies changes on the server side, the next upgrade fails with a field ownership conflict on the Secret.
+How you rotate the key depends on who owns the Secret. When you set `providers.<provider>.apiKey` in your Helm values, the kagent chart creates the Secret and Helm owns it. Rotate the key through Helm, not by editing the Secret, because a direct edit does not last. With Helm 3, the next `helm upgrade --reuse-values` writes the previous key back. With Helm 4, which applies changes on the server side, the next upgrade fails with a field ownership conflict on the Secret.
 
 1. Update the key.
    {{< tabs >}}

@@ -265,6 +265,7 @@ Turn off the trace exporter, then create a new AgentInstance so that the change 
 ## Next steps
 
 {{< cards >}}
+  {{< card link=`{{< link path="observability/audit-prompts" >}}` title="Audit prompts" subtitle="Export every prompt and reply as a log event for security and compliance review." >}}
   {{< card link=`{{< link path="observability/metrics" >}}` title="Metrics" subtitle="Review the metrics that kagent and Agent Substrate report." >}}
   {{< card link=`{{< link path="substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Learn what happens to an Actor between the turns of a conversation." >}}
 {{< /cards >}}
