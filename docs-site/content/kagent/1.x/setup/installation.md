@@ -288,6 +288,11 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    {{% /tab %}}
    {{< /tabs >}}
 
+4. Optional: Open the kagent UI. The UI is a separate `{{< reuse "kagent-docs/snippets/name-ui.md" >}}` service, so it needs its own port-forward in a second terminal. The dashboard is then available at [http://localhost:8082](http://localhost:8082). For the `kagent dashboard` shortcut and a tour of the UI, see [Launch the UI]({{< link path="observability/launch-ui" >}}).
+   ```bash
+   kubectl port-forward -n kagent svc/{{< reuse "kagent-docs/snippets/name-ui.md" >}} 8082:8080
+   ```
+
 ## Next steps
 
 {{< cards >}}
