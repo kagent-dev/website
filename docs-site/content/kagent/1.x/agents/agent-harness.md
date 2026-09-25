@@ -90,6 +90,8 @@ spec:
 
 Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}).
 
+Setting `compaction` summarizes older session events so an agent's prompt stays bounded as a conversation grows. For the two strategies and the rules the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
+
 ## Model provider support
 
 The runtime that a Harness selects decides which ModelConfig its AgentTemplates can use.
