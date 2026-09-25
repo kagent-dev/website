@@ -386,6 +386,6 @@ An `AgentgatewayPolicy` holds the same `promptGuard` configuration, and one poli
 
 {{< cards >}}
   {{< card link=`{{< link path="setup/model-providers/byo-agentgateway" >}}` title="agentgateway model routing" subtitle="Review the Gateway, AgentgatewayModel, and ModelConfig that carry an agent's model traffic." >}}
-  <!--{{< card link=`{{< link path="observability/audit-prompts" >}}` title="Audit prompts" subtitle="Export the prompts and replies that your agents exchange with a model, and query them in a logging backend." >}}-->
+  {{< card link=`{{< link path="observability/audit-prompts" >}}` title="Audit prompts" subtitle="Review where each runtime records the prompts and replies that your agents exchange with a model, and how to capture them for an audit." >}}
   {{< card link="https://agentgateway.dev/docs/kubernetes/latest/documentation/llm/guardrails/regex/#block-requests-with-pii" title="agentgateway regex guardrails" subtitle="Read the full set of regex guards, masking rules, and built-in patterns in the agentgateway documentation." >}}
 {{< /cards >}}

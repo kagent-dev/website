@@ -52,20 +52,21 @@ The following table lists what each source sends. For the meaning of each signal
 
 | Source | Traces | Logs | Metrics |
 | ------ | ------ | ---- | ------- |
-| kagent controller and agent runtimes | One trace per agent request, across the controller, the Agent Substrate proxy, and the agent runtime. | Audit events for the prompts and replies that agents exchange with a model. | Reconciliation, work queue, and gRPC API metrics, scraped from the controller's `/metrics` endpoint. |
-| Agent Substrate | Separate traces for its own work, such as routing a request to a Worker and resuming an Actor. | Actor lifecycle events and the router access log. | Actor lifecycle, scheduling, snapshot, image cache, and WorkerPool capacity metrics. |
+| kagent controller and agent runtimes | One trace per agent request, across the controller, the Agent Substrate proxy, and the agent runtime. | Log records from the agent runtimes. Prompts and replies are not among them on the `kagent` runtime, which puts them on spans instead. For how to capture them, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). | Reconciliation, work queue, and gRPC API metrics, scraped from the controller's `/metrics` endpoint. |
+| Agent Substrate | Separate traces for its own work, such as routing a request to a Worker and resuming an Actor. | A record of every Actor state change, and the router access log. | Actor lifecycle, scheduling, snapshot, image cache, and WorkerPool capacity metrics. |
 
 Agent Substrate traces do not join the trace of the agent request that caused them. To see why a request was slow to start, look up the Agent Substrate trace from the same time window.
 
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to send requests to.
-3. Make sure that your cluster has about 1.5 GB of memory available in addition to kagent. On a kind cluster, the memory limit is the memory that you give Docker.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because earlier CLI versions have no `agent-instance` commands and fail with `unknown command`. To check your version, run `kagent version`.
+3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
+4. Make sure that your cluster has about 1.5 GB of memory available in addition to kagent. On a kind cluster, the memory limit is the memory that you give Docker.
 
 ## Install Tempo and Loki
 
-Install the backends that store traces and logs. Both run as a single replica without persistent storage, which suits evaluation. For production, follow the Grafana guidance for [Tempo](https://grafana.com/docs/tempo/latest/setup/helm-chart/) and [Loki](https://grafana.com/docs/loki/latest/setup/install/helm/).
+Install the backends that store traces and logs. Both run as a single replica, which suits evaluation. Tempo keeps its traces in memory, and Loki keeps its logs on a small persistent volume, so your cluster needs a default StorageClass, which a kind cluster has. For production, follow the Grafana guidance for [Tempo](https://grafana.com/docs/tempo/latest/setup/helm-chart/) and [Loki](https://grafana.com/docs/loki/latest/setup/install/helm/).
 
 1. Install Tempo, with an OTLP receiver for traces.
    ```bash
@@ -87,7 +88,7 @@ Install the backends that store traces and logs. Both run as a single replica wi
    EOF
    ```
 
-2. Install Loki in single-binary mode. The values file disables the two Loki memcached caches, because the chart requests roughly 10 GB of memory for them by default and a single-node cluster cannot schedule that request.
+2. Install Loki in single-binary mode, with its logs on the local filesystem. The values file disables the two Loki memcached caches, because the chart requests roughly 10 GB of memory for them by default and a single-node cluster cannot schedule that request.
    ```bash
    helm upgrade --install loki loki \
      --repo https://grafana.github.io/helm-charts \
@@ -101,16 +102,21 @@ Install the backends that store traces and logs. Both run as a single replica wi
        configs:
          - from: 2024-04-01
            store: tsdb
-           object_store: s3
+           object_store: filesystem
            schema: v13
            index:
              prefix: loki_index_
              period: 24h
      auth_enabled: false
+     storage:
+       type: filesystem
    singleBinary:
      replicas: 1
+     persistence:
+       enabled: true
+       size: 2Gi
    minio:
-     enabled: true
+     enabled: false
    gateway:
      enabled: false
    test:
@@ -165,10 +171,9 @@ Install the backends that store traces and logs. Both run as a single replica wi
    ```
    Example output:
    ```console
-   NAME           READY   STATUS    RESTARTS   AGE
-   loki-0         2/2     Running   0          90s
-   loki-minio-0   1/1     Running   0          90s
-   tempo-0        1/1     Running   0          2m
+   NAME      READY   STATUS    RESTARTS   AGE
+   loki-0    2/2     Running   0          90s
+   tempo-0   1/1     Running   0          2m
    ```
 
 ## Install Prometheus and Grafana
@@ -365,7 +370,7 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    | Setting | Description |
    | ------- | ----------- |
    | `otel.tracing` | Exports traces from the controller and from the agent runtimes that it starts. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
-   | `otel.logging` | Exports audit events from the agent runtimes. By default, kagent withholds message content, so each event body reads `<elided>`. |
+   | `otel.logging` | Exports log records from the agent runtimes. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
    | `controller.metrics.enabled` | Serves the controller's Prometheus metrics on port `8443` over HTTPS. |
    | `controller.metrics.serviceMonitor` | Creates a ServiceMonitor for the metrics endpoint. The `prometheusServiceAccount` setting binds the metrics reader role to the Prometheus ServiceAccount, which authorizes the scrape. |
 
@@ -383,7 +388,7 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the pair, for example because the settings were already in place.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
 ## Send Agent Substrate telemetry to the collector
 
@@ -410,7 +415,9 @@ Point Agent Substrate at the collector. A single `otel.endpoint` setting turns o
 
 ## Send a request
 
-1. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance exports traces and audit events.
+Create an AgentInstance that picks up the new telemetry settings, and send it a few requests to produce traces, logs, and metrics.
+
+1. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance exports telemetry.
    ```bash
    kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
    ```
@@ -438,6 +445,8 @@ Point Agent Substrate at the collector. A single `otel.endpoint` setting turns o
 
 ## Explore the telemetry in Grafana
 
+Log in to Grafana, and query each backend from the **Explore** view.
+
 1. Get the Grafana password for the `admin` user.
    ```bash
    kubectl get secret -n telemetry kube-prometheus-stack-grafana \
@@ -456,17 +465,19 @@ Point Agent Substrate at the collector. A single `otel.endpoint` setting turns o
    {{% tab name="Traces" %}}
    Select the **Tempo** data source, then select the **Search** query type. From the **Service Name** list, select `my-first-agent-my-first-harness`, the service that the AgentTemplate and Harness pair reports as, and run the query. Open a trace to see the controller, proxy, and agent runtime spans of one request.
 
-   To see Agent Substrate's own work, select `ateapi`, `atenet-router`, or `atelet` from the **Service Name** list instead.
+   To see Agent Substrate's own work, select one of its services from the **Service Name** list instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
    {{% /tab %}}
    {{% tab name="Logs" %}}
-   Select the **Loki** data source, and run the following query to show the audit events of your agent.
+   Select the **Loki** data source, and run the following query to show the state changes of your agent's Actor. Agent Substrate names the Actor `ai-` followed by the AgentInstance ID, so replace `<instance-id>` with the value of `$INSTANCE_ID` from the previous section.
    ```text
-   {service_name="my-first-agent-my-first-harness"}
+   {service_name="ateapi"} | ate_actor_name="ai-<instance-id>"
    ```
 
-   The runtime exports audit events in batches, and Agent Substrate suspends the Actor as soon as a response completes. The events of the most recent request can therefore appear only after you send the next one.
+   Each record carries the new state of the Actor, such as `resuming`, `running`, or `suspended`. For the meaning of each record, see [Actor state changes]({{< link path="observability/substrate-telemetry#actor-state-changes" >}}).
 
-   To see Actor lifecycle events from Agent Substrate, query `{service_name="ateapi"}` instead.
+   To see the router access log, with an entry for every request that the router forwards, query `{service_name="agentgateway"}` instead.
+
+   Loki does not hold the prompts and replies of the `kagent` runtime, because that runtime puts them on spans rather than in log records. To audit them, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
    {{% /tab %}}
    {{% tab name="Metrics" %}}
    Select the **Prometheus** data source, and run a query. For example, the following query returns the number of ready Workers in each WorkerPool.

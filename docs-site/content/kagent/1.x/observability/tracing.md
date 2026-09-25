@@ -48,7 +48,7 @@ A caller reaches the gRPC API on the kagent controller, which starts the trace. 
 Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing backend uses these service names to group the spans.
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
-- **The Agent Substrate router** reports as `agentgateway`, the proxy that the router runs.
+- **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
 - **Each agent runtime** reports as its own service, named for the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} and {{< gloss "Harness" >}}Harness{{< /gloss >}} pair it was compiled from. The `my-first-agent` template on the `my-first-harness` Harness reports as `my-first-agent-my-first-harness`.
 
 > [!NOTE]
@@ -82,12 +82,12 @@ A trace tells you which request you are looking at through attributes on its spa
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invocation` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.captureSensitiveContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how the setting applies to each runtime, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
+> When the `otel.captureSensitiveContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} to send a request to.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} to send a request to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because earlier CLI versions have no `agent-instance` commands and fail with `unknown command`. To check your version, run `kagent version`.
 3. Set up a tracing backend. The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you, so you can skip to [Review a trace](#review-a-trace).
 
 ## Enable tracing
@@ -152,7 +152,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the pair, for example because the settings were already in place.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
 6. Create a new AgentInstance, so that its Actor starts from a runtime that has the tracing configuration.
    ```bash
@@ -173,6 +173,8 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
    ```
 
 ## Review a trace
+
+Send a request to the new AgentInstance, then find its trace in the backend that you set up.
 
 1. Send a request to the AgentInstance to produce a trace.
    ```bash
@@ -244,6 +246,8 @@ To avoid losing them, the controller sets `KAGENT_PRE_RESPONSE_TRACE_FLUSH` to `
 The flush lets a kagent trace arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
 
 ## Turn tracing off
+
+Turn off the trace exporter, then create a new AgentInstance so that the change takes effect.
 
 1. Disable tracing in the kagent Helm release.
    ```bash

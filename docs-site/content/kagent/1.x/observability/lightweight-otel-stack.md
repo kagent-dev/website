@@ -16,7 +16,7 @@ This stack follows the setup that Agent Substrate uses for its own local testing
 
 ## About the stack
 
-The stack has no logging backend. The collector prints the logs that it receives to its own output, which is enough to confirm that logs arrive. To store and query audit events, use the [OTel stack]({{< link path="observability/otel-stack" >}}), which adds Loki.
+The stack has no logging backend. The collector prints the logs that it receives to its own output, which is enough to confirm that logs arrive. To store and query logs, such as the Actor state changes that Agent Substrate records, use the [OTel stack]({{< link path="observability/otel-stack" >}}), which adds Loki.
 </br></br>
 
 ```mermaid
@@ -46,7 +46,8 @@ For what kagent and Agent Substrate each send, see [About the stack]({{< link pa
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to send requests to.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because earlier CLI versions have no `agent-instance` commands and fail with `unknown command`. To check your version, run `kagent version`.
+3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
 
 ## Install Jaeger
 
@@ -114,6 +115,8 @@ Install the [Prometheus](https://github.com/prometheus-community/helm-charts/tre
 
    The kagent controller serves its metrics over HTTPS with a self-signed certificate, and it accepts a scrape only from a ServiceAccount that holds its metrics reader role. The `kagent-controller` job therefore skips certificate verification and sends the Prometheus ServiceAccount token.
 
+   The `kagent-controller` target reads `DOWN` until you turn on the controller metrics in [Send kagent telemetry to the collector](#send-kagent-telemetry-to-the-collector), because the controller metrics Service does not exist before then.
+
 2. Verify that Prometheus is running.
    ```bash
    kubectl get pods -n telemetry -l app.kubernetes.io/name=prometheus
@@ -179,6 +182,8 @@ EOF
 
 ## Send kagent telemetry to the collector
 
+Turn on the kagent trace and log exporters, and point both at the collector. Also turn on the controller's metrics endpoint, and allow Prometheus to scrape it.
+
 1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent recompiles the pair with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
    for i in $(seq 1 60); do
@@ -241,7 +246,7 @@ EOF
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the pair, for example because the settings were already in place.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
 ## Send Agent Substrate telemetry to the collector
 
@@ -259,6 +264,8 @@ helm upgrade substrate \
 ```
 
 ## Send a request
+
+Create an AgentInstance that picks up the new telemetry settings, and send it a request to produce traces and metrics.
 
 1. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance exports traces.
    ```bash
@@ -287,13 +294,15 @@ helm upgrade substrate \
 
 ## Review the telemetry
 
+Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in the collector's own output.
+
 1. Review the traces in Jaeger.
    1. Forward the Jaeger query port, and leave the command running.
       ```bash
       kubectl port-forward -n telemetry svc/jaeger 16686:16686
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
-   3. From the **Service** list, select `my-first-agent-my-first-harness`, and click **Find Traces**. To see Agent Substrate's own work, select `ateapi`, `atenet-router`, or `atelet` instead.
+   3. From the **Service** list, select `my-first-agent-my-first-harness`, and click **Find Traces**. To see Agent Substrate's own work, select one of its services instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
 
 2. Review the metrics in Prometheus.
    1. Forward the Prometheus port, and leave the command running.

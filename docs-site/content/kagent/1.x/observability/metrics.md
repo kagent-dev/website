@@ -58,7 +58,7 @@ helm upgrade substrate \
   --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317
 ```
 
-To send metrics somewhere other than traces and logs, set `otel.metrics.endpoint` instead. To stop exporting metrics while keeping the other signals, set `otel.metrics.enabled` to `false`. Agent Substrate exports a batch of metrics every 60 seconds, so a new installation shows its first values about a minute after you set the endpoint.
+To send metrics somewhere other than traces and logs, set `otel.metrics.endpoint` instead. To stop exporting metrics while keeping the other signals, leave `otel.endpoint` empty, and set `otel.traces.endpoint` and `otel.logs.endpoint` instead. Setting `otel.metrics.enabled` to `false` is not enough in version {{< reuse "kagent-docs/versions/agent-substrate.md" >}}, because only the router's agentgateway reads it, and the other Agent Substrate components keep exporting. Agent Substrate exports a batch of metrics every 60 seconds, so a new installation shows its first values about a minute after you set the endpoint.
 
 ### Metric reference
 
@@ -76,6 +76,10 @@ The collector's Prometheus exporter converts each OpenTelemetry metric name to a
 | `ate_actor_checkpoint_duration_seconds` | `atelet` | Histogram | Time for each phase of writing a snapshot when an Actor suspends. |
 | `atelet_snapshot_size_bytes` | `atelet` | Histogram | Uncompressed size of each snapshot. |
 | `ate_imagecache_requests_total` | `atelet` | Counter | Lookups in the node-local image cache, by the `ate_imagecache_outcome` label. A cache miss pays for pulling and unpacking the image, so a low hit ratio predicts slow resumes. |
+| `ate_actor_stats_cpu_time_seconds_total` | `atelet` | Counter | CPU time of the Actors that run on a node, by template. Use `rate()` to find the templates that use a node's CPU. |
+| `ate_actor_stats_memory_usage_bytes` | `atelet` | Gauge | Memory of the Actors that run on a node, by template, including page cache that the node can reclaim. |
+| `ate_actor_stats_memory_working_set_bytes` | `atelet` | Gauge | Working set memory of the Actors that run on a node, by template, without reclaimable page cache. Compare this value with a memory limit. |
+| `ate_actor_stats_sampled_actors` | `atelet` | Gauge | Actors on a node that have a current resource measurement. Divide the other `ate_actor_stats_*` metrics by this value to get a per-Actor average for a template. |
 | `ate_actor_crashes_total` | `ateapi` | Counter | Actors that moved to the terminal crashed state, by failure reason. The metric appears only after the first crash. |
 | `rpc_server_call_duration_seconds`, `rpc_client_call_duration_seconds` | `ateapi`, `atelet` | Histogram | Latency, rate, and errors of the gRPC calls between Agent Substrate components. |
 

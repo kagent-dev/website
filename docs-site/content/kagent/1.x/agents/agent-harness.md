@@ -132,7 +132,7 @@ The `kagent` and `byo` runtimes take the full set. For more information about wh
 
 ## Telemetry content settings
 
-Tracing and audit logging both carry the prompts and replies that an agent exchanges with a model. Two settings in the kagent Helm chart decide whether that content leaves the runtime, and each one reaches a different set of runtimes. Both default to `false`, and both take effect only where tracing or audit logging is already enabled.
+Tracing carries the prompts and replies that an agent exchanges with a model, and so does log export on the `claude` runtime. Two settings in the kagent Helm chart decide whether that content leaves the runtime, and each one reaches a different set of runtimes. Both default to `false`, and both take effect only where tracing or log export is already enabled.
 
 ```yaml
 otel:
@@ -143,7 +143,7 @@ otel:
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require audit logging. | `kagent`, `codex`, `claude` |
+| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logging`. | `kagent`, `codex`, `claude` |
 | `otel.logging.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.captureSensitiveContent` does, and it takes effect only when `otel.logging.enabled` is `true`. | `claude` |
 
 The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.captureSensitiveContent`, so setting that variable in the Harness `spec.env` field has no effect.
