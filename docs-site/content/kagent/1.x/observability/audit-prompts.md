@@ -240,7 +240,7 @@ Turning on auditing takes two changes. The chart setting installs the log export
        workerPoolRef:
          name: kagent-default
        snapshotPolicy:
-         location: gs://<your-bucket>/kagent/
+         location: s3://ate-snapshots/kagent/
      allowedAgentTemplates:
        selector:
          matchLabels:
