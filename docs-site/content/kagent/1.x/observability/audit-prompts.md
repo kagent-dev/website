@@ -1,404 +1,190 @@
 ---
 title: Audit prompts
-description: Export the prompts and replies that your agents exchange with a model as OpenTelemetry log events, then query them in a logging backend.
-weight: 30
+description: Capture the prompts and replies that your agents exchange with a model in your traces, then find them in your tracing backend for security and compliance review.
+weight: 50
 author: kagent.dev
 ---
 
-Audit every prompt (input) and reply (output) that passes between your agents and their models. Security and compliance teams use these records to review how people use your {{< reuse "kagent-docs/snippets/name-product.md" >}} environment. For example, you can confirm that no request sends personally identifiable information (PII) to a model. You can also reconstruct the instructions that an agent received in an earlier conversation.
+Audit the prompts (inputs) and replies (outputs) that pass between your agents and their models. Security and compliance teams use these records to review how people use your {{< reuse "kagent-docs/snippets/name-product.md" >}} environment. For example, you can confirm that no request sends personally identifiable information (PII) to a model. You can also reconstruct the instructions that an agent received in an earlier conversation.
 
 ## About prompt auditing
 
-The agent runtime emits each message as an OpenTelemetry (OTel) log event. You export these events over the OpenTelemetry Protocol (OTLP) to a logging backend or to a security information and event management (SIEM) system.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} records prompts and replies in traces. When you turn on content capture, the spans for each model call carry the request that the agent sent and the reply that it received. You then find the records in your tracing backend, by agent, by conversation, or by the text that they contain.
 
-### Trace correlation
+The `kagent` runtime does not write prompts or replies to log records, so a logging backend on its own cannot hold a prompt audit trail. Capture is off by default, because the content can include sensitive user and model data.
 
-The runtime emits each event from inside the model call. Each event records the trace ID and the span ID of the request that produced it. Those IDs let you match an audit record to the trace of the same request. The runtime populates both IDs whether or not you enable tracing, but only an enabled tracing pipeline exports the matching trace. With tracing disabled, a lookup of the trace ID in your tracing backend returns nothing. For more information, see [Tracing]({{< link path="observability/tracing" >}}).
+### What each runtime records
 
-### Events
+Each runtime records the content on its own instrumentation, so where the content lands differs by runtime. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
-The runtime emits three event names for each model call. The system prompt and the model's reply each produce one event. The message history produces one event for every entry that it holds.
+| Runtime | Where the content goes | Settings |
+| ------- | ---------------------- | -------- |
+| `kagent` | The `generate_content` span of each model call, in two attributes. See [What a record holds](#what-a-record-holds). | `otel.captureSensitiveContent` |
+| `codex` | The runtime's own spans. | `otel.captureSensitiveContent` |
+| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.logging.captureRawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.captureSensitiveContent`, `otel.logging.captureRawApiBodies` |
+| `byo` | Nowhere. The controller sends this runtime no telemetry configuration. | None |
 
-| Event name | What it holds |
-| ---------- | ------------- |
-| `gen_ai.system.message` | The system prompt for the request, as one concatenated string. |
-| `gen_ai.user.message` | One entry from the request's message history. The entry holds a person's message, an earlier agent turn, or a tool result. |
-| `gen_ai.choice` | The model's reply, with the reply content and a `finish_reason`. On a turn that calls a tool, the reply content holds the tool call and its arguments instead of text. |
+For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
-An audit returns more than the prompts that your team wrote. A `gen_ai.system.message` body holds the `systemPrompt` field of your AgentTemplate followed by instructions that the runtime appends, which name the agent and repeat its description. Tool traffic is included as well, because a tool call reaches the log with its arguments, and the tool's output returns as a `gen_ai.user.message` that holds the tool response.
+### What a record holds
 
-> [!NOTE]
-> The runtime labels every history entry as `gen_ai.user.message`, including the agent's own earlier turns and tool results. The `content.role` field in the event body names the speaker. To select only the messages that a person sent, filter on `content.role` instead of on the event name. Each turn also re-emits the full history, so a long conversation produces repeated events. Account for that volume when you set a retention period.
+On the `kagent` runtime, each `generate_content` span carries the following two attributes, as JSON.
 
-### Configuration
+| Attribute | What it holds |
+| --------- | ------------- |
+| `gcp.vertex.agent.llm_request` | The whole request that the runtime sent to the model. |
+| `gcp.vertex.agent.llm_response` | The model's reply. On a turn that calls a tool, the reply holds the tool call and its arguments instead of text. |
 
-Audit output comes from two places. The kagent Helm chart decides whether the runtime exports events and where it sends them. The {{< gloss "Harness" >}}Harness{{< /gloss >}} decides whether those events carry message content.
+The request holds more than the prompts that your team wrote.
 
-| Setting | Where you set it | What it does |
-| ------- | ---------------- | ------------ |
-| `otel.logging.enabled` | kagent Helm chart | Installs the log exporter in the agent runtime. The default value is `false`, and the runtime then emits no audit events, regardless of the other settings. |
-| `otel.logging.exporter.otlp.endpoint` | kagent Helm chart | The address that the runtime exports events to. Set it to the address of your collector. |
-| `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | `Harness.spec.env` | Includes message content in the events. The default value is `false`, and the runtime then replaces each message body with `<elided>`. The event metadata and the trace IDs remain. Those fields still record which agent handled a request, and when. |
+- **The system instruction**, which holds the `systemPrompt` field of your AgentTemplate followed by instructions that the runtime appends.
+- **The message history**, including the person's messages, the agent's earlier turns, and tool results.
+- **The tools** that the agent offered the model, with their definitions.
+
+Each model call carries the full history again, so a long conversation repeats its earlier messages in every span. Account for that volume when you set a retention period.
+
+A payload larger than 32 KiB is cut to a prefix. The attribute then holds a JSON object with `truncated` set to `true`, the `original_size` of the payload in bytes, and the first 32 KiB in `payload_prefix`. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
+
+### Delivery
+
+Agent Substrate suspends an Actor as soon as a response completes. The controller therefore sets the `kagent` and `codex` runtimes to flush their spans before each response completes, so that the records of a turn reach your backend before the Actor suspends. The `claude` runtime gets no such flush, so the records of a conversation's last turn can be lost. For more information, see [Traces from a suspended Actor]({{< link path="observability/tracing#traces-from-a-suspended-actor" >}}).
 
 > [!IMPORTANT]
-> The chart's `otel.captureSensitiveContent` setting does not reach the `kagent` runtime. It applies to the Claude and Codex runtimes only. To include message content in an audit of a `kagent` agent, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` on the Harness, as shown in the following steps.
-
-> [!NOTE]
-> The controller compiles the chart's logging settings into every runtime revision, and its values override a Harness `spec.env` entry for the same variable. The variables it owns are `OTEL_LOGGING_ENABLED`, `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT`, and `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL`, together with their tracing equivalents and the endpoint and protocol variables that cover both signals. If `otel.logging.enabled` is `false`, the controller compiles no logging variable, and a `spec.env` entry takes effect as written.
-
-### Runtime support
-
-Only the `kagent` runtime emits these events. The runtime emits them from the model call itself, not from a provider-specific instrumentation library. Auditing therefore covers every model provider that the `kagent` runtime supports. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+> Traces are a best-effort record. An exporter drops spans without an error when the collector is unreachable or its queue is full, and nothing in the trace shows that a record is missing. Treat captured spans as a review aid, not as a complete or tamper-proof compliance log.
 
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} to configure.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because earlier CLI versions have no `agent-instance` commands and fail with `unknown command`. To check your version, run `kagent version`.
+3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
+4. Set up a tracing backend, and turn on tracing. The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you.
 
-## Install a collector and a logging backend
+## Turn on content capture
 
-Set up the path that audit events take from the agent runtime to a logging backend. The runtime exports to an OpenTelemetry collector, and the collector forwards the events to the backend. These steps install Grafana Loki as that backend, because Loki supports the queries that this guide runs later. Datadog, Splunk, and other OTLP-compatible systems work in the same way.
+Turn on content capture in the kagent Helm release, then create an AgentInstance that picks up the new setting.
 
-Export to a collector rather than directly to the backend. The collector holds the rules for which content and metadata leave your cluster. Audit events carry prompt text, so those rules matter more than they do for other telemetry. The collector also lets you change the rules without creating a new AgentInstance.
-
-1. Add the OpenTelemetry Helm repository.
+1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent rebuilds the pair with the new setting. The command first waits for any rebuild that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
-   helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-   helm repo update
+   for i in $(seq 1 60); do
+     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
+       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
+     sleep 5
+   done
+   export OLD_REVISION=${REVISIONS#* }
+   echo "Current revision: $OLD_REVISION"
    ```
 
-2. Install Loki in single-binary mode. The values file disables the two Loki memcached caches, because the chart requests roughly 10 GB of memory for them by default and a single-node cluster cannot schedule that request.
-   ```yaml
-   helm upgrade --install loki loki \
-   --repo https://grafana.github.io/helm-charts \
-   --version {{< reuse "kagent-docs/versions/loki.md" >}} \
-   --namespace telemetry \
-   --create-namespace \
-   --values - <<EOF
-   loki:
-     commonConfig:
-       replication_factor: 1
-     schemaConfig:
-       configs:
-         - from: 2024-04-01
-           store: tsdb
-           object_store: s3
-           schema: v13
-           index:
-             prefix: loki_index_
-             period: 24h
-     auth_enabled: false
-   singleBinary:
-     replicas: 1
-   minio:
-     enabled: true
-   gateway:
-     enabled: false
-   test:
-     enabled: false
-   monitoring:
-     selfMonitoring:
-       enabled: false
-       grafanaAgent:
-         installOperator: false
-   lokiCanary:
-     enabled: false
-   chunksCache:
-     enabled: false
-   resultsCache:
-     enabled: false
-   limits_config:
-     allow_structured_metadata: true
-   memberlist:
-     service:
-       publishNotReadyAddresses: true
-   deploymentMode: SingleBinary
-   backend:
-     replicas: 0
-   read:
-     replicas: 0
-   write:
-     replicas: 0
-   ingester:
-     replicas: 0
-   querier:
-     replicas: 0
-   queryFrontend:
-     replicas: 0
-   queryScheduler:
-     replicas: 0
-   distributor:
-     replicas: 0
-   compactor:
-     replicas: 0
-   indexGateway:
-     replicas: 0
-   bloomCompactor:
-     replicas: 0
-   bloomGateway:
-     replicas: 0
-   EOF
-   ```
-
-3. Verify that the logging backend is running.
-   ```bash
-   kubectl get pods -n telemetry
-   ```
-   Example output:
-   ```console
-   NAME           READY   STATUS    RESTARTS   AGE
-   loki-0         2/2     Running   0          112s
-   loki-minio-0   1/1     Running   0          112s
-   ```
-
-4. Create a Helm values file for the collector. The `debug` exporter prints each received event to the collector's own log. Use that log to confirm that events arrive, before you query the backend.
-   ```yaml
-   cat > otel-collector-audit.yaml <<EOF
-   mode: deployment
-   image:
-     repository: otel/opentelemetry-collector
-   config:
-     receivers:
-       otlp:
-         protocols:
-           grpc:
-             endpoint: 0.0.0.0:4317
-           http:
-             endpoint: 0.0.0.0:4318
-     processors:
-       batch:
-         timeout: 10s
-         send_batch_size: 1024
-     exporters:
-       debug:
-         verbosity: detailed
-       otlp_http:
-         endpoint: "http://loki.telemetry.svc.cluster.local:3100/otlp"
-         tls:
-           insecure: true
-     service:
-       pipelines:
-         logs:
-           receivers: [otlp]
-           processors: [batch]
-           exporters: [debug, otlp_http]
-   EOF
-   ```
-
-   To use a backend other than Loki, replace the `otlp_http` endpoint with the OTLP address of that backend. For example, Datadog uses `https://api.datadoghq.com`.
-
-5. Install the collector with the values file that you created.
-   ```bash
-   helm install opentelemetry-collector-audit open-telemetry/opentelemetry-collector \
-     --namespace telemetry \
-     --version {{< reuse "kagent-docs/versions/otel-collector.md" >}} \
-     --values otel-collector-audit.yaml
-   ```
-
-6. Verify that the collector is running.
-   ```bash
-   kubectl get pods -n telemetry -l app.kubernetes.io/name=opentelemetry-collector
-   ```
-   Example output:
-   ```console
-   NAME                                            READY   STATUS    RESTARTS   AGE
-   opentelemetry-collector-audit-xxxxxxxxx-xxxxx   1/1     Running   0          30s
-   ```
-
-## Turn on audit logging
-
-Turning on auditing takes two changes. The chart setting installs the log exporter in every agent runtime that the controller starts, and the Harness setting decides whether the exported events carry message content. A Harness applies to every AgentTemplate that it admits, so auditing covers an entire Harness rather than a single agent.
-
-1. Upgrade kagent to export audit events to the collector. The controller compiles these settings into every runtime revision that it builds from now on.
+2. Upgrade the kagent Helm release. The `--reuse-values` flag keeps the tracing settings that you already set.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
-     --namespace kagent --reuse-values \
-     --set otel.logging.enabled=true \
-     --set otel.logging.exporter.otlp.endpoint=http://opentelemetry-collector-audit.telemetry.svc.cluster.local:4317
+     --namespace kagent \
+     --reuse-values \
+     --set otel.captureSensitiveContent=true
    ```
 
-   To export over HTTP instead of gRPC, add `--set otel.logging.exporter.otlp.protocol=http/protobuf` and use port `4318`.
+   For an agent on the `claude` runtime, also set `otel.logging.enabled` to `true`, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
 
-2. Add the message content variable to the Harness. Keep the rest of its configuration unchanged.
-   ```yaml
-   kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
-   kind: Harness
-   metadata:
-     name: my-first-harness
-     namespace: kagent
-   spec:
-     kagent: {}
-     workload:
-       image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
-     env:
-       - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
-         value: "true"
-     substrate:
-       workerPoolRef:
-         name: kagent-default
-       snapshotPolicy:
-         location: s3://ate-snapshots/kagent/
-     allowedAgentTemplates:
-       selector:
-         matchLabels:
-           kagent.dev/harness: my-first-harness
-   EOF
-   ```
-
-   The `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` variable includes message content in the events. If you omit it, each event body reads `<elided>`, and the runtime exports only the metadata and the trace IDs. Those fields still record which agent handled a request, and when. Set the export destination through the chart rather than here, because the controller's compiled values override a `spec.env` entry for a variable that it owns. For every other field that a Harness takes, see [Agent harness]({{< link path="agents/agent-harness" >}}).
-
-3. Confirm that kagent compiled a new {{< gloss "Revision" >}}revision{{< /gloss >}} for the edited Harness. The Harness is current when `latestSuccessfulRevision` matches `desiredRevision`.
+3. Wait for the controller to roll out.
    ```bash
-   kubectl get agenttemplate my-first-agent -n kagent \
-     -o jsonpath='{range .status.harnesses[*]}{.harness}{"\t"}{.desiredRevision}{"\t"}{.latestSuccessfulRevision}{"\n"}{end}'
+   kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
-   Example output:
-   ```console
-   my-first-harness	4b8e1d3f5a7c9e2b0d4f6a8c1e3b5d7f9a2c4e6b8d0f2a4c6e8b0d2f4a6c8e0b	4b8e1d3f5a7c9e2b0d4f6a8c1e3b5d7f9a2c4e6b8d0f2a4c6e8b0d2f4a6c8e0b
+4. Wait for kagent to rebuild the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new setting. The following command prints `Recompiled` when the new revision is ready.
+   ```bash
+   for i in $(seq 1 60); do
+     [ "$(kubectl get agenttemplate my-first-agent -n kagent \
+       -o jsonpath='{.status.harnesses[0].latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
+       && echo "Recompiled" && break
+     sleep 5
+   done
    ```
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the setting was already in place, or the chart did not recognize the key. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the key on this page.
 
-4. Create a new AgentInstance. An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} pins the revision that it was created from, so an existing instance continues to run without auditing.
+5. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance captures content.
    ```bash
    kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
    ```
 
+6. Confirm that the AgentInstance runs the current revision of the pair. If the command prints `Outdated`, the AgentInstance was created from an earlier revision, and does not capture content. Create another AgentInstance, and run the command again.
+   ```bash
+   for i in $(seq 1 60); do
+     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
+       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
+     sleep 5
+   done
+   INSTANCE_REVISION=$(kagent get agent-instance -o json \
+     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .preparedRevision')
+   [ "$INSTANCE_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
+   ```
+
 ## Verify the setup
 
-1. Send a request to the new AgentInstance to produce audit events.
+Send a request that contains a distinctive phrase, then find that phrase in the captured request.
+
+1. Send a request to the new AgentInstance.
    ```bash
    export INSTANCE_ID=$(kagent get agent-instance -o json \
      | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   kagent invoke --agent-instance $INSTANCE_ID --task "What is 2+2?"
+   kagent invoke --agent-instance $INSTANCE_ID --task "Audit check: what is 2+2?"
    ```
 
-2. Check that the collector received the events. The collector logs its own metrics to the same stream, so filter the output for the audit records.
-   ```bash
-   kubectl -n telemetry logs -l app.kubernetes.io/name=opentelemetry-collector --tail=200 \
-     | grep -B 5 -A 4 "EventName: gen_ai"
-   ```
-   Example output:
-   ```console
-   LogRecord #1
-   ObservedTimestamp: 2026-09-03 19:26:18.48324493 +0000 UTC
-   Timestamp: 1970-01-01 00:00:00 +0000 UTC
-   SeverityText:
-   SeverityNumber: Unspecified(0)
-   EventName: gen_ai.user.message
-   Body: Map({"content":{"parts":[{"text":"What is 2+2?"}],"role":"user"}})
-   Trace ID: 3d34d2f1b74f30a5cce0d5ed8571e928
-   Span ID: 12671255711f5511
-   Flags: 1
-   ```
+2. Find the captured request in your tracing backend.
+   {{< tabs >}}
+   {{% tab name="Grafana with Tempo" %}}
+   1. Forward the Grafana port, and leave the command running.
+      ```bash
+      kubectl port-forward -n telemetry svc/kube-prometheus-stack-grafana 3000:80
+      ```
+   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in. For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
+   3. Open **Explore**, select the **Tempo** data source, and select the **TraceQL** query type.
+   4. Run the following query, which returns the model calls whose request contains the phrase.
+      ```text
+      { span.gcp.vertex.agent.llm_request =~ ".*Audit check.*" }
+      ```
+   5. Open a trace, and select its `generate_content` span. The **Span Attributes** section shows the two attributes that [What a record holds](#what-a-record-holds) describes.
+   {{% /tab %}}
+   {{% tab name="Jaeger" %}}
+   1. Forward the Jaeger query port, and leave the command running.
+      ```bash
+      kubectl port-forward -n telemetry svc/jaeger 16686:16686
+      ```
+   2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
+   3. From the **Service** list, select `my-first-agent-my-first-harness`. From the **Operation** list, select the `generate_content` operation for your model, such as `generate_content gpt-4.1-mini`, and click **Find Traces**.
+   4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the two attributes that [What a record holds](#what-a-record-holds) describes.
+   {{% /tab %}}
+   {{< /tabs >}}
 
-   The runtime leaves the `Timestamp` field unset, so every record reports `1970-01-01 00:00:00`. Read `ObservedTimestamp` instead, which records when the collector received the event.
+   If both attributes read `{}`, the AgentInstance started without content capture. Check that the previous section printed `Current`, and create a new AgentInstance if it did not.
 
-   > [!NOTE]
-   > The runtime buffers audit events and exports them in batches, and Agent Substrate suspends an Actor as soon as its response completes. A short conversation can therefore finish before the runtime exports its events, and this command then returns nothing. Send another request to the AgentInstance and check again.
+3. To collect every model call of one conversation, search by its conversation ID. Every span of the conversation carries the ID in the `gen_ai.conversation.id` attribute. For the other attributes that you can search by, see [Correlation attributes]({{< link path="observability/tracing#correlation-attributes" >}}).
 
-3. Forward the Loki query port. Leave the command running.
-   ```bash
-   kubectl port-forward -n telemetry svc/loki 3100:3100
-   ```
+> [!CAUTION]
+> Anyone who can read your tracing or logging backend can now read the prompts and replies of every agent. Restrict access to the backend, and set a retention period that meets your compliance requirements.
 
-4. Query the events for the agent's service. The runtime builds the service name from the AgentTemplate name and the Harness name, and replaces each hyphen with an underscore. For example, `my-first-agent` on `my-first-harness` reports as `my_first_agent_my_first_harness`.
-   ```bash
-   curl -s -G 'http://localhost:3100/loki/api/v1/query_range' \
-     --data-urlencode 'query={service_name="my_first_agent_my_first_harness"}' \
-     --data-urlencode "start=$(( $(date +%s) - 3600 ))000000000" \
-     --data-urlencode "end=$(date +%s)000000000" | jq
-   ```
+## Turn off content capture
 
-   Each entry holds the message content in the log line. The `stream` object holds the agent identity in the `service_name` and `service_namespace` labels, and holds the trace IDs as structured metadata. Loki does not record the event name, so the response carries no `event_name` field, and every event from one request shares a single stream. Example output:
-   ```json
-   {
-     "status": "success",
-     "data": {
-       "resultType": "streams",
-       "result": [
-         {
-           "stream": {
-             "service_name": "my_first_agent_my_first_harness",
-             "service_namespace": "kagent",
-             "scope_name": "gcp.vertex.agent",
-             "trace_id": "3d34d2f1b74f30a5cce0d5ed8571e928",
-             "span_id": "12671255711f5511",
-             "flags": "1"
-           },
-           "values": [
-             [
-               "1788463578483244930",
-               "{\"content\":{\"parts\":[{\"text\":\"What is 2+2?\"}],\"role\":\"user\"}}"
-             ],
-             [
-               "1788463578483063303",
-               "{\"content\":\"You are a concise, helpful assistant. ...\"}"
-             ]
-           ]
-         }
-       ]
-     }
-   }
-   ```
+Turn off content capture, then create a new AgentInstance so that the change takes effect.
 
-## Refine audit queries
-
-An audit usually needs a narrower set of events than the full message history of one agent. Loki does not index the event name, so each of the following examples selects an event type by a field in the event body instead. The examples use the Loki query language. Adapt each example to the query language of your own backend.
-
-- Return only the model's replies. Only a `gen_ai.choice` event carries a `finish_reason` field, so that field selects the replies.
-  ```bash
-  curl -s -G 'http://localhost:3100/loki/api/v1/query_range' \
-    --data-urlencode 'query={service_namespace="kagent"} | json reason="finish_reason" | reason != ""' \
-    --data-urlencode "start=$(( $(date +%s) - 3600 ))000000000" \
-    --data-urlencode "end=$(date +%s)000000000" | jq
-  ```
-
-- Return only the messages that a person sent, and exclude the agent's replayed history. The filter reads `content.role` from the event body, because only a person's message sets that field to `user`.
-  ```bash
-  curl -s -G 'http://localhost:3100/loki/api/v1/query_range' \
-    --data-urlencode 'query={service_namespace="kagent"} | json role="content.role" | role="user"' \
-    --data-urlencode "start=$(( $(date +%s) - 3600 ))000000000" \
-    --data-urlencode "end=$(date +%s)000000000" | jq
-  ```
-
-- Return every message from every agent that contains a given string. For example, this query checks whether a request sent a credential to a model.
-  ```bash
-  curl -s -G 'http://localhost:3100/loki/api/v1/query_range' \
-    --data-urlencode 'query={service_namespace="kagent"} |= "password"' \
-    --data-urlencode "start=$(( $(date +%s) - 3600 ))000000000" \
-    --data-urlencode "end=$(date +%s)000000000" | jq
-  ```
-
-To follow a request from its audit records into its trace, take the `trace_id` from any entry and look it up in your tracing backend. The lookup returns a trace only when [tracing]({{< link path="observability/tracing" >}}) is also enabled. With tracing disabled, the record still carries a trace ID, but no pipeline exported the trace that the ID names.
-
-## Turn off audit logging
-
-1. Turn the log exporter off again.
+1. Turn off content capture in the kagent Helm release. Tracing stays on.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.logging.enabled=false
+     --set otel.captureSensitiveContent=false
    ```
 
-2. Remove the `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` variable from the `spec.env` field of the Harness.
+2. Create a new AgentInstance, because an existing Actor keeps the configuration that it started with. The spans of an AgentInstance that still captures content keep carrying it until you delete the AgentInstance.
 
-3. Create a new AgentInstance, so that its Actor starts without auditing.
-
-4. Remove the collector and the logging backend.
-   ```bash
-   helm uninstall opentelemetry-collector-audit -n telemetry
-   helm uninstall loki -n telemetry
-   kubectl delete namespace telemetry
-   ```
+3. Delete the captured content from your backend when your retention policy requires it. Turning off capture does not remove the spans that your backend already stores.
 
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="observability/tracing" >}}` title="Tracing" subtitle="Follow one request from the controller through to the Actor that ran your agent." >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Review every field that a Harness takes, including the environment that its runtime receives." >}}
+  {{< card link=`{{< link path="observability/tracing" >}}` title="Tracing" subtitle="Read the spans and attributes of an agent request." >}}
+  {{< card link=`{{< link path="agents/agent-harness#telemetry-content-settings" >}}` title="Telemetry content settings" subtitle="Review how each content setting applies to each runtime." >}}
 {{< /cards >}}
