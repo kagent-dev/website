@@ -88,7 +88,7 @@ Setting `memory` gives every agent on this Harness memory that persists across c
 
 ## Model provider support
 
-The runtime that a Harness selects decides which ModelConfig its AgentTemplates can use.
+The runtime that a Harness selects decides which ModelConfig its AgentTemplates can use. This table covers every value that the ModelConfig `provider` field accepts, including the four that run on no runtime.
 
 | Provider | `kagent` | `byo` | `codex` | `claude` |
 | -------- | :------: | :---: | :-----: | :------: |
@@ -102,8 +102,11 @@ The runtime that a Harness selects decides which ModelConfig its AgentTemplates 
 | `Ollama` | ✅ | ✅ | ❌ | ❌ |
 | `SAPAICore` | ❌ | ❌ | ❌ | ❌ |
 | `Foundry` | ✅ | ✅ | ❌ | ❌ |
+| `Mistral` | ❌ | ❌ | ❌ | ❌ |
 
-`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` run on no runtime today. Each authenticates with a credential that the egress gateway cannot place in an HTTP header, so kagent rejects the ModelConfig before it compiles. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` run on no runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. kagent rejects the ModelConfig before it compiles. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+
+`Mistral` runs on no runtime for another reason. The controller does not resolve the `Mistral` provider, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision.
 
 Some supported combinations still carry restrictions.
 
