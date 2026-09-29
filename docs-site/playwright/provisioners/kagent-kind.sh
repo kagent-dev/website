@@ -174,8 +174,21 @@ run helm upgrade --install substrate-crds "$SUBSTRATE_CRDS_CHART" \
 
 # Deliberately no --wait: the pods cannot become ready until the identity material
 # below exists, so waiting here would always time out.
-run helm upgrade --install substrate "$SUBSTRATE_CHART" \
-  --version "$SUBSTRATE_VERSION" --namespace "$ATE_NAMESPACE"
+#
+# credentialProvider.namespacePolicies is the grant that lets the egress gateway read
+# the model provider key out of a Secret and add it to each model request. Agent
+# Substrate denies every agent access to every Secret by default, and the failure is
+# silent in the worst way: every pod reports healthy and every model call returns 403.
+# The install guide sets this in the same step, so it belongs here too.
+run_sh "helm upgrade --install substrate ${SUBSTRATE_CHART} --version ${SUBSTRATE_VERSION} -f - (credentialProvider grant)" "
+helm upgrade --install substrate ${SUBSTRATE_CHART} \
+  --version ${SUBSTRATE_VERSION} --namespace ${ATE_NAMESPACE} -f - <<'VALUES'
+credentialProvider:
+  namespacePolicies:
+  - atespace: ${NAMESPACE}
+    allowedNamespaces: [${NAMESPACE}]
+VALUES
+"
 
 # CA and JWT pools that sign service DNS, pod identity, actor identity and egress
 # certificates. No Helm chart creates these; Agent Substrate authenticates its
