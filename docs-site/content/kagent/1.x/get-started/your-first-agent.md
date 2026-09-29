@@ -5,14 +5,14 @@ weight: 10
 author: kagent.dev
 ---
 
-This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the AgentInstance that they produce. You apply the Harness and the AgentTemplate as Kubernetes resources, and you create and talk to the AgentInstance with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
+This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the AgentInstance that they produce. You apply the Harness and the AgentTemplate as Kubernetes resources, and you create and talk to the AgentInstance with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture/kagent" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
 
 ## Before you begin
 
 1. [Install kagent with a WorkerPool provisioned]({{< link path="setup/installation" >}}).
-2. Download the kagent CLI.
+2. Download the kagent CLI. The `--version` flag matches the CLI to the release that these docs cover.
    ```bash
-   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
    ```
 
 3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID out of the CLI's JSON output.
@@ -22,7 +22,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
 
 ## Create a Harness and an AgentTemplate
 
-1. Apply a `Harness` that uses kagent's native runtime. Its `substrate` section names the [WorkerPool]({{< link path="about/agent-substrate#workers-and-workerpools" >}}) that this Harness's Actors run on, and the object storage location for their [snapshots]({{< link path="about/agent-substrate#suspend-snapshot-and-resume" >}}).
+1. Apply a `Harness` that uses kagent's native runtime. Its `substrate` section names the [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) that this Harness's Actors run on, and the object storage location for their [snapshots]({{< link path="about/architecture/agent-substrate#suspend-snapshot-and-resume" >}}).
    ```yaml
    apiVersion: kagent.dev/v1alpha3
    kind: Harness
@@ -38,8 +38,9 @@ This guide walks you through creating an agent, from applying a Harness and an A
        workerPoolRef:
          name: kagent-default
        snapshotPolicy:
-         # The object storage location your cluster's Substrate installation uses for Actor snapshots
-         location: gs://<your-bucket>/kagent/
+         # The bucket that the Agent Substrate chart creates in its bundled object store.
+         # If your Substrate installation uses your own object storage, use that location instead.
+         location: s3://ate-snapshots/kagent/
      allowedAgentTemplates:
        selector:
          matchLabels:
@@ -81,7 +82,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
    +----------------+------------------+-------+----------------------+
    ```
 
-   An empty `HARNESS` column with a `READY` value of `UNKNOWN` means that the kagent controller has not yet reconciled the pair. Wait a few seconds, then check again. If `READY` stays `FALSE`, inspect the individual conditions to find which stage failed.
+   An empty `HARNESS` column with a `READY` value of `UNKNOWN` means that the kagent controller has not yet reconciled the pair. Wait a few seconds, then check again. A `READY` value of `FALSE` right after you apply the pair is also expected, because kagent builds a snapshot of the agent's runtime before it reports the pair ready. This step can take a minute. If `READY` stays `FALSE`, inspect the individual conditions to find which stage failed.
    ```bash
    kagent get agent-template my-first-agent -o json
    ```
@@ -173,7 +174,7 @@ To remove the resources, follow these steps.
 
 {{< cards >}}
   {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Bind a Model Context Protocol tool so that your agent can act on live cluster data." >}}
-  {{< card link=`{{< link path="about/agent-substrate" >}}` title="Agent Substrate architecture" subtitle="Understand what happens to your AgentInstance's Actor when it sits idle." >}}
+  {{< card link=`{{< link path="about/architecture/agent-substrate" >}}` title="Agent Substrate architecture" subtitle="Understand what happens to your AgentInstance's Actor when it sits idle." >}}
   {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Choose from the full set of Harness runtime options." >}}
   {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Give your agent capabilities beyond its system prompt." >}}
 {{< /cards >}}

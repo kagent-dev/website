@@ -85,7 +85,7 @@ spec:
     workerPoolRef:
       name: kagent-default
     snapshotPolicy:
-      location: gs://<your-bucket>/kagent/
+      location: s3://ate-snapshots/kagent/
   allowedAgentTemplates:
     selector:
       matchLabels:

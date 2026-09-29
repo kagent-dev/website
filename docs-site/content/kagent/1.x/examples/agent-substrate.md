@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-[Agent Substrate]({{< link path="about/agent-substrate" >}}) runs every agent as an Actor: a sandboxed unit of compute that holds a {{< gloss "Worker" >}}Worker{{< /gloss >}} only while a turn is in progress, and whose state you can pin and branch. This example follows one agent through all three behaviors.
+[Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs every agent as an Actor: a sandboxed unit of compute that holds a {{< gloss "Worker" >}}Worker{{< /gloss >}} only while a turn is in progress, and whose state you can pin and branch. This example follows one agent through all three behaviors.
 
 The Actor that these steps follow is also the isolation boundary. Every Actor runs in its own {{< gloss "gVisor" >}}gVisor{{< /gloss >}} sandbox rather than sharing one with its neighbors. This isolation allows a model to safely run tools and execute commands. For what the sandbox blocks, see [Sandboxing]({{< link path="substrate-runtime/sandboxing" >}}).
 

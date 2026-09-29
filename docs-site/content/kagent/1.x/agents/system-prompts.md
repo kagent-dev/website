@@ -125,7 +125,7 @@ spec:
 
 ## Troubleshooting
 
-Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. No revision compiles, so no new AgentInstance can start.
+Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. No new revision compiles. A Harness and AgentTemplate pair that has never been ready cannot start an AgentInstance, and one that was ready before keeps starting new AgentInstances from its last ready revision.
 
 An AgentTemplate reports one set of conditions for each Harness that admits it, under `status.harnesses`. To check the condition for your Harness, run the following command.
 

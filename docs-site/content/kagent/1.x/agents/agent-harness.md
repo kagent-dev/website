@@ -30,7 +30,7 @@ spec:
     workerPoolRef:
       name: kagent-default
     snapshotPolicy:
-      location: gs://<your-bucket>/kagent/
+      location: s3://ate-snapshots/kagent/
   allowedAgentTemplates:
     selector:
       matchLabels:
@@ -44,12 +44,14 @@ EOF
 | ----- | -------- | ----------- |
 | One of `kagent`, `codex`, `claude`, `byo` | Yes | The runtime that executes the agent. Naming none, or more than one, is rejected. For the available runtimes, see [Choose a runtime](#choose-a-runtime). |
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
-| `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. |
-| `workload.args` | No | Overrides the image arguments, up to 64 entries. |
+| `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, whatever language its image is written in. |
+| `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
 | `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`. A `credentialRef` is accepted by the API and then rejected at compile time on every runtime, so put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 | `allowedAgentTemplates.selector` | No | A label selector naming which AgentTemplates this Harness admits. Omitting it admits none, which makes the Harness unusable. Admission is a one-way match. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} has no field naming a Harness, so whoever controls a Harness's selector decides what it accepts. |
+
+A command or argument override belongs to the revision that kagent prepares, so changing one prepares a new revision rather than altering a running agent. An AgentInstance pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
 
 ## Choose a runtime
 
@@ -130,7 +132,7 @@ The `kagent` and `byo` runtimes take the full set. For more information about wh
 
 ## Telemetry content settings
 
-Tracing and audit logging both carry the prompts and replies that an agent exchanges with a model. Two settings in the kagent Helm chart decide whether that content leaves the runtime, and each one reaches a different set of runtimes. Both default to `false`, and both take effect only where tracing or audit logging is already enabled.
+Tracing carries the prompts and replies that an agent exchanges with a model, and so does log export on the `claude` runtime. Two settings in the kagent Helm chart decide whether that content leaves the runtime, and each one reaches a different set of runtimes. Both default to `false`, and both take effect only where tracing or log export is already enabled.
 
 ```yaml
 otel:
@@ -141,10 +143,10 @@ otel:
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `claude` runtime, tool results require tracing, and assistant replies require audit logging. | `codex`, `claude` |
+| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logging`. | `kagent`, `codex`, `claude` |
 | `otel.logging.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.captureSensitiveContent` does, and it takes effect only when `otel.logging.enabled` is `true`. | `claude` |
 
-The `kagent` runtime honors neither setting. To include message content for an agent on that runtime, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in the Harness `spec.env` field. That variable defaults differently for each signal, so check the [audit prompt onfiguration]({{< link path="observability/audit-prompts#configuration" >}}) before you set it.
+The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.captureSensitiveContent`, so setting that variable in the Harness `spec.env` field has no effect.
 
 The controller sends the `byo` runtime no telemetry configuration, so neither setting reaches it. A `byo` image that implements OpenTelemetry itself reads whatever the Harness `spec.env` field holds. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 

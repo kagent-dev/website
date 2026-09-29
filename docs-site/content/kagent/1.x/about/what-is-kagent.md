@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} is an open-source, Kubernetes-native platform for running AI agents. It defines an agent's runtime and behavior as ordinary Kubernetes custom resources, governed by the same GitOps and observability that you already use for your other workloads, and runs each agent's conversation inside [Agent Substrate]({{< link path="about/agent-substrate" >}}), a sandboxed, suspend-and-resume compute layer built for bursty, mostly idle agent workloads. kagent works with every major large language model (LLM) provider. Agents run on kagent's own Go and Python engines, which build on Google's Agent Development Kit (ADK), on the Codex or Claude coding agents, or on an image of your own.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} is an open-source, Kubernetes-native platform for running AI agents. It defines an agent's runtime and behavior as ordinary Kubernetes custom resources, governed by the same GitOps and observability that you already use for your other workloads, and runs each agent's conversation inside [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), a sandboxed, suspend-and-resume compute layer built for bursty, mostly idle agent workloads. kagent works with every major large language model (LLM) provider. Agents run on kagent's own Go and Python engines, which build on Google's Agent Development Kit (ADK), on the Codex or Claude coding agents, or on an image of your own.
 
 kagent was created at [Solo.io](https://www.solo.io) in 2025 and is a [Cloud Native Computing Foundation](https://www.cncf.io) sandbox project.
 
@@ -26,7 +26,7 @@ kagent 1.0 separates an agent's capabilities from its runtime, then runs the two
 - A **Harness** and an **AgentTemplate** are the Kubernetes custom resources you author. Together they say how an agent is allowed to run and what it can do.
 - An **AgentInstance** is the running conversation that those two resources produce, backed by an **Actor** on Agent Substrate.
 
-[Core concepts]({{< link path="about/core-concepts" >}}) define each of these in detail, and the [architecture]({{< link path="about/architecture" >}}) walks through how they connect end to end.
+[Core concepts]({{< link path="about/core-concepts" >}}) define each of these in detail, and the [architecture]({{< link path="about/architecture/kagent" >}}) walks through how they connect end to end.
 
 Kubernetes role-based access control (RBAC) governs who can author these resources with `kubectl`. The kagent gRPC API reaches the same resources by a second path, and the open source build authorizes every caller that reaches that endpoint. For what each path establishes, see [Identity]({{< link path="substrate-runtime/identity#the-kagent-plane" >}}).
 
@@ -66,7 +66,7 @@ Check out [Solo Enterprise for kagent](https://www.solo.io/products/kagent-enter
 
 ## Getting started
 
-To start using kagent, see [Your first agent]({{< link path="get-started/your-first-agent" >}}). For a deeper understanding of how the pieces fit together, see [kagent architecture]({{< link path="about/architecture" >}}).
+To start using kagent, see [Your first agent]({{< link path="get-started/your-first-agent" >}}). For a deeper understanding of how the pieces fit together, see [kagent architecture]({{< link path="about/architecture/kagent" >}}).
 
 Ready to contribute? Visit the [GitHub repository](https://github.com/kagent-dev) to learn how you can help expand the ecosystem of cloud-native AI agents.
 

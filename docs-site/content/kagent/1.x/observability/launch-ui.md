@@ -187,5 +187,5 @@ The `parentRefs` field is required when `enabled` is `true`, and it must referen
 {{< cards >}}
   {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Create your first agent" subtitle="Pair an AgentTemplate with a Harness, then hold a conversation with the result." >}}
   {{< card link=`{{< link path="observability/tracing" >}}` title="Tracing" subtitle="Follow one agent request from the controller through to the Actor that ran it." >}}
-  {{< card link=`{{< link path="observability/audit-prompts" >}}` title="Audit prompts" subtitle="Export every prompt and reply as a log event for security and compliance review." >}}
+  {{< card link=`{{< link path="observability/audit-prompts" >}}` title="Audit prompts" subtitle="Capture every prompt and reply in your traces for security and compliance review." >}}
 {{< /cards >}}
