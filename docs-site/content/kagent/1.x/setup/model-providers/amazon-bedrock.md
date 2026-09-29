@@ -37,7 +37,7 @@ The native provider authenticates with a Bedrock API key, which kagent sends as 
    ```
 
    > [!IMPORTANT]
-   > A Secret that holds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead does not work on any runtime. IAM credentials sign each request locally, and an agent reaches its provider through an egress gateway that injects a static header, so kagent rejects the ModelConfig at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the message `environment credential "AWS_ACCESS_KEY_ID" cannot use gateway header injection`. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+   > A Secret that holds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead does not work on any runtime. IAM credentials sign each request locally, and an agent reaches its provider through an egress gateway that injects a static header, so kagent rejects the ModelConfig at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the message `environment credential "AWS_ACCESS_KEY_ID" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported`. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
 3. Create a `ModelConfig` that uses the `Bedrock` provider.
    ```yaml
