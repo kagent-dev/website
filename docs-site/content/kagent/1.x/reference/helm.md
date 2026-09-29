@@ -12,10 +12,10 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha3 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha4 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
-| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
+| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
 
 ## Values
 
@@ -23,7 +23,7 @@ A Helm chart for kagent, built with Google ADK
 |-----|------|---------|-------------|
 | annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
-| controller.a2aGatewayUrl | string | `http://<fullname>-controller.<namespace>.svc:<grpc-port>` | Public gRPC URL advertised by AgentInstance Agent Cards. |
+| controller.a2aGatewayUrl | string | `http://<fullname>-controller.<namespace>.svc:<grpc-port>` | Public gateway base URL advertised by AgentInstance Agent Cards for gRPC and HTTP/JSON-RPC. |
 | controller.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod. |
 | controller.agentImage | object | `{"registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for declarative agents. |
 | controller.annotations | object | `{}` | Additional annotations to add to the controller Deployment metadata |
@@ -182,18 +182,22 @@ A Helm chart for kagent, built with Google ADK
 | oauth2-proxy.service.portNumber | int | `4180` |  |
 | oauth2-proxy.service.type | string | `"ClusterIP"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
-| otel.captureSensitiveContent | bool | `false` | Include prompts, tool details, and assistant responses in agent telemetry. This may expose sensitive user or model content. |
-| otel.logging.captureRawApiBodies | bool | `false` | Include complete provider API request and response bodies in Claude logs. This is more verbose than captureSensitiveContent. |
-| otel.logging.enabled | bool | `false` |  |
-| otel.logging.exporter.otlp.endpoint | string | `""` |  |
-| otel.logging.exporter.otlp.insecure | bool | `true` |  |
-| otel.logging.exporter.otlp.protocol | string | `"grpc"` |  |
-| otel.logging.exporter.otlp.timeout | int | `15000` |  |
-| otel.tracing.enabled | bool | `false` |  |
-| otel.tracing.exporter.otlp.endpoint | string | `""` |  |
-| otel.tracing.exporter.otlp.insecure | bool | `true` |  |
-| otel.tracing.exporter.otlp.protocol | string | `"grpc"` |  |
-| otel.tracing.exporter.otlp.timeout | int | `15000` |  |
+| otel.capture.maxBytes | string | `""` | Bytes kept per captured prompt or response. Empty keeps the default. |
+| otel.capture.messageContent | bool | `false` | Record prompts, tool details, and responses on agent telemetry. This may expose sensitive user or model content. |
+| otel.capture.rawApiBodies | bool | `false` | Include complete provider API request and response bodies in Claude logs. |
+| otel.exporter.otlp.endpoint | string | `""` | OTLP endpoint for every signal, as an http or https URL. |
+| otel.exporter.otlp.protocol | string | `"grpc"` | OTLP protocol, `grpc` or `http/protobuf`. |
+| otel.exporter.otlp.timeout | string | `""` | Export timeout in milliseconds. Empty keeps the SDK default. |
+| otel.logs.enabled | bool | `false` |  |
+| otel.logs.endpoint | string | `""` | Full URL that overrides `otel.exporter.otlp.endpoint` for logs. |
+| otel.logs.protocol | string | `""` |  |
+| otel.metrics.enabled | bool | `false` |  |
+| otel.metrics.endpoint | string | `""` | Full URL that overrides `otel.exporter.otlp.endpoint` for metrics. |
+| otel.metrics.protocol | string | `""` |  |
+| otel.resourceAttributes | object | `{}` | Resource attributes added to the controller and every agent, such as `deployment.environment.name` or `k8s.cluster.name`. |
+| otel.traces.enabled | bool | `false` |  |
+| otel.traces.endpoint | string | `""` | Full URL that overrides `otel.exporter.otlp.endpoint` for traces. |
+| otel.traces.protocol | string | `""` |  |
 | podAnnotations | object | `{}` |  |
 | podLabels | object | `{}` | Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods. |
 | podSecurityContext | object | `{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for all pods |
