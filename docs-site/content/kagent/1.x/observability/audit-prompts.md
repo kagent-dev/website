@@ -55,7 +55,7 @@ Agent Substrate suspends an Actor as soon as a response completes. The controlle
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because earlier CLI versions have no `agent-instance` commands and fail with `unknown command`. To check your version, run `kagent version`.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the AgentInstance commands that these steps use. To check your version, run `kagent version`.
 3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
 4. Set up a tracing backend, and turn on tracing. The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you.
 
