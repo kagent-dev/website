@@ -27,7 +27,7 @@ A credential never enters the agent. kagent compiles the Secret that a ModelConf
 
 To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation needs no recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
 
-Each provider carries its credential in the one header that the provider expects, and the destination is the endpoint that the ModelConfig resolves to.
+When a request is made to a provider, the gateway puts the credential in the header that the provider expects. The destination is the endpoint that the ModelConfig resolves to.
 
 | Credential | Header |
 | ---------- | ------ |

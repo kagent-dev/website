@@ -15,7 +15,7 @@ environment credential "KAGENT_CLAUDE_GOOGLE_CREDENTIALS_JSON" cannot use gatewa
 
 On the `kagent` and `byo` runtimes the same ModelConfig fails for a second reason as well, because those runtimes mount the key as a file: `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`.
 
-A `claude` Harness checks the key's shape before it checks the credential, so a Secret that does not hold a service account key reports a different message first: `Claude Vertex credentials must be a service_account key in the first release`. Correcting the key does not make the ModelConfig compile. The check only moves on to the rejection above.
+A `claude` Harness checks the key's shape before it checks the credential, so a Secret that does not hold a service account key reports a different message first: `Claude Vertex credentials must be a service_account key in the first release`. Correcting the key does not make the ModelConfig compile. The check only moves on to the rejection at compile time.
 
 ## Reach the same models another way
 
