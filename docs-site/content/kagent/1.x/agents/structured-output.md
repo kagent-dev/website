@@ -7,10 +7,21 @@ author: kagent.dev
 
 An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}} for a {{< gloss "Harness" >}}Harness{{< /gloss >}} and AgentTemplate pair, and the revision records the schema and its digest. A schema that fails the checks stops the revision from compiling, so a pair that has never been ready cannot start an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
 
+The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec.outputSchemaFrom`. The fields are mutually exclusive. An AgentTemplate that sets both is rejected when you apply it, with the message `outputSchema and outputSchemaFrom are mutually exclusive`. If you omit both fields, the agent's final answer is not constrained.
+
+| Field | Description |
+| ----- | ----------- |
+| `outputSchema` | The schema, written inline in the AgentTemplate. |
+| `outputSchemaFrom.name` | The ConfigMap holding the schema as JSON, in the AgentTemplate's namespace. |
+| `outputSchemaFrom.key` | The key within that ConfigMap. |
+
 ## Before you begin
 
 1. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-harness` Harness and the `default-model-config` {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that the AgentTemplates in this guide use. That guide also has you install the kagent CLI and `jq`.
-2. Check your kagent CLI version. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI. Unless you pass a version, the install script from that guide installs the latest kagent release, and the CLI from another release can fail with `unknown command`.
+
+   Structured output needs a Harness that uses the `kagent` runtime with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` runtime block and the same `workload.image` as `my-first-harness`. With the `codex`, `claude`, or `byo` runtime, an AgentTemplate with a schema fails to compile. With the `kagent` runtime and an image of kagent's Python engine, the AgentTemplate compiles, but the agent ignores the schema. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+
+2. Check your kagent CLI version. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI. A CLI from another release can fail with `unknown command`.
    ```bash
    kagent version
    ```
@@ -19,9 +30,6 @@ An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its
    ```bash
    curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
    ```
-
-> [!NOTE]
-> Structured output needs a Harness that uses the `kagent` runtime with the `golang-adk` image, which is the image that Your first agent uses. With the `codex`, `claude`, or `byo` runtime, an AgentTemplate with a schema fails to compile. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 ## Set the schema inline
 
@@ -140,14 +148,6 @@ Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that sev
    EOF
    ```
 
-   `outputSchema` and `outputSchemaFrom` are mutually exclusive. An AgentTemplate that sets both is rejected when you apply it, with the message `outputSchema and outputSchemaFrom are mutually exclusive`. If you omit both fields, the agent's final answer is not constrained.
-
-   | Field | Description |
-   | ----- | ----------- |
-   | `outputSchema` | The schema, written inline in the AgentTemplate. |
-   | `outputSchemaFrom.name` | The ConfigMap holding the schema as JSON, in the AgentTemplate's namespace. |
-   | `outputSchemaFrom.key` | The key within that ConfigMap. |
-
 3. Confirm that the pair is ready. Wait until `READY` is `TRUE`.
    ```bash
    kagent get agent-template structured-answer-shared
@@ -165,6 +165,8 @@ The root of the schema must declare `type: object`. kagent accepts the following
 - `$schema` and `$id`
 
 Anything else fails to compile, including `oneOf` and `allOf`, conditional schemas such as `if` and `then`, tuple arrays, references outside `$defs`, and validation keywords such as `pattern`, `format`, `minimum`, and `minLength`. To allow `null` alongside another type, use `anyOf`, because `type` takes one value.
+
+kagent also enforces the following limits when it compiles the revision. A schema that exceeds a limit fails to compile, before any agent runs with it.
 
 | Limit | Maximum |
 | ----- | ------- |
@@ -207,11 +209,11 @@ The runtime holds back the agent's partial output while the agent writes its ans
 
 The schema applies only to the root agent, which is the agent of the AgentTemplate that the AgentInstance was created from. An AgentTemplate [bound to it as a tool]({{< link path="skills-and-mcp/about-tools#agents-as-tools" >}}) does not inherit the schema. If the bound AgentTemplate has a schema of its own, that schema applies only to AgentInstances created from it.
 
-With a `Shared` binding, the root agent can hand the conversation to the bound agent, which then answers in its place, in that turn and in the turns that follow. Those tasks fail with `output_validation_failed: root agent produced no result artifact`, because the answers do not come from the root agent, and the bound agent's answers still reach the caller as text. Give a schema only to an AgentTemplate whose own agent writes the final answer.
+With a `Shared` binding, the root agent can hand the conversation to the bound agent, which then answers in its place, in that turn and in the turns that follow. Those tasks fail with `output_validation_failed: root agent produced no result artifact`, because the answers do not come from the root agent. The bound agent's answers still reach the caller as text. Give a schema only to an AgentTemplate whose own agent writes the final answer.
 
 ## Answers that fail validation
 
-Structured output has no fallback to text. If the model refuses, stops early, or returns an answer that is not JSON or does not match the schema, the task fails. kagent does not publish the invalid answer or include it in the failure message, because it can contain sensitive data.
+Structured output has no fallback to text. If the model refuses, stops early, or returns an answer that is not JSON or does not match the schema, the task fails. kagent does not publish the invalid answer or include it in the failure message, because it can contain sensitive data. With a Gemini model on the `Gemini` provider, however, the agent is told to give its answer as the arguments of a `set_model_response` tool call. kagent publishes that call like any other tool call, before it validates the answer, so an answer given that way reaches the caller even when it fails validation.
 
 For example, an answer that does not match the schema fails the `kagent invoke` command with output like the following. The `output_validation_failed:` message names the cause.
 
@@ -280,7 +282,7 @@ For example, if the `shared-schemas` ConfigMap no longer has the `arithmetic-ans
 If the pair has never been ready, `kagent create agent-instance` fails with `AgentTemplate and Harness do not have a ready prepared revision`.
 
 > [!WARNING]
-> An AgentInstance keeps the revision that it was created from, and validates its answers against that revision's schema. After you change a schema, create a new AgentInstance to use it. While a changed schema fails to compile, new AgentInstances start from the pair's latest ready revision, which `status.harnesses` reports as `latestSuccessfulRevision`, so they also use the previous schema.
+> An AgentInstance keeps the revision that it was created from, and validates its answers against that revision's schema. After you change a schema, create a new AgentInstance to use it. A changed schema that fails to compile does not stop new AgentInstances from starting. They start from the pair's latest ready revision, which `status.harnesses` reports as `latestSuccessfulRevision`, so they use the previous schema.
 
 A change to a ConfigMap does not change the AgentTemplate's `metadata.generation`, so check each condition's `lastTransitionTime` to tell whether kagent has seen your fix.
 
