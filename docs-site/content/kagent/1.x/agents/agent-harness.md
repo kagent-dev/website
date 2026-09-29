@@ -68,7 +68,7 @@ A Harness names exactly one of the following four runtimes, and that choice deci
 | `claude` | The Claude coding agent | You want Claude to do the work, with Anthropic, Bedrock, or Anthropic on Vertex AI as the model. |
 | `byo` | Any container image of your own that implements kagent's A2A contract | You have an agent framework kagent does not adapt, and you would rather bring the image than the integration. For more information, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
 
-The `kagent` and `byo` runtimes compile through the same path, so they accept the same model providers and the same AgentTemplate features. The `codex` and `claude` runtimes are purpose-built adapters, and each accepts a narrower slice.
+The `kagent` and `byo` runtimes compile through the same path, so they accept the same model providers and the same AgentTemplate features, except [structured output]({{< link path="agents/structured-output" >}}), which only the `kagent` runtime supports. The `codex` and `claude` runtimes are purpose-built adapters, and each accepts a narrower slice.
 
 ### Runtime-specific settings
 
