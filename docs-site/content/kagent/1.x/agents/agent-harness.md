@@ -88,7 +88,7 @@ Setting `memory` gives every agent on this Harness memory that persists across c
 
 ## Model provider support
 
-The runtime that a Harness selects decides which ModelConfig its AgentTemplates can use. This table covers every value that the ModelConfig `provider` field accepts, including the four that run on no runtime.
+The runtime that a Harness selects decides which ModelConfig its AgentTemplates can use. This table covers every value that the ModelConfig `provider` field accepts, including the four that kagent 1.0 rejects on every runtime.
 
 | Provider | `kagent` | `byo` | `codex` | `claude` |
 | -------- | :------: | :---: | :-----: | :------: |
@@ -104,9 +104,9 @@ The runtime that a Harness selects decides which ModelConfig its AgentTemplates 
 | `Foundry` | ✅ | ✅ | ❌ | ❌ |
 | `Mistral` | ❌ | ❌ | ❌ | ❌ |
 
-`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` run on no runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. kagent rejects the ModelConfig before it compiles. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+kagent rejects `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` on every runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. The ModelConfig never compiles, so no agent can use these providers. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
-`Mistral` runs on no runtime for another reason. The controller does not resolve the `Mistral` provider, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision.
+kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision.
 
 Some supported combinations still carry restrictions.
 

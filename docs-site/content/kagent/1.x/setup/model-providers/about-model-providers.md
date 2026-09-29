@@ -67,7 +67,7 @@ A ModelConfig is only half of the decision. The runtime that a {{< gloss "Harnes
 - The **`codex`** runtime integrates only `OpenAI` and `Bedrock`.
 - The **`claude`** runtime integrates only `Anthropic` and `Bedrock`.
 
-A provider runs only when the runtime integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` runtimes integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent 1.0 runs these three providers on no runtime. For the alternatives, see [Credentials that do not compile](#credentials-that-do-not-compile).
+A provider is available only when the runtime integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` runtimes integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials. kagent 1.0 rejects a ModelConfig that names any of the three, on every runtime, so no agent can reach these providers at all. For the alternatives, see [Credentials that do not compile](#credentials-that-do-not-compile).
 
 Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings it takes. A pair that asks for a provider its runtime does not integrate fails to compile, and the AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
 
