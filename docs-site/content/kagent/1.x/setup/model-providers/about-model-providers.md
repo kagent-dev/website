@@ -15,7 +15,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, and `Foundry`. Defaults to `OpenAI`. |
+| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision. |
 | `model` | The model name, as the provider spells it. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider needs no extra settings. |
 
@@ -25,7 +25,7 @@ Credentials come from a Kubernetes Secret in the same namespace as the ModelConf
 
 A credential never enters the agent. kagent compiles the Secret that a ModelConfig names into a destination-scoped binding, and the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway fetches the Secret and writes the value into an outgoing HTTP header. Where an SDK requires an API key, the runtime receives the inert placeholder `kagent-credential-injected`. A compiled {{< gloss "Revision" >}}revision{{< /gloss >}} therefore records the Secret name, key, destination, and header, and never the credential itself.
 
-To rotate a credential, update the Secret. The gateway refreshes its cache within five minutes, so neither a recompile nor a restart is needed.
+To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation needs no recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
 
 Each provider carries its credential in the one header that the provider expects, and the destination is the endpoint that the ModelConfig resolves to.
 
@@ -37,6 +37,7 @@ Each provider carries its credential in the one header that the provider expects
 | `Foundry` API key in Anthropic format | `x-api-key: <key>` |
 | `Gemini` API key | `x-goog-api-key: <key>` |
 | `Bedrock` bearer token | `authorization: Bearer <token>` |
+| `Ollama` API key, for an Ollama Cloud model | `authorization: Bearer <key>` |
 | A Secret-backed `RemoteMCPServer` header | The header that the server names |
 
 Substrate matches a destination on the exact DNS hostname, without path, port, or scheme. Two credentials that target the same hostname and header are rejected, including a conflict between an agent's model, a memory embedding model, and an MCP server. Give such origins distinct DNS names. A destination given as an IP address cannot carry an injected credential at all.
@@ -56,7 +57,7 @@ Header injection accepts one shape of credential: a static string. A credential 
 
 A rejected credential reports one of two messages. A credential that cannot be injected reports `cannot use gateway header injection`, and one that needs a mounted file reports `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`.
 
-The `Ollama` provider is unaffected, because it authenticates with no credential.
+The `Ollama` provider is unaffected when it points at a local daemon, which authenticates with no credential. An Ollama Cloud model reaches `api.ollama.com` with an API key, and that key is injected as a header like any other. For when a model routes to the cloud, see [Ollama]({{< link path="setup/model-providers/ollama" >}}).
 
 ## The Harness runtime decides which providers are available
 

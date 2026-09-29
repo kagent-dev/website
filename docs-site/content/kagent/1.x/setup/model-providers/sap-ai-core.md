@@ -13,6 +13,8 @@ The rejection happens at compile time on every runtime. The AgentTemplate report
 environment credential "SAP_AI_CORE_CLIENT_ID" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported
 ```
 
+The error names `SAP_AI_CORE_CLIENT_ID`, but a Secret reaches that check only when it already holds the keys `client_id` and `client_secret` under exactly those names. A Secret that names them anything else fails earlier, on the ModelConfig's `ResolvedRefs` condition, with `secret <name> does not contain key "client_id"`. `SAPAICore` is also the one provider that ignores `apiKeySecretKey`, because kagent reads both keys from the Secret that `apiKeySecret` names. Neither detail changes the outcome, and both decide which error a reader sees first.
+
 ## Reach the same models another way
 
 The SAP AI Core Orchestration Service serves models from several families, and kagent supports most of those families directly through a provider that authenticates with an API key. Choose the provider for the model that you want to run, rather than for the gateway that serves it.
