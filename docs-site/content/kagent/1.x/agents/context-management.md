@@ -7,11 +7,11 @@ author: kagent.dev
 
 An agent's prompt grows with the conversation: every message, tool call, and tool result accumulates, and long sessions eventually exceed the model's context window or degrade answer quality. Context compaction solves that by summarizing older session events so the prompt stays bounded while the agent keeps enough recent context to stay coherent.
 
-Compaction is configured on the {{< gloss "Harness" >}}Harness{{< /gloss >}}, not on the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. It is a property of the runner that drives the root agent, so it is runtime policy rather than portable agent behavior — the same Harness-versus-AgentTemplate split that [agent memory]({{< link path="agents/agent-memory" >}}) follows. An AgentTemplate cannot enable, disable, or tune compaction on its own.
+Compaction is configured on the {{< gloss "Harness" >}}Harness{{< /gloss >}}, not on the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. It is a property of the runner that drives the root agent, so it is runtime policy rather than portable agent behavior. This is the same Harness-versus-AgentTemplate split that [agent memory]({{< link path="agents/agent-memory" >}}) follows. An AgentTemplate cannot enable, disable, or tune compaction on its own.
 
 Compaction is a `spec.kagent` setting, so it applies to the **kagent runtime only**. A Harness that selects `codex`, `claude`, or `byo` has no compaction settings. Omitting the `compaction` block leaves the history uncompacted.
 
-Two strategies ship, and both are configured on the same field. Present them as two strategies rather than as a list of fields:
+Two strategies ship, and both are configured on the same field:
 
 - **Sliding window** — `compactionInterval`, optionally with `overlapSize` — summarizes each group of completed user-initiated invocations, pulling already-compacted invocations back into the next window so consecutive summaries overlap.
 - **Tail retention** — `tokenThreshold` with `eventRetentionSize` — bounds the prompt once it passes a token count by summarizing the history but keeping the most recent events uncompacted.
@@ -38,7 +38,7 @@ spec:
       tokenThreshold: 24000
       eventRetentionSize: 10
       # Optional: name a ModelConfig (in this Harness's namespace) to write the
-      # summaries. Omitted, the agent's own model summarizes.
+      # summaries. When you omit it, the agent's own model summarizes.
       summarizer:
         modelConfigRef:
           name: summarizer-model-config
@@ -54,7 +54,7 @@ spec:
     workerPoolRef:
       name: kagent-default
     snapshotPolicy:
-      location: gs://<your-bucket>/kagent/
+      location: s3://ate-snapshots/kagent/
   allowedAgentTemplates:
     selector:
       matchLabels:
@@ -63,13 +63,15 @@ spec:
 
 `Harness.spec.kagent.compaction` is the only field this page owns. The field-by-field schema — types, defaults, and validation rules — lives in the generated [API reference]({{< link path="reference/api-ref#kagentharnesscompaction" >}}); the complete Harness schema, including `workload`, `substrate`, and the runtime selection, lives on [Agent harness]({{< link path="agents/agent-harness" >}}).
 
+The table below lists the compaction fields and their requirements:
+
 | Field | Required | Description |
 | ----- | -------- | ----------- |
-| `compactionInterval` | One of the two strategies | The number of new user-initiated invocations that, once fully represented in the session, triggers a sliding-window compaction of those invocations. Minimum 1. |
-| `overlapSize` | Optional, requires `compactionInterval` | The number of already-compacted invocations pulled back into the next sliding window so consecutive summaries overlap. Minimum 0. |
-| `tokenThreshold` | One of the two strategies, with `eventRetentionSize` | The prompt token count at which tail-retention compaction summarizes the history before the next model call. Minimum 1. |
-| `eventRetentionSize` | Required when `tokenThreshold` is set | The number of most recent events that tail retention keeps uncompacted. Minimum 1. |
-| `summarizer.modelConfigRef` | Optional | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} in the Harness namespace that writes the summaries. Omitted, the agent's own model summarizes. |
+| `compactionInterval` | Optional. One of the two strategies. | The number of new user-initiated invocations that, once fully represented in the session, triggers a sliding-window compaction of those invocations. Minimum 1. |
+| `overlapSize` | Optional. With `compactionInterval`. | The number of already-compacted invocations pulled back into the next sliding window so consecutive summaries overlap. Minimum 0. |
+| `tokenThreshold` | Optional. One of the two strategies, with `eventRetentionSize`. | The prompt token count at which tail-retention compaction summarizes the history before the next model call. Minimum 1. |
+| `eventRetentionSize` | Optional. With `tokenThreshold`. | The number of most recent events that tail retention keeps uncompacted. Minimum 1. |
+| `summarizer.modelConfigRef` | Optional | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} in the Harness namespace that writes the summaries. When you omit it, the agent's own model summarizes. |
 | `summarizer.promptTemplate` | Optional | Replaces the runtime's default summarization prompt. Must contain `{conversation_history}`, which the runtime replaces with the rendered events. |
 
 ## Admission rules
@@ -85,20 +87,20 @@ These are CEL validations on the CRD, so a manifest that breaks one is rejected 
 
 The summarizer model resolves the same way the agent's own model does: its config lands in the compiled revision, its credentials and egress join the revision, and it joins the provenance. Changing the summarizer model therefore compiles a new revision for every AgentTemplate on the Harness.
 
-Naming the agent's own model in `summarizer.modelConfigRef` is deliberately a no-op: the runtime already summarizes with that model by default, so the revision is unchanged.
+Naming the agent's own model in `summarizer.modelConfigRef` is semantically a no-op: the runtime already summarizes with that model by default. It is not free, though. Revision IDs are not content hashes, so any change to the spec recompiles the revision, semantically identical or not, and setting this field carries that revision cost.
 
 These are the same {{< gloss "Revision" >}}revision{{< /gloss >}} mechanics the rest of the Harness configuration follows — the value is compiled in, not read at request time.
 
 ## Verify the configuration
 
-A Harness that names a ModelConfig that does not exist in its namespace is not `Ready`. Confirm the pair compiled before relying on compaction:
+A Harness that names a ModelConfig that does not exist in its namespace is not `Ready`. The failure surfaces on the AgentTemplate as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm the pair compiled before relying on compaction:
 
 ```bash
 kubectl get harness -n kagent
-kubectl get agenttemplate -n kagent
+kagent get agent-template cm-tpl
 ```
 
-The `HARNESS` column on the AgentTemplate lists each Harness that admitted it, and `READY` reports whether kagent compiled a runtime revision for that pairing. For more information, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+The `HARNESS` column lists each Harness that admitted the AgentTemplate, and `READY` reports whether kagent compiled a runtime revision for that pairing. For more information, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Next steps
 
