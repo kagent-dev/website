@@ -87,20 +87,25 @@ These are CEL validations on the CRD, so a manifest that breaks one is rejected 
 
 The summarizer model resolves the same way the agent's own model does: its config lands in the compiled revision, its credentials and egress join the revision, and it joins the provenance. Changing the summarizer model therefore compiles a new revision for every AgentTemplate on the Harness.
 
-Naming the agent's own model in `summarizer.modelConfigRef` is semantically a no-op: the runtime already summarizes with that model by default. It is not free, though. Revision IDs are not content hashes, so any change to the spec recompiles the revision, semantically identical or not, and setting this field carries that revision cost.
+Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantically a no-op for that AgentTemplate, because the runtime already summarizes with that model by default. The setting applies to every AgentTemplate on the Harness, so AgentTemplates that use a different model summarize with the named one instead. It is not free, though. Revision IDs are not content hashes, so any change to the spec recompiles the revision, semantically identical or not, and setting this field carries that revision cost.
 
 These are the same {{< gloss "Revision" >}}revision{{< /gloss >}} mechanics the rest of the Harness configuration follows — the value is compiled in, not read at request time.
 
 ## Verify the configuration
 
-A Harness that names a ModelConfig that does not exist in its namespace is not `Ready`. The failure surfaces on the AgentTemplate as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm the pair compiled before relying on compaction:
+If the summarizer names a ModelConfig that does not exist in the Harness namespace, the Harness and AgentTemplate pair is not ready. The failure surfaces on the AgentTemplate as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm the pair compiled before relying on compaction:
 
 ```bash
-kubectl get harness -n kagent
-kagent get agent-template cm-tpl
+kagent get agent-template <agent-template-name>
 ```
 
-The `HARNESS` column lists each Harness that admitted the AgentTemplate, and `READY` reports whether kagent compiled a runtime revision for that pairing. For more information, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+The `HARNESS` column lists each Harness that admitted the AgentTemplate, and `READY` reports whether kagent compiled a runtime revision for that pairing. If `READY` stays `FALSE`, inspect the conditions in `status.harnesses` to find the failing reference:
+
+```bash
+kagent get agent-template <agent-template-name> -o json
+```
+
+For more information, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Next steps
 
