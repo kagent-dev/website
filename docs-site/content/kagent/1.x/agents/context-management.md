@@ -67,10 +67,10 @@ The table below lists the compaction fields and their requirements:
 
 | Field | Required | Description |
 | ----- | -------- | ----------- |
-| `compactionInterval` | Optional. One of the two strategies. | The number of new user-initiated invocations that, once fully represented in the session, triggers a sliding-window compaction of those invocations. Minimum 1. |
-| `overlapSize` | Optional. With `compactionInterval`. | The number of already-compacted invocations pulled back into the next sliding window so consecutive summaries overlap. Minimum 0. |
-| `tokenThreshold` | Optional. One of the two strategies, with `eventRetentionSize`. | The prompt token count at which tail-retention compaction summarizes the history before the next model call. Minimum 1. |
-| `eventRetentionSize` | Optional. With `tokenThreshold`. | The number of most recent events that tail retention keeps uncompacted. Minimum 1. |
+| `compactionInterval` | Optional | The number of new user-initiated invocations that, once fully represented in the session, triggers a sliding-window compaction of those invocations. Minimum 1. |
+| `overlapSize` | Optional | The number of already-compacted invocations pulled back into the next sliding window so consecutive summaries overlap. Requires `compactionInterval`. Minimum 0. |
+| `tokenThreshold` | Optional | The prompt token count at which tail-retention compaction summarizes the history before the next model call. Requires `eventRetentionSize`. Minimum 1. |
+| `eventRetentionSize` | Optional | The number of most recent events that tail retention keeps uncompacted. Requires `tokenThreshold`. Minimum 1. |
 | `summarizer.modelConfigRef` | Optional | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} in the Harness namespace that writes the summaries. When you omit it, the agent's own model summarizes. |
 | `summarizer.promptTemplate` | Optional | Replaces the runtime's default summarization prompt. Must contain `{conversation_history}`, which the runtime replaces with the rendered events. |
 
