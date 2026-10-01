@@ -11,89 +11,92 @@ A Sandbox and a {{< gloss "Session" >}}Session{{< /gloss >}} are separate runtim
 
 | What you configure | What runs | What you call it with |
 | ------------------ | --------- | --------------------- |
-| An {{< gloss "Agent" >}}Agent{{< /gloss >}} pairs an AgentTemplate with a Harness | A Session | A2A interactions and tasks |
-| A SandboxTemplate defines a tools environment | A Sandbox | Guest process and file operations |
+| An {{< gloss "Agent" >}}Agent{{< /gloss >}} that pairs an AgentTemplate with a Harness | A Session | A2A interactions and tasks |
+| A SandboxTemplate that defines a tools environment | A Sandbox | Guest process and file operations |
 
 An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}MCP{{< /gloss >}} server, using the same service that a person calls. The agent's conversation and the Sandbox's lifetime stay independent of each other.
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), with a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} provisioned.
-
-2. Set a guest image digest on your installation. Sandbox preparation needs one, and the chart ships no default. A SandboxTemplate never becomes ready without it. The controller passes the digest to Agent Substrate unchanged and resolves no tags, so supply a digest rather than a tag.
+1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `controller.sandbox` values on the installation. Sandbox preparation needs a guest image digest, and the chart ships no default, so a SandboxTemplate never becomes ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
    ```yaml
    controller:
      sandbox:
        guestImage:
          digest: sha256:1821780ef01958f63cb9a1a1d9a175f7e386e7c72859dd29ab86d8644a47d2d4
+       cpu: 1
+       memory: 1Gi
+       defaultTTL: 1h
+       maxTTL: 24h
    ```
 
-3. Download the kagent CLI, as described in [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+   A SandboxTemplate cannot override these values, so they are the installation's policy rather than a per-template choice.
 
-## Operator settings
+   | Value | Default | Description |
+   | ----- | ------- | ----------- |
+   | `controller.sandbox.guestImage.digest` | `""` | The digest-pinned guest image. Required: preparation fails without it. The controller passes the digest to Agent Substrate unchanged and resolves no tags, so supply a digest rather than a tag. |
+   | `controller.sandbox.cpu` | `1` | CPU allocated to each Sandbox. |
+   | `controller.sandbox.memory` | `1Gi` | Memory allocated to each Sandbox. |
+   | `controller.sandbox.defaultTTL` | `1h` | Lifetime applied when `kagent sandbox create` omits `--ttl`. |
+   | `controller.sandbox.maxTTL` | `24h` | Upper bound on any requested lifetime. Note that activity does not extend a Sandbox's lifetime. A Sandbox expires the configured interval after it is created, however recently a command ran in it. |
 
-The rest of `controller.sandbox` sets the compute and the lifetime that every Sandbox gets. A SandboxTemplate cannot override them, so these are the installation's policy rather than a per-template choice.
+2. Download the kagent CLI. The `--version` flag matches the CLI to the release that these docs cover.
+   ```bash
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
+   ```
 
-| Value | Default | Description |
-| ----- | ------- | ----------- |
-| `controller.sandbox.guestImage.digest` | `""` | The digest-pinned guest image. Required: preparation fails without it. |
-| `controller.sandbox.cpu` | `1` | CPU allocated to each Sandbox. |
-| `controller.sandbox.memory` | `1Gi` | Memory allocated to each Sandbox. |
-| `controller.sandbox.defaultTTL` | `1h` | Lifetime applied when `kagent sandbox create` omits `--ttl`. |
-| `controller.sandbox.maxTTL` | `24h` | Upper bound on any requested lifetime. |
-
-Activity does not extend a Sandbox's lifetime. A Sandbox expires the configured interval after it is created, however recently a command ran in it.
-
-> [!WARNING]
-> **A Sandbox reaches no network destination.** kagent configures no allowed egress for a Sandbox, so a command that fetches a package, clones a repository, or calls an API fails. Plan on moving what a command needs into the Sandbox with `kagent sandbox upload`. Destination configuration on a SandboxTemplate is follow-up work.
+3. Install [`jq`](https://jqlang.org/download/) to read the Sandbox ID out of the CLI's JSON output.
 
 ## Create a SandboxTemplate
 
 A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepares a reusable runtime. Applying one does not allocate a Sandbox.
 
-```yaml
-kubectl apply -f - <<EOF
-apiVersion: api.kagent.dev/v1alpha3
-kind: SandboxTemplate
-metadata:
-  name: scratch
-  namespace: kagent
-spec:
-  workload:
-    # Replace with your own tools image and its digest.
-    image: registry.example.com/tools@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  env:
-    - name: LANG
-      value: C.UTF-8
-  substrate:
-    workerPoolRef:
-      name: kagent-default
-    snapshotPolicy:
-      location: s3://ate-snapshots/kagent/
-EOF
-```
+1. Apply a SandboxTemplate.
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: SandboxTemplate
+   metadata:
+     name: scratch
+     namespace: kagent
+   spec:
+     workload:
+       # Replace with your own tools image and its digest.
+       image: registry.example.com/tools@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+     env:
+       - name: LANG
+         value: C.UTF-8
+     substrate:
+       workerPoolRef:
+         name: kagent-default
+       snapshotPolicy:
+         location: s3://ate-snapshots/kagent/
+   EOF
+   ```
 
-{{< reuse "kagent-docs/snippets/review-table.md" >}} For the complete schema, see the [API reference]({{< link path="reference/api-ref#sandboxtemplate" >}}).
+   {{< reuse "kagent-docs/snippets/review-table.md" >}} For the complete schema, see the [API reference]({{< link path="reference/api-ref#sandboxtemplate" >}}).
 
-| Field | Required | Description |
-| ----- | -------- | ----------- |
-| `workload.image` | Yes | The tools image, pinned by `sha256` digest. A tag alone is rejected, because a prepared revision must be reproducible. |
-| `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and may be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
-| `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
-| `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
+   | Field | Required | Description |
+   | ----- | -------- | ----------- |
+   | `workload.image` | Yes | The tools image, pinned by `sha256` digest. A tag alone is rejected, because a prepared revision must be reproducible. |
+   | `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and may be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
+   | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
+   | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
-A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `controller.sandbox.guestImage.digest` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
+   A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `controller.sandbox.guestImage.digest` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
 
-Confirm that the template prepared a revision before you create a Sandbox from it.
-
-```bash
-kubectl get sandboxtemplate scratch -n kagent \
-  -o jsonpath='{range .status.conditions[?(@.type=="Ready")]}{.status} {.reason} {.message}{end}'
-```
+2. Confirm that the template prepared a revision before you create a Sandbox from it.
+   ```bash
+   kubectl get sandboxtemplate scratch -n kagent \
+     -o jsonpath='{range .status.conditions[?(@.type=="Ready")]}{.status} {.reason} {.message}{end}'
+   ```
 
 Editing a template prepares a new revision. A Sandbox that already exists keeps the revision it was created from, and deleting the template retires preparation without removing the Sandboxes that pinned it.
 
 ## Run a command
+
+> [!WARNING]
+> **The gateway denies every outbound connection from a Sandbox.** kagent compiles an empty [egress policy]({{< link path="substrate-runtime/networking-and-egress#policy-generation" >}}) as it creates a Sandbox, and the gateway rejects any destination that the policy does not name, so a command that fetches a package, clones a repository, or calls an API fails. The SandboxTemplate schema defines no destination field, so no configuration opens one. Move what a command needs into the Sandbox with `kagent sandbox upload`.
 
 Each `kagent sandbox` command makes one lifecycle attempt rather than retrying for you, so `create` takes a stable `--request-id` that you reuse to retry the same creation.
 
@@ -144,7 +147,7 @@ Each `kagent sandbox` command makes one lifecycle attempt rather than retrying f
 
 ## Reach a sandbox from an agent
 
-kagent's Helm chart installs a `RemoteMCPServer` named `kagent-api` in the controller's namespace, pointing at the controller's own `/mcp` endpoint. That one server exposes the Session and checkpoint tools alongside the sandbox tools, so an AgentTemplate reaches sandboxes through an ordinary tool binding.
+kagent's Helm chart installs a `RemoteMCPServer` named `kagent-api` in the controller's namespace, pointing at the controller's own `/mcp` endpoint. This server exposes the Session and checkpoint tools alongside the sandbox tools, so an AgentTemplate reaches sandboxes through an ordinary tool binding.
 
 ```yaml
 tools:
@@ -158,7 +161,7 @@ tools:
         - list_sandboxes
 ```
 
-An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation: the Go kagent runtime reads `KAGENT_PROPAGATE_TOKEN=true` to pass the caller's credentials and identity to the MCP servers that you trust.
+An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. The Go kagent runtime reads `KAGENT_PROPAGATE_TOKEN=true` to pass the caller's credentials and identity to the MCP servers that you trust.
 
 The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. An MCP transfer or output read is bounded at 1 MiB, encodes bytes as base64, and returns a continuation offset for reading more.
 
