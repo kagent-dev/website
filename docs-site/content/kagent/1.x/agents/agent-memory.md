@@ -129,7 +129,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
 
 3. Create a new {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} from the Harness and an AgentTemplate that it admits. Editing the Harness compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing AgentInstance keeps running the revision it was created from, so an agent that was already running does not gain memory until you recreate it.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
    The command returns output only after the AgentInstance reaches the `READY` state. Example output:
@@ -150,30 +150,28 @@ Memory is working when a fact from one conversation reaches a later one. An Agen
 
 1. Save the ID of the AgentInstance that you created. The command selects the most recently created AgentInstance for the AgentTemplate.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
    ```
 
 2. Tell the agent a fact that is worth remembering.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $SESSION_ID \
      --task "Remember that I deploy to the staging cluster on Fridays."
    ```
 
 3. Create a second AgentInstance from the same Harness and AgentTemplate pair. The new AgentInstance starts with an empty transcript.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
 4. Save the ID of the new AgentInstance.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
    ```
 
 5. Ask the new AgentInstance about the fact. An answer that includes the fact can only have come from memory, because this AgentInstance never saw the earlier conversation.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID --task "When do I deploy to staging?"
+   kagent agent invoke --session $SESSION_ID --task "When do I deploy to staging?"
    ```
 
    Example output:

@@ -46,8 +46,8 @@ For what kagent and Agent Substrate each send, see [About the stack]({{< link pa
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the AgentInstance commands that these steps use. To check your version, run `kagent version`.
-3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
+3. Install [`jq`](https://jqlang.org/download/), to read the Session ID and revision out of the CLI's JSON output.
 
 ## Install Jaeger
 
@@ -184,11 +184,11 @@ EOF
 
 Turn on the kagent trace and log exporters, and point both at the collector. Also turn on the controller's metrics endpoint, and allow Prometheus to scrape it.
 
-1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent recompiles the pair with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
+1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
@@ -237,16 +237,16 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
-5. Wait for kagent to recompile the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
+5. Wait for kagent to recompile the Agent. The controller rebuilds each Agent after the controller restarts, and a Session that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
    ```bash
    for i in $(seq 1 60); do
-     [ "$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
+     [ "$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
        && echo "Recompiled" && break
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the Agent. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
 ## Send Agent Substrate telemetry to the collector
 
@@ -265,31 +265,29 @@ helm upgrade substrate \
 
 ## Send a request
 
-Create an AgentInstance that picks up the new telemetry settings, and send it a request to produce traces and metrics.
+Create a Session that picks up the new telemetry settings, and send it a request to produce traces and metrics.
 
-1. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance exports traces.
+1. Create a new Session. A Session keeps the runtime configuration that it was created with, so only a new Session exports traces.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
-2. Confirm that the AgentInstance runs the current revision of the pair. The command waits until kagent finishes compiling the pair, then compares that revision with the one that the AgentInstance started from. If the command prints `Outdated`, the AgentInstance was created from an earlier revision, and exports without the new settings. Create another AgentInstance, and run the command again.
+2. Confirm that the Session runs the Agent's current revision. The command waits until kagent finishes compiling the Agent, then compares that revision with the one that the Session started from. If the command prints `Outdated`, the Session was created from an earlier revision, and exports without the new settings. Create another Session, and run the command again.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
-   INSTANCE_REVISION=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .preparedRevision')
-   [ "$INSTANCE_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
+   SESSION_REVISION=$(kagent agent session get $SESSION_ID -o json | jq -r '.session.preparedRevision')
+   [ "$SESSION_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
    ```
 
 3. Send a request to produce telemetry.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   kagent invoke --agent-instance $INSTANCE_ID --task "What is 2+2?"
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID --task "What is 2+2?"
    ```
 
 ## Review the telemetry
@@ -302,7 +300,7 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
       kubectl port-forward -n telemetry svc/jaeger 16686:16686
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
-   3. From the **Service** list, select `my-first-agent-my-first-harness`, and click **Find Traces**. To see Agent Substrate's own work, select one of its services instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
+   3. From the **Service** list, select `my-first-agent`, and click **Find Traces**. To see Agent Substrate's own work, select one of its services instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
 
 2. Review the metrics in Prometheus.
    1. Forward the Prometheus port, and leave the command running.

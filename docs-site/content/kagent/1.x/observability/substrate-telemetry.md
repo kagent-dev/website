@@ -24,14 +24,14 @@ The router access log and the Actor state change records are the two sources of 
 
 ## Actor identity
 
-Agent Substrate adds the following labels to Actor logs and to its component logs about an Actor. Each label maps to a kagent object, so you can find an agent's telemetry from the AgentInstance or the AgentTemplate that you already know.
+Agent Substrate adds the following labels to Actor logs and to its component logs about an Actor. Each label maps to a kagent object, so you can find an agent's telemetry from the Session or the Agent that you already know.
 
 | Label | Value for a kagent agent |
 | ----- | ------------------------ |
-| `ate.actor.name` | `ai-<agent-instance-id>`, one Actor for each AgentInstance. |
+| `ate.actor.name` | `session-<session-id>`, one Actor for each {{< gloss "Session" >}}Session{{< /gloss >}}. |
 | `ate.actor.uid` | A unique ID for the lifetime of the Actor. A deleted and recreated Actor gets a new one. |
-| `ate.atespace` | The {{< gloss "Atespace" >}}atespace{{< /gloss >}} of the Actor, which is the namespace of the AgentTemplate and Harness, such as `kagent`. The Actors that build a pair's first snapshot run in `ate-golden` instead. |
-| `ate.template.name` | The AgentTemplate name, the Harness name, and the short form of the {{< gloss "Revision" >}}revision{{< /gloss >}}, joined by hyphens, such as `my-first-agent-my-first-harness-a995d20d30a7`. All the AgentInstances of one pair at one revision share this value. |
+| `ate.atespace` | The {{< gloss "Atespace" >}}atespace{{< /gloss >}} of the Actor, which is the namespace of the Agent, such as `kagent`. The Actors that build an Agent's first snapshot run in `ate-golden` instead. |
+| `ate.template.name` | The {{< gloss "Agent" >}}Agent{{< /gloss >}} name and the short form of the {{< gloss "Revision" >}}revision{{< /gloss >}}, joined by a hyphen, such as `my-first-agent-a995d20d30a7`. Every Session of one Agent at one revision shares this value. |
 | `ate.template.atespace` | Where the template lives, which matches `ate.atespace` for a kagent agent. |
 | `ate.actor.container.name` | The container that wrote the line, such as `kagent`. Records for a suspend or resume omit this label, because the Actor writes them rather than a container. |
 
@@ -40,31 +40,30 @@ Agent Substrate metrics carry template and WorkerPool labels rather than the Act
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}), including the `kubectl-ate` plugin that the installation guide describes.
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), and send it at least one message, so that the `my-first-agent` AgentTemplate and the `my-first-harness` Harness have an Actor with logs to read. That guide also installs the kagent CLI.
-3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and filter the JSON log records.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), and send it at least one message, so that the `my-first-agent` Agent has an Actor with logs to read. That guide also installs the kagent CLI.
+3. Install [`jq`](https://jqlang.org/download/), to read the Session ID and filter the JSON log records.
 
 ## Read an Actor's logs
 
-An Actor writes to the stdout of whichever Worker pod runs it, and a suspended Actor is assigned to no Worker at all. Find the Actor by its AgentInstance ID, then read the Worker pods of its WorkerPool and filter by the Actor's name.
+An Actor writes to the stdout of whichever Worker pod runs it, and a suspended Actor is assigned to no Worker at all. Find the Actor by its Session ID, then read the Worker pods of its WorkerPool and filter by the Actor's name.
 
-1. Save the ID of the AgentInstance that you want to follow.
+1. Save the ID of the Session that you want to follow. Use an existing Session ID in place of this command when you already have one.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   echo $INSTANCE_ID
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   echo $SESSION_ID
    ```
 
-   A value of `null` means that no AgentInstance matched. The CLI lists only the AgentInstances that you created, so confirm that you are using the identity that created the agent.
+   A value of `null` means that the Session was not created. The CLI lists only the Sessions that you created, so confirm that you are using the identity that created the agent.
 
-2. Confirm that the Actor exists, and check its state. The Actor name is `ai-` followed by the AgentInstance ID.
+2. Confirm that the Actor exists, and check its state. The Actor name is `session-` followed by the Session ID.
    ```bash
-   kubectl ate get actors ai-$INSTANCE_ID --atespace kagent
+   kubectl ate get actors session-$SESSION_ID --atespace kagent
    ```
 
    Example output:
    ```console
    ATESPACE   NAME                                      TEMPLATE                                              STATE                   WORKER POD   WORKER IP   VERSION   AGE
-   kagent     ai-01a0d409-d249-728e-865c-ee58b55dff04   kagent/my-first-agent-my-first-harness-a995d20d30a7   ACTOR_STATE_SUSPENDED   <none>                   5         32m
+   kagent     session-01a0d409-d249-728e-865c-ee58b55dff04   kagent/my-first-agent-a995d20d30a7   ACTOR_STATE_SUSPENDED   <none>                   5         32m
    ```
 
    `ACTOR_STATE_SUSPENDED` with a `WORKER POD` of `<none>` is the resting state between turns. Because a suspended Actor names no Worker, the remaining steps read every Worker in the pool rather than one pod.
@@ -84,14 +83,14 @@ An Actor writes to the stdout of whichever Worker pod runs it, and a suspended A
 4. Read the Actor's lines from the Workers in the pool. A Worker writes the output of every Actor that it runs, so the filter selects a single Actor by name. Worker output mixes JSON records with plain text, so the filter also drops any line that is not a JSON object.
    ```bash
    kubectl logs -n kagent -l ate.dev/worker-pool=$WORKER_POOL --tail=-1 \
-     | jq -cR --arg actor "ai-$INSTANCE_ID" \
+     | jq -cR --arg actor "session-$SESSION_ID" \
        'fromjson? | objects | select(.labels["ate.actor.name"] == $actor)'
    ```
 
    Example output:
    ```console
-   {"labels":{"ate.actor.name":"ai-01a0d409-d249-728e-865c-ee58b55dff04","ate.actor.uid":"c91579a8-675c-474c-9437-4482ac628774","ate.atespace":"kagent","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-my-first-harness-a995d20d30a7"},"message":"Actor restoring","span_id":"d81bb304af04c945","time":"2026-09-24T16:02:52.008842377Z","trace_flags":"00","trace_id":"3b8987f98057610937b38639136d32b5"}
-   {"labels":{"ate.actor.name":"ai-01a0d409-d249-728e-865c-ee58b55dff04","ate.actor.uid":"c91579a8-675c-474c-9437-4482ac628774","ate.atespace":"kagent","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-my-first-harness-a995d20d30a7"},"message":"Actor checkpointed","span_id":"4914db77fcc2f59b","time":"2026-09-24T15:30:09.671009219Z","trace_flags":"01","trace_id":"c4971ca2e614428819443f64fe70f81c"}
+   {"labels":{"ate.actor.name":"session-01a0d409-d249-728e-865c-ee58b55dff04","ate.actor.uid":"c91579a8-675c-474c-9437-4482ac628774","ate.atespace":"kagent","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-a995d20d30a7"},"message":"Actor restoring","span_id":"d81bb304af04c945","time":"2026-09-24T16:02:52.008842377Z","trace_flags":"00","trace_id":"3b8987f98057610937b38639136d32b5"}
+   {"labels":{"ate.actor.name":"session-01a0d409-d249-728e-865c-ee58b55dff04","ate.actor.uid":"c91579a8-675c-474c-9437-4482ac628774","ate.atespace":"kagent","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-a995d20d30a7"},"message":"Actor checkpointed","span_id":"4914db77fcc2f59b","time":"2026-09-24T15:30:09.671009219Z","trace_flags":"01","trace_id":"c4971ca2e614428819443f64fe70f81c"}
    ```
 
    The filter returns the Actor's lines from every Worker that currently runs in the pool, including the lines from before the Actor last suspended.
@@ -101,13 +100,13 @@ An Actor writes to the stdout of whichever Worker pod runs it, and a suspended A
 Agent Substrate can also stream a single Actor's output directly, without the pool-wide filter.
 
 ```bash
-kubectl ate logs actors ai-$INSTANCE_ID --atespace kagent
+kubectl ate logs actors session-$SESSION_ID --atespace kagent
 ```
 
 The command reads the Worker that the Actor runs on, so it works only while the Actor is running. A kagent agent runs only during a turn, and the command returns an error the rest of the time.
 
 ```console
-Error: actor kagent/ai-01a0d409-d249-728e-865c-ee58b55dff04 is not currently running on any worker pod
+Error: actor kagent/session-01a0d409-d249-728e-865c-ee58b55dff04 is not currently running on any worker pod
 ```
 
 ## Suspend and resume records
@@ -116,7 +115,7 @@ The records that Agent Substrate writes for an Actor mark each step of a suspend
 
 ```bash
 kubectl logs -n kagent -l ate.dev/worker-pool=$WORKER_POOL --tail=-1 \
-  | jq -cR --arg actor "ai-$INSTANCE_ID" \
+  | jq -cR --arg actor "session-$SESSION_ID" \
     'fromjson? | objects | select(.labels["ate.actor.name"] == $actor and .labels["ate.actor.container.name"] == null) | {time, message}'
 ```
 
@@ -134,7 +133,7 @@ Example output:
 
 | `message` | Written when |
 | --------- | ------------ |
-| `Actor restoring` | A Worker begins to restore the Actor from a snapshot. An AgentInstance's Actor restores even for its first turn, from the snapshot that kagent built for the pair, so `Actor restoring` is the first record for every AgentInstance. |
+| `Actor restoring` | A Worker begins to restore the Actor from a snapshot. A Session's Actor restores even for its first turn, from the snapshot that kagent built for the Agent, so `Actor restoring` is the first record for every Session. |
 | `Actor restored` | The restore finishes and the Actor can serve the request. |
 | `Actor checkpointing` | The Actor begins to suspend, and Agent Substrate begins to write its snapshot. |
 | `Actor checkpointed` | The snapshot is written. The Actor is suspended, and the Worker is free for another Actor. |
@@ -155,19 +154,19 @@ The Agent Substrate API server, `ateapi`, writes an `Actor state changed` record
 | `running` | The Actor is on a Worker and can serve the turn. |
 | `suspending` | The turn ended, and the Actor is writing its snapshot. |
 | `suspended` | The snapshot is written, and the Actor holds no Worker. |
-| `deleting`, `deleted` | The AgentInstance was deleted. `deleted` is the last record that an Actor gets. |
+| `deleting`, `deleted` | The Session was deleted. `deleted` is the last record that an Actor gets. |
 
 `ateapi` runs more than one replica, and each replica writes only the changes that it handles. Read the logs of every replica.
 ```bash
 for pod in $(kubectl get pods -n ate-system -o name | grep ate-api-server); do
   kubectl logs -n ate-system "$pod"
-done | grep '"msg":"Actor state changed"' | grep "ai-${INSTANCE_ID}"
+done | grep '"msg":"Actor state changed"' | grep "session-${SESSION_ID}"
 ```
 
 Example output:
 ```console
-{"time":"2026-09-24T17:00:43.007925845Z","level":"INFO","msg":"Actor state changed","ate.atespace":"kagent","ate.actor.name":"ai-01a0d45b-c729-7d67-85c6-daa053202bff","ate.actor.uid":"831c62c5-b5ac-411f-b15e-7addfef97d73","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-my-first-harness-699a5ed2f709","ate.actor.operation.name":"resume","ate.actor.state":"resuming","trace_id":"402701838ffd50932dc0aec8e43a1604","span_id":"1f8f032ff37422c7","trace_flags":"00"}
-{"time":"2026-09-24T17:00:43.194765137Z","level":"INFO","msg":"Actor state changed","ate.atespace":"kagent","ate.actor.name":"ai-01a0d45b-c729-7d67-85c6-daa053202bff","ate.actor.uid":"831c62c5-b5ac-411f-b15e-7addfef97d73","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-my-first-harness-699a5ed2f709","ate.actor.operation.name":"resume","ate.actor.state":"running","trace_id":"402701838ffd50932dc0aec8e43a1604","span_id":"f92aecd47d89ad68","trace_flags":"00"}
+{"time":"2026-09-24T17:00:43.007925845Z","level":"INFO","msg":"Actor state changed","ate.atespace":"kagent","ate.actor.name":"session-01a0d45b-c729-7d67-85c6-daa053202bff","ate.actor.uid":"831c62c5-b5ac-411f-b15e-7addfef97d73","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-699a5ed2f709","ate.actor.operation.name":"resume","ate.actor.state":"resuming","trace_id":"402701838ffd50932dc0aec8e43a1604","span_id":"1f8f032ff37422c7","trace_flags":"00"}
+{"time":"2026-09-24T17:00:43.194765137Z","level":"INFO","msg":"Actor state changed","ate.atespace":"kagent","ate.actor.name":"session-01a0d45b-c729-7d67-85c6-daa053202bff","ate.actor.uid":"831c62c5-b5ac-411f-b15e-7addfef97d73","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-699a5ed2f709","ate.actor.operation.name":"resume","ate.actor.state":"running","trace_id":"402701838ffd50932dc0aec8e43a1604","span_id":"f92aecd47d89ad68","trace_flags":"00"}
 ```
 
 When the Agent Substrate release sets an OTLP endpoint, `ateapi` also exports each record as an OTLP log with the same attributes, so a logging backend receives the state changes of every Actor without reading pod output. Do not sample this stream. A dropped record leaves the last known state wrong, with nothing to show that a record is missing.

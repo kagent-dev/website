@@ -55,19 +55,19 @@ Agent Substrate suspends an Actor as soon as a response completes. The controlle
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the AgentInstance commands that these steps use. To check your version, run `kagent version`.
-3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
+3. Install [`jq`](https://jqlang.org/download/), to read the Session ID and revision out of the CLI's JSON output.
 4. Set up a tracing backend, and turn on tracing. The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you.
 
 ## Turn on content capture
 
-Turn on content capture in the kagent Helm release, then create an AgentInstance that picks up the new setting.
+Turn on content capture in the kagent Helm release, then create a Session that picks up the new setting.
 
 1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent rebuilds the pair with the new setting. The command first waits for any rebuild that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
@@ -92,44 +92,42 @@ Turn on content capture in the kagent Helm release, then create an AgentInstance
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
-4. Wait for kagent to rebuild the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new setting. The following command prints `Recompiled` when the new revision is ready.
+4. Wait for kagent to rebuild the Agent. The controller rebuilds each Agent after the controller restarts, and a Session that you create before the rebuild finishes starts from the previous revision, without the new setting. The following command prints `Recompiled` when the new revision is ready.
    ```bash
    for i in $(seq 1 60); do
-     [ "$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
+     [ "$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
        && echo "Recompiled" && break
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the setting was already in place, or the chart did not recognize the key. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the key on this page.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the Agent. Either the setting was already in place, or the chart did not recognize the key. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the key on this page.
 
-5. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance captures content.
+5. Create a new Session. A Session keeps the runtime configuration that it was created with, so only a new Session captures content.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
-6. Confirm that the AgentInstance runs the current revision of the pair. If the command prints `Outdated`, the AgentInstance was created from an earlier revision, and does not capture content. Create another AgentInstance, and run the command again.
+6. Confirm that the Session runs the Agent's current revision. If the command prints `Outdated`, the Session was created from an earlier revision, and does not capture content. Create another Session, and run the command again.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
-   INSTANCE_REVISION=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .preparedRevision')
-   [ "$INSTANCE_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
+   SESSION_REVISION=$(kagent agent session get $SESSION_ID -o json | jq -r '.session.preparedRevision')
+   [ "$SESSION_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
    ```
 
 ## Verify the setup
 
 Send a request that contains a distinctive phrase, then find that phrase in the captured request.
 
-1. Send a request to the new AgentInstance.
+1. Send a request to the new Session.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   kagent invoke --agent-instance $INSTANCE_ID --task "Audit check: what is 2+2?"
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID --task "Audit check: what is 2+2?"
    ```
 
 2. Find the captured request in your tracing backend.
@@ -153,12 +151,12 @@ Send a request that contains a distinctive phrase, then find that phrase in the 
       kubectl port-forward -n telemetry svc/jaeger 16686:16686
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
-   3. From the **Service** list, select `my-first-agent-my-first-harness`. From the **Operation** list, select the `generate_content` operation for your model, such as `generate_content gpt-4.1-mini`, and click **Find Traces**.
+   3. From the **Service** list, select `my-first-agent`. From the **Operation** list, select the `generate_content` operation for your model, such as `generate_content gpt-4.1-mini`, and click **Find Traces**.
    4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the two attributes that [What a record holds](#what-a-record-holds) describes.
    {{% /tab %}}
    {{< /tabs >}}
 
-   If both attributes read `{}`, the AgentInstance started without content capture. Check that the previous section printed `Current`, and create a new AgentInstance if it did not.
+   If both attributes read `{}`, the Session started without content capture. Check that the previous section printed `Current`, and create a new Session if it did not.
 
 3. To collect every model call of one conversation, search by its conversation ID. Every span of the conversation carries the ID in the `gen_ai.conversation.id` attribute. For the other attributes that you can search by, see [Correlation attributes]({{< link path="observability/tracing#correlation-attributes" >}}).
 
@@ -167,7 +165,7 @@ Send a request that contains a distinctive phrase, then find that phrase in the 
 
 ## Turn off content capture
 
-Turn off content capture, then create a new AgentInstance so that the change takes effect.
+Turn off content capture, then create a new Session so that the change takes effect.
 
 1. Turn off content capture in the kagent Helm release. Tracing stays on.
    ```bash
@@ -178,7 +176,7 @@ Turn off content capture, then create a new AgentInstance so that the change tak
      --set otel.captureSensitiveContent=false
    ```
 
-2. Create a new AgentInstance, because an existing Actor keeps the configuration that it started with. The spans of an AgentInstance that still captures content keep carrying it until you delete the AgentInstance.
+2. Create a new Session, because an existing Actor keeps the configuration that it started with. The spans of a Session that still captures content keep carrying it until you delete the Session.
 
 3. Delete the captured content from your backend when your retention policy requires it. Turning off capture does not remove the spans that your backend already stores.
 
