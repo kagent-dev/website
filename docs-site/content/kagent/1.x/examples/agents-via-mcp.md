@@ -1,11 +1,11 @@
 ---
 title: Use agents from an MCP client
-description: Connect Claude Code, Cursor, or another agent to kagent's MCP server, then discover and invoke your AgentInstances as tools.
+description: Connect Claude Code, Cursor, or another agent to kagent's MCP server, then discover and invoke your Sessions as tools.
 weight: 20
 author: kagent.dev
 ---
 
-The kagent controller runs a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server that exposes your {{< gloss "AgentInstance" >}}AgentInstances{{< /gloss >}} as tools. Any MCP client can then discover the agents in your cluster and delegate work to them. This mechanism allows one agent to orchestrate another as a sub-agent.
+The kagent controller runs a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server that exposes your {{< gloss "Session" >}}Sessions{{< /gloss >}} as tools. Any MCP client can then discover the agents in your cluster and delegate work to them. This mechanism allows one agent to orchestrate another as a sub-agent.
 
 This example runs in the opposite direction to [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}). There, kagent is the MCP client and an external server provides the tools. Here, kagent is the MCP server and your agents are the tools.
 
@@ -20,16 +20,16 @@ The MCP server is part of the controller's HTTP port rather than a separate depl
 - **Extensions**: The server advertises the `io.modelcontextprotocol/tasks` extension, which changes how invocations behave. For more information, see [Invoke without waiting](#invoke-without-waiting).
 
 > [!NOTE]
-> The tools take no session or conversation argument, because an AgentInstance **is** the conversation. Sending a second message to the same `agent_instance_id` continues where the first left off. The reply's `context_id` names the durable conversation rather than the instance, so it differs from the `agent_instance_id` and is shared by any fork taken from it. To hold two independent conversations on one AgentTemplate, create two AgentInstances.
+> A Session **is** one conversation, so sending a second message to the same `session_id` continues where the first left off. The reply's `context_id` is the Session's own ID. To hold two independent conversations with one {{< gloss "Agent" >}}Agent{{< /gloss >}}, create two Sessions.
 
 > [!WARNING]
-> The open source build does not authenticate this endpoint. Every request is accepted, and the caller's identity is read from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. Because the endpoint can invoke agents, create checkpoints, and create AgentInstances, do not expose port `8083` outside the cluster. For the wider identity model and what the open source build does guarantee, see [Identity]({{< link path="substrate-runtime/identity" >}}).
+> The open source build does not authenticate this endpoint. Every request is accepted, and the caller's identity is read from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. Because the endpoint can invoke agents, create checkpoints, and create Sessions, do not expose port `8083` outside the cluster. For the wider identity model and what the open source build does guarantee, see [Identity]({{< link path="substrate-runtime/identity" >}}).
 
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `controller.grpc.reflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have at least one AgentInstance in the `READY` state. The MCP server lists ready instances only.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have at least one Session in the `READY` state. The MCP server lists ready Sessions only.
 
 3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). Deleting a checkpoint has neither an MCP tool nor a kagent command, so cleaning one up calls `CheckpointService` directly.
 
@@ -88,20 +88,20 @@ Claude Code and Cursor read the tool schemas and build each call, so you work in
 
 ### List and invoke an agent
 
-1. Ask for the agents in the `kagent` namespace. The client calls `list_agent_instances` and reports one line per instance.
+1. Ask for your conversations. The client calls `list_sessions` and reports one line per Session.
    ```console
-   > List the kagent agents in the kagent namespace.
+   > List my kagent sessions.
    ```
 
-   An unexpectedly empty list is typically due to creator scoping rather than a missing agent. The tool returns only the instances that the calling identity created, and has no option to widen that scope. The kagent command line interface and this endpoint both default to `admin@kagent.dev`, so they see each other's instances. If you created the instance with `kagent --user-id <someone-else>`, send a matching `X-User-Id` header from the client.
+   An unexpectedly empty list is typically due to creator scoping rather than a missing agent. The tool returns only the Sessions that the calling identity created, and has no option to widen that scope. The kagent command line interface and this endpoint both default to `admin@kagent.dev`, so they see each other's Sessions. If you created the Session with `kagent --user-id <someone-else>`, send a matching `X-User-Id` header from the client.
 
-2. Ask the agent a question by naming the instance you want to use. The client calls `invoke_agent_instance` and fills in the arguments from the tool schema.
+2. Ask the agent a question by naming the Session you want to use. The client calls `invoke_session` and fills in the arguments from the tool schema.
    ```console
-   > Ask kagent agent instance <agent-instance-id> in the
-     kagent namespace: what is 2+2? Answer with just the number.
+   > Ask kagent session <session-id>: what is 2+2?
+     Answer with just the number.
    ```
 
-3. Ask a follow-up that depends on the previous answer, such as `Multiply that by 10.`, against the same instance. The word "that" resolves only when the earlier turns are in context, because the transcript belongs to the AgentInstance rather than to the client.
+3. Ask a follow-up that depends on the previous answer, such as `Multiply that by 10.`, against the same Session. The word "that" resolves only when the earlier turns are in context, because the transcript belongs to the Session rather than to the client.
 
 > [!NOTE]
 > Nothing here configures whether an invocation blocks or returns a task to poll, because a client declares its own capabilities on each request. A reply means your client did not declare the `io.modelcontextprotocol/tasks` extension and the call waited for the agent to finish. A task ID means it did, and the client polls in the background so that a long agent run never holds a request open.
@@ -111,17 +111,17 @@ Claude Code and Cursor read the tool schemas and build each call, so you work in
 When an agent pauses to ask something, kagent returns the question as an MCP elicitation and your client presents its own prompt: the agent's question, and a fixed set of choices where the agent offered them. When you answer it, the agent resumes the turn where it left off. When you refuse it, the agent is told that the person declined, which it can adapt to rather than treating it as an error.
 
 > [!IMPORTANT]
-> Only a client that declares the tasks extension can answer an agent. A blocking `invoke_agent_instance` call has nowhere to surface the question, so an agent that pauses leaves that call waiting.
+> Only a client that declares the tasks extension can answer an agent. A blocking `invoke_session` call has nowhere to surface the question, so an agent that pauses leaves that call waiting.
 
 This is the same pause that any other client sees, reached through MCP instead of A2A. For the pause types, the approval model, and what the agent receives, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
 ### Checkpoint and fork
 
-You can checkpoint an instance before letting an agent try something risky, then fork that checkpoint to start a second agent from the pinned state. The client calls the three {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} tools, which give it the same operations that the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}) performs from the command line.
+You can checkpoint a Session before letting an agent try something risky, then fork that checkpoint to start a second conversation from the pinned state. The client calls the three {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} tools, which give it the same operations that the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}) performs from the command line.
 
-1. Ask the client to checkpoint the instance.
+1. Ask the client to checkpoint the Session.
    ```console
-   > Checkpoint kagent agent instance <agent-instance-id>.
+   > Checkpoint kagent session <session-id>.
    ```
 
    The client reports the checkpoint's own ID, the turn that it pinned, and a state of `CHECKPOINT_STATE_READY`. Because the client holds that result in context, you can refer to the checkpoint without repeating its ID.
@@ -131,7 +131,7 @@ You can checkpoint an instance before letting an agent try something risky, then
    > Fork that checkpoint.
    ```
 
-   The client reports a second AgentInstance with its own ID, already `READY`, on the same Harness and AgentTemplate as the original.
+   The client reports a second Session with its own ID, already `READY`, on the same Agent as the original.
 
 3. Ask the fork a question.
    ```console
@@ -140,7 +140,7 @@ You can checkpoint an instance before letting an agent try something risky, then
 
    The fork answers `15`. Ask it about an earlier turn and it answers from the conversation it inherited, because a fork continues from the checkpoint rather than starting fresh.
 
-The two AgentInstances share everything up to the checkpoint and nothing after it, because new turns append only to the branch that received them. A fork also runs the {{< gloss "Revision" >}}revision{{< /gloss >}} its checkpoint was taken on, so editing the AgentTemplate afterwards does not change what the fork runs.
+The two Sessions share everything up to the checkpoint and nothing after it, because new turns append only to the branch that received them. A fork also runs the {{< gloss "Revision" >}}revision{{< /gloss >}} its checkpoint was taken on, so editing the Agent afterwards does not change what the fork runs.
 
 You can now safely [clean up these resources](#clean-up).
 
@@ -153,7 +153,7 @@ With `curl` you build each request yourself, so every field is visible: the tool
 
 ### List and invoke an agent
 
-1. List the ready AgentInstances in the namespace.
+1. List your ready Sessions.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -163,20 +163,20 @@ With `curl` you build each request yourself, so every field is visible: the tool
        "id": 1,
        "method": "tools/call",
        "params": {
-         "name": "list_agent_instances",
+         "name": "list_sessions",
          "arguments": {}
        }
      }'
    ```
 
-   The reply carries one line per instance as text, plus the same data as structured content. Example output:
+   The reply carries one line per Session as text, plus the same data as structured content. Example output:
    ```console
-   kagent/01a068e3-aeb6-7abc-8d6f-5ba9becd3143 (my-first-agent via my-first-harness)
+   01a068e3-aeb6-7abc-8d6f-5ba9becd3143 (my-first-agent)
    ```
 
-2. Save the ID of the instance that you want to use.
+2. Save the ID of the Session that you want to use.
    ```bash
-   export INSTANCE_ID=<agent-instance-id>
+   export SESSION_ID=<session-id>
    ```
 
 3. Send a message and wait for the reply. A blocking call needs no `_meta`, because the tool's default behavior asks nothing of the client.
@@ -189,9 +189,9 @@ With `curl` you build each request yourself, so every field is visible: the tool
        "id": 2,
        "method": "tools/call",
        "params": {
-         "name": "invoke_agent_instance",
+         "name": "invoke_session",
          "arguments": {
-           "agent_instance_id": "'"$INSTANCE_ID"'",
+           "session_id": "'"$SESSION_ID"'",
            "message": "What is 2+2? Answer with just the number."
          }
        }
@@ -201,7 +201,7 @@ With `curl` you build each request yourself, so every field is visible: the tool
    The reply text comes back as the tool's content, with the task identifiers alongside it. Example output:
    ```json
    {
-     "agent_instance_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+     "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
      "task_id": "01a06d0d-5fcf-7b07-aae3-1f470a8ee157",
      "context_id": "ce5a10b8-7789-4ba7-8395-e60a339de763",
      "state": "TASK_STATE_COMPLETED",
@@ -219,9 +219,9 @@ With `curl` you build each request yourself, so every field is visible: the tool
        "id": 2,
        "method": "tools/call",
        "params": {
-         "name": "invoke_agent_instance",
+         "name": "invoke_session",
          "arguments": {
-           "agent_instance_id": "'"$INSTANCE_ID"'",
+           "session_id": "'"$SESSION_ID"'",
            "message": "Multiply that by 10."
          }
        }
@@ -230,7 +230,7 @@ With `curl` you build each request yourself, so every field is visible: the tool
    Example output:
    ```json
    {
-     "agent_instance_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+     "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
      "task_id": "01a06d0d-6864-79f1-a4cb-8547f77638ba",
      "context_id": "ce5a10b8-7789-4ba7-8395-e60a339de763",
      "state": "TASK_STATE_COMPLETED",
@@ -240,7 +240,7 @@ With `curl` you build each request yourself, so every field is visible: the tool
 
 ### Invoke without waiting
 
-Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's result. Rather than blocking, `invoke_agent_instance` returns immediately with a task to poll, which keeps a long agent run from holding a request open. Because the handler is stateless, every request repeats the declaration in its `_meta` rather than establishing it once, and that includes each poll.
+Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's result. Rather than blocking, `invoke_session` returns immediately with a task to poll, which keeps a long agent run from holding a request open. Because the handler is stateless, every request repeats the declaration in its `_meta` rather than establishing it once, and that includes each poll.
 
 1. Invoke the agent with the extension declared in `params._meta`. Leave the declaration out and the tool blocks instead, as in [List and invoke an agent](#list-and-invoke-an-agent-1).
    ```bash
@@ -252,9 +252,9 @@ Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's 
        "id": 3,
        "method": "tools/call",
        "params": {
-         "name": "invoke_agent_instance",
+         "name": "invoke_session",
          "arguments": {
-           "agent_instance_id": "'"$INSTANCE_ID"'",
+           "session_id": "'"$SESSION_ID"'",
            "message": "Count to three."
          },
          "_meta": {
@@ -418,9 +418,9 @@ For the pause types, the approval model, and what the agent receives, see [Human
 
 ### Checkpoint and fork
 
-The three checkpoint tools pin an instance's state and start a second agent from it. None of them needs the tasks extension, so none carries `_meta`.
+The three checkpoint tools pin a Session's state and start a second conversation from it. None of them needs the tasks extension, so none carries `_meta`.
 
-1. Create a checkpoint. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
+1. Create a checkpoint. `expected_head_task_id` names the terminal task to pin, so the call fails rather than pinning the wrong turn when the conversation has advanced past it. Use the `$TASK_ID` that an earlier invocation returned. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -430,9 +430,10 @@ The three checkpoint tools pin an instance's state and start a second agent from
        "id": 6,
        "method": "tools/call",
        "params": {
-         "name": "create_agent_instance_checkpoint",
+         "name": "create_session_checkpoint",
          "arguments": {
-           "agent_instance_id": "'"$INSTANCE_ID"'",
+           "session_id": "'"$SESSION_ID"'",
+           "expected_head_task_id": "'"$TASK_ID"'",
            "request_id": "my-first-checkpoint"
          }
        }
@@ -444,7 +445,7 @@ The three checkpoint tools pin an instance's state and start a second agent from
    {
      "checkpoint": {
        "id": "01a06d19-540a-7040-befb-ec4499c96ff2",
-       "agent_instance_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+       "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
        "head_task_id": "01a06d13-2504-7245-9eaf-9c1870c51d26",
        "history_sequence": 398,
        "state": "CHECKPOINT_STATE_READY",
@@ -468,9 +469,9 @@ The three checkpoint tools pin an instance's state and start a second agent from
        "id": 7,
        "method": "tools/call",
        "params": {
-         "name": "list_agent_instance_checkpoints",
+         "name": "list_session_checkpoints",
          "arguments": {
-           "agent_instance_id": "'"$INSTANCE_ID"'"
+           "session_id": "'"$SESSION_ID"'"
          }
        }
      }'
@@ -482,7 +483,7 @@ The three checkpoint tools pin an instance's state and start a second agent from
      "checkpoints": [
        {
          "id": "01a0690f-5548-7935-b7ca-70919fc9c221",
-         "agent_instance_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+         "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
          "head_task_id": "01a0690f-058d-7d29-a880-9b5d6d30b772",
          "history_sequence": 91,
          "state": "CHECKPOINT_STATE_READY",
@@ -490,7 +491,7 @@ The three checkpoint tools pin an instance's state and start a second agent from
        },
        {
          "id": "01a06d19-540a-7040-befb-ec4499c96ff2",
-         "agent_instance_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+         "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
          "head_task_id": "01a06d13-2504-7245-9eaf-9c1870c51d26",
          "history_sequence": 398,
          "state": "CHECKPOINT_STATE_READY",
@@ -500,7 +501,7 @@ The three checkpoint tools pin an instance's state and start a second agent from
    }
    ```
 
-4. Fork the checkpoint into a second AgentInstance. This call takes `checkpoint_id` rather than an instance ID, because the checkpoint already identifies the instance it was taken on.
+4. Fork the checkpoint into a second Session. This call takes `checkpoint_id` rather than a Session ID, because the checkpoint already identifies the Session it was taken on.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -510,7 +511,7 @@ The three checkpoint tools pin an instance's state and start a second agent from
        "id": 8,
        "method": "tools/call",
        "params": {
-         "name": "fork_agent_instance",
+         "name": "fork_session",
          "arguments": {
            "checkpoint_id": "'"$CHECKPOINT_ID"'",
            "request_id": "my-first-fork"
@@ -519,22 +520,22 @@ The three checkpoint tools pin an instance's state and start a second agent from
      }'
    ```
 
-   The result is a new AgentInstance with its own ID, already `READY`, on the same Harness and AgentTemplate as the original. Example output:
+   The result is a new Session with its own ID, already `READY`, on the same Agent as the original. Example output:
    ```json
    {
-     "agent_instance": {
+     "session": {
        "id": "01a06d19-7eec-797b-87b8-7397a96b1544",
        "harness": "my-first-harness",
        "agent_template": "my-first-agent",
-       "state": "AGENT_INSTANCE_STATE_READY"
+       "state": "RUNTIME_STATE_READY"
      }
    }
    ```
 
-5. Invoke the fork with `invoke_agent_instance` and its new ID. Note that `context_id` matches the original's rather than the fork's own ID, because the fork continues the conversation that the checkpoint pinned. Example output:
+5. Invoke the fork with `invoke_session` and its new ID. A fork receives a new conversation ID, so `context_id` is the fork's own Session ID. Example output:
    ```json
    {
-     "agent_instance_id": "01a06d19-7eec-797b-87b8-7397a96b1544",
+     "session_id": "01a06d19-7eec-797b-87b8-7397a96b1544",
      "task_id": "01a06d19-80e7-7554-8288-377eda9e861b",
      "context_id": "ce5a10b8-7789-4ba7-8395-e60a339de763",
      "state": "TASK_STATE_COMPLETED",
@@ -548,9 +549,9 @@ You can now safely [clean up these resources](#clean-up).
 
 ## Clean up
 
-1. Delete the fork that you created. No MCP tool deletes an AgentInstance, so use the kagent command line interface.
+1. Delete the fork that you created. No MCP tool deletes a Session, so use the kagent command line interface.
    ```bash
-   kagent delete agent-instance <fork-agent-instance-id>
+   kagent agent session delete <fork-session-id>
    ```
 
 2. Port-forward the controller's gRPC port, and leave the command running. `CheckpointService` listens there rather than on the HTTP port that serves MCP.
@@ -571,15 +572,15 @@ You can now safely [clean up these resources](#clean-up).
 
 ## MCP tool reference
 
-The server exposes five tools. Two cover discovery and conversation, and three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. Every tool takes a `namespace` because an AgentInstance is scoped to one. No tool deletes an object, so removing an AgentInstance or a checkpoint means leaving MCP for the command line.
+The server exposes five Session tools. Two cover discovery and conversation, and three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. No tool takes a namespace: a Session is addressed by its own UUID. No tool deletes an object either, so removing a Session or a checkpoint means leaving MCP for the command line. The server also exposes a set of [standalone sandbox]({{< link path="substrate-runtime/sandboxing#standalone-sandboxes" >}}) tools, which this example does not cover.
 
 | Tool | Required arguments | What it does |
 | ---- | ------------------ | ------------ |
-| `list_agent_instances` | `namespace` | Lists the ready AgentInstances that the caller created. Takes `match_labels`, `page_size`, and `page_token`. |
-| `invoke_agent_instance` | `namespace`, `agent_instance_id`, `message` | Sends a message and returns the agent's reply. Takes `message_id` for idempotency. |
-| `create_agent_instance_checkpoint` | `namespace`, `agent_instance_id` | Pins the conversation at a turn boundary. Takes `request_id` for idempotency. |
-| `list_agent_instance_checkpoints` | `namespace`, `agent_instance_id` | Lists that instance's checkpoints. Takes `page_size` and `page_token`. |
-| `fork_agent_instance` | `namespace`, `checkpoint_id` | Creates a new AgentInstance from a checkpoint. Takes `request_id` for idempotency. |
+| `list_sessions` | None | Lists the ready Sessions that the caller created. Takes `page_size` and `page_token`. |
+| `invoke_session` | `session_id`, `message` | Sends a message and returns the agent's reply. Takes `message_id` for idempotency. |
+| `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the conversation at a turn boundary. The call fails if the conversation has advanced past that task. Takes `request_id` for idempotency. |
+| `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
+| `fork_session` | `checkpoint_id` | Creates a new Session from a checkpoint. Takes `request_id` for idempotency. |
 
 ## Next steps
 

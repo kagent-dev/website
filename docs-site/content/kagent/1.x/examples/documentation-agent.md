@@ -212,7 +212,7 @@ A `RemoteMCPServer` gives kagent the address of the running MCP server. kagent c
 
 The AgentTemplate binds the tools and sets the system prompt that makes the agent search before it answers. This example binds `query_documentation` and `get_chunks`, and leaves out `query_code`, because the crawl covered a website rather than a repository. The prompt also names `productName` and `version` on every query, because `query_documentation` needs both filters together. Passing `productName` alone returns `Error querying documentation: Not Found`, an error that reads like a broken database rather than a missing filter.
 
-1. Apply an AgentTemplate that binds the search tools. Use the label that your Harness admits.
+1. Apply an AgentTemplate that binds the search tools, and an Agent that pairs it with your Harness.
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -220,8 +220,6 @@ The AgentTemplate binds the tools and sets the system prompt that makes the agen
    metadata:
      name: docs-agent
      namespace: kagent
-     labels:
-       kagent.dev/harness: my-first-harness
    spec:
      description: Answers questions from the crawled documentation.
      modelConfig:
@@ -240,6 +238,17 @@ The AgentTemplate binds the tools and sets the system prompt that makes the agen
          tools:
          - query_documentation
          - get_chunks
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: docs-agent
+     namespace: kagent
+   spec:
+     templateRef:
+       name: docs-agent
+     harnessRef:
+       name: my-first-harness
    EOF
    ```
 
@@ -249,12 +258,10 @@ The AgentTemplate binds the tools and sets the system prompt that makes the agen
    > [!WARNING]
    > kagent resolves the server but never checks the tool names against what the server serves. A misspelled name compiles into a ready revision and fails silently at run time, so copy the names from `status.discoveredTools`.
 
-2. Create an AgentInstance and save its ID.
+2. Create a Session and save its ID.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template docs-agent
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "docs-agent")] | sort_by(.createdAt) | last | .id')
-   echo $INSTANCE_ID
+   export SESSION_ID=$(kagent agent session create --agent docs-agent -o json | jq -r '.session.id')
+   echo $SESSION_ID
    ```
 
 ## Ask a question
@@ -263,7 +270,7 @@ Ask the agent something that the crawled documentation covers, and then somethin
 
 1. Ask a question that the crawl covers.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $SESSION_ID \
      --task "What does a Harness do? Answer in two sentences."
    ```
 
@@ -277,7 +284,7 @@ Ask the agent something that the crawled documentation covers, and then somethin
 
 2. Ask a question that the crawl does not cover, to confirm that the agent refuses rather than falling back on the model.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $SESSION_ID \
      --task "How do I configure Istio ambient mode mTLS? Two sentences."
    ```
 
@@ -289,9 +296,10 @@ Ask the agent something that the crawled documentation covers, and then somethin
 
 ## Clean up
 
-1. Delete the AgentInstance and the AgentTemplate.
+1. Delete the Session, the Agent, and the AgentTemplate.
    ```bash
-   kagent delete agent-instance $INSTANCE_ID
+   kagent agent session delete $SESSION_ID
+   kubectl delete agent docs-agent -n kagent
    kubectl delete agenttemplate docs-agent -n kagent
    ```
 
