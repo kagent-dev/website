@@ -1,22 +1,20 @@
 ---
-title: kagent get
-description: Get a kagent resource.
-weight: 200
+title: kagent sandbox create
+description: Create a sandbox from a prepared template.
+weight: 430
 ---
 
-Get a kagent resource
+Create a sandbox. Retain --request-id and all inputs for retries; each call makes one lifecycle attempt. Activity does not extend the TTL.
 
 ```bash
-kagent get [flags]
-kagent get [command]
+kagent sandbox create TEMPLATE --request-id ID [flags]
 ```
 
-**Subcommands:**
-- [`kagent get agent-instance`]({{< link path="reference/cli/kagent-get-agent-instance" >}}) - Get an AgentInstance or list your AgentInstances
-- [`kagent get agent-template`]({{< link path="reference/cli/kagent-get-agent-template" >}}) - Get an AgentTemplate or list AgentTemplates
-
 **Flags:**
-- `-h, --help` - help for get
+- `-h, --help` - help for create
+- `--name string` - Display name
+- `--request-id string` - Stable idempotency key; reuse with identical inputs for retries
+- `--ttl duration` - Lifetime (omission uses operator policy)
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate goto
 description: Move one source to version V.
-weight: 140
+weight: 240
 ---
 
 Move one source to version V. Version zero removes its schema.

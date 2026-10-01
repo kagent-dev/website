@@ -1,7 +1,7 @@
 ---
 title: kagent bug-report
 description: Generate a bug report.
-weight: 20
+weight: 140
 ---
 
 Generate a bug report

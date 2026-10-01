@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate status
 description: Show migration status.
-weight: 150
+weight: 250
 ---
 
 Show migration status

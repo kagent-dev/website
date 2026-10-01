@@ -1,11 +1,11 @@
 ---
 title: kagent db migrate
 description: Apply, roll back, and inspect database migrations.
-weight: 120
+weight: 220
 ---
 
 Apply, roll back, and inspect database migrations.
-The command reads POSTGRES_DATABASE_URL when --db-url is empty.
+The command reads KAGENT_POSTGRES_DATABASE_URL when --db-url is empty.
 
 ```bash
 kagent db migrate [command]

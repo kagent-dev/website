@@ -1,7 +1,7 @@
 ---
 title: kagent mcp deploy
 description: Deploy MCP server to Kubernetes.
-weight: 280
+weight: 320
 ---
 
 Deploy an MCP server to Kubernetes by generating MCPServer CRDs.

@@ -1,28 +1,19 @@
 ---
-title: kagent completion fish
-description: Generate the autocompletion script for fish.
-weight: 170
+title: kagent agent session create
+description: Create a Session.
+weight: 60
 ---
 
-Generate the autocompletion script for the fish shell.
-
-To load completions in your current shell session:
-
-	kagent completion fish | source
-
-To load completions for every new session, execute once:
-
-	kagent completion fish > ~/.config/fish/completions/kagent.fish
-
-You will need to start a new shell for this setup to take effect.
+Create a Session
 
 ```bash
-kagent completion fish [flags]
+kagent agent session create [flags]
 ```
 
 **Flags:**
-- `-h, --help` - help for fish
-- `--no-descriptions` - disable completion descriptions
+- `--agent string` - Agent name
+- `-h, --help` - help for create
+- `--request-id string` - Idempotency key (generated when omitted)
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

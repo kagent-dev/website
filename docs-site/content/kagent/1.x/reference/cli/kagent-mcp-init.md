@@ -1,7 +1,7 @@
 ---
 title: kagent mcp init
 description: Initialize a new MCP server project.
-weight: 300
+weight: 340
 ---
 
 Initialize a new MCP server project with dynamic tool loading.

@@ -1,7 +1,7 @@
 ---
 title: kagent completion
 description: Generate the autocompletion script for the specified shell.
-weight: 30
+weight: 150
 ---
 
 Generate the autocompletion script for kagent for the specified shell.

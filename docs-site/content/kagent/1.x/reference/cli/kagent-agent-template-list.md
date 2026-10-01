@@ -1,28 +1,19 @@
 ---
-title: kagent completion fish
-description: Generate the autocompletion script for fish.
-weight: 170
+title: kagent agent template list
+description: List AgentTemplates.
+weight: 120
 ---
 
-Generate the autocompletion script for the fish shell.
-
-To load completions in your current shell session:
-
-	kagent completion fish | source
-
-To load completions for every new session, execute once:
-
-	kagent completion fish > ~/.config/fish/completions/kagent.fish
-
-You will need to start a new shell for this setup to take effect.
+List AgentTemplates
 
 ```bash
-kagent completion fish [flags]
+kagent agent template list [flags]
 ```
 
 **Flags:**
-- `-h, --help` - help for fish
-- `--no-descriptions` - disable completion descriptions
+- `-h, --help` - help for list
+- `--page-size int` - Number of AgentTemplates per page (0 uses 100; maximum 100)
+- `--page-token string` - Token returned by the previous page
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

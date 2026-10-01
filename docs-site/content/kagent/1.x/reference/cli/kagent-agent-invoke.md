@@ -1,20 +1,22 @@
 ---
-title: kagent create agent-instance
-description: Create an AgentInstance.
-weight: 90
+title: kagent agent invoke
+description: Invoke a Session.
+weight: 30
 ---
 
-Create an AgentInstance
+Invoke an existing Session through the A2A API.
 
 ```bash
-kagent create agent-instance [flags]
+kagent agent invoke [flags]
 ```
 
 **Flags:**
-- `--agent-template string` - AgentTemplate name
-- `--harness string` - Harness name
-- `-h, --help` - help for agent-instance
-- `--request-id string` - Idempotency key (generated when omitted)
+- `-f, --file string` - Read task text from a file or - for stdin
+- `-h, --help` - help for invoke
+- `--session string` - Session ID
+- `-S, --stream` - Stream the response
+- `-t, --task string` - Task text
+- `--token string` - Model API key passed through as an A2A Bearer token
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")
@@ -26,3 +28,9 @@ kagent create agent-instance [flags]
 - `--timeout duration` - Timeout (default 5m0s)
 - `--user-id string` - Caller identity used to select the server-side data partition (default "admin@kagent.dev")
 - `-v, --verbose` - Verbose output
+
+## Example
+
+```bash
+kagent agent invoke --session 8bd650a8-9775-488f-8bc1-0d52bf7bdcab --task "Get all the pods"
+```

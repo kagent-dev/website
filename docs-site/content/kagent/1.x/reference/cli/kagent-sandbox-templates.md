@@ -1,21 +1,17 @@
 ---
-title: kagent delete
-description: Delete a kagent resource.
-weight: 180
+title: kagent sandbox templates
+description: List SandboxTemplates in the selected namespace.
+weight: 530
 ---
 
-Delete a kagent resource
+List SandboxTemplates in the selected namespace
 
 ```bash
-kagent delete [flags]
-kagent delete [command]
+kagent sandbox templates [flags]
 ```
 
-**Subcommands:**
-- [`kagent delete agent-instance`]({{< link path="reference/cli/kagent-delete-agent-instance" >}}) - Delete an AgentInstance
-
 **Flags:**
-- `-h, --help` - help for delete
+- `-h, --help` - help for templates
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

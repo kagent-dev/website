@@ -1,28 +1,17 @@
 ---
-title: kagent completion fish
-description: Generate the autocompletion script for fish.
-weight: 170
+title: kagent sandbox delete
+description: delete a sandbox.
+weight: 440
 ---
 
-Generate the autocompletion script for the fish shell.
-
-To load completions in your current shell session:
-
-	kagent completion fish | source
-
-To load completions for every new session, execute once:
-
-	kagent completion fish > ~/.config/fish/completions/kagent.fish
-
-You will need to start a new shell for this setup to take effect.
+Inspect or change sandbox lifecycle. Mutations make one attempt; retry the same mutation on transient errors. Get only observes. Suspend can interrupt work; delete removes files.
 
 ```bash
-kagent completion fish [flags]
+kagent sandbox delete ID [flags]
 ```
 
 **Flags:**
-- `-h, --help` - help for fish
-- `--no-descriptions` - disable completion descriptions
+- `-h, --help` - help for delete
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

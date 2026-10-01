@@ -1,28 +1,17 @@
 ---
-title: kagent completion fish
-description: Generate the autocompletion script for fish.
-weight: 170
+title: kagent sandbox process
+description: Inspect process status without waiting.
+weight: 500
 ---
 
-Generate the autocompletion script for the fish shell.
-
-To load completions in your current shell session:
-
-	kagent completion fish | source
-
-To load completions for every new session, execute once:
-
-	kagent completion fish > ~/.config/fish/completions/kagent.fish
-
-You will need to start a new shell for this setup to take effect.
+Inspect process status without waiting
 
 ```bash
-kagent completion fish [flags]
+kagent sandbox process ID PROCESS_ID [flags]
 ```
 
 **Flags:**
-- `-h, --help` - help for fish
-- `--no-descriptions` - disable completion descriptions
+- `-h, --help` - help for process
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

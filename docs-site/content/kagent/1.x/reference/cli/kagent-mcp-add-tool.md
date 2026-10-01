@@ -1,7 +1,7 @@
 ---
 title: kagent mcp add-tool
 description: Add a new MCP tool to your project.
-weight: 260
+weight: 300
 ---
 
 Generate a new MCP tool that will be automatically loaded by the server.

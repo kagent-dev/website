@@ -1,17 +1,17 @@
 ---
 title: kagent apply
-description: Create or update an AgentTemplate.
-weight: 10
+description: Create or update an Agent or AgentTemplate.
+weight: 130
 ---
 
-Create or update an AgentTemplate
+Create or update an Agent or AgentTemplate
 
 ```bash
 kagent apply -f FILE [flags]
 ```
 
 **Flags:**
-- `-f, --file string` - Path to AgentTemplate manifest
+- `-f, --file string` - Path to Agent or AgentTemplate manifest
 - `-h, --help` - help for apply
 
 **Global Flags:**

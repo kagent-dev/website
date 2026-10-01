@@ -1,7 +1,7 @@
 ---
 title: kagent install
 description: Install kagent.
-weight: 230
+weight: 280
 ---
 
 Install kagent

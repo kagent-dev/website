@@ -1,17 +1,17 @@
 ---
-title: kagent delete agent-instance
-description: Delete an AgentInstance.
-weight: 190
+title: kagent agent session delete
+description: Delete a Session.
+weight: 70
 ---
 
-Delete an AgentInstance
+Delete a Session
 
 ```bash
-kagent delete agent-instance ID [flags]
+kagent agent session delete ID [flags]
 ```
 
 **Flags:**
-- `-h, --help` - help for agent-instance
+- `-h, --help` - help for delete
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

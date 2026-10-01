@@ -1,7 +1,7 @@
 ---
 title: kagent mcp init go
 description: Initialize a new Go MCP server project.
-weight: 310
+weight: 350
 ---
 
 Initialize a new MCP server project using the mcp-go framework.
