@@ -166,7 +166,7 @@ from kagent.adk import KAgentApp
 app = KAgentApp(
     root_agent_factory=build_agent,
     agent_card=card,
-    kagent_api_url=os.environ["KAGENT_URL"],
+    kagent_api_url=os.environ["KAGENT_API_URL"],
     app_name="my-agent",
 ).build()
 ```

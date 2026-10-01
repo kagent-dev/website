@@ -24,7 +24,7 @@ spec:
   workload:
     image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
   env:
-    - name: LOG_LEVEL
+    - name: KAGENT_LOG_LEVEL
       value: info
   substrate:
     workerPoolRef:

@@ -48,6 +48,14 @@ Agent:
   short: "A Kubernetes custom resource that pairs one AgentTemplate with one Harness. Each side takes either an inline spec or a reference to an existing resource, and the controller compiles the pair into a revision."
   link: "/docs/kagent/1.x/about/core-concepts/#agent"
 
+Sandbox:
+  short: "An owner-scoped scratch environment for running commands and working with files, created from a SandboxTemplate. It expires on a timer, reaches no network destination, and no agent conversation owns it."
+  link: "/docs/kagent/1.x/substrate-runtime/standalone-sandboxes/"
+
+SandboxTemplate:
+  short: "A Kubernetes custom resource defining the tools image, environment, WorkerPool, and snapshot storage that a Sandbox is created from. Applying one prepares a reusable runtime rather than allocating a Sandbox."
+  link: "/docs/kagent/1.x/substrate-runtime/standalone-sandboxes/#create-a-sandboxtemplate"
+
 Session:
   short: "A running conversation with one Agent. Unlike the resources it is built from, a Session is not a Kubernetes resource: kagent's gRPC API creates it and its PostgreSQL database tracks it."
   link: "/docs/kagent/1.x/about/core-concepts/#session"

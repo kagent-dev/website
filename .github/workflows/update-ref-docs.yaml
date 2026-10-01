@@ -301,7 +301,7 @@ jobs:
               API_DIR=go/api/v1alpha3
               API_TITLE="API reference"
               API_LINK_TITLE=""
-              API_DESC="Look up every field in the kagent v1alpha3 custom resources, including AgentTemplate, Harness, ModelConfig, and RemoteMCPServer."
+              API_DESC="Look up every field in the kagent v1alpha3 custom resources, including Agent, AgentTemplate, Harness, SandboxTemplate, ModelConfig, and RemoteMCPServer."
               API_WEIGHT=10
               HELM_TITLE="Helm reference"
               HELM_LINK_TITLE=""

@@ -87,7 +87,7 @@ controller:
 Leader election keeps the replicas from conflicting. One replica holds a Kubernetes lease and performs reconciliation, garbage collection, and scheduled runs; the other replicas stay ready and take over when the leader's lease expires.
 
 > [!NOTE]
-> Leader election is always on, including at a single replica, because a rolling update briefly runs two controllers at once. The chart grants the lease permissions unconditionally and exposes no setting to turn election off. `LEADER_ELECT=false` remains available for local testing.
+> Leader election is always on, including at a single replica, because a rolling update briefly runs two controllers at once. The chart grants the lease permissions unconditionally and exposes no setting to turn election off. `KAGENT_LEADER_ELECT=false` remains available for local testing.
 
 PostgreSQL supports multiple controller replicas without further configuration. The bundled instance is still a single pod backed by one PVC, so an installation that runs several controllers for availability, against a bundled database, has only moved the single point of failure.
 

@@ -21,7 +21,7 @@ controller:
     secureServing: true
 ```
 
-Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
+Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `KAGENT_METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
 
 Grant your Prometheus instance access in one of the following ways.
 
