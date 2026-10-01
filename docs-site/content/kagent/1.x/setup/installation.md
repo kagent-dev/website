@@ -221,8 +221,6 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
        enabled: true
        ateApiEndpoint: dns:///api.ate-system.svc:443
        atenetRouterURL: http://atenet-router.ate-system.svc:80
-       defaultWorkerPool:
-         name: kagent-default
    substrateWorkerPool:
      create: true
      replicas: 1
