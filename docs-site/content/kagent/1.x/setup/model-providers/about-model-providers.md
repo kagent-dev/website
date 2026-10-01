@@ -44,7 +44,7 @@ Substrate matches a destination on the exact DNS hostname, without path, port, o
 
 ### Credentials that do not compile
 
-Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from that template. Any AgentInstance that already exists keeps running the last revision that compiled.
+Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from it. Any Session that already exists keeps running the last revision that compiled.
 
 | Configuration | Why it cannot be injected | What to use instead |
 | ------------- | ------------------------- | ------------------- |
@@ -89,4 +89,4 @@ spec:
   systemPrompt: You are a concise, helpful assistant.
 ```
 
-Editing a ModelConfig produces a new compiled {{< gloss "Revision" >}}revision{{< /gloss >}} for every AgentTemplate that references it. An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} keeps running the revision that it was created from, so create a new AgentInstance to pick up a changed model.
+Editing a ModelConfig produces a new compiled {{< gloss "Revision" >}}revision{{< /gloss >}} for every {{< gloss "Agent" >}}Agent{{< /gloss >}} whose template references it. A {{< gloss "Session" >}}Session{{< /gloss >}} keeps running the revision that it was created from, so create a new Session to pick up a changed model.

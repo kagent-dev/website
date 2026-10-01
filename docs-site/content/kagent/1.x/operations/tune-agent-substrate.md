@@ -80,9 +80,9 @@ A Worker entry gains an `actorId` only while an Actor occupies it, so the Worker
 
 The replica count is the only capacity dial on a pool, and setting it well depends on knowing what actually consumes a Worker.
 
-A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts at most one Actor at a time, and it holds that Actor only while a turn is running. kagent suspends an Actor at every turn boundary and frees its Worker, as described in [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}). An idle {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} therefore occupies no Worker at all.
+A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts at most one Actor at a time, and it holds that Actor only while a turn is running. kagent suspends an Actor at every turn boundary and frees its Worker, as described in [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}). An idle {{< gloss "Session" >}}Session{{< /gloss >}} therefore occupies no Worker at all.
 
-Size the pool for the number of turns that run at the same time, not for the number of agents or AgentInstances that you have created. A cluster with hundreds of AgentInstances that are each used occasionally needs far fewer Workers than the instance count suggests.
+Size the pool for the number of turns that run at the same time, not for the number of Agents or Sessions that you have created. A cluster with hundreds of Sessions that are each used occasionally needs far fewer Workers than the session count suggests.
 
 Scale a pool in place with the standard Kubernetes scale command, because the WorkerPool exposes a scale subresource. Use the pool name that you read in [Inspect the runtime](#inspect-the-runtime).
 

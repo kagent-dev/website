@@ -155,7 +155,7 @@ kubectl get agenttemplate <name> -n kagent \
   -o jsonpath='{range .status.harnesses[*]}{.harness}{" desired="}{.desiredRevision}{" latestSuccessful="}{.latestSuccessfulRevision}{"\n"}{end}'
 ```
 
-The second cause is deliberate. An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} runs the revision that it was created from for its whole life, so editing an AgentTemplate never changes an instance that already exists. Create a new AgentInstance to pick up the edit.
+The second cause is deliberate. A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was created from for its whole life, so editing an AgentTemplate never changes a conversation that already exists. Create a new Session to pick up the edit.
 
 ## Collect logs
 
