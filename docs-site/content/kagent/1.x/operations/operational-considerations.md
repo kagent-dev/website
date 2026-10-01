@@ -110,6 +110,29 @@ gcloud container node-pools update "${NODE_POOL}" \
 
 Scaling a serving WorkerPool down removes pods without suspending the Actors on them, so it strands conversations exactly as a reclaimed node does. For pool sizing and the rest of the Substrate runtime settings, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
 
+## Expire idle conversations
+
+A conversation that nobody returns to still holds a row in your database and a pinned runtime revision. kagent deletes idle {{< gloss "Session" >}}Sessions{{< /gloss >}} on a timer so that neither accumulates without a bound.
+
+A leader-only worker sweeps once a minute and deletes every Session whose idle clock has run out, through the same deletion workflow that a client delete uses.
+
+| Value | Default | Description |
+| ----- | ------- | ----------- |
+| `controller.sessionIdleTTL` | `168h` | How long a Session may sit idle before the worker deletes it, as a Go duration. `0` turns the worker off, retries included. A negative value is rejected. |
+
+Seven days is the default. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
+
+Idle time runs from the later of the Session's creation and its most recent stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires. A {{< gloss "Fork" >}}fork{{< /gloss >}} keeps its source's event timestamps, and its own creation time is what gives it a full lifetime rather than inheriting an almost-expired one.
+
+Work in progress is never deleted. A Session with a running task, or with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`, survives past the interval, and so does one with a pending lifecycle operation or a checkpoint being captured.
+
+> [!IMPORTANT]
+> **Expiry bounds conversations, not history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, and `GetSession` then returns not-found. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint can still be forked after the Session that it was taken on has expired. Sizing a database for a long-running installation means planning for that audit history separately, because no setting on this page bounds it.
+
+Unlike an explicit client deletion, which keeps a tombstone, an expired Session releases its creation request ID. The same caller can reuse that request ID to start a fresh conversation.
+
+To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sessions that it removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
+
 ## How configuration changes reach agents
 
 kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} reference, such as the API keys and TLS certificates in a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}}. An edit to one of them recompiles the pair into a new revision.
