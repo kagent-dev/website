@@ -67,10 +67,10 @@ kagent does not wait for an Actor to go idle for a long stretch before suspendin
 
 A turn reaches such a boundary when its task enters a terminal state, or when the task stops to wait on a person, which is the `INPUT_REQUIRED` and `AUTH_REQUIRED` case. At that point kagent suspends the Actor durably and records the exact snapshot that the suspend produced.
 
-The {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}'s own state does not change while this happens. It stays `READY` throughout, because suspension is a property of the runtime underneath it rather than of the conversation. A caller that lists AgentInstances sees a ready agent whether or not an Actor is currently running for it.
+The {{< gloss "Session" >}}Session{{< /gloss >}}'s own state does not change while this happens. It stays `READY` throughout, because suspension is a property of the runtime underneath it rather than of the conversation. A caller that lists Sessions sees a ready conversation whether or not an Actor is currently running for it.
 
 > [!NOTE]
-> Creating an AgentInstance does not start an Actor running. The Actor is created as suspended, and the first message addressed to the AgentInstance resumes it.
+> Creating a Session does not start an Actor running. The Actor is created as suspended, and the first message addressed to the Session resumes it.
 
 ## Resuming on demand
 
@@ -82,8 +82,8 @@ Resume speed makes suspending at every turn boundary practical rather than costl
 
 A snapshot that Agent Substrate writes on suspend is transient. Agent Substrate is free to collect it once a newer snapshot supersedes it. A **checkpoint** makes one of those snapshots durable by pinning it.
 
-Creating a checkpoint attaches an Agent Substrate {{< gloss "Tag" >}}Tag{{< /gloss >}} to the snapshot that the AgentInstance most recently suspended to. The tag names that one snapshot permanently and acts as a retention pin, such that Agent Substrate does not collect a snapshot while a tag still names it. Deleting the checkpoint removes the tag and releases the pin.
+Creating a checkpoint attaches an Agent Substrate {{< gloss "Tag" >}}Tag{{< /gloss >}} to the snapshot that the Session most recently suspended to. The tag names that one snapshot permanently and acts as a retention pin, such that Agent Substrate does not collect a snapshot while a tag still names it. Deleting the checkpoint removes the tag and releases the pin.
 
-An AgentInstance must be a turn boundary to be checkpointed, because the turn boundary is captured. An AgentInstance with a turn still in progress has no quiescent boundary to capture, and the request fails until the turn finishes.
+A Session must be at a turn boundary to be checkpointed, because the turn boundary is captured. The request names the terminal task to pin, so it fails when a newer turn has already started, and again while that turn's snapshot is still being written.
 
-A checkpoint also records how far the conversation had advanced, and it lets you start a second AgentInstance from the state it pinned. That second AgentInstance, a {{< gloss "Fork" >}}fork{{< /gloss >}}, continues the conversation from the point that the checkpoint pinned, and new turns append only to the fork. To create a checkpoint and fork an AgentInstance from it, work through the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+A checkpoint also records how far the conversation had advanced, and it lets you start a second Session from the state it pinned. That second Session, a {{< gloss "Fork" >}}fork{{< /gloss >}}, continues the conversation from the point that the checkpoint pinned, and new turns append only to the fork. A fork receives fresh conversation and task identifiers rather than inheriting the source's. To create a checkpoint and fork a Session from it, work through the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).

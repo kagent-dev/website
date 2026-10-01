@@ -67,7 +67,7 @@ The collector host for agents on the `kagent`, `codex`, and `claude` runtimes is
 
 The gateway caches each Actor's policy rather than fetching it per request, so a change takes effect on a delay rather than instantly. The cache holds an entry for 10 seconds by default, and that interval is the upper bound on the lag: a policy that is created, updated, or deleted reaches new requests within one interval. Deleting a policy becomes a denial rather than an absence of one.
 
-Because an AgentInstance pins the revision it was created from, changing an AgentTemplate does not move an existing conversation onto a new allowlist. Create a new AgentInstance to pick up a changed set of destinations.
+Because a Session pins the revision it was created from, changing an AgentTemplate does not move an existing conversation onto a new allowlist. Create a new Session to pick up a changed set of destinations.
 
 ## Diagnose a denied request
 
