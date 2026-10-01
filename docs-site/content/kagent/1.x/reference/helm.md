@@ -12,7 +12,7 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha4 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha7 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
@@ -23,22 +23,22 @@ A Helm chart for kagent, built with Google ADK
 |-----|------|---------|-------------|
 | annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
-| controller.a2aGatewayUrl | string | `http://<fullname>-controller.<namespace>.svc:<grpc-port>` | Public gateway base URL advertised by AgentInstance Agent Cards for gRPC and HTTP/JSON-RPC. |
+| controller.a2aGatewayUrl | string | `http://<fullname>-controller.<namespace>.svc:<grpc-port>` | Public gateway base URL advertised by Session Agent Cards for gRPC and HTTP/JSON-RPC. |
 | controller.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod. |
 | controller.agentImage | object | `{"registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for declarative agents. |
 | controller.annotations | object | `{}` | Additional annotations to add to the controller Deployment metadata |
-| controller.auth.mode | string | `"unsecure"` |  |
-| controller.auth.userIdClaim | string | `""` |  |
+| controller.auth.mode | string | `"insecure"` | Controller authentication: insecure or trusted-proxy. trusted-proxy requires a validating proxy and network isolation; see docs/architecture/oidc-proxy-authentication.md. |
+| controller.auth.userIdClaim | string | `""` | JWT identity claim. Empty uses sub; a missing custom claim falls back to sub. |
 | controller.env | list | `[]` |  |
 | controller.envFrom | list | `[]` |  |
-| controller.grpc | object | `{"maxMessageBytes":16777216,"reflection":false,"tlsCertFile":"","tlsKeyFile":""}` | gRPC application API settings. Native gRPC, gRPC-Web, MCP, and health share the controller service port. |
+| controller.grpc | object | `{"reflection":false}` | gRPC application API settings. Native gRPC, gRPC-Web, MCP, and health share the controller service port. |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
 | controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
 | controller.image.tag | string | `""` |  |
 | controller.loglevel | string | `"info"` |  |
 | controller.mcpEgressPlaintext | bool | `false` | Rewrite RemoteMCPServer tool URLs and the controller's tool-discovery dial from `https://host[:port]` to `http://host:<port-or-443>` so MCP traffic egresses in plaintext to a proxy that originates TLS upstream off by default. |
-| controller.metrics | object | disabled | Prometheus-style /metrics endpoint for the controller manager. When enabled, provisions a dedicated metrics Service plus the ClusterRoles required for authenticated scrapes. Bind `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant scrape access. Use `bindAddress` for any port change: the Service `targetPort` and the pod `containerPort` are derived from it at template time, so overriding `METRICS_BIND_ADDRESS` via `controller.env` shifts only the runtime listener and leaves the rendered Service pointing at the chart-time port. Setting `bindAddress: "0"` (or empty) is treated as a disable signal — equivalent to `enabled: false` — to keep faith with the controller binary's documented contract for `--metrics-bind-address`. |
+| controller.metrics | object | disabled | Prometheus-style /metrics endpoint for the controller manager. When enabled, provisions a dedicated metrics Service plus the ClusterRoles required for authenticated scrapes. Bind `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant scrape access. Use `bindAddress` for any port change: the Service `targetPort` and the pod `containerPort` are derived from it at template time, so overriding `KAGENT_METRICS_BIND_ADDRESS` via `controller.env` shifts only the runtime listener and leaves the rendered Service pointing at the chart-time port. Setting `bindAddress: "0"` (or empty) is treated as a disable signal — equivalent to `enabled: false` — to keep faith with the controller binary's documented contract for `--metrics-bind-address`. |
 | controller.metrics.serviceMonitor | object | disabled | Prometheus Operator `ServiceMonitor` for the metrics `Service`. Requires `controller.metrics.enabled` and the `monitoring.coreos.com/v1` CRDs; the chart only renders it when the target cluster serves that API, so enabling it on a cluster without the Prometheus Operator is a no-op rather than a failed install (`helm template` needs `--api-versions monitoring.coreos.com/v1`). The endpoint follows `secureServing`: port name, scheme, bearer token and TLS settings are all derived from it, so flipping `secureServing` alone keeps the scrape working. With `secureServing` enabled the scrape is also authorized only once `<fullname>-metrics-reader` is bound to the Prometheus ServiceAccount; set `prometheusServiceAccount` below and the chart renders that binding for you. |
 | controller.metrics.serviceMonitor.annotations | object | `{}` | Annotations for the `ServiceMonitor`. |
 | controller.metrics.serviceMonitor.bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | Token presented to the authenticated metrics endpoint. Only used when `secureServing` is enabled; set to `""` to omit it. |
@@ -68,18 +68,26 @@ A Helm chart for kagent, built with Google ADK
 | controller.resources.limits.memory | string | `"512Mi"` |  |
 | controller.resources.requests.cpu | string | `"100m"` |  |
 | controller.resources.requests.memory | string | `"128Mi"` |  |
+| controller.sandbox.cpu | string | `"1"` |  |
+| controller.sandbox.defaultTTL | string | `"1h"` |  |
+| controller.sandbox.guestImage.digest | string | `""` |  |
+| controller.sandbox.guestImage.registry | string | `""` |  |
+| controller.sandbox.guestImage.repository | string | `"kagent-dev/kagent/sandbox-guest"` |  |
+| controller.sandbox.maxTTL | string | `"24h"` |  |
+| controller.sandbox.memory | string | `"1Gi"` |  |
 | controller.service.annotations | object | `{}` |  |
 | controller.service.ports.port | int | `8083` |  |
 | controller.service.ports.targetPort | int | `8083` |  |
 | controller.service.type | string | `"ClusterIP"` |  |
-| controller.serviceAccount | object | `{"annotations":{}}` | ServiceAccount settings for the controller pod |
+| controller.serviceAccount | object | `{"annotations":{},"create":true,"name":""}` | ServiceAccount settings for the controller pod |
 | controller.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the controller ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
+| controller.serviceAccount.create | bool | `true` | Create the controller ServiceAccount. Set to false to use one managed outside the chart. |
+| controller.serviceAccount.name | string | `<fullname>-controller` | Name of the controller ServiceAccount. |
+| controller.sessionIdleTTL | string | `"168h"` |  |
 | controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
 | controller.substrate.ateApiEndpoint | string | `""` |  |
 | controller.substrate.atenetRouterURL | string | `""` |  |
-| controller.substrate.defaultWorkerPool.name | string | `""` |  |
-| controller.substrate.defaultWorkerPool.namespace | string | `""` |  |
 | controller.substrate.enabled | bool | `false` |  |
 | controller.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | controller.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the controller pod. |
@@ -111,7 +119,7 @@ A Helm chart for kagent, built with Google ADK
 | fullnameOverride | string | `""` |  |
 | global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
 | global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
-| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, ui, bundled postgres, grafana-mcp, and substrateWorkerPool.workerImage. The vendored subcharts (kagent-tools, kmcp, substrate) adopt it when their pinned versions bump. |
+| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, bundled postgres, grafana-mcp, and substrateWorkerPool.workerImage. The vendored subcharts (kagent-tools, kmcp, substrate) adopt it when their pinned versions bump. |
 | global.watchNamespaces | list | `[]` | Namespace scope for the whole install. A non-empty list replaces ClusterRoles with Roles and scopes the controller's watch. Both derive from this one value, so they cannot disagree. Prefer this value over the per-surface keys. rbac.namespaces overrides it when the key is present. An explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in controller.watchNamespaces is validated: the watch must stay inside the RBAC scope. A watched namespace without a Role is a permanent Forbidden loop at runtime. |
 | grafana-mcp.enabled | bool | `true` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
@@ -217,7 +225,7 @@ A Helm chart for kagent, built with Google ADK
 | providers.default | string | `"openAI"` |  |
 | providers.gemini.apiKeySecretKey | string | `"GOOGLE_API_KEY"` |  |
 | providers.gemini.apiKeySecretRef | string | `"kagent-gemini"` |  |
-| providers.gemini.model | string | `"gemini-2.5-flash-lite"` |  |
+| providers.gemini.model | string | `"gemini-3.5-flash-lite"` |  |
 | providers.gemini.provider | string | `"Gemini"` |  |
 | providers.mistral.apiKeySecretKey | string | `"MISTRAL_API_KEY"` |  |
 | providers.mistral.apiKeySecretRef | string | `"kagent-mistral"` |  |
@@ -241,12 +249,12 @@ A Helm chart for kagent, built with Google ADK
 | substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
-| ui.additionalForwardedHeaders | list | `[]` | Identity headers the UI's nginx proxy will forward to the backend on /api/ and /a2a/. Names are case-insensitive. Authorization is always forwarded; the auth-proxy identity headers (x-auth-request-*, x-forwarded-user, x-forwarded-email, x-forwarded-groups, x-forwarded-preferred-username) are stripped from client requests unless listed here, so a caller cannot spoof an identity the backend trusts. Headers outside that set are forwarded by nginx as normal. |
+| ui.additionalForwardedHeaders | list | `[]` | Identity headers the UI's nginx proxy will forward to the backend on /api/, /a2a/, and /mcp. Names are case-insensitive. Authorization is always forwarded; the auth-proxy identity headers (x-auth-request-*, x-forwarded-user, x-forwarded-email, x-forwarded-groups, x-forwarded-preferred-username) are stripped from client requests unless listed here, so a caller cannot spoof an identity the backend trusts. Headers outside that set are forwarded by nginx as normal. In trusted-proxy mode, X-Agent-Name and X-User-Id are always stripped, even if listed here. |
 | ui.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod. |
 | ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
 | ui.basePath | string | `""` | Prefix a reverse proxy strips before forwarding, e.g. `/ui`; root-relative URLs such as `publicBackendUrl` get it too. With oauth2-proxy, set `OIDC_REDIRECT_URL` under it and restart oauth2-proxy after changing it. |
-| ui.env | list | `[]` | Extra environment variables for the UI container: a list of `{name, value}` entries, spliced into its `env:` verbatim. An installed app extension's own settings go here, named `EXTENSION_*`; the container's startup script copies those onto `window.environmentVariables` for the browser to read. |
+| ui.env | list | `[]` | Extra environment variables for the UI container, applied after ConfigMap defaults. Entries stay in the Deployment to support valueFrom and $(VAR_NAME) expansion. An installed app extension's settings go here, named `KAGENT_UI_EXTENSION_*`; the container's startup script copies those onto `window.environmentVariables` for the browser to read. |
 | ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
 | ui.httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":[],"labels":{},"parentRefs":[],"rules":[]}` | Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via `parentRefs`. Disabled by default; enable to front the UI with a Gateway API implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the OpenShift Route or bundled oauth2-proxy. |
 | ui.httpRoute.annotations | object | `{}` | Annotations to add to the `HTTPRoute`. |

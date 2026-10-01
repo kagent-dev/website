@@ -6,18 +6,64 @@ author: kagent.dev
 ---
 
 ## Packages
-- [kagent.dev/v1alpha3](#kagentdevv1alpha3)
+- [api.kagent.dev/v1alpha3](#apikagentdevv1alpha3)
 
-## kagent.dev/v1alpha3
+## api.kagent.dev/v1alpha3
 
-Package v1alpha3 contains API Schema definitions for the kagent.dev v1alpha3 API group.
+Package v1alpha3 contains API Schema definitions for the api.kagent.dev v1alpha3 API group.
 
 ### Resource Types
+- [Agent](#agent)
 - [AgentTemplate](#agenttemplate)
 - [Harness](#harness)
 - [ModelConfig](#modelconfig)
 - [ModelProviderConfig](#modelproviderconfig)
 - [RemoteMCPServer](#remotemcpserver)
+- [SandboxTemplate](#sandboxtemplate)
+
+#### Agent
+
+Agent is a runnable definition with an explicit template and harness.
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
+| `kind` _string_ | `Agent` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AgentSpec](#agentspec)_ |  |  | **Required** <br /> |
+| `status` _[AgentStatus](#agentstatus)_ |  |  |  |
+
+#### AgentSpec
+
+AgentSpec pairs portable behavior with a runner. References are local to the
+Agent's namespace, including references nested in inline specs.
+
+_Appears in:_
+- [Agent](#agent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `template` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  |  |
+| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  |  |
+| `harness` _[HarnessSpec](#harnessspec)_ |  |  |  |
+| `harnessRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  |  |
+
+#### AgentStatus
+
+AgentStatus reports compilation and preparation of an Agent.
+
+_Appears in:_
+- [Agent](#agent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `observedGeneration` _integer_ |  |  |  |
+| `desiredRevision` _string_ |  |  | MinLength: 1 <br /> |
+| `latestSuccessfulRevision` _string_ |  |  | MinLength: 1 <br /> |
+| `warnings` _string array_ | Warnings reports non-blocking compatibility decisions made while compiling<br />this Agent. |  | MaxItems: 100 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
 
 #### AgentTemplate
 
@@ -25,28 +71,12 @@ AgentTemplate defines portable agent behavior.
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `apiVersion` _string_ | `kagent.dev/v1alpha3` | | |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
 | `kind` _string_ | `AgentTemplate` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  | **Required** <br /> |
-| `status` _[AgentTemplateStatus](#agenttemplatestatus)_ |  |  |  |
-
-#### AgentTemplateHarnessStatus
-
-AgentTemplateHarnessStatus reports runtime revision state for one admitting Harness.
-
-_Appears in:_
-- [AgentTemplateStatus](#agenttemplatestatus)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `harness` _string_ | Harness names a same-namespace Harness whose admission selector matches<br />this AgentTemplate. |  | MinLength: 1 <br />**Required** <br /> |
-| `desiredRevision` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `latestSuccessfulRevision` _string_ |  |  | MinLength: 1 <br /> |
-| `warnings` _string array_ | Warnings reports non-blocking compatibility decisions made while compiling<br />this AgentTemplate for the Harness. |  | MaxItems: 100 <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
 
 #### AgentTemplatePromptSource
 
@@ -88,6 +118,7 @@ _Appears in:_
 AgentTemplateSpec defines portable agent behavior.
 
 _Appears in:_
+- [AgentSpec](#agentspec)
 - [AgentTemplate](#agenttemplate)
 
 | Field | Description | Default | Validation |
@@ -102,49 +133,6 @@ _Appears in:_
 | `tools` _[ToolBinding](#toolbinding) array_ |  |  | MaxItems: 50 <br /> |
 | `skills` _[AgentTemplateSkill](#agenttemplateskill) array_ |  |  | MaxItems: 50 <br /> |
 | `plugins` _[PluginBundle](#pluginbundle) array_ |  |  | MaxItems: 20 <br /> |
-
-#### AgentTemplateStatus
-
-AgentTemplateStatus is the controller-observed state for each admitting Harness.
-
-_Appears in:_
-- [AgentTemplate](#agenttemplate)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `observedGeneration` _integer_ |  |  |  |
-| `harnesses` _[AgentTemplateHarnessStatus](#agenttemplateharnessstatus) array_ | Harnesses has at most one entry for each admitting Harness. |  |  |
-
-#### AgentToolBinding
-
-AgentToolBinding exposes another same-namespace AgentTemplate as a logical tool.
-
-_Appears in:_
-- [ToolBinding](#toolbinding)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `description` _string_ | Description tells the parent when to route work to this binding. |  | MinLength: 1 <br />**Required** <br /> |
-| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  | **Required** <br /> |
-| `isolation` _[AgentToolIsolation](#agenttoolisolation)_ |  | Shared | Enum: [Shared Dedicated] <br /> |
-
-#### AgentToolIsolation
-
-_Underlying type:_ _string_
-
-AgentToolIsolation controls whether a referenced template shares its parent's runtime boundary.
-
-_Validation:_
-- Enum: [Shared Dedicated]
-
-_Appears in:_
-- [AgentToolBinding](#agenttoolbinding)
-
-| Field | Description |
-| --- | --- |
-| `Shared` |  |
-| `Dedicated` |  |
 
 #### AllowedNamespaces
 
@@ -366,17 +354,6 @@ _Appears in:_
 | `Same` | NamespacesFromSame only allows references from the same namespace as the target resource (default).<br /> |
 | `Selector` | NamespacesFromSelector allows references from namespaces matching the selector.<br /> |
 
-#### GDCHServiceAccountConfig
-
-GDCHServiceAccountConfig holds GDCH-specific token exchange parameters.
-
-_Appears in:_
-- [TokenExchangeConfig](#tokenexchangeconfig)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `audience` _string_ | Audience is the token exchange audience URL (the GDC inference gateway base URL) |  | **Required** <br /> |
-
 #### GeminiConfig
 
 GeminiConfig contains Gemini (AI Studio, API-key) specific configuration options
@@ -425,25 +402,13 @@ Harness defines a reusable agent runtime and infrastructure policy.
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `apiVersion` _string_ | `kagent.dev/v1alpha3` | | |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
 | `kind` _string_ | `Harness` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[HarnessSpec](#harnessspec)_ |  |  | **Required** <br /> |
 | `status` _[HarnessStatus](#harnessstatus)_ |  |  |  |
-
-#### HarnessAgentTemplateAdmission
-
-HarnessAgentTemplateAdmission selects AgentTemplates that this Harness admits.
-An omitted admission accepts no AgentTemplates.
-
-_Appears in:_
-- [HarnessSpec](#harnessspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `selector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#labelselector-v1-meta)_ | Selector selects admitted AgentTemplates in the Harness namespace. |  | **Required** <br /> |
 
 #### HarnessCapabilities
 
@@ -470,35 +435,12 @@ _Appears in:_
 | `resume` _boolean_ |  |  | **Required** <br /> |
 | `checkpoint` _boolean_ |  |  | **Required** <br /> |
 
-#### HarnessEnvVar
-
-HarnessEnvVar configures one runtime environment variable.
-
-_Appears in:_
-- [HarnessSpec](#harnessspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `value` _string_ | Value is a literal value, including an empty string. |  |  |
-| `credentialRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | CredentialRef references a key in a same-namespace Secret. |  |  |
-
-#### HarnessSnapshotPolicy
-
-HarnessSnapshotPolicy configures storage for Substrate snapshots.
-
-_Appears in:_
-- [HarnessSubstratePolicy](#harnesssubstratepolicy)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `location` _string_ | Location is the snapshot storage location used by Substrate. |  | Pattern: `^[^[:space:]]+$` <br />**Required** <br /> |
-
 #### HarnessSpec
 
 HarnessSpec defines a reusable runtime and its infrastructure policy.
 
 _Appears in:_
+- [AgentSpec](#agentspec)
 - [Harness](#harness)
 
 | Field | Description | Default | Validation |
@@ -508,9 +450,8 @@ _Appears in:_
 | `claude` _[ClaudeHarness](#claudeharness)_ |  |  |  |
 | `byo` _[BYOHarness](#byoharness)_ |  |  |  |
 | `workload` _[HarnessWorkload](#harnessworkload)_ |  |  | **Required** <br /> |
-| `env` _[HarnessEnvVar](#harnessenvvar) array_ |  |  | MaxItems: 100 <br /> |
-| `substrate` _[HarnessSubstratePolicy](#harnesssubstratepolicy)_ |  |  | **Required** <br /> |
-| `allowedAgentTemplates` _[HarnessAgentTemplateAdmission](#harnessagenttemplateadmission)_ | AllowedAgentTemplates selects AgentTemplates this Harness admits.<br />When omitted, the Harness admits none. |  |  |
+| `env` _[RuntimeEnvVar](#runtimeenvvar) array_ |  |  | MaxItems: 100 <br /> |
+| `substrate` _[RuntimeSubstratePolicy](#runtimesubstratepolicy)_ |  |  | **Required** <br /> |
 
 #### HarnessStatus
 
@@ -524,18 +465,6 @@ _Appears in:_
 | `observedGeneration` _integer_ | ObservedGeneration is the latest Harness generation observed by the controller. |  |  |
 | `capabilities` _[HarnessCapabilities](#harnesscapabilities)_ | Capabilities is the single capability record for the selected runtime. |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions report adapter and dependency health. |  | MaxItems: 8 <br /> |
-
-#### HarnessSubstratePolicy
-
-HarnessSubstratePolicy contains the Substrate policy shared by all runtime variants.
-
-_Appears in:_
-- [HarnessSpec](#harnessspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `workerPoolRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | WorkerPoolRef references a WorkerPool in the Harness namespace. |  | **Required** <br /> |
-| `snapshotPolicy` _[HarnessSnapshotPolicy](#harnesssnapshotpolicy)_ | SnapshotPolicy configures runtime snapshot storage. |  | **Required** <br /> |
 
 #### HarnessWorkload
 
@@ -652,7 +581,7 @@ ModelConfig is the Schema for the modelconfigs API.
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `apiVersion` _string_ | `kagent.dev/v1alpha3` | | |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
 | `kind` _string_ | `ModelConfig` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
@@ -670,6 +599,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `model` _string_ |  |  | **Required** <br /> |
+| `stream` _boolean_ | Stream controls LLM response streaming for the kagent harness. Set to false<br />for model endpoints that do not support streaming. Defaults to true. | true |  |
 | `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig.<br />For the SAPAICore provider, the secret must contain two keys: "client_id" and "client_secret"<br />(the OAuth2 client credentials for SAP AI Core). The apiKeySecretKey field is not used for SAPAICore. |  |  |
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
 | `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
@@ -735,7 +665,7 @@ It represents a model provider configuration with automatic model discovery.
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `apiVersion` _string_ | `kagent.dev/v1alpha3` | | |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
 | `kind` _string_ | `ModelProviderConfig` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
@@ -823,7 +753,6 @@ _Appears in:_
 | `timeout` _integer_ | Timeout |  |  |
 | `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh] <br /> |
 | `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects which OpenAI HTTP API the runtime uses for this model.<br />chatCompletions (default) posts to /v1/chat/completions.<br />responses posts to /v1/responses. Use responses for OpenAI-compatible<br />gateways or models that require the Responses API. | chatCompletions | Enum: [chatCompletions responses] <br /> |
-| `tokenExchange` _[TokenExchangeConfig](#tokenexchangeconfig)_ | TokenExchange configures dynamic bearer token acquisition via credential exchange.<br />Requires apiKeySecret (used as the service account secret) and is mutually exclusive with apiKeyPassthrough. |  |  |
 
 #### OpenAIReasoningEffort
 
@@ -857,7 +786,7 @@ RemoteMCPServer is the Schema for the RemoteMCPServers API.
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `apiVersion` _string_ | `kagent.dev/v1alpha3` | | |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
 | `kind` _string_ | `RemoteMCPServer` | | |
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
@@ -896,8 +825,8 @@ _Appears in:_
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  | 30s |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
-| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment<br />A cross-namespace-permitting value (from: All or from: Selector) is<br />mutually exclusive with spec.tls.caCertSecretRef (enforced by a spec-level<br />XValidation rule): a pinned CA Secret is mounted onto the consuming agent's<br />pod by bare name and Kubernetes resolves it in the agent's namespace, not<br />this RemoteMCPServer's, so a CA-pinning RemoteMCPServer cannot be referenced<br />cross-namespace. from: Same (the default) is always allowed. |  |  |
-| `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />Use this for HTTPS upstreams that present a certificate the agent's<br />system trust store does not include (corporate CA, self-signed cert<br />on a test fixture, internal MCP gateway). Reuses the same TLSConfig<br />type as ModelConfig.spec.tls — disableVerify turns off certificate<br />validation entirely, caCertSecretRef + caCertSecretKey point at a<br />PEM bundle Secret in the same namespace, and disableSystemCAs<br />trusts only the named bundle.<br />Note one asymmetry with ModelConfig: a spec-level XValidation rule<br />on RemoteMCPServer rejects spec.tls when spec.url has the http://<br />scheme (a TLS opinion contradicts a plaintext URL). ModelConfig has<br />no equivalent rule, so a TLS block can sit alongside any baseUrl. |  |  |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces defines which namespaces are allowed to reference this RemoteMCPServer.<br />This follows the Gateway API pattern for cross-namespace route attachments.<br />If not specified, only Agents in the same namespace can reference this RemoteMCPServer.<br />See: https://gateway-api.sigs.k8s.io/guides/multiple-ns/#cross-namespace-route-attachment |  |  |
+| `tls` _[TLSConfig](#tlsconfig)_ | TLS configuration for the upstream MCP server connection.<br />DisableVerify turns off certificate validation for development or testing.<br />Custom CA bundles are not supported. TLS must be unset for HTTP URLs. |  |  |
 
 #### RemoteMCPServerStatus
 
@@ -911,7 +840,43 @@ _Appears in:_
 | `observedGeneration` _integer_ | INSERT ADDITIONAL STATUS FIELD - define observed state of cluster<br />Important: Run "make" to regenerate code after modifying this file |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  |  |
 | `discoveredTools` _[MCPTool](#mcptool) array_ |  |  |  |
-| `secretHash` _string_ | SecretHash stores a hash of the TLS Secret referenced by spec.tls so<br />agents that consume this RemoteMCPServer can detect cert rotation and<br />roll on the next reconcile. Empty when spec.tls.caCertSecretRef is unset. |  |  |
+
+#### RuntimeEnvVar
+
+RuntimeEnvVar configures one literal runtime environment variable.
+
+_Appears in:_
+- [HarnessSpec](#harnessspec)
+- [SandboxTemplateSpec](#sandboxtemplatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `value` _string_ | Value is a literal value, including an empty string. |  | **Required** <br /> |
+
+#### RuntimeSnapshotPolicy
+
+RuntimeSnapshotPolicy configures storage for Substrate snapshots.
+
+_Appears in:_
+- [RuntimeSubstratePolicy](#runtimesubstratepolicy)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `location` _string_ | Location is the snapshot storage location used by Substrate. |  | Pattern: `^[^[:space:]]+$` <br />**Required** <br /> |
+
+#### RuntimeSubstratePolicy
+
+RuntimeSubstratePolicy contains the Substrate policy shared by all runtime variants.
+
+_Appears in:_
+- [HarnessSpec](#harnessspec)
+- [SandboxTemplateSpec](#sandboxtemplatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `workerPoolRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | WorkerPoolRef references a WorkerPool in the resource's namespace. |  | **Required** <br /> |
+| `snapshotPolicy` _[RuntimeSnapshotPolicy](#runtimesnapshotpolicy)_ | SnapshotPolicy configures runtime snapshot storage. |  | **Required** <br /> |
 
 #### S3Object
 
@@ -941,6 +906,58 @@ _Appears in:_
 | `resourceGroup` _string_ | Resource group in SAP AI Core | default |  |
 | `authUrl` _string_ | OAuth2 token endpoint URL (e.g., https://tenant.authentication.eu10.hana.ondemand.com) |  |  |
 
+#### SandboxTemplate
+
+SandboxTemplate defines standalone sandbox configuration. Creating one does not
+allocate a user sandbox. The controller prepares its reusable runtime.
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
+| `kind` _string_ | `SandboxTemplate` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[SandboxTemplateSpec](#sandboxtemplatespec)_ |  |  | **Required** <br /> |
+| `status` _[SandboxTemplateStatus](#sandboxtemplatestatus)_ |  |  |  |
+
+#### SandboxTemplateSpec
+
+SandboxTemplateSpec defines standalone sandbox environment configuration.
+
+_Appears in:_
+- [SandboxTemplate](#sandboxtemplate)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `workload` _[SandboxTemplateWorkload](#sandboxtemplateworkload)_ | Workload selects the immutable runtime image. |  | **Required** <br /> |
+| `env` _[RuntimeEnvVar](#runtimeenvvar) array_ | Env supplies runtime environment defaults.<br />Credential references do not grant permission to read the referenced Secret. |  | MaxItems: 100 <br /> |
+| `substrate` _[RuntimeSubstratePolicy](#runtimesubstratepolicy)_ | Substrate configures compute placement and snapshot storage. References are<br />resolved in this template's namespace. |  | **Required** <br /> |
+
+#### SandboxTemplateStatus
+
+SandboxTemplateStatus reports preparation of the current template inputs.
+
+_Appears in:_
+- [SandboxTemplate](#sandboxtemplate)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `observedGeneration` _integer_ | ObservedGeneration is the generation considered by preparation. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions describe whether a prepared revision is available. |  |  |
+
+#### SandboxTemplateWorkload
+
+SandboxTemplateWorkload identifies available software without selecting an agent
+or guest entrypoint. The consumer owns startup.
+
+_Appears in:_
+- [SandboxTemplateSpec](#sandboxtemplatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `image` _string_ | Image is an OCI image reference pinned by sha256 digest. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br />**Required** <br /> |
+
 #### SecretReference
 
 SecretReference references a Kubernetes Secret that must contain exactly one data key
@@ -953,12 +970,23 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ | Name is the name of the secret in the same namespace as the ModelProviderConfig. |  | **Required** <br /> |
 
+#### SubAgentToolBinding
+
+SubAgentToolBinding exposes a same-namespace AgentTemplate as a logical tool.
+
+_Appears in:_
+- [ToolBinding](#toolbinding)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+| `description` _string_ | Description tells the parent when to route work to this binding. |  | MinLength: 1 <br />**Required** <br /> |
+| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | TemplateRef selects a Shared subagent compiled into the parent's runtime using its Harness. |  | **Required** <br /> |
+
 #### TLSConfig
 
 TLSConfig contains TLS/SSL configuration options for outbound HTTPS
-connections from the agent (model provider, RemoteMCPServer). The
-XValidation rules below apply at admission to every CRD field that
-uses TLSConfig, so callers don't need to re-declare them per spec.
+connections from the agent (model provider, RemoteMCPServer).
 
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
@@ -967,41 +995,10 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `disableVerify` _boolean_ | DisableVerify disables SSL certificate verification entirely.<br />When false (default), SSL certificates are verified.<br />When true, SSL certificate verification is disabled.<br />WARNING: This should ONLY be used in development/testing environments.<br />Production deployments MUST use proper certificates. | false |  |
-| `caCertSecretRef` _string_ | CACertSecretRef is a reference to a Kubernetes Secret containing<br />CA certificate(s) in PEM format. The Secret must be in the same<br />namespace as the resource referencing it (ModelConfig,<br />RemoteMCPServer, or any future consumer of TLSConfig).<br />When set, the certificate will be used to verify the upstream's<br />SSL certificate. |  |  |
-| `caCertSecretKey` _string_ | CACertSecretKey is the key within the Secret that contains the<br />CA certificate data (PEM-encoded). Required when CACertSecretRef<br />is set — admission rejects ref-without-key regardless of<br />DisableVerify (see the TLSConfig-level XValidation rules). |  |  |
-| `disableSystemCAs` _boolean_ | DisableSystemCAs disables the use of system CA certificates.<br />When false (default), system CA certificates are used for verification (safe behavior).<br />When true, only the custom CA from CACertSecretRef is trusted.<br />This allows strict security policies where only corporate CAs should be trusted. | false |  |
-
-#### TokenExchangeConfig
-
-TokenExchangeConfig configures dynamic bearer token acquisition before model calls.
-
-_Appears in:_
-- [OpenAIConfig](#openaiconfig)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `type` _[TokenExchangeType](#tokenexchangetype)_ |  |  | Enum: [GDCHServiceAccount] <br />**Required** <br /> |
-| `gdchServiceAccount` _[GDCHServiceAccountConfig](#gdchserviceaccountconfig)_ |  |  |  |
-
-#### TokenExchangeType
-
-_Underlying type:_ _string_
-
-TokenExchangeType identifies the token exchange mechanism
-
-_Validation:_
-- Enum: [GDCHServiceAccount]
-
-_Appears in:_
-- [TokenExchangeConfig](#tokenexchangeconfig)
-
-| Field | Description |
-| --- | --- |
-| `GDCHServiceAccount` |  |
 
 #### ToolBinding
 
-ToolBinding selects exactly one MCP or AgentTemplate-backed tool source.
+ToolBinding selects exactly one MCP or subagent tool source.
 
 _Appears in:_
 - [AgentTemplateSpec](#agenttemplatespec)
@@ -1009,7 +1006,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `mcp` _[MCPToolBinding](#mcptoolbinding)_ |  |  |  |
-| `agent` _[AgentToolBinding](#agenttoolbinding)_ |  |  |  |
+| `subAgent` _[SubAgentToolBinding](#subagenttoolbinding)_ |  |  |  |
 
 #### ValueRef
 
