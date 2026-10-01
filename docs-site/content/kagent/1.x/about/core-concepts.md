@@ -1,62 +1,68 @@
 ---
 title: Core concepts
-description: Learn the Harness, AgentTemplate, AgentInstance, and Actor model that kagent 1.0 is built on.
+description: Learn the Harness, AgentTemplate, Agent, Session, and Actor model that kagent 1.0 is built on.
 weight: 20
 author: kagent.dev
 ---
 
 ## kagent 1.0
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, and **AgentInstance**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
 
-The new model separates what an agent can do from how it is allowed to run:
+The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 
 - A [**Harness**](#harness) defines how an agent is allowed to run. It picks a runtime and the infrastructure policy around it.
 - An [**AgentTemplate**](#agenttemplate) defines what an agent can do: its model, prompt, and tools.
-- An [**AgentInstance**](#agentinstance) is a running conversation, created by pairing the two.
-- An [**Actor**](#actor) is the sandboxed process, provided by Substrate, that an AgentInstance runs on.
+- An [**Agent**](#agent) pairs one AgentTemplate with one Harness. The Agent is what callers address and what the controller compiles.
+- A [**Session**](#session) is a running conversation with an Agent.
+- An [**Actor**](#actor) is the sandboxed process, provided by Substrate, that a Session runs on.
 
-The following diagram shows how a Harness and an AgentTemplate become a running conversation. The kagent controller compiles the Harness and AgentTemplate pair into an {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}, and each AgentInstance is created from that ActorTemplate and runs on an Actor.
+The following diagram shows how an Agent becomes a running conversation. The kagent controller compiles each Agent into an {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}, and each Session is created from that ActorTemplate and runs on an Actor.
 </br></br>
 
 ```mermaid
 flowchart LR
-    harness["Harness<br>(CRD)"]
     template["AgentTemplate<br>(CRD)"]
+    harness["Harness<br>(CRD)"]
+    agent["Agent<br>(CRD)"]
     controller["kagent controller"]
     actortemplate["ActorTemplate<br>(compiled, immutable)"]
-    instance["AgentInstance<br>(gRPC + database)"]
+    session["Session<br>(gRPC + database)"]
     actor["Actor<br>(Substrate)"]
 
-    harness --> controller
-    template --> controller
-    controller -->|compiles the pair into| actortemplate
-    actortemplate -->|instantiated as| instance
-    instance -->|runs on| actor
+    template --> agent
+    harness --> agent
+    agent --> controller
+    controller -->|compiles into| actortemplate
+    actortemplate -->|instantiated as| session
+    session -->|runs on| actor
 
     classDef crd stroke:#a78bfa,stroke-width:2px
-    class harness,template crd
+    class template,harness,agent crd
 ```
 
-The Harness and AgentTemplate are the only two resources that an operator applies directly. The kagent controller watches for a valid pair and compiles it into an ActorTemplate. From there, each AgentInstance created from that ActorTemplate gets its own Actor to run on.
+The three custom resources are what an operator applies directly. The kagent controller watches each Agent, resolves the template and harness that it names, and compiles the result into an ActorTemplate. From there, each Session created against that Agent gets its own Actor to run on.
+
+> [!IMPORTANT]
+> All three resources belong to the `api.kagent.dev` API group, which keeps them separate from the `kagent.dev` resources that 0.x serves, including 0.x's own `Agent` kind. The two groups share no conversion. On a cluster that serves both, qualify the resource name as `kubectl get agents.api.kagent.dev` to select the 1.0 API.
 
 ## Harness
 
 A **Harness** is a Kubernetes custom resource that defines _how an agent is allowed to run_. It specifies:
 
 - **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own Go and Python engines, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
-- **Workload**: The container image and environment the runtime runs in.
+- **Workload**: The container image, command, and arguments that the runtime runs as.
+- **Environment**: Literal environment values for the runtime, set in `spec.env`.
 - **Substrate policy**: The [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) that the Harness's Actors are scheduled onto, and where their {{< gloss "Snapshot" >}}snapshots{{< /gloss >}} are stored.
-- **Allowed AgentTemplates**: A selector that names which AgentTemplates are permitted to run on this Harness.
 
-That last point is a one-way match, not a mutual handshake. An AgentTemplate has no field naming a Harness. Instead, a Harness's `allowedAgentTemplates` selector matches on labels, and any AgentTemplate in the same namespace carrying a matching label becomes eligible to run on it. Whoever controls a Harness's selector decides which AgentTemplates it accepts.
+A Harness names no AgentTemplate, and an AgentTemplate names no Harness. An [Agent](#agent) pairs the two, and nothing pairs them implicitly.
 
 > [!NOTE]
-> Each runtime accepts a different subset of configuration. The `codex` and `claude` runtimes support fewer model providers than `kagent` does, and neither accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. A Harness and AgentTemplate pair that asks for something its runtime cannot do reports the `Compatible` condition as `False`, with the reason `UnsupportedConfiguration` and a message naming the specific setting.
+> Each runtime accepts a different subset of configuration. The `codex` and `claude` runtimes support fewer model providers than `kagent` does, and neither accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. An Agent that asks for something its runtime cannot do reports the `Compatible` condition as `False`, with the reason `UnsupportedConfiguration` and a message naming the specific setting.
 
 A `byo` Harness has one extra requirement: it must set `spec.workload.command`, because kagent has no default entrypoint for an image that it does not build.
 
-A Harness owns no running compute by itself. Applying one registers a runtime and policy that an AgentTemplate can pair with.
+A Harness owns no running compute by itself. Applying one registers a runtime and policy that an Agent can select.
 
 For the complete Harness schema, see the [API reference]({{< link path="reference/api-ref#harness" >}}).
 
@@ -67,44 +73,85 @@ For the complete Harness schema, see the [API reference]({{< link path="referenc
 
 An **AgentTemplate** is a Kubernetes custom resource that defines _what an agent does_. It specifies:
 
-- **Model configuration**: The large language model (LLM) provider and model the agent uses. This is the only field an AgentTemplate strictly requires.
+- **Model configuration**: The large language model (LLM) provider and model the agent uses.
 - **System prompt**: A literal prompt, or a Go-templated one that can `include` shared ConfigMaps.
-- **Tools**: A list of {{< gloss "Tool binding" >}}tool bindings{{< /gloss >}} that the agent can call. Each binding is either a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server, or another AgentTemplate used as an agent tool (see [Agent tools](#agent-tools)).
+- **Tools**: A list of {{< gloss "Tool binding" >}}tool bindings{{< /gloss >}} that the agent can call. Each binding is either a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server, or another AgentTemplate used as a subagent tool (see [Subagent tools](#subagent-tools)).
 - **Skills** and **plugins**: Reusable capability packages, sourced from an Open Container Initiative (OCI) registry, Git, or S3.
 
-An AgentTemplate does nothing on its own. It becomes runnable once it is paired with a Harness whose `allowedAgentTemplates` selector accepts it.
+An AgentTemplate does nothing on its own. It becomes runnable once an Agent pairs it with a Harness. One AgentTemplate can serve many Agents, so expect fewer templates than Agents where several runtimes run the same behavior.
 
 For the complete AgentTemplate schema, see the [API reference]({{< link path="reference/api-ref#agenttemplate" >}}).
 
-## AgentInstance
+## Agent
 
-An **AgentInstance** is a _running, conversational pairing_ of a Harness and an AgentTemplate. Unlike Harness and AgentTemplate, an AgentInstance is not a Kubernetes custom resource, and does not live in etcd. kagent's own gRPC API creates it, and kagent's PostgreSQL database tracks it.
+An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with one Harness_. The pairing is explicit: each side takes either a reference to an existing resource or a complete inline spec, and exactly one of the two per side.
+
+| Field | What it selects |
+| ----- | --------------- |
+| `spec.templateRef` | An existing AgentTemplate in the Agent's namespace, by name |
+| `spec.template` | A complete AgentTemplate spec, written inline |
+| `spec.harnessRef` | An existing Harness in the Agent's namespace, by name |
+| `spec.harness` | A complete Harness spec, written inline |
+
+The two sides are independent, so an Agent can reference both, inline both, or mix the two. An inline spec is a complete value rather than an override of a referenced one, and kagent creates no Kubernetes object to back it. Every reference, including one nested inside an inline spec, resolves in the Agent's own namespace.
+
+This Agent references both sides:
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: assistant
+  namespace: kagent
+spec:
+  templateRef:
+    name: shared-context
+  harnessRef:
+    name: kagent
+```
+
+The Agent owns readiness. Its status carries the desired revision, the latest revision that compiled and prepared successfully, any non-blocking compatibility warnings, and the `Accepted`, `ResolvedRefs`, `Compatible`, and `Ready` conditions. An AgentTemplate and a Harness are shared configuration and carry no runtime status of their own.
+
+Deleting an Agent retires its definition. Existing Sessions keep the revisions that they pinned. Recreating an Agent under the same name creates a new identity, which cannot inherit the deleted Agent's last successful revision.
+
+For the complete Agent schema, see the [API reference]({{< link path="reference/api-ref#agent" >}}).
+
+## Session
+
+A **Session** is a _running conversation with one Agent_. Unlike the three resources it is built from, a Session is not a Kubernetes custom resource and does not live in etcd. kagent's own gRPC API creates it, and kagent's PostgreSQL database tracks it.
 
 This split is deliberate, not an implementation detail to work around:
 
-- Applying a Harness or AgentTemplate is a **Kubernetes-native operation**, governed by Kubernetes RBAC, exactly like any other CRD.
-- Creating, suspending, resuming, sharing, or deleting an AgentInstance, and holding a conversation with it, are **kagent-native operations**, governed by kagent's own gRPC authentication and authorization, independent of who can `kubectl apply` a Harness or AgentTemplate.
+- Applying a Harness, AgentTemplate, or Agent is a **Kubernetes-native operation**, governed by Kubernetes RBAC, exactly like any other CRD.
+- Creating, suspending, resuming, sharing, or deleting a Session, and holding a conversation with it, are **kagent-native operations**, governed by kagent's own gRPC authentication and authorization, independent of who can `kubectl apply` an Agent.
 
-Under the hood, the kagent controller watches for valid Harness and AgentTemplate pairs and compiles each pair into an `ActorTemplate`, a Substrate resource that holds everything Substrate needs to start an Actor.
+Each compile produces one **{{< gloss "Revision" >}}revision{{< /gloss >}}**, identified by a digest: a SHA-256 hash of the compiled configuration. Because that digest is derived from the configuration itself, editing an Agent or either resource it references compiles to a different digest, and therefore becomes a separate ActorTemplate. kagent never rewrites an existing one.
 
-Each compile produces one **{{< gloss "Revision" >}}revision{{< /gloss >}}**, identified by a digest: a SHA-256 hash of the compiled configuration. Because that digest is derived from the configuration itself, editing a Harness or AgentTemplate compiles to a different digest, and therefore becomes a separate ActorTemplate. kagent never rewrites an existing one.
+That immutability keeps running conversations stable. When you create a Session, kagent looks up the Agent's latest successful revision and creates an Actor from it. Editing the Agent afterward does not disturb that Session, which keeps running on the revision that it was created from. Only Sessions created after the edit use the new revision.
 
-That immutability keeps running conversations stable. When you create an AgentInstance, kagent looks up the newest revision that compiled successfully for that Harness and AgentTemplate pair, and then creates an Actor from that revision. Editing the Harness or AgentTemplate afterward does not disturb that AgentInstance, which keeps running on the revision that it was created from. Only AgentInstances created after the edit use the new revision.
+Create a Session with the command line interface:
 
-Once created, an AgentInstance talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. The gateway resolves each request to the right AgentInstance and forwards it to the Actor running behind it.
+```bash
+kagent agent session create --agent assistant -n kagent
+```
 
-For the AgentInstance gRPC service definition, see the [API reference]({{< link path="reference/api-ref" >}}).
+Once created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session: the HTTP endpoint is `/agents/{namespace}/{name}`, and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
+
+A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window, and `0` turns the worker off. For what the deletion retains, see [Operational considerations]({{< link path="operations/operational-considerations" >}}).
 
 ## Actor
 
-An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), that _runs an AgentInstance's conversation loop_. Every AgentInstance is backed by an Actor.
+An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), that _runs a Session's conversation loop_. Every Session is backed by an Actor.
 
-Actors are the reason why AgentInstances can suspend and resume cheaply instead of staying resident. An idle Actor can be snapshotted and torn down, then resumed from that snapshot on demand. To understand the full mechanics ({{< gloss "Worker" >}}Workers{{< /gloss >}}, {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}}, ActorTemplates, and snapshotting), see [Agent Substrate architecture]({{< link path="about/architecture/agent-substrate" >}}).
+Actors are the reason why Sessions can suspend and resume cheaply instead of staying resident. An idle Actor can be snapshotted and torn down, then resumed from that snapshot on demand. To understand the full mechanics ({{< gloss "Worker" >}}Workers{{< /gloss >}}, {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}}, ActorTemplates, and snapshotting), see [Agent Substrate architecture]({{< link path="about/architecture/agent-substrate" >}}).
 
-## Agent tools
+## Subagent tools
 
 An AgentTemplate's tools are not limited to MCP servers. A tool binding can also point at another AgentTemplate, which lets one agent hand work to a specialist agent.
 
-Every agent-tool binding carries an isolation mode. kagent implements only `Shared`, which runs the bound agent inside its parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. The schema also accepts `Dedicated`, a mode that would give the bound agent an Actor of its own, but a binding that sets it fails to compile and the pair never becomes ready. For details about both modes, see [Shared and Dedicated isolation]({{< link path="skills-and-mcp/about-tools#shared-and-dedicated-isolation" >}}).
+Each subagent binding sets `tools[].subAgent.templateRef`, naming an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
 
-Because a `Shared` binding nests one agent inside another's runtime boundary, the compiler constrains the shape of the resulting tree. Nesting stops at one level: a bound agent cannot bind a third. That cap keeps the model predictable, because every agent runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must satisfy, see [What a Shared tree allows]({{< link path="skills-and-mcp/about-tools#what-a-shared-tree-allows" >}}).
+Because a subagent runs inside its parent's runtime boundary, the compiler constrains the shape of the resulting tree. Nesting stops at one level: a bound template cannot bind a third. That cap keeps the model predictable, because every agent runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must satisfy, see [What a subagent tree allows]({{< link path="skills-and-mcp/about-tools#what-a-subagent-tree-allows" >}}).
+
+> [!NOTE]
+> Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor and reach it over A2A, are not part of the served API. The `subAgent.agentRef` field that would select one is deferred until a dedicated subagent can create and invoke its own Session.

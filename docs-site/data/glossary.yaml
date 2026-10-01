@@ -29,7 +29,7 @@
 # claims them.
 
 Actor:
-  short: "The sandboxed unit of compute, provided by Agent Substrate, that runs an AgentInstance's conversation loop. Every AgentInstance is backed by one."
+  short: "The sandboxed unit of compute, provided by Agent Substrate, that runs a Session's conversation loop. Every Session is backed by one."
   link: "/docs/kagent/1.x/about/core-concepts/#actor"
 
 Atespace:
@@ -41,23 +41,27 @@ Agent Substrate:
   link: "/docs/kagent/1.x/about/architecture/agent-substrate/"
 
 ActorTemplate:
-  short: "The compiled, immutable definition that the kagent controller produces from a Harness and AgentTemplate pair. Every Actor is created from one."
+  short: "The compiled, immutable definition that the kagent controller produces from an Agent. Every Actor is created from one."
   link: "/docs/kagent/1.x/about/architecture/agent-substrate/#actortemplate"
 
-AgentInstance:
-  short: "A running, conversational pairing of a Harness and an AgentTemplate. Unlike the two, it is not a Kubernetes resource: kagent's gRPC API creates it and its database tracks it."
-  link: "/docs/kagent/1.x/about/core-concepts/#agentinstance"
+Agent:
+  short: "A Kubernetes custom resource that pairs one AgentTemplate with one Harness. Each side takes either an inline spec or a reference to an existing resource, and the controller compiles the pair into a revision."
+  link: "/docs/kagent/1.x/about/core-concepts/#agent"
+
+Session:
+  short: "A running conversation with one Agent. Unlike the resources it is built from, a Session is not a Kubernetes resource: kagent's gRPC API creates it and its PostgreSQL database tracks it."
+  link: "/docs/kagent/1.x/about/core-concepts/#session"
 
 Checkpoint:
-  short: "A durable pin on the snapshot that an AgentInstance most recently suspended to, and a record of how far its transcript had advanced. Not a new state: tagging copies the snapshot so that Agent Substrate does not collect it, and a second AgentInstance can be forked from it."
+  short: "A durable pin on the snapshot that a Session most recently suspended to, and a record of how far its transcript had advanced. Not a new state: tagging copies the snapshot so that Agent Substrate does not collect it, and a second Session can be forked from it."
   link: "/docs/kagent/1.x/substrate-runtime/suspend-and-resume/#checkpoints"
 
 AgentTemplate:
-  short: "A Kubernetes custom resource defining what an agent does: its model, system prompt, tools, skills, and plugins. It runs only once a Harness accepts it."
+  short: "A Kubernetes custom resource defining what an agent does: its model, system prompt, tools, skills, and plugins. It runs only once an Agent pairs it with a Harness."
   link: "/docs/kagent/1.x/about/core-concepts/#agenttemplate"
 
 Harness:
-  short: "A Kubernetes custom resource defining how an agent is allowed to run: its runtime, workload image, WorkerPool and snapshot storage, and which AgentTemplates it accepts."
+  short: "A Kubernetes custom resource defining how an agent is allowed to run: its runtime, workload image, and WorkerPool and snapshot storage. An Agent pairs it with the AgentTemplate it runs."
   link: "/docs/kagent/1.x/about/core-concepts/#harness"
 
 Worker:
@@ -65,7 +69,7 @@ Worker:
   link: "/docs/kagent/1.x/about/architecture/agent-substrate/#workers-and-workerpools"
 
 WorkerPool:
-  short: "A Kubernetes custom resource declaring how many Workers to keep running and which sandbox class they use. An operator must provision one before any Harness can create AgentInstances."
+  short: "A Kubernetes custom resource declaring how many Workers to keep running and which sandbox class they use. An operator must provision one before any Agent can compile."
   link: "/docs/kagent/1.x/about/architecture/agent-substrate/#workers-and-workerpools"
 
 
@@ -81,7 +85,7 @@ RemoteMCPServer:
   link: "/docs/kagent/1.x/skills-and-mcp/about-tools/#mcp-tools"
 
 Revision:
-  short: "The compiled, immutable output of one Harness and AgentTemplate pairing, identified by a content digest. An AgentInstance runs the revision it was created from for its whole life, so editing either resource affects only instances created afterward."
+  short: "The compiled, immutable output of one Agent, identified by a content digest. A Session runs the revision it was created from for its whole life, so editing the Agent affects only sessions created afterward."
 
 Snapshot:
   short: "The stored state that an Actor suspends to, held in object storage. Resuming restores the Actor from its most recent snapshot, which is what makes suspending idle agents cheap."
@@ -92,11 +96,11 @@ Tag:
   link: "/docs/kagent/1.x/about/architecture/agent-substrate/#suspend-snapshot-and-resume"
 
 Fork:
-  short: "A second AgentInstance created from a checkpoint, continuing the conversation from the point that the checkpoint pinned. A fork inherits the checkpoint's revision, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork, leaving the original's history untouched."
+  short: "A second Session created from a checkpoint, continuing the conversation from the point that the checkpoint pinned. A fork inherits the checkpoint's revision, so later edits to the Agent do not change what it runs, and new turns append only to the fork, leaving the original's history untouched."
   link: "/docs/kagent/1.x/examples/agent-substrate/#fork-the-conversation-into-a-second-agent"
 
 Transcript:
-  short: "The record of an AgentInstance's conversation, held server-side and append-only. It survives the Actor suspending between turns, and a resumed runtime cannot shrink it."
+  short: "The record of a Session's conversation, held server-side and append-only. It survives the Actor suspending between turns, and a resumed runtime cannot shrink it."
 
 Skill:
   short: "A packaged piece of know-how that an agent can pick up: a directory holding a SKILL.md file of instructions, plus any scripts or reference files those instructions use. An AgentTemplate attaches skills by naming where each one comes from."
@@ -119,7 +123,7 @@ MCP:
   link: "/docs/kagent/1.x/skills-and-mcp/about-tools/#mcp-tools"
 
 A2A:
-  short: "The Agent-to-Agent protocol, which callers and other agents use to talk to an AgentInstance. The conversation's context identifier is the AgentInstance ID, so a second message on the same ID continues the same conversation."
+  short: "The Agent-to-Agent protocol, which callers and other agents use to talk to an Agent. The conversation's context identifier is the Session ID, so a second message on the same ID continues the same conversation."
   link: "/docs/kagent/1.x/examples/a2a-agents/#about-the-kagent-a2a-service"
 
 gVisor:
