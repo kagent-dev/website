@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Look up every field in the kagent v1alpha3 custom resources, including AgentTemplate, Harness, ModelConfig, and RemoteMCPServer.
+description: Look up every field in the kagent v1alpha3 custom resources, including Agent, AgentTemplate, Harness, SandboxTemplate, ModelConfig, and RemoteMCPServer.
 weight: 10
 author: kagent.dev
 ---

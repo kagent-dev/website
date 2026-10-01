@@ -63,7 +63,7 @@ Agent Substrate suspends an Actor as soon as a response completes. The controlle
 
 Turn on content capture in the kagent Helm release, then create a Session that picks up the new setting.
 
-1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent rebuilds the pair with the new setting. The command first waits for any rebuild that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
+1. Save the current revision of your Agent. A later step uses it to tell when kagent rebuilds the Agent with the new setting. The command first waits for any rebuild that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
    for i in $(seq 1 60); do
      REVISIONS=$(kubectl get agent my-first-agent -n kagent \

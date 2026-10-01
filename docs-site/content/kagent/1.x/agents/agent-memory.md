@@ -193,7 +193,7 @@ Each memory is one row in the `memory` table, which the vector migration created
    | Column | What it holds |
    | ------ | ------------- |
    | `content` | The text that the agent saved. Retrieval returns it to a later conversation. |
-   | `agent_name` | The agent that owns the memory, written as `<namespace>__NS__<agent-template>_<harness>` with every hyphen replaced by an underscore. The AgentTemplate and Harness pair identifies a runtime, so the same AgentTemplate on two Harnesses owns two separate sets of memories. |
+   | `agent_name` | The agent that owns the memory, written as `<namespace>__NS__<agent>` with every hyphen replaced by an underscore. The name identifies one {{< gloss "Agent" >}}Agent{{< /gloss >}}, so the same AgentTemplate paired into two Agents owns two separate sets of memories. |
    | `user_id` | The user that the memory belongs to. |
    | `embedding` | The 768-dimensional vector that similarity search compares a query against. |
    | `created_at` and `expires_at` | When kagent wrote the memory, and `ttlDays` after that. |

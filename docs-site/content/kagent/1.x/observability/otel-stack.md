@@ -461,7 +461,7 @@ Log in to Grafana, and query each backend from the **Explore** view.
 4. Open **Explore**, and review each signal.
    {{< tabs >}}
    {{% tab name="Traces" %}}
-   Select the **Tempo** data source, then select the **Search** query type. From the **Service Name** list, select `my-first-agent`, the service that the AgentTemplate and Harness pair reports as, and run the query. Open a trace to see the controller, proxy, and agent runtime spans of one request.
+   Select the **Tempo** data source, then select the **Search** query type. From the **Service Name** list, select `my-first-agent`, the service that the Agent reports as, and run the query. Open a trace to see the controller, proxy, and agent runtime spans of one request.
 
    To see Agent Substrate's own work, select one of its services from the **Service Name** list instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
    {{% /tab %}}

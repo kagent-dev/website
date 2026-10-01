@@ -32,7 +32,7 @@ Agent conversations are mostly idle, so Agent Substrate does not hold a pod open
 
 ## How is 1.0 different from 0.x?
 
-1.0 changes how agents run and how you declare them. Agents no longer run as long-lived Deployments; each conversation runs as a sandboxed Actor on Agent Substrate that suspends between turns. The single 0.x `Agent` resource is replaced by the Harness and AgentTemplate pair, `ToolServer` is replaced by {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}}, and the API group moves from `v1alpha2` to `v1alpha3`.
+1.0 changes how agents run and how you declare them. Agents no longer run as long-lived Deployments; each conversation runs as a sandboxed Actor on Agent Substrate that suspends between turns. The single 0.x `Agent` resource is replaced by an AgentTemplate, a Harness, and a new `Agent` that pairs them, `ToolServer` is replaced by {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}}, and the API group moves from `kagent.dev/v1alpha2` to `api.kagent.dev/v1alpha3`.
 
 1.0 has no in-place upgrade path. An existing 0.10.x installation has no migration bridge to 1.0, so moving to 1.0 means standing up a new installation and recreating your resources on it. For the procedure, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}). [Version support]({{< link path="reference/versions#release-support-and-compatibility" >}}) records which upgrade paths are supported, and the [release notes]({{< link path="reference/release-notes/1.0#removed-and-replaced-resources" >}}) list the breaking changes.
 

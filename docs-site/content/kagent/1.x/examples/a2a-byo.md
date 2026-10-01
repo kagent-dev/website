@@ -13,7 +13,7 @@ The agent that you build here calls no model and binds no tools. It answers ever
 
 1. [Install kagent]({{< link path="setup/installation#verify-the-installation" >}}), including the port-forward to the controller's gRPC API.
 
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a Harness and AgentTemplate pair to model this one on, and a snapshot location to reuse.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a Harness, an AgentTemplate, and an Agent to model these on, and a snapshot location to reuse.
 
 3. Install the following tools.
    * [Docker](https://docs.docker.com/get-started/get-docker/)
