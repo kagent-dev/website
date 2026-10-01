@@ -22,7 +22,7 @@ The `Foundry` provider calls a model deployment in an Azure AI Foundry resource.
 3. Create a `ModelConfig` for your Foundry deployment.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: foundry-model-config
@@ -109,7 +109,7 @@ A Foundry deployment can also serve the embedding model behind [long-term memory
 
 ```yaml
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: ModelConfig
 metadata:
   name: foundry-embeddings

@@ -38,7 +38,7 @@ Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the sch
 1. Apply an AgentTemplate with a schema. The `kagent.dev/harness` label matches the `allowedAgentTemplates` selector of `my-first-harness`.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: structured-answer
@@ -130,7 +130,7 @@ Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that sev
 2. Apply an AgentTemplate that references the key.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: structured-answer-shared

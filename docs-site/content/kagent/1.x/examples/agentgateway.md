@@ -171,7 +171,7 @@ Two paths are worth checking in order. Calling the gateway directly isolates the
 4. Create an agent that uses the guarded model, and an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} to talk to it.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: support-triage

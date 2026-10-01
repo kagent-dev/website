@@ -78,7 +78,7 @@ Create a `ModelConfig` that points at the Ollama server. No Secret is needed, be
 
 ```yaml
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: ModelConfig
 metadata:
   name: llama3-model-config

@@ -68,7 +68,7 @@ A `byo` Harness takes the same fields as any other, minus the runtime settings b
 
 ```yaml
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: Harness
 metadata:
   name: my-byo-harness
@@ -106,7 +106,7 @@ An opaque agent's AgentTemplate carries only the label that the Harness selects 
 
 ```yaml
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: AgentTemplate
 metadata:
   name: my-byo-agent

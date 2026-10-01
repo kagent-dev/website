@@ -42,7 +42,7 @@ kagent records what it discovered on the server's status, so the tool names come
 2. Re-apply the `my-first-agent` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: my-first-agent
@@ -134,7 +134,7 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
 1. Apply a `RemoteMCPServer` for your own server.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: RemoteMCPServer
    metadata:
      name: my-mcp-server

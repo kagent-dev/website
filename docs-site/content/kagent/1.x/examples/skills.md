@@ -171,7 +171,7 @@ kagent pulls an `oci` source as a container image and unpacks its flattened file
 1. Add a `skills` entry to the AgentTemplate that your Harness admits. Keep the labels and the model configuration that your existing template uses, and change only the name and the skill.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: release-writer
@@ -293,7 +293,7 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
 3. Attach the package with `plugins` instead of `skills`, and list the skills to enable.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: release-writer

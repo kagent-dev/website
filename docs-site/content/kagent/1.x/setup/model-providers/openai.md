@@ -25,7 +25,7 @@ The `OpenAI` provider calls the OpenAI API directly.
 3. Create a `ModelConfig` that references the Secret.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: openai-model-config

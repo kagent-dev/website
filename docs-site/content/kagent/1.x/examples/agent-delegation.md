@@ -43,7 +43,7 @@ Apply two ordinary AgentTemplates. Nothing marks them as bound, because a templa
 1. Create the specialists. Each one labels itself for the same Harness, and each system prompt makes its replies recognizable so that you can tell which agent answered.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: incident-researcher
@@ -58,7 +58,7 @@ Apply two ordinary AgentTemplates. Nothing marks them as bound, because a templa
        You research incidents. Given a symptom, list at most three concrete
        things to check, and label your reply "RESEARCHER:".
    ---
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: incident-reviewer
@@ -97,7 +97,7 @@ Each binding renames the specialist that it points to, so the coordinator's syst
 1. Create the agent that routes work, binding both specialists under `tools`.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: incident-coordinator

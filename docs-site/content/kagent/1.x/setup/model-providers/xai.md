@@ -22,7 +22,7 @@ xAI's Grok models are served through an OpenAI-compatible API, so a {{< gloss "M
 3. Create a `ModelConfig` that references the Secret and sets the xAI base URL.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: grok-model-config

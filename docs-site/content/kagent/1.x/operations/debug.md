@@ -109,7 +109,7 @@ Example output:
 Add the label that the selector expects, and the conditions appear within seconds.
 
 ```yaml
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: AgentTemplate
 metadata:
   name: assistant

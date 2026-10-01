@@ -173,7 +173,7 @@ A `RemoteMCPServer` gives kagent the address of the running MCP server. kagent c
 1. Create a `RemoteMCPServer` pointing at the Service. The path is `/mcp`.
    ```bash
    kubectl apply -f - <<'EOF'
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: RemoteMCPServer
    metadata:
      name: doc2vec
@@ -215,7 +215,7 @@ The AgentTemplate binds the tools and sets the system prompt that makes the agen
 1. Apply an AgentTemplate that binds the search tools. Use the label that your Harness admits.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: docs-agent

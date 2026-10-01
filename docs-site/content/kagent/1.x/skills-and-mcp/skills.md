@@ -20,7 +20,7 @@ A skill can be published on its own, or bundled with other skills in a [plugin p
 An AgentTemplate attaches skills in two ways, and it can use both at once. Use `spec.skills` for a standalone skill, and `spec.plugins` for a {{< gloss "Plugin package" >}}plugin package{{< /gloss >}}.
 
 ```yaml
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: AgentTemplate
 metadata:
   name: incident-responder

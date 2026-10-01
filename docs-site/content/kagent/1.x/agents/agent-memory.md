@@ -96,7 +96,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
 1. Create a `ModelConfig` for the embedding model in the same namespace as your Harness. The model is an embedding model rather than a chat model.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: embedding-model-config

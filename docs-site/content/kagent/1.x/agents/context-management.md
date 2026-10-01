@@ -21,7 +21,7 @@ Two strategies ship, and both are configured on the same field:
 The following manifest enables both strategies on a Harness that already selects the kagent runtime. The `compaction` block is the only change; the rest of the Harness is unchanged.
 
 ```yaml
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: Harness
 metadata:
   name: my-harness

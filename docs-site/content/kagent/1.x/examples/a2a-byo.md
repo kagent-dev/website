@@ -71,7 +71,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
 1. Create the Harness. The repository's Go Dockerfile puts the binary at `/app`, so `command` names that path.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: Harness
    metadata:
      name: byo-example
@@ -99,7 +99,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
 2. Create the AgentTemplate. The Harness's selector matches on the label, and `description` is the only other field that this agent needs.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: byo-example-agent

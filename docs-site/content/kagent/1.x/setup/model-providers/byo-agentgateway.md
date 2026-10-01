@@ -85,7 +85,7 @@ When your agentgateway deployment enforces no API key authentication, the ModelC
 
 ```yaml
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: ModelConfig
 metadata:
   name: agentgateway-model-config
@@ -117,7 +117,7 @@ When your agentgateway deployment applies an `apiKeyAuthentication` policy with 
 2. Create the `ModelConfig`.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: agentgateway-model-config

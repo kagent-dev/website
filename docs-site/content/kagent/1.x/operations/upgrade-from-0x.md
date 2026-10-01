@@ -87,7 +87,7 @@ ModelConfig, ModelProviderConfig, and RemoteMCPServer have identical fields in `
 
 2. Change the `apiVersion` and apply the resources unchanged.
    ```bash
-   sed 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: kagent.dev/v1alpha3|' \
+   sed 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: api.kagent.dev/v1alpha3|' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
 

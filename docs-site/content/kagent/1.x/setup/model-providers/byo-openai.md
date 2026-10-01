@@ -24,7 +24,7 @@ The following example uses [Cohere](https://cohere.com/), which serves an OpenAI
 3. Create a `ModelConfig` that points at your provider's endpoint.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: my-provider-model-config
