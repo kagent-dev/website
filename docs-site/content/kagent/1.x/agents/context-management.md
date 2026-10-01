@@ -55,10 +55,6 @@ spec:
       name: kagent-default
     snapshotPolicy:
       location: s3://ate-snapshots/kagent/
-  allowedAgentTemplates:
-    selector:
-      matchLabels:
-        kagent.dev/harness: my-harness
 ```
 
 `Harness.spec.kagent.compaction` is the only field this page owns. The field-by-field schema — types, defaults, and validation rules — lives in the generated [API reference]({{< link path="reference/api-ref#kagentharnesscompaction" >}}); the complete Harness schema, including `workload`, `substrate`, and the runtime selection, lives on [Agent harness]({{< link path="agents/agent-harness" >}}).
@@ -85,24 +81,24 @@ These are CEL validations on the CRD, so a manifest that breaks one is rejected 
 
 ## Summarizer model and revisions
 
-The summarizer model resolves the same way the agent's own model does: its config lands in the compiled revision, its credentials and egress join the revision, and it joins the provenance. Changing the summarizer model therefore compiles a new revision for every AgentTemplate on the Harness.
+The summarizer model resolves the same way the agent's own model does: its config lands in the compiled revision, its credentials and egress join the revision, and it joins the provenance. Changing the summarizer model therefore compiles a new revision for every {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses the Harness.
 
-Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantically a no-op for that AgentTemplate, because the runtime already summarizes with that model by default. The setting applies to every AgentTemplate on the Harness, so AgentTemplates that use a different model summarize with the named one instead. It is not free, though. Revision IDs are not content hashes, so any change to the spec recompiles the revision, semantically identical or not, and setting this field carries that revision cost.
+Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantically a no-op for that AgentTemplate, because the runtime already summarizes with that model by default. The setting applies to every Agent that uses the Harness, so templates that use a different model summarize with the named one instead. It is not free, though. Revision IDs are not content hashes, so any change to the spec recompiles the revision, semantically identical or not, and setting this field carries that revision cost.
 
 These are the same {{< gloss "Revision" >}}revision{{< /gloss >}} mechanics the rest of the Harness configuration follows — the value is compiled in, not read at request time.
 
 ## Verify the configuration
 
-If the summarizer names a ModelConfig that does not exist in the Harness namespace, the Harness and AgentTemplate pair is not ready. The failure surfaces on the AgentTemplate as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm the pair compiled before relying on compaction:
+If the summarizer names a ModelConfig that does not exist in the Harness namespace, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm the Agent compiled before relying on compaction:
 
 ```bash
-kagent get agent-template <agent-template-name>
+kagent agent get <agent-name>
 ```
 
-The `HARNESS` column lists each Harness that admitted the AgentTemplate, and `READY` reports whether kagent compiled a runtime revision for that pairing. If `READY` stays `FALSE`, inspect the conditions in `status.harnesses` to find the failing reference:
+`READY` reports whether kagent compiled and prepared a runtime revision. If `READY` stays `False`, inspect the Agent's conditions to find the failing reference:
 
 ```bash
-kagent get agent-template <agent-template-name> -o json
+kubectl get agent <agent-name> -n kagent -o jsonpath='{.status.conditions}' | jq
 ```
 
 For more information, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).

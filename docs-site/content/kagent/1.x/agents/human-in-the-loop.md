@@ -69,8 +69,6 @@ kind: AgentTemplate
 metadata:
   name: cluster-operator
   namespace: kagent
-  labels:
-    kagent.dev/harness: kagent
 spec:
   tools:
     - mcp:
@@ -115,13 +113,13 @@ A2A-Extensions: https://kagent.dev/extensions/hitl/v1
 
 kagent activates the extension only for calls that request it, and echoes the activated URI back. An agent's card declares the extension, so a client can discover HITL support before it sends a message. A client that never requests the extension sees ordinary turns until the agent needs a person. The turn then pauses like any other, and that client has no way to answer the request.
 
-A call from outside the cluster addresses the agent with two more headers, because the gateway routes on metadata rather than on a path. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
+A gRPC call names the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
 
 ```bash
 grpcurl -plaintext \
   -H 'A2A-Extensions: https://kagent.dev/extensions/hitl/v1' \
-  -H 'x-kagent-agent-instance-id: <instance-id>' \
   -d '{
+    "tenant": "kagent/cluster-operator",
     "message": {
       "messageId": "msg-1",
       "role": "ROLE_USER",
@@ -129,6 +127,8 @@ grpcurl -plaintext \
     }
   }' localhost:8083 lf.a2a.v1.A2AService/SendStreamingMessage
 ```
+
+Omitting both a `contextId` and a task ID starts a new conversation. To continue an existing one, set the message's `contextId` to the {{< gloss "Session" >}}Session{{< /gloss >}} ID. Over HTTP, the URL path `/agents/{namespace}/{name}` selects the Agent instead, and no tenant is needed. For both transports, see [Call an agent over A2A]({{< link path="examples/a2a-agents" >}}).
 
 When the agent pauses, the payload arrives in the status message's `metadata`, keyed by the extension URI. The URI is also listed in the message's `extensions` array. Each payload carries a `type` field that specifies its shape.
 
@@ -203,7 +203,7 @@ The AgentTemplate decides that a turn pauses, but the client decides whether a p
 | ------ | ---- |
 | Your own A2A client | Full. Request the extension URI and handle the four payload types. |
 | An {{< gloss "MCP" >}}MCP{{< /gloss >}} client that supports tasks | Supported. `invoke_agent_instance` returns a task, and input requests surface as MCP elicitations. |
-| The kagent CLI | Not supported, and a turn that pauses is stranded. `kagent invoke` does not request the extension, so an agent that needs a person parks the task at `INPUT_REQUIRED` with nothing to answer it by. The CLI reports `Input required to continue this AgentInstance.` and stops there. Send the turn again from a client that requests the extension. |
+| The kagent CLI | Not supported, and a turn that pauses is stranded. `kagent agent invoke` does not request the extension, so an agent that needs a person parks the task at `INPUT_REQUIRED` with nothing to answer it by. The CLI reports `Input required to continue this Session.` and stops there. Send the turn again from a client that requests the extension. |
 
 ## Next steps
 

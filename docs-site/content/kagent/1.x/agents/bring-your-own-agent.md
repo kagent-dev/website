@@ -13,10 +13,10 @@ The `byo` runtime divides the work at the {{< gloss "A2A" >}}A2A{{< /gloss >}} (
 
 kagent owns the lifecycle, the isolation, and the routing:
 
-- Compiles a Harness and an AgentTemplate into an immutable revision, and creates an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} from it.
+- Compiles an {{< gloss "Agent" >}}Agent{{< /gloss >}} into an immutable revision, and creates a {{< gloss "Session" >}}Session{{< /gloss >}} from it.
 - Wraps the {{< gloss "Actor" >}}Actor{{< /gloss >}} that the image runs in with a [gVisor sandbox]({{< link path="substrate-runtime/sandboxing#sandbox-classes" >}}).
 - [Suspends and resumes]({{< link path="substrate-runtime/suspend-and-resume#suspension-between-turns" >}}) the Actor between turns, including its in-memory state.
-- Routes every conversation through the A2A gateway, so callers address the AgentInstance rather than the Actor behind it.
+- Routes every conversation through the A2A gateway, so callers address the Agent rather than the Actor behind it.
 - Delivers the compiled agent configuration and agent card to the container as environment variables.
 
 Your image owns the agent's behavior and the two endpoints that expose it:
@@ -39,7 +39,7 @@ A `byo` image must meet four requirements to run as an agent. kagent enforces on
 | The A2A service speaks gRPC, not JSON-RPC | The agent card fixes the protocol binding to gRPC. An image that serves A2A over JSON-RPC alone is never reached, whatever port it listens on. |
 
 > [!WARNING]
-> **A `byo` Harness injects no `PORT` variable, and an image that listens elsewhere still reports `READY`.** Readiness is probed on port 8081, which succeeds no matter what the A2A service does, so nothing surfaces the mismatch until an invoke fails with `Connect: tunnel failed`. Either pin port 80 in the image, or set `PORT` in the Harness's `spec.env` as the examples on this page do. This gap is tracked as [kagent#2758](https://github.com/kagent-dev/kagent/issues/2758).
+> **A `byo` Harness injects no `KAGENT_PORT` variable, and an image that listens elsewhere still reports `READY`.** Readiness is probed on port 8081, which succeeds no matter what the A2A service does, so nothing surfaces the mismatch until an invoke fails with `Connect: tunnel failed`. Only the `kagent` compiler sets `KAGENT_PORT=80`. Either pin port 80 in the image, or set `KAGENT_PORT` in the Harness's `spec.env` as the examples on this page do. This gap is tracked as [kagent#2758](https://github.com/kagent-dev/kagent/issues/2758).
 
 ## Opaque and configured agents
 
@@ -79,17 +79,13 @@ spec:
     image: <your-registry>/my-agent@sha256:<digest>
     command: ["/my-agent"]
   env:
-    - name: PORT
+    - name: KAGENT_PORT
       value: "80"
   substrate:
     workerPoolRef:
       name: kagent-default
     snapshotPolicy:
       location: s3://ate-snapshots/kagent/
-  allowedAgentTemplates:
-    selector:
-      matchLabels:
-        kagent.dev/harness: my-byo-harness
 EOF
 ```
 
@@ -100,25 +96,34 @@ EOF
 | `byo` | Yes | Selects this runtime. The object is always empty, and naming a second runtime alongside it is rejected. |
 | `workload.image` | Yes | Your image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
 | `workload.command` | Yes | The entrypoint to run, up to 32 entries. Required for `byo` and optional for every other runtime. |
-| `env` | No | Set `PORT` here unless the image pins port 80 itself. |
+| `env` | No | Set `KAGENT_PORT` here unless the image pins port 80 itself. Each entry takes a literal `value`. |
 
-An opaque agent's AgentTemplate carries only the label that the Harness selects on, plus a description for the agent card.
+An opaque agent's AgentTemplate carries only a description for the agent card. An Agent then pairs it with the Harness.
 
 ```yaml
 kubectl apply -f - <<EOF
 apiVersion: api.kagent.dev/v1alpha3
 kind: AgentTemplate
 metadata:
-  name: my-byo-agent
+  name: my-byo-template
   namespace: kagent
-  labels:
-    kagent.dev/harness: my-byo-harness
 spec:
   description: An agent that my own image implements.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: my-byo-agent
+  namespace: kagent
+spec:
+  templateRef:
+    name: my-byo-template
+  harnessRef:
+    name: my-byo-harness
 EOF
 ```
 
-To configure the agent from Kubernetes instead, add the fields that any AgentTemplate takes, and read `KAGENT_CONFIG_JSON` in the image. For what those fields mean, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-and-an-agenttemplate" >}}).
+To configure the agent from Kubernetes instead, add the fields that any AgentTemplate takes, and read `KAGENT_CONFIG_JSON` in the image. For what those fields mean, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
 
 ## Build the image
 
@@ -148,12 +153,12 @@ if err != nil {
 return application.Run()
 ```
 
-Setting `Port` to `80` keeps this image working without a `PORT` variable on the Harness. Omitting it falls back to the `PORT` environment variable and then to a default of `8080`, which kagent never dials.
+Setting `Port` to `80` keeps this image working without a `KAGENT_PORT` variable on the Harness. Omitting it falls back to the `KAGENT_PORT` environment variable and then to a default of `8080`, which kagent never dials.
 
 For a complete executor, see [`go/core/test/byoa2a/main.go`](https://github.com/kagent-dev/kagent/blob/main/go/core/test/byoa2a/main.go) in the kagent repository.
 {{% /tab %}}
 {{% tab name="Python" %}}
-The `kagent-adk` package serves A2A over gRPC, defaulting its listener to `[::]:80` and its readiness endpoint to 8081. The default address matches what kagent dials, so a Python image needs no `PORT` variable on the Harness.
+The `kagent-adk` package serves A2A over gRPC, defaulting its listener to `[::]:80` and its readiness endpoint to 8081. The default address matches what kagent dials, so a Python image needs no `KAGENT_PORT` variable on the Harness.
 
 ```python
 from kagent.adk import KAgentApp
@@ -182,13 +187,13 @@ Implement the contract directly:
 - **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` takes no field to change the address, the port, or the protocol. An image that serves A2A over HTTP JSON-RPC alone cannot run on this runtime.
 - **The `kagent-langgraph` and `kagent-crewai` adapters do not qualify yet.** Both build a FastAPI application with A2A JSON-RPC routes and no gRPC server, so neither satisfies the contract as shipped. Running LangGraph or CrewAI under `byo` currently means serving A2A over gRPC yourself.
 - **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory` and wired only by the `kagent` runtime's compiler. A `byo` Harness has no equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
-- **A broken port mapping presents as a healthy agent.** Readiness passes on 8081 regardless of the A2A service, so the AgentInstance reports `READY` and every invoke fails. This is [kagent#2758](https://github.com/kagent-dev/kagent/issues/2758).
+- **A broken port mapping presents as a healthy agent.** Readiness passes on 8081 regardless of the A2A service, so the Session reports `READY` and every invoke fails. This is [kagent#2758](https://github.com/kagent-dev/kagent/issues/2758).
 
 ## Next steps
 
 {{< cards >}}
   {{< card link=`{{< link path="examples/a2a-byo" >}}` title="Run your own agent image" subtitle="Build the minimal BYO agent, run it on a byo Harness, and invoke it." >}}
   {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the byo runtime against the three that kagent executes itself." >}}
-  {{< card link=`{{< link path="examples/a2a-agents" >}}` title="Call an agent over A2A" subtitle="Send messages to an AgentInstance with the same protocol that a BYO image serves." >}}
+  {{< card link=`{{< link path="examples/a2a-agents" >}}` title="Call an agent over A2A" subtitle="Send messages to an Agent with the same protocol that a BYO image serves." >}}
   {{< card link=`{{< link path="substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand what Agent Substrate snapshots while your image is idle." >}}
 {{< /cards >}}
