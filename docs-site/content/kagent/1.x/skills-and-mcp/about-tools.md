@@ -47,7 +47,7 @@ tools:
 
 ## Subagents as tools
 
-A `subAgent` binding points at another AgentTemplate, which lets one agent route work to another. The model reads the `description` when it decides whether to route work here, so a description that states plainly what the bound agent is for matters more than the detail of its configuration.
+A `subAgent` binding points at another AgentTemplate, which lets one agent route work to another. The model reads the `description` when it decides whether to route work here. A description that states plainly what the bound agent is for therefore matters more than the detail of its configuration.
 
 ```yaml
 tools:

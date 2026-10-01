@@ -84,6 +84,6 @@ A snapshot that Agent Substrate writes on suspend is transient. Agent Substrate 
 
 Creating a checkpoint attaches an Agent Substrate {{< gloss "Tag" >}}Tag{{< /gloss >}} to the snapshot that the Session most recently suspended to. The tag names that one snapshot permanently and acts as a retention pin, such that Agent Substrate does not collect a snapshot while a tag still names it. Deleting the checkpoint removes the tag and releases the pin.
 
-A Session must be at a turn boundary to be checkpointed, because the turn boundary is captured. The request names the terminal task to pin, so it fails when a newer turn has already started, and again while that turn's snapshot is still being written.
+A Session must be at a turn boundary to be checkpointed, because the turn boundary is captured. The request names the terminal task to pin. It fails when a newer turn has already started, and again while that turn's snapshot is still being written.
 
 A checkpoint also records how far the conversation had advanced, and it lets you start a second Session from the state it pinned. That second Session, a {{< gloss "Fork" >}}fork{{< /gloss >}}, continues the conversation from the point that the checkpoint pinned, and new turns append only to the fork. A fork receives fresh conversation and task identifiers rather than inheriting the source's. To create a checkpoint and fork a Session from it, work through the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).

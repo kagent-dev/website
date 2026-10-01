@@ -122,9 +122,9 @@ A leader-only worker sweeps once a minute and deletes every Session whose idle c
 
 Seven days is the default. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
 
-Idle time runs from the later of the Session's creation and its most recent stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires. A {{< gloss "Fork" >}}fork{{< /gloss >}} keeps its source's event timestamps, and its own creation time is what gives it a full lifetime rather than inheriting an almost-expired one.
+Idle time runs from the later of the Session's creation and its most recent stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires. A {{< gloss "Fork" >}}fork{{< /gloss >}} keeps its source's event timestamps. Its own creation time gives it a full lifetime, so it does not inherit an almost-expired one.
 
-Work in progress is never deleted. A Session with a running task, or with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`, survives past the interval, and so does one with a pending lifecycle operation or a checkpoint being captured.
+Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 
 > [!IMPORTANT]
 > **Expiry bounds conversations, not history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, and `GetSession` then returns not-found. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint can still be forked after the Session that it was taken on has expired. Sizing a database for a long-running installation means planning for that audit history separately, because no setting on this page bounds it.

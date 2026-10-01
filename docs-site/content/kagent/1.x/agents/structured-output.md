@@ -5,7 +5,7 @@ weight: 35
 author: kagent.dev
 ---
 
-An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}} for an {{< gloss "Agent" >}}Agent{{< /gloss >}}, and the revision records the schema and its digest. A schema that fails the checks stops the revision from compiling, so an Agent that has never been ready cannot start a {{< gloss "Session" >}}Session{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}} for an {{< gloss "Agent" >}}Agent{{< /gloss >}}. The revision records the schema and its digest. A schema that fails the checks stops the revision from compiling, so an Agent that has never been ready cannot start a {{< gloss "Session" >}}Session{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
 
 The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec.outputSchemaFrom`. The fields are mutually exclusive. An AgentTemplate that sets both is rejected when you apply it, with the message `outputSchema and outputSchemaFrom are mutually exclusive`. If you omit both fields, the agent's final answer is not constrained.
 

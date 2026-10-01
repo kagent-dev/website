@@ -572,7 +572,7 @@ You can now safely [clean up these resources](#clean-up).
 
 ## MCP tool reference
 
-The server exposes five Session tools. Two cover discovery and conversation, and three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. No tool takes a namespace: a Session is addressed by its own UUID. No tool deletes an object either, so removing a Session or a checkpoint means leaving MCP for the command line. The server also exposes a set of [standalone sandbox]({{< link path="substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
+The server exposes five Session tools. Two cover discovery and conversation. Three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. No tool takes a namespace. A Session is addressed by its own UUID. No tool deletes an object either, so removing a Session or a checkpoint means leaving MCP for the command line. The server also exposes a set of [standalone sandbox]({{< link path="substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
 
 | Tool | Required arguments | What it does |
 | ---- | ------------------ | ------------ |

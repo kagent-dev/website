@@ -85,7 +85,7 @@ Start at the **Agents** page to review your agents and the resources behind them
 {{< reuse-image-light src="img/kagent-ui-agents.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-agents-dark.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 
-The **Agents** tab authors the `Agent` custom resource directly: create one to pair a template with a harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it named. For the same work from the command line, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
+The **Agents** tab authors the `Agent` custom resource directly. Create one to pair a template with a harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it named. For the same work from the command line, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 > [!NOTE]
 > The **Overview** card labels a conversation an `AgentInstance`. The API calls the same object a {{< gloss "Session" >}}Session{{< /gloss >}}, which is the name the CLI, the gRPC services, and the rest of this documentation use. Read `AgentInstance` on this card as `Session`.

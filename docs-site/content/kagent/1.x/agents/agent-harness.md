@@ -46,9 +46,9 @@ EOF
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
-A Harness names no AgentTemplate. An {{< gloss "Agent" >}}Agent{{< /gloss >}} pairs the two, through either `spec.harnessRef` or an inline `spec.harness`, so whoever writes the Agent decides which template runs on which Harness. For that pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
+A Harness names no AgentTemplate. An {{< gloss "Agent" >}}Agent{{< /gloss >}} pairs the two through either `spec.harnessRef` or an inline `spec.harness`, so whoever writes the Agent decides which template runs on which Harness. For that pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
 
-A command or argument override belongs to the revision that kagent prepares, so changing one prepares a new revision rather than altering a running agent. A {{< gloss "Session" >}}Session{{< /gloss >}} pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
+A command or argument override belongs to the revision that kagent prepares. Changing one prepares a new revision rather than altering a running agent. A {{< gloss "Session" >}}Session{{< /gloss >}} pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
 
 ## Choose a runtime
 

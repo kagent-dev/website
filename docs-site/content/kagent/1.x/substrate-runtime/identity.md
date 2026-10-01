@@ -13,7 +13,7 @@ A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies t
 
 ## The Kubernetes plane
 
-Harness, AgentTemplate, and {{< gloss "Agent" >}}Agent{{< /gloss >}} are Kubernetes custom resources, so Kubernetes role-based access control (RBAC) governs who can create, read, edit, or delete them with `kubectl`. A cluster's existing roles and bindings decide who authors an agent's runtime, its behavior, and the pairing of the two on that path.
+Harness, AgentTemplate, and {{< gloss "Agent" >}}Agent{{< /gloss >}} are Kubernetes custom resources. Kubernetes role-based access control (RBAC) therefore governs who can create, read, edit, or delete them with `kubectl`. A cluster's existing roles and bindings decide who authors an agent's runtime, its behavior, and the pairing of the two on that path.
 
 kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent plane authorizes this path instead.
 
@@ -24,13 +24,13 @@ An Agent is where RBAC decides which template runs on which Harness, because nei
 
 ## The kagent plane
 
-A Session is not a Kubernetes resource. kagent's gRPC API creates the Session and kagent's database tracks it, so Kubernetes RBAC does not reach it. kagent resolves a principal for these calls itself.
+A Session is not a Kubernetes resource. kagent's gRPC API creates the Session, and kagent's database tracks it. Kubernetes RBAC therefore does not reach it. kagent resolves a principal for these calls itself.
 
 Every call on the Session API carries a principal. An authenticator resolves one before the request reaches the service, and a call that the authenticator declines is rejected as unauthenticated before any other check runs.
 
 ### Controller authentication modes
 
-The `controller.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it: browser sign-in and controller authentication are separate boundaries, so a deployment that wants both sets this value as well.
+The `controller.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it. Browser sign-in and controller authentication are separate boundaries. A deployment that wants both sets this value as well.
 
 | Mode | How a principal is resolved |
 | ---- | --------------------------- |

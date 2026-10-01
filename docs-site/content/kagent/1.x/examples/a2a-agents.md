@@ -88,7 +88,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 2. Read the card for what a caller acts on.
    * Both `name` and `description` come from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. `name` replaces hyphens with underscores, and `description` is `spec.description` verbatim, so a caller sees the description you wrote.
-   * The `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC, and the gRPC interface carries the `tenant` value to send.
+   * The `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The gRPC interface carries the `tenant` value to send.
    * The `capabilities.extensions` list advertises human-in-the-loop support, which a client opts into per call.
 
 > [!NOTE]

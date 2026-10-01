@@ -17,7 +17,7 @@ Three independent changes each rule out `helm upgrade`, so working around any on
 | The custom resources moved to a new API group | 1.0 serves its resources under `api.kagent.dev`, where 0.10.x serves them under `kagent.dev`. The groups share no conversion, so nothing stored under the old group is visible through the new CRDs. |
 | The resource model is replaced | 0.10.x's `Agent` is gone. What it described is now split between an AgentTemplate and a {{< gloss "Harness" >}}Harness{{< /gloss >}}, paired by a new {{< gloss "Agent" >}}Agent{{< /gloss >}} resource in the `api.kagent.dev` group, and a conversation is a {{< gloss "Session" >}}Session{{< /gloss >}} created against that Agent. The two `Agent` kinds share a name and nothing else. For the model itself, see [Core concepts]({{< link path="about/core-concepts" >}}). |
 
-The two releases also cannot run side by side on one cluster. The group rename separates most of the custom resources, but both releases bundle kmcp, so both install `mcpservers.kagent.dev` at different versions. A CRD is cluster-scoped, so installing 1.0's CRDs replaces that one. A second cluster keeps the old installation intact while you work.
+The two releases also cannot run side by side on one cluster. The group rename separates most of the custom resources. Both releases bundle kmcp, though, so both install `mcpservers.kagent.dev` at different versions. A CRD is cluster-scoped, so installing 1.0's CRDs replaces that one. A second cluster keeps the old installation intact while you work.
 
 > [!WARNING]
 > Downgrading from 1.0 back to 0.10.x is unsupported. Treat the cutover as one-way, and keep the 0.10.x installation running until you have verified the new one.
@@ -114,7 +114,7 @@ A 0.10.x `Agent` described both what the agent does and how it runs. In 1.0 thes
 > [!NOTE]
 > Tool bindings changed shape. A 0.10.x tool set `type: McpServer` or `type: Agent` alongside a matching block. A 1.0 `ToolBinding` carries an `mcp` or `subAgent` block and no discriminator, so the block you set is the binding's kind. For what each binding does, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
 
-Write one Harness for each distinct runtime and infrastructure combination that your agents need, then write one Agent for each 0.10.x Agent, naming the AgentTemplate and the Harness that it pairs. Neither reusable resource names the other, so the Agent is what makes a template runnable. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked example, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
+Write one Harness for each distinct runtime and infrastructure combination that your agents need. Then write one Agent for each 0.10.x Agent, naming the AgentTemplate and the Harness that it pairs. Neither reusable resource names the other, so the Agent makes a template runnable. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked example, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
 
 ### Resources with no 1.0 equivalent
 

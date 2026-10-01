@@ -20,7 +20,7 @@ An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}M
 
 1. [Install kagent]({{< link path="setup/installation" >}}), with a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} provisioned.
 
-2. Set a guest image digest on your installation. Sandbox preparation needs one, and the chart ships no default, so a SandboxTemplate never becomes ready without it. The controller passes the digest to Agent Substrate unchanged and resolves no tags, so supply a digest rather than a tag.
+2. Set a guest image digest on your installation. Sandbox preparation needs one, and the chart ships no default. A SandboxTemplate never becomes ready without it. The controller passes the digest to Agent Substrate unchanged and resolves no tags, so supply a digest rather than a tag.
    ```yaml
    controller:
      sandbox:
@@ -82,7 +82,7 @@ EOF
 | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
-A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `controller.sandbox.guestImage.digest` names, and that image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
+A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `controller.sandbox.guestImage.digest` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
 
 Confirm that the template prepared a revision before you create a Sandbox from it.
 
@@ -134,7 +134,7 @@ Each `kagent sandbox` command makes one lifecycle attempt rather than retrying f
    kagent sandbox download $SANDBOX_ID /data/workspace/out.txt ./out.txt
    ```
 
-5. Delete the Sandbox when you are finished. Deleting is not required, because the Sandbox expires on its own, but it releases the compute immediately.
+5. Delete the Sandbox when you are finished. Deleting is not required, because the Sandbox expires on its own. Deleting it releases the compute immediately.
    ```bash
    kagent sandbox delete $SANDBOX_ID
    ```
@@ -160,7 +160,7 @@ tools:
 
 An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation: the Go kagent runtime reads `KAGENT_PROPAGATE_TOKEN=true` to pass the caller's credentials and identity to the MCP servers that you trust.
 
-The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB, while an MCP transfer or output read is bounded at 1 MiB, encodes bytes as base64, and returns a continuation offset for reading more.
+The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. An MCP transfer or output read is bounded at 1 MiB, encodes bytes as base64, and returns a continuation offset for reading more.
 
 ## Next steps
 

@@ -127,7 +127,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
    | `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model, in the Harness's namespace. Required when `memory` is set. |
    | `memory.ttlDays` | How many days a stored memory stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
 
-3. Create a new Session against an {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses this Harness. Editing the Harness compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing Session keeps running the revision it was created from, so an agent that was already running does not gain memory until you start a new conversation.
+3. Create a new Session against an {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses this Harness. Editing the Harness compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing Session keeps running the revision it was created from. An agent that was already running does not gain memory until you start a new conversation.
    ```bash
    kagent agent session create --agent my-first-agent
    ```

@@ -125,19 +125,19 @@ This split is deliberate, not an implementation detail to work around:
 - Applying a Harness, AgentTemplate, or Agent is a **Kubernetes-native operation**, governed by Kubernetes RBAC, exactly like any other CRD.
 - Creating, suspending, resuming, sharing, or deleting a Session, and holding a conversation with it, are **kagent-native operations**, governed by kagent's own gRPC authentication and authorization, independent of who can `kubectl apply` an Agent.
 
-Each compile produces one **{{< gloss "Revision" >}}revision{{< /gloss >}}**, identified by a digest: a SHA-256 hash of the compiled configuration. Because that digest is derived from the configuration itself, editing an Agent or either resource it references compiles to a different digest, and therefore becomes a separate ActorTemplate. kagent never rewrites an existing one.
+Each compile produces one **{{< gloss "Revision" >}}revision{{< /gloss >}}**, identified by a digest, which is a SHA-256 hash of the compiled configuration. Because that digest is derived from the configuration itself, editing an Agent or either resource it references compiles to a different digest, and therefore becomes a separate ActorTemplate. kagent never rewrites an existing one.
 
 That immutability keeps running conversations stable. When you create a Session, kagent looks up the Agent's latest successful revision and creates an Actor from it. Editing the Agent afterward does not disturb that Session, which keeps running on the revision that it was created from. Only Sessions created after the edit use the new revision.
 
-Create a Session with the command line interface:
+You can create a Session with the following command:
 
 ```bash
 kagent agent session create --agent assistant -n kagent
 ```
 
-Once created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session: the HTTP endpoint is `/agents/{namespace}/{name}`, and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
+After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session. The HTTP endpoint is `/agents/{namespace}/{name}` and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
 
-A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window, and `0` turns the worker off. For what the deletion retains, see [Expire idle conversations]({{< link path="operations/operational-considerations#expire-idle-conversations" >}}).
+A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window. `0` turns the worker off. For what the deletion retains, see [Expire idle conversations]({{< link path="operations/operational-considerations#expire-idle-conversations" >}}).
 
 ## Actor
 
@@ -149,9 +149,9 @@ Actors are the reason why Sessions can suspend and resume cheaply instead of sta
 
 An AgentTemplate's tools are not limited to MCP servers. A tool binding can also point at another AgentTemplate, which lets one agent hand work to a specialist agent.
 
-Each subagent binding sets `tools[].subAgent.templateRef`, naming an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
+Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
 
-Because a subagent runs inside its parent's runtime boundary, the compiler constrains the shape of the resulting tree. Nesting stops at one level: a bound template cannot bind a third. That cap keeps the model predictable, because every agent runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must satisfy, see [What a subagent tree allows]({{< link path="skills-and-mcp/about-tools#what-a-subagent-tree-allows" >}}).
+Because a subagent runs inside its parent's runtime boundary, the compiler constrains the shape of the resulting tree. Nesting stops at one level. A bound template cannot bind a third. That cap keeps the model predictable, because every agent runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must satisfy, see [What a subagent tree allows]({{< link path="skills-and-mcp/about-tools#what-a-subagent-tree-allows" >}}).
 
 > [!NOTE]
 > Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor and reach it over A2A, are not part of the served API. The `subAgent.agentRef` field that would select one is deferred until a dedicated subagent can create and invoke its own Session.
