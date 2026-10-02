@@ -28,8 +28,6 @@ kagent 1.0 separates an agent's capabilities from its runtime, then runs the two
 
 ## Platform features
 
-Everything works with a single `helm install`, with one exception: long-term memory needs an external PostgreSQL database that has the `pgvector` extension.
-
 {{< feature-cards >}}
 {{< feature-card title="Agent lifecycle via CRDs" desc="Define, version, and roll out Harnesses and AgentTemplates with kubectl and GitOps, the same workflow as every other workload." >}}
 {{< feature-card title="Sandboxed by default" desc="Every Session runs on a Substrate Actor, isolated from the host kernel by a gVisor sandbox. Run untrusted, model-directed code safely." >}}
@@ -41,10 +39,9 @@ Everything works with a single `helm install`, with one exception: long-term mem
 {{< feature-card title="Long-term memory" desc="Persistent, vector-backed memory across sessions. Agents remember context, not just the last prompt." >}}
 {{< feature-card title="Human-in-the-loop" desc="Tool approval gates and agent-initiated questions keep a person in control of consequential actions." >}}
 {{< feature-card title="Agent-to-Agent (A2A)" desc="Agents talk to callers, and to each other, over the A2A protocol." >}}
-{{< feature-card title="Skills and plugins" desc="Load skills and capability packages from an Open Container Initiative (OCI) registry, Git, or S3 at startup." >}}
+{{< feature-card title="Skills and plugins" desc="Load skills and plugins from an Open Container Initiative (OCI) registry, Git, or S3 at startup." >}}
 {{< feature-card title="Prompt templates" desc="Reusable prompt fragments stored as ConfigMaps. Keep system prompts consistent across agents." >}}
 {{< feature-card title="Observability" desc="OpenTelemetry tracing, structured logs, and an optional Prometheus metrics endpoint, with control plane traces carrying the Actor that they belong to." >}}
-{{< feature-card title="Postgres storage" desc="Sessions, conversations, and compiled revisions persist in PostgreSQL with reviewable migrations. Start on the bundled instance, then point kagent at your own database." >}}
 {{< /feature-cards >}}
 
 {{< reuse "kagent-docs/snippets/about/what-is-kagent-enterprise.md" >}}
