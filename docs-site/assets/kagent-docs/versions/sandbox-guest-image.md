@@ -1,0 +1,1 @@
+ghcr.io/kagent-dev/kagent/sandbox-guest@sha256:1821780ef01958f63cb9a1a1d9a175f7e386e7c72859dd29ab86d8644a47d2d4

@@ -1,21 +1,19 @@
 ---
-title: kagent create
-description: Create a kagent resource.
-weight: 80
+title: kagent sandbox wait
+description: Collect output and wait for an existing process without restarting it.
+weight: 550
 ---
 
-Create a kagent resource
+Collect output and wait for an existing process without restarting it
 
 ```bash
-kagent create [flags]
-kagent create [command]
+kagent sandbox wait ID PROCESS_ID [flags]
 ```
 
-**Subcommands:**
-- [`kagent create agent-instance`]({{< link path="reference/cli/kagent-create-agent-instance" >}}) - Create an AgentInstance
-
 **Flags:**
-- `-h, --help` - help for create
+- `-h, --help` - help for wait
+- `--stderr-offset int` - Resume stderr at this byte offset
+- `--stdout-offset int` - Resume stdout at this byte offset
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

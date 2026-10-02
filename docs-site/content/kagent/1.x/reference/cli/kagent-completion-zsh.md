@@ -1,7 +1,7 @@
 ---
 title: kagent completion zsh
 description: Generate the autocompletion script for zsh.
-weight: 70
+weight: 190
 ---
 
 Generate the autocompletion script for the zsh shell.

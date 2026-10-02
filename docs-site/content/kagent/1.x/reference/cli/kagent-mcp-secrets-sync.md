@@ -1,7 +1,7 @@
 ---
 title: kagent mcp secrets sync
 description: Sync secrets to a Kubernetes environment from a local .env file.
-weight: 370
+weight: 410
 ---
 
 Sync secrets from a local .env file to a Kubernetes secret.

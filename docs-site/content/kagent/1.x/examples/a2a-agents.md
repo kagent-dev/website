@@ -1,11 +1,11 @@
 ---
 title: Call an agent over A2A
-description: Use the A2A service that the kagent controller serves to read an AgentInstance's agent card, send it a message, and stream a reply.
+description: Use the A2A service that the kagent controller serves to read an Agent's card, send it a message, and stream a reply.
 weight: 30
 author: kagent.dev
 ---
 
-Every {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. {{< reuse "kagent-docs/snippets/name-product.md" >}} uses the A2A protocol for its own agent traffic, rather than an extra interface beside it. The CLI, the [MCP server]({{< link path="examples/agents-via-mcp" >}}), and any client you write all take the same path.
+Every {{< gloss "Agent" >}}Agent{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. {{< reuse "kagent-docs/snippets/name-product.md" >}} uses the A2A protocol for its own agent traffic, rather than an extra interface beside it. The CLI, the [MCP server]({{< link path="examples/agents-via-mcp" >}}), and any client you write all take the same path.
 
 This example uses [grpcurl](https://github.com/fullstorydev/grpcurl) to show the requests and replies directly. Real callers use an A2A client library rather than assembling requests by hand.
 
@@ -13,13 +13,22 @@ This example uses [grpcurl](https://github.com/fullstorydev/grpcurl) to show the
 
 The controller serves `lf.a2a.v1.A2AService` on port `8083`, alongside its REST API and its MCP endpoint. The kagent CLI reaches the same port and the same service.
 
-An AgentInstance is not addressed by a URL path. A caller names the instance in the `x-kagent-agent-instance-id` request metadata header, carrying the AgentInstance's ID, and the controller routes the call to that instance's Actor. Exactly one such header is required.
+A gRPC caller names the Agent in the standard A2A `tenant` field, as `<namespace>/<name>`, and the controller routes the call to that Agent. The same controller serves A2A over HTTP JSON-RPC, where the URL path selects the Agent instead:
+
+| Transport | How a caller selects the Agent |
+| --------- | ----------------------------- |
+| gRPC | The `tenant` field on each request, as `<namespace>/<name>` |
+| HTTP JSON-RPC | `POST /agents/{namespace}/{name}`, with the card at `GET /agents/{namespace}/{name}/.well-known/agent-card.json` |
+
+An HTTP request that also sets a tenant must set one that matches its URL. There is no deployment-wide agent card, because the gateway serves many agents.
+
+A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
 > [!NOTE]
-> Header routing replaces the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP. The unit you address also changed: a 0.x caller addressed an agent, while a 1.x caller addresses one AgentInstance, which is one conversation with that agent.
+> `tenant` and the `/agents/{namespace}/{name}` path replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP.
 
 > [!WARNING]
-> The open source build does not authenticate this port. Any caller that can reach it can invoke any AgentInstance, so do not expose port `8083` outside the cluster. For what the open source build does guarantee, see [Identity]({{< link path="substrate-runtime/identity" >}}).
+> The open source build does not authenticate this port. Any caller that can reach it can invoke any Agent, so do not expose port `8083` outside the cluster. For what the open source build does guarantee, see [Identity]({{< link path="substrate-runtime/identity" >}}).
 
 ### A2A methods
 
@@ -27,7 +36,7 @@ The following methods are used in this example. The service defines more, includ
 
 | Method | What it does |
 | ------ | ------------ |
-| `GetExtendedAgentCard` | Returns the agent card describing the instance. |
+| `GetExtendedAgentCard` | Returns the agent card describing the Agent. |
 | `SendMessage` | Sends a message and returns the task after the agent either finishes the turn or pauses for a person. |
 | `SendStreamingMessage` | Sends a message and streams events as the agent works. |
 | `GetTask` | Reads a task that a previous call created. |
@@ -41,10 +50,10 @@ The following methods are used in this example. The service defines more, includ
 
 An A2A client typically starts by reading the agent card, which tells it what the agent is and which protocol features the agent supports.
 
-1. Fetch the card for your AgentInstance.
+1. Fetch the card for your Agent.
    ```bash
    grpcurl -plaintext \
-     -H "x-kagent-agent-instance-id: $INSTANCE_ID" \
+     -d '{"tenant":"'"$AGENT"'"}' \
      localhost:8083 lf.a2a.v1.A2AService/GetExtendedAgentCard
    ```
 
@@ -79,7 +88,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 2. Read the card for what a caller acts on.
    * Both `name` and `description` come from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. `name` replaces hyphens with underscores, and `description` is `spec.description` verbatim, so a caller sees the description you wrote.
-   * The `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller.
+   * The `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The gRPC interface carries the `tenant` value to send.
    * The `capabilities.extensions` list advertises human-in-the-loop support, which a client opts into per call.
 
 > [!NOTE]
@@ -89,11 +98,10 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 `SendMessage` blocks until the agent finishes the turn, or pauses to ask a person, and then returns the whole task. A message needs its own ID, a role, and at least one part.
 
-1. Send a message to the AgentInstance.
+1. Send a message to the Agent. Omitting a `contextId` starts a new Session.
    ```bash
    grpcurl -plaintext \
-     -H "x-kagent-agent-instance-id: $INSTANCE_ID" \
-     -d '{"message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","parts":[{"text":"What is 7 times 6? Answer with just the number."}]}}' \
+     -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","parts":[{"text":"What is 7 times 6? Answer with just the number."}]}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendMessage
    ```
 
@@ -119,13 +127,14 @@ An A2A client typically starts by reading the agent card, which tells it what th
    ```
    The task returns two identifiers, `id` and `contextId`, and a caller uses them differently.
    * The `id` identifies one turn, and every message returns a new one.
-   * The `contextId` identifies the conversation, and matches the AgentInstance's own ID. A second message to the same instance therefore continues the conversation rather than starting a new one.
+   * The `contextId` identifies the conversation, and is the Session's own ID. A second message that repeats this `contextId` therefore continues the conversation rather than starting a new one.
 
    Task metadata uses the `kagent.dev/a2a/` namespace. An artifact carries `kagent.dev/a2a/timeline-position`, an RFC 3339 timestamp that orders task history, and the task itself carries `kagent.dev/a2a/task-created-at`. A runtime that reports model usage publishes it as `kagent.dev/a2a/usage` on a task event rather than on the artifact.
 
-2. Save the task's `id` so that you can read the task again later.
+2. Save the task's `id` and the conversation's `contextId`, so that later steps can read the task and continue the same Session.
    ```bash
    export TASK_ID=<your-task-id>
+   export SESSION_ID=<your-context-id>
    ```
 
 ## Stream a reply
@@ -135,8 +144,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
 1. Send a message on the streaming method.
    ```bash
    grpcurl -plaintext \
-     -H "x-kagent-agent-instance-id: $INSTANCE_ID" \
-     -d '{"message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","parts":[{"text":"Count from 1 to 3."}]}}' \
+     -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","contextId":"'"$SESSION_ID"'","role":"ROLE_USER","parts":[{"text":"Count from 1 to 3."}]}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendStreamingMessage
    ```
 
@@ -157,8 +165,7 @@ A task outlives the call that created it, so a caller that lost its connection c
 1. Read the task by ID.
    ```bash
    grpcurl -plaintext \
-     -H "x-kagent-agent-instance-id: $INSTANCE_ID" \
-     -d '{"id":"'"$TASK_ID"'"}' \
+     -d '{"tenant":"'"$AGENT"'","id":"'"$TASK_ID"'"}' \
      localhost:8083 lf.a2a.v1.A2AService/GetTask
    ```
 
@@ -192,9 +199,8 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
 1. Send a message that requests the extension.
    ```bash
    grpcurl -plaintext \
-     -H "x-kagent-agent-instance-id: $INSTANCE_ID" \
      -H "A2A-Extensions: https://kagent.dev/extensions/hitl/v1" \
-     -d '{"message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","extensions":["https://kagent.dev/extensions/hitl/v1"],"parts":[{"text":"Should I increase the replica count?"}]}}' \
+     -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","extensions":["https://kagent.dev/extensions/hitl/v1"],"parts":[{"text":"Should I increase the replica count?"}]}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendMessage
    ```
 
@@ -227,18 +233,18 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
    }
    ```
 
-3. Save both identifiers to environment variables. The request `id` is within the extension metadata and starts with `adk-`.
+3. Save the task ID, the conversation's `contextId`, and the request `id` to environment variables. The request `id` is within the extension metadata and starts with `adk-`.
    ```bash
    export PAUSED_TASK_ID=<your-task-id>
+   export PAUSED_SESSION_ID=<your-context-id>
    export REQUEST_ID=<your-request-id>
    ```
 
 4. Answer on the same task. The response goes in the same metadata key, names the request `id` it answers, and sets `taskId` so that it answers the paused task rather than starting a new turn.
    ```bash
    grpcurl -plaintext \
-     -H "x-kagent-agent-instance-id: $INSTANCE_ID" \
      -H "A2A-Extensions: https://kagent.dev/extensions/hitl/v1" \
-     -d '{"message":{"messageId":"'"$(uuidgen)"'","taskId":"'"$PAUSED_TASK_ID"'","contextId":"'"$INSTANCE_ID"'","role":"ROLE_USER","extensions":["https://kagent.dev/extensions/hitl/v1"],"parts":[{"text":"staging"}],"metadata":{"https://kagent.dev/extensions/hitl/v1":{"type":"ask_user_response","id":"'"$REQUEST_ID"'","answers":[{"answer":["staging"]}]}}}}' \
+     -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","taskId":"'"$PAUSED_TASK_ID"'","contextId":"'"$PAUSED_SESSION_ID"'","role":"ROLE_USER","extensions":["https://kagent.dev/extensions/hitl/v1"],"parts":[{"text":"staging"}],"metadata":{"https://kagent.dev/extensions/hitl/v1":{"type":"ask_user_response","id":"'"$REQUEST_ID"'","answers":[{"answer":["staging"]}]}}}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendMessage
    ```
 
@@ -257,7 +263,7 @@ A tool approval works the same way with a different payload, `tool_approval_requ
 
 * This example creates no Kubernetes resources, so you have nothing to delete.
 * You can stop the 8083 port-forward for the kagent-controller service with `Ctrl+C`.
-* The tasks that your messages created stay on the AgentInstance as part of its conversation, and deleting the AgentInstance removes them.
+* The tasks that your messages created stay on the Session as part of its conversation, and deleting the Session removes them.
 
 ## Next steps
 

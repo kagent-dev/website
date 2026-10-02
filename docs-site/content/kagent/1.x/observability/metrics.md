@@ -21,7 +21,7 @@ controller:
     secureServing: true
 ```
 
-Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
+Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `KAGENT_METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
 
 Grant your Prometheus instance access in one of the following ways.
 
@@ -34,7 +34,7 @@ Besides the standard Go runtime and process metrics, the controller reports the 
 
 | Metric | Type | Measures |
 | ------ | ---- | -------- |
-| `kagent_grpc_server_requests_total` | Counter | Requests to the controller's gRPC API, by `method`, `code`, and `rpc_type`. The `method` label names the full gRPC method, such as `/kagent.api.v1alpha1.AgentInstanceService/CreateAgentInstance`. |
+| `kagent_grpc_server_requests_total` | Counter | Requests to the controller's gRPC API, by `method`, `code`, and `rpc_type`. The `method` label names the full gRPC method, such as `/kagent.api.v1alpha1.SessionService/CreateSession`. |
 | `kagent_grpc_server_request_duration_seconds` | Histogram | Latency of requests to the controller's gRPC API, with the same labels. |
 | `controller_runtime_reconcile_total`, `controller_runtime_reconcile_errors_total`, `controller_runtime_reconcile_time_seconds` | Counter, counter, histogram | Reconciliations of kagent resources, by controller, and how long each one takes. A rising error count means that the controller cannot bring a resource to its desired state. |
 | `workqueue_depth`, `workqueue_queue_duration_seconds`, `workqueue_retries_total` | Gauge, histogram, counter | Work waiting for a reconciler, how long it waits, and how often it is retried. |

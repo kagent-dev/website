@@ -168,16 +168,14 @@ kagent pulls an `oci` source as a container image and unpacks its flattened file
 
 ## Attach the skill to an AgentTemplate
 
-1. Add a `skills` entry to the AgentTemplate that your Harness admits. Keep the labels and the model configuration that your existing template uses, and change only the name and the skill.
+1. Add a `skills` entry to an AgentTemplate, and pair it with your Harness through an Agent. Keep the model configuration that your existing template uses, and change only the name and the skill.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: release-writer
      namespace: kagent
-     labels:
-       kagent.dev/harness: my-first-harness
    spec:
      modelConfig:
        name: default-model-config
@@ -187,6 +185,17 @@ kagent pulls an `oci` source as a container image and unpacks its flattened file
        - name: release-notes
          source:
            oci: ${SKILL_OCI}
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: release-writer
+     namespace: kagent
+   spec:
+     templateRef:
+       name: release-writer
+     harnessRef:
+       name: my-first-harness
    EOF
    ```
 
@@ -197,32 +206,26 @@ kagent pulls an `oci` source as a container image and unpacks its flattened file
    | `skills[].name` | The directory the skill is mounted under, and the name the agent sees. It must match no other skill on the template. |
    | `skills[].source.oci` | The digest-pinned image reference, in the form `<repository>@sha256:<digest>`. |
 
-2. Confirm that the template compiled. The revision is ready when `desiredRevision` and `latestSuccessfulRevision` hold the same value.
+2. Confirm that the Agent compiled. The revision is ready when `desiredRevision` and `latestSuccessfulRevision` hold the same value.
    ```bash
-   kubectl get agenttemplate release-writer -n kagent \
-     -o jsonpath='{range .status.harnesses[*]}{.harness}{"\t"}{.desiredRevision}{"\t"}{.latestSuccessfulRevision}{"\n"}{end}'
+   kubectl get agent release-writer -n kagent \
+     -o jsonpath='{.status.desiredRevision}{"\t"}{.status.latestSuccessfulRevision}{"\n"}'
    ```
 
    > [!NOTE]
    > A ready revision means that kagent accepted the reference, not that the image exists. kagent fetches the skill when the agent starts, so a wrong digest surfaces in the next step rather than this one.
 
-3. Create an AgentInstance. An AgentInstance pins the revision that it was created on, so an instance that already exists does not pick up the skill.
+3. Create a {{< gloss "Session" >}}Session{{< /gloss >}}, and save its ID to an environment variable. A Session pins the revision that it was created on, so a session that already exists does not pick up the skill.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template release-writer
-   ```
-
-4. Save the AgentInstance's ID to an environment variable.
-   ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "release-writer")] | sort_by(.createdAt) | last | .id')
-   echo $INSTANCE_ID
+   export SESSION_ID=$(kagent agent session create --agent release-writer -o json | jq -r '.session.id')
+   echo $SESSION_ID
    ```
 
 ## Ask the agent to use the skill
 
 1. Send the agent a request that matches the skill's description.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $SESSION_ID \
      --task "Turn these commit subjects into release notes. feat: add checkpoint API. fix: correct revision digest. docs: update install guide."
    ```
 
@@ -242,7 +245,7 @@ kagent pulls an `oci` source as a container image and unpacks its flattened file
 
 3. Ask the agent what skills it holds, to confirm the attachment from the agent's own side.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID --task "What skills do you have?"
+   kagent agent invoke --session $SESSION_ID --task "What skills do you have?"
    ```
 
 ## Publish a new version of the skill
@@ -259,7 +262,7 @@ A source is immutable, so changing a skill is a two-step change: publish new con
 
 3. Update `skills[].source.oci` on the AgentTemplate with the new digest, which compiles a new revision.
 
-4. Create a new AgentInstance. Agents that are already running keep the skill content they started with, because their revision is pinned.
+4. Create a new Session. Conversations that are already running keep the skill content they started with, because their revision is pinned.
 
 ## Bundle the skill in a plugin package
 
@@ -293,13 +296,11 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
 3. Attach the package with `plugins` instead of `skills`, and list the skills to enable.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: release-writer
      namespace: kagent
-     labels:
-       kagent.dev/harness: my-first-harness
    spec:
      modelConfig:
        name: default-model-config
@@ -316,12 +317,10 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
    > [!IMPORTANT]
    > A package enables only the skills that you list. If you omit `plugins[].skills`, or leave it empty, the agent gets none of them, and kagent accepts that rather than reporting an error. For why an explicit list is the safer default, see [Skills]({{< link path="skills-and-mcp/skills" >}}).
 
-4. Create an AgentInstance on the new revision, and confirm that the agent still has the skill. The instance from the previous section is pinned to the revision that carried the standalone skill.
+4. Create a Session on the new revision, and confirm that the agent still has the skill. The session from the previous section is pinned to the revision that carried the standalone skill.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template release-writer
-   export PLUGIN_INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "release-writer")] | sort_by(.createdAt) | last | .id')
-   kagent invoke --agent-instance $PLUGIN_INSTANCE_ID --task "What skills do you have?"
+   export PLUGIN_SESSION_ID=$(kagent agent session create --agent release-writer -o json | jq -r '.session.id')
+   kagent agent invoke --session $PLUGIN_SESSION_ID --task "What skills do you have?"
    ```
 
    The agent reports `release-notes` exactly as before. A skill behaves the same whether it arrives on its own or inside a package, because kagent copies both into `/skills` before the agent starts.
@@ -374,14 +373,15 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
 
 ## Clean up
 
-1. Delete the AgentInstances that you created. Deleting the AgentTemplate does not remove them. Skip the second command if you did not complete the plugin package section.
+1. Delete the Sessions that you created. Deleting the Agent does not remove them. Skip the second command if you did not complete the plugin package section.
    ```bash
-   kagent delete agent-instance $INSTANCE_ID
-   kagent delete agent-instance $PLUGIN_INSTANCE_ID
+   kagent agent session delete $SESSION_ID
+   kagent agent session delete $PLUGIN_SESSION_ID
    ```
 
-2. Delete the AgentTemplate.
+2. Delete the Agent and the AgentTemplate.
    ```bash
+   kubectl delete agent release-writer -n kagent
    kubectl delete agenttemplate release-writer -n kagent
    ```
 

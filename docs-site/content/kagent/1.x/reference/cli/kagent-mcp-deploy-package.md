@@ -1,7 +1,7 @@
 ---
 title: kagent mcp deploy package
 description: Deploy an MCP server using a package manager (npx, uvx).
-weight: 290
+weight: 330
 ---
 
 Deploy an MCP server using a package manager to run Model Context Protocol servers.

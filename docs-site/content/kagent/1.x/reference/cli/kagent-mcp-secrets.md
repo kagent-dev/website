@@ -1,7 +1,7 @@
 ---
 title: kagent mcp secrets
 description: Manage project secrets.
-weight: 360
+weight: 400
 ---
 
 Manage secrets for MCP server projects.

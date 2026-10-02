@@ -42,7 +42,7 @@ The native provider authenticates with a Bedrock API key, which kagent sends as 
 3. Create a `ModelConfig` that uses the `Bedrock` provider.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: bedrock-model-config
@@ -94,7 +94,7 @@ Bedrock also serves an [OpenAI-compatible chat completions API](https://docs.aws
 3. Create a `ModelConfig` that uses the `OpenAI` provider and points at the Bedrock endpoint for your region.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: bedrock-openai-model-config

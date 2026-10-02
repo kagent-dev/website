@@ -289,8 +289,6 @@ controller:
     enabled: true
     ateApiEndpoint: dns:///api.${ATE_NAMESPACE}.svc:443
     atenetRouterURL: http://atenet-router.${ATE_NAMESPACE}.svc:80
-    defaultWorkerPool:
-      name: kagent-default
 substrateWorkerPool:
   create: true
   replicas: 1

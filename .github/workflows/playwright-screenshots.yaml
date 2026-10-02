@@ -99,7 +99,7 @@ jobs:
         run: |
           # vite directly, not `yarn dev`: one less toolchain pin between here and a
           # screenshot. Backgrounded because the capture needs it to outlive this step.
-          VITE_API_MODE=mock ./node_modules/.bin/vite --port 8101 > /tmp/ui-dev.log 2>&1 &
+          KAGENT_UI_VITE_API_MODE=mock ./node_modules/.bin/vite --port 8101 > /tmp/ui-dev.log 2>&1 &
           for i in $(seq 1 60); do
             if curl -sf http://localhost:8101/ >/dev/null; then echo "UI up after ${i}s"; exit 0; fi
             sleep 1

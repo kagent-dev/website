@@ -1,19 +1,17 @@
 ---
-title: kagent get agent-instance
-description: Get an AgentInstance or list your AgentInstances.
-weight: 210
+title: kagent sandbox resume
+description: resume a sandbox.
+weight: 510
 ---
 
-Get an AgentInstance or list your AgentInstances
+Inspect or change sandbox lifecycle. Mutations make one attempt; retry the same mutation on transient errors. Get only observes. Suspend can interrupt work; delete removes files.
 
 ```bash
-kagent get agent-instance [ID] [flags]
+kagent sandbox resume ID [flags]
 ```
 
 **Flags:**
-- `-h, --help` - help for agent-instance
-- `--page-size int32` - Number of AgentInstances to return (default 50, maximum 100)
-- `--page-token string` - Token returned by the previous page
+- `-h, --help` - help for resume
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

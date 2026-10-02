@@ -17,9 +17,32 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 | ----- | ----------- |
 | `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision. |
 | `model` | The model name, as the provider spells it. |
+| `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider needs no extra settings. |
 
 Credentials come from a Kubernetes Secret in the same namespace as the ModelConfig. The `apiKeySecret` field names the Secret, and `apiKeySecretKey` names the key within that Secret. To forward the bearer token from the incoming request to the provider instead, set `apiKeyPassthrough: true`. A ModelConfig cannot set both `apiKeyPassthrough` and `apiKeySecret`. For every ModelConfig field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#modelconfigspec" >}}).
+
+### Turn off model streaming
+
+The `kagent` harness streams its calls to the model by default, including OpenAI Chat Completions and Responses. An endpoint that rejects a streaming request fails every turn, so set `stream: false` on the ModelConfig to call it without streaming.
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: non-streaming
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: example-model
+  stream: false
+  openAI:
+    baseUrl: https://models.example.com/v1
+```
+
+The setting belongs to the root agent's ModelConfig, and the root runner applies it to its subagents as well. Turning streaming off does not stop a caller from streaming the conversation: A2A task events remain streamable either way. The `codex` and `claude` harnesses do not read this setting.
+
+Changing `stream` compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, so create a new {{< gloss "Session" >}}Session{{< /gloss >}} to use the change.
 
 ## How a credential reaches the provider
 
@@ -44,7 +67,7 @@ Substrate matches a destination on the exact DNS hostname, without path, port, o
 
 ### Credentials that do not compile
 
-Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from that template. Any AgentInstance that already exists keeps running the last revision that compiled.
+Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from it. Any Session that already exists keeps running the last revision that compiled.
 
 | Configuration | Why it cannot be injected | What to use instead |
 | ------------- | ------------------------- | ------------------- |
@@ -78,7 +101,7 @@ For the full matrix, including the per-combination restrictions, see [Agent harn
 Reference the ModelConfig by name in an AgentTemplate. The ModelConfig must be in the same namespace as the AgentTemplate.
 
 ```yaml
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: AgentTemplate
 metadata:
   name: my-agent
@@ -89,4 +112,4 @@ spec:
   systemPrompt: You are a concise, helpful assistant.
 ```
 
-Editing a ModelConfig produces a new compiled {{< gloss "Revision" >}}revision{{< /gloss >}} for every AgentTemplate that references it. An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} keeps running the revision that it was created from, so create a new AgentInstance to pick up a changed model.
+Editing a ModelConfig produces a new compiled {{< gloss "Revision" >}}revision{{< /gloss >}} for every {{< gloss "Agent" >}}Agent{{< /gloss >}} whose template references it. A {{< gloss "Session" >}}Session{{< /gloss >}} keeps running the revision that it was created from, so create a new Session to pick up a changed model.

@@ -5,7 +5,7 @@ weight: 35
 author: kagent.dev
 ---
 
-An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}} for a {{< gloss "Harness" >}}Harness{{< /gloss >}} and AgentTemplate pair, and the revision records the schema and its digest. A schema that fails the checks stops the revision from compiling, so a pair that has never been ready cannot start an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}} for an {{< gloss "Agent" >}}Agent{{< /gloss >}}. The revision records the schema and its digest. A schema that fails the checks stops the revision from compiling, so an Agent that has never been ready cannot start a {{< gloss "Session" >}}Session{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
 
 The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec.outputSchemaFrom`. The fields are mutually exclusive. An AgentTemplate that sets both is rejected when you apply it, with the message `outputSchema and outputSchemaFrom are mutually exclusive`. If you omit both fields, the agent's final answer is not constrained.
 
@@ -19,7 +19,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 
 1. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-harness` Harness and the `default-model-config` {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that the AgentTemplates in this guide use. That guide also has you install the kagent CLI and `jq`.
 
-   Structured output needs a Harness that uses the `kagent` runtime with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` runtime block and the same `workload.image` as `my-first-harness`. With the `codex`, `claude`, or `byo` runtime, an AgentTemplate with a schema fails to compile. With the `kagent` runtime and an image of kagent's Python engine, the AgentTemplate compiles, but the agent ignores the schema. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+   Structured output needs a Harness that uses the `kagent` runtime with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` runtime block and the same `workload.image` as `my-first-harness`. With the `codex`, `claude`, or `byo` runtime, an Agent whose template sets a schema fails to compile. With the `kagent` runtime and an image of kagent's Python engine, the AgentTemplate compiles, but the agent ignores the schema. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 2. Check your kagent CLI version. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI. A CLI from another release can fail with `unknown command`.
    ```bash
@@ -35,16 +35,14 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 
 Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the schema and the rest of the agent's configuration change together.
 
-1. Apply an AgentTemplate with a schema. The `kagent.dev/harness` label matches the `allowedAgentTemplates` selector of `my-first-harness`.
+1. Apply an AgentTemplate with a schema, and an Agent that pairs it with the `my-first-harness` Harness.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: structured-answer
      namespace: kagent
-     labels:
-       kagent.dev/harness: my-first-harness
    spec:
      description: Answers arithmetic questions with a structured result.
      modelConfig:
@@ -61,37 +59,46 @@ Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the sch
          - answer
          - explanation
        additionalProperties: false
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: structured-answer
+     namespace: kagent
+   spec:
+     templateRef:
+       name: structured-answer
+     harnessRef:
+       name: my-first-harness
    EOF
    ```
 
    The schema requires an object with an integer `answer` and a string `explanation`, and allows no other properties. The system prompt describes the same JSON, because some model providers do not receive the schema.
 
-2. Confirm that the pair is ready.
+2. Confirm that the Agent is ready.
    ```bash
-   kagent get agent-template structured-answer
+   kagent agent get structured-answer
    ```
 
    Example output:
    ```console
-   +-------------------+------------------+-------+----------------------+
-   | NAME              | HARNESS          | READY | CREATED              |
-   +-------------------+------------------+-------+----------------------+
-   | structured-answer | my-first-harness | TRUE  | 2026-09-29T07:49:30Z |
-   +-------------------+------------------+-------+----------------------+
+   +-------------------+-------+----------------------+
+   | NAME              | READY | CREATED              |
+   +-------------------+-------+----------------------+
+   | structured-answer | True  | 2026-09-29T07:49:30Z |
+   +-------------------+-------+----------------------+
    ```
 
-   A `READY` value of `FALSE` right after you apply the AgentTemplate is expected, because kagent builds a snapshot of the agent's runtime before it reports the pair ready. If `READY` stays `FALSE`, see [Troubleshooting](#troubleshooting).
+   A `READY` value of `False` right after you apply the Agent is expected, because kagent builds a snapshot of the agent's runtime before it reports the Agent ready. If `READY` stays `False`, see [Troubleshooting](#troubleshooting).
 
-3. Create an AgentInstance from the pair, and save its ID.
+3. Create a Session against the Agent, and save its ID.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template structured-answer
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "structured-answer")] | sort_by(.createdAt) | last | .id')
+   export SESSION_ID=$(kagent agent session create --agent structured-answer -o json | jq -r '.session.id')
    ```
 
 4. Send a question.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID --task "What is 3 plus 5?"
+   kagent agent invoke --session $SESSION_ID --task "What is 3 plus 5?"
    ```
 
    Example output:
@@ -130,13 +137,11 @@ Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that sev
 2. Apply an AgentTemplate that references the key.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: structured-answer-shared
      namespace: kagent
-     labels:
-       kagent.dev/harness: my-first-harness
    spec:
      description: Answers arithmetic questions with a structured result.
      modelConfig:
@@ -145,12 +150,23 @@ Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that sev
      outputSchemaFrom:
        name: shared-schemas
        key: arithmetic-answer
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: structured-answer-shared
+     namespace: kagent
+   spec:
+     templateRef:
+       name: structured-answer-shared
+     harnessRef:
+       name: my-first-harness
    EOF
    ```
 
-3. Confirm that the pair is ready. Wait until `READY` is `TRUE`.
+3. Confirm that the Agent is ready. Wait until `READY` is `True`.
    ```bash
-   kagent get agent-template structured-answer-shared
+   kagent agent get structured-answer-shared
    ```
 
 ## Supported schemas
@@ -178,12 +194,12 @@ kagent counts depth and nodes through `properties`, `items`, and `anyOf`, and co
 
 ## Read the answer
 
-A successful answer is published as one {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) `DataPart` with the media type `application/json`. The part's metadata carries the SHA-256 digest of the schema that the answer was validated against, under the key `kagent.dev/a2a/output-schema-sha256`. kagent computes the digest after it normalizes the schema, so two schemas that differ only in formatting or key order have the same digest. The AgentInstance's agent card lists `application/json` as its default output mode, instead of `text`.
+A successful answer is published as one {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) `DataPart` with the media type `application/json`. The part's metadata carries the SHA-256 digest of the schema that the answer was validated against, under the key `kagent.dev/a2a/output-schema-sha256`. kagent computes the digest after it normalizes the schema, so two schemas that differ only in formatting or key order have the same digest. The Agent's card lists `application/json` as its default output mode, instead of `text`.
 
 To see the part and its metadata, print the task as JSON.
 
 ```bash
-kagent invoke --agent-instance $INSTANCE_ID --task "What is 3 plus 5?" -o json \
+kagent agent invoke --session $SESSION_ID --task "What is 3 plus 5?" -o json \
   | jq '.task.artifacts[-1].parts'
 ```
 
@@ -207,7 +223,7 @@ The runtime holds back the agent's partial output while the agent writes its ans
 
 ## Agents as tools
 
-The schema applies only to the root agent, which is the agent of the AgentTemplate that the AgentInstance was created from. An AgentTemplate [bound to it as a tool]({{< link path="skills-and-mcp/about-tools#agents-as-tools" >}}) does not inherit the schema. If the bound AgentTemplate has a schema of its own, that schema applies only to AgentInstances created from it.
+The schema applies only to the root agent, which is the agent of the AgentTemplate that the Agent names. An AgentTemplate [bound to it as a subagent]({{< link path="skills-and-mcp/about-tools#subagents-as-tools" >}}) does not inherit the schema. If the bound AgentTemplate has a schema of its own, that schema applies only to Agents that name it directly.
 
 With a `Shared` binding, the root agent can hand the conversation to the bound agent, which then answers in its place, in that turn and in the turns that follow. Those tasks fail with `output_validation_failed: root agent produced no result artifact`, because the answers do not come from the root agent. The bound agent's answers still reach the caller as text. Give a schema only to an AgentTemplate whose own agent writes the final answer.
 
@@ -219,7 +235,7 @@ For example, an answer that does not match the schema fails the `kagent invoke` 
 
 ```console
 processor failed: output_validation_failed: root agent output does not conform to its schema
-Error: AgentInstance task 01a0ec27-157f-7034-bb89-09855f485b2a ended in TASK_STATE_FAILED
+Error: Session task 01a0ec27-157f-7034-bb89-09855f485b2a ended in TASK_STATE_FAILED
 ```
 
 | Message | Cause |
@@ -277,26 +293,27 @@ For example, if the `shared-schemas` ConfigMap no longer has the `arithmetic-ans
 | `invalid output schema: schema does not match the portable output profile: ...` | `Compatible`, `UnsupportedConfiguration` | The schema uses a keyword or form outside the [portable output profile](#supported-schemas), or its root is not an object. |
 | `invalid output schema: resolve schema: ...` | `Compatible`, `UnsupportedConfiguration` | kagent cannot resolve the schema, for example because a `$ref` names a `$defs` entry that does not exist. |
 | `output schema is incompatible with Go ADK: ...` | `Compatible`, `UnsupportedConfiguration` | The schema has a recursive reference, or exceeds the depth or node limit. |
-| `Harness "x" does not support structured output` | `Compatible`, `UnsupportedConfiguration` | The Harness does not use the `kagent` runtime. |
+| `Harness runtime "x" does not support structured output` | `Compatible`, `UnsupportedConfiguration` | The Harness does not use the `kagent` runtime. |
 
-If the pair has never been ready, `kagent create agent-instance` fails with `AgentTemplate and Harness do not have a ready prepared revision`.
+If the Agent has never been ready, `kagent agent session create` fails with `Agent does not have a ready prepared revision`.
 
 > [!WARNING]
-> An AgentInstance keeps the revision that it was created from, and validates its answers against that revision's schema. After you change a schema, create a new AgentInstance to use it. A changed schema that fails to compile does not stop new AgentInstances from starting. They start from the pair's latest ready revision, which `status.harnesses` reports as `latestSuccessfulRevision`, so they use the previous schema.
+> A Session keeps the revision that it was created from, and validates its answers against that revision's schema. After you change a schema, create a new Session to use it. A changed schema that fails to compile does not stop new Sessions from starting. They start from the Agent's latest ready revision, which `status.latestSuccessfulRevision` reports, so they use the previous schema.
 
 A change to a ConfigMap does not change the AgentTemplate's `metadata.generation`, so check each condition's `lastTransitionTime` to tell whether kagent has seen your fix.
 
 ## Clean up
 
-1. Delete the AgentInstances that you created in this guide.
+1. Delete the Sessions that you created in this guide.
    ```bash
-   kagent get agent-instance -o json \
-     | jq -r '.agentInstances[] | select(.agentTemplate.name == "structured-answer" or .agentTemplate.name == "structured-answer-shared") | .id' \
-     | xargs -n1 kagent delete agent-instance
+   kagent agent session list -o json \
+     | jq -r '.sessions[] | select(.agent.name == "structured-answer" or .agent.name == "structured-answer-shared") | .id' \
+     | xargs -n1 kagent agent session delete
    ```
 
-2. Delete the AgentTemplates and the ConfigMap.
+2. Delete the Agents, the AgentTemplates, and the ConfigMap.
    ```bash
+   kubectl delete agent structured-answer structured-answer-shared -n kagent
    kubectl delete agenttemplate structured-answer structured-answer-shared -n kagent
    kubectl delete configmap shared-schemas -n kagent
    ```

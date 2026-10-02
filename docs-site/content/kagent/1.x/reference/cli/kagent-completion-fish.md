@@ -1,7 +1,7 @@
 ---
 title: kagent completion fish
 description: Generate the autocompletion script for fish.
-weight: 50
+weight: 170
 ---
 
 Generate the autocompletion script for the fish shell.

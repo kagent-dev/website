@@ -36,7 +36,7 @@ the wrong one produces either a fake screenshot or a permanently red test.
 | | **Live cluster** | **Mock dev server** |
 | --- | --- | --- |
 | Spec | `tests/launch-ui.spec.ts` | `tests/chat.spec.ts` |
-| What serves the UI | `kubectl port-forward svc/kagent-ui` | `VITE_API_MODE=mock vite` from a kagent checkout |
+| What serves the UI | `kubectl port-forward svc/kagent-ui` | `KAGENT_UI_VITE_API_MODE=mock vite` from a kagent checkout |
 | Shows | real resources from a real install | the UI's own fixtures |
 | Use for | anything a reader reaches by following the install guide | anything a real backend makes nondeterministic |
 
@@ -52,7 +52,7 @@ docs need.
 
 Two constraints on the mock path:
 
-- **It needs a kagent source checkout**, not the released image. `VITE_API_MODE` is a
+- **It needs a kagent source checkout**, not the released image. `KAGENT_UI_VITE_API_MODE` is a
   build-time pin and the release image deliberately ships no mock service worker
   (`ui/src/api/config.ts`), so a built image cannot honour it however it is set.
 - **A mock-backed spec must be unable to run against a cluster by accident.** `chat.spec.ts`
@@ -126,7 +126,7 @@ Use a real key only for a capture that shows an agent doing something.
 ```sh
 cd <kagent checkout>/ui
 yarn install
-VITE_API_MODE=mock ./node_modules/.bin/vite --port 8101 &
+KAGENT_UI_VITE_API_MODE=mock ./node_modules/.bin/vite --port 8101 &
 
 cd <website>/docs-site/playwright
 UI_BASE_URL=http://localhost:8101 npm run update:chat
@@ -229,35 +229,47 @@ Screenshots are pixel-compared, so captures must be stable across runs.
 
 | Capture | Source | Date |
 | --- | --- | --- |
-| `kagent-ui-chat` | kagent UI mock backend, `vite` at kagent tag `v1.0.0-alpha2` (`373b56be`) | 2026-09-15, re-verified 2026-09-23 |
-| `kagent-ui-dashboard` / `-agents` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-15, re-verified 2026-09-23 |
-| `kagent-ui-substrate` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-23 |
+| `kagent-ui-chat` | kagent UI mock backend, `vite` at kagent tag `v1.0.0-alpha7` | 2026-10-01 |
+| `kagent-ui-dashboard` | **published charts** kagent `1.0.0-alpha2` + Agent Substrate `0.2.0-beta5`, kind 1.37.0 | 2026-09-15, re-verified 2026-09-23 and 2026-10-01 |
+| `kagent-ui-agents` / `-substrate` | **published charts** kagent `1.0.0-alpha7` + Agent Substrate `0.3.0-alpha3`, kind 1.37.0 | 2026-10-01 |
 
-**The cluster captures now come from the published chart**, which closes the caveat these
-notes carried since 2026-09-15. A fresh `kagent-shots` cluster installed exactly what
-`versions/kagent.md` and `versions/agent-substrate.md` pin, and the capture ran against that.
+> The 2026-10-01 set was captured on macOS, so CI's first Linux run after it merges rewrites
+> all six. That re-render carries no content change — see **Baselines and platforms**.
 
-**`-dashboard` and `-agents` were re-verified, not rewritten.** They still match byte-for-byte
-against the published chart, so those two surfaces did not move between the 2026-09-15 source
-build and `1.0.0-alpha2`, and the old images were honest after all. Only `-substrate` changed
-(see below), so only that pair carries the new date.
+**`-dashboard` was re-verified, not rewritten.** It passed unchanged against `1.0.0-alpha7`,
+so the landing view did not move across five releases.
 
-**What moved on the Substrate page at `1.0.0-alpha2`** — the page grew 1247px to 1308px, and
-these are the changes a reader sees:
+**What moved at `1.0.0-alpha7`.** The Agents page carries the 1.0 Agent model, which is the
+change these captures exist to show:
 
-- the single **Scope** selector became two filters, **Kubernetes namespace** and **ATE atespace**;
-- the **Actor templates** table dropped its **Harness** column;
-- the **Workers** table replaced its **Actor** column (which read `idle`) with **IP**;
-- the Actors and Workers panels lost their per-panel search boxes, gained `N on this page`
-  counts and a `read just now` line, and the empty state changed from
-  `ate-api reported no actors in this scope` to `No actors on this page.`;
-- the page description dropped the internal name `ate-api` in favour of `Substrate`.
+- a **New Agent** button joins **New Template** and **New Harness**, because the Agents tab
+  now authors the `Agent` custom resource rather than deriving the list;
+- the **Overview** card's `Agent` box lost its `(derived)` marker and reads
+  `One template and one harness, each shared or inline`;
+- the agents table replaced its **Runs on** and **Revision** columns with **Template**,
+  **Harness** and **Status**;
+- the empty state grew from `No agents yet.` to
+  `No agents yet. Create one to pair a template with a harness.`, and the sentence
+  `The agents list is populated automatically from the available template and harness
+  configurations.` is gone.
 
-Three of those falsified prose in `observability/launch-ui.md`, which was corrected in the
-same change. **`read just now` is a new volatile string** — it has held across re-captures so
-far, but it is the thing to suspect first if this capture ever starts flapping.
+**The Substrate page did not move structurally.** Its only content change is the Ateom image
+in the worker pool row, `v0.2.0-beta5` to `v0.3.0-alpha3`. The rest of its diff is the pod
+name, the pod IP, the `read N ago` line, and the macOS render.
 
-The chat capture needs no such caveat going forward: it will always come from source,
+**The chat surface moved by one string.** The agent switcher's subtitle reads the namespace,
+`kagent`, where it used to read the agent name, `on k8s-agent`.
+
+**`AgentInstance` is still the UI's word for a Session.** The API renamed it — the dev server
+proxies `SessionService/ListSessions` — but the Agents page Overview card and the chat surface
+still say `AgentInstance`. `observability/launch-ui.md` carries a note mapping the two, the
+same way it already maps the UI's `Snapshot` label onto a checkpoint. Drop that note when the
+UI catches up.
+
+**`read just now` is a volatile string** — it has held across re-captures so far, but it is
+the thing to suspect first if this capture ever starts flapping.
+
+The chat capture needs no source caveat going forward: it will always come from source,
 because the released image ships no mock service worker.
 
 ## Design decisions worth not reversing by accident

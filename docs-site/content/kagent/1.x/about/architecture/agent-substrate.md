@@ -1,25 +1,25 @@
 ---
 title: Agent Substrate architecture
-description: See how Agent Substrate runs, suspends, and resumes the Actors behind every AgentInstance.
+description: See how Agent Substrate runs, suspends, and resumes the Actors behind every Session.
 weight: 40
 author: kagent.dev
 aliases:
   - /kagent/1.x/about/agent-substrate/
 ---
 
-The [kagent architecture]({{< link path="about/architecture/kagent" >}}) page established that every {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} runs on an Actor. This page explains what an Actor is built from and what it runs on: the ActorTemplate that it is created from, the compute that hosts it, the atespace that identifies it, the sandbox that isolates it, and the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} cycle that lets it suspend when idle and resume on demand.
+The [kagent architecture]({{< link path="about/architecture/kagent" >}}) page established that every {{< gloss "Session" >}}Session{{< /gloss >}} runs on an Actor. This page explains what an Actor is built from and what it runs on. It covers the ActorTemplate that it is created from, the compute that hosts it, the atespace that identifies it, the sandbox that isolates it, and the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} cycle that lets it suspend when idle and resume on demand.
 
 ## ActorTemplate
 
 Every Actor is created from an **ActorTemplate**, the compiled definition that the kagent controller produces from a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} pair.
 
-Substrate adds enforcement. It rejects any change to an ActorTemplate's spec after it is created, so immutability is a property of the resource itself rather than a convention that the controller follows. That immutability requires the controller to create a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and allows the controller to safely reclaim an old ActorTemplate once no AgentInstance references it.
+Substrate adds enforcement. It rejects any change to an ActorTemplate's spec after it is created, so immutability is a property of the resource itself rather than a convention that the controller follows. That immutability requires the controller to create a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and allows the controller to safely reclaim an old ActorTemplate once nothing references its revision. An Agent holds a reference for as long as the revision is its desired or its latest successful one, and a Session holds one for as long as it runs on that revision.
 
 ## Workers and WorkerPools
 
-An Actor needs somewhere to run. Each Actor runs on a **Worker**: a pre-started, sandboxed pod that hosts at most one Actor at a time. Instead of starting a new pod each time an AgentInstance needs an Actor, Substrate schedules that Actor onto a Worker that is already running and waiting.
+An Actor needs somewhere to run. Each Actor runs on a **Worker**: a pre-started, sandboxed pod that hosts at most one Actor at a time. Instead of starting a new pod each time a Session needs an Actor, Substrate schedules that Actor onto a Worker that is already running and waiting.
 
-Workers come from a **WorkerPool**, a Kubernetes custom resource that an operator provisions before any Harness can create AgentInstances. A WorkerPool declares how many Workers to keep running and which sandbox technology those Workers use.
+Workers come from a **WorkerPool**, a Kubernetes custom resource that an operator provisions before any Agent can compile. A WorkerPool declares how many Workers to keep running and which sandbox technology those Workers use.
 
 An operator never creates a Worker directly. Substrate manages them, keeping enough ready in each WorkerPool so that an Actor can start or resume on one immediately, without waiting on the Kubernetes scheduler to place a new Pod.
 
@@ -27,7 +27,7 @@ An operator never creates a Worker directly. Substrate manages them, keeping eno
 
 An **atespace** is the isolation boundary that an Actor belongs to, and the first half of its identity. Agent Substrate addresses an Actor by its atespace and its name together, so the same Actor name can exist in two atespaces without colliding. Despite the resemblance, an atespace is a global-scoped Agent Substrate resource rather than a Kubernetes namespace.
 
-kagent names each atespace after the Kubernetes namespace of the AgentInstance whose Actor it holds, and creates that atespace on demand the first time an AgentInstance in the namespace needs an Actor. The Actor's own name comes from the AgentInstance's identifier. An AgentInstance in the `kagent` namespace therefore runs on an Actor that Agent Substrate addresses within the `kagent` atespace. Both halves of that identity appear in the address that traffic uses to reach the Actor, which [Sandboxing]({{< link path="substrate-runtime/sandboxing#how-traffic-reaches-a-sandboxed-actor" >}}) covers.
+kagent names each atespace after the Kubernetes namespace of the Agent whose Actor it holds, and creates that atespace on demand the first time a Session in the namespace needs an Actor. The Actor's own name is `session-` followed by the Session's identifier. A Session on an Agent in the `kagent` namespace therefore runs on an Actor that Agent Substrate addresses within the `kagent` atespace. Both halves of that identity appear in the address that traffic uses to reach the Actor, which [Sandboxing]({{< link path="substrate-runtime/sandboxing#how-traffic-reaches-a-sandboxed-actor" >}}) covers.
 
 ## Sandboxing
 

@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on, and kagent provides the Harness, AgentTemplate, and AgentInstance API that you author against. Install Agent Substrate first, because the kagent controller connects to it at startup.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on, and kagent provides the Harness, AgentTemplate, and Agent API that you author against. Install Agent Substrate first, because the kagent controller connects to it at startup.
 
 > [!NOTE]
 > These steps install kagent 1.0 fresh. kagent 1.0 has no in-place upgrade from the 0.10.x version line, and installing its custom resource definitions replaces the ones that a 0.10.x installation uses. To move an existing installation, start with [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}).
@@ -221,8 +221,6 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
        enabled: true
        ateApiEndpoint: dns:///api.ate-system.svc:443
        atenetRouterURL: http://atenet-router.ate-system.svc:80
-       defaultWorkerPool:
-         name: kagent-default
    substrateWorkerPool:
      create: true
      replicas: 1
@@ -271,7 +269,7 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    kagent-default   1         1          1       2m
    ```
 
-3. Get the address to reach the kagent gRPC API, which serves the AgentInstance lifecycle and conversation calls. The guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) assumes port-forwarding.
+3. Get the address to reach the kagent gRPC API, which serves the Session lifecycle and conversation calls. The guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) assumes port-forwarding.
    {{< tabs >}}
    {{% tab name="Port-forward for local testing" %}}
    Forward the controller port and leave the command running. The API is then available at `localhost:8083`.
@@ -296,7 +294,7 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Your first agent" subtitle="Apply a Harness and AgentTemplate, and talk to the AgentInstance they produce." >}}
+  {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Your first agent" subtitle="Apply a Harness, an AgentTemplate, and an Agent, then start a conversation with it." >}}
   {{< card link=`{{< link path="setup/model-providers" >}}` title="Configure model providers" subtitle="Point kagent at OpenAI, Anthropic, Gemini, or a provider of your own." >}}
   {{< card link=`{{< link path="operations/operational-considerations" >}}` title="Operational considerations" subtitle="Replace the evaluation defaults for the database, controller replicas, and Worker node pools." >}}
   {{< card link=`{{< link path="operations/operational-considerations#rotate-the-model-provider-api-key" >}}` title="Rotate the model provider API key" subtitle="Change the API key in the kagent-openai Secret, which Helm owns, without breaking running agents." >}}

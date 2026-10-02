@@ -288,8 +288,8 @@ kagent's repository carries example servers in [contrib/tools](https://github.co
 
 | Server | Ready to apply | Description |
 | ------ | -------------- | ----------- |
-| [k8sgpt](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/k8sgpt-mcp-server) | Yes | K8sGPT integration, for diagnosing cluster problems. Declares `RemoteMCPServer` on `kagent.dev/v1alpha3`. |
-| [server-everything](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/server-everything) | Yes | The MCP reference server, useful for testing a binding end to end. Declares `RemoteMCPServer` on `kagent.dev/v1alpha3`. |
+| [k8sgpt](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/k8sgpt-mcp-server) | Yes | K8sGPT integration, for diagnosing cluster problems. Declares `RemoteMCPServer` on `api.kagent.dev/v1alpha3`. |
+| [server-everything](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/server-everything) | Yes | The MCP reference server, useful for testing a binding end to end. Declares `RemoteMCPServer` on `api.kagent.dev/v1alpha3`. |
 | [GitHub MCP Server](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/github-mcp-server) | No | Tools for issues, pull requests, repositories, and actions. Its chart still declares the removed `ToolServer` kind. |
 | [mcp-grafana](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/mcp-grafana) | No | Superseded by the `grafana-mcp` subchart that a kagent installation already registers. Its chart still declares the removed `ToolServer` kind. |
 | [context7](https://github.com/kagent-dev/kagent/blob/main/contrib/tools/context7.mcp.yaml) | No | Documentation lookup over stdio. Both the `ToolServer` kind and the stdio transport were removed. |

@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate down
 description: Roll back the latest N migrations.
-weight: 130
+weight: 230
 ---
 
 Roll back the latest N migrations. A down migration can delete data.

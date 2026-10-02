@@ -45,43 +45,37 @@ tools:
 >
 > Where an agent on the Claude harness must not reach a tool, narrow the server rather than the binding. Set `requireApproval: true`, which does apply on this harness and pauses every call to the server, or give the agent its own RemoteMCPServer that serves only the tools you intend. For the bundled tool server, see the installation-level settings that drop providers and write tools in [Tools ecosystem]({{< link path="reference/tools-ecosystem#narrow-what-kagent-tool-server-serves" >}}).
 
-## Agents as tools
+## Subagents as tools
 
-An `agent` binding points at another AgentTemplate, which lets one agent route work to another. The model reads the `description` when it decides whether to route work here, so a description that states plainly what the bound agent is for matters more than the detail of its configuration.
+A `subAgent` binding points at another AgentTemplate. The binding allows one agent to route work to another agent. The model reads the `description` when it decides whether to route work here. A description that states plainly what the bound agent is for therefore matters more than the detail of its configuration.
 
 ```yaml
 tools:
-  - agent:
+  - subAgent:
       name: log-searcher
       description: Search application logs for a time range and a query string.
       templateRef:
         name: log-search-agent
-      isolation: Shared
 ```
+
+Every field is required. For the complete schema, see the [API reference]({{< link path="reference/api-ref#subagenttoolbinding" >}}).
 
 | Field | Description |
 | ----- | ----------- |
-| `agent.name` | The name that the model sees for this binding. |
-| `agent.description` | The text that tells the parent agent when to route work here. |
-| `agent.templateRef.name` | The AgentTemplate to bind, in the same namespace. |
-| `agent.isolation` | The [isolation mode](#shared-and-dedicated-isolation) for the bound agent. Currently, `Shared` is the only supported value. |
+| `subAgent.name` | The name that the model sees for this binding. |
+| `subAgent.description` | The text that tells the parent agent when to route work here. |
+| `subAgent.templateRef.name` | The AgentTemplate to bind, in the same namespace. |
 
-### Shared and Dedicated isolation
+A bound template compiles under the parent {{< gloss "Agent" >}}Agent{{< /gloss >}}'s Harness and runs inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}, so nesting costs no extra compute and the two agents share one sandbox. A subagent needs no Agent of its own.
 
-The isolation setting determines whether a bound agent runs inside its parent's runtime boundary, or runs within a boundary of its own.
+> [!NOTE]
+> Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor and reach it over A2A, are not part of the served API. The `subAgent.agentRef` field that would select one is deferred until a dedicated subagent can create and invoke its own Session, so the only binding a reader can write today is `templateRef`.
 
-- **`Shared`**: The bound agent runs inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}. Nesting costs no extra compute, and the two agents share one sandbox.
-- **`Dedicated`**: The bound agent would run in its own Actor, with its own sandbox and its own suspend and resume cycle.
+### What a subagent tree allows
 
-> [!WARNING]
-> `Dedicated` is not currently implemented. The AgentTemplate schema accepts the value, but compiling a binding that uses it fails with `Dedicated AgentTemplate tools are not supported yet`, and the pair does not become ready. Use `Shared`, which is the default.
-
-### What a Shared tree allows
-
-A `Shared` binding nests one agent inside another's runtime, so kagent constrains the shape of the resulting tree. The compiler enforces each of the following rules, and a violation surfaces as a failed {{< gloss "Revision" >}}revision{{< /gloss >}} rather than a failure at run time.
+A subagent binding nests one agent inside another's runtime, so kagent constrains the shape of the resulting tree. The compiler enforces each of the following rules, and a violation surfaces as a failed {{< gloss "Revision" >}}revision{{< /gloss >}} rather than a failure at run time.
 
 - **One level of nesting.** A bound agent cannot itself bind another agent. A second consecutive binding is rejected as exceeding the kagent runtime boundary.
 - **No cycles.** An AgentTemplate cannot reach itself through a chain of bindings.
 - **No reuse within one tree.** The same AgentTemplate cannot appear twice in the same tree.
 - **Unique binding names.** Two bindings on one AgentTemplate cannot share a `name`.
-- **The bound template must be admitted too.** A nested AgentTemplate must match the same {{< gloss "Harness" >}}Harness{{< /gloss >}}'s `allowedAgentTemplates` selector. Binding a template that the Harness does not admit is rejected.

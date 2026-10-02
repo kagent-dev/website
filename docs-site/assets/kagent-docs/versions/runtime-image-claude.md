@@ -1,1 +1,1 @@
-ghcr.io/kagent-dev/kagent/claude-harness@sha256:a8b224b561dccee6a8a120b1061ddeec160d8616ae572be1ee00f01cbaa00ec7
+ghcr.io/kagent-dev/kagent/claude-harness@sha256:1bce31de2ffe651c23f1fc64d57d6625d937ad4e8e46836f4f2208128f2c2bb0

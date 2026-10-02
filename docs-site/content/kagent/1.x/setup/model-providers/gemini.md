@@ -26,7 +26,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
 3. Create a `ModelConfig` that references the Secret.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: gemini-model-config
@@ -34,7 +34,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
    spec:
      apiKeySecret: kagent-gemini
      apiKeySecretKey: GOOGLE_API_KEY
-     model: gemini-2.5-flash
+     model: gemini-3.5-flash
      provider: Gemini
      gemini: {}
    EOF

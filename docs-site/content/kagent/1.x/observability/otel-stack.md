@@ -60,8 +60,8 @@ Agent Substrate traces do not join the trace of the agent request that caused th
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the AgentInstance commands that these steps use. To check your version, run `kagent version`.
-3. Install [`jq`](https://jqlang.org/download/), to read the AgentInstance ID and revision out of the CLI's JSON output.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
+3. Install [`jq`](https://jqlang.org/download/), to read the Session ID and revision out of the CLI's JSON output.
 4. Make sure that your cluster has about 1.5 GB of memory available in addition to kagent. On a kind cluster, the memory limit is the memory that you give Docker.
 
 ## Install Tempo and Loki
@@ -319,11 +319,11 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
 
 Turn on the kagent trace and log exporters, and point both at the collector. Also turn on the controller's metrics endpoint, together with the ServiceMonitor that the kagent chart creates for it.
 
-1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent recompiles the pair with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
+1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
@@ -379,16 +379,16 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
-4. Wait for kagent to recompile the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
+4. Wait for kagent to recompile the Agent. The controller rebuilds each Agent after the controller restarts. A Session that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
    ```bash
    for i in $(seq 1 60); do
-     [ "$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
+     [ "$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
        && echo "Recompiled" && break
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the Agent. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
 ## Send Agent Substrate telemetry to the collector
 
@@ -415,32 +415,30 @@ Point Agent Substrate at the collector. A single `otel.endpoint` setting turns o
 
 ## Send a request
 
-Create an AgentInstance that picks up the new telemetry settings, and send it a few requests to produce traces, logs, and metrics.
+Create a Session that picks up the new telemetry settings, and send it a few requests to produce traces, logs, and metrics.
 
-1. Create a new AgentInstance. An AgentInstance keeps the runtime configuration that it was created with, so only a new AgentInstance exports telemetry.
+1. Create a new Session. A Session keeps the runtime configuration that it was created with, so only a new Session exports telemetry.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
-2. Confirm that the AgentInstance runs the current revision of the pair. The command waits until kagent finishes compiling the pair, then compares that revision with the one that the AgentInstance started from. If the command prints `Outdated`, the AgentInstance was created from an earlier revision, and exports without the new settings. Create another AgentInstance, and run the command again.
+2. Confirm that the Session runs the Agent's current revision. The command waits until kagent finishes compiling the Agent, then compares that revision with the one that the Session started from. If the command prints `Outdated`, the Session was created from an earlier revision, and exports without the new settings. Create another Session, and run the command again.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
-   INSTANCE_REVISION=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .preparedRevision')
-   [ "$INSTANCE_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
+   SESSION_REVISION=$(kagent agent session get $SESSION_ID -o json | jq -r '.session.preparedRevision')
+   [ "$SESSION_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
    ```
 
 3. Send a few requests to produce telemetry.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   kagent invoke --agent-instance $INSTANCE_ID --task "What is 2+2?"
-   kagent invoke --agent-instance $INSTANCE_ID --task "What did I just ask you?"
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID --task "What is 2+2?"
+   kagent agent invoke --session $SESSION_ID --task "What did I just ask you?"
    ```
 
 ## Explore the telemetry in Grafana
@@ -463,14 +461,14 @@ Log in to Grafana, and query each backend from the **Explore** view.
 4. Open **Explore**, and review each signal.
    {{< tabs >}}
    {{% tab name="Traces" %}}
-   Select the **Tempo** data source, then select the **Search** query type. From the **Service Name** list, select `my-first-agent-my-first-harness`, the service that the AgentTemplate and Harness pair reports as, and run the query. Open a trace to see the controller, proxy, and agent runtime spans of one request.
+   Select the **Tempo** data source, then select the **Search** query type. From the **Service Name** list, select `my-first-agent`, the service that the Agent reports as, and run the query. Open a trace to see the controller, proxy, and agent runtime spans of one request.
 
    To see Agent Substrate's own work, select one of its services from the **Service Name** list instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
    {{% /tab %}}
    {{% tab name="Logs" %}}
-   Select the **Loki** data source, and run the following query to show the state changes of your agent's Actor. Agent Substrate names the Actor `ai-` followed by the AgentInstance ID, so replace `<instance-id>` with the value of `$INSTANCE_ID` from the previous section.
+   Select the **Loki** data source, and run the following query to show the state changes of your agent's Actor. Agent Substrate names the Actor `session-` followed by the Session ID, so replace `<session-id>` with the value of `$SESSION_ID` from the previous section.
    ```text
-   {service_name="ateapi"} | ate_actor_name="ai-<instance-id>"
+   {service_name="ateapi"} | ate_actor_name="session-<session-id>"
    ```
 
    Each record carries the new state of the Actor, such as `resuming`, `running`, or `suspended`. For the meaning of each record, see [Actor state changes]({{< link path="observability/substrate-telemetry#actor-state-changes" >}}).

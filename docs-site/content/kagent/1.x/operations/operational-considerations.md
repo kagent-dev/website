@@ -9,7 +9,7 @@ A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation is b
 
 ## Choose a database
 
-kagent stores conversations, {{< gloss "AgentInstance" >}}AgentInstances{{< /gloss >}}, and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. A bundled instance ships with the chart so that an evaluation needs no external prerequisites, and production deployments supply their own.
+kagent stores conversations, {{< gloss "Session" >}}Sessions{{< /gloss >}}, and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. A bundled instance ships with the chart so that an evaluation needs no external prerequisites, and production deployments supply their own.
 
 Two independent settings determine what runs and what the controller talks to:
 
@@ -87,7 +87,7 @@ controller:
 Leader election keeps the replicas from conflicting. One replica holds a Kubernetes lease and performs reconciliation, garbage collection, and scheduled runs; the other replicas stay ready and take over when the leader's lease expires.
 
 > [!NOTE]
-> Leader election is always on, including at a single replica, because a rolling update briefly runs two controllers at once. The chart grants the lease permissions unconditionally and exposes no setting to turn election off. `LEADER_ELECT=false` remains available for local testing.
+> Leader election is always on, including at a single replica, because a rolling update briefly runs two controllers at once. The chart grants the lease permissions unconditionally and exposes no setting to turn election off. `KAGENT_LEADER_ELECT=false` remains available for local testing.
 
 PostgreSQL supports multiple controller replicas without further configuration. The bundled instance is still a single pod backed by one PVC, so an installation that runs several controllers for availability, against a bundled database, has only moved the single point of failure.
 
@@ -110,13 +110,36 @@ gcloud container node-pools update "${NODE_POOL}" \
 
 Scaling a serving WorkerPool down removes pods without suspending the Actors on them, so it strands conversations exactly as a reclaimed node does. For pool sizing and the rest of the Substrate runtime settings, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
 
+## Expire idle conversations
+
+A conversation that nobody returns to still holds a row in your database and a pinned runtime revision. The kagent controller deletes idle {{< gloss "Session" >}}Sessions{{< /gloss >}} on a timer so that neither accumulates without a bound.
+
+A leader-only worker sweeps once a minute and deletes every Session whose idle clock has run out, through the same deletion workflow that a client delete uses.
+
+| Value | Default | Description |
+| ----- | ------- | ----------- |
+| `controller.sessionIdleTTL` | `168h` | How long a Session can be idle before the worker deletes it, as a Go duration. `0` turns the worker off, retries included. A negative value is rejected. |
+
+The `168h` default is seven days. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
+
+Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires. A {{< gloss "Fork" >}}fork{{< /gloss >}} keeps its source's event timestamps. Its own creation time gives it a full lifetime, so it does not inherit an almost-expired one.
+
+Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
+
+> [!IMPORTANT]
+> **Expiry bounds conversations, not history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, and `GetSession` then returns not-found. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint can still be forked after the Session that it was taken on has expired. Sizing a database for a long-running installation means planning for that audit history separately, because no setting on this page bounds it.
+
+Unlike an explicit client deletion, which keeps a tombstone, an expired Session releases its creation request ID. The same caller can reuse that request ID to start a fresh conversation.
+
+To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sessions that it removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
+
 ## How configuration changes reach agents
 
 kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} reference, such as the API keys and TLS certificates in a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}}. An edit to one of them recompiles the pair into a new revision.
 
-A new revision does not reach the AgentInstances that are already running. An AgentInstance is pinned to the revision that it was created from and keeps that revision for life. To move an existing conversation onto new configuration, create a new AgentInstance.
+A new revision does not reach the Sessions that are already running. A Session is pinned to the revision that it was created from and keeps that revision for life. To move an existing conversation onto new configuration, create a new Session.
 
-The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so a rotated key reaches running AgentInstances after you restart the egress gateway. See [Rotate the model provider API key](#rotate-the-model-provider-api-key).
+The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so a rotated key reaches running Sessions after you restart the egress gateway. See [Rotate the model provider API key](#rotate-the-model-provider-api-key).
 
 This behavior differs from kagent 0.x, where an agent ran as a Deployment and a secret change restarted its pods.
 

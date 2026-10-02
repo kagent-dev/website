@@ -16,10 +16,10 @@ import { test, expect, gotoUI, pinClock, settle } from '../fixtures/test';
  *
  * Run it against a dev server from a kagent checkout, NOT against a cluster:
  *
- *   cd <kagent>/ui && VITE_API_MODE=mock yarn dev --port 8101
+ *   cd <kagent>/ui && KAGENT_UI_VITE_API_MODE=mock yarn dev --port 8101
  *   UI_BASE_URL=http://localhost:8101 npm run update:chat
  *
- * `VITE_API_MODE` is a build-time pin and the released UI image ships no mock service
+ * `KAGENT_UI_VITE_API_MODE` is a build-time pin and the released UI image ships no mock service
  * worker (ui/src/api/config.ts), so this cannot be captured from the published image —
  * it needs the source checkout.
  *

@@ -73,36 +73,38 @@ The left menu groups the console by the resource each page reads, so the page yo
 | Page | Shows |
 | ---- | ----- |
 | **Dashboard** | Counts of agents, model configurations, MCP servers, and discovered tools, plus recent conversations. |
-| **Agents** | Every {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} and {{< gloss "Harness" >}}Harness{{< /gloss >}} pairing, and the conversations held with each. |
+| **Agents** | Every {{< gloss "Agent" >}}Agent{{< /gloss >}}, {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, and {{< gloss "Harness" >}}Harness{{< /gloss >}}, and the conversations held with each Agent. |
 | **Schedules** | Agents that run automatically, each execution starting a new conversation. |
 | **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents name, and the providers behind them. |
 | **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each. |
 | **Prompts** | Prompt libraries, which hold reusable fragments that an AgentTemplate includes in its instructions. |
 | **Substrate** | WorkerPools, Actors, and Workers, read from both Kubernetes and the Agent Substrate API. |
 
-Start at the **Agents** page to review the agents and their backing pairs of AgentTempate and Harness resources. The page lists the derived pairs across its **Agents**, **Templates**, and **Harnesses** tabs.
+Start at the **Agents** page to review your agents and the resources behind them. The page lists each resource kind on its own tab: **Agents**, **Templates**, and **Harnesses**.
 
 {{< reuse-image-light src="img/kagent-ui-agents.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-agents-dark.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 
+The **Agents** tab authors the `Agent` custom resource directly. Create one to pair a template with a harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it named. For CLI steps, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
+
 > [!NOTE]
-> The agents list is derived, not authored. kagent builds it from the AgentTemplate and Harness resources that already exist, so an agent appears when a Harness accepts a template rather than when you create an `Agent` resource. kagent 1.0 has no `Agent` custom resource. To create the pair, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
+> The **Overview** card labels a conversation an `AgentInstance`. The API calls the same object a {{< gloss "Session" >}}Session{{< /gloss >}}, which is the name the CLI, the gRPC services, and the rest of this documentation use. Read `AgentInstance` on this card as `Session`.
 
 ## Read a conversation
 
-Opening an agent and sending a message creates an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}, which is one conversation scheduled onto a Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the controls that branch the conversation.
+Opening an agent and sending a message creates a {{< gloss "Session" >}}Session{{< /gloss >}}, which is one conversation scheduled onto a Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the controls that branch the conversation.
 
 {{< reuse-image-light src="img/kagent-ui-chat.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-chat-dark.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 
 The UI labels a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} **Snapshot**. The label names the pin, not the Agent Substrate {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} beneath it. Agent Substrate writes a snapshot each time an Actor suspends, and a checkpoint pins one of those snapshots so that Agent Substrate does not collect it.
 
-To take a checkpoint, select the save icon beside the message box. kagent pins the snapshot that the AgentInstance most recently suspended to, and records how far the transcript advanced. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
+To take a checkpoint, select the save icon beside the message box. kagent pins the snapshot that the Session most recently suspended to, and records how far the transcript advanced. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}).
 
 A checkpoint appears in the transcript as a mark carrying the snapshot name and three controls. Select the mark to open the record behind it. The record holds the checkpoint's ID, turn, state, and age.
 
-- **Fork** creates a second AgentInstance from the checkpoint, continuing from the point that the checkpoint pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the checkpoint's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the AgentTemplate do not change what it runs, and new turns append only to the fork. The fork takes the snapshot name as its own. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
-- **Rename** replaces the snapshot name that kagent generates on creation from the AgentInstance ID and the turn the checkpoint pins. Clearing the name restores that generated default.
+- **Fork** creates a second Session from the checkpoint, continuing from the point that the checkpoint pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the checkpoint's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the Agent do not change what it runs, and new turns append only to the fork. The fork takes the snapshot name as its own. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
+- **Rename** replaces the snapshot name that kagent generates on creation from the Session ID and the turn the checkpoint pins. Clearing the name restores that generated default.
 - **Delete** removes the checkpoint and releases the snapshot it pinned. Agent Substrate is then free to collect that snapshot.
 
 > [!NOTE]
@@ -121,7 +123,7 @@ Read the page from the top tiles down.
 | ---- | ----- |
 | **Worker pools** | {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}} that an operator has provisioned. No Harness can run an agent until at least one exists. |
 | **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated. |
-| **Actors running** | Live Actors, each one an AgentInstance holding a conversation. |
+| **Actors running** | Live Actors, each one a Session holding a conversation. |
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
 | **Scope** | The filters this page asked for, rather than what the API returned. Reads `all` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`. |
 

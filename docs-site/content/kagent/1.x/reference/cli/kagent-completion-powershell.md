@@ -1,7 +1,7 @@
 ---
 title: kagent completion powershell
 description: Generate the autocompletion script for powershell.
-weight: 60
+weight: 180
 ---
 
 Generate the autocompletion script for powershell.

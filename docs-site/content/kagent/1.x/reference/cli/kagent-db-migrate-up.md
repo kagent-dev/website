@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate up
 description: Apply all pending migrations.
-weight: 160
+weight: 260
 ---
 
 Apply all pending migrations

@@ -5,7 +5,7 @@ weight: 40
 author: kagent.dev
 ---
 
-An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} remembers its own conversation, because it holds the {{< gloss "Transcript" >}}transcript{{< /gloss >}}. Long-term memory is different: it carries what an agent learned in one conversation into later ones. kagent stores those memories as vectors and retrieves them by similarity to whatever the user just said. Each agent on a {{< gloss "Harness" >}}Harness{{< /gloss >}} keeps its own memories, scoped to the user who created them.
+A {{< gloss "Session" >}}Session{{< /gloss >}} remembers its own conversation, because it holds the {{< gloss "Transcript" >}}transcript{{< /gloss >}}. Long-term memory is different: it carries what an agent learned in one conversation into later ones. kagent stores those memories as vectors and retrieves them by similarity to whatever the user just said. Each agent on a {{< gloss "Harness" >}}Harness{{< /gloss >}} keeps its own memories, scoped to the user who created them.
 
 Memory is configured on the Harness rather than on an AgentTemplate, so it applies to every agent that the Harness runs.
 
@@ -96,7 +96,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
 1. Create a `ModelConfig` for the embedding model in the same namespace as your Harness. The model is an embedding model rather than a chat model.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: embedding-model-config
@@ -127,18 +127,18 @@ Add memory to a Harness that already exists. The examples in these steps use `my
    | `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model, in the Harness's namespace. Required when `memory` is set. |
    | `memory.ttlDays` | How many days a stored memory stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
 
-3. Create a new {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} from the Harness and an AgentTemplate that it admits. Editing the Harness compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing AgentInstance keeps running the revision it was created from, so an agent that was already running does not gain memory until you recreate it.
+3. Create a new Session against an {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses this Harness. Editing the Harness compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing Session keeps running the revision it was created from. An agent that was already running does not gain memory until you start a new Session.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
-   The command returns output only after the AgentInstance reaches the `READY` state. Example output:
+   The command returns output only after the Session reaches the `READY` state. Example output:
    ```console
-   +--------------------------------------+----------------+------------------+-------+----------------------+
-   | ID                                   | AGENT TEMPLATE | HARNESS          | STATE | CREATED              |
-   +--------------------------------------+----------------+------------------+-------+----------------------+
-   | 0198c3d7-4f2a-7b61-9c3e-5d8f7a2b4e10 | my-first-agent | my-first-harness | READY | 2026-08-31T15:02:10Z |
-   +--------------------------------------+----------------+------------------+-------+----------------------+
+   +--------------------------------------+----------------+-------+----------------------+
+   | ID                                   | AGENT          | STATE | CREATED              |
+   +--------------------------------------+----------------+-------+----------------------+
+   | 0198c3d7-4f2a-7b61-9c3e-5d8f7a2b4e10 | my-first-agent | READY | 2026-08-31T15:02:10Z |
+   +--------------------------------------+----------------+-------+----------------------+
    ```
 
 > [!NOTE]
@@ -146,34 +146,27 @@ Add memory to a Harness that already exists. The examples in these steps use `my
 
 ## Verify that memory works
 
-Memory is working when a fact from one conversation reaches a later one. An AgentInstance holds the transcript of its own conversation, so the check needs a second AgentInstance that never saw the first.
+Memory is working when a fact from one conversation reaches a later one. A Session holds the transcript of its own conversation, so the check needs a second Session that never saw the first.
 
-1. Save the ID of the AgentInstance that you created. The command selects the most recently created AgentInstance for the AgentTemplate.
+1. Create a Session and save its ID.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
+   export FIRST_SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
    ```
 
 2. Tell the agent a fact that is worth remembering.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $FIRST_SESSION_ID \
      --task "Remember that I deploy to the staging cluster on Fridays."
    ```
 
-3. Create a second AgentInstance from the same Harness and AgentTemplate pair. The new AgentInstance starts with an empty transcript.
+3. Create a second Session against the same Agent, and save its ID. The new Session starts with an empty transcript.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   export SECOND_SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
    ```
 
-4. Save the ID of the new AgentInstance.
+4. Ask the second Session about the fact. An answer that includes the fact can only have come from memory, because this Session never saw the earlier conversation.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   ```
-
-5. Ask the new AgentInstance about the fact. An answer that includes the fact can only have come from memory, because this AgentInstance never saw the earlier conversation.
-   ```bash
-   kagent invoke --agent-instance $INSTANCE_ID --task "When do I deploy to staging?"
+   kagent agent invoke --session $SECOND_SESSION_ID --task "When do I deploy to staging?"
    ```
 
    Example output:
@@ -200,7 +193,7 @@ Each memory is one row in the `memory` table, which the vector migration created
    | Column | What it holds |
    | ------ | ------------- |
    | `content` | The text that the agent saved. Retrieval returns it to a later conversation. |
-   | `agent_name` | The agent that owns the memory, written as `<namespace>__NS__<agent-template>_<harness>` with every hyphen replaced by an underscore. The AgentTemplate and Harness pair identifies a runtime, so the same AgentTemplate on two Harnesses owns two separate sets of memories. |
+   | `agent_name` | The agent that owns the memory, written as `<namespace>__NS__<agent>` with every hyphen replaced by an underscore. The name identifies one {{< gloss "Agent" >}}Agent{{< /gloss >}}, so the same AgentTemplate paired into two Agents owns two separate sets of memories. |
    | `user_id` | The user that the memory belongs to. |
    | `embedding` | The 768-dimensional vector that similarity search compares a query against. |
    | `created_at` and `expires_at` | When kagent wrote the memory, and `ttlDays` after that. |
@@ -241,7 +234,7 @@ The memory service also exposes `Search`, `AddSession`, and `AddSessionBatch`. E
 
 A memory expires `ttlDays` after it is written, which defaults to 15 days. Expiry is per memory rather than per session, so an old preference ages out while a recent one survives.
 
-Changing `ttlDays` on the Harness applies to memories written by AgentInstances created after the change, because the value is compiled into the revision.
+Changing `ttlDays` on the Harness applies to memories written by Sessions created after the change, because the value is compiled into the revision.
 
 ## Known limitations
 

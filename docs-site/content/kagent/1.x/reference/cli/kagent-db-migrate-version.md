@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate version
 description: Show the applied migration version.
-weight: 170
+weight: 270
 ---
 
 Show the applied migration version

@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s system prompt defines the agent's role and how it should behave. {{< reuse "kagent-docs/snippets/name-product.md" >}} resolves the prompt when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}}, so the text that an agent runs with is fixed for the life of an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}}. Editing the prompt affects instances created after the edit compiles, but not ones that are already running.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s system prompt defines the agent's role and how it should behave. {{< reuse "kagent-docs/snippets/name-product.md" >}} resolves the prompt when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}}, so the text that an agent runs with is fixed for the life of a {{< gloss "Session" >}}Session{{< /gloss >}}. Editing the prompt affects sessions created after the edit compiles, but not ones that are already running.
 
 ## Write an effective prompt
 
@@ -125,29 +125,27 @@ spec:
 
 ## Troubleshooting
 
-Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. No new revision compiles. A Harness and AgentTemplate pair that has never been ready cannot start an AgentInstance, and one that was ready before keeps starting new AgentInstances from its last ready revision.
+Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. No new revision compiles. An {{< gloss "Agent" >}}Agent{{< /gloss >}} that has never been ready cannot start a Session, and one that was ready before keeps starting new Sessions from its last ready revision.
 
-An AgentTemplate reports one set of conditions for each Harness that admits it, under `status.harnesses`. To check the condition for your Harness, run the following command.
+An AgentTemplate carries no status of its own, so read the conditions from the Agent that names it.
 
 ```bash
-kubectl get agenttemplate my-first-agent -n kagent -o json \
-  | jq '.status.harnesses[] | {harness, conditions: [.conditions[] | select(.type == "ResolvedRefs")]}'
+kubectl get agent my-first-agent -n kagent -o json \
+  | jq '[.status.conditions[] | select(.type == "ResolvedRefs")]'
 ```
 
 In the output, a failure sets the reason to `ReferenceResolutionFailed` and the resolve error is listed in the message. Example output:
 
 ```json
-{
-  "harness": "my-first-harness",
-  "conditions": [
-    {
-      "type": "ResolvedRefs",
-      "status": "False",
-      "observedGeneration": 2,
-      "lastTransitionTime": "2026-08-31T15:02:10Z",
-      "reason": "ReferenceResolutionFailed",
-      "message": "resolve systemPromptFrom: ConfigMap \"shared-prompts\" does not contain key \"kubernetes-assistant\""
-    }
+[
+  {
+    "type": "ResolvedRefs",
+    "status": "False",
+    "observedGeneration": 2,
+    "lastTransitionTime": "2026-08-31T15:02:10Z",
+    "reason": "ReferenceResolutionFailed",
+    "message": "resolve systemPromptFrom: ConfigMap \"shared-prompts\" does not contain key \"kubernetes-assistant\""
+  }
   ]
 }
 ```

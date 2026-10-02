@@ -65,7 +65,7 @@ Only `policies.promptGuard` is new in this example. The routing fields and `poli
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and [create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a {{< gloss "Harness" >}}Harness{{< /gloss >}} and know which label it admits. This example uses a Harness named `my-first-harness` that admits the label `kagent.dev/harness: my-first-harness`.
+1. [Install kagent]({{< link path="setup/installation" >}}), and [create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a {{< gloss "Harness" >}}Harness{{< /gloss >}} to pair with. This example uses a Harness named `my-first-harness` in the `kagent` namespace.
 
 2. Set up [agentgateway model routing]({{< link path="setup/model-providers/byo-agentgateway#set-up-agentgateway-model-routing" >}}), which installs agentgateway with `--set agentgatewayModels.enabled=true` and creates a `Gateway` named `agentgateway-proxy` and an `AgentgatewayModel` named `gpt-4o-mini`.
 
@@ -168,39 +168,46 @@ Two paths are worth checking in order. Calling the gateway directly isolates the
    {"model":"gpt-4o-mini-2024-07-18","usage":{"prompt_tokens":14,"completion_tokens":33,...},"choices":[{"message":{"content":"I'm sorry, but I don't have access to specific ...
    ```
 
-4. Create an agent that uses the guarded model, and an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} to talk to it.
+4. Create an agent that uses the guarded model, and a {{< gloss "Session" >}}Session{{< /gloss >}} to talk to it.
    ```bash
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
      name: support-triage
      namespace: kagent
-     labels:
-       kagent.dev/harness: my-first-harness
    spec:
      description: Summarizes support tickets.
      modelConfig:
        name: agentgateway-model-config
      systemPrompt: |
        You summarize support tickets in two sentences.
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: support-triage
+     namespace: kagent
+   spec:
+     templateRef:
+       name: support-triage
+     harnessRef:
+       name: my-first-harness
    EOF
-   kagent create agent-instance --harness my-first-harness --agent-template support-triage
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "support-triage")] | sort_by(.createdAt) | last | .id')
-   echo $INSTANCE_ID
+   export SESSION_ID=$(kagent agent session create --agent support-triage -o json | jq -r '.session.id')
+   echo $SESSION_ID
    ```
 
 5. Send the agent a task that carries an email address.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $SESSION_ID \
      --task "Summarize the ticket from alex@example.com"
    ```
 
    The turn fails rather than returning a summary. Example output:
    ```console
    llm error response (code STREAM_ERROR): "POST \"http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1/chat/completions\": 403 Forbidden "
-   Error: AgentInstance task 01a0b011-a684-7416-af8f-526242a5c07f ended in TASK_STATE_FAILED
+   Error: Session task 01a0b011-a684-7416-af8f-526242a5c07f ended in TASK_STATE_FAILED
    ```
 
    The error names the model call and the status code that the gateway returned. Ask the same question without the address, and the agent answers normally.
@@ -209,17 +216,17 @@ Two paths are worth checking in order. Calling the gateway directly isolates the
 > **The guard's `response.message` does not reach the person talking to the agent.** A caller who reads the gateway's response directly sees the message, as the curl steps show, but kagent surfaces only the status code and the failed task. Treat `response.message` as something for an operator reading gateway logs rather than as an explanation for the end user, and put the explanation your users need in the agent's system prompt instead.
 
 > [!CAUTION]
-> **A rejected turn strands the conversation permanently.** An agent is not a single-shot chat client: the {{< gloss "Transcript" >}}transcript{{< /gloss >}} is append-only, and a failed turn does not remove the message that failed. The AgentInstance resends the whole conversation on every turn, so the prompt that tripped the guard is sent again, and rejected again, for the rest of that AgentInstance's life.
+> **A rejected turn strands the conversation permanently.** An agent is not a single-shot chat client: the {{< gloss "Transcript" >}}transcript{{< /gloss >}} is append-only, and a failed turn does not remove the message that failed. The Session resends the whole conversation on every turn, so the prompt that tripped the guard is sent again, and rejected again, for the rest of that Session's life.
 >
-> The following sequence reproduces it. A fresh AgentInstance answers `Summarize the most recent ticket` normally. Send `Summarize the ticket from alex@example.com` next, and that turn fails with the `403`. Then send `What is 2+2?`, which carries no PII of its own: that turn fails with a `403` as well, and so does every turn after it.
+> The following sequence reproduces it. A fresh Session answers `Summarize the most recent ticket` normally. Send `Summarize the ticket from alex@example.com` next, and that turn fails with the `403`. Then send `What is 2+2?`, which carries no PII of its own: that turn fails with a `403` as well, and so does every turn after it.
 >
-> Creating a new AgentInstance is the only way to recover a conversation that a `Reject` guard has stopped. For agents, that cost is the strongest argument for [masking instead](#mask-instead-of-reject).
+> Creating a new Session is the only way to recover a conversation that a `Reject` guard has stopped. For agents, that cost is the strongest argument for [masking instead](#mask-instead-of-reject).
 
 ## Mask instead of reject
 
 A `Reject` guard ends the conversation for good, as the [previous section](#watch-the-gateway-reject-a-prompt) demonstrates. A `Mask` guard instead lets the turn through with the matched text replaced. Masking is therefore the better default for an agent, and `Reject` belongs to a policy that forbids PII outright and accepts a dead conversation as the price.
 
-Masking also repairs a conversation that a `Reject` guard already stopped. Changing the action re-masks the offending message on the next turn rather than rejecting it, so the stranded AgentInstance answers again without being recreated.
+Masking also repairs a conversation that a `Reject` guard already stopped. Changing the action re-masks the offending message on the next turn rather than rejecting it, so the stranded Session answers again without being recreated.
 
 1. Change the action on the request guard to `Mask`.
    ```bash
@@ -227,9 +234,9 @@ Masking also repairs a conversation that a `Reject` guard already stopped. Chang
      '{"spec":{"policies":{"promptGuard":{"request":[{"regex":{"builtins":["Email","Ssn","CreditCard"],"action":"Mask"}}]}}}}'
    ```
 
-2. Send the same prompt again, to the same AgentInstance that the `Reject` guard stranded.
+2. Send the same prompt again, to the same Session that the `Reject` guard stranded.
    ```bash
-   kagent invoke --agent-instance $INSTANCE_ID \
+   kagent agent invoke --session $SESSION_ID \
      --task "Summarize this ticket: alex@example.com reports that checkout returns 503 errors during peak hours."
    ```
 
@@ -347,9 +354,10 @@ An `AgentgatewayPolicy` holds the same `promptGuard` configuration, and one poli
 
 ## Clean up
 
-1. Delete the AgentInstance and the AgentTemplate.
+1. Delete the Session, the Agent, and the AgentTemplate.
    ```bash
-   kagent delete agent-instance $INSTANCE_ID
+   kagent agent session delete $SESSION_ID
+   kubectl delete agent support-triage -n kagent
    kubectl delete agenttemplate support-triage -n kagent
    ```
 

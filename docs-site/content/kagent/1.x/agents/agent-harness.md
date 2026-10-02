@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-Review configuration guidelines and reference for the `Harness` resource: every field it takes, the four runtimes it can select, and what each runtime supports. To understand a Harness and why it is separate from an AgentTemplate, see the [core concepts]({{< link path="about/core-concepts#harness" >}}).
+Review configuration guidelines and reference for the `Harness` resource: every field it takes, the four runtimes it can select, and what each runtime supports. To understand a Harness and why an Agent, rather than the Harness itself, names the AgentTemplate that runs on it, see the [core concepts]({{< link path="about/core-concepts#harness" >}}).
 
 ## Configure a Harness
 
@@ -13,7 +13,7 @@ The following configuration is for a complete Harness resource. Only `workload`,
 
 ```yaml
 kubectl apply -f - <<EOF
-apiVersion: kagent.dev/v1alpha3
+apiVersion: api.kagent.dev/v1alpha3
 kind: Harness
 metadata:
   name: my-harness
@@ -24,17 +24,13 @@ spec:
   workload:
     image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
   env:
-    - name: LOG_LEVEL
+    - name: KAGENT_LOG_LEVEL
       value: info
   substrate:
     workerPoolRef:
       name: kagent-default
     snapshotPolicy:
       location: s3://ate-snapshots/kagent/
-  allowedAgentTemplates:
-    selector:
-      matchLabels:
-        kagent.dev/harness: my-harness
 EOF
 ```
 
@@ -46,12 +42,13 @@ EOF
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, whatever language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
-| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`. A `credentialRef` is accepted by the API and then rejected at compile time on every runtime, so put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
+| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
-| `allowedAgentTemplates.selector` | No | A label selector naming which AgentTemplates this Harness admits. Omitting it admits none, which makes the Harness unusable. Admission is a one-way match. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} has no field naming a Harness, so whoever controls a Harness's selector decides what it accepts. |
 
-A command or argument override belongs to the revision that kagent prepares, so changing one prepares a new revision rather than altering a running agent. An AgentInstance pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
+A Harness names no AgentTemplate. An {{< gloss "Agent" >}}Agent{{< /gloss >}} pairs the two through either `spec.harnessRef` or an inline `spec.harness`, so whoever writes the Agent decides which template runs on which Harness. For more information about the pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
+
+A command or argument override belongs to the revision that kagent prepares. Changing one prepares a new revision rather than altering a running agent. A {{< gloss "Session" >}}Session{{< /gloss >}} pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
 
 ## Choose a runtime
 
@@ -90,7 +87,7 @@ Setting `compaction` summarizes older session events so an agent's prompt stays 
 
 ## Model provider support
 
-The runtime that a Harness selects decides which ModelConfig its AgentTemplates can use. This table covers every value that the ModelConfig `provider` field accepts, including the four that kagent 1.0 rejects on every runtime.
+The runtime that a Harness selects decides which ModelConfig an Agent that runs on it can use. This table covers every value that the ModelConfig `provider` field accepts, including the four that kagent 1.0 rejects on every runtime.
 
 | Provider | `kagent` | `byo` | `codex` | `claude` |
 | -------- | :------: | :---: | :-----: | :------: |
@@ -129,7 +126,7 @@ The coding-agent runtimes also constrain what an AgentTemplate can ask for.
 
 | Constraint | Applies to |
 | ---------- | ---------- |
-| A `Shared` agent-tool binding cannot itself carry tools, skills, plugins, or nested agents, and must use the same provider and credentials as the agent that binds it. | `codex`, `claude` |
+| A subagent binding cannot itself carry tools, skills, plugins, or nested agents, and must use the same provider and credentials as the agent that binds it. | `codex`, `claude` |
 | An {{< gloss "MCP" >}}MCP{{< /gloss >}} server is bound whole. Claude does not support partial tool selection, so the agent sees every tool the server offers rather than only the ones a binding names. The compiler warns rather than failing. | `claude` |
 | A `RemoteMCPServer` must use the `STREAMABLE_HTTP` protocol. `SSE` is rejected. | `codex` |
 
@@ -164,12 +161,12 @@ kubectl get harness -n kagent
 
 A Harness that is not `Ready` most often names a WorkerPool that does not exist yet. For the specific reason, read its conditions with `kubectl describe harness <harness-name> -n kagent`.
 
-`Ready` covers the Harness's own dependencies, not whether a given agent runs on it. Whether an AgentTemplate compiles against this Harness is reported on the AgentTemplate, under `status.harnesses`. For that check and the conditions it reports, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+`Ready` covers the Harness's own dependencies, not whether a given agent runs on it. Whether a template compiles against this Harness is reported on the Agent that pairs the two, because an AgentTemplate carries no status of its own. For that check and the conditions it reports, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Your first agent" subtitle="Apply a Harness and an AgentTemplate, then talk to the AgentInstance they produce." >}}
+  {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Your first agent" subtitle="Apply a Harness, an AgentTemplate, and an Agent, then start a conversation with it." >}}
   {{< card link=`{{< link path="agents/agent-memory" >}}` title="Agent memory" subtitle="Give agents on this Harness memory that outlasts a single conversation." >}}
   {{< card link=`{{< link path="setup/model-providers/about-model-providers" >}}` title="About model providers" subtitle="Understand how a ModelConfig reaches a running agent." >}}
 {{< /cards >}}

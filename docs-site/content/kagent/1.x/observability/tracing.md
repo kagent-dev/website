@@ -37,7 +37,7 @@ flowchart LR
     class grpc,gateway,router,runtime inner
 ```
 
-A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) connection to the AgentInstance's Actor and injects a `traceparent` header into that call. The Agent Substrate router forwards the call to the Worker that runs the Actor, and adds its own spans to the trace. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
+A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) connection to the Session's Actor and injects a `traceparent` header into that call. The Agent Substrate router forwards the call to the Worker that runs the Actor, and adds its own spans to the trace. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
 
 > [!IMPORTANT]
 > The controller passes its tracing configuration to the `kagent`, `codex`, and `claude` runtimes. Each of the three exports on its own instrumentation, so the span names in this page describe the `kagent` runtime and do not carry over to the other two. An agent on the `byo` runtime receives no tracing configuration, and its half of the trace is missing. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
@@ -49,10 +49,10 @@ Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing ba
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
 - **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
-- **Each agent runtime** reports as its own service, named for the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} and {{< gloss "Harness" >}}Harness{{< /gloss >}} pair it was compiled from. The `my-first-agent` template on the `my-first-harness` Harness reports as `my-first-agent-my-first-harness`.
+- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`.
 
 > [!NOTE]
-> A service per template and Harness pair is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each pair, and adding an agent adds a service.
+> A service per Agent is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
 
 ### Spans
 
@@ -63,7 +63,7 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 | `POST /lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. |
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
 | `invocation` | Once per request, as the parent of the agent's own work. |
-| `invoke_agent <agent>` | Once per request, named for the AgentTemplate and Harness pair that serves it. Unlike the service name, the span name replaces hyphens with underscores, such as `invoke_agent my_first_agent_my_first_harness`. |
+| `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
 | `execute_tool <tool>` | Once per tool call, named for the tool that was called. |
 | `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
@@ -87,18 +87,18 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} to send a request to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the AgentInstance commands that these steps use. To check your version, run `kagent version`.
+2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send a request to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
 3. Set up a tracing backend. The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you, so you can skip to [Review a trace](#review-a-trace).
 
 ## Enable tracing
 
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
 
-1. Save the current revision of your Harness and AgentTemplate pair. A later step uses it to tell when kagent recompiles the pair with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
+1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
@@ -143,44 +143,42 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
      --values values.yaml
    ```
 
-5. Wait for kagent to recompile the pair. The controller rebuilds each pair after the controller restarts, and an AgentInstance that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
+5. Wait for kagent to recompile the Agent. The controller rebuilds each Agent after the controller restarts. A Session that you create before the rebuild finishes starts from the previous revision, without the new settings. The following command prints `Recompiled` when the new revision is ready.
    ```bash
    for i in $(seq 1 60); do
-     [ "$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
+     [ "$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.latestSuccessfulRevision}')" != "$OLD_REVISION" ] \
        && echo "Recompiled" && break
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the pair. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the Agent. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
-6. Create a new AgentInstance, so that its Actor starts from a runtime that has the tracing configuration.
+6. Create a new Session, so that its Actor starts from a runtime that has the tracing configuration.
    ```bash
-   kagent create agent-instance --harness my-first-harness --agent-template my-first-agent
+   kagent agent session create --agent my-first-agent
    ```
 
-7. Confirm that the AgentInstance runs the current revision of the pair. The command waits until kagent finishes compiling the pair, then compares that revision with the one that the AgentInstance started from. If the command prints `Outdated`, the AgentInstance was created from an earlier revision, and exports without the new settings. Create another AgentInstance, and run the command again.
+7. Confirm that the Session runs the Agent's current revision. The command waits until kagent finishes compiling the Agent, then compares that revision with the one that the Session started from. If the command prints `Outdated`, the Session was created from an earlier revision, and exports without the new settings. Create another Session, and run the command again.
    ```bash
    for i in $(seq 1 60); do
-     REVISIONS=$(kubectl get agenttemplate my-first-agent -n kagent \
-       -o jsonpath='{.status.harnesses[0].desiredRevision} {.status.harnesses[0].latestSuccessfulRevision}')
+     REVISIONS=$(kubectl get agent my-first-agent -n kagent \
+       -o jsonpath='{.status.desiredRevision} {.status.latestSuccessfulRevision}')
      [ "${REVISIONS% *}" = "${REVISIONS#* }" ] && break
      sleep 5
    done
-   INSTANCE_REVISION=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .preparedRevision')
-   [ "$INSTANCE_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
+   SESSION_REVISION=$(kagent agent session get $SESSION_ID -o json | jq -r '.session.preparedRevision')
+   [ "$SESSION_REVISION" = "${REVISIONS#* }" ] && echo "Current" || echo "Outdated"
    ```
 
 ## Review a trace
 
-Send a request to the new AgentInstance, then find its trace in the backend that you set up.
+Send a request to a new Session, then find its trace in the backend that you set up.
 
-1. Send a request to the AgentInstance to produce a trace.
+1. Send a request to a new Session to produce a trace.
    ```bash
-   export INSTANCE_ID=$(kagent get agent-instance -o json \
-     | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
-   kagent invoke --agent-instance $INSTANCE_ID --task "What is 2+2?"
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID --task "What is 2+2?"
    ```
 
 2. Open the trace in your tracing backend.
@@ -192,7 +190,7 @@ Send a request to the new AgentInstance, then find its trace in the backend that
       ```
    2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in. For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
    3. Open **Explore**, select the **Tempo** data source, and select the **Search** query type.
-   4. From the **Service Name** list, select `my-first-agent-my-first-harness`, and run the query. Selecting `kagent-controller` instead returns the same traces from the controller's side.
+   4. From the **Service Name** list, select `my-first-agent`, and run the query. Selecting `kagent-controller` instead returns the same traces from the controller's side.
    5. Click a trace to open it.
    {{% /tab %}}
    {{% tab name="Jaeger" %}}
@@ -201,7 +199,7 @@ Send a request to the new AgentInstance, then find its trace in the backend that
       kubectl port-forward -n telemetry svc/jaeger 16686:16686
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
-   3. From the **Service** list, select `my-first-agent-my-first-harness`. Selecting `kagent-controller` instead returns the same traces from the controller's side.
+   3. From the **Service** list, select `my-first-agent`. Selecting `kagent-controller` instead returns the same traces from the controller's side.
    4. Leave **Operation** on `all`, or select `invocation` to start from the agent's own work rather than from the A2A call that carries it, and click **Find Traces**.
    5. Click a trace to open it.
    {{% /tab %}}
@@ -213,12 +211,12 @@ Send a request to the new AgentInstance, then find its trace in the backend that
      lf.a2a.v1.A2AService/SendMessage                       kagent-controller
        POST /*                                              agentgateway
          POST                                               agentgateway
-           POST /lf.a2a.v1.A2AService/SendMessage           my-first-agent-my-first-harness
-             a2a.request                                    my-first-agent-my-first-harness
-               invocation                                   my-first-agent-my-first-harness
-                 invoke_agent my_first_agent_my_first_harness   my-first-agent-my-first-harness
-                   generate_content gpt-4.1-mini            my-first-agent-my-first-harness
-                     HTTP POST                              my-first-agent-my-first-harness
+           POST /lf.a2a.v1.A2AService/SendMessage           my-first-agent
+             a2a.request                                    my-first-agent
+               invocation                                   my-first-agent
+                 invoke_agent my_first_agent_my_first_harness   my-first-agent
+                   generate_content gpt-4.1-mini            my-first-agent
+                     HTTP POST                              my-first-agent
    ```
 
 4. To narrow a search to one conversation, search by a correlation attribute, such as `gen_ai.conversation.id=<context-id>`.
@@ -241,13 +239,13 @@ Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, 
 
 Agent Substrate {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} an Actor as soon as the response body closes, which is sooner than a batching span exporter normally sends its buffer. Spans still in the buffer at that moment freeze inside the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and reach the backend only when the session next resumes, or never at all for a conversation's last message.
 
-To avoid losing them, the controller sets `KAGENT_PRE_RESPONSE_TRACE_FLUSH` to `true` on the `kagent` and `codex` runtimes, and the runtime flushes its span buffer before each response completes. The flush waits up to three seconds, which you can change with `KAGENT_TRACE_FLUSH_TIMEOUT_MS` in the Harness `spec.env`. The `claude` runtime gets no such flush, so its spans arrive on its exporter's own schedule and a conversation's last turn can lose them.
+To avoid losing them, the `kagent`, `codex`, and `claude` runtimes flush their span buffer after each A2A handler returns, before the response completes. The flush is unconditional and waits up to three seconds, and no setting changes either. An agent on the `byo` runtime flushes only if its own image does, so a conversation's last turn can lose its spans there.
 
 The flush lets a kagent trace arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
 
 ## Turn tracing off
 
-Turn off the trace exporter, then create a new AgentInstance so that the change takes effect.
+Turn off the trace exporter, then create a new Session so that the change takes effect.
 
 1. Disable tracing in the kagent Helm release.
    ```bash
@@ -258,7 +256,7 @@ Turn off the trace exporter, then create a new AgentInstance so that the change 
      --set otel.tracing.enabled=false
    ```
 
-2. Create a new AgentInstance to pick up the change, because an existing Actor keeps the configuration it started with.
+2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
 
 3. To remove the tracing backend, follow the cleanup steps in the [OTel stack]({{< link path="observability/otel-stack#clean-up" >}}) or [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#clean-up" >}}) guide.
 

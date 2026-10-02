@@ -1,7 +1,7 @@
 ---
 title: kagent mcp init java
 description: Initialize a new Java MCP server project.
-weight: 320
+weight: 360
 ---
 
 Initialize a new MCP server project using the Java MCP framework.

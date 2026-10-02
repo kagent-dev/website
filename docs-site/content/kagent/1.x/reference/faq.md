@@ -8,7 +8,7 @@ author: kagent.dev
 
 ## How do I get started with kagent?
 
-Install {{< reuse "kagent-docs/snippets/name-product.md" >}} first, with a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} provisioned, by following [Install kagent]({{< link path="setup/installation" >}}). Then work through [Your first agent]({{< link path="get-started/your-first-agent" >}}), which applies a Harness and an AgentTemplate and holds a conversation with the AgentInstance that they produce. Those two resources and that conversation are the model that the rest of these docs assume. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}) then gives that agent a tool.
+Install {{< reuse "kagent-docs/snippets/name-product.md" >}} first, with a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} provisioned, by following [Install kagent]({{< link path="setup/installation" >}}). Then work through [Your first agent]({{< link path="get-started/your-first-agent" >}}). That guide applies a Harness, an AgentTemplate, and an Agent, then holds a conversation with that Agent. Those three resources and that conversation are the model that the rest of these docs assume. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}) then gives that agent a tool.
 
 ## What makes kagent different from other agent frameworks?
 
@@ -22,9 +22,9 @@ A {{< gloss "Harness" >}}Harness{{< /gloss >}} defines how an agent is allowed t
 
 No. The two share part of a name and nothing else. 0.x's `AgentHarness` provisions OpenClaw or Hermes coding-agent sandboxes, while 1.0's `Harness` governs how any agent is allowed to run. Read `Harness` as a new resource rather than a renamed one.
 
-## What is an AgentInstance?
+## What is a Session?
 
-An {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} is one running conversation between a Harness and an AgentTemplate. Unlike those two, it is not a Kubernetes custom resource: kagent's gRPC API creates it, kagent's database tracks it, and an {{< gloss "Actor" >}}Actor{{< /gloss >}} on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} runs it. One template can back many concurrent instances, each with its own {{< gloss "Transcript" >}}transcript{{< /gloss >}}.
+A {{< gloss "Session" >}}Session{{< /gloss >}} is one running conversation with an {{< gloss "Agent" >}}Agent{{< /gloss >}}. Unlike the three resources it is built from, a Session is not a Kubernetes custom resource. kagent's gRPC API creates it, kagent's database tracks it, and an {{< gloss "Actor" >}}Actor{{< /gloss >}} on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} runs it. One Agent can back many concurrent Sessions, each with its own {{< gloss "Transcript" >}}transcript{{< /gloss >}}.
 
 ## How does suspend and resume work?
 
@@ -32,7 +32,7 @@ Agent conversations are mostly idle, so Agent Substrate does not hold a pod open
 
 ## How is 1.0 different from 0.x?
 
-1.0 changes how agents run and how you declare them. Agents no longer run as long-lived Deployments; each conversation runs as a sandboxed Actor on Agent Substrate that suspends between turns. The single 0.x `Agent` resource is replaced by the Harness and AgentTemplate pair, `ToolServer` is replaced by {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}}, and the API group moves from `v1alpha2` to `v1alpha3`.
+1.0 changes how agents run and how you declare them. Agents no longer run as long-lived Deployments; each conversation runs as a sandboxed Actor on Agent Substrate that suspends between turns. The single 0.x `Agent` resource is replaced by an AgentTemplate, a Harness, and a new `Agent` that pairs them. `ToolServer` is replaced by {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}}. The API group moves from `kagent.dev/v1alpha2` to `api.kagent.dev/v1alpha3`.
 
 1.0 has no in-place upgrade path. An existing 0.10.x installation has no migration bridge to 1.0, so moving to 1.0 means standing up a new installation and recreating your resources on it. For the procedure, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}). [Version support]({{< link path="reference/versions#release-support-and-compatibility" >}}) records which upgrade paths are supported, and the [release notes]({{< link path="reference/release-notes/1.0#removed-and-replaced-resources" >}}) list the breaking changes.
 

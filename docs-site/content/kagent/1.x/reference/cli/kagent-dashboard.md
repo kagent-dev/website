@@ -1,7 +1,7 @@
 ---
 title: kagent dashboard
 description: Open the kagent dashboard.
-weight: 100
+weight: 200
 ---
 
 Open the kagent dashboard

@@ -1,22 +1,17 @@
 ---
-title: kagent invoke
-description: Invoke an AgentInstance.
-weight: 240
+title: kagent sandbox download
+description: Download a file, replacing the local destination only after success.
+weight: 450
 ---
 
-Invoke an existing AgentInstance through the A2A API.
+Download a file, replacing the local destination only after success
 
 ```bash
-kagent invoke [flags]
+kagent sandbox download ID REMOTE_PATH LOCAL_FILE [flags]
 ```
 
 **Flags:**
-- `--agent-instance string` - AgentInstance ID
-- `-f, --file string` - Read task text from a file or - for stdin
-- `-h, --help` - help for invoke
-- `-S, --stream` - Stream the response
-- `-t, --task string` - Task text
-- `--token string` - Model API key passed through as an A2A Bearer token
+- `-h, --help` - help for download
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")
@@ -28,9 +23,3 @@ kagent invoke [flags]
 - `--timeout duration` - Timeout (default 5m0s)
 - `--user-id string` - Caller identity used to select the server-side data partition (default "admin@kagent.dev")
 - `-v, --verbose` - Verbose output
-
-## Example
-
-```bash
-kagent invoke --agent-instance 8bd650a8-9775-488f-8bc1-0d52bf7bdcab --task "Get all the pods"
-```

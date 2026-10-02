@@ -14,10 +14,10 @@ Three independent changes each rule out `helm upgrade`, so working around any on
 | Change | Consequence |
 | ------ | ----------- |
 | The database schema is a clean baseline | 1.0 replaces golang-migrate with goose and starts from a single baseline migration. An existing 0.10.x database has no bridge to it, and 1.0 refuses to run against one. |
-| The custom resources serve one API version | The 1.0 CRDs serve `v1alpha3` alone and declare no conversion strategy, so objects stored as `v1alpha2` cannot be read through them. |
-| The resource model is replaced | The `Agent` resource is gone. What it described is now split between an AgentTemplate and a {{< gloss "Harness" >}}Harness{{< /gloss >}}, and a conversation is an {{< gloss "AgentInstance" >}}AgentInstance{{< /gloss >}} created from that pair. For the model itself, see [Core concepts]({{< link path="about/core-concepts" >}}). |
+| The custom resources moved to a new API group | 1.0 serves its resources under `api.kagent.dev`, where 0.10.x serves them under `kagent.dev`. The groups share no conversion, so nothing stored under the old group is visible through the new CRDs. |
+| The resource model is replaced | 0.10.x's `Agent` is gone. What it described is now split between an AgentTemplate and a {{< gloss "Harness" >}}Harness{{< /gloss >}}, paired by a new {{< gloss "Agent" >}}Agent{{< /gloss >}} resource in the `api.kagent.dev` group, and a conversation is a {{< gloss "Session" >}}Session{{< /gloss >}} created against that Agent. The two `Agent` kinds share a name and nothing else. For the model itself, see [Core concepts]({{< link path="about/core-concepts" >}}). |
 
-The two releases also cannot run side by side on one cluster. `modelconfigs.kagent.dev`, `modelproviderconfigs.kagent.dev`, and `remotemcpservers.kagent.dev` exist in both, and a CRD is cluster-scoped, so installing 1.0's CRDs replaces 0.10.x's. A second cluster keeps the old installation intact while you work.
+The two releases also cannot run side by side on one cluster. The group rename separates most of the custom resources. Both releases bundle kmcp, though, and each one ships its own version of the `mcpservers.kagent.dev` CRD. A CRD is cluster-scoped, so installing 1.0's CRDs replaces the version that 0.10.x installed. A second cluster keeps the old installation intact while you work.
 
 > [!WARNING]
 > Downgrading from 1.0 back to 0.10.x is unsupported. Treat the cutover as one-way, and keep the 0.10.x installation running until you have verified the new one.
@@ -81,19 +81,19 @@ The export splits into three groups: resources that need only an `apiVersion` ch
 
 ### Resources that carry forward
 
-ModelConfig, ModelProviderConfig, and RemoteMCPServer have identical fields in `v1alpha2` and `v1alpha3`.
+ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets. `v1alpha3` adds fields that 0.10.x did not serve, so an exported resource applies unchanged apart from its `apiVersion`.
 
 1. Recreate the Secrets that your ModelConfigs name before you apply them, or the ModelConfigs resolve to nothing.
 
 2. Change the `apiVersion` and apply the resources unchanged.
    ```bash
-   sed 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: kagent.dev/v1alpha3|' \
+   sed 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: api.kagent.dev/v1alpha3|' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
 
-### Agents become an AgentTemplate and a Harness
+### Agents become an AgentTemplate, a Harness, and an Agent
 
-A 0.10.x `Agent` described both what the agent does and how it runs. In 1.0 these concepts are separated into two resources: an AgentTemplate holds the agent's behavior, and a Harness holds the runtime and infrastructure. One Harness serves many AgentTemplates, so expect fewer Harnesses than you had Agents.
+A 0.10.x `Agent` described both what the agent does and how it runs. In 1.0 these concepts are separated into two resources: an AgentTemplate holds the agent's behavior, and a Harness holds the runtime and infrastructure. A third resource, 1.0's own `Agent`, pairs one of each. One Harness serves many Agents, so expect fewer Harnesses than you had 0.10.x Agents.
 
 | 0.10.x `Agent` field | Equivalent field in 1.0 |
 | -------------------- | -------------------- |
@@ -107,14 +107,14 @@ A 0.10.x `Agent` described both what the agent does and how it runs. In 1.0 thes
 | `spec.declarative.runtime` | `Harness.spec.workload.image`, through the runtime that the Harness selects |
 | `spec.declarative.deployment` | `Harness.spec.workload` and `Harness.spec.substrate`. Agents no longer run as Deployments. |
 | `spec.type`, `spec.byo` | The `byo` runtime on a Harness. For more information, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
-| `spec.declarative.a2aConfig` | Nothing. A2A is always on, and callers address an AgentInstance by ID. |
+| `spec.declarative.a2aConfig` | Nothing. A2A is always on, and callers address an Agent at `/agents/{namespace}/{name}`. |
 | `spec.iconUrl`, `spec.documentationUrl`, `spec.version`, `spec.provider` | Nothing. kagent builds the agent card from the AgentTemplate's name and description. |
 | `spec.declarative.stream`, `executeCodeBlocks`, `shareTools`, `context` | Nothing. `v1alpha3` has no equivalent field. |
 
 > [!NOTE]
-> Tool bindings changed shape. A 0.10.x tool set `type: McpServer` or `type: Agent` alongside a matching block. A 1.0 `ToolBinding` carries an `mcp` or `agent` block and no discriminator, so the block you set is the binding's kind. For what each binding does, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
+> Tool bindings changed shape. A 0.10.x tool set `type: McpServer` or `type: Agent` alongside a matching block. A 1.0 `ToolBinding` carries an `mcp` or `subAgent` block and no discriminator, so the block you set is the binding's kind. For what each binding does, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
 
-Write one Harness for each distinct runtime and infrastructure combination that your agents need, then label each AgentTemplate so that a Harness admits it. A Harness admits nothing until its `allowedAgentTemplates.selector` matches, and an AgentTemplate has no field naming a Harness. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked pair, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-and-an-agenttemplate" >}}).
+Write one Harness for each distinct runtime and infrastructure combination that your agents need. Then write one Agent for each 0.10.x Agent, naming the AgentTemplate and the Harness that it pairs. Neither reusable resource names the other, so the Agent makes a template runnable. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked example, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
 
 ### Resources with no 1.0 equivalent
 
@@ -136,14 +136,14 @@ Confirm that the resources resolved before you retire anything, because a Harnes
    kubectl get harness -n kagent
    ```
 
-2. Check that each AgentTemplate compiled against the Harness that admits it. `status.harnesses` carries one entry per admitting Harness, each ending in a `Ready` condition. An AgentTemplate has no status print column, so read the conditions rather than the table.
+2. Check that each Agent compiled. An AgentTemplate carries no status, so the Agent that pairs it with a Harness is where readiness is reported.
    ```bash
-   kagent get agent-template <template-name> -o json
+   kagent agent list
    ```
 
-3. Create an AgentInstance from a migrated pair and send it a message. A reply confirms the whole path, from the compiled revision to the model credentials.
+3. Create a Session against a migrated Agent and send it a message. A reply confirms the whole path, from the compiled revision to the model credentials.
    ```bash
-   kagent create agent-instance --harness <harness-name> --agent-template <template-name>
+   kagent agent session create --agent <agent-name>
    ```
 
 ## Retire the 0.10.x installation
@@ -155,7 +155,7 @@ Keep the database backup after the uninstall for your own records. It is the onl
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="about/core-concepts" >}}` title="Core concepts" subtitle="Learn the Harness, AgentTemplate, and AgentInstance model that replaces the Agent resource." >}}
+  {{< card link=`{{< link path="about/core-concepts" >}}` title="Core concepts" subtitle="Learn the Harness, AgentTemplate, Agent, and Session model that replaces the 0.x Agent resource." >}}
   {{< card link=`{{< link path="reference/versions" >}}` title="Version support" subtitle="Check which upgrade paths kagent supports from 1.0 onward." >}}
   {{< card link=`{{< link path="operations/operational-considerations" >}}` title="Operational considerations" subtitle="Replace the evaluation defaults before the new installation carries real traffic." >}}
 {{< /cards >}}

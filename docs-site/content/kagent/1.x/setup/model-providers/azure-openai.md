@@ -22,7 +22,7 @@ The `AzureOpenAI` provider calls an Azure OpenAI deployment. It differs from the
 3. Create a `ModelConfig` for your Azure OpenAI deployment.
    ```yaml
    kubectl apply -f - <<EOF
-   apiVersion: kagent.dev/v1alpha3
+   apiVersion: api.kagent.dev/v1alpha3
    kind: ModelConfig
    metadata:
      name: azure-openai-model-config
