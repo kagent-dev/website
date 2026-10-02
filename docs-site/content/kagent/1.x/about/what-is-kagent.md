@@ -28,7 +28,7 @@ kagent 1.0 separates an agent's capabilities from its runtime, then runs the two
 
 [Core concepts]({{< link path="about/core-concepts" >}}) define each of these in detail, and the [architecture]({{< link path="about/architecture/kagent" >}}) walks through how they connect end to end.
 
-Kubernetes role-based access control (RBAC) governs who can author these resources with `kubectl`. The kagent gRPC API reaches the same resources by a second path, and the open source build authorizes every caller that reaches that endpoint. For what each path establishes, see [Identity]({{< link path="substrate-runtime/identity#the-kagent-plane" >}}).
+Kubernetes role-based access control (RBAC) governs who can author these resources with `kubectl`. The kagent gRPC API reaches the same resources by a second path, and the open source build authorizes every caller that reaches that endpoint. For what each path establishes, see [Identity]({{< link path="substrate-runtime/identity#the-kagent-control-plane" >}}).
 
 ## Benefits
 

@@ -7,7 +7,7 @@ author: kagent.dev
 
 ## kagent 1.0
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces the Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. The 1.0 `Agent` kind shares the 0.x name but not its meaning: it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
 
 The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 
@@ -93,9 +93,9 @@ An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with 
 | `spec.harnessRef` | An existing Harness in the Agent's namespace, by name |
 | `spec.harness` | A complete Harness spec, written inline |
 
-The two sides are independent, so an Agent can reference both, inline both, or mix the two. An inline spec is a complete value rather than an override of a referenced one, and kagent creates no Kubernetes object to back it. Every reference, including one nested inside an inline spec, resolves in the Agent's own namespace.
+The template side and the harness side are set independently, so an Agent can reference both, inline both, or mix the two. An inline spec is a complete value rather than an override of a referenced one, and kagent creates no Kubernetes object to back it. Every reference, including one that is nested inside an inline spec, resolves in the Agent's own namespace.
 
-This Agent references both sides:
+The following Agent resource references both sides:
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -118,7 +118,7 @@ For the complete Agent schema, see the [API reference]({{< link path="reference/
 
 ## Session
 
-A **Session** is a _running conversation with one Agent_. Unlike the three resources it is built from, a Session is not a Kubernetes custom resource and does not live in etcd. kagent's own gRPC API creates it, and kagent's PostgreSQL database tracks it.
+A **Session** is a _running conversation with one Agent_. Unlike the Harness, AgentTemplate, and Agent that it is built from, a Session is not a Kubernetes custom resource and does not live in etcd. kagent's own gRPC API creates it, and kagent's PostgreSQL database tracks it.
 
 This split is deliberate, not an implementation detail to work around:
 
@@ -137,7 +137,7 @@ kagent agent session create --agent assistant -n kagent
 
 After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session. The HTTP endpoint is `/agents/{namespace}/{name}` and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
 
-A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window. `0` turns the worker off. For what the deletion retains, see [Expire idle conversations]({{< link path="operations/operational-considerations#expire-idle-conversations" >}}).
+A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window. A value of `0` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle conversations]({{< link path="operations/operational-considerations#expire-idle-conversations" >}}).
 
 ## Actor
 

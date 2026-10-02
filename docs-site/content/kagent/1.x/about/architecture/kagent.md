@@ -12,9 +12,9 @@ The previous page defined the [core concepts]({{< link path="about/core-concepts
 kagent 1.0 splits authorization across two planes:
 
 - The **Kubernetes plane** governs the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} custom resources. Kubernetes Role-Based Access Control (RBAC) decides who can create, read, or edit the resources with `kubectl`, exactly as it would for any other Custom Resource Definition (CRD).
-- The **kagent plane** governs any interactions involving {{< gloss "Session" >}}Sessions{{< /gloss >}}, such as creating, suspending, resuming, sharing, deleting, and holding a conversation with a Session. kagent's own gRPC authentication and authorization decide who can complete these interactions, independent of Kubernetes RBAC.
+- The **kagent control plane** governs any interactions involving {{< gloss "Session" >}}Sessions{{< /gloss >}}, such as creating, suspending, resuming, sharing, deleting, and holding a conversation with a Session. kagent's own gRPC authentication and authorization decide who can complete these interactions, independent of Kubernetes RBAC.
 
-Someone with Kubernetes RBAC access to apply an Agent and the resources it names does not automatically have access to create or talk to Sessions on it. The planes are not mirror images, though. kagent's gRPC API also writes those Kubernetes resources, so a caller on the kagent plane reaches both. For more information on that second path, see [Identity]({{< link path="substrate-runtime/identity#the-kubernetes-plane" >}}).
+Someone with Kubernetes RBAC access to apply an Agent and the resources it names does not automatically have access to create or talk to Sessions on it. The separation runs in one direction only. kagent's gRPC API also writes those Kubernetes resources, so a caller on the kagent control plane reaches both planes. For more information on that second path, see [Identity]({{< link path="substrate-runtime/identity#the-kubernetes-plane" >}}).
 
 The following diagram shows where the boundary between the two planes falls.
 </br></br>
@@ -43,7 +43,7 @@ flowchart TB
     actortemplate["ActorTemplate (Substrate)"]
     controller -->|compiles the Agent into| actortemplate
 
-    subgraph kagentplane["kagent plane (gRPC auth)"]
+    subgraph kagentplane["kagent control plane (gRPC auth)"]
         caller["Caller"]
         gateway["A2A gateway"]
         session["Session"]
@@ -55,7 +55,7 @@ flowchart TB
     end
 
     actortemplate -->|instantiated as| session
-    %% Invisible link: forces the kagent plane to sit fully below the ActorTemplate,
+    %% Invisible link: forces the kagent control plane to sit fully below the ActorTemplate,
     %% and the ActorTemplate below the Kubernetes plane. Without it the layout engine
     %% staggers the two planes diagonally, which both wastes width and scrambles the
     %% reading order. Anchor it to actortemplate, not controller: anchoring higher
@@ -66,9 +66,9 @@ flowchart TB
     class harness,template crd
 ```
 
-Follow the **Kubernetes plane** first. An operator applies a Harness, an AgentTemplate, and an Agent that pairs them with `kubectl`, governed by Kubernetes RBAC. The diagram shows this path because RBAC governs it, and kagent's gRPC API reaches the same resources instead. The kagent controller watches each Agent, resolves the template and harness that it names, and compiles the result into an {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}} on Substrate. The ActorTemplate sits outside both planes in the diagram because that is where it sits in reality. It is a Substrate resource that the controller creates over gRPC, rather than a Kubernetes object. No Kubernetes role grants access to it.
+Follow the **Kubernetes plane** first. An operator applies a Harness, an AgentTemplate, and an Agent that pairs them with `kubectl`, governed by Kubernetes RBAC. The diagram shows this path because RBAC governs it, and kagent's gRPC API reaches the same resources instead. The kagent controller watches each Agent, resolves the template and harness that it names, and compiles the result into an {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}} on Substrate. The ActorTemplate sits outside both planes in the diagram. It is a Substrate resource that the controller creates over gRPC, rather than a Kubernetes object. No Kubernetes role grants access to it.
 
-The **kagent plane** starts once that ActorTemplate exists. A caller, who may or may not be the same person as the operator, calls `CreateSession` through kagent's gRPC API. This call is governed by kagent's own authentication and authorization, not by Kubernetes RBAC. kagent creates the Session from the Agent's latest successful revision. That Session runs on an {{< gloss "Actor" >}}Actor{{< /gloss >}}.
+The **kagent control plane** starts once that ActorTemplate exists. A caller, who might be the same person as the operator, calls `CreateSession` through kagent's gRPC API. This call is governed by kagent's own authentication and authorization, not by Kubernetes RBAC. kagent creates the Session from the Agent's latest successful revision. That Session runs on an {{< gloss "Actor" >}}Actor{{< /gloss >}}.
 
 From there, the caller holds a conversation over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol. A caller addresses the Agent, and names the conversation with the Session's ID as the A2A `contextId`. The A2A gateway routes each request to the Actor running behind that Session. This means that the caller only ever needs to know the Agent's name and the Session's ID, never which Actor or {{< gloss "Worker" >}}Worker{{< /gloss >}} is behind it.
 

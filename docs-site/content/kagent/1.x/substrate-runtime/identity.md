@@ -8,21 +8,21 @@ author: kagent.dev
 A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
 
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
-- A caller creating or talking to a {{< gloss "Session" >}}Session{{< /gloss >}} is assigned a principal by [kagent's own gRPC API](#the-kagent-plane).
+- A caller creating or talking to a {{< gloss "Session" >}}Session{{< /gloss >}} is assigned a principal by [kagent's own gRPC API](#the-kagent-control-plane).
 - The components inside [Agent Substrate](#the-agent-substrate-plane) authenticate each other.
 
 ## The Kubernetes plane
 
 Harness, AgentTemplate, and {{< gloss "Agent" >}}Agent{{< /gloss >}} are Kubernetes custom resources. Kubernetes role-based access control (RBAC) therefore governs who can create, read, edit, or delete them with `kubectl`. A cluster's existing roles and bindings decide who authors an agent's runtime, its behavior, and the pairing of the two on that path.
 
-kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent plane authorizes this path instead.
+kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent control plane authorizes this path instead.
 
 > [!WARNING]
-> By default, kagent neither authenticates nor authorizes this path: the `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [The kagent plane](#the-kagent-plane).
+> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [The kagent control plane](#the-kagent-control-plane).
 
-An Agent is where RBAC decides which template runs on which Harness, because neither reusable resource names the other. Whoever can write Agents in a namespace decides every pairing in it, whatever their access to the Harnesses and AgentTemplates that those Agents name. For the pairing itself, see the [Agent core concept]({{< link path="about/core-concepts#agent" >}}).
+Because neither a Harness nor an AgentTemplate names the other, the Agent resource carries the pairing, and RBAC on Agents governs it. Whoever can write Agents in a namespace controls which template runs on which Harness, even without edit access to the Harnesses and AgentTemplates that those Agents name. For more information about the pairing, see the [Agent core concept]({{< link path="about/core-concepts#agent" >}}).
 
-## The kagent plane
+## The kagent control plane
 
 A Session is not a Kubernetes resource. kagent's gRPC API creates the Session, and kagent's database tracks it. Kubernetes RBAC therefore does not reach it. kagent resolves a principal for these calls itself.
 
@@ -30,7 +30,7 @@ Every call on the Session API carries a principal. An authenticator resolves one
 
 ### Controller authentication modes
 
-The `controller.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it. Browser sign-in and controller authentication are separate boundaries. A deployment that wants both sets this value as well.
+The `controller.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it, because browser sign-in and controller authentication are separate boundaries. To authenticate both, enable oauth2-proxy and set `controller.auth.mode` to `trusted-proxy`.
 
 | Mode | How a principal is resolved |
 | ---- | --------------------------- |
