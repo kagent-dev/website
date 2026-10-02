@@ -267,7 +267,7 @@ Before we configure the MCP server, you'll need to gather the following informat
 - Slack team ID
 - Slack channel IDs
 
-The easiest way to get the IDs is to open your Slack workspaces in the browser - you can do that by vistiing the `https://[slack-workspace-name].slack.com/`. Once the workspace loads you'll be able to get the team ID and the channnel ID by looking at the URL -- for example: `https://app.slack.com/client/T08S1QPFY1F/C08S1QQ53BK` - in this case the team ID is `T08S1QPFY1F` and the channel ID is `C08S1QQ53BK`.
+The easiest way to get the IDs is to open your Slack workspaces in the browser - you can do that by visiting the `https://[slack-workspace-name].slack.com/`. Once the workspace loads you'll be able to get the team ID and the channel ID by looking at the URL -- for example: `https://app.slack.com/client/T08S1QPFY1F/C08S1QQ53BK` - in this case the team ID is `T08S1QPFY1F` and the channel ID is `C08S1QQ53BK`.
 
 Let's set all those as environment variables:
 

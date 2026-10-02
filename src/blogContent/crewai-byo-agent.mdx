@@ -270,7 +270,7 @@ kagent invoke --agent my-crew-name --task "Research the latest developments in q
 
 You can also access the agent through the dashboard UI or the CLI (reference the quickstart tutorial if needed).
 
-## Note on persistance and tracing
+## Note on persistence and tracing
 
 If your CrewAI agent needs to maintain state or memory across sessions, you can leverage KAgent's session-aware memory feature. **No additional change is needed at all in your CrewAI code!** This means if you have already enabled `memory=True` or `@persist` on your Crew or Flow, they will automatically use the Kagent backend! You don't need to define any storage interface or connect to any database, `KAgentApp` handles that!
 
