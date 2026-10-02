@@ -176,7 +176,7 @@ spec:
 ```
 
 > [!NOTE]
-> An agent runs inside a sandboxed Actor with controlled egress, so the Ollama server must be reachable from the cluster network. An Ollama server on your laptop is not reachable from an agent, even when `kubectl port-forward` makes it reachable from your terminal.
+> An agent runs inside a sandboxed Actor with controlled egress, so a self-hosted Ollama server must be reachable from the cluster network. A self-hosted server on your laptop is not reachable from an agent, even when `kubectl port-forward` makes it reachable from your terminal.
 
 ## Next steps
 
