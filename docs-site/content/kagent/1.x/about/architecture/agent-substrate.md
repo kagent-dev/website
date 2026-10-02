@@ -11,13 +11,15 @@ aliases:
 
 ## ActorTemplate
 
-Every Actor is created from an **ActorTemplate**, the compiled definition that the kagent controller produces from a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} pair.
+An **ActorTemplate** is the definition that Substrate creates an Actor from. It carries what Substrate needs in order to start a conversation: the image to run, the command, the environment, the sandbox class, and the WorkerPool to schedule onto. The kagent controller produces one by compiling an {{< gloss "Agent" >}}Agent{{< /gloss >}} and the resources that it names, so an ActorTemplate is where kagent's configuration model becomes something that Substrate can execute.
 
-Substrate adds enforcement. It rejects any change to an ActorTemplate's spec after it is created, so immutability is a property of the resource itself rather than a convention that the controller follows. That immutability requires the controller to create a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and allows the controller to safely reclaim an old ActorTemplate once nothing references its revision. An Agent holds a reference for as long as the revision is its desired or its latest successful one, and a Session holds one for as long as it runs on that revision.
+Substrate rejects any change to an ActorTemplate's spec after it is created. That immutability keeps a running conversation on a fixed definition. It requires the controller to create a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and allows the controller to safely reclaim an old ActorTemplate once nothing references its revision. An Agent holds a reference for as long as the revision is its desired or its latest successful one, and a Session holds one for as long as it runs on that revision.
 
 ## Workers and WorkerPools
 
-An Actor needs somewhere to run. Each Actor runs on a **Worker**: a pre-started, sandboxed pod that hosts at most one Actor at a time. Instead of starting a new pod each time a Session needs an Actor, Substrate schedules that Actor onto a Worker that is already running and waiting.
+An Actor needs somewhere to run. Each Actor runs on a **Worker**, a pre-started pod that waits to receive one. Instead of starting a new pod each time a Session needs an Actor, Substrate schedules that Actor onto a Worker that is already running. The sandbox boundary sits around the Actor, not around the Worker pod that hosts it.
+
+<!-- REVIEW (runtime reviewer): a Worker hosts at most one Actor at a time today. Confirm whether multiple Actors per Worker ships in the target release before this paragraph describes that model. Confirm the autoscaling mechanism and its required metrics as well; the v1 matrix specifies an HPA and a metrics adapter keyed on assigned-worker count, and queue-depth scaling is unconfirmed. A diagram of pods, Workers, pools, and Actor placement, with the sandbox boundaries marked, is wanted here once the model is settled. -->
 
 Workers come from a **WorkerPool**, a Kubernetes custom resource that an operator provisions before any Agent can compile. A WorkerPool declares how many Workers to keep running and which sandbox technology those Workers use.
 
@@ -25,7 +27,7 @@ An operator never creates a Worker directly. Substrate manages them, keeping eno
 
 ## Atespaces
 
-An **atespace** is the isolation boundary that an Actor belongs to, and the first half of its identity. Agent Substrate addresses an Actor by its atespace and its name together, so the same Actor name can exist in two atespaces without colliding. Despite the resemblance, an atespace is a global-scoped Agent Substrate resource rather than a Kubernetes namespace.
+An **atespace** is the isolation boundary that an Actor belongs to, and the first half of its identity. Agent Substrate addresses an Actor by its atespace and its name together, so the same Actor name can exist in two atespaces without colliding. An atespace resembles a Kubernetes namespace but is not one. Agent Substrate defines it as its own cluster-wide resource, so no namespace contains it, a namespace's RBAC does not reach it, and deleting a Kubernetes namespace does not delete the atespace that kagent named after it. Actors and Workers sit differently against that boundary: an Actor belongs to exactly one atespace for the whole of its life, and a Worker belongs to none, because a Worker hosts whichever Actor Substrate places on it.
 
 kagent names each atespace after the Kubernetes namespace of the Agent whose Actor it holds, and creates that atespace on demand the first time a Session in the namespace needs an Actor. The Actor's own name is `session-` followed by the Session's identifier. A Session on an Agent in the `kagent` namespace therefore runs on an Actor that Agent Substrate addresses within the `kagent` atespace. Both halves of that identity appear in the address that traffic uses to reach the Actor, which [Sandboxing]({{< link path="substrate-runtime/sandboxing#how-traffic-reaches-a-sandboxed-actor" >}}) covers.
 
@@ -55,4 +57,6 @@ A tag gives a snapshot a stable, human-meaningful name, so callers do not need t
 
 For example, an agent partway through a long incident investigation reaches a state worth keeping. Creating a [checkpoint]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}) tags the snapshot that the agent most recently suspended to, which holds that one snapshot in place while the agent carries on and writes newer ones. Without the tag, Substrate collects that snapshot once a newer one supersedes it.
 
-Substrate's own target for this cycle is 100 milliseconds at the ninety-fifth percentile, measured from the moment traffic arrives for a suspended Actor to the moment that Actor can receive it.
+<!-- REVIEW (performance reviewer): the preview stated a 100 ms target at the ninety-fifth percentile, measured from traffic arrival to the moment the Actor can receive it. Removed pending confirmation of the approved measurement and whether it applies to kagent. Do not restore it as a latency guarantee. -->
+
+<!-- REVIEW (runtime/storage reviewers): expand this section with pause versus suspend, golden snapshots, where snapshots are stored, and what resume restores, and extend the snapshot-cycle diagram to show those distinctions. Do not equate a filesystem snapshot with full execution-state restoration without confirmation. -->

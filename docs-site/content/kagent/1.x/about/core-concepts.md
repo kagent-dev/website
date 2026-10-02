@@ -7,7 +7,7 @@ author: kagent.dev
 
 ## kagent 1.0
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. The 1.0 `Agent` kind shares the 0.x name but not its meaning: it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}), which maps each 0.x resource onto its 1.0 replacement.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. The 1.0 `Agent` kind shares the 0.x name but not its meaning: it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, you migrate to the new model rather than upgrading into it. No controller converts a 0.x resource, and the two API groups share no conversion, so you author the 1.0 resources yourself and retire the 0.x ones. [Migrate from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}) maps each 0.x resource onto its 1.0 replacement.
 
 The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 
@@ -48,19 +48,18 @@ The three custom resources are what an operator applies directly. The kagent con
 
 ## Harness
 
-A **Harness** is a Kubernetes custom resource that defines _how an agent is allowed to run_. It specifies:
+In the wider industry, an agent harness is the software around a model that turns it into an agent: the loop that feeds the model its context, the tools that it is allowed to call, and the environment that it executes in. A model on its own answers a prompt. A harness is what lets it take a sequence of actions and work toward a goal. Claude Code and Codex are harnesses in this sense, and each runs on a laptop with the developer's own shell and files.
+
+A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 
 - **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own Go and Python engines, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
 - **Workload**: The container image, command, and arguments that the runtime runs as.
 - **Environment**: Literal environment values for the runtime, set in `spec.env`.
-- **Substrate policy**: The [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) that the Harness's Actors are scheduled onto, and where their {{< gloss "Snapshot" >}}snapshots{{< /gloss >}} are stored.
+- **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. Agents do not run as Deployments. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) is the compute layer underneath kagent, and it runs each conversation as a sandboxed process on pre-started capacity called a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}). A {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} is the saved state of one of those processes, written when the conversation goes idle so that its capacity returns to the pool, and read back when the next message arrives. The Harness names the WorkerPool to schedule onto and where those snapshots are stored.
 
 A Harness names no AgentTemplate, and an AgentTemplate names no Harness. An [Agent](#agent) pairs the two, and nothing pairs them implicitly.
 
-> [!NOTE]
-> Each runtime accepts a different subset of configuration. The `codex` and `claude` runtimes support fewer model providers than `kagent` does, and neither accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. An Agent that asks for something its runtime cannot do reports the `Compatible` condition as `False`, with the reason `UnsupportedConfiguration` and a message naming the specific setting.
-
-A `byo` Harness has one extra requirement: it must set `spec.workload.command`, because kagent has no default entrypoint for an image that it does not build.
+Each runtime accepts a different subset of configuration, and an Agent that asks for something its runtime cannot do reports a compatibility condition rather than running. For the per-runtime restrictions and the condition that reports them, see the [API reference]({{< link path="reference/api-ref#harness" >}}).
 
 A Harness owns no running compute by itself. Applying one registers a runtime and policy that an Agent can select.
 
@@ -74,7 +73,7 @@ For the complete Harness schema, see the [API reference]({{< link path="referenc
 An **AgentTemplate** is a Kubernetes custom resource that defines _what an agent does_. It specifies:
 
 - **Model configuration**: The large language model (LLM) provider and model the agent uses.
-- **System prompt**: A literal prompt, or a Go-templated one that can `include` shared ConfigMaps.
+- **System prompt**: A literal prompt, or a Go-templated one that can include shared ConfigMaps.
 - **Tools**: A list of {{< gloss "Tool binding" >}}tool bindings{{< /gloss >}} that the agent can call. Each binding is either a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server, or another AgentTemplate used as a subagent tool (see [Subagent tools](#subagent-tools)).
 - **Skills** and **plugins**: Reusable capability packages, sourced from an Open Container Initiative (OCI) registry, Git, or S3.
 
@@ -144,7 +143,7 @@ Actors are the reason why Sessions can suspend and resume cheaply instead of sta
 
 ## Subagent tools
 
-An AgentTemplate's tools are not limited to MCP servers. A tool binding can also point at another AgentTemplate, which lets one agent hand work to a specialist agent.
+An agent does not have to do everything itself. A tool binding can point at another AgentTemplate instead of an MCP server, so a broad agent hands part of a task to one that is built for it: a release agent delegates a database question, gets the answer, and carries on. The specialist keeps its own prompt and its own tools, and the conversation stays with the agent that the caller addressed.
 
 Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
 
