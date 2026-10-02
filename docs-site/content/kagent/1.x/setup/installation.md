@@ -291,6 +291,8 @@ The kagent chart connects the controller to Agent Substrate and creates a Worker
    kubectl port-forward -n kagent svc/{{< reuse "kagent-docs/snippets/name-ui.md" >}} 8082:8080
    ```
 
+   To serve the UI behind a reverse proxy under a prefix such as `/ui` (configurable with `ui.basePath`), see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy" >}}).
+
 ## Next steps
 
 {{< cards >}}
