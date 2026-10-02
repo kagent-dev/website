@@ -74,7 +74,7 @@ The name and namespace of the Kubernetes secret that you want to create is defin
    EOF
    ```
 
-4. Create the Kubernetes secret in your kind cluster by using the secret defintion from the `kmcp.yaml` file and the environment variables from the `.env.staging` file. Note that this step is not required when you plan to run your MCP server locally only. 
+4. Create the Kubernetes secret in your kind cluster by using the secret definition from the `kmcp.yaml` file and the environment variables from the `.env.staging` file. Note that this step is not required when you plan to run your MCP server locally only. 
    ```sh
    kmcp secrets sync staging --from-file my-mcp-server/.env.staging --project-dir my-mcp-server
    ```

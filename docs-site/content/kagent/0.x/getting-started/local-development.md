@@ -231,7 +231,7 @@ spec:
 status: {}
 ```
 
-Note that the Agent image is tagged with the `localhost:5001` registry, so make sure you have either a local Docker registry running or push the image to a remote registry and then modify the agent image tag. You can also use `kagent build myagent --image ghcr.io/myorg/my-agent:v1.0.0 --push` to build the image with a specifiy name and also push it to a remote registry.
+Note that the Agent image is tagged with the `localhost:5001` registry, so make sure you have either a local Docker registry running or push the image to a remote registry and then modify the agent image tag. You can also use `kagent build myagent --image ghcr.io/myorg/my-agent:v1.0.0 --push` to build the image with a specified name and also push it to a remote registry.
 
 To deploy both the agent and MCP servers to a Kubernetes cluster, you can use the same `deploy` command, but omit the `--dry-run` flag:
 

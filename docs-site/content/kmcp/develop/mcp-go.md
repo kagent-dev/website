@@ -20,7 +20,7 @@ author: kagent.dev
 1. Create a scaffold for your MCP Go server project.
 
    The following command creates an MCP server 
-in the `my-mcp-server` directory and a sample echo tool that you can later use to test your server. Follow the interactive CLI prompts to optionaly add a description and author for your project.
+in the `my-mcp-server` directory and a sample echo tool that you can later use to test your server. Follow the interactive CLI prompts to optionally add a description and author for your project.
    
    ```sh
    kmcp init go my-mcp-server --go-module-name my-mcp-server
