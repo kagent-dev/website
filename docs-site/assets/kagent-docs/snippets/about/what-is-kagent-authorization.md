@@ -1,0 +1,1 @@
+Kubernetes role-based access control (RBAC) governs who can author these resources with `kubectl`. The kagent gRPC API reaches the same resources by a second path, and the open source build authorizes every caller that reaches that endpoint. For what each path establishes, see [Identity]({{< link path="substrate-runtime/identity#the-kagent-control-plane" >}}).

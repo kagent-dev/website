@@ -120,10 +120,7 @@ For the complete Agent schema, see the [API reference]({{< link path="reference/
 
 A **Session** is a _running conversation with one Agent_. Unlike the Harness, AgentTemplate, and Agent that it is built from, a Session is not a Kubernetes custom resource and does not live in etcd. kagent's own gRPC API creates it, and kagent's PostgreSQL database tracks it.
 
-This split is deliberate, not an implementation detail to work around:
-
-- Applying a Harness, AgentTemplate, or Agent is a **Kubernetes-native operation**, governed by Kubernetes RBAC, exactly like any other CRD.
-- Creating, suspending, resuming, sharing, or deleting a Session, and holding a conversation with it, are **kagent-native operations**, governed by kagent's own gRPC authentication and authorization, independent of who can `kubectl apply` an Agent.
+{{< reuse "kagent-docs/snippets/about/core-concepts-session-authorization.md" >}}
 
 Each compile produces one **{{< gloss "Revision" >}}revision{{< /gloss >}}**, identified by a digest, which is a SHA-256 hash of the compiled configuration. Because that digest is derived from the configuration itself, editing an Agent or either resource it references compiles to a different digest, and therefore becomes a separate ActorTemplate. kagent never rewrites an existing one.
 
