@@ -78,7 +78,7 @@ site + Hugo docs) and authoring conventions.
 
 ## Contributing Blog Posts
 
-The kagent website includes a blog section where we post about kagent. If you'd like to submit a blog post to [kagent.dev](https://kagent.dev), make sure your article meets the guidelines below. If you have any questions or you'd like to discuss your ideas, please send us a meessage on our [Discord server](https://bit.ly/kagentdiscord).
+The kagent website includes a blog section where we post about kagent. If you'd like to submit a blog post to [kagent.dev](https://kagent.dev), make sure your article meets the guidelines below. If you have any questions or you'd like to discuss your ideas, please send us a message on our [Discord server](https://bit.ly/kagentdiscord).
 
 ### Blog post guidelines
 
