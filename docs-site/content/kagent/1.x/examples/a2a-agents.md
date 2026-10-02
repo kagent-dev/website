@@ -22,7 +22,7 @@ A gRPC caller names the Agent in the standard A2A `tenant` field, as `<namespace
 
 An HTTP request that also sets a tenant must set one that matches its URL. There is no deployment-wide agent card, because the gateway serves many agents.
 
-A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation: omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
+A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
 > [!NOTE]
 > `tenant` and the `/agents/{namespace}/{name}` path replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP.

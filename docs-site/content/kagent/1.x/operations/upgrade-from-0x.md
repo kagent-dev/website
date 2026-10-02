@@ -17,7 +17,7 @@ Three independent changes each rule out `helm upgrade`, so working around any on
 | The custom resources moved to a new API group | 1.0 serves its resources under `api.kagent.dev`, where 0.10.x serves them under `kagent.dev`. The groups share no conversion, so nothing stored under the old group is visible through the new CRDs. |
 | The resource model is replaced | 0.10.x's `Agent` is gone. What it described is now split between an AgentTemplate and a {{< gloss "Harness" >}}Harness{{< /gloss >}}, paired by a new {{< gloss "Agent" >}}Agent{{< /gloss >}} resource in the `api.kagent.dev` group, and a conversation is a {{< gloss "Session" >}}Session{{< /gloss >}} created against that Agent. The two `Agent` kinds share a name and nothing else. For the model itself, see [Core concepts]({{< link path="about/core-concepts" >}}). |
 
-The two releases also cannot run side by side on one cluster. The group rename separates most of the custom resources. Both releases bundle kmcp, though, so both install `mcpservers.kagent.dev` at different versions. A CRD is cluster-scoped, so installing 1.0's CRDs replaces that one. A second cluster keeps the old installation intact while you work.
+The two releases also cannot run side by side on one cluster. The group rename separates most of the custom resources. Both releases bundle kmcp, though, and each one ships its own version of the `mcpservers.kagent.dev` CRD. A CRD is cluster-scoped, so installing 1.0's CRDs replaces the version that 0.10.x installed. A second cluster keeps the old installation intact while you work.
 
 > [!WARNING]
 > Downgrading from 1.0 back to 0.10.x is unsupported. Treat the cutover as one-way, and keep the 0.10.x installation running until you have verified the new one.

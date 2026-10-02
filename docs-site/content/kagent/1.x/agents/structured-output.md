@@ -35,7 +35,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 
 Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the schema and the rest of the agent's configuration change together.
 
-1. Apply an AgentTemplate with a schema, and an Agent that pairs it with `my-first-harness`.
+1. Apply an AgentTemplate with a schema, and an Agent that pairs it with the `my-first-harness` Harness.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3

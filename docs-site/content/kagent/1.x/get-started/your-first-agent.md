@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the Agent that pairs them. You apply the Harness, the AgentTemplate, and the Agent as Kubernetes resources. You create and talk to a Session with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture/kagent" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
+This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the Agent that pairs them. You apply the Harness, the AgentTemplate, and the Agent as Kubernetes resources. Then, you create and talk to a Session with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture/kagent" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
 
 ## Before you begin
 
@@ -60,7 +60,7 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
      systemPrompt: You are a concise, helpful assistant.
    ```
 
-3. Apply an `Agent` that names both. Nothing pairs a Harness and an AgentTemplate implicitly, so this resource is what makes the two runnable together.
+3. Apply an `Agent` that pairs a Harness and an AgentTemplate.
    ```yaml
    apiVersion: api.kagent.dev/v1alpha3
    kind: Agent

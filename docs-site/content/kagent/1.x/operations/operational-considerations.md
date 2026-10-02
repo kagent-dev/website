@@ -112,15 +112,15 @@ Scaling a serving WorkerPool down removes pods without suspending the Actors on 
 
 ## Expire idle conversations
 
-A conversation that nobody returns to still holds a row in your database and a pinned runtime revision. kagent deletes idle {{< gloss "Session" >}}Sessions{{< /gloss >}} on a timer so that neither accumulates without a bound.
+A conversation that nobody returns to still holds a row in your database and a pinned runtime revision. The kagent controller deletes idle {{< gloss "Session" >}}Sessions{{< /gloss >}} on a timer so that neither accumulates without a bound.
 
 A leader-only worker sweeps once a minute and deletes every Session whose idle clock has run out, through the same deletion workflow that a client delete uses.
 
 | Value | Default | Description |
 | ----- | ------- | ----------- |
-| `controller.sessionIdleTTL` | `168h` | How long a Session may sit idle before the worker deletes it, as a Go duration. `0` turns the worker off, retries included. A negative value is rejected. |
+| `controller.sessionIdleTTL` | `168h` | How long a Session can be idle before the worker deletes it, as a Go duration. `0` turns the worker off, retries included. A negative value is rejected. |
 
-Seven days is the default. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
+The `168h` default is seven days. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
 
 Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires. A {{< gloss "Fork" >}}fork{{< /gloss >}} keeps its source's event timestamps. Its own creation time gives it a full lifetime, so it does not inherit an almost-expired one.
 
