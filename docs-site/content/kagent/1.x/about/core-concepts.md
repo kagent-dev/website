@@ -13,7 +13,7 @@ The new model separates what an agent can do from how it is allowed to run, and 
 
 - A [**Harness**](#harness) defines how an agent is allowed to run. It picks a runtime and the infrastructure policy around it.
 - An [**AgentTemplate**](#agenttemplate) defines what an agent can do: its model, prompt, and tools.
-- An [**Agent**](#agent) pairs one AgentTemplate with one Harness. The Agent is what callers address and what the controller compiles.
+- An [**Agent**](#agent) pairs one AgentTemplate with one Harness. Callers address the Agent, and the controller compiles it.
 - A [**Session**](#session) is a running conversation with an Agent.
 - An [**Actor**](#actor) is the sandboxed process, provided by Substrate, that a Session runs on.
 
@@ -41,14 +41,16 @@ flowchart LR
     class template,harness,agent crd
 ```
 
-The three custom resources are what an operator applies directly. The kagent controller watches each Agent, resolves the template and harness that it names, and compiles the result into an ActorTemplate. From there, each Session created against that Agent gets its own Actor to run on.
+An operator applies the three custom resources directly. The kagent controller watches each Agent, resolves the template and harness that it names, and compiles the result into an ActorTemplate. From there, each Session created against that Agent gets its own Actor to run on.
 
 > [!IMPORTANT]
 > All three resources belong to the `api.kagent.dev` API group, which keeps them separate from the `kagent.dev` resources that 0.x serves, including 0.x's own `Agent` kind. The two groups share no conversion. On a cluster that serves both, qualify the resource name as `kubectl get agents.api.kagent.dev` to select the 1.0 API.
 
 ## Harness
 
-In the wider industry, an agent harness is the software around a model that turns it into an agent. The loop that feeds the model its context, the tools that it is allowed to call, and the environment that it executes in. A model on its own answers a prompt, but a harness is what lets it take a sequence of actions and work toward a goal. Claude Code and Codex are harnesses in this sense, and each runs on a local machine with your own shell and files.
+An agent harness is the application layer that executes an agent and adds capabilities around its model. It typically assembles context, invokes the model, executes tool calls, loads skills, feeds results back into the agent loop, and manages session state. A harness can also provide memory, subagents, permissions, approvals, sandboxing, and event streaming.
+
+Examples include [Claude Code](https://code.claude.com/docs/en/how-claude-code-works), [Codex CLI](https://learn.chatgpt.com/docs/codex/cli), [Gemini CLI](https://geminicli.com/docs/), [OpenClaw](https://docs.openclaw.ai/concepts/agent-runtimes), and custom in-house applications. Each of those runs on a local machine with your own shell and files.
 
 A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 

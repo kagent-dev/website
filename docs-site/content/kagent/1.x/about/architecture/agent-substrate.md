@@ -11,9 +11,9 @@ aliases:
 
 ## ActorTemplate
 
-An **ActorTemplate** is the definition that Substrate creates an Actor from. It carries what Substrate needs in order to start a conversation: the image to run, the command, the environment, the sandbox class, and the WorkerPool to schedule onto. The kagent controller produces an ActorTemplate by compiling an {{< gloss "Agent" >}}Agent{{< /gloss >}} and the resources that it names, so an ActorTemplate is where kagent's configuration model becomes executable by Substrate.
+An **ActorTemplate** is the definition that Substrate creates an Actor from. It carries what Substrate needs in order to start that Actor: the agent's container image, the command that starts the agent, the agent's environment, the sandbox class to isolate it with, and the WorkerPool to schedule it onto. The kagent controller produces an ActorTemplate by compiling an {{< gloss "Agent" >}}Agent{{< /gloss >}} and the resources that it names, so an ActorTemplate is where kagent's configuration model becomes executable by Substrate.
 
-Substrate rejects any change to an ActorTemplate's spec after it is created. This immutability ensures that a running conversation remains on a fixed definition. The controller creates a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and allows the controller to safely reclaim an old ActorTemplate once nothing references its revision. An Agent holds a reference for as long as the revision is its desired or its latest successful one, and a Session holds one for as long as it runs on that revision.
+Substrate rejects any change to an ActorTemplate's spec after it is created. This immutability ensures that a running conversation remains on a fixed definition. The controller creates a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and it reclaims an old ActorTemplate once nothing references its revision. An Agent holds a reference for as long as the revision is its desired or its latest successful one, and a Session holds one for as long as it runs on that revision.
 
 ## Workers and WorkerPools
 
