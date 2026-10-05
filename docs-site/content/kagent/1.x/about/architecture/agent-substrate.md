@@ -19,7 +19,7 @@ Substrate rejects any change to an ActorTemplate's spec after it is created. Tha
 
 An Actor needs somewhere to run. Each Actor runs on a **Worker**, a pre-started pod that waits to receive one. Instead of starting a new pod each time a Session needs an Actor, Substrate schedules that Actor onto a Worker that is already running. The sandbox boundary sits around the Actor, not around the Worker pod that hosts it.
 
-<!-- REVIEW (runtime reviewer): a Worker hosts at most one Actor at a time today. Confirm whether multiple Actors per Worker ships in the target release before this paragraph describes that model. Confirm the autoscaling mechanism and its required metrics as well; the v1 matrix specifies an HPA and a metrics adapter keyed on assigned-worker count, and queue-depth scaling is unconfirmed. A diagram of pods, Workers, pools, and Actor placement, with the sandbox boundaries marked, is wanted here once the model is settled. -->
+<!-- REVIEW (runtime reviewer): a Worker hosts at most one Actor at a time today. Confirm whether multiple Actors per Worker ships in the target release before this paragraph describes that model. Confirm the autoscaling mechanism and the metrics that it requires; an HPA with a metrics adapter keyed on assigned-worker count is one proposal, and whether queue-depth scaling is supported is unconfirmed. A diagram of pods, Workers, pools, and Actor placement, with the sandbox boundaries marked, is wanted here once the model is settled. -->
 
 Workers come from a **WorkerPool**, a Kubernetes custom resource that an operator provisions before any Agent can compile. A WorkerPool declares how many Workers to keep running and which sandbox technology those Workers use.
 
@@ -57,6 +57,6 @@ A tag gives a snapshot a stable, human-meaningful name, so callers do not need t
 
 For example, an agent partway through a long incident investigation reaches a state worth keeping. Creating a [checkpoint]({{< link path="substrate-runtime/suspend-and-resume#checkpoints" >}}) tags the snapshot that the agent most recently suspended to, which holds that one snapshot in place while the agent carries on and writes newer ones. Without the tag, Substrate collects that snapshot once a newer one supersedes it.
 
-<!-- REVIEW (performance reviewer): the preview stated a 100 ms target at the ninety-fifth percentile, measured from traffic arrival to the moment the Actor can receive it. Removed pending confirmation of the approved measurement and whether it applies to kagent. Do not restore it as a latency guarantee. -->
+<!-- REVIEW (performance reviewer): an earlier draft stated a 100 ms target at the ninety-fifth percentile, measured from traffic arrival to the moment the Actor can receive it. Removed pending confirmation of the approved measurement and whether it applies to kagent. Do not restore it as a latency guarantee. -->
 
 <!-- REVIEW (runtime/storage reviewers): expand this section with pause versus suspend, golden snapshots, where snapshots are stored, and what resume restores, and extend the snapshot-cycle diagram to show those distinctions. Do not equate a filesystem snapshot with full execution-state restoration without confirmation. -->
