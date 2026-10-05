@@ -82,7 +82,7 @@ A trace tells you which request you are looking at through attributes on its spa
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invocation` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.captureSensitiveContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 
@@ -93,6 +93,9 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 ## Enable tracing
 
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
+
+> [!IMPORTANT]
+> The telemetry values changed shape in 1.0. `otel.tracing.*`, `otel.logging.*`, `otel.captureSensitiveContent`, and the `insecure` flag were removed, and `otel.exporter.otlp.*`, `otel.traces.*`, `otel.logs.*`, and `otel.capture.*` replace them. The chart rejects an upgrade whose values still carry a removed setting, and no Helm flag carries you across: both `--reuse-values` and `--reset-then-reuse-values` reapply the stored values and fail the same way. When your release still holds the old settings, write the replacements into a values file and upgrade with `--values`, as the following steps do. After the first upgrade, `--reuse-values` works again.
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -114,25 +117,26 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 3. Add the tracing settings to the values file.
    ```yaml
    otel:
-     tracing:
+     exporter:
+       otlp:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+         timeout: 15000
+     traces:
        enabled: true
-       exporter:
-         otlp:
-           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
-           protocol: grpc
-           timeout: 15000
-           insecure: true
    ```
 
    {{< reuse "kagent-docs/snippets/review-table.md" >}}
 
    | Field | Description |
    | ----- | ----------- |
-   | `enabled` | Whether to export traces at all. Defaults to `false`. |
-   | `exporter.otlp.endpoint` | The OTLP endpoint to export to. Empty by default, which leaves the exporter on the OTel default of `localhost:4317`. |
+   | `traces.enabled` | Whether to export traces at all. Defaults to `false`. |
+   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default, which leaves the exporter on the OTel default of `localhost:4317`. |
    | `exporter.otlp.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
-   | `exporter.otlp.timeout` | The export timeout in milliseconds. Defaults to `15000`. |
-   | `exporter.otlp.insecure` | Whether to skip Transport Layer Security (TLS) for the exporter connection. Defaults to `true`. |
+   | `exporter.otlp.timeout` | The export timeout in milliseconds. Empty by default, which keeps the OTel SDK default. |
+   | `traces.endpoint`, `traces.protocol` | Send traces somewhere other than the other signals. Each one overrides its `exporter.otlp` counterpart for traces alone. Both are empty by default. |
+
+   An endpoint is an absolute `http://` or `https://` URL, and the controller rejects one that carries credentials, a query, or a fragment. The two endpoint settings differ in how the controller treats the path. A per-signal endpoint such as `traces.endpoint` is used exactly as you write it. The shared `exporter.otlp.endpoint` is used as written on the `grpc` protocol, and gains a `/v1/traces` suffix on `http/protobuf`, so point the shared setting at the collector's root rather than at a signal path.
 
 4. Upgrade the kagent Helm release.
    ```bash
@@ -253,10 +257,13 @@ Turn off the trace exporter, then create a new Session so that the change takes 
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.tracing.enabled=false
+     --set otel.traces.enabled=false
    ```
 
 2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
+
+   > [!NOTE]
+   > Turning tracing off compiles an explicit off state rather than an absent one. The controller sets `OTEL_SDK_DISABLED` to `true` and every signal exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`.
 
 3. To remove the tracing backend, follow the cleanup steps in the [OTel stack]({{< link path="observability/otel-stack#clean-up" >}}) or [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#clean-up" >}}) guide.
 

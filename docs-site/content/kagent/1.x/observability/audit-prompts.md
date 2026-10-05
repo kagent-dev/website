@@ -19,9 +19,9 @@ Each runtime records the content on its own instrumentation, so where the conten
 
 | Runtime | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |
-| `kagent` | The `generate_content` span of each model call, in two attributes. See [What a record holds](#what-a-record-holds). | `otel.captureSensitiveContent` |
-| `codex` | The runtime's own spans. | `otel.captureSensitiveContent` |
-| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.logging.captureRawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.captureSensitiveContent`, `otel.logging.captureRawApiBodies` |
+| `kagent` | The `generate_content` span of each model call, in two attributes. See [What a record holds](#what-a-record-holds). | `otel.capture.messageContent` |
+| `codex` | The runtime's own spans. | `otel.capture.messageContent` |
+| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.capture.rawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.capture.messageContent`, `otel.capture.rawApiBodies` |
 | `byo` | Nowhere. The controller sends this runtime no telemetry configuration. | None |
 
 For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
@@ -82,10 +82,10 @@ Turn on content capture in the kagent Helm release, then create a Session that p
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent \
      --reuse-values \
-     --set otel.captureSensitiveContent=true
+     --set otel.capture.messageContent=true
    ```
 
-   For an agent on the `claude` runtime, also set `otel.logging.enabled` to `true`, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
+   For an agent on the `claude` runtime, also set `otel.logs.enabled` to `true`, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
 
 3. Wait for the controller to roll out.
    ```bash
@@ -173,7 +173,7 @@ Turn off content capture, then create a new Session so that the change takes eff
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.captureSensitiveContent=false
+     --set otel.capture.messageContent=false
    ```
 
 2. Create a new Session, because an existing Actor keeps the configuration that it started with. The spans of a Session that still captures content keep carrying it until you delete the Session.

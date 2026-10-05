@@ -138,19 +138,48 @@ Tracing carries the prompts and replies that an agent exchanges with a model, an
 
 ```yaml
 otel:
-  captureSensitiveContent: false
-  logging:
-    captureRawApiBodies: false
+  capture:
+    messageContent: false
+    rawApiBodies: false
 ```
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `otel.captureSensitiveContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logging`. | `kagent`, `codex`, `claude` |
-| `otel.logging.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.captureSensitiveContent` does, and it takes effect only when `otel.logging.enabled` is `true`. | `claude` |
+| `otel.capture.messageContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logs`. | `kagent`, `codex`, `claude` |
+| `otel.capture.rawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.capture.messageContent` does, and it takes effect only when `otel.logs.enabled` is `true`. | `claude` |
 
-The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.captureSensitiveContent`, so setting that variable in the Harness `spec.env` field has no effect.
+The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.capture.messageContent`, so a Harness cannot change the capture decision for itself. Naming that variable in the Harness `spec.env` field fails the `claude` and `codex` runtimes outright, and is discarded on the `kagent` runtime. For the rest of the variables that behave this way, see [Controller-owned telemetry variables](#controller-owned-telemetry-variables).
 
 The controller sends the `byo` runtime no telemetry configuration, so neither setting reaches it. A `byo` image that implements OpenTelemetry itself reads whatever the Harness `spec.env` field holds. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
+
+## Controller-owned telemetry variables
+
+The controller compiles an installation's telemetry decisions into every runtime revision, so a Harness cannot override them through its `spec.env` field. The controller owns the following variables.
+
+* `OTEL_SDK_DISABLED` and `OTEL_SERVICE_NAME`
+* `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL`, and `OTEL_EXPORTER_OTLP_TIMEOUT`
+* `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER`, and `OTEL_LOGS_EXPORTER`
+* `OTEL_EXPORTER_OTLP_<SIGNAL>_ENDPOINT` and `OTEL_EXPORTER_OTLP_<SIGNAL>_PROTOCOL`, where `<SIGNAL>` is `TRACES`, `METRICS`, or `LOGS`
+* `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`
+
+A runtime that meets one of these names in `spec.env` either refuses the Harness or discards the entry, as the following table shows.
+
+| Runtime | Result of naming a controller-owned variable in `spec.env` |
+| ------- | ---------------------------------------------------------- |
+| `claude` | The Harness fails to compile, and the controller reports `Harness env "<name>" conflicts with Claude-owned runtime configuration`. |
+| `codex` | The Harness fails to compile, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
+| `kagent` | The entry is dropped and the controller's own value is compiled in its place. No error is reported. |
+
+Two further variables are neither owned nor passed through unchanged:
+
+* `OTEL_RESOURCE_ATTRIBUTES` is merged rather than refused. The value in `spec.env` is kept, and the agent identity attributes that the controller adds win where the two name the same attribute.
+* `OTEL_EXPORTER_OTLP_HEADERS` is never forwarded to a runtime, because an Actor environment holds no secrets. To add headers, export to an in-cluster collector that adds them for you.
+
+Every other `OTEL_*` variable, such as the `OTEL_BSP_*` batch span processor settings, stays available for per-Harness tuning.
+
+### Baggage propagation
+
+kagent runtimes set `OTEL_PROPAGATORS` to `tracecontext` when the environment leaves it unset, so a caller's baggage reaches neither the tools an agent calls nor its model provider. Trace context still propagates. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field.
 
 ## Check that a Harness is ready
 

@@ -340,20 +340,14 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
      --reuse-values \
      --values - <<EOF
    otel:
-     tracing:
+     exporter:
+       otlp:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+     traces:
        enabled: true
-       exporter:
-         otlp:
-           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
-           protocol: grpc
-           insecure: true
-     logging:
+     logs:
        enabled: true
-       exporter:
-         otlp:
-           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
-           protocol: grpc
-           insecure: true
    controller:
      metrics:
        enabled: true
@@ -369,8 +363,9 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
 
    | Setting | Description |
    | ------- | ----------- |
-   | `otel.tracing` | Exports traces from the controller and from the agent runtimes that it starts. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
-   | `otel.logging` | Exports log records from the agent runtimes. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
+   | `otel.exporter.otlp` | The OTLP endpoint and protocol that every signal exports to. An `http://` endpoint sends plaintext. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
+   | `otel.traces` | Exports traces from the controller and from the agent runtimes that it starts. |
+   | `otel.logs` | Exports log records from the agent runtimes. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
    | `controller.metrics.enabled` | Serves the controller's Prometheus metrics on port `8443` over HTTPS. |
    | `controller.metrics.serviceMonitor` | Creates a ServiceMonitor for the metrics endpoint. The `prometheusServiceAccount` setting binds the metrics reader role to the Prometheus ServiceAccount, which authorizes the scrape. |
 
@@ -500,8 +495,8 @@ Log in to Grafana, and query each backend from the **Explore** view.
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.tracing.enabled=false \
-     --set otel.logging.enabled=false \
+     --set otel.traces.enabled=false \
+     --set otel.logs.enabled=false \
      --set controller.metrics.enabled=false \
      --set controller.metrics.serviceMonitor.enabled=false
    helm upgrade substrate \
