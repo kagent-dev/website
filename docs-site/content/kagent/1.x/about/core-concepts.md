@@ -143,7 +143,7 @@ Actors are the reason why Sessions can suspend and resume cheaply instead of sta
 
 ## Subagent tools
 
-An agent tool binding can point at another AgentTemplate instead of an MCP server. In this way, a broad-scope agent can hand part of a task to one that is built specifically for that subtaask. For example, a release agent delegates a database question to another agent, gets the answer, and carries on. The specialist agent keeps its own prompt and its own tools, and the conversation stays with the broader agent that the caller originally addressed.
+An agent tool binding can point at another AgentTemplate instead of an MCP server. In this way, a broad-scope agent can hand part of a task to one that is built specifically for that subtask. For example, a release agent delegates a database question to another agent, gets the answer, and carries on. The specialist agent keeps its own prompt and its own tools, and the conversation stays with the broader agent that the caller originally addressed.
 
 Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
 
