@@ -48,14 +48,14 @@ The three custom resources are what an operator applies directly. The kagent con
 
 ## Harness
 
-In the wider industry, an agent harness is the software around a model that turns it into an agent: the loop that feeds the model its context, the tools that it is allowed to call, and the environment that it executes in. A model on its own answers a prompt. A harness is what lets it take a sequence of actions and work toward a goal. Claude Code and Codex are harnesses in this sense, and each runs on a laptop with the developer's own shell and files.
+In the wider industry, an agent harness is the software around a model that turns it into an agent. The loop that feeds the model its context, the tools that it is allowed to call, and the environment that it executes in. A model on its own answers a prompt, but a harness is what lets it take a sequence of actions and work toward a goal. Claude Code and Codex are harnesses in this sense, and each runs on a local machine with your own shell and files.
 
 A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 
 - **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own Go and Python engines, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
 - **Workload**: The container image, command, and arguments that the runtime runs as.
 - **Environment**: Literal environment values for the runtime, set in `spec.env`.
-- **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. Agents do not run as Deployments. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) is the compute layer underneath kagent, and it runs each conversation as a sandboxed process on pre-started capacity called a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}). A {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} is the saved state of one of those processes, written when the conversation goes idle so that its capacity returns to the pool, and read back when the next message arrives. The Harness names the WorkerPool to schedule onto and where those snapshots are stored.
+- **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. Agents do not run as Deployments. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), which is the compute layer underneath kagent, runs each conversation as a sandboxed process on pre-started capacity called a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}). A {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} is the saved state of one of those sandboxed processes. A snapshot is written when the conversation goes idle so that its capacity returns to the pool, and read back when the next message arrives. The Harness names the WorkerPool to schedule onto and where those snapshots are stored.
 
 A Harness names no AgentTemplate, and an AgentTemplate names no Harness. An [Agent](#agent) pairs the two, and nothing pairs them implicitly.
 
@@ -143,7 +143,7 @@ Actors are the reason why Sessions can suspend and resume cheaply instead of sta
 
 ## Subagent tools
 
-An agent does not have to do everything itself. A tool binding can point at another AgentTemplate instead of an MCP server, so a broad agent hands part of a task to one that is built for it: a release agent delegates a database question, gets the answer, and carries on. The specialist keeps its own prompt and its own tools, and the conversation stays with the agent that the caller addressed.
+An agent tool binding can point at another AgentTemplate instead of an MCP server. In this way, a broad-scope agent can hand part of a task to one that is built specifically for that subtaask. For example, a release agent delegates a database question to another agent, gets the answer, and carries on. The specialist agent keeps its own prompt and its own tools, and the conversation stays with the broader agent that the caller originally addressed.
 
 Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
 
