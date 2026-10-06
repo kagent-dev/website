@@ -60,12 +60,11 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 
 | Span | When it is created |
 | ---- | ------------------ |
-| `POST /lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. |
+| `lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. The controller reports spans of the same name for its own side of the call. |
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
-| `invocation` | Once per request, as the parent of the agent's own work. |
 | `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
-| `execute_tool <tool>` | Once per tool call, named for the tool that was called. |
+| `execute_tool <tool>` | Once per tool call, named for the tool that was called. Records the call's arguments and the tool's reply in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. |
 | `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
 
 ### Correlation attributes
@@ -74,15 +73,18 @@ A trace tells you which request you are looking at through attributes on its spa
 
 | Attribute | Value |
 | --------- | ----- |
-| `gen_ai.task.id` | The A2A task ID, which identifies one turn of a conversation. |
+| `a2a.task.id` | The A2A task ID, which identifies one turn of a conversation. |
 | `gen_ai.conversation.id` | The A2A context ID, which identifies the conversation and is stable across its turns. |
-| `kagent.app_name` | The AgentTemplate, as `<namespace>__NS__<name>` with hyphens replaced by underscores. |
-| `kagent.user_id` | The authenticated caller, or `A2A_USER_<context-id>` for an unauthenticated one. |
+| `gen_ai.agent.id` | The Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
+| `enduser.id` | The authenticated caller, such as `admin@kagent.dev`. |
+| `kagent.runtime` | The runtime that served the request, such as `adk-go`. |
 
-The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invocation` span alone, so a search on one returns that span instead of the whole subtree.
+The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.captureSensitiveContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three.
+>
+> The setting does not govern tool content. An `execute_tool` span carries the call's arguments and the tool's reply in `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` whether the setting is `true` or `false`, so a tool that returns sensitive data sends it to your tracing backend on the default settings. Turn tracing off for an agent whose tools return data that must not leave the cluster. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 
@@ -93,6 +95,9 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 ## Enable tracing
 
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
+
+> [!IMPORTANT]
+> The telemetry values changed shape in 1.0. `otel.tracing.*`, `otel.logging.*`, `otel.captureSensitiveContent`, and the `insecure` flag were removed, and `otel.exporter.otlp.*`, `otel.traces.*`, `otel.logs.*`, and `otel.capture.*` replace them. The chart defines no check that rejects a removed setting, so neither Helm flag that reuses stored values carries you across. `--reuse-values` restores the previous chart's defaults, which leaves `otel.traces` and `otel.metrics` undefined and fails the upgrade while the controller ConfigMap renders. `--reset-then-reuse-values` completes, but the chart ignores the removed keys, so a release that set `otel.tracing.enabled` to `true` turns tracing off without reporting an error. If your release still holds the old settings, write the replacements into a values file and upgrade with `--values`, as shown in the following steps. On subsequent upgrades, `--reuse-values` works again.
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -114,25 +119,26 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 3. Add the tracing settings to the values file.
    ```yaml
    otel:
-     tracing:
+     exporter:
+       otlp:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+         timeout: 15000
+     traces:
        enabled: true
-       exporter:
-         otlp:
-           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
-           protocol: grpc
-           timeout: 15000
-           insecure: true
    ```
 
    {{< reuse "kagent-docs/snippets/review-table.md" >}}
 
    | Field | Description |
    | ----- | ----------- |
-   | `enabled` | Whether to export traces at all. Defaults to `false`. |
-   | `exporter.otlp.endpoint` | The OTLP endpoint to export to. Empty by default, which leaves the exporter on the OTel default of `localhost:4317`. |
+   | `traces.enabled` | Whether to export traces at all. Defaults to `false`. |
+   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default. When a signal is enabled and neither this setting nor its per-signal counterpart holds an endpoint, the controller rejects the configuration with `OTLP traces endpoint is required when traces export is enabled`. |
    | `exporter.otlp.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
-   | `exporter.otlp.timeout` | The export timeout in milliseconds. Defaults to `15000`. |
-   | `exporter.otlp.insecure` | Whether to skip Transport Layer Security (TLS) for the exporter connection. Defaults to `true`. |
+   | `exporter.otlp.timeout` | The export timeout in milliseconds. Empty by default, which keeps the OTel SDK default. |
+   | `traces.endpoint`, `traces.protocol` | Send traces somewhere other than the other signals. Each one overrides its `exporter.otlp` counterpart for traces alone. Both are empty by default. |
+
+   An endpoint is an absolute `http://` or `https://` URL, and the controller rejects one that carries credentials, a query, or a fragment. The two endpoint settings differ in how the controller treats the path. A per-signal endpoint such as `traces.endpoint` is used exactly as you write it. The shared `exporter.otlp.endpoint` is used as written on the `grpc` protocol, and gains a `/v1/traces` suffix on `http/protobuf`, so point the shared setting at the collector's root rather than at a signal path.
 
 4. Upgrade the kagent Helm release.
    ```bash
@@ -200,7 +206,7 @@ Send a request to a new Session, then find its trace in the backend that you set
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
    3. From the **Service** list, select `my-first-agent`. Selecting `kagent-controller` instead returns the same traces from the controller's side.
-   4. Leave **Operation** on `all`, or select `invocation` to start from the agent's own work rather than from the A2A call that carries it, and click **Find Traces**.
+   4. Leave **Operation** on `all`, or select `invoke_agent <agent>` to start from the agent's own work rather than from the A2A call that carries it, and click **Find Traces**.
    5. Click a trace to open it.
    {{% /tab %}}
    {{< /tabs >}}
@@ -211,12 +217,11 @@ Send a request to a new Session, then find its trace in the backend that you set
      lf.a2a.v1.A2AService/SendMessage                       kagent-controller
        POST /*                                              agentgateway
          POST                                               agentgateway
-           POST /lf.a2a.v1.A2AService/SendMessage           my-first-agent
+           lf.a2a.v1.A2AService/SendMessage                 my-first-agent
              a2a.request                                    my-first-agent
-               invocation                                   my-first-agent
-                 invoke_agent my_first_agent_my_first_harness   my-first-agent
-                   generate_content gpt-4.1-mini            my-first-agent
-                     HTTP POST                              my-first-agent
+               invoke_agent my-first-agent                   my-first-agent
+                 generate_content gpt-4.1-mini              my-first-agent
+                   HTTP POST                                my-first-agent
    ```
 
 4. To narrow a search to one conversation, search by a correlation attribute, such as `gen_ai.conversation.id=<context-id>`.
@@ -253,8 +258,11 @@ Turn off the trace exporter, then create a new Session so that the change takes 
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.tracing.enabled=false
+     --set otel.traces.enabled=false
    ```
+
+   > [!NOTE]
+   > Turning tracing off compiles an explicit off state rather than an absent one. The controller sets the trace exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`. The controller sets `OTEL_SDK_DISABLED` to `true` only when traces, metrics, and logs are all off. Both stack guides turn logs on, so the SDK stays enabled after this step.
 
 2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
 

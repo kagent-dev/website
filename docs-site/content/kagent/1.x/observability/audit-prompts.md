@@ -19,31 +19,32 @@ Each runtime records the content on its own instrumentation, so where the conten
 
 | Runtime | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |
-| `kagent` | The `generate_content` span of each model call, in two attributes. See [What a record holds](#what-a-record-holds). | `otel.captureSensitiveContent` |
-| `codex` | The runtime's own spans. | `otel.captureSensitiveContent` |
-| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.logging.captureRawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.captureSensitiveContent`, `otel.logging.captureRawApiBodies` |
-| `byo` | Nowhere. The controller sends this runtime no telemetry configuration. | None |
+| `kagent` | The `generate_content` span of each model call, in three attributes. See [What a record holds](#what-a-record-holds). | `otel.capture.messageContent` |
+| `codex` | The runtime's own spans. | `otel.capture.messageContent` |
+| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.capture.rawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.capture.messageContent`, `otel.capture.rawApiBodies` |
+| `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in this runtime, but an image that does not read the variable records nothing. | `otel.capture.messageContent` |
 
 For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
 ### What a record holds
 
-On the `kagent` runtime, each `generate_content` span carries the following two attributes, as JSON.
+On the `kagent` runtime, each `generate_content` span carries the following three attributes, as JSON.
 
 | Attribute | What it holds |
 | --------- | ------------- |
-| `gcp.vertex.agent.llm_request` | The whole request that the runtime sent to the model. |
-| `gcp.vertex.agent.llm_response` | The model's reply. On a turn that calls a tool, the reply holds the tool call and its arguments instead of text. |
+| `gen_ai.system_instructions` | The `systemPrompt` field of your AgentTemplate, followed by the instructions that the runtime appends. |
+| `gen_ai.input.messages` | The chat history sent to the model, as a list of messages with a `role` and typed `parts`. |
+| `gen_ai.output.messages` | The model's reply, with its `finish_reason`. On a turn that calls a tool, the reply holds the tool call and its arguments instead of text. |
 
-The request holds more than the prompts that your team wrote.
+The record holds more than the prompts that your team wrote.
 
-- **The system instruction**, which holds the `systemPrompt` field of your AgentTemplate followed by instructions that the runtime appends.
-- **The message history**, including the person's messages, the agent's earlier turns, and tool results.
-- **The tools** that the agent offered the model, with their definitions.
+The system instruction holds the instructions that the runtime appends as well as the prompt your team wrote, and the message history holds the person's messages, the agent's earlier turns, and the model's tool calls.
+
+A tool's own arguments and reply are recorded separately, on the `execute_tool` span of each tool call, in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. `otel.capture.messageContent` does not govern those two attributes. The runtime records them whenever tracing is on. Treat them as part of the audit record, and as a disclosure to account for on an agent whose tools return sensitive data.
 
 Each model call carries the full history again, so a long conversation repeats its earlier messages in every span. Account for that volume when you set a retention period.
 
-A payload larger than 32 KiB is cut to a prefix. The attribute then holds a JSON object with `truncated` set to `true`, the `original_size` of the payload in bytes, and the first 32 KiB in `payload_prefix`. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
+The `kagent` runtime does not shorten these attributes. The `claude` and `codex` runtimes bound each captured prompt and reply to the `otel.capture.maxBytes` budget, which defaults to 16384 bytes, and report a shortened capture with the `kagent.capture.input_truncated` and `kagent.capture.output_truncated` attributes. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
 
 ### Delivery
 
@@ -82,10 +83,10 @@ Turn on content capture in the kagent Helm release, then create a Session that p
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent \
      --reuse-values \
-     --set otel.captureSensitiveContent=true
+     --set otel.capture.messageContent=true
    ```
 
-   For an agent on the `claude` runtime, also set `otel.logging.enabled` to `true`, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
+   For an agent on the `claude` runtime, also set `otel.logs.enabled` to `true`, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
 
 3. Wait for the controller to roll out.
    ```bash
@@ -141,9 +142,9 @@ Send a request that contains a distinctive phrase, then find that phrase in the 
    3. Open **Explore**, select the **Tempo** data source, and select the **TraceQL** query type.
    4. Run the following query, which returns the model calls whose request contains the phrase.
       ```text
-      { span.gcp.vertex.agent.llm_request =~ ".*Audit check.*" }
+      { span.gen_ai.input.messages =~ ".*Audit check.*" }
       ```
-   5. Open a trace, and select its `generate_content` span. The **Span Attributes** section shows the two attributes that [What a record holds](#what-a-record-holds) describes.
+   5. Open a trace, and select its `generate_content` span. The **Span Attributes** section shows the three attributes that [What a record holds](#what-a-record-holds) describes.
    {{% /tab %}}
    {{% tab name="Jaeger" %}}
    1. Forward the Jaeger query port, and leave the command running.
@@ -152,7 +153,7 @@ Send a request that contains a distinctive phrase, then find that phrase in the 
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
    3. From the **Service** list, select `my-first-agent`. From the **Operation** list, select the `generate_content` operation for your model, such as `generate_content gpt-4.1-mini`, and click **Find Traces**.
-   4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the two attributes that [What a record holds](#what-a-record-holds) describes.
+   4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the three attributes that [What a record holds](#what-a-record-holds) describes.
    {{% /tab %}}
    {{< /tabs >}}
 
@@ -173,7 +174,7 @@ Turn off content capture, then create a new Session so that the change takes eff
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.captureSensitiveContent=false
+     --set otel.capture.messageContent=false
    ```
 
 2. Create a new Session, because an existing Actor keeps the configuration that it started with. The spans of a Session that still captures content keep carrying it until you delete the Session.
