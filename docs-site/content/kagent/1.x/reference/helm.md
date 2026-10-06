@@ -12,7 +12,7 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha7 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha8 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
@@ -84,6 +84,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.serviceAccount.create | bool | `true` | Create the controller ServiceAccount. Set to false to use one managed outside the chart. |
 | controller.serviceAccount.name | string | `<fullname>-controller` | Name of the controller ServiceAccount. |
 | controller.sessionIdleTTL | string | `"168h"` |  |
+| controller.sessionShareMaxTTL | string | `"0"` |  |
 | controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
 | controller.substrate.ateApiEndpoint | string | `""` |  |
