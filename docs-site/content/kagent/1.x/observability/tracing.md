@@ -64,7 +64,7 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
 | `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
-| `execute_tool <tool>` | Once per tool call, named for the tool that was called. |
+| `execute_tool <tool>` | Once per tool call, named for the tool that was called. Records the call's arguments and the tool's reply in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. |
 | `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
 
 ### Correlation attributes
@@ -82,7 +82,9 @@ A trace tells you which request you are looking at through attributes on its spa
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three.
+>
+> The setting does not govern tool content. An `execute_tool` span carries the call's arguments and the tool's reply in `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` whether the setting is `true` or `false`, so a tool that returns sensitive data sends it to your tracing backend on the default settings. Turn tracing off for an agent whose tools return data that must not leave the cluster. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 

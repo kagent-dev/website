@@ -38,7 +38,9 @@ On the `kagent` runtime, each `generate_content` span carries the following thre
 
 The record holds more than the prompts that your team wrote.
 
-The system instruction holds the instructions that the runtime appends as well as the prompt your team wrote, and the message history holds the person's messages, the agent's earlier turns, and tool results.
+The system instruction holds the instructions that the runtime appends as well as the prompt your team wrote, and the message history holds the person's messages, the agent's earlier turns, and the model's tool calls.
+
+A tool's own arguments and reply are recorded separately, on the `execute_tool` span of each tool call, in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. `otel.capture.messageContent` does not govern those two attributes. The runtime records them whenever tracing is on. Treat them as part of the audit record, and as a disclosure to account for on an agent whose tools return sensitive data.
 
 Each model call carries the full history again, so a long conversation repeats its earlier messages in every span. Account for that volume when you set a retention period.
 
