@@ -62,9 +62,7 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 | ---- | ------------------ |
 | `POST /lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. |
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
-| `invoke_workflow <agent>` | Once per request, as the parent of the agent's own work, named for the root Agent that the request enters through. |
 | `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
-| `call_llm` | Once per model call, as the parent of the `generate_content` span. When `otel.capture.messageContent` is `true`, this span carries the captured prompt and reply. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
 | `execute_tool <tool>` | Once per tool call, named for the tool that was called. |
 | `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
@@ -75,15 +73,16 @@ A trace tells you which request you are looking at through attributes on its spa
 
 | Attribute | Value |
 | --------- | ----- |
-| `gen_ai.task.id` | The A2A task ID, which identifies one turn of a conversation. |
+| `a2a.task.id` | The A2A task ID, which identifies one turn of a conversation. |
 | `gen_ai.conversation.id` | The A2A context ID, which identifies the conversation and is stable across its turns. |
-| `kagent.app_name` | The AgentTemplate, as `<namespace>__NS__<name>` with hyphens replaced by underscores. |
-| `kagent.user_id` | The authenticated caller, or `A2A_USER_<context-id>` for an unauthenticated one. |
+| `gen_ai.agent.id` | The Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
+| `enduser.id` | The authenticated caller, such as `admin@kagent.dev`. |
+| `kagent.runtime` | The runtime that served the request, such as `adk-go`. |
 
-The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invoke_workflow` span alone, so a search on one returns that span instead of the whole subtree.
+The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `call_llm` span of each model call then carries the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, which the runtime does not truncate. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 
