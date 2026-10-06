@@ -63,7 +63,7 @@ The `anthropic` block takes the following optional settings. For every field, in
 
 ## Prompt caching
 
-An agent that calls a model many times for one task resends the same prefix every time: the tool definitions, the system prompt, and the turns already taken. When `promptCaching` is `true`, kagent marks that prefix with `cache_control` breakpoints, and Anthropic bills a later request that reuses it at a fraction of the normal input price. Because the conversation breakpoint moves with every turn, each call in an agent loop reads the whole previous history from the cache and writes only the new turn.
+An agent that calls a model many times for one task resends the same prefix every time, including the tool definitions, the system prompt, and the turns already taken. When `promptCaching` is `true`, kagent marks that prefix with `cache_control` breakpoints, and Anthropic bills a later request that reuses it at a fraction of the normal input price. Because the conversation breakpoint moves with every turn, each call in an agent loop reads the whole previous history from the cache and writes only the new turn.
 
 Enable the field wherever a tool-using agent makes many model calls per task against a stable system prompt and tool set. Without it, the full history is billed as fresh input on every call.
 

@@ -36,7 +36,7 @@ kubectl get remotemcpserver kagent-tool-server -n kagent \
 
 The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, accepts no credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
 
-To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at run time with the credentials that they carry.
+To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at runtime with the credentials that they carry.
 
 ```sh
 kubectl label remotemcpserver <name> -n <namespace> kagent.dev/discovery=disabled
@@ -51,7 +51,7 @@ The label changes three things about the server:
 You can also use this label on a kmcp `MCPServer` when agentgateway fronts the server. Agents bind a RemoteMCPServer that points at the gateway rather than binding the `MCPServer` itself, so discovery against the `MCPServer` serves no purpose and the label turns it off.
 
 > [!NOTE]
-> Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server with discovery off, but nothing validates those names at admission, so a typo surfaces as a failed tool call at run time instead of a rejected binding.
+> Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server with discovery off, but nothing validates those names at admission, so a typo surfaces as a failed tool call at runtime instead of a rejected binding.
 
 ## kagent-tool-server
 
