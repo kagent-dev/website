@@ -150,7 +150,7 @@ otel:
 
 The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.capture.messageContent`, so a Harness cannot change the capture decision for itself. Naming that variable in the Harness `spec.env` field fails the `claude` and `codex` runtimes outright, and is discarded on the `kagent` runtime. For the rest of the variables that behave this way, see [Controller-owned telemetry variables](#controller-owned-telemetry-variables).
 
-The controller sends the `byo` runtime no telemetry configuration, so neither setting reaches it. A `byo` image that implements OpenTelemetry itself reads whatever the Harness `spec.env` field holds. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
+The controller compiles the telemetry environment into the `byo` runtime as well whenever any signal is enabled, so `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` reaches a `byo` image. The `byo` runtime is the exception to the ownership rule. The controller applies the Harness `spec.env` field after the telemetry environment, so a `spec.env` entry wins where the two name the same variable, and an image that exports to its own backend keeps doing so. Whether the image acts on either setting depends on its own instrumentation. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 
 ## Controller-owned telemetry variables
 
@@ -170,10 +170,10 @@ A runtime that meets one of these names in `spec.env` either refuses the Harness
 | `codex` | The Harness fails to compile, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
 | `kagent` | The entry is dropped and the controller's own value is compiled in its place. No error is reported. |
 
-Two further variables are neither owned nor passed through unchanged:
+Two further variables fall outside that table:
 
 * `OTEL_RESOURCE_ATTRIBUTES` is merged rather than refused. The value in `spec.env` is kept, and the agent identity attributes that the controller adds win where the two name the same attribute.
-* `OTEL_EXPORTER_OTLP_HEADERS` is never forwarded to a runtime, because an Actor environment holds no secrets. To add headers, export to an in-cluster collector that adds them for you.
+* `OTEL_EXPORTER_OTLP_HEADERS` is neither owned nor rendered. No Helm setting produces it, so the controller never adds it to a runtime, but a value in the Harness `spec.env` field reaches every runtime unchanged. To attach headers without holding them in an Actor environment, export to an in-cluster collector that adds them.
 
 Every other `OTEL_*` variable, such as the `OTEL_BSP_*` batch span processor settings, stays available for per-Harness tuning.
 

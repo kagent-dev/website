@@ -19,16 +19,16 @@ Each runtime records the content on its own instrumentation, so where the conten
 
 | Runtime | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |
-| `kagent` | The `generate_content` span of each model call, in two attributes. See [What a record holds](#what-a-record-holds). | `otel.capture.messageContent` |
+| `kagent` | The `call_llm` span of each model call, in two attributes. See [What a record holds](#what-a-record-holds). | `otel.capture.messageContent` |
 | `codex` | The runtime's own spans. | `otel.capture.messageContent` |
 | `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.capture.rawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.capture.messageContent`, `otel.capture.rawApiBodies` |
-| `byo` | Nowhere. The controller sends this runtime no telemetry configuration. | None |
+| `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in this runtime, but an image that does not read the variable records nothing. | `otel.capture.messageContent` |
 
 For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
 ### What a record holds
 
-On the `kagent` runtime, each `generate_content` span carries the following two attributes, as JSON.
+On the `kagent` runtime, each `call_llm` span carries the following two attributes, as JSON.
 
 | Attribute | What it holds |
 | --------- | ------------- |

@@ -62,8 +62,9 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 | ---- | ------------------ |
 | `POST /lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. |
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
-| `invocation` | Once per request, as the parent of the agent's own work. |
+| `invoke_workflow <agent>` | Once per request, as the parent of the agent's own work, named for the root Agent that the request enters through. |
 | `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
+| `call_llm` | Once per model call, as the parent of the `generate_content` span. When `otel.capture.messageContent` is `true`, this span carries the captured prompt and reply. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
 | `execute_tool <tool>` | Once per tool call, named for the tool that was called. |
 | `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
@@ -79,10 +80,10 @@ A trace tells you which request you are looking at through attributes on its spa
 | `kagent.app_name` | The AgentTemplate, as `<namespace>__NS__<name>` with hyphens replaced by underscores. |
 | `kagent.user_id` | The authenticated caller, or `A2A_USER_<context-id>` for an unauthenticated one. |
 
-The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invocation` span alone, so a search on one returns that span instead of the whole subtree.
+The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the four correlation attributes, these tags stay on the `invoke_workflow` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. The spans for a model call then carry the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, truncated to a prefix when a payload is larger than 32 KiB. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `call_llm` span of each model call then carries the full serialized request and response as the `gcp.vertex.agent.llm_request` and `gcp.vertex.agent.llm_response` attributes, which the runtime does not truncate. The setting defaults to `false`, which leaves both attributes as `{}`. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 
@@ -95,7 +96,7 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
 
 > [!IMPORTANT]
-> The telemetry values changed shape in 1.0. `otel.tracing.*`, `otel.logging.*`, `otel.captureSensitiveContent`, and the `insecure` flag were removed, and `otel.exporter.otlp.*`, `otel.traces.*`, `otel.logs.*`, and `otel.capture.*` replace them. The chart rejects an upgrade whose values still carry a removed setting, and no Helm flag carries you across. Both `--reuse-values` and `--reset-then-reuse-values` reapply the stored values and fail in the same way. If your release still holds the old settings, write the replacements into a values file and upgrade with `--values`, as shown in the following steps. On subsequent upgrades, `--reuse-values` works again.
+> The telemetry values changed shape in 1.0. `otel.tracing.*`, `otel.logging.*`, `otel.captureSensitiveContent`, and the `insecure` flag were removed, and `otel.exporter.otlp.*`, `otel.traces.*`, `otel.logs.*`, and `otel.capture.*` replace them. The chart defines no check that rejects a removed setting, so neither Helm flag that reuses stored values carries you across. `--reuse-values` restores the previous chart's defaults, which leaves `otel.traces` and `otel.metrics` undefined and fails the upgrade while the controller ConfigMap renders. `--reset-then-reuse-values` completes, but the chart ignores the removed keys, so a release that set `otel.tracing.enabled` to `true` turns tracing off without reporting an error. If your release still holds the old settings, write the replacements into a values file and upgrade with `--values`, as shown in the following steps. On subsequent upgrades, `--reuse-values` works again.
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -131,7 +132,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
    | Field | Description |
    | ----- | ----------- |
    | `traces.enabled` | Whether to export traces at all. Defaults to `false`. |
-   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default, which leaves the exporter on the OTel default of `localhost:4317`. |
+   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default. When a signal is enabled and neither this setting nor its per-signal counterpart holds an endpoint, the controller rejects the configuration with `OTLP traces endpoint is required when traces export is enabled`. |
    | `exporter.otlp.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
    | `exporter.otlp.timeout` | The export timeout in milliseconds. Empty by default, which keeps the OTel SDK default. |
    | `traces.endpoint`, `traces.protocol` | Send traces somewhere other than the other signals. Each one overrides its `exporter.otlp` counterpart for traces alone. Both are empty by default. |
@@ -260,10 +261,10 @@ Turn off the trace exporter, then create a new Session so that the change takes 
      --set otel.traces.enabled=false
    ```
 
-2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
-
    > [!NOTE]
-   > Turning tracing off compiles an explicit off state rather than an absent one. The controller sets `OTEL_SDK_DISABLED` to `true` and every signal exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`.
+   > Turning tracing off compiles an explicit off state rather than an absent one. The controller sets the trace exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`. The controller sets `OTEL_SDK_DISABLED` to `true` only when traces, metrics, and logs are all off. Both stack guides turn logs on, so the SDK stays enabled after this step.
+
+2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
 
 3. To remove the tracing backend, follow the cleanup steps in the [OTel stack]({{< link path="observability/otel-stack#clean-up" >}}) or [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#clean-up" >}}) guide.
 
