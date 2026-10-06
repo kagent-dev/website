@@ -51,8 +51,8 @@ Agent Substrate exports metrics over OTLP when its Helm release has an OTLP endp
 
 ```bash
 helm upgrade substrate \
-  oci://ghcr.io/kagent-dev/substrate/helm/substrate \
-  --version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} \
+  {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
+  --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
   --namespace ate-system \
   --reuse-values \
   --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317

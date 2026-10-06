@@ -392,8 +392,8 @@ Point Agent Substrate at the collector. A single `otel.endpoint` setting turns o
 1. Upgrade the Agent Substrate Helm release.
    ```bash
    helm upgrade substrate \
-     oci://ghcr.io/kagent-dev/substrate/helm/substrate \
-     --version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} \
+     {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
      --namespace ate-system \
      --reuse-values \
      --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317 \
@@ -500,8 +500,8 @@ Log in to Grafana, and query each backend from the **Explore** view.
      --set controller.metrics.enabled=false \
      --set controller.metrics.serviceMonitor.enabled=false
    helm upgrade substrate \
-     oci://ghcr.io/kagent-dev/substrate/helm/substrate \
-     --version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} \
+     {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
      --namespace ate-system --reuse-values \
      --set otel.endpoint="" \
      --set otel.traces.samplingRatio=0.01

@@ -248,8 +248,8 @@ Upgrade the Agent Substrate Helm release. A single `otel.endpoint` setting turns
 
 ```bash
 helm upgrade substrate \
-  oci://ghcr.io/kagent-dev/substrate/helm/substrate \
-  --version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} \
+  {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
+  --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
   --namespace ate-system \
   --reuse-values \
   --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317 \
@@ -321,8 +321,8 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
      --set otel.logs.enabled=false \
      --set controller.metrics.enabled=false
    helm upgrade substrate \
-     oci://ghcr.io/kagent-dev/substrate/helm/substrate \
-     --version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} \
+     {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
      --namespace ate-system --reuse-values \
      --set otel.endpoint="" \
      --set otel.traces.samplingRatio=0.01

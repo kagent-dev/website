@@ -56,13 +56,13 @@ Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing ba
 
 ### Spans
 
-The `kagent` runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the service name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following spans appear in nesting order, from the span that accepts the request down to the model and tool calls that serve it.
+The `kagent` runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following spans appear in nesting order, from the span that accepts the request down to the model and tool calls that serve it.
 
 | Span | When it is created |
 | ---- | ------------------ |
 | `lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. The controller reports spans of the same name for its own side of the call. |
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
-| `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
+| `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, with each hyphen replaced by an underscore. The Agent `my-first-agent` produces `invoke_agent my_first_agent`, while its service name keeps the hyphens, so the two spellings differ. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
 | `execute_tool <tool>` | Once per tool call, named for the tool that was called. Records the call's arguments and the tool's reply in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. |
 | `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
@@ -133,12 +133,14 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
    | Field | Description |
    | ----- | ----------- |
    | `traces.enabled` | Whether to export traces at all. Defaults to `false`. |
-   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default. When a signal is enabled and neither this setting nor its per-signal counterpart holds an endpoint, the controller rejects the configuration with `OTLP traces endpoint is required when traces export is enabled`. |
+   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default. When a signal is enabled and neither this setting nor its per-signal counterpart holds an endpoint, the controller disables that signal and reports `OTLP traces endpoint is required when traces export is enabled`. |
    | `exporter.otlp.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
    | `exporter.otlp.timeout` | The export timeout in milliseconds. Empty by default, which keeps the OTel SDK default. |
    | `traces.endpoint`, `traces.protocol` | Send traces somewhere other than the other signals. Each one overrides its `exporter.otlp` counterpart for traces alone. Both are empty by default. |
 
-   An endpoint is an absolute `http://` or `https://` URL, and the controller rejects one that carries credentials, a query, or a fragment. The two endpoint settings differ in how the controller treats the path. A per-signal endpoint such as `traces.endpoint` is used exactly as you write it. The shared `exporter.otlp.endpoint` is used as written on the `grpc` protocol, and gains a `/v1/traces` suffix on `http/protobuf`, so point the shared setting at the collector's root rather than at a signal path.
+   An endpoint is an absolute `http://` or `https://` URL, and one that carries credentials, a query, or a fragment leaves its signal disabled in the same way. An invalid telemetry setting never fails the upgrade or the Harness. The controller reports each one as a warning when it starts, as the log record `invalid agent telemetry configuration; disabling signal`, and turns off only the signal that the setting belongs to. Check that log after you change these values, because no other surface reports the problem and an agent with a disabled signal runs normally.
+
+   The two endpoint settings differ in how the controller treats the path. A per-signal endpoint such as `traces.endpoint` is used exactly as you write it. The shared `exporter.otlp.endpoint` is used as written on the `grpc` protocol, and gains a `/v1/traces` suffix on `http/protobuf`, so point the shared setting at the collector's root rather than at a signal path.
 
 4. Upgrade the kagent Helm release.
    ```bash
@@ -219,7 +221,7 @@ Send a request to a new Session, then find its trace in the backend that you set
          POST                                               agentgateway
            lf.a2a.v1.A2AService/SendMessage                 my-first-agent
              a2a.request                                    my-first-agent
-               invoke_agent my-first-agent                   my-first-agent
+               invoke_agent my_first_agent                   my-first-agent
                  generate_content gpt-4.1-mini              my-first-agent
                    HTTP POST                                my-first-agent
    ```
