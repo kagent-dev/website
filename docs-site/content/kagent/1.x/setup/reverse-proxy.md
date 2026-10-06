@@ -5,22 +5,34 @@ weight: 15
 author: kagent.dev
 ---
 
-The kagent UI is served by an nginx sidecar that answers on port `8080` inside the pod. By default it serves at the root (`/`). When a reverse proxy fronts the UI and you want it reachable under a prefix such as `/ui`, set `ui.basePath` in the Helm values.
+The kagent UI is a static bundle served by nginx, which answers on port `8080` inside the pod. By default it serves at the root (`/`). When a reverse proxy fronts the UI and you want it reachable under a prefix such as `/ui`, set `ui.basePath` in the Helm values.
 
 ## The `ui.basePath` value
+
+One Helm value controls the whole sub-path, and it is purely additive: leaving it unset leaves an existing installation serving at the root exactly as before. Set it, and the prefix reaches every URL the UI emits, not only the pages a reader navigates to.
 
 | Setting | Default | Effect |
 |---------|---------|--------|
 | `ui.basePath` | `""` (empty) | UI served at `/`. All existing behaviour unchanged. |
 | `ui.basePath` | e.g. `/ui` | UI served under the prefix. One value moves every root-relative URL the UI emits. |
 
-The value is purely additive: leaving it unset leaves the installation exactly as it is today.
+When set, a single value controls the `<base href>` tag, the client-side router basename, and the root-relative API, SSO, userinfo, and share-link URLs that the browser uses. `publicBackendUrl` and the other root-relative URLs inherit the prefix, so do not adjust them by hand.
 
-When set, a single value controls the `<base href>` tag, the client-side router basename, and the root-relative API, SSO, userinfo, and share-link URLs that the browser uses. A reader who expects to adjust `publicBackendUrl` by hand should know that the base path already covers it: root-relative URLs such as `publicBackendUrl` inherit the prefix automatically.
+## Setting the value
+
+Put `ui.basePath` in the Helm values at install time, rather than in a follow-up `helm upgrade`. The install steps live on the [Install kagent]({{< link path="setup/installation" >}}) page; the value is the only non-default setting this page needs.
+
+```bash
+helm upgrade --install kagent \
+  {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+  --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+  --namespace kagent --create-namespace --timeout 10m \
+  --set ui.basePath=/ui
+```
 
 ## Proxy shapes
 
-Both of the following proxy configurations work. Choose the one that matches your infrastructure.
+Both of the following proxy configurations work. Choose the one that matches your infrastructure. If you enable oauth2-proxy for SSO, the proxy must strip the prefix: with the prefix forwarded, oauth2-proxy cannot match its own sign-in and skip-authentication paths, and sign-in fails.
 
 ### Proxy strips the prefix
 
@@ -30,7 +42,7 @@ Example nginx configuration:
 
 ```nginx
 location /ui/ {
-    proxy_pass http://kagent-ui.kagent:8080/;
+    proxy_pass http://{{< reuse "kagent-docs/snippets/name-ui.md" >}}.kagent:8080/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -38,7 +50,7 @@ location /ui/ {
 }
 ```
 
-The trailing slash on `proxy_pass` is what makes nginx drop the `/ui` prefix.
+A trailing slash on `proxy_pass` makes nginx drop the `/ui` prefix.
 
 ### Proxy forwards the prefix unchanged
 
@@ -48,7 +60,7 @@ Example nginx configuration:
 
 ```nginx
 location /ui/ {
-    proxy_pass http://kagent-ui.kagent:8080;
+    proxy_pass http://{{< reuse "kagent-docs/snippets/name-ui.md" >}}.kagent:8080;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -56,11 +68,11 @@ location /ui/ {
 }
 ```
 
-No trailing slash on `proxy_pass` — the full path including `/ui` reaches the UI pod, and its nginx rewrites it to `/` before serving.
+Do not put a trailing slash on `proxy_pass`. The full path including `/ui` reaches the UI pod, and its nginx rewrites it to `/` before serving.
 
 ## Helm render validation
 
-Two validations run at Helm render time and fail the install rather than producing a broken UI. Both are defined in `helm/kagent/templates/ui-configmap.yaml`.
+Two validations run at Helm render time and fail the install rather than producing a broken UI.
 
 | Condition | Helm error message |
 |-----------|-------------------|
@@ -83,17 +95,41 @@ Choosing any of these as the base path collides with a path nginx already owns i
 
 If you use oauth2-proxy for SSO, a base-path change requires a second, manual step.
 
-1. Set `OIDC_REDIRECT_URL` to point under the base path (for example `https://example.com/ui/oauth2/start` rather than `https://example.com/oauth2/start`).
-2. Restart the oauth2-proxy pod after changing the value.
+1. Set `OIDC_REDIRECT_URL` under `oauth2-proxy.extraEnv` in your Helm values so that it points under the base path, for example `https://example.com/ui/oauth2/callback` rather than `https://example.com/oauth2/callback`. This becomes oauth2-proxy's `--redirect-url`, which is the OAuth callback, not the path that starts sign-in; the chart leaves its `--proxy-prefix` at `/oauth2`, so the callback is `/oauth2/callback`.
+2. Register that same URL as a redirect URI with your identity provider.
+3. Restart the oauth2-proxy pod after changing the value.
 
-The restart is required because the chart's sign-in HTML redirects to `{basePath}/login`, and the oauth2-proxy checksum deliberately renders without the `ui` prefix, so a base-path change alone does not roll the oauth2-proxy pod. Without the restart, the proxy keeps using the old redirect URL and sign-in fails.
+The restart is required because the chart's sign-in HTML redirects to `{basePath}/login`, but the checksum that would roll the oauth2-proxy pod is computed where the `ui` values key is not in scope. The base path is absent from the hash, so the hash does not change and the pod keeps the old sign-in template and redirect URL until you restart it.
 
 ## Verifying the installation
 
-After installing with `--set ui.basePath=/ui`:
+After installing with `--set ui.basePath=/ui`, run each check and look for the named result.
 
-1. Open `/ui/` in a browser. The UI should load.
-2. Navigate to an agent list or detail page. The URL should stay under `/ui/...` (for example `/ui/agents`).
-3. Open the browser network tab. API calls should go to `/ui/api/...`, not `/api/...`.
-4. Reload the page. The SPA router should keep the prefix.
-5. If oauth2-proxy is enabled, sign in. The redirect should land under `/ui/oauth2/...`.
+1. Open `/ui/` in a browser. Expected: the kagent UI loads, and the `<base href>` in the page source is `/ui/`.
+2. Navigate to an agent list or detail page. Expected: the URL stays under `/ui/...`, for example `/ui/agents`.
+3. Open the browser network tab while the page loads. Expected: API calls go to `/ui/api/...`, not `/api/...`.
+4. Reload the page. Expected: the SPA router keeps the `/ui` prefix in the URL.
+5. If oauth2-proxy is enabled, sign in. Expected: the OAuth redirect lands under `/ui/oauth2/...`, then returns you to the UI under `/ui/`. This holds when the proxy strips the prefix; when the proxy forwards the prefix unchanged, the OAuth paths behave as described under [Proxy shapes](#proxy-shapes).
+
+To confirm the Helm-side validation, install with a rejected value and expect the render to fail:
+
+```bash
+helm upgrade --install kagent \
+  {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+  --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+  --namespace kagent --create-namespace \
+  --set ui.basePath=/api
+```
+
+Expected:
+
+```
+Error: execution error at (kagent/templates/ui-deployment.yaml:21:31): ui.basePath cannot start with a path nginx serves, such as /api or /assets
+```
+
+## Next steps
+
+{{< cards >}}
+  {{< card link=`{{< link path="setup/installation" >}}` title="Install kagent" subtitle="The full install steps this page's `ui.basePath` value plugs into." >}}
+  {{< card link=`{{< link path="substrate-runtime/identity" >}}` title="Identity" subtitle="How kagent resolves a caller's identity and scopes a Session to its creator." >}}
+{{< /cards >}}
