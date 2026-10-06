@@ -145,7 +145,7 @@ otel:
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `otel.capture.messageContent` | Prompts, tool details, and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the spans for each model call. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logs`. | `kagent`, `codex`, `claude` |
+| `otel.capture.messageContent` | Prompts and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, whatever this setting holds. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logs`. | `kagent`, `codex`, `claude` |
 | `otel.capture.rawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.capture.messageContent` does, and it takes effect only when `otel.logs.enabled` is `true`. | `claude` |
 
 The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.capture.messageContent`, so a Harness cannot change the capture decision for itself. Naming that variable in the Harness `spec.env` field fails the `claude` and `codex` runtimes outright, and is discarded on the `kagent` runtime. For the rest of the variables that behave this way, see [Controller-owned telemetry variables](#controller-owned-telemetry-variables).

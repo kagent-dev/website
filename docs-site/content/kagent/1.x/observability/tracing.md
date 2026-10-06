@@ -60,7 +60,7 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 
 | Span | When it is created |
 | ---- | ------------------ |
-| `POST /lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. |
+| `lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. The controller reports spans of the same name for its own side of the call. |
 | `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
 | `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, such as `invoke_agent my-first-agent`. The name matches the runtime's service name. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
@@ -206,7 +206,7 @@ Send a request to a new Session, then find its trace in the backend that you set
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
    3. From the **Service** list, select `my-first-agent`. Selecting `kagent-controller` instead returns the same traces from the controller's side.
-   4. Leave **Operation** on `all`, or select `invocation` to start from the agent's own work rather than from the A2A call that carries it, and click **Find Traces**.
+   4. Leave **Operation** on `all`, or select `invoke_agent <agent>` to start from the agent's own work rather than from the A2A call that carries it, and click **Find Traces**.
    5. Click a trace to open it.
    {{% /tab %}}
    {{< /tabs >}}
@@ -217,12 +217,11 @@ Send a request to a new Session, then find its trace in the backend that you set
      lf.a2a.v1.A2AService/SendMessage                       kagent-controller
        POST /*                                              agentgateway
          POST                                               agentgateway
-           POST /lf.a2a.v1.A2AService/SendMessage           my-first-agent
+           lf.a2a.v1.A2AService/SendMessage                 my-first-agent
              a2a.request                                    my-first-agent
-               invocation                                   my-first-agent
-                 invoke_agent my_first_agent_my_first_harness   my-first-agent
-                   generate_content gpt-4.1-mini            my-first-agent
-                     HTTP POST                              my-first-agent
+               invoke_agent my-first-agent                   my-first-agent
+                 generate_content gpt-4.1-mini              my-first-agent
+                   HTTP POST                                my-first-agent
    ```
 
 4. To narrow a search to one conversation, search by a correlation attribute, such as `gen_ai.conversation.id=<context-id>`.
