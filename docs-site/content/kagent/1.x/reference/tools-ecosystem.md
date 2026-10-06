@@ -20,7 +20,7 @@ The kagent release pins the `kagent-tool-server` version, which is currently {{<
 
 ## Read the tools that a server serves
 
-The controller connects to each RemoteMCPServer, asks it what it serves, and records the answer in `status.discoveredTools`. That status reports the server that your cluster actually runs, so it is more reliable than any list on this page.
+The kagent controller connects to each RemoteMCPServer, asks it what it serves, and records the answer in `status.discoveredTools`. That status reports the server that your cluster actually runs, so it is more reliable than any list on this page.
 
 ```sh
 kubectl get remotemcpserver kagent-tool-server -n kagent \
@@ -30,7 +30,28 @@ kubectl get remotemcpserver kagent-tool-server -n kagent \
 [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-the-tool-to-your-agenttemplate" >}}) runs the same command as the first step of binding one of these tools to an agent.
 
 > [!NOTE]
-> `status.discoveredTools` stays empty until the controller completes a discovery pass, and `status.observedGeneration` tells you whether the recorded set matches the current spec. A server whose `Accepted` condition is not `True` has not been reached at all.
+> `status.discoveredTools` stays empty until the controller completes a discovery pass, and `status.observedGeneration` tells you whether the recorded set matches the current spec. A server whose `Accepted` condition is not `True` has not been reached at all. A server that opts out of discovery is the exception, because it is `Accepted` and its tool list stays empty permanently. Read the `Accepted` condition's reason to tell the two apart, as described in the next section.
+
+### Turn tool discovery off for a server
+
+The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, accepts no credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
+
+To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at run time with the credentials that they carry.
+
+```sh
+kubectl label remotemcpserver <name> -n <namespace> kagent.dev/discovery=disabled
+```
+
+The label changes three things about the server:
+
+- The `Accepted` condition becomes `True` with the reason `DiscoveryDisabled`, rather than reporting a discovery failure.
+- `status.discoveredTools` stays empty, so the command in [Read the tools that a server serves](#read-the-tools-that-a-server-serves) returns nothing for this server. The server's own documentation becomes the only list of what it offers.
+- The catalog keeps the server but records it as disconnected, with no tools.
+
+You can also use this label on a kmcp `MCPServer` when agentgateway fronts the server. Agents bind a RemoteMCPServer that points at the gateway rather than binding the `MCPServer` itself, so discovery against the `MCPServer` serves no purpose and the label turns it off.
+
+> [!NOTE]
+> Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server with discovery off, but nothing validates those names at admission, so a typo surfaces as a failed tool call at run time instead of a rejected binding.
 
 ## kagent-tool-server
 

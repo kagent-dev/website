@@ -295,6 +295,9 @@ jobs:
               # read none of the 1.x-only conrefs.
               WITH_RUNTIME_IMAGES=false
               WITH_KMCP=false
+              # 0.x predates the environment variable registry: docs/env.md
+              # does not exist at v0.10.1, and no 0.x page documents env vars.
+              WITH_ENV_DOCS=false
               ;;
             1.x)
               SECTION=reference
@@ -315,6 +318,7 @@ jobs:
               KAGENT_CLI_LINK_PREFIX=reference/cli
               WITH_RUNTIME_IMAGES=true
               WITH_KMCP=true
+              WITH_ENV_DOCS=true
               ;;
             *)
               echo "Error: unknown line '$LINE'."
@@ -341,6 +345,8 @@ jobs:
             echo "CLI_WEIGHT=$CLI_WEIGHT"
             echo "WITH_RUNTIME_IMAGES=$WITH_RUNTIME_IMAGES"
             echo "WITH_KMCP=$WITH_KMCP"
+            echo "WITH_ENV_DOCS=$WITH_ENV_DOCS"
+            echo "KAGENT_ENV_PAGE=docs-site/content/kagent/$LINE/$SECTION/env-vars.md"
           } >> $GITHUB_ENV
 
           echo "Line $LINE -> content/kagent/$LINE/$SECTION/, $API_DIR"
@@ -719,6 +725,12 @@ jobs:
               echo "LINE_SCOPE_NOTE=No kmcp, kagent-tools or runtime-image conref is touched on a $LINE run: no $LINE page reads them, and their values would come from the ${KAGENT_VERSION%%.*}.x tree."
               echo "FLAT_CONREF_ROWS="
             } >> $GITHUB_ENV
+          fi
+
+          if [ "$WITH_ENV_DOCS" = "true" ]; then
+            echo "ENV_DOCS_NOTE=The environment variable reference is regenerated from \`docs/env.md\` in the kagent checkout, which upstream generates from the registry in \`go/core/pkg/env\` and holds to it in CI. The \`testing\` section is dropped as repository-facing; pass \`--include-section testing\` to publish it." >> $GITHUB_ENV
+          else
+            echo "ENV_DOCS_NOTE=No environment variable reference is generated on a $LINE run: \`docs/env.md\` does not exist at that line's releases." >> $GITHUB_ENV
           fi
 
       - name: Flag whether the conrefs moved
@@ -1154,6 +1166,31 @@ jobs:
             --out-dir "$KMCP_CLI_DIR" \
             --url-prefix "$KMCP_CLI_URL_PREFIX"
 
+      - name: Generate environment variable reference
+        if: env.WITH_ENV_DOCS == 'true'
+        # kagent generates docs/env.md from the registry in go/core/pkg/env,
+        # and its own CI fails the build when the two drift (make
+        # env-docs-check). So the checked-out file is authoritative and this
+        # step only reshapes it into a page; it does not re-derive anything
+        # from Go source, and needs no build.
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/website"
+          SOURCE="$GITHUB_WORKSPACE/kagent/docs/env.md"
+          # Fail loudly rather than skipping. A missing file here means the
+          # release being documented dropped or moved the registry output,
+          # which is a change this job must not paper over by silently
+          # leaving the published page on its previous contents.
+          if [ ! -f "$SOURCE" ]; then
+            echo "Error: $SOURCE not found in the kagent checkout at $KAGENT_VERSION."
+            echo "kagent generates it with 'make env-docs'. If upstream moved or"
+            echo "removed it, update this step and scripts/generate-env-docs.py."
+            exit 1
+          fi
+          python3 scripts/generate-env-docs.py \
+            --source "$SOURCE" \
+            --out "$KAGENT_ENV_PAGE"
+
       - name: Audit generated CLI docs
         run: |
           cd "$GITHUB_WORKSPACE/website"
@@ -1173,13 +1210,15 @@ jobs:
           signoff: true
           title: "Update kagent ${{ env.LINE }} reference docs at ${{ env.KAGENT_TAG }}${{ env.CONREFS_CHANGED && ' (version conrefs changed)' || '' }}"
           body: |
-            Regenerates the kagent **${{ env.LINE }}** API and Helm references, its CLI pages, and the version conrefs at a released tag. Nothing here was read from either repository's `main`:
+            Regenerates the kagent **${{ env.LINE }}** API and Helm references, its CLI and environment variable pages, and the version conrefs at a released tag. Nothing here was read from either repository's `main`:
             - **kagent**: [`${{ env.KAGENT_TAG }}`](https://github.com/${{ github.repository_owner }}/kagent/releases/tag/${{ env.KAGENT_TAG }}) (`${{ env.KAGENT_COMMIT }}`)
             ${{ env.KMCP_SOURCE_LINE }}
 
             The `${{ env.LINE }}` span of `versions/kagent.md` moves to `${{ env.KAGENT_VERSION }}`, so the `helm install --version` lines on those pages and the reference content beside them describe the same release. Only this line's spans were written; the other line's are asserted unchanged.
 
             ${{ env.LINE_SCOPE_NOTE }}
+
+            ${{ env.ENV_DOCS_NOTE }}
 
             ${{ env.CONREF_NOTE }}
 
