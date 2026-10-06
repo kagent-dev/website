@@ -162,7 +162,7 @@ The controller compiles an installation's telemetry decisions into every runtime
 * `OTEL_EXPORTER_OTLP_<SIGNAL>_ENDPOINT` and `OTEL_EXPORTER_OTLP_<SIGNAL>_PROTOCOL`, where `<SIGNAL>` is `TRACES`, `METRICS`, or `LOGS`
 * `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`
 
-A runtime that meets one of these names in `spec.env` either refuses the Harness or discards the entry, as the following table shows.
+A runtime that meets one of these names in `spec.env` either refuses the Harness or discards the entry, as described in the following table.
 
 | Runtime | Result of naming a controller-owned variable in `spec.env` |
 | ------- | ---------------------------------------------------------- |
