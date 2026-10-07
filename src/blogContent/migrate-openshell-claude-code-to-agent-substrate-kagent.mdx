@@ -2,7 +2,7 @@ export const metadata = {
   title: "Running Claude Code on Agent Substrate: What Changes from OpenShell",
   publishDate: "2026-10-07T00:00:00Z",
   description:
-    "Running Claude Code in an OpenShell sandbox? Move it to kagent 1.x and Agent Substrate with no adapter and no image to build: the Claude runtime is built in, and idle agents stop holding compute.",
+    "Running Claude Code in an OpenShell sandbox? Move it to kagent 1.x and Agent Substrate with no image to build: the Claude runtime is built in, and idle agents stop holding compute.",
   author: "Hugo Guerrero",
   authorIds: ["hugoguerrero"],
 };
@@ -19,7 +19,7 @@ The part I kept coming back to is the time between commands. A coding agent spen
 
 In this post we take the OpenShell Claude Code setup and run it on kagent 1.x and Agent Substrate. Each step maps to something you already did in the tutorial, but you do not need to have followed it.
 
-Two notes before we start. First, kagent 1.x is in alpha at the time of writing, and the versions below are the ones I tested. Check the [kagent 1.x docs](https://kagent.dev/docs/kagent/1.x/) for current ones. Second, Claude Code is the easy case. kagent has a built-in runtime for it, so there is no adapter to write and no image to build. An agent without a built-in runtime needs more work.
+Two notes before we start. First, kagent 1.x is in alpha at the time of writing, and the versions below are the ones I tested. Check the [kagent 1.x docs](https://kagent.dev/docs/kagent/1.x/) for current ones. Second, Claude Code is the easy case. kagent has a built-in runtime for it, so there is no image to build. An agent without a built-in runtime needs more work.
 
 ## Why move: agents spend their lives waiting
 
@@ -285,7 +285,7 @@ A note on what is in the image. It is Alpine with Claude Code (version 2.1.260 i
 
 ![Inside an actor, the kagent gateway talks A2A over gRPC to kagent-claude, which drives claude -p with JSON; both use the durable /data volume (workspace and claude directories), and model calls leave through the egress gateway to api.anthropic.com.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/03-inside-the-actor.png)
 
-*The runtime ships in the image. You write a Harness, not a Dockerfile or an adapter.*
+*The runtime ships in the image. You write a Harness, not a Dockerfile.*
 
 ## Step 5: Run it and watch it sleep
 
@@ -521,7 +521,7 @@ Moving off a dedicated sandbox has a price, so here is the ledger.
 
 1. **Density.** Capacity follows active work instead of open sessions. A suspended actor costs storage and holds no worker, and kagent's docs say a pool can carry far more actors than it has workers at any one moment.
 2. **Long-running work that survives the wait.** An agent can sit on a pending approval, hold no worker while it waits, and pick up with its memory, files, and Claude Code session when you answer. The docs say a task waiting for input never expires. I answered my approvals within seconds, so I did not test a wait of hours.
-3. **Nothing to build for Claude Code.** The runtime is built in, so there is no image to patch and no adapter to maintain.
+3. **Nothing to build for Claude Code.** The runtime is built in, so there is no image to patch.
 4. **Isolation without one pod per agent.** Each actor runs in its own gVisor sandbox with its own filesystem view and a private network.
 5. **Default-deny egress and credentials outside the agent.** The allow-list comes from what the template declares, and the keys stay on the gateway.
 6. **Approval gates that cost nothing while they wait.** The agent pauses and frees its worker until you decide.

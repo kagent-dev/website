@@ -18,7 +18,7 @@ const posts = [
         slug: 'migrate-openshell-claude-code-to-agent-substrate-kagent',
         publishDate: '2026-10-07',
         title: 'Running Claude Code on Agent Substrate: What Changes from OpenShell',
-        description: 'Running Claude Code in an OpenShell sandbox? Move it to kagent 1.x and Agent Substrate with no adapter and no image to build: the Claude runtime is built in, and idle agents stop holding compute.',
+        description: 'Running Claude Code in an OpenShell sandbox? Move it to kagent 1.x and Agent Substrate with no image to build: the Claude runtime is built in, and idle agents stop holding compute.',
         authorId: 'hugoguerrero',
     },
     {
