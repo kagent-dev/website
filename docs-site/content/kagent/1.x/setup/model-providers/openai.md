@@ -43,7 +43,7 @@ The `OpenAI` provider calls the OpenAI API directly.
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that stores the API key, in the same namespace as this ModelConfig. |
    | `apiKeySecretKey` | The key within that Secret that holds the API key. |
-   | `model` | The model to use. For the available models, see the [OpenAI model docs](https://platform.openai.com/docs/models). |
+   | `model` | The model to use. For the available models, see the [OpenAI model docs](https://developers.openai.com/api/docs/models). |
    | `provider` | The provider to use, `OpenAI`. |
    | `openAI` | Settings that only the OpenAI provider takes. An empty block is valid, and is the common case for OpenAI itself. |
 

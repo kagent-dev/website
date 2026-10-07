@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-[Ollama](https://ollama.com) runs large language models on hardware that you control. The `Ollama` provider points {{< reuse "kagent-docs/snippets/name-product.md" >}} at a self-hosted Ollama server or at an [Ollama Cloud](https://ollama.com/cloud) model. A self-hosted server takes a host address and no API key. An Ollama Cloud model takes an API key, and leaves the host address unset. The `ModelConfig` selects between them.
+[Ollama](https://ollama.com) runs large language models on hardware that you control. The `Ollama` provider points {{< reuse "kagent-docs/snippets/name-product.md" >}} at a self-hosted Ollama server or at an [Ollama Cloud](https://docs.ollama.com/cloud) model. A self-hosted server takes a host address and no API key. An Ollama Cloud model takes an API key, and leaves the host address unset. The `ModelConfig` selects between them.
 
 > [!IMPORTANT]
 > kagent agents call tools, so choose a model that supports function calling. A model without tool support connects successfully and then fails to use any tool that you bind to it.
@@ -101,7 +101,7 @@ EOF
 
 ## Use Ollama Cloud
 
-[Ollama Cloud](https://ollama.com/cloud) serves hosted models that you reach with an API key. The same `Ollama` provider covers them, with a differently shaped `ModelConfig`: leave `ollama.host` unset, and set `apiKeySecret` and `apiKeySecretKey` to the Secret that holds the key.
+[Ollama Cloud](https://docs.ollama.com/cloud) serves hosted models that you reach with an API key. The same `Ollama` provider covers them, with a differently shaped `ModelConfig`: leave `ollama.host` unset, and set `apiKeySecret` and `apiKeySecretKey` to the Secret that holds the key.
 
 1. Save your [Ollama Cloud API key](https://ollama.com/settings/keys) as an environment variable.
    ```bash

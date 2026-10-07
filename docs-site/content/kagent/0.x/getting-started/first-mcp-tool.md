@@ -6,7 +6,7 @@ weight: 3
 author: kagent.dev
 ---
 
-[MCP (Model Context Protocol)](https://modelcontextprotocol.io/introduction) tools extend the agent's abilities by calling external services to perform tasks that require logic or access outside the cluster.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/docs/getting-started/intro) tools extend the agent's abilities by calling external services to perform tasks that require logic or access outside the cluster.
 
 In this guide, you'll learn how to add an MCP tool to your first AI agent using the kagent resources.
 

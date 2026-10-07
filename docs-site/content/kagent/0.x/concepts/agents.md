@@ -92,7 +92,7 @@ If the user asks "List all pods in the cluster", the agent can use the **list_re
 
 Some tools support additional configuration that you set when adding the tool to the agent. For example, any Grafana or Prometheus tools will require an API endpoint URL to be set.
 
-kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/introduction) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
+kagent comes with a set of built-in tools that you can use to interact with your environment. kagent also supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/docs/getting-started/intro) tools. Using MCP, you can bring any external tool into kagent and make it available for your agents to run.
 
 ## Human-in-the-Loop
 
@@ -185,7 +185,7 @@ These skills contain instructions, scripts, and resources that are loaded from c
 
 Container-based skills are actual, callable capabilities—not just descriptions of capabilities.
 
-kagent's skills are similar to [Claude's Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview), but with a key advantage: you can use kagent's skills with any LLM provider, not just Anthropic Claude. This means your agents can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
+kagent's skills are similar to [Claude's Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), but with a key advantage: you can use kagent's skills with any LLM provider, not just Anthropic Claude. This means your agents can use skills with OpenAI, Google Vertex AI, Azure OpenAI, Ollama, and any other LLM provider that kagent supports.
 
 ### Git-based skills
 

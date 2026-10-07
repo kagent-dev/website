@@ -1432,4 +1432,4 @@ Supported LLM providers are pre-configured by the [kagent-dev/autogen project fo
 
 ### Memory API
 
-The Memory API is not supported in ADK. The [agent development kit](https://google.github.io/adk-docs/) is required to bring your own agents. As such, the Memory docs are removed.
+The Memory API is not supported in ADK. The [agent development kit](https://adk.dev/) is required to bring your own agents. As such, the Memory docs are removed.

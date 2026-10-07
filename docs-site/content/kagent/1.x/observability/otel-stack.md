@@ -66,7 +66,7 @@ Agent Substrate traces do not join the trace of the agent request that caused th
 
 ## Install Tempo and Loki
 
-Install the backends that store traces and logs. Both run as a single replica, which suits evaluation. Tempo keeps its traces in memory, and Loki keeps its logs on a small persistent volume, so your cluster needs a default StorageClass, which a kind cluster has. For production, follow the Grafana guidance for [Tempo](https://grafana.com/docs/tempo/latest/setup/helm-chart/) and [Loki](https://grafana.com/docs/loki/latest/setup/install/helm/).
+Install the backends that store traces and logs. Both run as a single replica, which suits evaluation. Tempo keeps its traces in memory, and Loki keeps its logs on a small persistent volume, so your cluster needs a default StorageClass, which a kind cluster has. For production, follow the Grafana guidance for [Tempo](https://grafana.com/docs/tempo/latest/set-up-for-tracing/setup-tempo/deploy/kubernetes/helm-chart/) and [Loki](https://grafana.com/docs/loki/latest/setup/install/helm/).
 
 1. Install Tempo, with an OTLP receiver for traces.
    ```bash

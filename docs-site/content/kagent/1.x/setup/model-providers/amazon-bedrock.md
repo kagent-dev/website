@@ -59,7 +59,7 @@ The native provider authenticates with a Bedrock API key, which kagent sends as 
    | Field | Description |
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that holds `AWS_BEARER_TOKEN_BEDROCK`. |
-   | `model` | The Bedrock model ID. For the format, see the [AWS Bedrock model IDs](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). |
+   | `model` | The Bedrock model ID. For the format, see the [AWS Bedrock model IDs](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html). |
    | `provider` | The provider to use, `Bedrock`. |
    | `bedrock.region` | The AWS region that serves the model. This field is required. |
 
