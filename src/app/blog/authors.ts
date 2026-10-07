@@ -73,9 +73,9 @@ export const authors: Author[] = [
   {
     id: "hugoguerrero",
     name: "Hugo Guerrero",
-    title: "Solo.io",
-    photo: "",
-    bio: "Hugo Guerrero works at Solo.io on kagent, agentgateway, and agentic infrastructure.",
+    title: "Senior AI Architect, Solo.io",
+    photo: "/images/authors/hugoguerrero.jpg",
+    bio: "Hugo Guerrero is an AI architect and open source advocate exploring agentic AI, MCP, and the infrastructure that connects agents to the world.",
   },
 ];
 
