@@ -63,6 +63,107 @@ A Harness names exactly one of the following four runtimes, and that choice deci
 
 The `kagent` and `byo` runtimes compile through the same path, so they accept the same model providers and the same AgentTemplate features, except [structured output]({{< link path="agents/structured-output" >}}), which only the `kagent` runtime supports. The `codex` and `claude` runtimes are purpose-built adapters, and each accepts a narrower slice.
 
+### Codex and Claude examples
+
+A `codex` or `claude` Harness has the same shape as a `kagent` one. It differs only in the runtime block, the image, and the ModelConfigs that it accepts. For the providers and settings that each runtime accepts, see [Model provider support](#model-provider-support).
+
+{{< tabs >}}
+{{% tab name="Codex" %}}
+The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai" >}}) guide creates.
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: codex-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-5.2-codex
+  provider: OpenAI
+  openAI:
+    # The only value that the codex runtime accepts.
+    apiFormat: responses
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: codex-harness
+  namespace: kagent
+spec:
+  codex: {}
+  workload:
+    image: {{< reuse "kagent-docs/versions/runtime-image-codex.md" >}}
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+    snapshotPolicy:
+      location: s3://ate-snapshots/kagent/
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: codex-agent
+  namespace: kagent
+spec:
+  template:
+    modelConfig:
+      name: codex-model-config
+    systemPrompt: You are a concise, helpful coding assistant.
+  harnessRef:
+    name: codex-harness
+EOF
+```
+{{% /tab %}}
+{{% tab name="Claude" %}}
+The ModelConfig reads its API key from the `kagent-anthropic` Secret that the [Anthropic]({{< link path="setup/model-providers/anthropic" >}}) guide creates.
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: claude-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-anthropic
+  apiKeySecretKey: ANTHROPIC_API_KEY
+  model: claude-sonnet-5
+  provider: Anthropic
+  anthropic: {}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: claude-harness
+  namespace: kagent
+spec:
+  claude: {}
+  workload:
+    image: {{< reuse "kagent-docs/versions/runtime-image-claude.md" >}}
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+    snapshotPolicy:
+      location: s3://ate-snapshots/kagent/
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: claude-agent
+  namespace: kagent
+spec:
+  template:
+    modelConfig:
+      name: claude-model-config
+    systemPrompt: You are a concise, helpful coding assistant.
+  harnessRef:
+    name: claude-harness
+EOF
+```
+{{% /tab %}}
+{{< /tabs >}}
+
 ### Runtime-specific settings
 
 `spec.kagent` is the only runtime block that takes settings of its own. The rest are empty.
