@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-[FastMCP Python](https://github.com/jlowin/fastmcp) is a lightweight, high-performance Python framework that implements the Model Context Protocol (MCP). With KMCP, you can quickly create an MCP project that uses the FastMCP framework with a sample MCP server and `echo` tool that you can use as a boilerplate to develop your own tools. 
+[FastMCP Python](https://github.com/PrefectHQ/fastmcp) is a lightweight, high-performance Python framework that implements the Model Context Protocol (MCP). With KMCP, you can quickly create an MCP project that uses the FastMCP framework with a sample MCP server and `echo` tool that you can use as a boilerplate to develop your own tools. 
 
 ## Prerequisites
 

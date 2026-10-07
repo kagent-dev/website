@@ -41,7 +41,7 @@ xAI's Grok models are served through an OpenAI-compatible API, so a {{< gloss "M
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that stores the API key, in the same namespace as this ModelConfig. |
    | `apiKeySecretKey` | The key within that Secret that holds the API key. |
-   | `model` | The Grok model to use. For the available models, see the [xAI model docs](https://docs.x.ai/docs/models). |
+   | `model` | The Grok model to use. For the available models, see the [xAI model docs](https://docs.x.ai/developers/models). |
    | `provider` | The provider to use, `OpenAI`. xAI is reached through the OpenAI provider. |
    | `openAI.baseUrl` | The xAI API endpoint, `https://api.x.ai/v1`. |
 

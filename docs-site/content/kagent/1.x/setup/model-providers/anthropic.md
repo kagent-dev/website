@@ -12,7 +12,7 @@ The `Anthropic` provider calls the Anthropic API directly.
 
 ## Create the ModelConfig
 
-1. Save your [Anthropic API key](https://console.anthropic.com/settings/keys) as an environment variable.
+1. Save your [Anthropic API key](https://platform.claude.com/settings/keys) as an environment variable.
    ```bash
    export ANTHROPIC_API_KEY=<your_api_key>
    ```
@@ -43,7 +43,7 @@ The `Anthropic` provider calls the Anthropic API directly.
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that stores the API key, in the same namespace as this ModelConfig. |
    | `apiKeySecretKey` | The key within that Secret that holds the API key. |
-   | `model` | The model to use. For the available models, see the [Anthropic model docs](https://docs.anthropic.com/en/docs/about-claude/models). |
+   | `model` | The model to use. For the available models, see the [Anthropic model docs](https://platform.claude.com/docs/en/models/overview). |
    | `provider` | The provider to use, `Anthropic`. |
    | `anthropic` | Settings that only the Anthropic provider takes. An empty block is valid. |
 

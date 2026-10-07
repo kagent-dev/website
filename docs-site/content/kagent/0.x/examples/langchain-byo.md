@@ -14,7 +14,7 @@ Install kagent by following the [quick start]({{< link path="getting-started/qui
 
 ## Building a LangGraph agent
 
-The following example builds a simple LangGraph agent from the [kagent code repository](https://github.com/kagent-dev/kagent). The sample app is built with [LangGraph SDK](https://docs.langchain.com/langgraph-platform/sdk) and performs a currency exchange lookup task. It uses Google's Gemini model as the underlying LLM provider.
+The following example builds a simple LangGraph agent from the [kagent code repository](https://github.com/kagent-dev/kagent). The sample app is built with [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) and performs a currency exchange lookup task. It uses Google's Gemini model as the underlying LLM provider.
 
 1. Clone the kagent code repository.
 

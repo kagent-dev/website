@@ -9,7 +9,7 @@ author: kagent.dev
 
 Google Vertex AI is supported for Gemini and Anthropic models.
 
-1. Create the [Google Application Default Credentials file](https://cloud.google.com/docs/authentication/provide-credentials-adc) and store it in a Kubernetes Secret. If your credentials are in a different location, update the filepath.
+1. Create the [Google Application Default Credentials file](https://docs.cloud.google.com/docs/authentication/provide-credentials-adc) and store it in a Kubernetes Secret. If your credentials are in a different location, update the filepath.
 
 ```shell
 kubectl create secret generic kagent-google-creds -n kagent --from-file=~/.config/gcloud/application_default_credentials.json
