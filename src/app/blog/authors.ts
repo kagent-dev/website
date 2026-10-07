@@ -70,6 +70,13 @@ export const authors: Author[] = [
     photo: "",
     bio: "Petr, Engineer at Solo.io, comes from a background as a solution architect and developer, now focusing on Service Mesh technologies with public clouds.",
   },
+  {
+    id: "hugoguerrero",
+    name: "Hugo Guerrero",
+    title: "Solo.io",
+    photo: "",
+    bio: "Hugo Guerrero works at Solo.io on kagent, agentgateway, and agentic infrastructure.",
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
