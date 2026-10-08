@@ -3,6 +3,8 @@ title: Standalone sandboxes
 description: Run commands and transfer files in a scratch environment that no agent conversation owns.
 weight: 25
 author: kagent.dev
+aliases:
+  - /kagent/1.x/substrate-runtime/standalone-sandboxes/
 ---
 
 A **Sandbox** is a scratch environment for running commands and working with files. It is scoped to the caller who created it, it expires on a timer, and no agent conversation owns it. You create one from a **SandboxTemplate**, run processes and move files in it, then delete it or let it expire.
@@ -96,7 +98,7 @@ Editing a template prepares a new revision. A Sandbox that already exists keeps 
 ## Run a command
 
 > [!WARNING]
-> **The gateway denies every outbound connection from a Sandbox.** kagent compiles an empty [egress policy]({{< link path="substrate-runtime/networking-and-egress#policy-generation" >}}) as it creates a Sandbox, and the gateway rejects any destination that the policy does not name, so a command that fetches a package, clones a repository, or calls an API fails. The SandboxTemplate schema defines no destination field, so no configuration opens one. Move what a command needs into the Sandbox with `kagent sandbox upload`.
+> **The gateway denies every outbound connection from a Sandbox.** kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) as it creates a Sandbox, and the gateway rejects any destination that the policy does not name, so a command that fetches a package, clones a repository, or calls an API fails. The SandboxTemplate schema defines no destination field, so no configuration opens one. Move what a command needs into the Sandbox with `kagent sandbox upload`.
 
 Each `kagent sandbox` command makes one lifecycle attempt rather than retrying for you, so `create` takes a stable `--request-id` that you reuse to retry the same creation.
 
@@ -168,7 +170,7 @@ The MCP transfer limits are tighter than the command line's. A gRPC file transfe
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="substrate-runtime/sandboxing" >}}` title="Sandboxing" subtitle="Understand the gVisor boundary that a Sandbox shares with every agent Actor." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/sandboxing" >}}` title="Sandboxing" subtitle="Understand the gVisor boundary that a Sandbox shares with every agent Actor." >}}
   {{< card link=`{{< link path="examples/agents-via-mcp" >}}` title="Use agents from an MCP client" subtitle="Reach the same MCP server that serves the sandbox tools." >}}
   {{< card link=`{{< link path="reference/cli/kagent-sandbox" >}}` title="kagent sandbox" subtitle="Look up every flag that the sandbox commands take." >}}
 {{< /cards >}}

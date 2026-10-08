@@ -140,7 +140,7 @@ A Session is one running conversation with an Agent. Creating it starts an Actor
    ```
 
 > [!NOTE]
-> A Session gives its Worker back at the end of every turn. The Session itself stays `READY`, because suspension applies to the Actor running underneath it rather than to the conversation, and the next `kagent agent invoke` resumes that Actor automatically. To understand what happens to the Actor in between, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
+> A Session gives its Worker back at the end of every turn. The Session itself stays `READY`, because suspension applies to the Actor running underneath it rather than to the conversation, and the next `kagent agent invoke` resumes that Actor automatically. To understand what happens to the Actor in between, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
 The `invoke` command takes a few more options that are useful beyond a first conversation.
 

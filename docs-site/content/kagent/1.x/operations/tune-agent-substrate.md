@@ -80,7 +80,7 @@ A Worker entry gains an `actorId` only while an Actor occupies it, so the Worker
 
 The replica count is the only capacity dial on a pool, and setting it well depends on knowing what actually consumes a Worker.
 
-A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts at most one Actor at a time, and it holds that Actor only while a turn is running. kagent suspends an Actor at every turn boundary and frees its Worker, as described in [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}). An idle {{< gloss "Session" >}}Session{{< /gloss >}} therefore occupies no Worker at all.
+A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts at most one Actor at a time, and it holds that Actor only while a turn is running. kagent suspends an Actor at every turn boundary and frees its Worker, as described in [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}). An idle {{< gloss "Session" >}}Session{{< /gloss >}} therefore occupies no Worker at all.
 
 Size the pool for the number of turns that run at the same time, not for the number of Agents or Sessions that you have created. A cluster with hundreds of Sessions that are each used occasionally needs far fewer Workers than the session count suggests.
 
@@ -179,7 +179,7 @@ Because the two places are configured independently, confirm the result rather t
 
 A pool's sandbox class decides which sandbox runtime its Workers provide, and kagent constrains the choice more tightly than Agent Substrate does.
 
-Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the `gvisor` class and to a SandboxConfig named exactly `gvisor-default`. Placement never relaxes the class constraint, so Workers in a `microvm` pool accept no kagent Actor, and the pool sits idle while turns time out.
+Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the `gvisor` class and to a SandboxConfig named exactly `gvisor-default`. Placement never relaxes the class constraint, so Workers in a `microvm` pool accept no kagent Actor, and the pool sits idle while turns time out.
 
 Leave a pool that backs kagent Harnesses on `gvisor`, and keep the pool's image on the matching Worker build.
 
