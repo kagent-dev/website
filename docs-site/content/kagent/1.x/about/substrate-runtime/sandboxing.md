@@ -35,7 +35,7 @@ A **sandbox class** is the sandbox runtime family that a Worker uses. {{< gloss 
 A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} selects its class through the `sandboxClass` field, which defaults to `gvisor`. The choice is not only a runtime preference. It also shapes the Worker pods that Agent Substrate creates for that pool, including the virtualization device mounts and node placement that a micro-VM needs.
 
 > [!NOTE]
-> kagent generates {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that use the `gvisor` class. Keep a WorkerPool that backs kagent Harnesses on `gvisor`.
+> kagent generates {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that use the sandbox class of the pool that hosts them, and names the matching SandboxConfig on each template: `gvisor-default` for the `gvisor` class, `microvm` for the `microvm` class. A WorkerPool that backs kagent Harnesses must run the class it is meant to serve, with a matching Worker build.
 
 ## Sandbox configuration
 

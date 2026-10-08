@@ -7,7 +7,7 @@ author: kagent.dev
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), and a fresh installation is deliberately small: one {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} holding a single Worker, snapshots in whichever object storage the Agent Substrate installation was given, and the `gvisor` sandbox class.
 
-When preparing for real traffic to your agents, you can size the pool and check where snapshots land. Leave the sandbox class on `gvisor`. A pool set to any other class sits idle while turns time out.
+When preparing for real traffic to your agents, you can size the pool and check where snapshots land. The sandbox class a pool backs can be `gvisor` or `microvm`, as long as the pool's Worker build and SandboxConfig match the class, as described in [Keep pools on the sandbox class they serve](#keep-pools-on-the-sandbox-class-they-serve).
 
 ## Before you begin
 
@@ -175,13 +175,13 @@ Because the two places are configured independently, confirm the result rather t
 > [!WARNING]
 > A development installation points at an in-cluster object store with well-known credentials, and it is not durable. Snapshots hold agent conversation state, so a production installation needs a real bucket, credentials that are not shared defaults, and a backup policy that matches how much conversation history you are willing to lose.
 
-## Keep pools on the gvisor class
+## Keep pools on the sandbox class they serve
 
 A pool's sandbox class decides which sandbox runtime its Workers provide, and kagent constrains the choice more tightly than Agent Substrate does.
 
-Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the `gvisor` class and to a SandboxConfig named exactly `gvisor-default`. Placement never relaxes the class constraint, so Workers in a `microvm` pool accept no kagent Actor, and the pool sits idle while turns time out.
+Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the class that its pool selected and to the matching SandboxConfig: a pool on `gvisor` (or no `sandboxClass`, which defaults to `gvisor`) gets the `gvisor` class and a SandboxConfig named `gvisor-default`, while a pool on `microvm` gets the `microvm` class and a SandboxConfig named `microvm`. Placement never relaxes the class constraint, so a Worker in a pool whose class does not match an ActorTemplate's class cannot host that Actor.
 
-Leave a pool that backs kagent Harnesses on `gvisor`, and keep the pool's image on the matching Worker build.
+Leave a pool that backs kagent Harnesses on the class you intend to run, and keep the pool's image on the matching Worker build.
 
 ```yaml
 substrateWorkerPool:
@@ -192,7 +192,7 @@ substrateWorkerPool:
 > [!NOTE]
 > The `ateomImage` field in the [Inspect the runtime](#inspect-the-runtime) response reports this same setting, which the WorkerPool resource calls `workerImage`. To check which build a pool is running, compare the two names.
 
-A cluster-scoped SandboxConfig named `gvisor-default` must also exist, because kagent names it directly rather than resolving a default. A missing one fails template preparation with `SandboxConfig "gvisor-default" not found`.
+A cluster-scoped SandboxConfig for the pool's class must also exist, because kagent names it directly rather than resolving a default: `gvisor-default` for the `gvisor` class and `microvm` for the `microvm` class. A missing one fails template preparation with `SandboxConfig "<name>" not found`.
 
 ```bash
 kubectl get sandboxconfigs
