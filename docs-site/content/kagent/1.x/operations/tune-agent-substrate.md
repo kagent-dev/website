@@ -179,9 +179,9 @@ Because the two places are configured independently, confirm the result rather t
 
 A pool's sandbox class decides which sandbox runtime its Workers provide, and kagent constrains the choice more tightly than Agent Substrate does.
 
-Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the class that its pool selected and to the matching SandboxConfig: a pool on `gvisor` (or no `sandboxClass`, which defaults to `gvisor`) gets the `gvisor` class and a SandboxConfig named `gvisor-default`, while a pool on `microvm` gets the `microvm` class and a SandboxConfig named `microvm`. Placement never relaxes the class constraint, so a Worker in a pool whose class does not match an ActorTemplate's class cannot host that Actor.
+Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the class that its pool selected and to the matching SandboxConfig: a pool on `gvisor` (or no `sandboxClass`, which defaults to `gvisor`) gets the `gvisor` class and a SandboxConfig named `gvisor-default`, while a pool on `microvm` gets the `microvm` class and a SandboxConfig named `microvm`. Placement never relaxes the class constraint: a Worker in a pool whose class does not match an ActorTemplate's class reports `RevisionInvalid` with `unsupported sandbox class "<value>"`, and placement of that Actor fails with `WorkerPoolNotFound`.
 
-Leave a pool that backs kagent Harnesses on the class you intend to run, and keep the pool's image on the matching Worker build.
+Leave a pool that backs kagent Harnesses on the class you intend to run, and keep the pool's image on the matching Worker build: `ateom-gvisor` for a pool on `gvisor`, `ateom-microvm` for a pool on `microvm`.
 
 ```yaml
 substrateWorkerPool:
@@ -189,10 +189,16 @@ substrateWorkerPool:
   workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
 ```
 
+```yaml
+substrateWorkerPool:
+  sandboxClass: microvm
+  workerImage: "ghcr.io/kagent-dev/substrate/ateom-microvm:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+```
+
 > [!NOTE]
 > The `ateomImage` field in the [Inspect the runtime](#inspect-the-runtime) response reports this same setting, which the WorkerPool resource calls `workerImage`. To check which build a pool is running, compare the two names.
 
-A cluster-scoped SandboxConfig for the pool's class must also exist, because kagent names it directly rather than resolving a default: `gvisor-default` for the `gvisor` class and `microvm` for the `microvm` class. A missing one fails template preparation with `SandboxConfig "<name>" not found`.
+A cluster-scoped SandboxConfig for the pool's class must also exist, because kagent names it directly rather than resolving a default: `gvisor-default` for the `gvisor` class and `microvm` for the `microvm` class. A missing one fails template preparation with `SandboxConfig "<name>" not found`. On a default installation only the `gvisor` class is wired up: Substrate applies `sandboxconfig-gvisor.yaml`, and kagent installs nothing for `microvm`. A `microvm` pool therefore needs operator-staged assets: the `microvm` SandboxConfig is a template that the Substrate installer stages out of band (for example via `hack/install-microvm-deps.sh --install`), not something kagent provides.
 
 ```bash
 kubectl get sandboxconfigs
@@ -201,6 +207,7 @@ Example output:
 ```console
 NAME             CLASS    AGE
 gvisor-default   gvisor   26h
+microvm          microvm  26h
 ```
 
 Two further constraints apply when you change any of this on a running cluster.
