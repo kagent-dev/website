@@ -14,7 +14,7 @@ kagent 1.0 splits authorization across two planes:
 - The **Kubernetes plane** governs the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} custom resources. Kubernetes Role-Based Access Control (RBAC) decides who can create, read, or edit the resources with `kubectl`, exactly as it would for any other Custom Resource Definition (CRD).
 - The **kagent control plane** governs any interactions involving {{< gloss "Session" >}}Sessions{{< /gloss >}}, such as creating, suspending, resuming, sharing, deleting, and holding a conversation with a Session. kagent's own gRPC authentication and authorization decide who can complete these interactions, independent of Kubernetes RBAC.
 
-Someone with Kubernetes RBAC access to apply an Agent and the resources it names does not automatically have access to create or talk to Sessions on it. The separation runs in one direction only. kagent's gRPC API also writes those Kubernetes resources, so a caller on the kagent control plane reaches both planes. For more information on that second path, see [Identity]({{< link path="substrate-runtime/identity#the-kubernetes-plane" >}}).
+Someone with Kubernetes RBAC access to apply an Agent and the resources it names does not automatically have access to create or talk to Sessions on it. The separation runs in one direction only. kagent's gRPC API also writes those Kubernetes resources, so a caller on the kagent control plane reaches both planes. For more information on that second path, see [Identity]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
 
 The following diagram shows where the boundary between the two planes falls.
 </br></br>

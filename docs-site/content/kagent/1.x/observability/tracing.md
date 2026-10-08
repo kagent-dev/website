@@ -43,7 +43,7 @@ A caller reaches the gRPC API on the kagent controller, which starts the trace. 
 > The controller passes its tracing configuration to the `kagent`, `codex`, and `claude` runtimes. Each of the three exports on its own instrumentation, so the span names in this page describe the `kagent` runtime and do not carry over to the other two. An agent on the `byo` runtime receives no tracing configuration, and its half of the trace is missing. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 > [!NOTE]
-> A `byo` image that implements OTel itself reads the exporter variables from the Harness `spec.env`, which the controller leaves alone for this runtime. Its spans still do not reach a collector inside the cluster, because kagent adds the collector to an Actor's egress allowlist only for the runtimes it configures, and no field adds a host to that list by hand. For more information, see [Networking and egress control]({{< link path="substrate-runtime/networking-and-egress#policy-generation" >}}).
+> A `byo` image that implements OTel itself reads the exporter variables from the Harness `spec.env`, which the controller leaves alone for this runtime. Its spans still do not reach a collector inside the cluster, because kagent adds the collector to an Actor's egress allowlist only for the runtimes it configures, and no field adds a host to that list by hand. For more information, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
 
 Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing backend uses these service names to group the spans.
 
@@ -248,7 +248,7 @@ Agent Substrate {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} an Actor as 
 
 To avoid losing them, the `kagent`, `codex`, and `claude` runtimes flush their span buffer after each A2A handler returns, before the response completes. The flush is unconditional and waits up to three seconds, and no setting changes either. An agent on the `byo` runtime flushes only if its own image does, so a conversation's last turn can lose its spans there.
 
-The flush lets a kagent trace arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
+The flush lets a kagent trace arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
 ## Turn tracing off
 
@@ -275,5 +275,5 @@ Turn off the trace exporter, then create a new Session so that the change takes 
 {{< cards >}}
   {{< card link=`{{< link path="observability/audit-prompts" >}}` title="Audit prompts" subtitle="Export every prompt and reply as a log event for security and compliance review." >}}
   {{< card link=`{{< link path="observability/metrics" >}}` title="Metrics" subtitle="Review the metrics that kagent and Agent Substrate report." >}}
-  {{< card link=`{{< link path="substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Learn what happens to an Actor between the turns of a conversation." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Learn what happens to an Actor between the turns of a conversation." >}}
 {{< /cards >}}

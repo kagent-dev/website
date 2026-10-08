@@ -189,7 +189,7 @@ The controller serves a Prometheus `/metrics` endpoint, turned off by default. T
 
 kagent 0.x ran agents as Deployments and relied on a Kubernetes `securityContext` to constrain them. In 1.0, every agent runs as an Actor inside a gVisor sandbox, and the sandbox provides process, network, and filesystem isolation without per-agent security context configuration.
 
-For what the sandbox blocks, how to configure egress, and how to select a sandbox class, see [Sandboxing]({{< link path="substrate-runtime/sandboxing" >}}).
+For what the sandbox blocks, how to configure egress, and how to select a sandbox class, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Next steps
 

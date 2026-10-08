@@ -3,24 +3,23 @@ title: Identity
 description: Understand how kagent resolves a caller's identity, scopes a Session to its creator, and how Agent Substrate identifies its own components.
 weight: 30
 author: kagent.dev
+aliases:
+  - /kagent/1.x/substrate-runtime/identity/
 ---
 
-A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies three different kinds of caller, and each one is handled by a different system. This page describes what each layer establishes, and what it does not.
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies three different kinds of callers, and each one is handled by a different system.
 
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
-- A caller creating or talking to a {{< gloss "Session" >}}Session{{< /gloss >}} is assigned a principal by [kagent's own gRPC API](#the-kagent-control-plane).
+- A caller that reaches [kagent's own gRPC API](#the-kagent-control-plane) is assigned a principal by kagent, both for a {{< gloss "Session" >}}Session{{< /gloss >}} and for the resources that the API writes.
 - The components inside [Agent Substrate](#the-agent-substrate-plane) authenticate each other.
 
 ## The Kubernetes plane
 
-Harness, AgentTemplate, and {{< gloss "Agent" >}}Agent{{< /gloss >}} are Kubernetes custom resources. Kubernetes role-based access control (RBAC) therefore governs who can create, read, edit, or delete them with `kubectl`. A cluster's existing roles and bindings decide who authors an agent's runtime, its behavior, and the pairing of the two on that path.
-
-kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The kagent control plane authorizes this path instead.
-
-> [!WARNING]
-> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [The kagent control plane](#the-kagent-control-plane).
+Kubernetes role-based access control (RBAC) governs who can create, read, edit, or delete Kubernetes resources with `kubectl`, including Harness, AgentTemplate, and {{< gloss "Agent" >}}Agent{{< /gloss >}} resources. A cluster's existing roles and bindings decide who authors an agent's runtime, its behavior, and the pairing of the two on that path.
 
 Because neither a Harness nor an AgentTemplate names the other, the Agent resource carries the pairing, and RBAC on Agents governs it. Whoever can write Agents in a namespace controls which template runs on which Harness, even without edit access to the Harnesses and AgentTemplates that those Agents name. For more information about the pairing, see the [Agent core concept]({{< link path="about/core-concepts#agent" >}}).
+
+kagent's gRPC API reaches these same resources by a second path that Kubernetes RBAC does not evaluate. For more information, see [Resources that the API writes](#resources-that-the-api-writes).
 
 ## The kagent control plane
 
@@ -47,9 +46,16 @@ Any other value fails controller startup rather than falling back to a default.
 
 Authorization is separate from both modes. kagent installs an authorizer that permits every check regardless of the authentication mode, so neither mode constrains what an authenticated caller may do.
 
+### Resources that the API writes
+
+kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The authenticator above resolves the caller instead.
+
+> [!WARNING]
+> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
+
 ### Creator ownership
 
-kagent records a **creator** on every Session, taken from the principal on the call that created it. That creator is then part of the database query for every read, so a caller who asks for a Session that another principal created receives a not-found response rather than a permission error.
+kagent records a **creator** on every Session, taken from the principal on the call that created it. That creator is then part of the database query for every read, so a caller who asks for a Session that another principal created receives a not-found response rather than a permission error. Sandboxes, Checkpoints, and ScheduledRuns each carry a creator of their own, and a read on one of those is scoped the same way.
 
 Listing behaves the same way. A list returns the caller's own Sessions by default. A caller that sets the request's all-creators flag asks to widen that to every creator in the namespace, and kagent authorizes that request separately from an ordinary list.
 
@@ -71,7 +77,7 @@ A share widens what the holder can reach to what the owner can see, and the unde
 
 {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} authenticates its own components rather than authenticating end users. Its API server accepts Kubernetes ServiceAccount tokens issued for its audience, and the components that carry traffic to an Actor authenticate each other with mutual Transport Layer Security (mTLS). The [kagent installation guide]({{< link path="setup/installation" >}}) covers creating the certificate authority pools and the JSON Web Token (JWT) authority pool that these identities are issued from, which is a required step that no Helm chart performs.
 
-Each Actor also carries an identity of its own, addressed as its {{< gloss "Atespace" >}}atespace{{< /gloss >}} and name together. [Sandboxing]({{< link path="substrate-runtime/sandboxing" >}}) covers how the router uses that identity to reach the right Worker over mTLS.
+Each Actor also carries an identity of its own, addressed as its {{< gloss "Atespace" >}}atespace{{< /gloss >}} and name together. [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}) covers how the router uses that identity to reach the right Worker over mTLS.
 
 > [!IMPORTANT]
 > Agent Substrate authenticates callers but does not authorize them. Any provider that you configure as an authenticated caller can reach every remote procedure call, including destructive ones, so configure only providers whose users require full access to Agent Substrate.

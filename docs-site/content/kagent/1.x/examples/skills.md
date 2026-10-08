@@ -37,7 +37,7 @@ Two further tools are available but off by default. Set `KAGENT_ENABLE_FILE_SEAR
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
 > [!IMPORTANT]
-> The `bash` tool gives the agent shell access inside its own Actor sandbox, and the sandbox is the boundary that contains it. Review a skill before you attach it, and treat the [egress]({{< link path="substrate-runtime/sandboxing" >}}) that the Actor is granted as the reach that the skill has. Writes are confined to the session directory, so a skill cannot modify `/skills` or another skill's files.
+> The `bash` tool gives the agent shell access inside its own Actor sandbox, and the sandbox is the boundary that contains it. Review a skill before you attach it, and treat the [egress]({{< link path="about/substrate-runtime/sandboxing" >}}) that the Actor is granted as the reach that the skill has. Writes are confined to the session directory, so a skill cannot modify `/skills` or another skill's files.
 
 ## Before you begin
 

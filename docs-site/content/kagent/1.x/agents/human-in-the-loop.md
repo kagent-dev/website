@@ -101,7 +101,7 @@ Two limits apply to what a binding can express, and both depend on the runtime:
 | `codex` | Supported. | Rejected, with `RemoteMCPServer "<name>" is bound more than once`. |
 | `claude` | Supported. | Rejected, with `RemoteMCPServer "<name>" is bound more than once`. A binding whose tool selection kagent cannot verify against the server's discovered tools exposes the whole server and reports a warning. |
 
-Anything the binding does not cover runs without a pause. A built-in tool, such as file access, shell, or web search, and any MCP tool on a binding that omits `requireApproval`, is approved automatically. The sandbox is the boundary that contains those calls. For more information, see [Sandboxing]({{< link path="substrate-runtime/sandboxing" >}}).
+Anything the binding does not cover runs without a pause. A built-in tool, such as file access, shell, or web search, and any MCP tool on a binding that omits `requireApproval`, is approved automatically. The sandbox is the boundary that contains those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Negotiate the extension
 
@@ -178,7 +178,7 @@ An `ask_user_request` carries an `id` and a list of `questions`. The response ec
 
 A paused task waits. To resume, the client sends a message on the same task and context, carrying the response payload. kagent rejects a resume attempt on a task that is not waiting, with `task is not waiting for input`.
 
-While the task waits, kagent pauses the {{< gloss "Actor" >}}Actor{{< /gloss >}} rather than suspending it. A pause keeps the running process in a full {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} on node-local storage, so a runtime that holds a live process across the wait, such as `codex` or `claude`, continues the same turn on resume. The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a conversation that sits at `INPUT_REQUIRED` costs no pool capacity. For more information on the suspend that a finished turn uses instead, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
+While the task waits, kagent pauses the {{< gloss "Actor" >}}Actor{{< /gloss >}} rather than suspending it. A pause keeps the running process in a full {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} on node-local storage, so a runtime that holds a live process across the wait, such as `codex` or `claude`, continues the same turn on resume. The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a conversation that sits at `INPUT_REQUIRED` costs no pool capacity. For more information on the suspend that a finished turn uses instead, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
 Because the {{< gloss "Transcript" >}}transcript{{< /gloss >}} only grows, the question and the answer both stay in the task history, so a later reader can see what was asked and what a person decided.
 

@@ -141,7 +141,7 @@ Work through the causes in this order.
 2. **Check the model provider.** A turn that reaches the model and waits on a slow or unreachable provider also times out. The agent's own logs name the provider error.
 
 3. **Check the {{< gloss "Actor" >}}Actor{{< /gloss >}} state.** An Actor stuck in `RESUMING`, or sitting in `CRASHED`, never answers.
-   * To review the list of states, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume/#actor-lifecycle-operations" >}}).
+   * To review the list of states, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume/#actor-lifecycle-operations" >}}).
    * To get the current state for every actor, [call `GetSubstrateStatus`]({{< link path="operations/tune-agent-substrate#inspect-the-runtime" >}}).
 
 ## An edit to an AgentTemplate has no effect

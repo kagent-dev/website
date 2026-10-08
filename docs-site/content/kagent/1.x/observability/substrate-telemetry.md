@@ -179,5 +179,5 @@ You can also check out the following resources in this documentation set.
 
 {{< cards >}}
   {{< card link=`{{< link path="observability/tracing" >}}` title="Tracing" subtitle="Read the spans of an agent request, and the separate Agent Substrate traces." >}}
-  {{< card link=`{{< link path="substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand what happens to an Actor between turns." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand what happens to an Actor between turns." >}}
 {{< /cards >}}

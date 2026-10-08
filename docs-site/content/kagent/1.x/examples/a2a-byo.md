@@ -165,7 +165,7 @@ At this point, the BYO agent behaves in the same way as any other. The {{< gloss
 
    That string is hardcoded, so the reply itself proves nothing. Its path proves the contract: kagent compiled a revision, Agent Substrate started a sandboxed {{< gloss "Actor" >}}Actor{{< /gloss >}} from your image, the controller's A2A gateway routed the message to it, and your executor answered.
 
-4. Send another message to the same Session. The reply does not change, but the message reaches the same Actor. Agent Substrate suspended that Actor after the first turn and resumed it for this message. For more information about the Actor lifecycle, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume#suspension-between-turns" >}}).
+4. Send another message to the same Session. The reply does not change, but the message reaches the same Actor. Agent Substrate suspended that Actor after the first turn and resumed it for this message. For more information about the Actor lifecycle, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#suspension-between-turns" >}}).
    ```bash
    kagent agent invoke --session $SESSION_ID --task "hello again"
    ```
