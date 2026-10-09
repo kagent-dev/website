@@ -50,11 +50,11 @@ Agent:
 
 Sandbox:
   short: "An owner-scoped scratch environment for running commands and working with files, created from a SandboxTemplate. It expires on a timer, reaches no network destination, and no agent conversation owns it."
-  link: "/docs/kagent/1.x/substrate-runtime/standalone-sandboxes/"
+  link: "/docs/kagent/1.x/about/substrate-runtime/standalone-sandboxes/"
 
 SandboxTemplate:
   short: "A Kubernetes custom resource defining the tools image, environment, WorkerPool, and snapshot storage that a Sandbox is created from. Applying one prepares a reusable runtime rather than allocating a Sandbox."
-  link: "/docs/kagent/1.x/substrate-runtime/standalone-sandboxes/#create-a-sandboxtemplate"
+  link: "/docs/kagent/1.x/about/substrate-runtime/standalone-sandboxes/#create-a-sandboxtemplate"
 
 Session:
   short: "A running conversation with one Agent. Unlike the resources it is built from, a Session is not a Kubernetes resource: kagent's gRPC API creates it and its PostgreSQL database tracks it."
@@ -62,7 +62,7 @@ Session:
 
 Checkpoint:
   short: "A durable pin on the snapshot that a Session most recently suspended to, and a record of how far its transcript had advanced. Not a new state: tagging copies the snapshot so that Agent Substrate does not collect it, and a second Session can be forked from it."
-  link: "/docs/kagent/1.x/substrate-runtime/suspend-and-resume/#checkpoints"
+  link: "/docs/kagent/1.x/about/substrate-runtime/suspend-and-resume/#checkpoints"
 
 AgentTemplate:
   short: "A Kubernetes custom resource defining what an agent does: its model, system prompt, tools, skills, and plugins. It runs only once an Agent pairs it with a Harness."
@@ -97,7 +97,7 @@ Revision:
 
 Snapshot:
   short: "The stored state that an Actor suspends to, held in object storage. Resuming restores the Actor from its most recent snapshot, which is what makes suspending idle agents cheap."
-  link: "/docs/kagent/1.x/substrate-runtime/suspend-and-resume/#what-a-snapshot-captures"
+  link: "/docs/kagent/1.x/about/substrate-runtime/suspend-and-resume/#what-a-snapshot-captures"
 
 Tag:
   short: "An Agent Substrate resource that gives one snapshot a stable, human-meaningful name, so callers do not need to track Substrate's internal snapshot identity. It also acts as a retention pin: Agent Substrate does not collect a snapshot while a tag names it, and only the tag's visibility scope can change afterward."
@@ -136,4 +136,4 @@ A2A:
 
 gVisor:
   short: "A user-space kernel that isolates a workload from the host kernel by intercepting its system calls. kagent compiles every ActorTemplate to the gvisor sandbox class."
-  link: "/docs/kagent/1.x/substrate-runtime/sandboxing/#sandbox-classes"
+  link: "/docs/kagent/1.x/about/substrate-runtime/sandboxing/#sandbox-classes"

@@ -28,7 +28,7 @@ A {{< gloss "Session" >}}Session{{< /gloss >}} is one running conversation with 
 
 ## How does suspend and resume work?
 
-Agent conversations are mostly idle, so Agent Substrate does not hold a pod open between turns. When a turn ends, it writes the Actor's memory and filesystem to a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and releases the {{< gloss "Worker" >}}Worker{{< /gloss >}} that was hosting it. The next message restores that snapshot onto whichever Worker is free, and the conversation continues where it stopped. [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}) covers the lifecycle, what a snapshot captures, and how {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} pin one.
+Agent conversations are mostly idle, so Agent Substrate does not hold a pod open between turns. When a turn ends, it writes the Actor's memory and filesystem to a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and releases the {{< gloss "Worker" >}}Worker{{< /gloss >}} that was hosting it. The next message restores that snapshot onto whichever Worker is free, and the conversation continues where it stopped. [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}) covers the lifecycle, what a snapshot captures, and how {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} pin one.
 
 ## How is 1.0 different from 0.x?
 

@@ -28,7 +28,7 @@ A caller addresses the Agent rather than one conversation. The message's `contex
 > `tenant` and the `/agents/{namespace}/{name}` path replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP.
 
 > [!WARNING]
-> The open source build does not authenticate this port. Any caller that can reach it can invoke any Agent, so do not expose port `8083` outside the cluster. For what the open source build does guarantee, see [Identity]({{< link path="substrate-runtime/identity" >}}).
+> The open source build does not authenticate this port. Any caller that can reach it can invoke any Agent, so do not expose port `8083` outside the cluster. For what the open source build does guarantee, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 
 ### A2A methods
 

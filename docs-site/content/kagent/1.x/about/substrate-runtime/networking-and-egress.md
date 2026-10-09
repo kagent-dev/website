@@ -1,8 +1,10 @@
 ---
-title: Networking and egress control
+title: Egress control
 description: Learn how Agent Substrate authorizes the outbound connections that your agents open, and how kagent builds the allowlist it enforces.
 weight: 40
 author: kagent.dev
+aliases:
+  - /kagent/1.x/substrate-runtime/networking-and-egress/
 ---
 
 An agent reaches the network only through Agent Substrate's egress gateway, and the gateway authorizes every connection against a policy attached to that {{< gloss "Actor" >}}Actor{{< /gloss >}}. The policy is default-deny: an Actor with no policy makes no outbound request at all. kagent builds the policy for you from the AgentTemplate. A documented agent therefore works without any egress configuration of its own.
@@ -10,7 +12,7 @@ An agent reaches the network only through Agent Substrate's egress gateway, and 
 > [!IMPORTANT]
 > The gateway terminates TLS, so hostname rules constrain encrypted traffic as well as cleartext. An HTTPS request is decrypted at the gateway, matched against the policy's hostnames, and re-originated to the destination. An opaque TCP tunnel is the exception, because it carries no request for the gateway to read. For details, see [Traffic types](#traffic-types).
 
-For the inbound half of the picture, and for the NetworkPolicy that protects Workers, see [Sandboxing]({{< link path="substrate-runtime/sandboxing#default-network-posture" >}}).
+For the inbound half of the picture, and for the NetworkPolicy that protects Workers, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing#default-network-posture" >}}).
 
 ## How the gateway authorizes a connection
 

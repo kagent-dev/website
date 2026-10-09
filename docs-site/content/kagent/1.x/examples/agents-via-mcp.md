@@ -23,7 +23,7 @@ The MCP server is part of the controller's HTTP port rather than a separate depl
 > A Session **is** one conversation, so sending a second message to the same `session_id` continues where the first left off. The reply's `context_id` is the Session's own ID. To hold two independent conversations with one {{< gloss "Agent" >}}Agent{{< /gloss >}}, create two Sessions.
 
 > [!WARNING]
-> The open source build does not authenticate this endpoint. Every request is accepted, and the caller's identity is read from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. Because the endpoint can invoke agents, create checkpoints, and create Sessions, do not expose port `8083` outside the cluster. For the wider identity model and what the open source build does guarantee, see [Identity]({{< link path="substrate-runtime/identity" >}}).
+> The open source build does not authenticate this endpoint. Every request is accepted, and the caller's identity is read from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. Because the endpoint can invoke agents, create checkpoints, and create Sessions, do not expose port `8083` outside the cluster. For the wider identity model and what the open source build does guarantee, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 
 ## Before you begin
 
@@ -543,7 +543,7 @@ The three checkpoint tools pin a Session's state and start a second conversation
    }
    ```
 
-A fork runs the {{< gloss "Revision" >}}revision{{< /gloss >}} its checkpoint was taken on, so editing the AgentTemplate afterwards does not change what the fork runs. For what a checkpoint captures, why a checkpoint taken on a suspended instance is the forkable kind, and what a fork does and does not inherit, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+A fork runs the {{< gloss "Revision" >}}revision{{< /gloss >}} its checkpoint was taken on, so editing the AgentTemplate afterwards does not change what the fork runs. For what a checkpoint captures, why a checkpoint taken on a suspended instance is the forkable kind, and what a fork does and does not inherit, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
 You can now safely [clean up these resources](#clean-up).
 
@@ -572,7 +572,7 @@ You can now safely [clean up these resources](#clean-up).
 
 ## MCP tool reference
 
-The server exposes five Session tools. Two cover discovery and conversation. Three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. No tool takes a namespace. A Session is addressed by its own UUID. No tool deletes an object either. Deleting a Session takes the `kagent agent session delete` command, and deleting a checkpoint takes a direct call to the gRPC API, because the CLI has no checkpoint command. The server also exposes a set of [standalone sandbox]({{< link path="substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
+The server exposes five Session tools. Two cover discovery and conversation. Three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. No tool takes a namespace. A Session is addressed by its own UUID. No tool deletes an object either. Deleting a Session takes the `kagent agent session delete` command, and deleting a checkpoint takes a direct call to the gRPC API, because the CLI has no checkpoint command. The server also exposes a set of [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
 
 | Tool | Required arguments | What it does |
 | ---- | ------------------ | ------------ |

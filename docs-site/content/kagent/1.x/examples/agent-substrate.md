@@ -7,7 +7,7 @@ author: kagent.dev
 
 [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs every agent as an Actor: a sandboxed unit of compute that holds a {{< gloss "Worker" >}}Worker{{< /gloss >}} only while a turn is in progress, and whose state you can pin and branch. This example follows one agent through all three behaviors.
 
-The Actor that these steps follow is also the isolation boundary. Every Actor runs in its own {{< gloss "gVisor" >}}gVisor{{< /gloss >}} sandbox rather than sharing one with its neighbors. This isolation allows a model to safely run tools and execute commands. For what the sandbox blocks, see [Sandboxing]({{< link path="substrate-runtime/sandboxing" >}}).
+The Actor that these steps follow is also the isolation boundary. Every Actor runs in its own {{< gloss "gVisor" >}}gVisor{{< /gloss >}} sandbox rather than sharing one with its neighbors. This isolation allows a model to safely run tools and execute commands. For what the sandbox blocks, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Before you begin
 
@@ -78,7 +78,7 @@ Checkpoints and {{< gloss "Fork" >}}forks{{< /gloss >}} have no kagent CLI comma
    +--------------------------------------+----------------+-------+----------------------+
    ```
 
-The Session stays `READY` throughout all steps. A suspended agent remains listed and readable because suspension is a property of the Actor underneath the conversation, not of the conversation itself. For the full cycle, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
+The Session stays `READY` throughout all steps. A suspended agent remains listed and readable because suspension is a property of the Actor underneath the conversation, not of the conversation itself. For the full cycle, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
 > [!NOTE]
 > Two objects report state on this page, and each interface names its states differently. `kubectl ate get actors` reports the Actor's state in full, such as `ACTOR_STATE_SUSPENDED`, because the command prints the Agent Substrate enum name. The kagent CLI trims the prefix from the Session's state and prints `READY`, and the same value reaches you as `RUNTIME_STATE_READY` in a `grpcurl` response. Checkpoints have no CLI command yet, so the next section calls the API directly and reads the checkpoint's state in full, as `CHECKPOINT_STATE_READY`.
@@ -203,7 +203,7 @@ A fork runs the compiled {{< gloss "Revision" >}}revision{{< /gloss >}} that its
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand the snapshot cycle that checkpoints pin." >}}
-  {{< card link=`{{< link path="substrate-runtime/sandboxing" >}}` title="Sandboxing" subtitle="See what the sandbox around each Actor isolates." >}}
-  {{< card link=`{{< link path="substrate-runtime/identity" >}}` title="Identity" subtitle="See who owns a Session and the checkpoints taken on it." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand the snapshot cycle that checkpoints pin." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/sandboxing" >}}` title="Sandboxing" subtitle="See what the sandbox around each Actor isolates." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Identity" subtitle="See who owns a Session and the checkpoints taken on it." >}}
 {{< /cards >}}

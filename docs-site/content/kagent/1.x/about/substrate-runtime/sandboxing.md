@@ -3,9 +3,11 @@ title: Sandboxing
 description: Learn how Agent Substrate isolates each Actor in its own sandbox, and what that sandbox separates.
 weight: 10
 author: kagent.dev
+aliases:
+  - /kagent/1.x/substrate-runtime/sandboxing/
 ---
 
-An agent is a program that decides at run time what to do next. It runs the commands that a model asks for, and it calls the tools it can access. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, its own unit of compute, and it does not run that Actor as an ordinary container process. Each Actor runs inside its own **sandbox**, on a {{< gloss "Worker" >}}Worker{{< /gloss >}} that hosts one Actor at a time. This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it. The same boundary holds a [standalone sandbox]({{< link path="substrate-runtime/standalone-sandboxes" >}}), a scratch environment that runs commands and holds files without an agent conversation owning it.
+An agent is a program that decides at run time what to do next. It runs the commands that a model asks for, and it calls the tools it can access. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, its own unit of compute, and it does not run that Actor as an ordinary container process. Each Actor runs inside its own **sandbox**, on a {{< gloss "Worker" >}}Worker{{< /gloss >}} that hosts one Actor at a time. This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it. The same boundary holds a [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}), a scratch environment that runs commands and holds files without an agent conversation owning it.
 </br></br>
 
 ```mermaid
@@ -74,7 +76,7 @@ spec:
 The sandbox draws a boundary in three places.
 
 - **Process and kernel**: The Actor's processes run against the sandbox runtime rather than the Worker node's kernel. A system call that the workload makes is handled by {{< gloss "gVisor" >}}gVisor{{< /gloss >}}'s user-space kernel, or by the guest kernel inside a micro-VM, instead of reaching the host directly.
-- **Filesystem**: The Actor sees the filesystem assembled from its container image, plus whatever durable volume its ActorTemplate declares. Writes to the root filesystem are a layer on top of the image, captured in a `Full` {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and discarded by a `Data` one. For what each scope keeps, see [Suspend and resume]({{< link path="substrate-runtime/suspend-and-resume" >}}).
+- **Filesystem**: The Actor sees the filesystem assembled from its container image, plus whatever durable volume its ActorTemplate declares. Writes to the root filesystem are a layer on top of the image, captured in a `Full` {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and discarded by a `Data` one. For what each scope keeps, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 - **Network**: The Actor does not share the Worker pod's network position. The node agent gives the active Actor a private, point-to-point virtual network inside the Worker pod, so reaching the Actor means going through Agent Substrate's own network path rather than connecting to the Worker directly.
 
 ## How traffic reaches a sandboxed Actor
@@ -95,4 +97,4 @@ Agent Substrate creates a Kubernetes NetworkPolicy for each WorkerPool, selectin
 
 That policy governs inbound traffic only. Outbound traffic is governed separately, by an egress policy that the gateway enforces on every connection that an Actor opens. That policy is default-deny: an Actor reaches a destination only when a rule allows it, and an Actor with no policy at all gets no outbound connection.
 
-kagent writes that policy for you, deriving it from the AgentTemplate, so an agent needs no egress configuration of its own. For what the policy holds, how a rule is matched, and how to diagnose a denied request, see [Networking and egress control]({{< link path="substrate-runtime/networking-and-egress" >}}).
+kagent writes that policy for you, deriving it from the AgentTemplate, so an agent needs no egress configuration of its own. For what the policy holds, how a rule is matched, and how to diagnose a denied request, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress" >}}).

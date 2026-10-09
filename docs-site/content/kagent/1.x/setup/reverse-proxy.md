@@ -131,5 +131,5 @@ Error: execution error at (kagent/templates/ui-deployment.yaml:21:31): ui.basePa
 
 {{< cards >}}
   {{< card link=`{{< link path="setup/installation" >}}` title="Install kagent" subtitle="The full install steps this page's `ui.basePath` value plugs into." >}}
-  {{< card link=`{{< link path="substrate-runtime/identity" >}}` title="Identity" subtitle="How kagent resolves a caller's identity and scopes a Session to its creator." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Identity" subtitle="How kagent resolves a caller's identity and scopes a Session to its creator." >}}
 {{< /cards >}}

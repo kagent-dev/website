@@ -14,8 +14,8 @@ The `byo` runtime divides the work at the {{< gloss "A2A" >}}A2A{{< /gloss >}} (
 kagent owns the lifecycle, the isolation, and the routing:
 
 - Compiles an {{< gloss "Agent" >}}Agent{{< /gloss >}} into an immutable revision, and creates a {{< gloss "Session" >}}Session{{< /gloss >}} from it.
-- Wraps the {{< gloss "Actor" >}}Actor{{< /gloss >}} that the image runs in with a [gVisor sandbox]({{< link path="substrate-runtime/sandboxing#sandbox-classes" >}}).
-- [Suspends and resumes]({{< link path="substrate-runtime/suspend-and-resume#suspension-between-turns" >}}) the Actor between turns, including its in-memory state.
+- Wraps the {{< gloss "Actor" >}}Actor{{< /gloss >}} that the image runs in with a [gVisor sandbox]({{< link path="about/substrate-runtime/sandboxing#sandbox-classes" >}}).
+- [Suspends and resumes]({{< link path="about/substrate-runtime/suspend-and-resume#suspension-between-turns" >}}) the Actor between turns, including its in-memory state.
 - Routes every conversation through the A2A gateway, so callers address the Agent rather than the Actor behind it.
 - Delivers the compiled agent configuration and agent card to the container as environment variables.
 
@@ -195,5 +195,5 @@ Implement the contract directly:
   {{< card link=`{{< link path="examples/a2a-byo" >}}` title="Run your own agent image" subtitle="Build the minimal BYO agent, run it on a byo Harness, and invoke it." >}}
   {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the byo runtime against the three that kagent executes itself." >}}
   {{< card link=`{{< link path="examples/a2a-agents" >}}` title="Call an agent over A2A" subtitle="Send messages to an Agent with the same protocol that a BYO image serves." >}}
-  {{< card link=`{{< link path="substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand what Agent Substrate snapshots while your image is idle." >}}
+  {{< card link=`{{< link path="about/substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand what Agent Substrate snapshots while your image is idle." >}}
 {{< /cards >}}
