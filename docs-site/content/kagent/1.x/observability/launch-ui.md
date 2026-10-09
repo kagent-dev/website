@@ -110,6 +110,32 @@ A checkpoint appears in the transcript as a mark carrying the snapshot name and 
 > [!NOTE]
 > A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
 
+## Attach files to a message
+
+An agent reads the files that you send with a message, so you can ask about a log, a manifest, or a screenshot without pasting the contents into the message box. The attachment controls appear only on an agent whose {{< gloss "Harness" >}}Harness{{< /gloss >}} names the `kagent` runtime, because the `codex` and `claude` runtimes take one text part per message and nothing else.
+
+Stage files in any of the following ways.
+
+- Select the paperclip beside the message box, then choose the files.
+- Drop files anywhere on the chat page.
+- Paste a file or an image from your clipboard. A clipboard that also holds plain text pastes the text instead, so that a copy from a word processor keeps its text rather than its image rendering.
+
+Each staged file becomes a chip above the message box, and selecting the chip's remove control drops that file before you send. Sent files stay in the transcript as download chips, and reloading the page redraws them.
+
+The UI accepts plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images. The UI rejects any other type as you stage it, and reports the rejection with the file name. Because browsers report no media type for some extensions, and the wrong one for others, the UI falls back to the file extension before it decides.
+
+Three limits apply to an attachment, and each one is enforced somewhere different.
+
+| Limit | Value | Enforced by |
+| ----- | ----- | ----------- |
+| Total size of the files in one message | 10 MB | The UI, as you stage each file. |
+| Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
+| Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the gateway's 16 MiB gRPC cap. |
+
+A reverse proxy in front of the UI applies its own body-size limit, which is smaller than 10 MB on a default nginx. For the directive to set, see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
+
+Every non-image file reaches the model as text, whatever provider the agent uses. A file that the runtime cannot read as text becomes a short note naming the file, so the agent reports the problem rather than failing the turn. Images reach the providers that accept them. Amazon Bedrock, Ollama, and SAP AI Core receive a note in place of the image.
+
 ## Check Agent Substrate capacity
 
 The **Substrate** page shows whether there is capacity for an agent to run. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.

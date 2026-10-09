@@ -34,6 +34,8 @@ helm upgrade --install kagent \
 
 Both of the following proxy configurations work. Choose the one that matches your infrastructure. If you enable oauth2-proxy for SSO, the proxy must strip the prefix: with the prefix forwarded, oauth2-proxy cannot match its own sign-in and skip-authentication paths, and sign-in fails.
 
+Both examples set `client_max_body_size`. A chat message that carries file attachments reaches 10 MB, and nginx defaults the directive to `1m`, so a proxy that leaves it unset rejects the upload with a `413` before the request reaches the UI pod. For the attachment limits themselves, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+
 ### Proxy strips the prefix
 
 The proxy removes the `/ui` prefix before forwarding to the UI service on port `8080`. The UI then sees requests at `/` and serves them normally.
@@ -44,6 +46,7 @@ Example nginx configuration:
 location /ui/ {
     proxy_pass http://{{< reuse "kagent-docs/snippets/name-ui.md" >}}.kagent:8080/;
     proxy_http_version 1.1;
+    client_max_body_size 20m;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -62,6 +65,7 @@ Example nginx configuration:
 location /ui/ {
     proxy_pass http://{{< reuse "kagent-docs/snippets/name-ui.md" >}}.kagent:8080;
     proxy_http_version 1.1;
+    client_max_body_size 20m;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
