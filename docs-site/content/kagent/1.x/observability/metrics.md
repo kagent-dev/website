@@ -40,6 +40,8 @@ Besides the standard Go runtime and process metrics, the controller reports the 
 | `workqueue_depth`, `workqueue_queue_duration_seconds`, `workqueue_retries_total` | Gauge, histogram, counter | Work waiting for a reconciler, how long it waits, and how often it is retried. |
 | `leader_election_master_status` | Gauge | `1` on the controller replica that holds the leader lease. With several replicas, exactly one reports `1`. |
 | `rest_client_requests_total` | Counter | Requests from the controller to the Kubernetes API server, by status code. |
+| `kagent_runtime_revision_gc_pending` | Gauge | Runtime revisions that the last successful discovery found eligible for cleanup. The controller reports a cached count, so a scrape costs no database or network call. The metric is absent until a discovery succeeds, and `0` reports a discovery that matched nothing. A failed discovery holds the previous value rather than clearing it. |
+| `kagent_runtime_revision_gc_duration_seconds` | Histogram | Time that one revision cleanup attempt takes, by the `kagent_gc_stage` label: `discovery` or `collection`. A `collection` attempt covers the database claim, the Agent Substrate read and deletion, and the database finalization. A failed attempt carries an `error_type` label holding a gRPC status code name, or `_OTHER` for every other failure, so the series that carry the label give both the failure rate and the reason. |
 
 The Agent Substrate `atecontroller` component reports the same `controller_runtime_*` and `workqueue_*` metrics for its own reconcilers. To keep the two apart in a query, filter by the scrape job, such as `job="kagent-controller-metrics"` in the OTel stack.
 

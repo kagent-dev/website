@@ -110,6 +110,32 @@ A checkpoint appears in the transcript as a mark carrying the snapshot name and 
 > [!NOTE]
 > A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
 
+## Attach files to a message
+
+In the chat interface for agents on the `kagent` runtime, you can attach files to send with a message. An agent reads any files that you attach, so you can ask the agent about a log, a manifest, or a screenshot without pasting the contents into the message box.
+
+Stage files in any of the following ways.
+
+- Select the paperclip beside the message box, then choose the files.
+- Drop files anywhere on the chat page.
+- Paste a file or an image from your clipboard. A clipboard that also holds plain text pastes the text instead, so that a copy from a word processor keeps its text rather than its image rendering.
+
+Sent files stay in the transcript as download chips, and reloading the page redraws them. Every non-image file reaches the model as text, regardless of the provider that the agent uses. An empty file, or one that holds only whitespace, reaches the model as the note `[Uploaded file "notes.txt" (text/plain) contained no extractable text.]` instead of contents, so the agent reports the gap rather than answering from nothing. Images reach the providers that accept them. Amazon Bedrock, Ollama, and SAP AI Core receive a note in place of the image.
+
+The following limits apply to attachments:
+
+| Limit | Value | Enforced by |
+| ----- | ----- | ----------- |
+| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. |
+| Total size of the files in one message | 10 MB | The UI, as you stage each file. |
+| Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
+| gRPC message that the kagent API accepts | 16 MiB | The controller's gRPC server, and every kagent gRPC client. The limit is a compiled-in constant that no Helm value changes. |
+| Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the 16 MiB gRPC message limit. |
+
+The UI falls back to the file extension when the browser reports no media type, or the wrong one, for a file. For example, browsers report no media type for `.md` files.
+
+If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit, and a default nginx allows only `1m`. Raise the limit as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
+
 ## Check Agent Substrate capacity
 
 The **Substrate** page shows whether there is capacity for an agent to run. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
