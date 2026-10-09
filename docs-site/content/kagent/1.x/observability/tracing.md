@@ -39,20 +39,21 @@ flowchart LR
 
 A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) connection to the Session's Actor and injects a `traceparent` header into that call. The Agent Substrate router forwards the call to the Worker that runs the Actor, and adds its own spans to the trace. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
 
-> [!IMPORTANT]
-> The controller passes its tracing configuration to the `kagent`, `codex`, and `claude` runtimes. Each of the three exports on its own instrumentation, so the span names in this page describe the `kagent` runtime and do not carry over to the other two. An agent on the `byo` runtime receives no tracing configuration, and its half of the trace is missing. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
-
-> [!NOTE]
-> A `byo` image that implements OTel itself reads the exporter variables from the Harness `spec.env`, which the controller leaves alone for this runtime. Its spans still do not reach a collector inside the cluster, because kagent adds the collector to an Actor's egress allowlist only for the runtimes it configures, and no field adds a host to that list by hand. For more information, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
-
 Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing backend uses these service names to group the spans.
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
 - **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
-- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`.
+- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. This is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
 
-> [!NOTE]
-> A service per Agent is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
+### Runtime coverage
+
+The controller passes its tracing configuration to every runtime and adds the collector to the Actor's egress allowlist, but the spans that each runtime sends depend on its own instrumentation. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}). For how the allowlist is built, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
+
+| Runtime | What the trace shows |
+| ------- | -------------------- |
+| `kagent` | The runtime's spans. The span names on this page describe this runtime. |
+| `codex` and `claude` | The runtime's spans, from their own instrumentation. The span names differ from the ones on this page. |
+| `byo` | Spans only if the image implements OTel and reads the standard exporter variables. An image without OTel instrumentation leaves its half of the trace missing. A Harness `spec.env` entry overrides the controller's value for a variable of the same name, but an endpoint that you set this way is not added to the egress allowlist, so the image cannot reach it. |
 
 ### Spans
 
