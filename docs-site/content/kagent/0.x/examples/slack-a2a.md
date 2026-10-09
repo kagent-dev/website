@@ -365,7 +365,7 @@ Now let's open the kagent UI and try chatting with the agent. Let's ask the agen
 Can you show me all deployments in my cluster and send it to Slack?
 ```
 
-The agent will run the tools it needs to run and finally caall the `send_message_to_slack` tool to send a message to Slack:
+The agent will run the tools it needs to run and finally call the `send_message_to_slack` tool to send a message to Slack:
 
 ![Sending message to Slack](/images/slack-a2a/send-to-slack.png)
 

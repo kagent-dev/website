@@ -169,7 +169,7 @@ The agent has access to the `add` tool as it specified in the response to the us
 
 Now let's deploy the project to a Kubernetes cluster. We'll use the `kagent deploy` command to deploy the agent and MCP servers to a Kubernetes cluster. Make sure you have a Kubernetes cluster and kagent installed in it. 
 
-We'll preprate a `.env.production` file and include the OpenAI API key in it:
+We'll prepare a `.env.production` file and include the OpenAI API key in it:
 
 ```shell
 cat << EOF > .env.production
