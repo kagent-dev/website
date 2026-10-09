@@ -129,7 +129,8 @@ The following limits apply to attachments:
 | Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. |
 | Total size of the files in one message | 10 MB | The UI, as you stage each file. |
 | Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
-| Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the gateway's 16 MiB gRPC cap. |
+| gRPC message that the kagent API accepts | 16 MiB | The controller's gRPC server, and every kagent gRPC client. The limit is a compiled-in constant that no Helm value changes. |
+| Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the 16 MiB gRPC message limit. |
 
 The UI falls back to the file extension when the browser reports no media type, or the wrong one, for a file. For example, browsers report no media type for `.md` files.
 
