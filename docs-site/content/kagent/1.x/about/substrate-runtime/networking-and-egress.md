@@ -63,7 +63,7 @@ kagent compiles that set into the Actor's policy as it creates the Actor. Each d
 > [!IMPORTANT]
 > No field adds an arbitrary host to the allowlist. A destination becomes reachable by being named in the AgentTemplate as a model endpoint, an MCP server, an HTTP tool, or a skill source. kagent writes these as hostname rules, which the gateway enforces against encrypted and cleartext requests alike, so the allowlist is the limit of what an agent can reach over HTTP and HTTPS rather than only a record of intent.
 
-The collector host for agents on the `kagent`, `codex`, and `claude` runtimes is added automatically. The host for an agent on the `byo` runtime is not, so a BYO image that exports its own telemetry has no route to a collector. For more information, see [Tracing]({{< link path="observability/tracing" >}}).
+The collector host is added automatically for agents on every runtime, `byo` included. An image on the `byo` runtime that exports to a backend of its own, through a Harness `spec.env` entry, has no route to that backend, because no field adds its host to the allowlist. For more information, see [Runtime coverage]({{< link path="observability/tracing#runtime-coverage" >}}).
 
 ## Policy changes
 
