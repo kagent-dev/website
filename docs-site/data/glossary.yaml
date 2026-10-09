@@ -135,5 +135,5 @@ A2A:
   link: "/docs/kagent/1.x/examples/a2a-agents/#about-the-kagent-a2a-service"
 
 gVisor:
-  short: "A user-space kernel that isolates a workload from the host kernel by intercepting its system calls. kagent compiles every ActorTemplate to the gvisor sandbox class."
+  short: "A user-space kernel that isolates a workload from the host kernel by intercepting its system calls. A default kagent installation compiles ActorTemplates to the gvisor sandbox class."
   link: "/docs/kagent/1.x/about/substrate-runtime/sandboxing/#sandbox-classes"
