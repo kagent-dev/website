@@ -42,7 +42,7 @@ install: ## Install web + docs dependencies (npm) and Hugo modules
 HUGO_CONFIG ?= hugo.yaml
 HUGO_FLAGS ?=
 
-build-docs: ## Build the Hugo docs site -> docs-site/public
+build-docs: check-docs-node-deps ## Build the Hugo docs site -> docs-site/public
 	cd $(DOCS_DIR) && $(HUGO) --config $(HUGO_CONFIG) $(HUGO_FLAGS) $(if $(DOCS_BASEURL),--baseURL "$(DOCS_BASEURL)") --gc --minify
 
 .PHONY: inject-docs
@@ -59,8 +59,27 @@ inject-docs: ## Copy built docs into public/docs (preserves tracked assets, e.g.
 # server: each later save re-renders only the pages it touched, so pages come
 # back but the stylesheets never do, and the preview degrades edit by edit
 # instead of failing outright. Rendering to memory removes the shared directory.
-serve-docs: ## Preview the docs alone at http://localhost:1313/docs/
-	cd $(DOCS_DIR) && $(HUGO) server --config $(HUGO_CONFIG) --disableFastRender --renderToMemory
+#
+# VERSION=<linkVersion> (for example VERSION=1.x, or VERSION=latest) builds only
+# that docs version, for a faster preview. scripts/local-version-config.py
+# derives the skip list from docs-site/hugo.yaml's `params.versions` and writes
+# docs-site/hugo-local-version.yaml (gitignored). NO_SEARCH=1 builds without the
+# search index (the search box does nothing).
+serve-docs: check-docs-node-deps ## Preview the docs alone at http://localhost:1313/docs/ (VERSION=, NO_SEARCH=1)
+	@$(if $(VERSION),python3 scripts/local-version-config.py --version $(VERSION),:)
+	cd $(DOCS_DIR) && $(NO_SEARCH_ENV)$(HUGO) server --config $(HUGO_CONFIG)$(VERSION_CONFIG) --disableFastRender --renderToMemory
+
+COMMA := ,
+VERSION_CONFIG = $(if $(VERSION),$(COMMA)hugo-local-version.yaml)
+NO_SEARCH_ENV = $(if $(NO_SEARCH),HUGO_PARAMS_SEARCH_ENABLE=false )
+
+# The docs CSS goes through PostCSS + Tailwind from docs-site/node_modules.
+# Without them Hugo fails deep in a template with a PostCSS error that does not
+# say what to do. A fresh clone or git worktree has no node_modules, so check
+# first.
+.PHONY: check-docs-node-deps
+check-docs-node-deps:
+	@test -d $(DOCS_DIR)/node_modules/postcss-cli || { echo "$(DOCS_DIR)/node_modules is missing. Run 'make install' first."; exit 1; }
 
 # ── Web (Next.js) ──────────────────────────────────────────────────────────
 .PHONY: serve-web
