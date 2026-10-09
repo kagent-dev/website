@@ -63,9 +63,13 @@ the URL, so `docs-site/content/kagent/introduction/installation.md` is served at
 `/docs/kagent/introduction/installation/`. Hextra builds the sidebar
 automatically from the tree plus each page's `weight`.
 
-```bash
-make serve-docs     # Hugo docs only, at http://localhost:1313/docs/
-```
+To preview the docs alone at http://localhost:1313/docs/, use one of these commands:
+
+| Command | Builds |
+|---|---|
+| `make serve-docs` | Every docs version in `docs-site/content/`. |
+| `make serve-docs VERSION=<linkVersion>` | Only one kagent version, such as `VERSION=1.x` or `VERSION=latest`, for a faster preview. kmcp always builds. Links into other versions do not resolve locally. |
+| `make serve-docs NO_SEARCH=1` | Same as `make serve-docs`, without the search index. The search box does nothing, but the build is faster. Combine with `VERSION=`. |
 
 To preview the docs and marketing site together the way they deploy (so
 cross-stack links and the shared top nav behave), build and serve the combined

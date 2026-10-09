@@ -80,6 +80,12 @@ ignoreLogs:
   - extras-section-hollow
 
 params:
+  # Hextra's default, stated so that `make serve-docs NO_SEARCH=1` can override
+  # it: Hugo's HUGO_PARAMS_SEARCH_ENABLE env var only sets a key that already
+  # exists in the config.
+  search:
+    enable: true
+
   # Section registry, alphabetical. A section exists because it is a key here.
   # See docs-theme-extras USAGE.md, "Versions and sections".
   #
