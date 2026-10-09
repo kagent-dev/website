@@ -112,7 +112,7 @@ A checkpoint appears in the transcript as a mark carrying the snapshot name and 
 
 ## Attach files to a message
 
-In the chat interface for agents on the `kagent` runtime, you can attach files to send with a message. An agent reads any files that you attach, so you can ask the agent about a log, a manifest, or a screenshot without pasting the contents into the message box. Note file attachments are supported only on the `kagent` runtime, so an agent on a `byo`, `codex`, or `claude` Harness has no attachment option in the chat.
+In the chat interface for agents on the `kagent` runtime, you can attach files to send with a message. An agent reads any files that you attach, so you can ask the agent about a log, a manifest, or a screenshot without pasting the contents into the message box.
 
 Stage files in any of the following ways.
 
@@ -126,10 +126,14 @@ The following limits apply to attachments:
 
 | Limit | Value | Enforced by |
 | ----- | ----- | ----------- |
-| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. Browsers report no media type for some extensions, and the wrong one for others, so the UI falls back to the file extension before it decides whether a file qualifies. |
-| Total size of the files in one message | 10 MB | The UI, as you stage each file. Note that when you host a reverse proxy in front of the UI, it applies its own body-size limit. A default nginx allows `1m`, so a larger attachment is rejected with a `413` before it reaches the UI pod. Raise the limit with `client_max_body_size`, as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}). |
+| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. |
+| Total size of the files in one message | 10 MB | The UI, as you stage each file. |
 | Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
 | Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the gateway's 16 MiB gRPC cap. |
+
+The UI falls back to the file extension when the browser reports no media type, or the wrong one, for a file. For example, browsers report no media type for `.md` files.
+
+If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit, and a default nginx allows only `1m`. Raise the limit as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
 
 ## Check Agent Substrate capacity
 
