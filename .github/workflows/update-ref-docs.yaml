@@ -486,7 +486,8 @@ jobs:
 
           # conref basename : GHCR repository
           RUNTIME_IMAGES="runtime-image:kagent-dev/kagent/golang-adk
-          runtime-image-claude:kagent-dev/kagent/claude-harness"
+          runtime-image-claude:kagent-dev/kagent/claude-harness
+          runtime-image-codex:kagent-dev/kagent/codex-harness"
 
           UNRESOLVED=""
           while IFS= read -r line; do
@@ -698,6 +699,11 @@ jobs:
             else
               echo "  runtime-image-claude.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image-claude.md")"
             fi
+            if [ -n "${RUNTIME_IMAGE_CODEX:-}" ]; then
+              write_conref "$VERSIONS_DIR/runtime-image-codex.md" "$RUNTIME_IMAGE_CODEX"
+            else
+              echo "  runtime-image-codex.md: SKIPPED, unresolved digest. Left at $(cat "$VERSIONS_DIR/runtime-image-codex.md")"
+            fi
           fi
 
       # Three fragments of the PR body that exist only on a 1.x run. Built here
@@ -717,6 +723,7 @@ jobs:
               echo "| \`kagent-tools\` | \`${KAGENT_TOOLS_VERSION}\` | \`helm/kagent/Chart-template.yaml\` |"
               echo "| \`runtime-image\` | \`${RUNTIME_IMAGE:-unresolved}\` | GHCR, at \`${KAGENT_TAG}\` |"
               echo "| \`runtime-image-claude\` | \`${RUNTIME_IMAGE_CLAUDE:-unresolved}\` | GHCR, at \`${KAGENT_TAG}\` |"
+              echo "| \`runtime-image-codex\` | \`${RUNTIME_IMAGE_CODEX:-unresolved}\` | GHCR, at \`${KAGENT_TAG}\` |"
               echo "ROWS_EOF"
             } >> $GITHUB_ENV
           else
