@@ -12,7 +12,7 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha8 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha9 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
@@ -267,7 +267,8 @@ A Helm chart for kagent, built with Google ADK
 | ui.image.registry | string | `""` |  |
 | ui.image.repository | string | `"kagent-dev/kagent/ui"` |  |
 | ui.image.tag | string | `""` |  |
-| ui.nginx | object | `{"proxyReadTimeout":"1800s","proxySendTimeout":"1800s"}` | Nginx proxy timeout configuration for the UI sidecar (values are passed directly to the corresponding nginx directives, e.g. "1800s"). |
+| ui.nginx | object | `{"clientMaxBodySize":"20m","proxyReadTimeout":"1800s","proxySendTimeout":"1800s"}` | Nginx configuration for the UI sidecar (timeout values are passed directly to the corresponding nginx directives, e.g. "1800s"). |
+| ui.nginx.clientMaxBodySize | string | `"20m"` | client_max_body_size: max request body size (0 disables it). Just above the gateway's 16 MiB gRPC cap, which chat attachments hit first. |
 | ui.nginx.proxyReadTimeout | string | `"1800s"` | proxy_read_timeout: max time between two successive reads from the upstream. |
 | ui.nginx.proxySendTimeout | string | `"1800s"` | proxy_send_timeout: max time between two successive writes to the upstream. |
 | ui.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
