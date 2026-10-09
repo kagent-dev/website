@@ -112,7 +112,7 @@ A checkpoint appears in the transcript as a mark carrying the snapshot name and 
 
 ## Attach files to a message
 
-An agent reads the files that you send with a message, so you can ask about a log, a manifest, or a screenshot without pasting the contents into the message box. The attachment controls appear only on an agent whose {{< gloss "Harness" >}}Harness{{< /gloss >}} names the `kagent` runtime, because the `codex` and `claude` runtimes take one text part per message and nothing else.
+In the chat interface for agents on the `kagent` runtime, you can attach files to send with a message. An agent reads any files that you attach, so you can ask the agent about a log, a manifest, or a screenshot without pasting the contents into the message box. Note file attachments are supported only on the `kagent` runtime, so an agent on a `byo`, `codex`, or `claude` Harness has no attachment option in the chat.
 
 Stage files in any of the following ways.
 
@@ -120,21 +120,16 @@ Stage files in any of the following ways.
 - Drop files anywhere on the chat page.
 - Paste a file or an image from your clipboard. A clipboard that also holds plain text pastes the text instead, so that a copy from a word processor keeps its text rather than its image rendering.
 
-Each staged file becomes a chip above the message box, and selecting the chip's remove control drops that file before you send. Sent files stay in the transcript as download chips, and reloading the page redraws them.
+Sent files stay in the transcript as download chips, and reloading the page redraws them. Every non-image file reaches the model as text, regardless of the provider that the agent uses. An empty file, or one that holds only whitespace, reaches the model as the note `[Uploaded file "notes.txt" (text/plain) contained no extractable text.]` instead of contents, so the agent reports the gap rather than answering from nothing. Images reach the providers that accept them. Amazon Bedrock, Ollama, and SAP AI Core receive a note in place of the image.
 
-The UI accepts plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images. The UI rejects any other type as you stage it, and reports the rejection with the file name. Because browsers report no media type for some extensions, and the wrong one for others, the UI falls back to the file extension before it decides.
-
-Three limits apply to an attachment, and each one is enforced somewhere different.
+The following limits apply to attachments:
 
 | Limit | Value | Enforced by |
 | ----- | ----- | ----------- |
-| Total size of the files in one message | 10 MB | The UI, as you stage each file. |
+| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. Browsers report no media type for some extensions, and the wrong one for others, so the UI falls back to the file extension before it decides whether a file qualifies. |
+| Total size of the files in one message | 10 MB | The UI, as you stage each file. Note that when you host a reverse proxy in front of the UI, it applies its own body-size limit. A default nginx allows `1m`, so a larger attachment is rejected with a `413` before it reaches the UI pod. Raise the limit with `client_max_body_size`, as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}). |
 | Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
 | Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the gateway's 16 MiB gRPC cap. |
-
-A reverse proxy in front of the UI applies its own body-size limit, which is smaller than 10 MB on a default nginx. For the directive to set, see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
-
-Every non-image file reaches the model as text, whatever provider the agent uses. A file that the runtime cannot read as text becomes a short note naming the file, so the agent reports the problem rather than failing the turn. Images reach the providers that accept them. Amazon Bedrock, Ollama, and SAP AI Core receive a note in place of the image.
 
 ## Check Agent Substrate capacity
 

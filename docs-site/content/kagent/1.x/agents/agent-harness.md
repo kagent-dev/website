@@ -63,7 +63,7 @@ A Harness names exactly one of the following four runtimes, and that choice deci
 
 The `kagent` and `byo` runtimes compile through the same path, so they accept the same model providers and the same AgentTemplate features, except [structured output]({{< link path="agents/structured-output" >}}), which only the `kagent` runtime supports. The `codex` and `claude` runtimes are purpose-built adapters, and each accepts a narrower slice.
 
-File attachments are limited to the `kagent` runtime in the same way. The `codex` and `claude` runtimes take one text part per message, so the UI hides the attachment controls on an agent that runs on either of them. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+Note that the agent chat in the kagent UI allows file attachments only on the `kagent` runtime, so an agent on a `byo`, `codex`, or `claude` Harness has no attachment option in the chat. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
 
 ### Runtime-specific settings
 
