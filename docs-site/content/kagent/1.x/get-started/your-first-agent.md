@@ -152,7 +152,16 @@ The `invoke` command takes a few more options that are useful beyond a first con
 > [!TIP]
 > Run `kagent` with no arguments to open an interactive workspace in your terminal, where you can browse your Sessions and chat with them without passing an ID to each command.
 
-## Clean up
+## Next steps
+
+{{< cards >}}
+  {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Bind a Model Context Protocol tool so that your agent can act on live cluster data." >}}
+  {{< card link=`{{< link path="about/architecture/agent-substrate" >}}` title="Agent Substrate architecture" subtitle="Understand what happens to your Session's Actor when it sits idle." >}}
+  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Choose from the full set of Harness runtime options." >}}
+  {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Give your agent capabilities beyond its system prompt." >}}
+{{< /cards >}}
+
+## Optional: clean up
 
 > [!IMPORTANT]
 > Other guides build on the Harness, AgentTemplate, and Agent that you created here, including [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}) and [Agent Substrate]({{< link path="examples/agent-substrate" >}}). Unless you are finished with the kagent guides, leave the resources in place.
@@ -172,12 +181,3 @@ To remove the resources, follow these steps.
    kubectl delete agenttemplate my-first-template -n kagent
    kubectl delete harness my-first-harness -n kagent
    ```
-
-## Next steps
-
-{{< cards >}}
-  {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Bind a Model Context Protocol tool so that your agent can act on live cluster data." >}}
-  {{< card link=`{{< link path="about/architecture/agent-substrate" >}}` title="Agent Substrate architecture" subtitle="Understand what happens to your Session's Actor when it sits idle." >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Choose from the full set of Harness runtime options." >}}
-  {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Give your agent capabilities beyond its system prompt." >}}
-{{< /cards >}}
