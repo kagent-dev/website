@@ -31,46 +31,31 @@ author: kagent.dev
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-3. Prepare a Kubernetes cluster at **1.37 or later** and enable it with the following requirements for Agent Substrate.
+3. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs, which are GA in 1.37 and served at `certificates.k8s.io/v1` by default.
 
    {{< tabs >}}
    {{% tab name="Local kind cluster" %}}
-   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. Enable the `certificates.k8s.io/v1beta1` API, which Agent Substrate depends on.
+   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. No extra API configuration is needed.
    ```bash
-   kind create cluster --image kindest/node:v1.37.0 --config=- <<EOF
-   kind: Cluster
-   apiVersion: kind.x-k8s.io/v1alpha4
-   name: kagent
-   runtimeConfig:
-     "certificates.k8s.io/v1beta1": "true"
-   EOF
+   kind create cluster --name kagent --image kindest/node:v1.37.0
    ```
    {{% /tab %}}
 
    {{% tab name="Existing 1.37+ cluster" %}}
-   To use an existing Kubernetes 1.37 or later cluster, you must manually enable the `certificates.k8s.io/v1beta1` API, which Agent Substrate depends on.
-   1. On each control plane node, add the runtime configuration to the kube-apiserver manifest. The kubelet restarts the static pod when the file changes, so no restart command is needed.
-      ```yaml
-      # /etc/kubernetes/manifests/kube-apiserver.yaml
-      spec:
-        containers:
-        - command:
-          - kube-apiserver
-          - --runtime-config=certificates.k8s.io/v1beta1=true
-      ```
-      > [!NOTE]
-      > If the command list already has a `--runtime-config` flag, edit that line instead of adding a second one. A duplicate flag is silently ignored, and the API is not served.
+   Kubernetes 1.37 and later serve the required APIs at `certificates.k8s.io/v1` by default, so you do not need to change the API server configuration. This includes managed control planes such as Amazon EKS, Google GKE, and Azure AKS.
 
-   2. Confirm that the beta group is served. Be sure to check the served API versions, not the resource list.
-      ```bash
-      kubectl api-versions | grep certificates.k8s.io
-      ```
+   Confirm that the cluster serves the required APIs.
+   ```bash
+   kubectl api-resources --api-group=certificates.k8s.io
+   ```
 
-      Example output:
-      ```console
-      certificates.k8s.io/v1
-      certificates.k8s.io/v1beta1
-      ```
+   Example output:
+   ```console
+   NAME                           SHORTNAMES   APIVERSION               NAMESPACED   KIND
+   certificatesigningrequests     csr          certificates.k8s.io/v1   false        CertificateSigningRequest
+   clustertrustbundles                         certificates.k8s.io/v1   false        ClusterTrustBundle
+   podcertificaterequests                      certificates.k8s.io/v1   true         PodCertificateRequest
+   ```
    {{% /tab %}}
    {{< /tabs >}}
 
