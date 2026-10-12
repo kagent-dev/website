@@ -29,10 +29,17 @@
        entry while 1.0 is in beta, so today that spares every 1.x page the 0.x
        tree has no counterpart for.
 
+       Like upstream, this RETURNS a directive string ("noindex, follow" or "")
+       and emits no markup: the module's _partials/head.html folds the result
+       into the one robots tag it writes. Printing a <meta> tag here instead
+       puts that markup inside head.html's content attribute, which renders as
+       an empty `content` on exactly the pages that should be noindexed.
+
        Re-check this against the pinned module on any docs-theme-extras bump: if
        upstream learns to resolve a baseURL path prefix itself, this override
        should be deleted rather than left to rot. */ -}}
 
+{{- $directive := "" -}}
 {{- $root := partial "utils/version-root.html" . -}}
 {{- with partial "utils/resolve-section-versions.html" $root.section -}}
   {{- /* The current version's URL segment. `latest = true` is the only signal
@@ -58,7 +65,8 @@
     {{- end -}}
 
     {{- if site.GetPage $latestEquiv -}}
-  <meta name="robots" content="noindex, follow" />
+      {{- $directive = "noindex, follow" -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
+{{- return $directive -}}
