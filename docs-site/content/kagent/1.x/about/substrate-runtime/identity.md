@@ -71,6 +71,10 @@ A share carries one of two permissions.
 - **`READ_ONLY`**: The holder can read the conversation. kagent refuses any call that is not a read before the request reaches the service.
 - **`READ_WRITE`**: The holder can also send messages to the Session.
 
+A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime that starts when the share is created. When the lifetime ends, the token no longer grants access, and token lookup returns not found. The owner still sees the expired share in `ListSessionShares`, so the owner can revoke it.
+
+The returned `SessionShare.expiresAt` field records when the token stops granting access. When `expiresAt` is unset, the share remains valid until it is revoked or the Session is deleted. An operator can cap share lifetimes with `controller.sessionShareMaxTTL`. For more information, see [Expire idle conversations]({{< link path="operations/operational-considerations#expire-idle-conversations" >}}).
+
 A share widens what the holder can reach to what the owner can see, and the underlying record is read as the owner rather than as the visitor. Revoking the share withdraws that access.
 
 ## The Agent Substrate plane

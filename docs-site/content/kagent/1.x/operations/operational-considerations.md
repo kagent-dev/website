@@ -119,6 +119,7 @@ A leader-only worker sweeps once a minute and deletes every Session whose idle c
 | Value | Default | Description |
 | ----- | ------- | ----------- |
 | `controller.sessionIdleTTL` | `168h` | How long a Session can be idle before the worker deletes it, as a Go duration. `0` turns the worker off, retries included. A negative value is rejected. |
+| `controller.sessionShareMaxTTL` | `0` | Longest lifetime that a Session share can request, as a Go duration. A positive value caps `CreateSessionShareRequest.ttl`. A request that exceeds the cap fails. If the request omits `ttl`, the share uses the cap. `0` leaves shares unbounded unless the client request sets `ttl`. A negative value is rejected at startup. |
 
 The `168h` default is seven days. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
 
