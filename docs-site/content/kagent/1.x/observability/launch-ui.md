@@ -107,6 +107,8 @@ A checkpoint appears in the transcript as a mark carrying the snapshot name and 
 - **Rename** replaces the snapshot name that kagent generates on creation from the Session ID and the turn the checkpoint pins. Clearing the name restores that generated default.
 - **Delete** removes the checkpoint and releases the snapshot it pinned. Agent Substrate is then free to collect that snapshot.
 
+The bell icon on the latest message for a task opens **Task notifications**. Use it to add, edit, or remove callback URLs while the task is active. New callbacks receive only future updates for tasks that need input or reach a final state. For callback delivery and security details, see [Register task callbacks]({{< link path="examples/a2a-agents#task-callbacks" >}}).
+
 > [!NOTE]
 > A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
 
