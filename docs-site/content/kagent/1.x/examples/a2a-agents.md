@@ -214,12 +214,12 @@ The kagent CLI wraps the three push notification configuration methods, so the s
      -o json
    ```
 
-   Save the task ID, so that later steps can address the task.
+2. Save the task ID from the command output so that later steps can address the task.
    ```bash
    export PUSH_TASK_ID=<your-task-id>
    ```
 
-2. To add a second callback to a task that is still active, create one explicitly. The server rejects new callbacks after the task reaches a terminal state.
+3. To add a second callback to a task that is still active, create one explicitly. The server rejects new callbacks after the task reaches a terminal state.
    ```bash
    kagent agent session push create \
      $SESSION_ID $PUSH_TASK_ID \
@@ -227,12 +227,12 @@ The kagent CLI wraps the three push notification configuration methods, so the s
      --url https://receiver.example/callback
    ```
 
-3. List the callbacks for the task.
+4. List the callbacks for the task.
    ```bash
    kagent agent session push list $SESSION_ID $PUSH_TASK_ID
    ```
 
-4. Delete a callback that should no longer receive task updates.
+5. Delete a callback that should no longer receive task updates.
    ```bash
    kagent agent session push delete $SESSION_ID $PUSH_TASK_ID audit-webhook
    ```
@@ -242,17 +242,49 @@ The kagent CLI wraps the three push notification configuration methods, so the s
 A callback URL is a public endpoint that receives task state from kagent. Before you register a callback in production, decide how the receiver establishes that a delivery came from kagent.
 
 > [!IMPORTANT]
-> kagent signs deliveries only when an operator configures a signing key, and `controller.push.signing.secretName` is empty by default. Until an operator sets it, kagent posts each callback without an `Authorization` header, and the controller serves `404` at `/.well-known/jwks.json`. A receiver cannot distinguish an unsigned kagent delivery from any other caller, so treat the default configuration as suitable for a trusted network only.
+> kagent signs deliveries only when the installation names a signing key, and `controller.push.signing.secretName` is empty by default. Until you set it, kagent posts each callback without an `Authorization` header, and the controller serves `404` at `/.well-known/jwks.json`. A receiver cannot distinguish an unsigned kagent delivery from any other caller, so treat the default configuration as suitable for a trusted network only.
 
-To sign deliveries, an operator creates a Secret that holds an unencrypted PKCS#8 Ed25519 private key in a `private-key.pem` entry, and names that Secret in `controller.push.signing.secretName`. kagent generates no key of its own, so key creation, persistence, and rotation stay with the operator.
+kagent does not generate its own signing key, so you are responsible for creating the key, keeping it, and rotating it. The following steps turn signing on.
 
-Receivers verify a signed delivery against the JSON Web Key Set (JWKS) that the controller serves at `/.well-known/jwks.json`, which exposes the public verification key alone. The controller serves that path on the same port as its gRPC, A2A, and MCP endpoints, so a receiver outside the cluster needs a stable HTTPS URL that routes to the controller. The UI does not proxy the path, so publishing only the UI leaves a receiver with no key to verify against.
+1. Generate an Ed25519 private key in unencrypted PKCS#8 PEM form.
+   ```bash
+   openssl genpkey -algorithm ed25519 -out private-key.pem
+   ```
 
-Set `controller.push.signing.issuer` to the URL that reaches the controller, so that the issuer a receiver trusts matches the host it fetches the JWKS from. When `controller.push.signing.issuer` is empty, Helm falls back to `ui.externalUrl` and then to the in-cluster A2A gateway URL, and either fallback can name a host that does not serve the JWKS.
+   > [!NOTE]
+   > The `openssl` binary that ships with macOS is LibreSSL, which rejects this command with `Algorithm ed25519 not found`. Install OpenSSL 3, or generate the key on another machine.
 
-Receivers must not send a token or credential when they register a callback. kagent signs each delivery attempt with a fresh five-minute JWT whose audience is the exact callback URL, including the query string. Before you acknowledge the request with a 2xx response, verify the JWT signature, issuer, audience, expiry, and `taskId` claim.
+2. Store the key in a Secret. kagent reads the `private-key.pem` entry, so the entry name is not optional.
+   ```bash
+   kubectl create secret generic kagent-push-signing -n kagent \
+     --from-file=private-key.pem=private-key.pem
+   ```
 
-By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. For trusted test receivers, operators can set `controller.push.allowHTTP=true` or `controller.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
+3. Name the Secret in `controller.push.signing.secretName`, and set `controller.push.signing.issuer` to a URL that reaches the controller. Use the Helm release name and version that you installed kagent with.
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent --reuse-values \
+     --set controller.push.signing.secretName=kagent-push-signing \
+     --set controller.push.signing.issuer=https://kagent.example
+   ```
+
+   The issuer that a receiver trusts must match the host that it fetches the JWKS from. When `controller.push.signing.issuer` is empty, Helm falls back to `ui.externalUrl` and then to the in-cluster A2A gateway URL. Either fallback can name a host that does not serve the JWKS.
+
+4. Confirm that the controller publishes a verification key. Before you set the Secret, this path returns `404`.
+   ```bash
+   curl -s http://localhost:8083/.well-known/jwks.json
+   ```
+
+   Example output, which carries the public key alone:
+   ```json
+   {"keys":[{"kty":"OKP","crv":"Ed25519","alg":"EdDSA","use":"sig","kid":"B1BP8zPNOTEGYyBUVgUAeTyA5hPlnrNc0OB416NY-CM","x":"xIc8dv_I-NrYSvWKg4aKm_X1CjHmiUBSMf9cDXEKesM"}]}
+   ```
+
+Receivers verify a signed delivery against the JSON Web Key Set (JWKS). The controller serves the path on the same port as its gRPC, A2A, and MCP endpoints, so a receiver outside of the cluster needs a stable HTTPS URL that routes to the controller. The UI does not proxy the path, so publishing only the UI leaves a receiver with no key to verify against.
+
+Receivers must not send a token or credential when they register a callback. kagent signs each delivery attempt with a fresh five-minute JWT whose audience is the exact callback URL, including the query string. Before you acknowledge the request with a 2xx response, verify the JWT signature, issuer, audience, expiry, and `taskId` claim. The `taskId` claim repeats the `statusUpdate.taskId` value in the body, so a receiver that compares them rejects a token replayed against a different task.
+
+By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. To reach a test receiver inside the cluster, set `controller.push.allowHTTP=true` or `controller.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
 
 ## When an agent needs a person
 
