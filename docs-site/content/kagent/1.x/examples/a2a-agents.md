@@ -32,7 +32,7 @@ A caller addresses the Agent rather than one conversation. The message's `contex
 
 ### A2A methods
 
-The following methods are used in this example. The service defines more methods, including `ListTasks` and the push notification configuration calls that manage callbacks for a task.
+This example calls each method in the following table except the three `TaskPushNotificationConfig` calls, which manage a task's callbacks and which the kagent CLI wraps. The service defines more, including `ListTasks` and `GetTaskPushNotificationConfig`, which reads one callback by ID.
 
 | Method | What it does |
 | ------ | ------------ |
@@ -203,7 +203,7 @@ A task that is still running reports `TASK_STATE_WORKING` and has no artifacts y
 
 A task callback lets a webhook learn when a task needs input or reaches a final state. The callback receives a status update for future `INPUT_REQUIRED`, `AUTH_REQUIRED`, `COMPLETED`, `FAILED`, `CANCELED`, and `REJECTED` states. After the callback arrives, the receiver calls authenticated `GetTask` to read the current state and artifacts.
 
-Before you register callbacks for a receiver outside the cluster, expose a stable HTTPS URL for the controller or UI so that the receiver can read `/.well-known/jwks.json`. The receiver uses that JSON Web Key Set (JWKS) to verify the short-lived Ed25519 JSON Web Token (JWT) that kagent sends in the `Authorization` header. To keep the issuer stable, set `controller.push.signing.issuer`. When `controller.push.signing.issuer` is empty, Helm uses `ui.externalUrl`, then the in-cluster A2A gateway URL.
+The kagent CLI wraps the three push notification configuration methods, so the steps that follow use the CLI rather than building each request by hand. The CLI defaults to port 8083, which the prerequisites already forward.
 
 1. To register a callback before a new task is dispatched, add `--push-url` to the kagent CLI invocation. The command returns immediately with the task ID and callback ID.
    ```bash
@@ -214,21 +214,18 @@ Before you register callbacks for a receiver outside the cluster, expose a stabl
      -o json
    ```
 
-   Save the task ID and callback ID from the output.
+   Save the task ID, so that later steps can address the task.
    ```bash
    export PUSH_TASK_ID=<your-task-id>
-   export PUSH_CALLBACK_ID=<your-callback-id>
    ```
 
-2. To add a callback to a task that is already active, create one explicitly.
+2. To add a second callback to a task that is still active, create one explicitly. The server rejects new callbacks after the task reaches a terminal state.
    ```bash
    kagent agent session push create \
      $SESSION_ID $PUSH_TASK_ID \
      --id audit-webhook \
      --url https://receiver.example/callback
    ```
-
-   The server rejects new callbacks after the task reaches a terminal state.
 
 3. List the callbacks for the task.
    ```bash
@@ -239,6 +236,19 @@ Before you register callbacks for a receiver outside the cluster, expose a stabl
    ```bash
    kagent agent session push delete $SESSION_ID $PUSH_TASK_ID audit-webhook
    ```
+
+### Secure callback deliveries
+
+A callback URL is a public endpoint that receives task state from kagent. Before you register a callback in production, decide how the receiver establishes that a delivery came from kagent.
+
+> [!IMPORTANT]
+> kagent signs deliveries only when an operator configures a signing key, and `controller.push.signing.secretName` is empty by default. Until an operator sets it, kagent posts each callback without an `Authorization` header, and the controller serves `404` at `/.well-known/jwks.json`. A receiver cannot distinguish an unsigned kagent delivery from any other caller, so treat the default configuration as suitable for a trusted network only.
+
+To sign deliveries, an operator creates a Secret that holds an unencrypted PKCS#8 Ed25519 private key in a `private-key.pem` entry, and names that Secret in `controller.push.signing.secretName`. kagent generates no key of its own, so key creation, persistence, and rotation stay with the operator.
+
+Receivers verify a signed delivery against the JSON Web Key Set (JWKS) that the controller serves at `/.well-known/jwks.json`, which exposes the public verification key alone. The controller serves that path on the same port as its gRPC, A2A, and MCP endpoints, so a receiver outside the cluster needs a stable HTTPS URL that routes to the controller. The UI does not proxy the path, so publishing only the UI leaves a receiver with no key to verify against.
+
+Set `controller.push.signing.issuer` to the URL that reaches the controller, so that the issuer a receiver trusts matches the host it fetches the JWKS from. When `controller.push.signing.issuer` is empty, Helm falls back to `ui.externalUrl` and then to the in-cluster A2A gateway URL, and either fallback can name a host that does not serve the JWKS.
 
 Receivers must not send a token or credential when they register a callback. kagent signs each delivery attempt with a fresh five-minute JWT whose audience is the exact callback URL, including the query string. Before you acknowledge the request with a 2xx response, verify the JWT signature, issuer, audience, expiry, and `taskId` claim.
 
