@@ -32,7 +32,7 @@ A caller addresses the Agent rather than one conversation. The message's `contex
 
 ### A2A methods
 
-This example calls each method in the following table except the three `TaskPushNotificationConfig` calls, which manage a task's callbacks and which the kagent CLI wraps. The service defines more, including `ListTasks` and `GetTaskPushNotificationConfig`, which reads one callback by ID.
+This example calls each method in the following table except the three `TaskPushNotificationConfig` calls, which manage a task's callbacks and which the kagent CLI wraps. The service defines more, including `ListTasks`. `GetTaskPushNotificationConfig` reads a single callback by ID.
 
 | Method | What it does |
 | ------ | ------------ |
