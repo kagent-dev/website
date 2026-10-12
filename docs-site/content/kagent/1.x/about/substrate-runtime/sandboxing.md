@@ -39,7 +39,7 @@ A **sandbox class** is the sandbox runtime family that a Worker uses. {{< gloss 
 A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}}'s `sandboxClass` field sets the sandbox class for its Workers, and defaults to `gvisor`. That value does more than name a runtime. Agent Substrate builds the pool's Worker pods to match it, mounting the virtualization devices that a micro-VM needs and placing those pods on nodes that provide them.
 
 > [!NOTE]
-> kagent copies a pool's sandbox class onto every {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}} that it generates for that pool. Each template then names the SandboxConfig that serves its class. A `gvisor` template names `gvisor-default`, and a `microvm` template names `microvm`.
+> kagent copies a pool's sandbox class onto every {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}} that it generates for this pool. Each template then names the SandboxConfig that serves its class. A `gvisor` template names `gvisor-default`, and a `microvm` template names `microvm`.
 
 ## Sandbox configuration
 
@@ -47,7 +47,7 @@ A **SandboxConfig** is a cluster-scoped resource that describes the runtime file
 
 Every ActorTemplate must name a SandboxConfig, and Agent Substrate supplies no name of its own. A template cannot be prepared until the configuration that it names exists in the cluster. Many ActorTemplates can share one SandboxConfig. The runtime version is then pinned in a single place, rather than repeated on every template.
 
-A default installation creates one SandboxConfig, named `gvisor-default`. kagent writes that name onto every ActorTemplate that it generates, so each template carries it explicitly. The configuration looks like the following:
+A default installation creates one SandboxConfig, named `gvisor-default`. kagent writes this name onto every ActorTemplate that it generates, so each template carries it explicitly. The configuration looks like the following:
 
 ```yaml
 apiVersion: ate.dev/v1alpha1
@@ -87,19 +87,19 @@ The sandbox draws a boundary in three places.
 
 Every Actor is addressed by its {{< gloss "Atespace" >}}atespace{{< /gloss >}} and name, at `<actor-name>.<atespace>.actors.resources.substrate.ate.dev`. Reaching it involves several hops, and each one keeps a sandboxed Actor addressable without exposing the Worker that it happens to be running on.
 
-1. Agent Substrate runs its own Domain Name System (DNS) service that answers queries for that address pattern with the address of the router, rather than any individual Worker.
-2. The router reads the Actor name and atespace from the request, asks the Agent Substrate API to resume that Actor and report which Worker it is now assigned to, then selects that Worker as the destination.
-3. The router connects to a listener on the Worker over mutual Transport Layer Security (mTLS). The listener validates that the caller is the router, and forwards traffic only to the Actor currently assigned to that Worker.
+1. Agent Substrate runs its own Domain Name System (DNS) service that answers queries for this address pattern with the address of the router, rather than any individual Worker.
+2. The router reads the Actor name and atespace from the request, asks the Agent Substrate API to resume this Actor and report which Worker it is now assigned to, then selects this Worker as the destination.
+3. The router connects to a listener on the Worker over mutual Transport Layer Security (mTLS). The listener validates that the caller is the router, and forwards traffic only to the Actor currently assigned to this Worker.
 
 Because the router resolves the Worker assignment on every request, an Actor keeps a stable address across suspends, resumes, and moves between Workers.
 
-A kagent user never uses that address. A message sent to a {{< gloss "Session" >}}Session{{< /gloss >}} through the kagent API or the web console reaches the kagent controller, which resolves the Session to its Actor and passes the request to Agent Substrate. Every hop after that stays inside the runtime.
+A kagent user never uses this address. A message sent to a {{< gloss "Session" >}}Session{{< /gloss >}} through the kagent API or the web console reaches the kagent controller, which resolves the Session to its Actor and passes the request to Agent Substrate. Every hop after that stays inside the runtime.
 
 Traffic in the other direction leaves through a separate egress gateway rather than going straight out from the Worker. Routing Actor egress through one gateway provides a single place to apply outbound controls.
 
 ## Default network posture
 
-Agent Substrate creates a Kubernetes NetworkPolicy for each WorkerPool, selecting that pool's Worker pods. The policy restricts **ingress** to the Agent Substrate router alone. No other pod in the cluster can open a connection to a Worker, so an Actor is not reachable by anything that bypasses the routing path.
+Agent Substrate creates a Kubernetes NetworkPolicy for each WorkerPool, selecting this pool's Worker pods. The policy restricts **ingress** to the Agent Substrate router alone. No other pod in the cluster can open a connection to a Worker, so an Actor is not reachable by anything that bypasses the routing path.
 
 That policy governs inbound traffic only. Outbound traffic is governed separately by an egress policy that the gateway enforces on every connection that an Actor opens. That policy is default-deny. An Actor reaches a destination only when a rule allows it, and the gateway denies the connection when no rule does.
 

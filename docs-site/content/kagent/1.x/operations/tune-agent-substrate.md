@@ -103,7 +103,7 @@ substrateWorkerPool:
 
 ### Recognize an undersized pool
 
-Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use, and a placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats that outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
+Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use, and a placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
 
 None of those signals reach the caller. A turn that cannot get a Worker waits for one, and a turn that waits too long fails with a generic timeout that names neither capacity nor the pool.
 
@@ -185,7 +185,7 @@ Because the two places are configured independently, confirm the result rather t
 
 A pool's sandbox class decides which sandbox runtime its Workers provide, and kagent constrains the choice more tightly than Agent Substrate does.
 
-Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the class that its pool selected and to the matching SandboxConfig: a pool on `gvisor` (or no `sandboxClass`, which defaults to `gvisor`) gets the `gvisor` class and a SandboxConfig named `gvisor-default`, while a pool on `microvm` gets the `microvm` class and a SandboxConfig named `microvm`. Placement never relaxes the class constraint: a Worker in a pool whose class does not match an ActorTemplate's class reports `RevisionInvalid` with `unsupported sandbox class "<value>"`, and placement of that Actor fails with `WorkerPoolNotFound`.
+Agent Substrate supports the `gvisor` and `microvm` classes, as explained in [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}). kagent compiles every ActorTemplate to the class that its pool selected and to the matching SandboxConfig: a pool on `gvisor` (or no `sandboxClass`, which defaults to `gvisor`) gets the `gvisor` class and a SandboxConfig named `gvisor-default`, while a pool on `microvm` gets the `microvm` class and a SandboxConfig named `microvm`. Placement never relaxes the class constraint: a Worker in a pool whose class does not match an ActorTemplate's class reports `RevisionInvalid` with `unsupported sandbox class "<value>"`, and placement of this Actor fails with `WorkerPoolNotFound`.
 
 Leave a pool that backs kagent Harnesses on the class you intend to run, and keep the pool's image on the matching Worker build: `ateom-gvisor` for a pool on `gvisor`, `ateom-microvm` for a pool on `microvm`.
 

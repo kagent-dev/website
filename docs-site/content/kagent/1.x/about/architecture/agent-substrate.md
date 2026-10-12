@@ -11,13 +11,13 @@ aliases:
 
 ## ActorTemplate
 
-An **ActorTemplate** is the definition that Substrate creates an Actor from. It carries what Substrate needs in order to start that Actor: the agent's container image, the command that starts the agent, the agent's environment, the sandbox class to isolate it with, and the WorkerPool to schedule it onto. The kagent controller produces an ActorTemplate by compiling an {{< gloss "Agent" >}}Agent{{< /gloss >}} and the resources that it names, so an ActorTemplate is where kagent's configuration model becomes executable by Substrate.
+An **ActorTemplate** is the definition that Substrate creates an Actor from. It carries what Substrate needs in order to start this Actor: the agent's container image, the command that starts the agent, the agent's environment, the sandbox class to isolate it with, and the WorkerPool to schedule it onto. The kagent controller produces an ActorTemplate by compiling an {{< gloss "Agent" >}}Agent{{< /gloss >}} and the resources that it names, so an ActorTemplate is where kagent's configuration model becomes executable by Substrate.
 
 Substrate rejects any change to an ActorTemplate's spec after it is created. This immutability ensures that a running conversation remains on a fixed definition. The controller creates a new ActorTemplate for every compiled {{< gloss "Revision" >}}revision{{< /gloss >}} instead of editing an existing one, and it reclaims an old ActorTemplate once nothing references its revision. An Agent holds a reference for as long as the revision is its desired or its latest successful one, and a Session holds one for as long as it runs on that revision.
 
 ## Workers and WorkerPools
 
-An Actor needs somewhere to run. Each Actor runs on a **Worker**, a pre-started pod that Substrate places Actors onto. Instead of starting a new pod each time a Session needs an Actor, Substrate schedules that Actor onto a Worker that is already running. The sandbox boundary sits around the Actor, not around the Worker pod that hosts it.
+An Actor needs somewhere to run. Each Actor runs on a **Worker**, a pre-started pod that Substrate places Actors onto. Instead of starting a new pod each time a Session needs an Actor, Substrate schedules this Actor onto a Worker that is already running. The sandbox boundary sits around the Actor, not around the Worker pod that hosts it.
 
 ### WorkerPools
 
@@ -25,14 +25,14 @@ Workers come from a **WorkerPool**, a Kubernetes custom resource that an operato
 
 An operator never creates a Worker directly. Substrate manages them, keeping enough ready in each WorkerPool so that an Actor can start or resume on one immediately, without waiting on the Kubernetes scheduler to place a new Pod.
 
-A WorkerPool exposes a Kubernetes scale subresource. A HorizontalPodAutoscaler can use it to size a pool from a metric instead of a fixed replica count. Agent Substrate publishes how many Workers in each pool have no free Actor slot. An autoscaler that watches that number adds Workers before the pool fills, rather than after placements start to fail.
+A WorkerPool exposes a Kubernetes scale subresource. A HorizontalPodAutoscaler can use it to size a pool from a metric instead of a fixed replica count. Agent Substrate publishes how many Workers in each pool have no free Actor slot. An autoscaler that watches this number adds Workers before the pool fills, rather than after placements start to fail.
 
 <!-- REVIEW (runtime reviewer): queue-depth scaling is still unconfirmed and is deliberately not described here. Confirm whether it is supported before adding it. -->
 <!-- REVIEW (runtime reviewer): the external metric that drives the autoscaler is named per deployment, so this paragraph describes the signal rather than naming the series. Confirm the supported name before documenting a worked HPA example. -->
 
 ### Worker capacity
 
-One Worker hosts many Actors at the same time. When each Worker starts, it reports a maximum capacity of Actors that it can host. A Worker that reaches that capacity refuses any further Actors, and Substrate puts those Actors on another Worker in the pool. The Worker's Actor capacity is a property of the Worker build, not a setting on the pool. The gVisor and micro-VM Workers that Agent Substrate ships both report a capacity of 1000 Actors.
+One Worker hosts many Actors at the same time. When each Worker starts, it reports a maximum capacity of Actors that it can host. A Worker that reaches this capacity refuses any further Actors, and Substrate puts those Actors on another Worker in the pool. The Worker's Actor capacity is a property of the Worker build, not a setting on the pool. The gVisor and micro-VM Workers that Agent Substrate ships both report a capacity of 1000 Actors.
 
 ### Actor placement
 
@@ -54,7 +54,7 @@ An atespace resembles a Kubernetes namespace, but it is not one. Agent Substrate
 
 Actors and Workers sit differently against this boundary. An Actor belongs to exactly one atespace for its entire life, whereas a Worker belongs to none. A Worker hosts whichever Actors Substrate places on it, and those Actors can come from different atespaces.
 
-kagent names each atespace after the Kubernetes namespace of the Agent whose Actor it holds, and creates that atespace on demand the first time a Session in the namespace needs an Actor. The Actor's own name is `session-` followed by the Session's identifier. A Session on an Agent in the `kagent` namespace therefore runs on an Actor that Agent Substrate addresses within the `kagent` atespace. Both halves of that identity appear in the address that traffic uses to reach the Actor, which [Sandboxing]({{< link path="about/substrate-runtime/sandboxing#how-traffic-reaches-a-sandboxed-actor" >}}) covers.
+kagent names each atespace after the Kubernetes namespace of the Agent whose Actor it holds, and creates that atespace on demand the first time a Session in the namespace needs an Actor. The Actor's own name is `session-` followed by the Session's identifier. A Session on an Agent in the `kagent` namespace therefore runs on an Actor that Agent Substrate addresses within the `kagent` atespace. Both halves of this identity appear in the address that traffic uses to reach the Actor, which [Sandboxing]({{< link path="about/substrate-runtime/sandboxing#how-traffic-reaches-a-sandboxed-actor" >}}) covers.
 
 ## Sandboxing
 
@@ -71,16 +71,16 @@ The following diagram traces an Actor through one suspend-and-resume cycle, and 
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
 
-A **WorkerPool** keeps **Workers** running and ready, and a Worker hosts the **Actor** alongside other Actors while its conversation is active. Suspending that Actor writes its full state to an immutable **ActorSnapshot** and releases the capacity that it held on its Worker.
+A **WorkerPool** keeps **Workers** running and ready, and a Worker hosts the **Actor** alongside other Actors while its conversation is active. Suspending this Actor writes its full state to an immutable **ActorSnapshot** and releases the capacity that it held on its Worker.
 
-The diagram forks at that snapshot, because a snapshot serves two purposes.
+The diagram forks at this snapshot, because a snapshot serves two purposes.
 
 - **Resume** restores the same Actor onto **any Worker in the pool with room**, which is not necessarily the Worker that it ran on before. Because the snapshot captures the Actor's full state, the conversation continues from where it left off. Every idle agent takes this path.
-- A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins that snapshot, and a **New Actor** can be seeded from the tag at the moment that it is created. Resuming an existing Actor never goes through a tag.
+- A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins this snapshot, and a **New Actor** can be seeded from the tag at the moment that it is created. Resuming an existing Actor never goes through a tag.
 
 A tag gives a snapshot a stable, human-meaningful name, so callers do not need to track Substrate's internal snapshot identity. A tag names one snapshot permanently, and only its visibility scope can change afterward. A tag also acts as a retention pin, so Substrate does not delete a snapshot while a tag still names it.
 
-For example, an agent partway through a long incident investigation reaches a state worth keeping. Creating a [checkpoint]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) tags the snapshot that the agent most recently suspended to, which holds that one snapshot in place while the agent carries on and writes newer ones. Without the tag, Substrate collects that snapshot once a newer one supersedes it.
+For example, an agent partway through a long incident investigation reaches a state worth keeping. Creating a [checkpoint]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) tags the snapshot that the agent most recently suspended to, which holds that one snapshot in place while the agent carries on and writes newer ones. Without the tag, Substrate collects this snapshot once a newer one supersedes it.
 
 <!-- REVIEW (performance reviewer): an earlier draft stated a 100 ms target at the ninety-fifth percentile, measured from traffic arrival to the moment the Actor can receive it. Removed pending confirmation of the approved measurement and whether it applies to kagent. Do not restore it as a latency guarantee. -->
 

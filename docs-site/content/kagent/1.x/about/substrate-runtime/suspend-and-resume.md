@@ -7,7 +7,7 @@ aliases:
   - /kagent/1.x/substrate-runtime/suspend-and-resume/
 ---
 
-An agent spends most of its life waiting. It waits on a person to reply, and it waits on a large language model (LLM) to answer. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, the unit that it suspends and resumes. Rather than hold compute open through that waiting, Agent Substrate writes the idle Actor to a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and releases the capacity that the Actor held on its {{< gloss "Worker" >}}Worker{{< /gloss >}}. The next message restores it. The {{< gloss "Session" >}}Session{{< /gloss >}} stays ready the whole time, so reclaiming that capacity costs the user nothing. This page explains what a snapshot captures, when kagent suspends an Actor, and what happens when a suspended Actor is addressed again.
+An agent spends most of its life waiting. It waits on a person to reply, and it waits on a large language model (LLM) to answer. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, the unit that it suspends and resumes. Rather than hold compute open through that waiting, Agent Substrate writes the idle Actor to a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and releases the capacity that the Actor held on its {{< gloss "Worker" >}}Worker{{< /gloss >}}. The next message restores it. The {{< gloss "Session" >}}Session{{< /gloss >}} stays ready the whole time, so reclaiming this capacity costs the user nothing. This page explains what a snapshot captures, when kagent suspends an Actor, and what happens when a suspended Actor is addressed again.
 
 ## Actor lifecycle operations
 
@@ -22,7 +22,7 @@ The following diagram traces an Actor through those operations, and shows the fu
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
 
-An Actor reports its position in that cycle through its state, which is one of `RESUMING`, `RUNNING`, `SUSPENDING`, `SUSPENDED`, `PAUSING`, `PAUSED`, `CRASHED`, or `DELETING`. Only a suspended Actor can be deleted.
+An Actor reports its position in this cycle through its state, which is one of `RESUMING`, `RUNNING`, `SUSPENDING`, `SUSPENDED`, `PAUSING`, `PAUSED`, `CRASHED`, or `DELETING`. Only a suspended Actor can be deleted.
 
 > [!NOTE]
 > Resume restores an Actor onto whichever Worker in the pool has room, which is not necessarily the Worker that the Actor ran on before. Because a suspended Actor occupies no Worker, a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} can serve far more Sessions than it could if every Actor stayed resident.
@@ -34,22 +34,20 @@ An {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}'s snapshot configura
 - **`Full`**: Captures process memory, the root filesystem changes layered on top of the container image, and any attached durable volumes. A `Full` snapshot holds everything that is needed to resume the Actor hot, with its in-memory state intact.
 - **`Data`**: Captures only the contents of attached durable volumes. Process memory and the rest of the root filesystem are discarded, which makes the snapshot much cheaper to write and store.
 
-kagent sets these scopes automatically on every ActorTemplate that it generates. A pause captures `Full`, a commit captures `Data`, a resume cold-boots, and each Actor gets a single durable volume named `data`. The one snapshot setting that you author is the storage location, which you set on the {{< gloss "Harness" >}}Harness{{< /gloss >}}.
+kagent sets the scope automatically on every ActorTemplate that it generates, and it sets `Full` so that process memory survives both a pause and a suspend. Each Actor also gets a single durable volume named `data`. The one snapshot setting that you author is the storage location, which you set on the {{< gloss "Harness" >}}Harness{{< /gloss >}}.
 
-A scope is set per trigger. The `onPause` setting selects what a pause captures on the node, and `onCommit` selects what a suspend uploads to snapshot storage. What `onCommit` captures must be a subset of what `onPause` captures.
+One scope governs both operations. The ActorTemplate's `onCommit` setting selects what a suspend uploads to snapshot storage, and a pause captures this same scope on the node.
 
 ### Durable volumes and resume
 
 A **DurableDir volume** is the per-Actor application data surface. Its contents are preserved by the `Data` scope, so they survive a suspend and resume cycle independently of process memory. How many volumes an ActorTemplate can declare depends on its sandbox class. A `microvm` template can declare several, because they are subdirectories of a single shared filesystem. A `gvisor` template is limited to one, until {{< gloss "gVisor" >}}gVisor{{< /gloss >}} accepts more than a single durable mount.
 
-When an Actor resumes from a `Data`-scope snapshot, the ActorTemplate's `onResume.fromData` setting decides where the rest of the guest state comes from. The default is `ColdBoot`, which starts the containers fresh from the container image with the durable volume contents restored over them.
-
 ## Golden and per-Actor snapshots
 
 Two kinds of snapshot serve different purposes, and both appear in a normal installation.
 
-- The **golden snapshot** is shared by every Actor of one ActorTemplate. Agent Substrate captures it once by booting the workload temporarily when the template is created. Every new Actor of that template starts from this snapshot rather than from a cold start. kagent waits for the golden snapshot before an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} becomes ready, and the controller reports `waiting for the ActorTemplate golden snapshot` while the capture runs.
-- The **last snapshot** belongs to one Actor. Agent Substrate writes it on every suspend and restores that same Actor from it on the next resume. It holds the files and memory that this one conversation built up, which is how the conversation continues from where it stopped.
+- The **golden snapshot** is shared by every Actor of one ActorTemplate. Agent Substrate captures it once by booting the workload temporarily when the template is created. Every new Actor of this template starts from this snapshot rather than from a cold start. kagent waits for the golden snapshot before an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} becomes ready, and the controller reports `waiting for the ActorTemplate golden snapshot` while the capture runs.
+- The **last snapshot** belongs to one Actor. Agent Substrate writes it on every suspend and restores this same Actor from it on the next resume. It holds the files and memory that this one conversation built up, so the conversation continues from where it stopped.
 
 Snapshots are persisted to object storage so that Actor state is durable and portable across the cluster. Agent Substrate writes snapshots to Google Cloud Storage or to Amazon Simple Storage Service (S3). The S3 client also reaches S3-compatible stores that accept a custom endpoint and path-style addressing. For the settings that select and configure each client, see [Configure snapshot storage]({{< link path="operations/tune-agent-substrate#configure-snapshot-storage" >}}). A {{< gloss "Harness" >}}Harness{{< /gloss >}} names the location for its Actors' snapshots in its `substrate.snapshotPolicy` section.
 
@@ -89,6 +87,6 @@ Because kagent suspends at every turn boundary, every message to a Session pays 
 
 A **checkpoint** marks one point in a conversation and keeps it. You can create a checkpoint when a Session reaches a state worth returning to, such as a long investigation that is only partway through. You can then start a second Session from that point, which is known as a {{< gloss "Fork" >}}fork{{< /gloss >}}. The fork continues the conversation from where the checkpoint marked it, new turns append only to the fork, and the fork gets its own conversation and task identifiers rather than inheriting the source's. To create a checkpoint and fork a Session from it, follow the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
-Checkpoint a Session only at a turn boundary, because the turn boundary is what gets captured. The request names the terminal task to pin, and it fails when a newer turn has already started or while that turn's snapshot is still being written.
+Checkpoint a Session only at a turn boundary, because a checkpoint captures this boundary. The request names the terminal task to pin, and it fails when a newer turn has already started or while this turn's snapshot is still being written.
 
 Underneath, a checkpoint pins a snapshot that would otherwise be discarded. Agent Substrate treats the snapshot written on each suspend as transient and collects it once a newer one supersedes it. Creating a checkpoint attaches a {{< gloss "Tag" >}}Tag{{< /gloss >}} to the snapshot that the Session most recently suspended to, and Agent Substrate keeps any snapshot that a tag still names. Deleting the checkpoint removes the tag and releases the snapshot.
