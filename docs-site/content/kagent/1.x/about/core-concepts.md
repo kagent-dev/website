@@ -7,7 +7,9 @@ author: kagent.dev
 
 ## kagent 1.0
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**, running on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) instead of the plain Kubernetes Deployments that the 0.x model uses. The 1.0 `Agent` kind shares the 0.x name but not its meaning: it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 model docs use. If you already have a 0.x installation, you migrate to the new model rather than upgrading into it. No controller converts a 0.x resource, and the two API groups share no conversion, so you author the 1.0 resources yourself and retire the 0.x ones. [Migrate from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}) maps each 0.x resource onto its 1.0 replacement.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**. The 1.0 `Agent` kind keeps the 0.x name but not its meaning, because it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 documentation uses.
+
+Moving a 0.x installation to 1.0 is a manual migration, and no upgrade path exists. No controller converts a 0.x resource, and the two API groups share no conversion, so you author the 1.0 resources yourself and retire the 0.x ones. [Migrate from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}) maps each 0.x resource onto its 1.0 replacement.
 
 The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 
@@ -17,7 +19,11 @@ The new model separates what an agent can do from how it is allowed to run, and 
 - A [**Session**](#session) is a running conversation with an Agent.
 - An [**Actor**](#actor) is the sandboxed process, provided by Substrate, that a Session runs on.
 
-The following diagram shows how an Agent becomes a running conversation. The kagent controller compiles each Agent into an {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}, and each Session is created from that ActorTemplate and runs on an Actor.
+Agents do not run as Kubernetes Deployments. kagent runs every conversation on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), a compute layer that starts capacity in advance and places sandboxed workloads onto it. Substrate keeps a conversation alive without keeping it resident. When a conversation goes idle, Substrate saves its state to a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and releases the capacity it held, then restores it from that snapshot when the next message arrives. A caller never sees the pause.
+
+Substrate needs its own definition of the workload to run, so the kagent controller automatically compiles each Agent into an **{{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}**, the Substrate resource that an Actor is created from.
+
+The following diagram shows how an Agent becomes a running conversation.
 </br></br>
 
 ```mermaid
@@ -48,16 +54,18 @@ An operator applies the three custom resources directly. The kagent controller w
 
 ## Harness
 
+<!-- REVIEW (docs): the reviewer asked for an established industry definition of "agent harness" with a source. The definition below is drawn from what the linked harnesses do rather than from a published definition. Replace it with an approved citation, or confirm that the examples are sufficient sourcing. -->
+
 An agent harness is the application layer that executes an agent and adds capabilities around its model. It typically assembles context, invokes the model, executes tool calls, loads skills, feeds results back into the agent loop, and manages session state. A harness can also provide memory, subagents, permissions, approvals, sandboxing, and event streaming.
 
 Examples include [Claude Code](https://code.claude.com/docs/en/how-claude-code-works), [Codex CLI](https://learn.chatgpt.com/docs/codex/cli), [Gemini CLI](https://geminicli.com/docs/), [OpenClaw](https://docs.openclaw.ai/concepts/agent-runtimes), and custom in-house applications. Each of those runs on a local machine with your own shell and files.
 
 A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 
-- **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own Go and Python engines, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
+- **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own agent engine, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
 - **Workload**: The container image, command, and arguments that the runtime runs as.
 - **Environment**: Literal environment values for the runtime, set in `spec.env`.
-- **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. Agents do not run as Deployments. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), which is the compute layer underneath kagent, runs each conversation as a sandboxed process on pre-started capacity called a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}). A {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} is the saved state of one of those sandboxed processes. A snapshot is written when the conversation goes idle so that its capacity returns to the pool, and read back when the next message arrives. The Harness names the WorkerPool to schedule onto and where those snapshots are stored.
+- **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. The Harness names a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) to schedule onto and the storage location that snapshots write to.
 
 A Harness names no AgentTemplate, and an AgentTemplate names no Harness. An [Agent](#agent) pairs the two, and nothing pairs them implicitly.
 
@@ -85,16 +93,9 @@ For the complete AgentTemplate schema, see the [API reference]({{< link path="re
 
 ## Agent
 
-An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with one Harness_. The pairing is explicit: each side takes either a reference to an existing resource or a complete inline spec, and exactly one of the two per side.
+An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with one Harness_. Each side of the pairing either names an existing resource or carries a complete spec written inline, and an Agent sets exactly one of the two per side.
 
-| Field | What it selects |
-| ----- | --------------- |
-| `spec.templateRef` | An existing AgentTemplate in the Agent's namespace, by name |
-| `spec.template` | A complete AgentTemplate spec, written inline |
-| `spec.harnessRef` | An existing Harness in the Agent's namespace, by name |
-| `spec.harness` | A complete Harness spec, written inline |
-
-The template side and the harness side are set independently, so an Agent can reference both, inline both, or mix the two. An inline spec is a complete value rather than an override of a referenced one, and kagent creates no Kubernetes object to back it. Every reference, including one that is nested inside an inline spec, resolves in the Agent's own namespace.
+The two sides are set independently. An Agent can name both resources, inline both, or mix the two. An inline spec is a complete definition, not an override of a named resource. kagent creates no Kubernetes object to back one. Every name resolves in the Agent's own namespace, including a name nested inside an inline spec. For the fields that express each choice, see the [API reference]({{< link path="reference/api-ref#agent" >}}).
 
 The following Agent resource references both sides:
 
@@ -135,13 +136,33 @@ kagent agent session create --agent assistant -n kagent
 
 After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session. The HTTP endpoint is `/agents/{namespace}/{name}` and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
 
-A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window. A value of `0` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle conversations]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
+A Session that records no task activity for seven days is deleted by an expiration worker. The `controller.sessionIdleTTL` Helm value sets that window. A value of `0` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
 ## Actor
 
 An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), that _runs a Session's conversation loop_. Every Session is backed by an Actor.
 
-Actors are the reason why Sessions can suspend and resume cheaply instead of staying resident. An idle Actor can be snapshotted and torn down, then resumed from that snapshot on demand. To understand the full mechanics ({{< gloss "Worker" >}}Workers{{< /gloss >}}, {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}}, ActorTemplates, and snapshotting), see [Agent Substrate architecture]({{< link path="about/architecture/agent-substrate" >}}).
+An Actor lets a Session suspend and resume cheaply instead of staying resident. To understand the {{< gloss "Worker" >}}Workers{{< /gloss >}} and {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}} that Actors run on, see [Agent Substrate architecture]({{< link path="about/architecture/agent-substrate" >}}).
+
+## Compute, identity, and isolation
+
+The Harness, AgentTemplate, and Agent resources describe what an agent is. The Actor behind each Session decides how that agent runs. An Actor supplies the agent's compute, its network identity, and the sandbox that confines it.
+
+### Compute
+
+An Actor occupies a slot on a Worker, which is a pre-started pod in a WorkerPool. A Worker hosts many Actors at once, and an Actor that goes idle is suspended to a snapshot so that its slot returns to the pool. A pool therefore serves far more Sessions than it holds Workers. Agent Substrate also pauses an Actor to a node-local snapshot, resumes it onto whichever Worker has room, and forks a tagged snapshot into a second Actor that starts from the same state. For these operations and what each snapshot keeps, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
+
+### Identity
+
+Each Actor carries its own cryptographic identity that is issued as a certificate and scoped to the {{< gloss "Atespace" >}}atespace{{< /gloss >}} that it belongs to. Agent Substrate's egress gateway authorizes every outbound connection against the identity on the certificate rather than against anything in the request. Because of this, an agent cannot reach a destination by claiming to be another agent.
+
+This identity is also what keeps API keys out of the agent. An agent sends a placeholder header, and the gateway replaces it with the real credential as the request passes through, so the key never enters the agent's environment or its filesystem. For the allowlist that the gateway enforces and how credentials are attached to it, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress" >}}).
+
+### Isolation
+
+Each Actor runs in its own sandbox, with its own filesystem and its own durable volume for application data. Two Sessions on the same Agent share no files and cannot see any of each other's state, even when they run on the same Worker. One conversation's data therefore stays out of another's context. The sandbox also isolates the workload's system calls from the node's kernel, which matters because an agent runs commands that a model chose. For what each sandbox class separates, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
+
+<!-- REVIEW (docs): the reviewer asked for this page to be reorganized around compute, identity, and sandboxing, and to cover MCP servers, CLIs, file systems, skills, prompts, plugins, and the lifecycle operations. This section adds the three axes and links to the runtime pages that own each mechanism, rather than restating them here. Confirm whether the reviewer wants the kagent resource model reordered under these three headings instead. -->
 
 ## Subagent tools
 
