@@ -87,6 +87,122 @@ Setting `memory` gives every agent on this Harness memory that persists across c
 
 Setting `compaction` summarizes older session events so an agent's prompt stays bounded as a conversation grows. For the two strategies and the rules the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
 
+### Codex and Claude examples
+
+A `codex` or `claude` Harness has the same shape as a `kagent` one, and differs in the runtime block, the image, and the ModelConfigs that it accepts. For the providers and settings that each runtime accepts, see [Model provider support](#model-provider-support), and for the limits each one places on an AgentTemplate, see [Tool and skill support](#tool-and-skill-support).
+
+{{< tabs >}}
+{{% tab name="Codex" %}}
+The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) guide creates. The key must be entitled to the model that you name. A key without access to it fails the turn with `Codex execution failed`.
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: codex-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-5.2-codex
+  provider: OpenAI
+  openAI:
+    apiFormat: responses
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: codex-harness
+  namespace: kagent
+spec:
+  codex: {}
+  workload:
+    image: {{< reuse "kagent-docs/versions/runtime-image-codex.md" >}}
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+    snapshotPolicy:
+      location: s3://ate-snapshots/kagent/
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: codex-template
+  namespace: kagent
+spec:
+  modelConfig:
+    name: codex-model-config
+  systemPrompt: You are a concise, helpful coding assistant.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: codex-agent
+  namespace: kagent
+spec:
+  templateRef:
+    name: codex-template
+  harnessRef:
+    name: codex-harness
+EOF
+```
+{{% /tab %}}
+{{% tab name="Claude" %}}
+The ModelConfig reads its API key from the `kagent-anthropic` Secret that the [Anthropic]({{< link path="setup/model-providers/anthropic#create-the-modelconfig" >}}) guide creates.
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: claude-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-anthropic
+  apiKeySecretKey: ANTHROPIC_API_KEY
+  model: claude-sonnet-5
+  provider: Anthropic
+  anthropic: {}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: claude-harness
+  namespace: kagent
+spec:
+  claude: {}
+  workload:
+    image: {{< reuse "kagent-docs/versions/runtime-image-claude.md" >}}
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+    snapshotPolicy:
+      location: s3://ate-snapshots/kagent/
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: claude-template
+  namespace: kagent
+spec:
+  modelConfig:
+    name: claude-model-config
+  systemPrompt: You are a concise, helpful coding assistant.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: claude-agent
+  namespace: kagent
+spec:
+  templateRef:
+    name: claude-template
+  harnessRef:
+    name: claude-harness
+EOF
+```
+{{% /tab %}}
+{{< /tabs >}}
+
 ## Model provider support
 
 The runtime that a Harness selects decides which ModelConfig an Agent that runs on it can use. This table covers every value that the ModelConfig `provider` field accepts, including the four that kagent 1.0 rejects on every runtime.
