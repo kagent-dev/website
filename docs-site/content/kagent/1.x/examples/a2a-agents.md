@@ -98,6 +98,11 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 `SendMessage` blocks until the agent finishes the turn, or pauses to ask a person, and then returns the whole task. A message needs its own ID, a role, and at least one part.
 
+A message part can also carry a file. Put the file's bytes in the part's `raw` field, which JSON encodes as base64, and set `filename` and `mediaType` on the same part.
+
+> [!NOTE]
+> Unlike the UI, which checks each file as you stage it, this path accepts any media type. A file whose media type is not text-like reaches the model as the note `[Uploaded file "report.pdf" (application/pdf) could not be read as text.]` instead of contents. The controller's gRPC server rejects any message over 16 MiB, framing included. For how files reach the model, and the file types and sizes that the UI accepts, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+
 1. Send a message to the Agent. Omitting a `contextId` starts a new Session.
    ```bash
    grpcurl -plaintext \
