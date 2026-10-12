@@ -150,7 +150,10 @@ The Harness, AgentTemplate, and Agent resources describe what an agent is. The A
 
 ### Compute
 
-An Actor occupies a slot on a Worker, which is a pre-started pod in a WorkerPool. A Worker hosts many Actors at once, and an Actor that goes idle is suspended to a snapshot so that its slot returns to the pool. A pool therefore serves far more Sessions than it holds Workers. Agent Substrate also pauses an Actor to a node-local snapshot, resumes it onto whichever Worker has room, and forks a tagged snapshot into a second Actor that starts from the same state. For these operations and what each snapshot keeps, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
+An Actor occupies a slot on a Worker, which is a pre-started pod in a WorkerPool. A Worker hosts many Actors at once, and an Actor that goes idle is suspended to a snapshot so that its slot returns to the pool. A pool therefore serves far more Sessions than it holds Workers. Agent Substrate also pauses an Actor to a node-local snapshot, and resumes an Actor onto whichever Worker has room. For these operations and what each snapshot keeps, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
+
+> [!NOTE]
+> Forking a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} into a second Session is unavailable in this release. kagent captures process memory in every snapshot, and a restored copy would hold the source Session's identifiers, so `ForkSession` rejects the request. Forking returns once Agent Substrate separates the pause and suspend snapshot scopes again.
 
 ### Identity
 
