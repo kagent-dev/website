@@ -432,11 +432,12 @@ jobs:
       # ---------------------------------------------------------------------
       # Runtime image conrefs.
       #
-      # versions/runtime-image.md and versions/runtime-image-claude.md hold a
-      # FULL digest-pinned reference (repository@sha256:...), not a version,
-      # because a Harness `workload.image` rejects a bare tag -- a revision has
-      # to be reproducible. Pages reuse the whole string, so the repository name
-      # is not hardcoded on any page either.
+      # versions/runtime-image.md, versions/runtime-image-claude.md and
+      # versions/runtime-image-codex.md hold a FULL digest-pinned reference
+      # (repository@sha256:...), not a version, because a Harness
+      # `workload.image` rejects a bare tag -- a revision has to be
+      # reproducible. Pages reuse the whole string, so the repository name is
+      # not hardcoded on any page either.
       #
       # A digest exists only once the image is pushed, so unlike every value
       # above this one is read from the REGISTRY rather than from a file in the
@@ -444,13 +445,14 @@ jobs:
       # `git describe` on main: that conref names the release the docs describe,
       # so resolving against it is what keeps the image a reader pins consistent
       # with the chart version the install page tells them to install. It also
-      # means these two follow automatically whenever kagent.md is bumped by
+      # means these three follow automatically whenever kagent.md is bumped by
       # hand, which is the reason that one stays editorial.
       #
       # Image names are NOT the ones the kagent tree suggests. The kagent
       # runtime is golang-adk (values.yaml calls it `agentImage`); the claude
-      # runtime is claude-harness. The `claude-adk` and `codex-adk` strings in
-      # kagent are build stages, and nothing is published under those names.
+      # and codex runtimes are claude-harness and codex-harness. The
+      # `claude-adk` and `codex-adk` strings in kagent are build stages, and
+      # nothing is published under those names.
       #
       # 0.x needs no equivalent: it predates Harness and pins no runtime image.
       # ---------------------------------------------------------------------

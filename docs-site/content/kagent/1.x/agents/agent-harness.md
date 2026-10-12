@@ -65,13 +65,35 @@ The `kagent` and `byo` runtimes compile through the same path, so they accept th
 
 The agent chat in the kagent UI allows file attachments only on the `kagent` runtime, so an agent on a `byo`, `codex`, or `claude` Harness has no attachment option in the chat. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
 
+### Runtime-specific settings
+
+`spec.kagent` is the only runtime block that takes settings of its own. The rest are empty.
+
+```yaml
+spec:
+  kagent:
+    memory:
+      modelConfigRef:
+        name: embedding-model-config
+      ttlDays: 30
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model, in the Harness's namespace. Required when `memory` is set. |
+| `memory.ttlDays` | How many days a stored memory entry stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
+
+Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}).
+
+Setting `compaction` summarizes older session events so an agent's prompt stays bounded as a conversation grows. For the two strategies and the rules the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
+
 ### Codex and Claude examples
 
-A `codex` or `claude` Harness has the same shape as a `kagent` one. It differs only in the runtime block, the image, and the ModelConfigs that it accepts. For the providers and settings that each runtime accepts, see [Model provider support](#model-provider-support).
+A `codex` or `claude` Harness has the same shape as a `kagent` one, and differs in the runtime block, the image, and the ModelConfigs that it accepts. For the providers and settings that each runtime accepts, see [Model provider support](#model-provider-support), and for the limits each one places on an AgentTemplate, see [Tool and skill support](#tool-and-skill-support).
 
 {{< tabs >}}
 {{% tab name="Codex" %}}
-The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai" >}}) guide creates.
+The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) guide creates. The key must be entitled to the model that you name. A key without access to it fails the turn with `Codex execution failed`.
 ```yaml
 kubectl apply -f - <<EOF
 apiVersion: api.kagent.dev/v1alpha3
@@ -85,7 +107,6 @@ spec:
   model: gpt-5.2-codex
   provider: OpenAI
   openAI:
-    # The only value that the codex runtime accepts.
     apiFormat: responses
 ---
 apiVersion: api.kagent.dev/v1alpha3
@@ -104,22 +125,30 @@ spec:
       location: s3://ate-snapshots/kagent/
 ---
 apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: codex-template
+  namespace: kagent
+spec:
+  modelConfig:
+    name: codex-model-config
+  systemPrompt: You are a concise, helpful coding assistant.
+---
+apiVersion: api.kagent.dev/v1alpha3
 kind: Agent
 metadata:
   name: codex-agent
   namespace: kagent
 spec:
-  template:
-    modelConfig:
-      name: codex-model-config
-    systemPrompt: You are a concise, helpful coding assistant.
+  templateRef:
+    name: codex-template
   harnessRef:
     name: codex-harness
 EOF
 ```
 {{% /tab %}}
 {{% tab name="Claude" %}}
-The ModelConfig reads its API key from the `kagent-anthropic` Secret that the [Anthropic]({{< link path="setup/model-providers/anthropic" >}}) guide creates.
+The ModelConfig reads its API key from the `kagent-anthropic` Secret that the [Anthropic]({{< link path="setup/model-providers/anthropic#create-the-modelconfig" >}}) guide creates.
 ```yaml
 kubectl apply -f - <<EOF
 apiVersion: api.kagent.dev/v1alpha3
@@ -150,43 +179,29 @@ spec:
       location: s3://ate-snapshots/kagent/
 ---
 apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: claude-template
+  namespace: kagent
+spec:
+  modelConfig:
+    name: claude-model-config
+  systemPrompt: You are a concise, helpful coding assistant.
+---
+apiVersion: api.kagent.dev/v1alpha3
 kind: Agent
 metadata:
   name: claude-agent
   namespace: kagent
 spec:
-  template:
-    modelConfig:
-      name: claude-model-config
-    systemPrompt: You are a concise, helpful coding assistant.
+  templateRef:
+    name: claude-template
   harnessRef:
     name: claude-harness
 EOF
 ```
 {{% /tab %}}
 {{< /tabs >}}
-
-### Runtime-specific settings
-
-`spec.kagent` is the only runtime block that takes settings of its own. The rest are empty.
-
-```yaml
-spec:
-  kagent:
-    memory:
-      modelConfigRef:
-        name: embedding-model-config
-      ttlDays: 30
-```
-
-| Field | Description |
-| ----- | ----------- |
-| `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model, in the Harness's namespace. Required when `memory` is set. |
-| `memory.ttlDays` | How many days a stored memory entry stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
-
-Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}).
-
-Setting `compaction` summarizes older session events so an agent's prompt stays bounded as a conversation grows. For the two strategies and the rules the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
 
 ## Model provider support
 
