@@ -97,13 +97,15 @@ Leader election keeps the replicas from conflicting. One replica holds a Kuberne
 > [!IMPORTANT]
 > If an installation runs on the development database, extra controller replicas do not make the installation highly available. That database is a single pod backed by one PersistentVolumeClaim, so losing it stops every replica at once. Run an external PostgreSQL instance before counting controller replicas toward availability.
 
-## Tune session quiescence recovery {#session-quiescence-recovery}
+## Recover missed Session pauses {#session-quiescence-recovery}
 
-When a task settles, the controller commits the task history to PostgreSQL. Then the controller wakes local workers that pause or suspend the Session's {{< gloss "Actor" >}}Actor{{< /gloss >}}. Committed settlements do not wait for the recovery scan interval. Four workers drain durable claims, and PostgreSQL coordinates the work across controller replicas so that one replica handles each claim.
+An idle Session's {{< gloss "Actor" >}}Actor{{< /gloss >}} is paused or suspended so that the capacity it holds returns to its pool. The controller starts this within moments of a turn finishing. The setting in this section governs only how quickly the controller recovers when it misses that moment.
 
-If a controller exits after the commit and before the local wake-up, another replica finds the durable claim on its next recovery scan. The default recovery interval is `1m`. Increasing the interval can delay pause, suspension, and {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} availability after a missed wake-up. With a shorter interval, the controller scans for missed work more often.
+When a task settles, the controller commits the task history to PostgreSQL. It then signals itself to pause or suspend the Session's Actor. The signal is local to one controller process, so a controller that exits between the commit and the signal leaves the work undone. Another replica finds the record on its next recovery scan, which runs every `1m` by default.
 
-Use `KAGENT_SESSION_QUIESCENCE_POLL_INTERVAL` to change only the missed-wake-up recovery interval. The value must be a positive Go duration. The controller retries temporarily blocked work and database errors within one second, regardless of the recovery interval.
+This work is not leader-only, unlike the reconciliation that [Run multiple controller replicas](#run-multiple-controller-replicas) describes. Every replica claims from the same PostgreSQL queue, and PostgreSQL grants each record to one claimant, so no two replicas pause the same Session. Each replica runs four claims at a time, which bounds how much of this work one replica takes on.
+
+Set `KAGENT_SESSION_QUIESCENCE_POLL_INTERVAL` to change the recovery scan interval. A longer interval delays a pause, a suspend, and the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} that follows one, but only after a missed signal. A shorter interval scans more often. The value must be a positive Go duration, and the controller retries blocked work and database errors within one second regardless of the interval.
 
 ```yaml
 controller:
