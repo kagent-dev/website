@@ -80,7 +80,11 @@ A Worker entry gains an `actorId` only while an Actor occupies it, so the Worker
 
 The replica count is the only capacity dial on a pool, and setting it well depends on knowing what actually consumes a Worker.
 
-A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts at most one Actor at a time, and it holds that Actor only while a turn is running. kagent suspends an Actor at every turn boundary and frees its Worker, as described in [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}). An idle {{< gloss "Session" >}}Session{{< /gloss >}} therefore occupies no Worker at all.
+A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts many Actors at the same time, and it holds each one only while a turn is running. kagent suspends an Actor at every turn boundary and frees the Actor's share of its Worker, as described in [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}). An idle {{< gloss "Session" >}}Session{{< /gloss >}} therefore occupies no Worker capacity at all.
+
+Each Worker reports an Actor capacity when it starts, fixed by the Worker build rather than by a field on the WorkerPool. The gVisor and micro-VM Workers that Agent Substrate ships both report a capacity of 1000 Actors, and no setting raises or lowers it.
+
+Agent Substrate checks this capacity on every placement. It weighs a Worker's spare CPU and memory only when the ActorTemplate states what one Actor needs, and the templates that kagent generates for Sessions state nothing. A pool therefore places a Session's Actor based only on a Worker's available slots, regardless of how loaded the Worker's node already is. Worker resource limits still matter, because they govern how Kubernetes packs Workers onto nodes.
 
 Size the pool for the number of turns that run at the same time, not for the number of Agents or Sessions that you have created. A cluster with hundreds of Sessions that are each used occasionally needs far fewer Workers than the session count suggests.
 
@@ -99,7 +103,9 @@ substrateWorkerPool:
 
 ### Recognize an undersized pool
 
-A pool with too few Workers does not report a capacity error anywhere. Turns that cannot get a Worker wait for one, and a turn that waits too long fails with a generic timeout that names neither capacity nor the pool.
+Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use, and a placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats that outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
+
+None of those signals reach the caller. A turn that cannot get a Worker waits for one, and a turn that waits too long fails with a generic timeout that names neither capacity nor the pool.
 
 ```console
 ERROR:
@@ -107,7 +113,7 @@ ERROR:
   Message: actor "ai-01a087c0-1d72-775a-9a32-566acac7b685" request timed out
 ```
 
-Because short turns release their Worker quickly, a pool under mild pressure absorbs the load and only sheds the requests that wait past the deadline. The result is intermittent timeouts under concurrency rather than a clean failure. Neither the kagent controller log nor the Agent Substrate API log records a capacity message when this happens, so diagnose it from the pool's `READY` count and raise the replica count.
+Because short turns release their capacity quickly, a pool under mild pressure absorbs the load and only sheds the requests that wait past the deadline. The result is intermittent timeouts under concurrency rather than a clean failure. Neither the kagent controller log nor the Agent Substrate API log records a capacity message when this happens, so confirm the diagnosis from the `at_capacity` and `no_capacity` signals and from the pool's `READY` count, then raise the replica count.
 
 ### Set resource requests on Workers
 

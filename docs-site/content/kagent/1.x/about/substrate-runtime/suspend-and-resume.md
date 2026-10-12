@@ -7,13 +7,13 @@ aliases:
   - /kagent/1.x/substrate-runtime/suspend-and-resume/
 ---
 
-An agent spends most of its life waiting. It waits on a person to reply, and it waits on a large language model (LLM) to answer. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, the unit that it suspends and resumes, and it treats that idle time as reclaimable: it suspends an idle Actor into a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, frees the {{< gloss "Worker" >}}Worker{{< /gloss >}} that the Actor was running on, and restores the Actor when traffic arrives for it. This page explains what a snapshot captures, when kagent suspends an Actor, and what happens when a suspended Actor is addressed again.
+An agent spends most of its life waiting. It waits on a person to reply, and it waits on a large language model (LLM) to answer. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, the unit that it suspends and resumes, and it treats that idle time as reclaimable: it suspends an idle Actor into a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, releases the capacity that it held on its {{< gloss "Worker" >}}Worker{{< /gloss >}}, and restores the Actor when traffic arrives for it. This page explains what a snapshot captures, when kagent suspends an Actor, and what happens when a suspended Actor is addressed again.
 
 ## Actor lifecycle operations
 
 {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} provides three lifecycle operations, and each one moves an Actor between states that you can observe on the Actor record.
 
-- **Suspend**: Writes the Actor's state to a durable snapshot in snapshot storage, then frees its Worker. A running Actor is snapshotted on its Worker. A paused Actor's node-local snapshot is uploaded instead.
+- **Suspend**: Writes the Actor's state to a durable snapshot in snapshot storage, then releases the capacity that it held on its Worker. A running Actor is snapshotted on its Worker. A paused Actor's node-local snapshot is uploaded instead.
 - **Pause**: Takes a short-term snapshot whose files stay on the node. Pausing pins the Actor to that node, because the following resume is prioritized onto the node that holds the snapshot files.
 - **Resume**: Restores a suspended or paused Actor onto a Worker, from its latest snapshot. The common path restores from a snapshot rather than cold-booting the workload.
 
@@ -25,7 +25,7 @@ The following diagram traces an Actor through those operations, and shows the fu
 An Actor reports its position in that cycle through its state, which is one of `RESUMING`, `RUNNING`, `SUSPENDING`, `SUSPENDED`, `PAUSING`, `PAUSED`, `CRASHED`, or `DELETING`. Only a suspended Actor can be deleted.
 
 > [!NOTE]
-> Resume restores an Actor onto whichever Worker in the pool is free, which is not necessarily the Worker that the Actor ran on before. Suspend and resume let a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} carry far more Actors than it has Workers at any one moment.
+> Resume restores an Actor onto whichever Worker in the pool has room, which is not necessarily the Worker that the Actor ran on before. Suspend and resume let a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} carry far more Actors than it has Workers at any one moment.
 
 ## What a snapshot captures
 
@@ -50,7 +50,7 @@ Two kinds of snapshot serve different purposes, and both appear in a normal inst
 - **Golden snapshot**: Captured once, when an ActorTemplate is created, from a temporary golden boot of the workload. Every Actor of that template is first restored from this one shared snapshot, so a new Actor starts from an already-booted image rather than a cold start. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} is not ready until its golden snapshot exists. Until then, the kagent controller reports `waiting for the ActorTemplate golden snapshot` while Agent Substrate captures it.
 - **Last snapshot**: The most recent per-Actor snapshot, written on every suspend and used to restore that specific Actor on its next resume. Because it carries the Actor's own accumulated state, the conversation continues from where it stopped.
 
-Snapshots are persisted to object storage, either Google Cloud Storage or Amazon Simple Storage Service (S3), so that Actor state is durable and portable across the cluster. A {{< gloss "Harness" >}}Harness{{< /gloss >}} names the location for its Actors' snapshots in its `substrate.snapshotPolicy` section.
+Snapshots are persisted to object storage so that Actor state is durable and portable across the cluster. Agent Substrate writes snapshots to Google Cloud Storage or to Amazon Simple Storage Service (S3). The S3 client also reaches S3-compatible stores that accept a custom endpoint and path-style addressing. For the settings that select and configure each client, see [Configure snapshot storage]({{< link path="operations/tune-agent-substrate#configure-snapshot-storage" >}}). A {{< gloss "Harness" >}}Harness{{< /gloss >}} names the location for its Actors' snapshots in its `substrate.snapshotPolicy` section.
 
 ```yaml
 spec:
