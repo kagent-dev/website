@@ -98,6 +98,8 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 `SendMessage` blocks until the agent finishes the turn, or pauses to ask a person, and then returns the whole task. A message needs its own ID, a role, and at least one part.
 
+A message part can also carry a file as raw bytes, with `filename` and `mediaType` set on the part. Non-image files reach the model as extracted text, and the extracted text keeps the file name. Images reach providers that accept image input. Providers that do not accept image input, such as Amazon Bedrock, Ollama, and SAP AI Core, receive a text note that names the image instead. Messages that use the controller or kagent gRPC clients can be up to 16 MiB, so clients that send large file parts must stay under that limit.
+
 1. Send a message to the Agent. Omitting a `contextId` starts a new Session.
    ```bash
    grpcurl -plaintext \
