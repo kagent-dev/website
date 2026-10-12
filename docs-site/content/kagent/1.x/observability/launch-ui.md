@@ -110,6 +110,8 @@ A checkpoint appears in the transcript as a mark carrying the snapshot name and 
 > [!NOTE]
 > A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
 
+The bell icon on the latest message of a task opens **Task notifications**. Use it to add, edit, or remove the callback URLs that kagent posts task updates to. A new callback receives only the updates that its task sends after you register it, and only when the task needs input or reaches a final state. After the task finishes, you can view and remove its callbacks, but you cannot add or edit them. For how kagent delivers and signs a callback, see [Register task callbacks]({{< link path="examples/a2a-agents#task-callbacks" >}}).
+
 ## Attach files to a message
 
 In the chat interface for agents on the `kagent` runtime, you can attach files to send with a message. An agent reads any files that you attach, so you can ask the agent about a log, a manifest, or a screenshot without pasting the contents into the message box.
