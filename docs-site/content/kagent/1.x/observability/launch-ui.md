@@ -92,7 +92,7 @@ The **Agents** tab authors the `Agent` custom resource directly. Create one to p
 
 ## Read a conversation
 
-Opening an agent and sending a message creates a {{< gloss "Session" >}}Session{{< /gloss >}}, which is one conversation scheduled onto a Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the controls that branch the conversation.
+Opening an agent and sending a message creates a {{< gloss "Session" >}}Session{{< /gloss >}}, which is one conversation scheduled onto a Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the checkpoint controls for the conversation.
 
 {{< reuse-image-light src="img/kagent-ui-chat.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-chat-dark.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
@@ -103,12 +103,12 @@ To take a checkpoint, select the save icon beside the message box. kagent pins t
 
 A checkpoint appears in the transcript as a mark carrying the snapshot name and three controls. Select the mark to open the record behind it. The record holds the checkpoint's ID, turn, state, and age.
 
-- **Fork** creates a second Session from the checkpoint, continuing from the point that the checkpoint pinned. A {{< gloss "Fork" >}}fork{{< /gloss >}} inherits the checkpoint's {{< gloss "Revision" >}}Revision{{< /gloss >}}, so later edits to the Agent do not change what it runs, and new turns append only to the fork. The fork takes the snapshot name as its own. For the same operation over the gRPC API, see [Fork the conversation into a second agent]({{< link path="examples/agent-substrate#fork-the-conversation-into-a-second-agent" >}}).
+- **Fork** is temporarily unavailable in the current release. The API rejects checkpoint forks with `FAILED_PRECONDITION` while suspended Actor snapshots include process memory. For more information, see [Forking is temporarily unavailable]({{< link path="examples/agent-substrate#forking-is-temporarily-unavailable" >}}).
 - **Rename** replaces the snapshot name that kagent generates on creation from the Session ID and the turn the checkpoint pins. Clearing the name restores that generated default.
 - **Delete** removes the checkpoint and releases the snapshot it pinned. Agent Substrate is then free to collect that snapshot.
 
 > [!NOTE]
-> A checkpoint is always taken at the latest turn boundary, so the UI offers **Fork** on your own most recent message and not on earlier ones.
+> A checkpoint is always taken at the latest turn boundary, so the UI offers checkpoint controls on your own most recent message and not on earlier ones.
 
 ## Attach files to a message
 

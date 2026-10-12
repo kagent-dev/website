@@ -58,19 +58,26 @@ Your Kubernetes resources do carry forward, so export them before anything repla
 
 ## Install kagent 1.0
 
-Install 1.0 the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure covers Agent Substrate and the identity material that it needs before you install kagent 1.0.
+Install 1.0 the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure installs Agent Substrate, kagent, and the identity material that they need.
 
-1. Follow all steps in the [1.0 installation guide]({{< link path="setup/installation" >}}). Set the following Helm values on the kagent install, rather than changing them afterward.
+1. Store the connection string for the empty database in a Secret in the new cluster.
+   ```bash
+   kubectl create secret generic kagent-upgrade-postgres -n kagent \
+     --from-literal=connectionString='postgres://<user>:<password>@<host>:5432/<dbname>?sslmode=require'
+   ```
+
+2. Follow all steps in the [1.0 installation guide]({{< link path="setup/installation" >}}). Set the following Helm values on the kagent install, rather than changing them afterward.
 
    | Value | Why |
    | ----- | --- |
-   | `database.postgres.url` | Your new database's connection string. Setting it takes precedence over the bundled instance. Use `urlFile` instead to read the string from a file. |
-   | `database.postgres.bundled.enabled=false` | Turns off the bundled PostgreSQL instance. The bundled instance is for development and evaluation, and it is not suitable for production. |
+   | `database.postgres.connectionStringSecretRef.name=kagent-upgrade-postgres` | Reads the connection string from the Secret that you created. |
+   | `database.postgres.connectionStringSecretRef.key=connectionString` | Names the key in the Secret that holds the connection string. |
+   | `database.postgres.role=""` | Uses the database login user directly. If you created a separate role such as `kagent_owner`, set that role name instead. |
    | `database.postgres.vectorEnabled=true` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. Your database must have the pgvector extension installed. |
 
    The controller applies migrations at startup. To apply them from a pipeline instead, set `database.postgres.skipMigrations=true` and run `kagent db migrate up` yourself. The controller then verifies the schema and fails if it is not already current. For sizing and connection guidance on the database itself, see [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}).
 
-2. Verify the schema before continuing.
+3. Verify the schema before continuing.
    ```bash
    kagent db migrate status --db-url "postgres://<user>:<password>@<host>:5432/<dbname>"
    ```

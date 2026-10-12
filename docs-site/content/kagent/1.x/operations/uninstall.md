@@ -5,20 +5,19 @@ weight: 50
 author: kagent.dev
 ---
 
-Helm removes what its releases own, but does not uninstall the identity material and some storage that it does not own.
+Helm removes what its releases own, but does not uninstall the identity material, development database resources, and some storage that it does not own.
 
 Helm removes:
 
 - Every `kagent.dev` and `ate.dev` custom resource definition, and with them every Harness, AgentTemplate, WorkerPool, and SandboxConfig in the cluster
-- kagent's bundled PostgreSQL volume, holding all conversation state
 - The object storage volume holding every Actor snapshot
-- The `podcertificate-controller-system` namespace, with the service DNS and pod identity CA pools inside it
 
 Helm leaves behind:
 
-- The actor identity pools that the install created in `ate-system` with `kubectl ate`, and the `ate-api-authentication` ConfigMap beside them
-- Agent Substrate's PostgreSQL volume, `data-postgres-0`, because a StatefulSet volume claim outlives its release
-- The `kagent` and `ate-system` namespaces
+- The development PostgreSQL Deployment, Service, Secret, and PersistentVolumeClaim that `kagent install` created in the kagent namespace
+- The actor identity pools and the `ate-api-authentication` ConfigMap that the install created in `ate-system`
+- The service DNS, pod identity, and PostgreSQL certificate authority pools that the install created in `podcertificate-controller-system`
+- The `kagent`, `ate-system`, and `podcertificate-controller-system` namespaces
 
 This guide includes both Helm steps to uninstall its owned components, and manual steps to remove separate material that can block a later reinstallation.
 
@@ -46,7 +45,7 @@ Remove the kagent release before the CRDs release, because deleting the definiti
    ```
 
 > [!NOTE]
-> The `kagent uninstall` command removes the same two releases in the same order, and it is a convenience rather than a different path. It does not touch Agent Substrate, so the rest of this page still applies. Prefer Helm, for the same reason that the install guide does: the CLI does not manage the Agent Substrate layer.
+> The `kagent uninstall` command is a convenience path that removes the same two kagent releases in the same order. It does not remove Agent Substrate or the development PostgreSQL resources that `kagent install` created, so the rest of this page still applies.
 
 ## Uninstall Agent Substrate
 
@@ -57,20 +56,23 @@ Agent Substrate is a separate installation in the `ate-system` namespace, and no
    helm uninstall substrate -n ate-system
    ```
 
-2. Uninstall the Agent Substrate CRDs chart, which deletes the `workerpools`, `sandboxconfigs`, and `csidriverconfigs` definitions.
+2. Uninstall the Substrate PodCertificate chart.
+   ```bash
+   helm uninstall substrate-podcert -n podcertificate-controller-system
+   ```
+
+3. Uninstall the Agent Substrate CRDs chart, which deletes the `workerpools`, `sandboxconfigs`, and `csidriverconfigs` definitions.
    ```bash
    helm uninstall substrate-crds -n ate-system
    ```
 
 ## Remove the identity material
 
-The install created the actor identity pools with the `kubectl ate` plugin instead of Helm, so no release owns them and no uninstall removes them. A later install that tries to create a pool that already exists fails with a message naming the secret.
+The `kagent install` command created the identity pools outside Helm, so no release owns them and no uninstall removes them. A later install that tries to create a pool that already exists fails with a message naming the secret.
 
 ```console
 Error: while uploading pool state to secret: secrets "actor-id-jwt-pool" already exists
 ```
-
-The service DNS and pod identity CA pools do not need to be manually removed. Because the install created them inside `podcertificate-controller-system`, a namespace that the Agent Substrate chart owns, `helm uninstall substrate` deletes that namespace and the pools along with it.
 
 1. Delete the actor identity pools and the material derived from them.
    ```bash
@@ -78,20 +80,32 @@ The service DNS and pod identity CA pools do not need to be manually removed. Be
    kubectl delete configmap ate-api-authentication -n ate-system
    ```
 
-2. Delete the Agent Substrate database volume, which a StatefulSet volume claim keeps alive after its release is gone.
+2. Delete the service DNS, pod identity, and PostgreSQL CA pools.
    ```bash
-   kubectl delete pvc data-postgres-0 -n ate-system
+   kubectl delete secret -n podcertificate-controller-system \
+     service-dns-ca-pool pod-identity-ca-pool postgres-ca-pool
+   ```
+
+3. Delete the development PostgreSQL resources that `kagent install` created.
+   ```bash
+   kubectl delete -n kagent \
+     deployment/kagent-postgresql \
+     service/kagent-postgresql \
+     configmap/kagent-postgresql \
+     secret/kagent-postgres \
+     pvc/kagent-postgresql \
+     --ignore-not-found
    ```
 
 > [!IMPORTANT]
-> Deleting `data-postgres-0` matters even if you plan to reinstall immediately. Agent Substrate folds its schema changes into a single baseline migration before release, so a database that survives from an earlier version keeps that migration marked as applied and never picks up the new schema. The cluster then looks healthy and fails later, at the first checkpoint operation.
+> Deleting the development PostgreSQL PersistentVolumeClaim removes all conversation state that the development install stored. Back up anything that you need before you delete it.
 
 ## Remove the namespaces
 
 Deleting the namespaces removes anything that the preceding steps missed, including volumes left by optional components.
 
 ```bash
-kubectl delete namespace kagent ate-system
+kubectl delete namespace kagent ate-system podcertificate-controller-system
 ```
 
 Confirm that nothing remains.

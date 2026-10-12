@@ -26,36 +26,27 @@ Memories are scoped to the agent and to the user who created them, and carry the
 ## Before you begin
 
 > [!IMPORTANT]
-> Memory requires an **external** PostgreSQL database with the [pgvector](https://github.com/pgvector/pgvector) extension installed. kagent's bundled database uses the stock `postgres` image, which does not ship pgvector, so it cannot store memories. Point kagent at your own database first.
+> Memory requires an **external** PostgreSQL database with the [pgvector](https://github.com/pgvector/pgvector) extension installed. The development database that `kagent install` creates uses the stock `postgres` image, which does not ship pgvector, so the database cannot store memories. Point kagent at your own database first.
 
-1. Store the connection string for your database in a Kubernetes Secret, in the same namespace as the kagent controller. The key that you choose becomes the file name that kagent reads, so `db-url` produces the path `/var/secrets/db-url`.
+1. Store the connection string for your database in a Kubernetes Secret, in the same namespace as the kagent controller.
    ```bash
    kubectl create secret generic my-postgres-url-secret -n kagent \
-     --from-literal=db-url='postgres://<username>:<password>@<host>:5432/<database>?sslmode=require'
+     --from-literal=connectionString='postgres://<username>:<password>@<host>:5432/<database>?sslmode=require'
    ```
 
-2. Save the following values, which point kagent at your database, mount the Secret into the controller, and run the migration that creates the pgvector extension.
+2. Save the following values, which point kagent at your database and run the migration that creates the pgvector extension.
    ```yaml
    cat > kagent-memory-values.yaml <<EOF
    database:
      postgres:
-       # Path to a file holding the connection string, which takes precedence over url
-       urlFile: /var/secrets/db-url
+       # Secret holding the connection string.
+       connectionStringSecretRef:
+         name: my-postgres-url-secret
+         key: connectionString
+       # Use the login user directly. To assume a role instead, create the role in PostgreSQL and set its name here.
+       role: ""
        # Runs the vector migration, which creates the pgvector extension and the memory tables
        vectorEnabled: true
-       bundled:
-         # Use your own database instead of the bundled one
-         enabled: false
-   controller:
-     # Mounts the Secret so that the file at urlFile exists in the controller pod
-     volumes:
-       - name: db-secret
-         secret:
-           secretName: my-postgres-url-secret
-     volumeMounts:
-       - name: db-secret
-         mountPath: /var/secrets
-         readOnly: true
    EOF
    ```
 

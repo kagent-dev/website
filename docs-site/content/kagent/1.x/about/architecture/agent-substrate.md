@@ -41,21 +41,23 @@ kagent compiles each ActorTemplate to the sandbox class of the WorkerPool that h
 
 Substrate's density model rests on one fact about agent workloads: an Actor spends most of its time idle, waiting on a person or a large language model (LLM) to respond, not actively computing. Substrate exploits that by suspending idle Actors and reclaiming their Worker, then resuming them on demand when traffic arrives. Suspending and resuming allows a WorkerPool to run far more Actors than it has Workers for at any given moment.
 
-The following diagram traces an Actor through one suspend-and-resume cycle, and shows the second path that opens up once the resulting snapshot is tagged.
+The following diagram traces an Actor through one suspend-and-resume cycle, and shows how a tag can pin the resulting snapshot.
 </br></br>
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
 
 A **WorkerPool** keeps **Workers** running and ready, and one Worker hosts the **Actor** while its conversation is active. Suspending that Actor writes its full state to an immutable **ActorSnapshot** and frees the Worker that it was running on.
 
-The diagram forks at that snapshot, because a snapshot serves two purposes.
+The diagram reaches a tagged snapshot, because a snapshot serves two purposes.
 
 - **Resume** restores the same Actor onto **any free Worker in the pool**, which is not necessarily the Worker that it ran on before. Because the snapshot captures the Actor's full state, the conversation continues from where it left off. Every idle agent takes this path.
-- A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins that snapshot, and a **New Actor** can be seeded from the tag at the moment that it is created. Resuming an existing Actor never goes through a tag.
+- A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins that snapshot so that Agent Substrate does not collect the snapshot. Resuming an existing Actor never goes through a tag.
 
 A tag gives a snapshot a stable, human-meaningful name, so callers do not need to track Substrate's internal snapshot identity. A tag names one snapshot permanently, and only its visibility scope can change afterward. A tag also acts as a retention pin, so Substrate does not delete a snapshot while a tag still names it.
 
 For example, an agent partway through a long incident investigation reaches a state worth keeping. Creating a [checkpoint]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) tags the snapshot that the agent most recently suspended to, which holds that one snapshot in place while the agent carries on and writes newer ones. Without the tag, Substrate collects that snapshot once a newer one supersedes it.
+
+Checkpoint forks are temporarily unavailable in the current kagent release. Because the snapshots that kagent takes on suspend include process memory, `ForkSession` rejects checkpoint forks with `FAILED_PRECONDITION` instead of restoring processes that still hold the source Session's identifiers.
 
 <!-- REVIEW (performance reviewer): an earlier draft stated a 100 ms target at the ninety-fifth percentile, measured from traffic arrival to the moment the Actor can receive it. Removed pending confirmation of the approved measurement and whether it applies to kagent. Do not restore it as a latency guarantee. -->
 

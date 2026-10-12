@@ -5,67 +5,52 @@ weight: 10
 author: kagent.dev
 ---
 
-A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation is built for evaluation. It runs one controller replica against a bundled database, and places no constraints on the nodes that run agents. Production changes each of those.
+A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation is built for evaluation. It runs one controller replica against a development database that `kagent install` creates, and places no constraints on the nodes that run agents. Production changes each of those defaults.
 
 ## Choose a database
 
-kagent stores conversations, {{< gloss "Session" >}}Sessions{{< /gloss >}}, and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. A bundled instance ships with the chart so that an evaluation needs no external prerequisites, and production deployments supply their own.
+kagent stores conversations, {{< gloss "Session" >}}Sessions{{< /gloss >}}, and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart no longer deploys or initializes PostgreSQL. The chart reads the connection string from a Kubernetes Secret that you create or that `kagent install` creates for its development database.
 
-Two independent settings determine what runs and what the controller talks to:
+For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data. Create a database role for kagent, or set `database.postgres.role` to an empty string so that kagent uses the login user directly. If you keep the default `kagent_owner` role, grant the role to the login user and give the role `USAGE, CREATE` on the `public` schema.
 
-- `database.postgres.bundled.enabled` determines whether the chart deploys the bundled PostgreSQL pod and its PersistentVolumeClaim (PVC). This setting does not affect which database the controller connects to.
-- `database.postgres.url` and `database.postgres.urlFile` determine what the controller connects to. When either is set, the controller uses it. When both are empty, the controller connects to the bundled instance.
-
-The controller resolves its connection in the order `urlFile`, then `url`, then the bundled connection string. Because the two settings are independent, a bundled pod can keep running while the controller points at an external database, which gives you a window to migrate data across.
-
-| `bundled.enabled` | `url` or `urlFile` | Bundled pod deployed | Controller connects to |
-| ----------------- | ------------------ | -------------------- | ---------------------- |
-| `true` | Omitted | Yes | The bundled instance |
-| `false` | Set | No | The external instance |
-| `true` | Set | Yes | The external instance |
-| `false` | Omitted | No | Nothing. The chart fails to render. |
-
-The last row fails at template time with `No database connection configured`, rather than installing a controller that cannot start.
-
-The bundled instance claims its PersistentVolumeClaim from the cluster's default StorageClass. Set `database.postgres.bundled.storageClassName` to choose a different one.
+`kagent install` creates a development PostgreSQL deployment in the kagent namespace. That database authenticates kagent and Substrate with Pod Certificates, creates the Kagent and Substrate roles, and writes the connection Secrets for both charts. The certificate authorities that the CLI creates are valid for one year, are not renewed automatically, and are kept when you run `kagent install` again.
 
 ### Use an external PostgreSQL instance
 
-For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data.
+1. Store the connection string in a Secret in the kagent namespace.
 
-1. Set the connection in your Helm values file. To keep credentials out of Helm values, mount the connection string from a Kubernetes Secret and reference the mount path by using `urlFile`.
+   ```bash
+   kubectl create secret generic my-postgres-connection -n kagent \
+     --from-literal=connectionString='postgres://<username>:<password>@<host>:5432/<database>?sslmode=require'
+   ```
+
+2. Set the connection Secret in your Helm values file.
 
    ```yaml
    database:
      postgres:
-       urlFile: /var/secrets/db-url
+       connectionStringSecretRef:
+         name: my-postgres-connection
+         key: connectionString
+       role: ""
        vectorEnabled: true
        skipMigrations: false
        pool:
          maxConns: 20
          minConns: 2
-       bundled:
-         enabled: false
    controller:
      replicas: 3
-     volumes:
-       - name: db-secret
-         secret:
-           secretName: my-postgres-url-secret
-     volumeMounts:
-       - name: db-secret
-         mountPath: /var/secrets
-         readOnly: true
    ```
 
    | Setting | Description |
    | ------- | ----------- |
-   | `database.postgres.url` or `database.postgres.urlFile` | The connection string, or the path to a file holding it. `urlFile` keeps the credentials out of Helm values. |
-   | `database.postgres.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The bundled image does not include `pgvector`. |
+   | `database.postgres.connectionStringSecretRef` | The Secret and key that hold the PostgreSQL connection string. Secret changes require a controller restart. |
+   | `database.postgres.role` | The PostgreSQL role that kagent assumes on every connection. Set it to `""` to use the login user directly. |
+   | `database.postgres.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database that `kagent install` creates does not include `pgvector`. |
    | `database.postgres.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. Omit the fields to keep the pgx library defaults. |
    | `database.postgres.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies that the database is already migrated and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. |
 
-2. Apply the values to the kagent Helm release.
+3. Apply the values to the kagent Helm release.
 
    ```bash
    helm upgrade --install kagent \
@@ -74,6 +59,8 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
      --namespace kagent \
      --values kagent.yaml
    ```
+
+If the connection string references client certificate files under `/run/postgres.podcert.ate.dev`, set `database.postgres.clientCertificate.enabled=true`. The controller rereads those files before it opens a new physical connection, so rotated Pod Certificates can take effect without a controller restart. `database.postgres.pool.maxConnLifetime` controls how long a connection that opened with an older certificate can stay in use.
 
 ## Run multiple controller replica
 
@@ -89,7 +76,7 @@ Leader election keeps the replicas from conflicting. One replica holds a Kuberne
 > [!NOTE]
 > Leader election is always on, including at a single replica, because a rolling update briefly runs two controllers at once. The chart grants the lease permissions unconditionally and exposes no setting to turn election off. `KAGENT_LEADER_ELECT=false` remains available for local testing.
 
-PostgreSQL supports multiple controller replicas without further configuration. The bundled instance is still a single pod backed by one PVC, so an installation that runs several controllers for availability, against a bundled database, has only moved the single point of failure.
+PostgreSQL supports multiple controller replicas without further configuration. A development database that `kagent install` creates is still a single pod backed by one PersistentVolumeClaim, so an installation that runs several controllers for availability against that database has only moved the single point of failure.
 
 ## Reserve node pools for Workers
 
@@ -122,12 +109,12 @@ A leader-only worker sweeps once a minute and deletes every Session whose idle c
 
 The `168h` default is seven days. There is no per-agent override and no maximum, so this one value governs every conversation in the installation.
 
-Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires. A {{< gloss "Fork" >}}fork{{< /gloss >}} keeps its source's event timestamps. Its own creation time gives it a full lifetime, so it does not inherit an almost-expired one.
+Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset the clock, so a conversation that is only ever listed still expires.
 
 Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 
 > [!IMPORTANT]
-> **Expiry bounds conversations, not history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, and `GetSession` then returns not-found. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint can still be forked after the Session that it was taken on has expired. Sizing a database for a long-running installation means planning for that audit history separately, because no setting on this page bounds it.
+> **Expiry bounds conversations, not history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, and `GetSession` then returns not-found. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL. Sizing a database for a long-running installation means planning for that audit history separately, because no setting on this page bounds it.
 
 Unlike an explicit client deletion, which keeps a tombstone, an expired Session releases its creation request ID. The same caller can reuse that request ID to start a fresh conversation.
 

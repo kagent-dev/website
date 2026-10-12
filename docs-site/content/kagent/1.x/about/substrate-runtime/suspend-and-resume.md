@@ -34,14 +34,14 @@ An {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}'s snapshot configura
 - **`Full`**: Captures process memory, the root filesystem changes layered on top of the container image, and any attached durable volumes. A `Full` snapshot holds everything that is needed to resume the Actor hot, with its in-memory state intact.
 - **`Data`**: Captures only the contents of attached durable volumes. Process memory and the rest of the root filesystem are discarded, which makes the snapshot much cheaper to write and store.
 
-Scopes describe only what a snapshot captures, and they are configured per trigger. The `onPause` setting selects what a pause captures on the node, and `onCommit` selects what a suspend uploads to snapshot storage. What `onCommit` captures must be a subset of what `onPause` captures.
+Scopes describe only what a snapshot captures. In the current Agent Substrate release, one snapshot scope applies to both pause snapshots on the node and suspend snapshots in snapshot storage.
 
 A **DurableDir volume** is the per-Actor application data surface. Its contents are preserved by the `Data` scope, so they survive a suspend and resume cycle independently of process memory. How many volumes an ActorTemplate can declare depends on its sandbox class. A `microvm` template can declare several, because they are subdirectories of a single shared filesystem. A `gvisor` template is limited to one, until {{< gloss "gVisor" >}}gVisor{{< /gloss >}} accepts more than a single durable mount.
 
 When an Actor resumes from a `Data`-scope snapshot, the ActorTemplate's `onResume.fromData` setting decides where the rest of the guest state comes from. The default is `ColdBoot`, which starts the containers fresh from the container image with the durable volume contents restored over them.
 
 > [!NOTE]
-> These scopes describe what Agent Substrate supports, not choices that you make. kagent compiles every ActorTemplate with the same snapshot configuration: `Full` on pause, `Data` on commit, `ColdBoot` on resume, and a single DurableDir volume named `data`. The only snapshot setting that you author is the storage location, on the Harness.
+> These scopes describe what Agent Substrate supports, not choices that you make. kagent currently compiles every ActorTemplate with `Full` snapshots, so suspended Actors keep their process memory. The only snapshot setting that you author is the storage location on the Harness.
 
 ## Golden and per-Actor snapshots
 
@@ -88,4 +88,4 @@ Creating a checkpoint attaches an Agent Substrate {{< gloss "Tag" >}}Tag{{< /glo
 
 A Session must be at a turn boundary to be checkpointed, because the turn boundary is captured. The request names the terminal task to pin. It fails when a newer turn has already started, and again while that turn's snapshot is still being written.
 
-A checkpoint also records how far the conversation had advanced, and it lets you start a second Session from the state it pinned. That second Session, a {{< gloss "Fork" >}}fork{{< /gloss >}}, continues the conversation from the point that the checkpoint pinned, and new turns append only to the fork. A fork receives fresh conversation and task identifiers rather than inheriting the source's. To create a checkpoint and fork a Session from it, work through the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+A checkpoint also records how far the conversation had advanced. Forking a checkpoint is temporarily unavailable because kagent's current checkpoints include process memory. `ForkSession` rejects these checkpoints with `FAILED_PRECONDITION` so that a restored Actor does not resume processes that still hold the source Session's identifiers. Forking returns when Agent Substrate lifecycle v2 lets kagent take `Data` snapshots on suspend again. To create and inspect a checkpoint, work through the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).

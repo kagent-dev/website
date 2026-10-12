@@ -251,5 +251,5 @@ An agent of your own takes the same path as the example image, with two differen
 {{< cards >}}
   {{< card link=`{{< link path="agents/bring-your-own-agent" >}}` title="Bring your own agent" subtitle="Read the full A2A contract and the limits of the byo runtime." >}}
   {{< card link=`{{< link path="examples/a2a-agents" >}}` title="Call an agent over A2A" subtitle="Talk to this Agent with grpcurl instead of the CLI." >}}
-  {{< card link=`{{< link path="examples/agent-substrate" >}}` title="Agent Substrate" subtitle="Watch the Actor behind your image suspend, checkpoint, and fork." >}}
+  {{< card link=`{{< link path="examples/agent-substrate" >}}` title="Agent Substrate" subtitle="Watch the Actor behind your image suspend and checkpoint." >}}
 {{< /cards >}}
