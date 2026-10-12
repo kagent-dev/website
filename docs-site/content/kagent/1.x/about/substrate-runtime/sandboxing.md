@@ -7,7 +7,11 @@ aliases:
   - /kagent/1.x/substrate-runtime/sandboxing/
 ---
 
-An agent is a program that decides at run time what to do next. It runs the commands that a model asks for, and it calls the tools it can access. [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs each agent inside an **Actor**, its own unit of compute, and it does not run that Actor as an ordinary container process. Each Actor runs inside its own **sandbox**, on a {{< gloss "Worker" >}}Worker{{< /gloss >}} that hosts many Actors at the same time, each in a sandbox of its own. This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it. The same boundary holds a [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}), a scratch environment that runs commands and holds files without an agent conversation owning it.
+An agent runs an **agentic loop**. A model proposes the next step, the agent carries it out by running a command or calling a tool, and the result feeds the model's next decision. The loop repeats until the task finishes or the agent stops to wait on input from a person.
+
+kagent runs an agent's loop inside an **Actor**, a unit of compute that [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) creates and manages. An Actor is not an ordinary container process. Each Actor runs inside its own **sandbox**, and one {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts many of those sandboxed Actors at the same time.
+
+This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it.
 </br></br>
 
 ```mermaid
@@ -32,18 +36,18 @@ A **sandbox class** is the sandbox runtime family that a Worker uses. {{< gloss 
 - **`gvisor`** (default): Runs the workload against a [gVisor](https://gvisor.dev) user-space kernel, which keeps the workload's system calls from reaching the host kernel.
 - **`microvm`**: Runs the workload inside a lightweight virtual machine, which places a hypervisor boundary between the workload and the host.
 
-A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} selects its class through the `sandboxClass` field, which defaults to `gvisor`. The choice is not only a runtime preference. It also shapes the Worker pods that Agent Substrate creates for that pool, including the virtualization device mounts and node placement that a micro-VM needs.
+A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}}'s `sandboxClass` field sets the sandbox class for its Workers, and defaults to `gvisor`. That value does more than name a runtime. Agent Substrate builds the pool's Worker pods to match it, mounting the virtualization devices that a micro-VM needs and placing those pods on nodes that provide them.
 
 > [!NOTE]
-> kagent generates {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that use the sandbox class of the pool that hosts them, and names the matching SandboxConfig on each template: `gvisor-default` for the `gvisor` class, `microvm` for the `microvm` class. A WorkerPool that backs kagent Harnesses must run the class it is meant to serve, with a matching Worker build.
+> kagent copies a pool's sandbox class onto every {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}} that it generates for that pool. Each template then names the SandboxConfig that serves its class. A `gvisor` template names `gvisor-default`, and a `microvm` template names `microvm`.
 
 ## Sandbox configuration
 
-A **SandboxConfig** is a cluster-scoped resource that holds the material needed to start one sandbox runtime family. It carries the runtime assets that the node agent fetches, keyed by processor architecture, along with the pause image that holds the sandbox's namespaces as its root container. Each ActorTemplate names the configuration that it uses, and the name is required. Agent Substrate resolves no cluster default, so the configuration that a template names must exist before that template can be prepared.
+A **SandboxConfig** is a cluster-scoped resource that describes the runtime files a sandbox class requires to start. The resource stores none of those files. Instead, it records the location that the node agent fetches each file from, keyed by processor architecture. It also names the pause image, which holds the sandbox's namespaces as its root container.
 
-Defining these assets in a cluster resource lets one configuration pin a runtime version for many ActorTemplates at once, rather than each template carrying its own copy.
+Every ActorTemplate must name a SandboxConfig, and Agent Substrate supplies no name of its own. A template cannot be prepared until the configuration that it names exists in the cluster. Many ActorTemplates can share one SandboxConfig. The runtime version is then pinned in a single place, rather than repeated on every template.
 
-A default installation creates a single `gvisor-default` configuration, and kagent names exactly that configuration on every ActorTemplate that it generates. The configuration looks like the following:
+A default installation creates one SandboxConfig, named `gvisor-default`. kagent writes that name onto every ActorTemplate that it generates, so each template carries it explicitly. The configuration looks like the following:
 
 ```yaml
 apiVersion: ate.dev/v1alpha1
@@ -89,12 +93,16 @@ Every Actor is addressed by its {{< gloss "Atespace" >}}atespace{{< /gloss >}} a
 
 Because the router resolves the Worker assignment on every request, an Actor keeps a stable address across suspends, resumes, and moves between Workers.
 
+A kagent user never uses that address. A message sent to a {{< gloss "Session" >}}Session{{< /gloss >}} through the kagent API or the web console reaches the kagent controller, which resolves the Session to its Actor and passes the request to Agent Substrate. Every hop after that stays inside the runtime.
+
 Traffic in the other direction leaves through a separate egress gateway rather than going straight out from the Worker. Routing Actor egress through one gateway provides a single place to apply outbound controls.
 
 ## Default network posture
 
 Agent Substrate creates a Kubernetes NetworkPolicy for each WorkerPool, selecting that pool's Worker pods. The policy restricts **ingress** to the Agent Substrate router alone. No other pod in the cluster can open a connection to a Worker, so an Actor is not reachable by anything that bypasses the routing path.
 
-That policy governs inbound traffic only. Outbound traffic is governed separately, by an egress policy that the gateway enforces on every connection that an Actor opens. That policy is default-deny: an Actor reaches a destination only when a rule allows it, and an Actor with no policy at all gets no outbound connection.
+That policy governs inbound traffic only. Outbound traffic is governed separately by an egress policy that the gateway enforces on every connection that an Actor opens. That policy is default-deny. An Actor reaches a destination only when a rule allows it, and the gateway denies the connection when no rule does.
 
-kagent writes that policy for you, deriving it from the AgentTemplate, so an agent needs no egress configuration of its own. For what the policy holds, how a rule is matched, and how to diagnose a denied request, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress" >}}).
+kagent derives the egress policy from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, so an agent carries no egress configuration of its own. The destinations it allows come from what the AgentTemplate already names, such as its model provider and its MCP servers. You author neither policy. Agent Substrate owns the ingress policy, and kagent regenerates the egress policy whenever the AgentTemplate changes. For what the policy holds, how a rule is matched, and how to diagnose a denied request, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress" >}}).
+
+<!-- REVIEW (egress API owner): whether a user can add a destination that the AgentTemplate does not name is unconfirmed, so this section claims no explicit allowlist either way. Confirm current and planned support before stating one. -->
