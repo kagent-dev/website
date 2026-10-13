@@ -5,7 +5,7 @@ weight: 50
 author: kagent.dev
 ---
 
-Helm removes what its releases own, but does not uninstall the identity material, development database resources, and some storage that it does not own.
+Helm removes what its releases own. No release owns the identity material, the development database resources, or the volume behind that database, so a Helm uninstall leaves all three in the cluster.
 
 Helm removes:
 
@@ -56,7 +56,7 @@ Agent Substrate is a separate installation in the `ate-system` namespace, and no
    helm uninstall substrate -n ate-system
    ```
 
-2. Uninstall the Substrate PodCertificate chart.
+2. Uninstall the Agent Substrate PodCertificate chart.
    ```bash
    helm uninstall substrate-podcert -n podcertificate-controller-system
    ```
@@ -68,7 +68,7 @@ Agent Substrate is a separate installation in the `ate-system` namespace, and no
 
 ## Remove the identity material
 
-The `kagent install` command created the identity pools outside Helm, so no release owns them and no uninstall removes them. A later install that tries to create a pool that already exists fails with a message naming the secret.
+The `kagent install` command created the identity pools outside Helm, so no release owns them and no uninstall removes them. A later install that tries to create a pool that already exists fails with a message naming the Secret.
 
 ```console
 Error: while uploading pool state to secret: secrets "actor-id-jwt-pool" already exists

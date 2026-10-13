@@ -71,7 +71,7 @@ author: kagent.dev
 
 ## Install kagent
 
-The kagent CLI installs the CRDs, Agent Substrate, the Substrate PodCertificate controller, a development PostgreSQL database, and kagent in the correct order. It also creates the Substrate identity material and database connection Secrets that the releases need.
+The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertificate controller, a development PostgreSQL database, and kagent in the correct order. It also creates the Substrate identity material and database connection Secrets that the releases need.
 
 1. Install kagent. The following command enables gRPC server reflection so that guides that use `grpcurl` can discover the controller API.
    ```bash
@@ -79,7 +79,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Substrate PodCertificate 
      kagent install --namespace kagent
    ```
 
-   The command uses your provider API key, installs Agent Substrate into `ate-system`, deploys PostgreSQL as `kagent-postgresql` in the kagent namespace, and connects kagent and Substrate to that database with Pod Certificates. The development database does not include the `pgvector` extension and is not intended for production.
+   The command reads your provider API key, installs Agent Substrate into `ate-system`, and deploys PostgreSQL as `kagent-postgresql` in the kagent namespace. It then connects kagent and Agent Substrate to that database with Pod Certificates. The development database runs the stock `postgres` image, which omits the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs.
 
 2. Wait for the controller to roll out.
    ```bash
