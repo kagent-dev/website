@@ -16,11 +16,11 @@ For the inbound half of the picture, and for the NetworkPolicy that protects Wor
 
 ## How the gateway authorizes a connection
 
-Outbound traffic leaves a Worker through the egress gateway rather than directly out. This chokepoint gives Agent Substrate one place to decide what each agent can reach. The gateway takes three steps on every connection, and each step depends on the one before it, because the Actor's identity selects the policy, and the policy supplies the rules.
+All outbound traffic leaves a Worker through the egress gateway, which gives Agent Substrate one place to decide what each agent can reach. The gateway takes three steps on every connection, and each step depends on the one before it, because the Actor's identity selects the policy, and the policy supplies the rules.
 
 1. The gateway identifies the Actor. It reads the Actor's SPIFFE ID from the client certificate on the connection from the Actor, and it verifies this certificate rather than trusting anything in the request.
 
-2. The gateway fetches the `EgressPolicy` for this Actor. Each Actor has at most one `EgressPolicy` named `default`, and Agent Substrate addresses the policy by the Actor rather than by this name. An Actor with no policy reaches nothing, because a policy is the only thing that allows a destination.
+2. The gateway fetches the `EgressPolicy` for this Actor. Each Actor has at most one `EgressPolicy` named `default`, and Agent Substrate addresses the policy by the Actor rather than by this name. The gateway denies every request from an Actor that has no policy, because only a policy allows access to a destination.
 
 3. The gateway picks which rule applies to the request. Rules are an unordered set rather than a list, and exactly one rule applies to a given destination name and port regardless of its protocol. When more than one rule matches, the gateway applies two criteria in order, moving to the second only when the first ties.
 
@@ -29,16 +29,16 @@ Outbound traffic leaves a Worker through the egress gateway rather than directly
 
    A request that no rule matches is denied, and only the rule that applies contributes a credential.
 
-The verified identity holds the other two steps together. The Actor's identity is established only by the certificate, so the gateway authorizes every request against the Actor that actually sent it regardless of the headers or hostnames that the request carries. The gateway refuses a connection that does not present a certificate rather than falling back to a default identity. Each Actor also gets its own connection pool, even when two of them dial the same address, so that every connection carries requests from the one Actor that opened it.
+Policy enforcement depends on this verified identity. The Actor's identity is established only by the certificate, so the gateway authorizes every request against the Actor that actually sent it regardless of the headers or hostnames that the request carries. The gateway refuses a connection that does not present a certificate rather than falling back to a default identity. Each Actor also gets its own connection pool, even when two of them dial the same address, so that every connection carries requests from the one Actor that opened it.
 
 > [!NOTE]
 > Two rules that tie on the same name and port are rejected when the policy is admitted, so a policy never reaches the gateway with an ambiguous match. A policy holds at most 256 rules.
 
 ### Traffic types
 
-A rule's type fixes the kind of connection it covers and the place that the gateway reads the destination hostname from. Three types cover the three cases.
+Each rule defines the type of connection that is allowed to a destination and how the gateway determines the destination's hostname. The following connection types are allowed:
 
-- **`http`**: Cleartext HTTP, meaning HTTP/1.1 and the h2c that gRPC uses. The gateway reads the `Host` header and matches it against the rule's hostnames. TLS to those same names is not allowed by this rule.
+- **`http`**: Cleartext HTTP, meaning HTTP/1.1 and the h2c that gRPC uses. The gateway reads the hostname from the `Host` header and matches it against the rule's hostnames. TLS to those same names is not allowed by this rule.
 - **`https`**: HTTPS, which the gateway intercepts. It terminates the connection with a certificate minted for the destination name, reads the request inside, matches it against the rule's hostnames, and re-originates its own TLS connection onward. HTTP/1.1 and HTTP/2 work inside this connection, and HTTP/3 is not supported.
 - **`tls_passthrough`**: TLS forwarded to the named servers without decryption. The gateway cannot read the request, so it decides at the TLS ClientHello instead.
 

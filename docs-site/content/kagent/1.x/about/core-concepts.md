@@ -9,7 +9,8 @@ author: kagent.dev
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**. The 1.0 `Agent` kind keeps the 0.x name but not its meaning, because it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 documentation uses.
 
-Moving a 0.x installation to 1.0 is a manual migration, and no upgrade path exists. No controller converts a 0.x resource, and the two API groups share no conversion, so you author the 1.0 resources yourself and retire the 0.x ones. [Migrate from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}) maps each 0.x resource onto its 1.0 replacement.
+> [!NOTE]
+> Moving a 0.x installation to 1.0 is a manual migration, and no upgrade path exists. No controller converts a 0.x resource, and the two API groups share no conversion, so you author the 1.0 resources yourself and retire the 0.x ones. [Migrate from 0.x]({{< link path="operations/upgrade-from-0x#recreate-your-resources" >}}) maps each 0.x resource onto its 1.0 replacement.
 
 The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 

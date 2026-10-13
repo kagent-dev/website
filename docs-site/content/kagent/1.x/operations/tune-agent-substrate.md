@@ -84,7 +84,7 @@ A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts many Actors at the same time,
 
 Each Worker reports an Actor capacity when it starts, fixed by the Worker build rather than by a field on the WorkerPool. The gVisor and micro-VM Workers that Agent Substrate ships both report a capacity of 1000 Actors, and no setting raises or lowers it.
 
-Agent Substrate checks this capacity on every placement. It weighs a Worker's spare CPU and memory only when the ActorTemplate states what one Actor needs, and the templates that kagent generates for Sessions state nothing. A pool therefore places a Session's Actor based only on a Worker's available slots, regardless of how loaded the Worker's node already is. Worker resource limits still matter, because they govern how Kubernetes packs Workers onto nodes.
+Agent Substrate checks this capacity on every placement. It weighs a Worker's spare CPU and memory only when the ActorTemplate states how much CPU and memory one Actor needs. An ActorTemplate that the kagent controller compiles states no per-Actor CPU or memory, so a pool places a Session's Actor on a Worker's available slots alone, regardless of how loaded the Worker's node already is. Worker resource limits still matter, because they govern how Kubernetes packs Workers onto nodes.
 
 Size the pool for the number of turns that run at the same time, not for the number of Agents or Sessions that you have created. A cluster with hundreds of Sessions that are each used occasionally needs far fewer Workers than the session count suggests.
 
@@ -103,7 +103,7 @@ substrateWorkerPool:
 
 ### Recognize an undersized pool
 
-Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use, and a placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
+Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use. A placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
 
 None of those signals reach the caller. A turn that cannot get a Worker waits for one, and a turn that waits too long fails with a generic timeout that names neither capacity nor the pool.
 
@@ -113,7 +113,7 @@ ERROR:
   Message: actor "ai-01a087c0-1d72-775a-9a32-566acac7b685" request timed out
 ```
 
-Because short turns release their capacity quickly, a pool under mild pressure absorbs the load and only sheds the requests that wait past the deadline. The result is intermittent timeouts under concurrency rather than a clean failure. Neither the kagent controller log nor the Agent Substrate API log records a capacity message when this happens, so confirm the diagnosis from the `at_capacity` and `no_capacity` signals and from the pool's `READY` count, then raise the replica count.
+Because short turns release their capacity quickly, a pool under mild pressure absorbs the load and only sheds the requests that wait past the deadline. The result is intermittent timeouts under concurrency rather than a clean failure. Neither the kagent controller log nor the Agent Substrate API log records a capacity message when this happens, so confirm the diagnosis from the `at_capacity` and `no_capacity` signals and from the pool's `READY` count. If the pool is under pressure, raise the replica count.
 
 ### Set resource requests on Workers
 
@@ -153,7 +153,7 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 ### Move snapshots to an external bucket
 
-1. Turn the bundled store off and select the backend in your Agent Substrate Helm values. Setting `atelet.storageBackend` to `s3` selects the S3 client, and any other value selects Google Cloud Storage.
+1. Turn the bundled store off and select the backend in your Agent Substrate Helm values. Setting `atelet.storageBackend` to `s3` selects the S3 client, and setting it to `gcs` selects Google Cloud Storage. Agent Substrate matches only the `s3` value, so every other value, an empty one included, selects Google Cloud Storage.
 
    ```yaml
    rustfs:
@@ -164,9 +164,9 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 2. Supply the credentials that your backend needs. Setting `rustfs.enabled` to `false` stops the chart from setting the `AWS_*` variables, so neither component receives an endpoint or a key from Helm. Each storage client reads its credentials from the pod's own environment instead.
 
-   - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through Workload Identity and set nothing further.
+   - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through [Workload Identity Federation for GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart renders no Helm value for Google credentials, so set nothing further.
    - For Amazon S3, the client reads the standard AWS environment and uses a role that the pod assumes. No static key is needed.
-   - For an S3-compatible store, pass `AWS_ENDPOINT_URL`, `AWS_S3_USE_PATH_STYLE`, and the static credentials through `atelet.extraEnv`.
+   - For an S3-compatible store, pass two variables and the static credentials through `atelet.extraEnv`. `AWS_ENDPOINT_URL` names the store's API endpoint, which the client otherwise resolves to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname, which most S3-compatible stores require.
 
    ```yaml
    atelet:
@@ -190,11 +190,11 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
          location: s3://ate-snapshots/kagent/
    ```
 
-4. Run a turn on an agent, suspend its Actor, and compare the `latestSnapshot` path [in the response](#inspect-the-runtime) against the `location` that you set. Because the backend and the location are configured separately, a mismatch between them breaks resume rather than install. Confirm the result rather than the intent.
+4. Run a turn on an agent, suspend its Actor, and compare the `latestSnapshot` path [in the response](#inspect-the-runtime) against the `location` that you set. Because the backend and the location are configured separately, a mismatch between them breaks resuming an Actor from its snapshot later.
 
 ### How the chart reaches the components
 
-The `atelet` DaemonSet writes a snapshot, and the `ate-api-server` Deployment manages the snapshot. The chart renders `atelet.storageBackend` as the `ATE_STORAGE_BACKEND` variable on both workloads, so one Helm value keeps both in agreement.
+The `atelet` DaemonSet writes a snapshot, and the `ate-api-server` Deployment manages the snapshot. The chart renders `atelet.storageBackend` as the `ATE_STORAGE_BACKEND` variable on the DaemonSet and the Deployment alike, so one Helm value keeps the two in agreement.
 
 Reading these variables off a running pod helps when a snapshot fails to write. Edit the Helm values rather than the pod environment because the next Helm upgrade overwrites a direct edit.
 

@@ -19,16 +19,16 @@ database:
       key: connectionString
 ```
 
-Run your own PostgreSQL instance for production, so that the data outlives the cluster that kagent runs on.
+`kagent install` creates a development database in the cluster, so an installation needs no external database to start. Run your own PostgreSQL instance for production, so that the data outlives the cluster that kagent runs on.
 
 ### The development database
 
 `kagent install` creates a database for you unless you pass `--skip-database-setup`. It deploys a single-replica `kagent-postgresql` Deployment backed by a 500Mi PersistentVolumeClaim, creates the roles that kagent and Agent Substrate connect as, and writes the connection Secrets for both: `kagent-postgres` in the kagent namespace, and `substrate-postgres-readwrite` and `substrate-postgres-owner` in `ate-system`.
 
-Connections to this database carry no password. Each client authenticates with a Pod Certificate projected into its pod, and the connection string points `sslcert` and `sslkey` at the files under `/run/postgres.podcert.ate.dev`. `database.postgres.clientCertificate.enabled` projects those files, and `kagent install` sets it.
+Connections to this database carry no password. When `database.postgres.clientCertificate.enabled` is set to `true`, which `kagent install` does, each client authenticates with a Pod Certificate projected into its pod under `/run/postgres.podcert.ate.dev`. The connection string points its `sslcert` and `sslkey` parameters at those files.
 
 > [!IMPORTANT]
-> The development database is a single pod backed by one PersistentVolumeClaim, and `kagent install` sizes that claim at 500Mi. Losing the pod's volume loses every Session and every compiled revision, so move a production installation to a PostgreSQL instance of your own.
+> The development database is a single pod backed by one PersistentVolumeClaim, and `kagent install` sizes that claim at 500Mi. Losing the pod's volume loses every Session and every compiled revision, so move a production installation to a PostgreSQL instance that you manage.
 
 ### Use an external PostgreSQL instance
 
@@ -66,7 +66,7 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
    | Setting | Description |
    | ------- | ----------- |
    | `database.postgres.connectionStringSecretRef` | The Secret and key that hold the connection string. Keeping the string in a Secret keeps the credentials out of Helm values. The controller restarts to pick up a changed Secret. |
-   | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. The connection string must then reference the files under `/run/postgres.podcert.ate.dev`. |
+   | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. The connection string must then point its `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in the preceding example, leaves `enabled` at `false`. |
    | `database.postgres.role` | The role that kagent assumes on each connection. Give each installation that shares one database a distinct role. |
    | `database.postgres.schema` | The schema that holds kagent's tables. `database.postgres.vectorSchema` names the schema that holds the shared `pgvector` extension, and kagent needs `USAGE` on it. |
    | `database.postgres.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
@@ -102,7 +102,7 @@ Leader election keeps the replicas from conflicting. One replica holds a Kuberne
 A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so every node event reaches the {{< gloss "Actor" >}}Actors{{< /gloss >}} that this Worker hosts. What the event costs depends on what each Actor was doing when the node went away.
 
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
-* An awake Actor does not survive. Its conversation lives in the memory of its sandbox on the Worker, and Agent Substrate writes nothing to snapshot storage until this Actor suspends.
+* An awake Actor is lost. Its conversation lives in the memory of its sandbox on the Worker, and Agent Substrate writes nothing to snapshot storage until this Actor suspends.
 
 A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. Through kagent, deleting the Actor and starting a new {{< gloss "Session" >}}Session{{< /gloss >}} is the only available option, so the conversation ends wherever the node ends.
 
@@ -157,11 +157,9 @@ Idle time runs from whichever is later: the Session's creation, or its most rece
 Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 
 > [!IMPORTANT]
-> **Expiry bounds Sessions, not history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, so `GetSession` returns not-found afterward. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
+> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, so `GetSession` returns not-found afterward. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
 
-An expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone. The same caller can reuse that request ID to start a fresh Session.
-
-<!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page. Move it when a Sessions reference page exists. -->
+<!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page, so it is parked here until a Sessions reference page exists. The behaviour: an expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone, so the same caller can reuse that request ID to start a fresh Session. -->
 
 To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sessions that it removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
 

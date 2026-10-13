@@ -38,7 +38,9 @@ One Worker hosts many Actors at the same time. When each Worker starts, it repor
 
 Substrate checks two things before it places an Actor on a Worker:
 * Whether the Worker has a free Actor slot. This check always runs.
-* Whether the Worker has enough spare CPU and memory. This check runs only when the ActorTemplate declares what one Actor needs, and kagent declares nothing for a Session. The free Actor slot check is therefore the only one that decides where a Session's Actor lands. [Worker resource limits]({{< link path="operations/tune-agent-substrate#set-resource-requests-on-workers" >}}) still matter, because a Worker with no limits reports its whole node as its own capacity.
+* Whether the Worker has enough spare CPU and memory. This check runs only when the ActorTemplate states how much CPU and memory one Actor needs.
+
+An ActorTemplate that the kagent controller compiles states no per-Actor CPU or memory, so the free Actor slot check is the only one that decides where a Session's Actor lands. [Worker resource limits]({{< link path="operations/tune-agent-substrate#set-resource-requests-on-workers" >}}) still matter, because a Worker with no limits reports its whole node as its own capacity.
 
 <!-- REVIEW (runtime reviewer): on a default installation neither side declares resources, so a Worker keeps accepting Actors up to its build capacity no matter how loaded its node is, and node pressure surfaces as eviction rather than as a placement failure. Confirm that this is intended for GA before this section describes it as the expected operating mode. -->
 
