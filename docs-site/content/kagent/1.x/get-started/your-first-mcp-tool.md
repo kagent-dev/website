@@ -185,5 +185,5 @@ kubectl delete remotemcpserver my-mcp-server -n kagent
 {{< cards >}}
   {{< card link=`{{< link path="skills-and-mcp/about-tools" >}}` title="About tools" subtitle="Read the full tool binding schema, including binding one AgentTemplate as another agent's subagent." >}}
   {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Give your agent capabilities that no MCP server provides." >}}
-  {{< card link=`{{< link path="examples/agent-substrate" >}}` title="Agent Substrate" subtitle="Watch your agent's Actor suspend between turns, then checkpoint and fork the conversation." >}}
+  {{< card link=`{{< link path="examples/agent-substrate" >}}` title="Agent Substrate" subtitle="Watch your agent's Actor suspend between turns, then checkpoint the conversation." >}}
 {{< /cards >}}

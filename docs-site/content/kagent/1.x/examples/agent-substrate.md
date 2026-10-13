@@ -1,21 +1,30 @@
 ---
 title: Agent Substrate
-description: Watch an agent's Actor suspend between turns, pin its state with a checkpoint, and fork that checkpoint into a second agent that continues the conversation.
+description: Watch an agent's Actor suspend between turns and pin its state with a checkpoint.
 weight: 10
 author: kagent.dev
 ---
 
-[Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs every agent as an Actor: a sandboxed unit of compute that holds a {{< gloss "Worker" >}}Worker{{< /gloss >}} only while a turn is in progress, and whose state you can pin and branch. This example follows one agent through all three behaviors.
+[Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) runs every agent as an Actor: a sandboxed unit of compute that holds a {{< gloss "Worker" >}}Worker{{< /gloss >}} only while a turn is in progress. This example follows one agent through suspend, resume, and checkpoint creation.
 
 The Actor that these steps follow is also the isolation boundary. Every Actor runs in its own {{< gloss "gVisor" >}}gVisor{{< /gloss >}} sandbox rather than sharing one with its neighbors. This isolation allows a model to safely run tools and execute commands. For what the sandbox blocks, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Before you begin
 
-Checkpoints and {{< gloss "Fork" >}}forks{{< /gloss >}} have no kagent CLI commands yet, so this example calls `CheckpointService` with grpcurl.
+Checkpoints have no kagent CLI commands yet, so this example calls `CheckpointService` with grpcurl.
 
 {{< reuse "kagent-docs/snippets/grpcurl-prerequisites.md" >}}
 
-5. Create a {{< gloss "Session" >}}Session{{< /gloss >}} and send it a message, then save the Session's ID and the ID of the task that the message produced. A checkpoint pins a completed turn, so the conversation needs at least one.
+5. Install `kubectl-ate`, the Agent Substrate command line tool.
+   ```bash
+   curl -fsSL -o kubectl-ate \
+     "https://github.com/kagent-dev/substrate/releases/download/v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}/kubectl-ate-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')"
+   chmod +x kubectl-ate
+   sudo mv kubectl-ate /usr/local/bin/
+   kubectl ate --help
+   ```
+
+6. Create a {{< gloss "Session" >}}Session{{< /gloss >}} and send it a message. Then save the Session's ID and the ID of the task that the message produced. A checkpoint pins a completed turn, so the conversation needs at least one.
    ```bash
    export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
    export TASK_ID=$(kagent agent invoke --session $SESSION_ID --task "What is 2+2?" -o json | jq -r '.task.id')
@@ -112,7 +121,7 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
    > [!NOTE]
    > A checkpoint captures a turn boundary, so the named task must be terminal and its snapshot must be written. A newer turn that has already started fails the call with `conversation advanced beyond the expected task`, and a snapshot that is still being written fails it with `snapshot for the expected task is not ready`. The second is safe to retry with the same values; the first needs a newer task ID.
 
-2. Save the checkpoint's `id` to fork from it in the next section.
+2. Save the checkpoint's `id` so that you can delete it during cleanup.
    ```bash
    export CHECKPOINT_ID=<your-checkpoint-id>
    ```
@@ -126,65 +135,11 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
 
 Underneath, the checkpoint attaches a {{< gloss "Tag" >}}Tag{{< /gloss >}} named `checkpoint-<checkpoint-id>` to the snapshot, and Agent Substrate does not collect a snapshot while a tag names it. You can see the tag by running `kubectl ate get tags --atespace kagent`.
 
-## Fork the conversation into a second agent
+## Forking is temporarily unavailable
 
-Forking creates a second Session from the pinned snapshot, running the revision that the checkpoint was taken on. The fork continues the conversation from the checkpoint: it inherits the {{< gloss "Transcript" >}}transcript{{< /gloss >}} up to that point, along with the Actor's durable state.
+Forking creates a second Session from a checkpoint only when the pinned snapshot contains durable data without process memory. In the current kagent release, suspended Actors use `Full` snapshots so that their process memory survives suspend and resume. A `ForkSession` request for these checkpoints is rejected with `FAILED_PRECONDITION`, because a restored Actor would resume processes that still hold the source Session's identifiers.
 
-> [!NOTE]
-> The two branches share everything up to the checkpoint and nothing after it. New turns append only to the Session that received them, so the original's history and the checkpoint itself stay unchanged no matter what the fork goes on to do. Each branch runs its own Actor.
-
-1. Fork the checkpoint.
-   ```bash
-   grpcurl -plaintext \
-     -d '{"checkpointId":"'"$CHECKPOINT_ID"'","requestId":"'"$(uuidgen)"'"}' \
-     localhost:8083 kagent.api.v1alpha1.CheckpointService/ForkSession
-   ```
-
-   The response carries a new Session with its own ID. Example output:
-   ```json
-   {
-     "session": {
-       "id": "0198c3e5-1d62-7f38-a904-8b3c7e2f5d16",
-       "agent": {
-         "namespace": "kagent",
-         "name": "my-first-agent"
-       },
-       "state": "RUNTIME_STATE_READY",
-       "contextId": "0198c3e5-1d62-7f38-a904-8b3c7e2f5d16",
-       "name": "my-first-agent turn 4"
-     }
-   }
-   ```
-
-   A fork receives fresh conversation and task IDs rather than inheriting the source's, so `contextId` is the fork's own `id`. The transcript it replays stops at the checkpoint's boundary. The fork takes the checkpoint's `name` as its own.
-
-2. Save the fork's ID, then ask it about a turn that happened before the checkpoint.
-   ```bash
-   export FORK_ID=<your-fork-session-id>
-   kagent agent invoke --session $FORK_ID --task "What did I ask you first?"
-   ```
-
-   The fork answers from the conversation it inherited. That is the difference between a fork and a new Session on the same Agent. Send the original a different question and the two diverge from here.
-
-3. List your Sessions to verify that both appear as separate conversations.
-   ```bash
-   kagent agent session list
-   ```
-
-   The two rows share an Agent, and differ in their IDs and creation times. Each one has its own Actor, named `session-<session-id>`. Example output:
-   ```console
-   +--------------------------------------+----------------+-------+----------------------+
-   | ID                                   | AGENT          | STATE | CREATED              |
-   +--------------------------------------+----------------+-------+----------------------+
-   | 0198c3d7-4f2a-7b61-9c3e-5d8f7a2b4e10 | my-first-agent | READY | 2026-08-31T15:02:10Z |
-   | 0198c3e5-1d62-7f38-a904-8b3c7e2f5d16 | my-first-agent | READY | 2026-08-31T15:14:02Z |
-   +--------------------------------------+----------------+-------+----------------------+
-   ```
-
-A fork runs the compiled {{< gloss "Revision" >}}revision{{< /gloss >}} that its checkpoint was taken on, not whatever revision the Agent resolves to now. Editing the Agent after checkpointing does not change what a fork of that checkpoint runs. That stability is the point of a checkpoint: it holds a known-good configuration you can return to, rather than tracking the template as it moves on.
-
-> [!NOTE]
-> A checkpoint can only be forked when its snapshot captured durable data alone. kagent compiles every ActorTemplate to take a `Data`-scope snapshot on commit, so a checkpoint taken on a suspended Session is forkable. A checkpoint whose snapshot also captured process state is rejected with `Checkpoint includes process state and cannot be forked`, because process memory belongs to the one Actor that produced it.
+Checkpoint creation is still useful without forking. A checkpoint pins the snapshot for retention, gives the turn boundary a stable record, and keeps the checkpoint visible in the API while the original Session continues.
 
 ## Clean up
 
@@ -193,11 +148,6 @@ A fork runs the compiled {{< gloss "Revision" >}}revision{{< /gloss >}} that its
    grpcurl -plaintext \
      -d '{"checkpointId":"'"$CHECKPOINT_ID"'"}' \
      localhost:8083 kagent.api.v1alpha1.CheckpointService/DeleteCheckpoint
-   ```
-
-2. Delete the fork. A fork is a Session in its own right, so deleting the checkpoint that it started from does not remove it.
-   ```bash
-   kagent agent session delete $FORK_ID
    ```
 
 ## Next steps

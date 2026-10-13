@@ -115,9 +115,9 @@ When an agent pauses to ask something, kagent returns the question as an MCP eli
 
 This is the same pause that any other client sees, reached through MCP instead of A2A. For the pause types, the approval model, and what the agent receives, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
-### Checkpoint and fork
+### Checkpoint a Session
 
-You can checkpoint a Session before letting an agent try something risky, then fork that checkpoint to start a second conversation from the pinned state. The client calls the three {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} tools, which give it the same operations that the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}) performs from the command line.
+You can checkpoint a Session before letting an agent try something risky. The client calls the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} tools, which give the client the same checkpoint operations that the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}) performs from the command line.
 
 1. Ask the client to checkpoint the Session.
    ```console
@@ -126,27 +126,15 @@ You can checkpoint a Session before letting an agent try something risky, then f
 
    The client reports the checkpoint's own ID, the turn that it pinned, and a state of `CHECKPOINT_STATE_READY`. Because the client holds that result in context, you can refer to the checkpoint without repeating its ID.
 
-2. Ask the client to fork that checkpoint.
-   ```console
-   > Fork that checkpoint.
-   ```
+2. Keep the checkpoint ID if you need to inspect or delete the checkpoint later.
 
-   The client reports a second Session with its own ID, already `READY`, on the same Agent as the original.
-
-3. Ask the fork a question.
-   ```console
-   > Ask that fork what 10+5 is.
-   ```
-
-   The fork answers `15`. Ask it about an earlier turn and it answers from the conversation it inherited, because a fork continues from the checkpoint rather than starting fresh.
-
-The two Sessions share everything up to the checkpoint and nothing after it, because new turns append only to the branch that received them. A fork also runs the {{< gloss "Revision" >}}revision{{< /gloss >}} its checkpoint was taken on, so editing the Agent afterwards does not change what the fork runs.
+Forking a checkpoint is temporarily unavailable. The current release stores process memory in suspended Actor snapshots, so `fork_session` returns `FAILED_PRECONDITION` instead of creating a second Session from a checkpoint.
 
 You can now safely [clean up these resources](#clean-up).
 
 ## Use agents from curl
 
-With `curl` you build each request yourself, so every field is visible: the tool name, its arguments, and the `_meta` that decides whether a call blocks or returns a task to poll. You list the agents in your cluster, hold a conversation with one, answer the agent when it pauses, and checkpoint an instance to fork a second agent from it. Every request is a `tools/call` to `/mcp` unless it names a `tasks/` method, and none of them needs an `initialize` handshake first.
+With `curl` you build each request yourself, so every field is visible: the tool name, its arguments, and the `_meta` field that decides whether a call blocks or returns a task to poll. You list the agents in your cluster, hold a conversation with one, answer the agent when it pauses, and checkpoint an instance. Every request is a `tools/call` to `/mcp` unless it names a `tasks/` method, and no request needs an `initialize` handshake first.
 
 > [!NOTE]
 > Do not put `io.modelcontextprotocol/protocolVersion` in a request's `_meta`. The server then requires a matching `Mcp-Protocol-Version` header and rejects the call without one. Neither field is necessary for any of these requests.
@@ -416,9 +404,9 @@ When an agent pauses to ask something, the task's status becomes `input_required
 
 For the pause types, the approval model, and what the agent receives, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
-### Checkpoint and fork
+### Checkpoint a Session
 
-The three checkpoint tools pin a Session's state and start a second conversation from it. None of them needs the tasks extension, so none carries `_meta`.
+The checkpoint tools pin a Session's state. These tools do not need the tasks extension, so they do not carry `_meta`.
 
 1. Create a checkpoint. `expected_head_task_id` names the terminal task to pin, so the call fails rather than pinning the wrong turn when the conversation has advanced past it. Use the `$TASK_ID` that an earlier invocation returned. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
    ```bash
@@ -459,7 +447,7 @@ The three checkpoint tools pin a Session's state and start a second conversation
    export CHECKPOINT_ID=<checkpoint-id>
    ```
 
-3. List the instance's checkpoints to confirm what you can fork from.
+3. List the Session's checkpoints.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -501,78 +489,31 @@ The three checkpoint tools pin a Session's state and start a second conversation
    }
    ```
 
-4. Fork the checkpoint into a second Session. This call takes `checkpoint_id` rather than a Session ID, because the checkpoint already identifies the Session it was taken on.
-   ```bash
-   curl -s -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{
-       "jsonrpc": "2.0",
-       "id": 8,
-       "method": "tools/call",
-       "params": {
-         "name": "fork_session",
-         "arguments": {
-           "checkpoint_id": "'"$CHECKPOINT_ID"'",
-           "request_id": "my-first-fork"
-         }
-       }
-     }'
-   ```
-
-   The result is a new Session with its own ID, already `READY`, on the same Agent as the original. Example output:
-   ```json
-   {
-     "session": {
-       "id": "01a06d19-7eec-797b-87b8-7397a96b1544",
-       "harness": "my-first-harness",
-       "agent_template": "my-first-agent",
-       "state": "RUNTIME_STATE_READY"
-     }
-   }
-   ```
-
-5. Invoke the fork with `invoke_session` and its new ID. A fork receives a new conversation ID, so `context_id` is the fork's own Session ID. Example output:
-   ```json
-   {
-     "session_id": "01a06d19-7eec-797b-87b8-7397a96b1544",
-     "task_id": "01a06d19-80e7-7554-8288-377eda9e861b",
-     "context_id": "ce5a10b8-7789-4ba7-8395-e60a339de763",
-     "state": "TASK_STATE_COMPLETED",
-     "text": "15"
-   }
-   ```
-
-A fork runs the {{< gloss "Revision" >}}revision{{< /gloss >}} its checkpoint was taken on, so editing the AgentTemplate afterwards does not change what the fork runs. For what a checkpoint captures, why a checkpoint taken on a suspended instance is the forkable kind, and what a fork does and does not inherit, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+Forking a checkpoint is temporarily unavailable. The current release stores process memory in suspended Actor snapshots, so `fork_session` returns `FAILED_PRECONDITION` instead of creating a second Session from a checkpoint. For what a checkpoint captures and why forking is rejected, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
 You can now safely [clean up these resources](#clean-up).
 
 ## Clean up
 
-1. Delete the fork that you created. No MCP tool deletes a Session, so use the kagent command line interface.
-   ```bash
-   kagent agent session delete <fork-session-id>
-   ```
-
-2. Port-forward the controller's gRPC port, and leave the command running. `CheckpointService` listens there rather than on the HTTP port that serves MCP.
+1. Port-forward the controller's gRPC port, and leave the command running. `CheckpointService` listens there rather than on the HTTP port that serves MCP.
    ```bash
    kubectl port-forward -n kagent svc/kagent-controller 8083:8083
    ```
 
-3. Delete the checkpoint that you created.
+2. Delete the checkpoint that you created.
    ```bash
    grpcurl -plaintext \
      -d '{"checkpointId":"<checkpoint-id>"}' \
      localhost:8083 kagent.api.v1alpha1.CheckpointService/DeleteCheckpoint
    ```
 
-4. Remove the server entry from your client. In Claude Code, run `claude mcp remove kagent`. In Cursor, delete the `kagent` entry from your MCP settings.
+3. Remove the server entry from your client. In Claude Code, run `claude mcp remove kagent`. In Cursor, delete the `kagent` entry from your MCP settings.
 
-5. Stop both port-forwards with `Ctrl+C`.
+4. Stop both port-forwards with `Ctrl+C`.
 
 ## MCP tool reference
 
-The server exposes five Session tools. Two cover discovery and conversation. Three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin and branch an agent's state as well as talk to it. No tool takes a namespace. A Session is addressed by its own UUID. No tool deletes an object either. Deleting a Session takes the `kagent agent session delete` command, and deleting a checkpoint takes a direct call to the gRPC API, because the CLI has no checkpoint command. The server also exposes a set of [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
+The server exposes five Session tools. Two cover discovery and conversation. Three expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin an agent's state as well as talk to it. No tool takes a namespace. A Session is addressed by its own UUID. No tool deletes an object either. Deleting a Session takes the `kagent agent session delete` command, and deleting a checkpoint takes a direct call to the gRPC API, because the CLI has no checkpoint command. The server also exposes a set of [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
 
 | Tool | Required arguments | What it does |
 | ---- | ------------------ | ------------ |
@@ -580,7 +521,7 @@ The server exposes five Session tools. Two cover discovery and conversation. Thr
 | `invoke_session` | `session_id`, `message` | Sends a message and returns the agent's reply. Takes `message_id` for idempotency. |
 | `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the conversation at a turn boundary. The call fails if the conversation has advanced past that task. Takes `request_id` for idempotency. |
 | `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
-| `fork_session` | `checkpoint_id` | Creates a new Session from a checkpoint. Takes `request_id` for idempotency. |
+| `fork_session` | `checkpoint_id` | Temporarily rejects checkpoints with `FAILED_PRECONDITION` while suspended snapshots include process memory. Takes `request_id` for idempotency. |
 
 ## Next steps
 

@@ -32,7 +32,7 @@ kagent 1.0 separates an agent's capabilities from its runtime, then runs the two
 {{< feature-card title="Agent lifecycle via CRDs" desc="Define, version, and roll out Harnesses and AgentTemplates with kubectl and GitOps, the same workflow as every other workload." >}}
 {{< feature-card title="Sandboxed by default" desc="Every Session runs on a Substrate Actor, isolated from the host kernel by a gVisor sandbox. Run untrusted, model-directed code safely." >}}
 {{< feature-card title="Suspend and resume" desc="Idle Sessions suspend and free their compute, then resume on demand. Run far more agents than you have capacity for at any one moment." >}}
-{{< feature-card title="Checkpoint and fork" desc="Pin a snapshot of a conversation at a turn boundary, then branch a second Session from it that keeps the revision it started with." >}}
+{{< feature-card title="Checkpoints" desc="Pin a snapshot of a conversation at a turn boundary so that Agent Substrate keeps the state for inspection and retention." >}}
 {{< feature-card title="Pluggable agent runtimes" desc="A Harness selects the engine behind an agent: kagent's own Go and Python engines, the Codex or Claude coding agents, or any image of your own that speaks kagent's A2A contract." >}}
 {{< feature-card title="Tools over MCP" desc="Bind an agent to any Model Context Protocol (MCP) server with a RemoteMCPServer resource. An installation registers two servers already, including 124 tools for Kubernetes, Helm, Istio, and Argo Rollouts." >}}
 {{< feature-card title="Agent tools" desc="Bind another AgentTemplate as a tool, so an agent can hand work to a specialist. A Shared binding nests that agent inside its parent's Actor, one level deep." >}}
