@@ -17,7 +17,7 @@ An agent spends most of its life waiting. It waits on a person to reply, and it 
 - **Pause**: Takes a short-term snapshot whose files stay on the node. Pausing pins the Actor to that node, because the following resume is prioritized onto the node that holds the snapshot files.
 - **Resume**: Restores a suspended or paused Actor onto a Worker, from its latest snapshot. The common path restores from a snapshot rather than cold-booting the workload.
 
-The following diagram traces an Actor through those operations, and shows the further path that opens once a snapshot is [pinned by a tag](#checkpoints).
+The following diagram traces an Actor through those operations, and shows what happens once a snapshot is [pinned by a tag](#checkpoints).
 </br></br>
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
@@ -85,7 +85,7 @@ Because kagent suspends at every turn boundary, every message to a Session pays 
 
 ## Checkpoints
 
-A **checkpoint** marks one point in a conversation and keeps it. You can create a checkpoint when a Session reaches a state worth returning to, such as a long investigation that is only partway through. You can then start a second Session from that point, which is known as a {{< gloss "Fork" >}}fork{{< /gloss >}}. The fork continues the conversation from where the checkpoint marked it, new turns append only to the fork, and the fork gets its own conversation and task identifiers rather than inheriting the source's. To create a checkpoint and fork a Session from it, follow the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+A **checkpoint** marks one point in a conversation and keeps it. You can create a checkpoint when a Session reaches a state worth returning to, such as a long investigation that is only partway through. Starting a second Session from that point, which is known as a {{< gloss "Fork" >}}fork{{< /gloss >}}, is unavailable in this release. kagent captures process memory in every snapshot, so `ForkSession` rejects a checkpoint with `FAILED_PRECONDITION` rather than restore an Actor that still holds the source Session's identifiers. To create and inspect a checkpoint, follow the [Agent Substrate example]({{< link path="examples/agent-substrate#forking-is-temporarily-unavailable" >}}).
 
 Create a checkpoint only after a turn finishes. The request names the task that the turn ended on, and it fails when a newer turn has already started or while that turn's snapshot is still being written.
 
