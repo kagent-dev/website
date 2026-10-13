@@ -68,13 +68,14 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
      name: my-first-agent
      namespace: kagent
    spec:
-     templateRef:
-       name: my-first-template
+     template:
+       ref:
+         name: my-first-template
      harnessRef:
        name: my-first-harness
    ```
    > [!NOTE]
-   > Each side of the pairing takes either a reference, as shown here, or a complete spec written inline under `spec.template` or `spec.harness`. The two choices are independent, so an Agent can reference one side and inline the other. An inline spec is a complete value rather than an override, and kagent creates no Kubernetes object to back it.
+   > `spec.template` takes either a reference, as shown here, or a complete AgentTemplate spec under `inline`. An inline template is a complete value rather than an override, and kagent creates no Kubernetes object to back it. `spec.harnessRef` takes a reference only, so a Harness must exist before an Agent can name it.
 
 4. Confirm that the Agent is ready. `READY` reports whether kagent compiled and prepared a runtime {{< gloss "Revision" >}}revision{{< /gloss >}} for the pair.
    ```bash

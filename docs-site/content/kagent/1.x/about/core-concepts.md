@@ -90,9 +90,9 @@ For the complete AgentTemplate schema, see the [API reference]({{< link path="re
 
 ## Agent
 
-An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with one Harness_. For each side, the Agent either names an existing resource or includes a complete spec inline, and it sets exactly one of the two.
+An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with one Harness_. Both sides are required. Under `spec.template`, the Agent sets exactly one of `ref`, which names an existing AgentTemplate, or `inline`, which carries a complete template spec. Under `spec.harnessRef`, the Agent names an existing Harness. A Harness has no inline form.
 
-The two sides are independent, so an Agent can name both resources, inline both, or mix the two. An inline spec is a complete definition, not an override of a named resource, and kagent creates no Kubernetes resource to back one. Every name resolves in the Agent's own namespace, including a name nested inside an inline spec. For the fields that express each choice, see the [API reference]({{< link path="reference/api-ref#agent" >}}).
+An inline template is a complete definition rather than an override of a named AgentTemplate, and kagent creates no Kubernetes resource to back one. Every name resolves in the Agent's own namespace, including a name nested inside an inline template. For the fields that express each choice, see the [API reference]({{< link path="reference/api-ref#agent" >}}).
 
 The following Agent resource references both sides:
 
@@ -103,8 +103,9 @@ metadata:
   name: assistant
   namespace: kagent
 spec:
-  templateRef:
-    name: shared-context
+  template:
+    ref:
+      name: shared-context
   harnessRef:
     name: kagent
 ```

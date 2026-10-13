@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox wait
 description: Collect output and wait for an existing process without restarting it.
-weight: 550
+weight: 600
 ---
 
 Collect output and wait for an existing process without restarting it

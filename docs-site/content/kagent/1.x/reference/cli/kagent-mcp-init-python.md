@@ -1,7 +1,7 @@
 ---
 title: kagent mcp init python
 description: Initialize a new Python MCP server project.
-weight: 370
+weight: 420
 ---
 
 Initialize a new MCP server project using the fastmcp-python framework.

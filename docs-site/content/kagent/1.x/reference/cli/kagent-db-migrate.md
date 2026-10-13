@@ -1,11 +1,11 @@
 ---
 title: kagent db migrate
 description: Apply, roll back, and inspect database migrations.
-weight: 220
+weight: 270
 ---
 
 Apply, roll back, and inspect database migrations.
-The command reads KAGENT_POSTGRES_DATABASE_URL when --db-url is empty.
+The command reads KAGENT_POSTGRES_DATABASE_URL and KAGENT_POSTGRES_DATABASE_ROLE when their flags are empty.
 
 ```bash
 kagent db migrate [command]
@@ -19,6 +19,7 @@ kagent db migrate [command]
 - [`kagent db migrate version`]({{< link path="reference/cli/kagent-db-migrate-version" >}}) - Show the applied migration version
 
 **Flags:**
+- `--db-role string` - Stable PostgreSQL role to assume after authentication
 - `--db-url string` - PostgreSQL connection URL
 - `-h, --help` - help for migrate
 - `--source string` - Migration source for down, goto, or version

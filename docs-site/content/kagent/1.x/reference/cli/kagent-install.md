@@ -1,7 +1,7 @@
 ---
 title: kagent install
 description: Install kagent.
-weight: 280
+weight: 330
 ---
 
 Install kagent
@@ -13,6 +13,7 @@ kagent install [flags]
 **Flags:**
 - `-h, --help` - help for install
 - `--profile string` - Installation profile (minimal)
+- `--skip-database-setup` - Skip bundled PostgreSQL deployment and initialization
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

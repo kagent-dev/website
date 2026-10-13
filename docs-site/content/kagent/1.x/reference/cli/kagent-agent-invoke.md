@@ -13,6 +13,8 @@ kagent agent invoke [flags]
 **Flags:**
 - `-f, --file string` - Read task text from a file or - for stdin
 - `-h, --help` - help for invoke
+- `--push-id string` - Callback ID (generated when omitted; requires --push-url)
+- `--push-url string` - Register a callback before task dispatch; return the task immediately
 - `--session string` - Session ID
 - `-S, --stream` - Stream the response
 - `-t, --task string` - Task text

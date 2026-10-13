@@ -46,7 +46,7 @@ The `AzureOpenAI` provider calls an Azure OpenAI deployment. It differs from the
    | `model` | The model that the deployment serves. |
    | `provider` | The provider to use, `AzureOpenAI`. |
    | `azureOpenAI.azureEndpoint` | The endpoint of your Azure OpenAI resource. This field is required. |
-   | `azureOpenAI.apiVersion` | The Azure OpenAI API version to call. This field is required. |
+   | `azureOpenAI.apiVersion` | The Azure OpenAI API version to call. This field is required unless `apiFormat` is `responses`. |
    | `azureOpenAI.azureDeployment` | The name of the deployment within the resource. |
 
 ## Azure OpenAI provider settings
@@ -56,12 +56,41 @@ The `azureOpenAI` block takes the following settings. For every field, including
 | Field | Description |
 | ----- | ----------- |
 | `azureEndpoint` | The endpoint of the Azure OpenAI resource. Required. |
-| `apiVersion` | The Azure OpenAI API version. Required. |
+| `apiFormat` | Which Azure OpenAI HTTP API to call, either `chatCompletions` or `responses`. Defaults to `chatCompletions`. |
+| `apiVersion` | The Azure OpenAI API version. Required unless `apiFormat` is `responses`. |
 | `azureDeployment` | The deployment name within the resource. |
 | `azureAdToken` | A Microsoft Entra ID token to send instead of an API key. |
 | `temperature` | How much randomness the model applies when it picks the next token. |
 | `topP` | The nucleus sampling cutoff. |
 | `maxTokens` | A cap on the tokens generated in one response. |
+
+## Choose an API format
+
+`apiFormat` selects which Azure OpenAI HTTP API the runtime calls. Keep the default unless a model that you deployed serves the Responses API only, because the two formats differ in how they address a deployment and in whether they take a dated API version.
+
+| Value | What the runtime calls | `azureOpenAI.apiVersion` |
+| ----- | ---------------------- | ------------------------ |
+| `chatCompletions` | The dated deployments path, which addresses `azureDeployment` under a pinned API version. This value is the default. | Required. The API server rejects a ModelConfig that omits it. |
+| `responses` | The Azure Responses API at `<azureEndpoint>/openai/v1/`. This surface takes no dated version. | Omit this field. |
+
+The following ModelConfig calls the Responses API.
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: azure-openai-responses
+  namespace: kagent
+spec:
+  apiKeySecret: azure-openai-api-key
+  apiKeySecretKey: api-key
+  model: gpt-4o-mini
+  provider: AzureOpenAI
+  azureOpenAI:
+    azureEndpoint: https://<account>.openai.azure.com/
+    apiFormat: responses
+    azureDeployment: gpt-4o-mini
+```
 
 ## Authentication
 

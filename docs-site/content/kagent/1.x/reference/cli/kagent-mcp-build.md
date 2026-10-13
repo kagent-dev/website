@@ -1,7 +1,7 @@
 ---
 title: kagent mcp build
 description: Build MCP server as a Docker image.
-weight: 310
+weight: 360
 ---
 
 Build an MCP server from the current project.

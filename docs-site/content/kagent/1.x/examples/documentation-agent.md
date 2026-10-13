@@ -245,8 +245,9 @@ The AgentTemplate binds the tools and sets the system prompt that makes the agen
      name: docs-agent
      namespace: kagent
    spec:
-     templateRef:
-       name: docs-agent
+     template:
+       ref:
+         name: docs-agent
      harnessRef:
        name: my-first-harness
    EOF
