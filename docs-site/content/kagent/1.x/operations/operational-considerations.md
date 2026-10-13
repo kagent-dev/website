@@ -5,11 +5,11 @@ weight: 10
 author: kagent.dev
 ---
 
-A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation runs one controller replica against the development database that `kagent install` creates, and schedules agents onto any node in the cluster. Each of those defaults works for a trial installation, but all three need a decision before you run {{< reuse "kagent-docs/snippets/name-product.md" >}} in production. This page covers which database to run, how many controller replicas to keep, and how to treat the nodes that host Workers.
+A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation runs one controller replica against the development database that `kagent install` creates, and schedules agents onto any node in the cluster. Each default works for a trial installation, and each needs a decision before you run {{< reuse "kagent-docs/snippets/name-product.md" >}} in production: which database to run, how many controller replicas to keep, and how to treat the nodes that host Workers.
 
 ## Choose a database
 
-kagent stores conversations, {{< gloss "Session" >}}Sessions{{< /gloss >}}, and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart deploys no database of its own. It reads a connection string from a Kubernetes Secret, and `database.postgres.connectionStringSecretRef` names that Secret and the key inside it.
+kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart deploys no database of its own. It reads a connection string from a Kubernetes Secret, and `database.postgres.connectionStringSecretRef` names that Secret and the key inside it.
 
 ```yaml
 database:
@@ -85,14 +85,14 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
 
 ## Run multiple controller replicas
 
-To ensure that a controller failure does not stop reconciliation, set `controller.replicas` to a number higher than `1`.
+So that a controller failure does not stop reconciliation, set `controller.replicas` to a number higher than `1`.
 
 ```yaml
 controller:
   replicas: 3
 ```
 
-Leader election keeps the replicas from conflicting. One replica holds a Kubernetes lease and performs reconciliation, garbage collection, and scheduled runs. The other replicas stay ready and take over when the leader's lease expires.
+Leader election keeps the replicas from conflicting. One replica takes a Kubernetes lease and performs reconciliation, garbage collection, and scheduled runs. The other replicas stay ready and take over when the leader's lease expires.
 
 > [!IMPORTANT]
 > If an installation runs on the development database, extra controller replicas do not make the installation highly available. That database is a single pod backed by one PersistentVolumeClaim, so losing it stops every replica at once. Run an external PostgreSQL instance before counting controller replicas toward availability.
@@ -102,13 +102,13 @@ Leader election keeps the replicas from conflicting. One replica holds a Kuberne
 A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so every node event reaches the {{< gloss "Actor" >}}Actors{{< /gloss >}} that this Worker hosts. What the event costs depends on what each Actor was doing when the node went away.
 
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
-* An awake Actor is lost. Its conversation lives in the memory of its sandbox on the Worker, and Agent Substrate writes nothing to snapshot storage until this Actor suspends.
+* An awake Actor is lost. The Session's in-flight state lives in the memory of its sandbox on the Worker, and Agent Substrate writes nothing to snapshot storage until this Actor suspends.
 
-A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. Through kagent, deleting the Actor and starting a new {{< gloss "Session" >}}Session{{< /gloss >}} is the only available option, so the conversation ends wherever the node ends.
+A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. Through kagent, deleting the Actor and starting a new {{< gloss "Session" >}}Session{{< /gloss >}} is the only available option, so the Session ends with the node.
 
 <!-- REVIEW (runtime reviewer): Agent Substrate does have a recovery verb. RevertActor (cmd/ateapi/internal/controlapi/workflow_revert.go) accepts a CRASHED actor, returns it to SUSPENDED, leaves the external snapshot in place for a later resume, and needs no live worker. kagent never calls it, so a kagent user cannot reach it today and this section describes the kagent-level outcome only. Confirm whether kagent should expose revert before GA, and rewrite this paragraph if it does. -->
 
-Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors still lose their conversations, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
+Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors still lose their Sessions, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
 
 ### Graceful pod deletion
 
@@ -129,7 +129,7 @@ gcloud container node-pools update "${NODE_POOL}" \
 
 ### Spot and preemptible nodes
 
-A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for conversations that end without warning. Use these nodes only where the agents on this pool can afford to lose a turn.
+A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for Sessions that end without warning. Use these nodes only where the agents on this pool can afford to lose a turn.
 
 ### WorkerPool scale-down
 

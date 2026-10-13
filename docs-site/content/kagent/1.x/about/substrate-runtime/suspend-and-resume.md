@@ -47,9 +47,9 @@ A **DurableDir volume** is the per-Actor application data surface. Its contents 
 Two kinds of snapshot serve different purposes, and both appear in a normal installation.
 
 - The **golden snapshot** is shared by every Actor of one ActorTemplate. Agent Substrate captures it once by booting the workload temporarily when the template is created. Every new Actor of this template starts from this snapshot rather than from a cold start. kagent waits for the golden snapshot before an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} becomes ready, and the controller reports `waiting for the ActorTemplate golden snapshot` while the capture runs.
-- The **last snapshot** belongs to one Actor. Agent Substrate writes it on every suspend and restores this same Actor from it on the next resume. It holds the files and memory that this one conversation built up, so the conversation continues from where it stopped.
+- The **last snapshot** belongs to one Actor. Agent Substrate writes it on every suspend and restores this same Actor from it on the next resume. It keeps the files and memory that this one Session built up, so the Session continues from where it stopped.
 
-Snapshots are persisted to object storage so that Actor state is durable and portable across the cluster. Agent Substrate writes snapshots to Google Cloud Storage or to Amazon Simple Storage Service (S3). The S3 client also reaches S3-compatible stores that accept a custom endpoint and path-style addressing. For the settings that select and configure each client, see [Configure snapshot storage]({{< link path="operations/tune-agent-substrate#configure-snapshot-storage" >}}). A {{< gloss "Harness" >}}Harness{{< /gloss >}} names the location for its Actors' snapshots in its `substrate.snapshotPolicy` section.
+Agent Substrate writes every snapshot to object storage, so Actor state is durable and portable across the cluster. The supported backends are Google Cloud Storage and Amazon Simple Storage Service (S3), and the S3 client also reaches S3-compatible stores that accept a custom endpoint and path-style addressing. For the settings that select and configure each client, see [Configure snapshot storage]({{< link path="operations/tune-agent-substrate#configure-snapshot-storage" >}}). A {{< gloss "Harness" >}}Harness{{< /gloss >}} names the location for its Actors' snapshots in its `substrate.snapshotPolicy` section.
 
 ```yaml
 spec:
@@ -64,11 +64,11 @@ spec:
 
 ## Suspension between turns
 
-kagent does not wait for an Actor to go idle for a long stretch before suspending it. It suspends the Actor at every turn boundary, as soon as the conversation reaches a point where nothing is running.
+kagent does not wait for an Actor to go idle for a long stretch before suspending it. It suspends the Actor at every turn boundary, as soon as nothing in the Session is running.
 
 A turn reaches such a boundary when its task enters a terminal state, or when the task stops to wait on a person, which is the `INPUT_REQUIRED` and `AUTH_REQUIRED` case. At that point kagent suspends the Actor durably and records the exact snapshot that the suspend produced.
 
-The {{< gloss "Session" >}}Session{{< /gloss >}}'s own state does not change while this happens. It stays `READY` throughout, because suspension is a property of the runtime underneath it rather than of the conversation. A caller that lists Sessions sees a ready conversation whether or not an Actor is currently running for it.
+The {{< gloss "Session" >}}Session{{< /gloss >}}'s own state does not change while this happens. It stays `READY` throughout, because suspension is a property of the runtime underneath the Session rather than of the Session itself. A caller that lists Sessions sees a ready Session whether or not an Actor is running for it.
 
 > [!NOTE]
 > Creating a Session does not start an Actor running. The Actor is created as suspended, and the first message addressed to the Session resumes it.

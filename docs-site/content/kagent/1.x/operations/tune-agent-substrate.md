@@ -7,7 +7,7 @@ author: kagent.dev
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}). A default installation creates one {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} named `kagent-default`, holding a single Worker on the `gvisor` sandbox class, and it writes snapshots to the object store that the Agent Substrate chart bundles.
 
-This single Worker reports capacity for 1000 Actors, so a default pool serves many concurrent {{< gloss "Session" >}}Sessions{{< /gloss >}} before it runs out of slots. Three settings require tuning before the installation can carry real traffic: how many Workers to run, where snapshots are stored durably, and what resource requests the Worker pods carry. This page covers your options for tuning each setting, and steps for moving a pool to the `microvm` sandbox class.
+This single Worker reports capacity for 1000 Actors, so a default pool serves many concurrent {{< gloss "Session" >}}Sessions{{< /gloss >}} before it runs out of slots. Three settings still need tuning before the installation takes real traffic: how many Workers to run, where snapshots are stored durably, and what resource requests the Worker pods set. This page covers each setting, and the steps for moving a pool to the `microvm` sandbox class.
 
 ## Before you begin
 
@@ -15,13 +15,13 @@ This single Worker reports capacity for 1000 Actors, so a default pool serves ma
 
 2. Confirm that you have administrative access to the cluster, because this guide scales WorkerPools and reads cluster-scoped resources.
 
-3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). `GetSubstrateStatus` has no kubectl or kagent command equivalent, so calling it directly is the only way to get the fuller view of the runtime.
+3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). `GetSubstrateStatus` has no kubectl or kagent command equivalent, so calling it directly is the only way to see the full runtime state.
 
 ## Inspect the runtime
 
-Read the current state of the runtime before you change it. Three values from this section carry into the rest of this guide: the pool name and its `READY` count, the snapshot path that Actors are writing to, and the Worker image that the pool runs.
+Read the current state of the runtime before you change it. The rest of this guide uses three values from this section: the pool name and its `READY` count, the snapshot path that Actors are writing to, and the Worker image that the pool runs.
 
-1. Check the WorkerPool's Worker counts. These counts are the only place that capacity trouble surfaces.
+1. Check the WorkerPool's Worker counts. These counts show whether the pool is producing the Workers that you asked for.
    ```bash
    kubectl get workerpools -n kagent
    ```
@@ -74,7 +74,7 @@ Read the current state of the runtime before you change it. Three values from th
    }
    ```
 
-A Worker entry gains an `actorId` only while an Actor occupies it, so the Workers list doubles as a view of which capacity is busy.
+A Worker entry gains an `actorId` only while an Actor occupies it, so the Workers list also shows which capacity is busy.
 
 ## Size a WorkerPool
 
@@ -139,7 +139,7 @@ The same `template` block also accepts `nodeSelector`, `tolerations`, `priorityC
 
 ## Configure snapshot storage
 
-Agent Substrate writes every suspended Actor to an object store, so the bucket holds the conversation state that a resume restores. Two places decide where a snapshot lands:
+Agent Substrate writes every suspended Actor to an object store, so the bucket stores the Session state that a resume restores. Two places decide where a snapshot lands:
 
 - In the Agent Substrate Helm values, `atelet.storageBackend` selects the storage client and `rustfs.enabled` decides whether the chart supplies credentials for it. These two values cover both the components that write snapshots and the ones that manage them.
 - In each {{< gloss "Harness" >}}Harness{{< /gloss >}}, `spec.substrate.snapshotPolicy.location`, names the bucket and prefix that its Actors write under. The field is required, and it must point into a bucket that the selected client can reach.
@@ -149,7 +149,7 @@ Agent Substrate writes every suspended Actor to an object store, so the bucket h
 Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs an in-cluster object store and points the `atelet` DaemonSet and the `ate-api-server` Deployment at it. The store claims a 1Gi PersistentVolumeClaim, and it accepts an access key and secret key that the chart sets to published defaults.
 
 > [!IMPORTANT]
-> The bundled store is not durable. Its credentials are shared defaults that every installation receives. Snapshots hold agent conversation state, so [move a production installation to your own bucket](#move-snapshots-to-an-external-bucket) before it carries real traffic.
+> The bundled store is not durable. Its credentials are shared defaults that every installation receives. Snapshots store agent Session state, so [move a production installation to your own bucket](#move-snapshots-to-an-external-bucket) before it carries real traffic.
 
 ### Move snapshots to an external bucket
 
@@ -214,13 +214,13 @@ Agent Substrate builds a path per Actor under the Harness prefix, so one bucket 
 s3://ate-snapshots/kagent/atespaces/<atespace>/actors/<actor-uid>/snapshots/<snapshot-uid>
 ```
 
-A {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} takes a second shape. kagent creates an Agent Substrate {{< gloss "Tag" >}}Tag{{< /gloss >}} for each checkpoint, and tagging copies the Actor's snapshot into the Tag's own prefix. A Tag holds exactly one snapshot, so its objects sit directly under `tags/` with no `snapshots/` segment. The `<tag-uid>` segment is the Tag's `metadata.uid`, so nothing in the path records the `checkpoint-<id>` name that kagent gave the Tag.
+A {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} uses a different path. kagent creates an Agent Substrate {{< gloss "Tag" >}}Tag{{< /gloss >}} for each checkpoint, and tagging copies the Actor's snapshot into the Tag's own prefix. A Tag names exactly one snapshot, so its objects sit directly under `tags/` with no `snapshots/` segment. The `<tag-uid>` segment is the Tag's `metadata.uid`, so nothing in the path records the `checkpoint-<id>` name that kagent gave the Tag.
 
 ```console
 s3://ate-snapshots/kagent/atespaces/<atespace>/tags/<tag-uid>
 ```
 
-A backup or lifecycle policy must cover both prefixes, because one scoped to `actors/` omits every checkpoint and understates how much the bucket holds.
+A backup or lifecycle policy must cover both prefixes, because one scoped to `actors/` omits every checkpoint and understates how much the bucket stores.
 
 ## Keep pools on the sandbox class they serve
 
@@ -269,7 +269,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
 
    A default installation creates only the `gvisor` class, because the Agent Substrate chart applies `sandboxconfig-gvisor.yaml` and kagent installs nothing for `microvm`. The `microvm` configuration and its runtime assets are staged out of band by the Agent Substrate installer, such as through `hack/install-microvm-deps.sh --install`.
 
-3. Verify that the pool's Workers came up on the build that you set. The `ateomImage` field in the [runtime response](#inspect-the-runtime) reports the image that each Worker is running, which the WorkerPool resource calls `workerImage`. Compare the two, and confirm in the ouput that the pool reports its full replica count as ready.
+3. Verify that the pool's Workers came up on the build that you set. The `ateomImage` field in the [runtime response](#inspect-the-runtime) reports the image that each Worker is running, which the WorkerPool resource calls `workerImage`. Compare the two, and confirm in the output that the pool reports its full replica count as ready.
 
    ```bash
    kubectl get workerpools -n kagent

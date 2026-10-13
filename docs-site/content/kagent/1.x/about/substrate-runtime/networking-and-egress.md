@@ -42,9 +42,9 @@ Each rule defines the type of connection that is allowed to a destination and ho
 - **`https`**: HTTPS, which the gateway intercepts. It terminates the connection with a certificate minted for the destination name, reads the request inside, matches it against the rule's hostnames, and re-originates its own TLS connection onward. HTTP/1.1 and HTTP/2 work inside this connection, and HTTP/3 is not supported.
 - **`tls_passthrough`**: TLS forwarded to the named servers without decryption. The gateway cannot read the request, so it decides at the TLS ClientHello instead.
 
-All three rule types cover TCP connections. Agent Substrate blocks UDP, and it does not support a protocol in which the server sends the first bytes once the connection opens, such as SMTP or SSH. The gateway reads the destination hostname from the bytes that the client sends first, so those protocols leave the gateway nothing to match against.
+All three rule types cover TCP connections. Agent Substrate blocks UDP, and it does not support a protocol in which the server sends the first bytes once the connection opens, such as SMTP or SSH. The gateway reads the destination hostname from the bytes that the client sends first, so those protocols leave the gateway with nothing to match against.
 
-Intercepting HTTPS has a cost. Because the gateway terminates TLS, it holds the cleartext of every agent request for the duration of time it takes to authorize this request. Holding the cleartext also lets the gateway attach credentials on the agent's behalf. For more information, see [Credential injection](#credential-injection).
+Intercepting HTTPS has a cost. The gateway decrypts every agent request in order to authorize it, so the cleartext exists at the gateway for the length of that check. Decrypting also lets the gateway attach credentials on the agent's behalf. For more information, see [Credential injection](#credential-injection).
 
 ## Rule matching
 
@@ -56,7 +56,7 @@ Every rule names the hosts and ports that it covers, regardless of its protocol.
 | `ports` | Either every port, or a list of up to 16 port numbers. |
 | `effects` | Not a match condition. See [Credential injection](#credential-injection). |
 
-A hostname pattern is a DNS name, optionally with a `*` wildcard replacing the complete leftmost label. The wildcard matches exactly one non-empty label, so `*.example.com` matches `api.example.com` but matches neither `example.com` nor `nested.api.example.com`. A `*` wildcard on its own matches every name. No other wildcard syntax is accepted, and a pattern without one matches only the complete name. Patterns must be lowercase, must not carry a trailing dot, and must use the punycode form for an internationalized name.
+A hostname pattern is a DNS name, optionally with a `*` wildcard replacing the complete leftmost label. The wildcard matches exactly one non-empty label, so `*.example.com` matches `api.example.com` but matches neither `example.com` nor `nested.api.example.com`. A `*` wildcard on its own matches every name. No other wildcard syntax is accepted, and a pattern without one matches only the complete name. Patterns must be lowercase, must not end with a dot, and must use the punycode form for an internationalized name.
 
 ## Policy generation
 
@@ -67,7 +67,7 @@ kagent derives the allowlist from the AgentTemplate rather than taking it as con
 - Every skill artifact source, such as a git or OCI registry host.
 - The OpenTelemetry collector, for each telemetry signal that is enabled.
 
-kagent compiles this host set into the Actor's policy when it creates the Actor. Each destination becomes one rule that covers one hostname on one port, and the scheme decides the rule type. For example, an `https` destination becomes an `https` rule, and a cleartext destination becomes an `http` rule. Keeping exactly one rule per host and port is deliberate; otherwise, an overlapping rule could decide a request and skip the credential that the narrower rule carries. A destination that uses both HTTP and HTTPS on the same host and port is rejected rather than compiled.
+kagent compiles this host set into the Actor's policy when it creates the Actor. Each destination becomes one rule that covers one hostname on one port, and the scheme decides the rule type. For example, an `https` destination becomes an `https` rule, and a cleartext destination becomes an `http` rule. Keeping exactly one rule per host and port is deliberate. An overlapping rule could otherwise decide a request and skip the credential that the narrower rule attaches. A destination that uses both HTTP and HTTPS on the same host and port is rejected rather than compiled.
 
 The host set is fixed when kagent compiles the policy, so an agent reaches only the hosts that its AgentTemplate declares. The gateway denies every other destination, including a web page that a model decides to fetch partway through a Session.
 
@@ -77,14 +77,14 @@ An agent also needs a route to the OpenTelemetry collector, or its traces never 
 
 ## Policy changes
 
-The gateway caches each Actor's policy rather than fetching it per request, so policy changes are eventually consistent rather than immediate. The cache holds an entry for 10 seconds by default. This interval bounds the lag, so a policy that is created, updated, or deleted reaches new requests within one interval. Deleting a policy produces denials rather than an absence of enforcement because the gateway caches the absence too.
+The gateway caches each Actor's policy rather than fetching it per request, so policy changes are eventually consistent. The cache holds an entry for 10 seconds by default, so a policy that is created, updated, or deleted reaches new requests within that window. Deleting a policy produces denials rather than an absence of enforcement, because the gateway caches the absence too.
 
 > [!IMPORTANT]
-> A Session pins the revision it was created from, so editing an AgentTemplate does not move an existing conversation onto a new allowlist. A Session keeps the destinations that it started with for however long it runs. To pick up a changed set of destinations, create a new Session.
+> A Session pins the revision it was created from, so editing an AgentTemplate does not move an existing Session onto a new allowlist. A Session keeps the destinations that it started with for however long it runs. To pick up a changed set of destinations, create a new Session.
 
 ## Diagnose a denied request
 
-A denied request fails without explaining itself. The agent sees a rejected call, and its own error text names neither the destination nor the rule that refused it. The gateway records the reason in its log.
+A denied request gives no explanation. The agent sees a rejected call, and its own error text names neither the destination nor the rule that refused it. The gateway records the reason in its log.
 
 ```bash
 kubectl logs -n ate-system deploy/atenet-egress -c agentgateway --tail=100
@@ -98,7 +98,7 @@ error request ... http.host=kagent-tools.kagent http.status=403
   error="actor egress policy denied: ... \"EgressPolicy not found\"" reason=Authorization
 ```
 
-Read this entry in three parts. `reason=Authorization` means that the policy refused the request rather than the request failing due to some other cause. The `error` text names which check failed, such as a policy that does not exist. The `http.host` names the destination that the agent asked for. Compare this host against the AgentTemplate.
+Read this entry in three parts. `reason=Authorization` means that the policy refused the request rather than the request failing for another reason. The `error` text names which check failed, such as a policy that does not exist. The `http.host` names the destination that the agent asked for. Compare this host against the AgentTemplate.
 
 A `503` means that the gateway could not reach the control plane or a credential provider, which is an installation problem rather than a denied request.
 
@@ -112,10 +112,7 @@ A model provider or an MCP server usually requires an API key or token. The agen
 
 kagent sets this up from two resources. Every ModelConfig that holds an `apiKeySecret` becomes a credential on the rule for that model's host, and every RemoteMCPServer whose `headersFrom` reads a Secret becomes a credential on the rule for its host. kagent attaches the credential to the destination's own rule rather than adding a rule for it, and it refuses to compile a credential whose host is not already an allowed destination.
 
-A credential is declared on a rule as a `replace_headers` entry. The entry names the header to replace, an optional prefix such as `Bearer `, and either a reference that a registered credential provider resolves or a Substrate-issued JWT asserting the Actor's identity.
-
-> [!IMPORTANT]
-> The gateway replaces a header only when the request already carries it. A request that omits the placeholder header is forwarded unchanged, without the credential, rather than being denied.
+A credential is declared on a rule as a `replace_headers` entry. The entry names the header to replace, an optional prefix such as `Bearer `, and either a reference that a registered credential provider resolves or a JWT that Agent Substrate issues to assert the Actor's identity. The gateway replaces the header only when the request already sends it. A request that omits the placeholder header is forwarded unchanged, without the credential, rather than being denied.
 
 > [!NOTE]
 > Replacement happens only on a connection that the gateway terminates, and only when a credential provider is configured for the reference. If either is missing, the request reaches the destination without the credential. The request fails closed when replacement is attempted and fails. `403` is returned when the provider does not hold the credential or refuses to release it, and `503` is returned when the provider is unreachable.
