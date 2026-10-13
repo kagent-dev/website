@@ -1,7 +1,7 @@
 ---
 title: kagent completion bash
 description: Generate the autocompletion script for bash.
-weight: 160
+weight: 210
 ---
 
 Generate the autocompletion script for the bash shell.

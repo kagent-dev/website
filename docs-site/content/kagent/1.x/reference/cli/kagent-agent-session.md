@@ -15,6 +15,7 @@ kagent agent session [command]
 - [`kagent agent session delete`]({{< link path="reference/cli/kagent-agent-session-delete" >}}) - Delete a Session
 - [`kagent agent session get`]({{< link path="reference/cli/kagent-agent-session-get" >}}) - Get a Session
 - [`kagent agent session list`]({{< link path="reference/cli/kagent-agent-session-list" >}}) - List your Sessions
+- [`kagent agent session push`]({{< link path="reference/cli/kagent-agent-session-push" >}}) - Manage A2A task push callbacks
 
 **Flags:**
 - `-h, --help` - help for session

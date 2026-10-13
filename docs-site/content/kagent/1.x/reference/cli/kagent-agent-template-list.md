@@ -1,7 +1,7 @@
 ---
 title: kagent agent template list
 description: List AgentTemplates.
-weight: 120
+weight: 170
 ---
 
 List AgentTemplates

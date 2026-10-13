@@ -1,7 +1,7 @@
 ---
 title: kagent mcp run
 description: Run MCP server locally.
-weight: 390
+weight: 440
 ---
 
 Run an MCP server locally using the Model Context Protocol inspector.

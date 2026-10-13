@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox process
 description: Inspect process status without waiting.
-weight: 500
+weight: 550
 ---
 
 Inspect process status without waiting

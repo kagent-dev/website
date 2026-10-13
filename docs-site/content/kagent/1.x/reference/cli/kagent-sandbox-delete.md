@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox delete
 description: delete a sandbox.
-weight: 440
+weight: 490
 ---
 
 Inspect or change sandbox lifecycle. Mutations make one attempt; retry the same mutation on transient errors. Get only observes. Suspend can interrupt work; delete removes files.

@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate down
 description: Roll back the latest N migrations.
-weight: 230
+weight: 280
 ---
 
 Roll back the latest N migrations. A down migration can delete data.
@@ -15,6 +15,7 @@ kagent db migrate down N [flags]
 
 **Global Flags:**
 - `--ca-file string` - CA certificate file for KAgent endpoints
+- `--db-role string` - Stable PostgreSQL role to assume after authentication
 - `--db-url string` - PostgreSQL connection URL
 - `--server-name string` - TLS server name for KAgent endpoints
 - `--source string` - Migration source for down, goto, or version

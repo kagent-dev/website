@@ -11,8 +11,7 @@ A Helm chart for kagent, built with Google ADK
 
 | Repository | Name | Version |
 |------------|------|---------|
-| `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha9 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha12 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
@@ -62,6 +61,10 @@ A Helm chart for kagent, built with Google ADK
 | controller.pdb.unhealthyPodEvictionPolicy | string | "" (defer to the Kubernetes default) | `spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when the budget is exhausted, which avoids drains wedging on a crash-looping pod. Requires Kubernetes >= 1.27. Omitted from the manifest when empty. |
 | controller.podAnnotations | object | `{}` |  |
 | controller.podLabels | object | `{}` | Additional labels for the controller pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
+| controller.push.allowHTTP | bool | `false` | Allow plain HTTP callback URLs. HTTPS is required by default. |
+| controller.push.allowPrivateNetworks | bool | `false` | Allow callbacks to private, loopback, and link-local addresses. |
+| controller.push.signing.issuer | string | `""` |  |
+| controller.push.signing.secretName | string | `""` |  |
 | controller.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
 | controller.replicas | int | `1` |  |
 | controller.resources.limits.cpu | int | `2` |  |
@@ -95,32 +98,20 @@ A Helm chart for kagent, built with Google ADK
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
-| database.postgres.bundled | object | `{"affinity":{},"enabled":true,"image":{"name":"postgres","pullPolicy":"","registry":"docker.io","repository":"library","tag":"18.6-alpine3.23"},"nodeSelector":{},"podLabels":{},"podSecurityContext":{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"storage":"500Mi","storageClassName":"","tolerations":[]}` | Bundled PostgreSQL instance — for development and evaluation only. Not suitable for production. Deployed when enabled is true and url/urlFile are not set. |
-| database.postgres.bundled.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the bundled PostgreSQL pod. |
-| database.postgres.bundled.enabled | bool | `true` | Set to false to disable the bundled database and provide your own via url or urlFile. |
-| database.postgres.bundled.image.name | string | `"postgres"` | Bundled PostgreSQL image name |
-| database.postgres.bundled.image.pullPolicy | string | `""` | Bundled PostgreSQL image pull policy. Empty falls back to the top-level imagePullPolicy, then global.imagePullPolicy, then IfNotPresent. A declared default here would shadow both fallbacks. |
-| database.postgres.bundled.image.registry | string | `"docker.io"` | Bundled PostgreSQL image registry |
-| database.postgres.bundled.image.repository | string | `"library"` | Bundled PostgreSQL image repository (org/namespace) |
-| database.postgres.bundled.image.tag | string | `"18.6-alpine3.23"` | Bundled PostgreSQL image tag |
-| database.postgres.bundled.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
-| database.postgres.bundled.podLabels | object | `{}` | Additional labels for the bundled PostgreSQL pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
-| database.postgres.bundled.podSecurityContext | object | `{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999,"seccompProfile":{"type":"RuntimeDefault"}}` | Pod-level security context for the bundled PostgreSQL deployment. |
-| database.postgres.bundled.resources | object | `{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"256Mi"}}` | Resource requests/limits for the demo PostgreSQL container |
-| database.postgres.bundled.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}` | Container-level security context for the bundled PostgreSQL container. |
-| database.postgres.bundled.storage | string | `"500Mi"` | PersistentVolumeClaim size for demo PostgreSQL data |
-| database.postgres.bundled.storageClassName | string | `""` | StorageClass for the PostgreSQL PVC. Defaults to the cluster default when empty. |
-| database.postgres.bundled.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| database.postgres.clientCertificate | object | `{"enabled":false}` | Project the bundled PostgreSQL client certificate. The connection string must reference the files under /run/postgres.podcert.ate.dev. |
+| database.postgres.connectionStringSecretRef | object | `{"key":"connectionString","name":"kagent-postgres"}` | Source the PostgreSQL connection string from a pre-created Secret. Secret changes require restarting the controller. |
 | database.postgres.pool | object | `{"maxConnIdleTime":"","maxConnLifetime":"","maxConns":null,"minConns":null}` | Optional pgxpool settings. Leave unset/null to keep pgx library defaults (MaxConns≈max(4,NumCPU), MinConns=0, MaxConnIdleTime=30m, MaxConnLifetime=1h). |
+| database.postgres.pool.maxConnLifetime | string | `""` | Maximum physical connection lifetime. |
+| database.postgres.role | string | `"kagent_owner"` | Role assumed on each Kagent connection. Set a distinct role for each install sharing a database. |
+| database.postgres.schema | string | `"kagent"` | Schema for Kagent tables. |
 | database.postgres.skipMigrations | bool | `false` | Skip running database migrations at controller startup. The controller instead verifies the database is already migrated and fails if it is not. Migrations must be applied out-of-band (e.g. from a CI/CD pipeline) before install/upgrade. |
-| database.postgres.url | string | `""` | External PostgreSQL connection string. Is always used if set regardless of the `.bundled.enabled` field. |
-| database.postgres.urlFile | string | `""` | Path to a file containing the database URL. Takes precedence over url when set. Is always used if set regardless of the `.bundled.enabled` field. |
 | database.postgres.vectorEnabled | bool | `false` | Enable the pgvector migration Required to use features that depend on database vector capability. (e.g. long-term memory) Set to true when using an external PostgreSQL that has the pgvector extension installed. |
+| database.postgres.vectorSchema | string | `"extensions"` | Schema for the shared pgvector extension. Existing installations must match this value. Kagent needs USAGE on this schema; only trusted administrators should have CREATE on it. |
 | extraObjects | list | [] | Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.:   extraObjects:     - apiVersion: external-secrets.io/v1       kind: ExternalSecret       metadata:         name: '`{{ include "kagent.fullname" . }}`-openai'         namespace: '`{{ .Release.Namespace }}`'       spec:         secretStoreRef:           name: aws-secretsmanager           kind: ClusterSecretStore         target:           name: kagent-openai         data:           - secretKey: OPENAI_API_KEY             remoteRef:               key: prod/kagent/openai               property: api_key |
 | fullnameOverride | string | `""` |  |
 | global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
 | global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
-| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, bundled postgres, grafana-mcp, and substrateWorkerPool.workerImage. The vendored subcharts (kagent-tools, kmcp, substrate) adopt it when their pinned versions bump. |
+| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, grafana-mcp, and substrateWorkerPool.workerImage. The vendored subcharts (kagent-tools, kmcp) adopt it when their pinned versions bump. |
 | global.watchNamespaces | list | `[]` | Namespace scope for the whole install. A non-empty list replaces ClusterRoles with Roles and scopes the controller's watch. Both derive from this one value, so they cannot disagree. Prefer this value over the per-surface keys. rbac.namespaces overrides it when the key is present. An explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in controller.watchNamespaces is validated: the watch must stay inside the RBAC scope. A watched namespace without a Role is a permanent Forbidden loop at runtime. |
 | grafana-mcp.enabled | bool | `true` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
@@ -137,6 +128,7 @@ A Helm chart for kagent, built with Google ADK
 | kagent-tools.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | kagent-tools.podSecurityContext.runAsNonRoot | bool | `true` |  |
 | kagent-tools.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| kagent-tools.remoteMCPServer.allowedNamespaces | object | `{}` | Namespaces whose Agents may reference the tool server (spec.allowedNamespaces). Unset by default, which allows only the release namespace. Example: allowedNamespaces:   from: Selector   # All | Same | Selector   selector:     matchLabels:       kagent-tools: allowed |
 | kagent-tools.replicaCount | int | `1` |  |
 | kagent-tools.resources.limits.memory | string | `"256Mi"` |  |
 | kagent-tools.resources.requests.cpu | string | `"50m"` |  |
@@ -244,10 +236,10 @@ A Helm chart for kagent, built with Google ADK
 | rbac | object | `{}` |  |
 | registry | string | `"ghcr.io"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
-| substrate.ateApi.extraArgs[0] | string | `"--template-resync-interval=250ms"` |  |
-| substrate.credentialProvider.namespacePolicies | list | `[]` |  |
-| substrate.enabled | bool | `false` |  |
-| substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
+| substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","serviceAccount":{"create":true,"name":""},"template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
+| substrateWorkerPool.serviceAccount | object | `{"create":true,"name":""}` | ServiceAccount settings for the worker pods |
+| substrateWorkerPool.serviceAccount.create | bool | `true` | Create the worker ServiceAccount. Set to false to use one managed outside the chart. |
+| substrateWorkerPool.serviceAccount.name | string | `<substrateWorkerPool.name>` | Name of the worker ServiceAccount. |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.additionalForwardedHeaders | list | `[]` | Identity headers the UI's nginx proxy will forward to the backend on /api/, /a2a/, and /mcp. Names are case-insensitive. Authorization is always forwarded; the auth-proxy identity headers (x-auth-request-*, x-forwarded-user, x-forwarded-email, x-forwarded-groups, x-forwarded-preferred-username) are stripped from client requests unless listed here, so a caller cannot spoof an identity the backend trusts. Headers outside that set are forwarded by nginx as normal. In trusted-proxy mode, X-Agent-Name and X-User-Id are always stripped, even if listed here. |

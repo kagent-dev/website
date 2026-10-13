@@ -37,18 +37,17 @@ Agent is a runnable definition with an explicit template and harness.
 
 #### AgentSpec
 
-AgentSpec pairs portable behavior with a runner. References are local to the
-Agent's namespace, including references nested in inline specs.
+AgentSpec pairs portable behavior with a platform-managed runtime. References
+are local to the Agent's namespace, including references nested in inline
+template specs.
 
 _Appears in:_
 - [Agent](#agent)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `template` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  |  |
-| `templateRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  |  |
-| `harness` _[HarnessSpec](#harnessspec)_ |  |  |  |
-| `harnessRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ |  |  |  |
+| `template` _[AgentTemplateSource](#agenttemplatesource)_ | Template selects the portable behavior this Agent exposes. |  | **Required** <br /> |
+| `harnessRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | HarnessRef selects the platform-managed runtime configuration that executes<br />the behavior. |  | **Required** <br /> |
 
 #### AgentStatus
 
@@ -113,13 +112,25 @@ _Appears in:_
 | `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `source` _[ArtifactSource](#artifactsource)_ |  |  | **Required** <br /> |
 
+#### AgentTemplateSource
+
+AgentTemplateSource selects portable behavior inline or by local reference.
+
+_Appears in:_
+- [AgentSpec](#agentspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `inline` _[AgentTemplateSpec](#agenttemplatespec)_ | Inline defines the Agent's portable behavior directly. It cannot be set<br />together with Ref. |  |  |
+| `ref` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | Ref names an AgentTemplate in the Agent's namespace. It cannot be set<br />together with Inline. |  |  |
+
 #### AgentTemplateSpec
 
 AgentTemplateSpec defines portable agent behavior.
 
 _Appears in:_
-- [AgentSpec](#agentspec)
 - [AgentTemplate](#agenttemplate)
+- [AgentTemplateSource](#agenttemplatesource)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -207,12 +218,13 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `azureEndpoint` _string_ | Endpoint for the Azure OpenAI API |  | **Required** <br /> |
-| `apiVersion` _string_ | API version for the Azure OpenAI API |  | **Required** <br /> |
+| `apiVersion` _string_ | API version for the Azure OpenAI API. Required unless apiFormat is responses. |  |  |
 | `azureDeployment` _string_ | Deployment name for the Azure OpenAI API |  |  |
 | `azureAdToken` _string_ | Azure AD token for authentication |  |  |
 | `temperature` _string_ | Temperature for sampling |  |  |
 | `maxTokens` _integer_ | Maximum tokens to generate |  |  |
 | `topP` _string_ | Top-p sampling parameter |  |  |
+| `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects chatCompletions (default, the dated deployments path) or<br />responses (the /openai/v1 surface, which needs no apiVersion and reads files by link). | chatCompletions | Enum: [chatCompletions responses] <br /> |
 
 #### BYOHarness
 
@@ -442,7 +454,6 @@ _Appears in:_
 HarnessSpec defines a reusable runtime and its infrastructure policy.
 
 _Appears in:_
-- [AgentSpec](#agentspec)
 - [Harness](#harness)
 
 | Field | Description | Default | Validation |
@@ -726,6 +737,7 @@ _Validation:_
 - Enum: [chatCompletions responses]
 
 _Appears in:_
+- [AzureOpenAIConfig](#azureopenaiconfig)
 - [OpenAIConfig](#openaiconfig)
 
 | Field | Description |
@@ -882,18 +894,12 @@ _Appears in:_
 
 #### S3Object
 
+_Underlying type:_ _[struct{Endpoint string "json:\"endpoint\""; Bucket string "json:\"bucket\""; Key string "json:\"key\""; VersionID string "json:\"versionId\""; Region string "json:\"region,omitempty\""}](#struct{endpoint-string-"json:\"endpoint\"";-bucket-string-"json:\"bucket\"";-key-string-"json:\"key\"";-versionid-string-"json:\"versionid\"";-region-string-"json:\"region,omitempty\""})_
+
 S3Object identifies one immutable S3 object version.
 
 _Appears in:_
 - [BucketArtifact](#bucketartifact)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `endpoint` _string_ | Endpoint is the HTTP(S) endpoint of an AWS or S3-compatible service. |  | Pattern: `^https?://[^[:space:]]+$` <br />**Required** <br /> |
-| `bucket` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `versionId` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `region` _string_ | Region is used for request signing when required by the service. |  |  |
 
 #### SAPAICoreConfig
 

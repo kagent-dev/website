@@ -1,7 +1,7 @@
 ---
 title: kagent mcp init typescript
 description: Initialize a new TypeScript MCP server project.
-weight: 380
+weight: 430
 ---
 
 Initialize a new MCP server project using the TypeScript MCP framework.

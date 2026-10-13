@@ -1,7 +1,7 @@
 ---
 title: kagent db
 description: Database operations (migrations, inspection).
-weight: 210
+weight: 260
 ---
 
 Database operations (migrations, inspection)
