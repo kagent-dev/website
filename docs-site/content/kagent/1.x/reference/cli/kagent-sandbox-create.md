@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox create
 description: Create a sandbox from a prepared template.
-weight: 430
+weight: 480
 ---
 
 Create a sandbox. Retain --request-id and all inputs for retries; each call makes one lifecycle attempt. Activity does not extend the TTL.

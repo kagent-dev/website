@@ -109,8 +109,9 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
      name: byo-example-agent
      namespace: kagent
    spec:
-     templateRef:
-       name: byo-example-template
+     template:
+       ref:
+         name: byo-example-template
      harnessRef:
        name: byo-example
    EOF

@@ -189,8 +189,9 @@ Two paths are worth checking in order. Calling the gateway directly isolates the
      name: support-triage
      namespace: kagent
    spec:
-     templateRef:
-       name: support-triage
+     template:
+       ref:
+         name: support-triage
      harnessRef:
        name: my-first-harness
    EOF

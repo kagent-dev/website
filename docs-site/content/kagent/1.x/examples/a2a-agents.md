@@ -32,7 +32,7 @@ A caller addresses the Agent rather than one conversation. The message's `contex
 
 ### A2A methods
 
-The following methods are used in this example. The service defines more, including `ListTasks` and the push notification configuration calls, but an agent card that reports `pushNotifications` as `false` does not support being called back.
+This example calls each method in the following table except the three `TaskPushNotificationConfig` calls, which manage a task's callbacks and which the kagent CLI wraps. The service defines more, including `ListTasks`. `GetTaskPushNotificationConfig` reads a single callback by ID.
 
 | Method | What it does |
 | ------ | ------------ |
@@ -41,6 +41,9 @@ The following methods are used in this example. The service defines more, includ
 | `SendStreamingMessage` | Sends a message and streams events as the agent works. |
 | `GetTask` | Reads a task that a previous call created. |
 | `CancelTask` | Stops a task that is still running. |
+| `CreateTaskPushNotificationConfig` | Adds or replaces a callback for a task that is still active. |
+| `ListTaskPushNotificationConfigs` | Lists the active callbacks for one task. |
+| `DeleteTaskPushNotificationConfig` | Removes a task callback. |
 
 ## Before you begin
 
@@ -72,7 +75,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
      "version": "v1",
      "capabilities": {
        "streaming": true,
-       "pushNotifications": false,
+       "pushNotifications": true,
        "extensions": [
          {
            "uri": "https://kagent.dev/extensions/hitl/v1",
@@ -89,6 +92,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
 2. Read the card for what a caller acts on.
    * Both `name` and `description` come from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. `name` replaces hyphens with underscores, and `description` is `spec.description` verbatim, so a caller sees the description you wrote.
    * The `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The gRPC interface carries the `tenant` value to send.
+   * The `capabilities.pushNotifications` value advertises task callbacks. Each callback belongs to one task, not to the whole Session.
    * The `capabilities.extensions` list advertises human-in-the-loop support, which a client opts into per call.
 
 > [!NOTE]
@@ -194,6 +198,93 @@ A task outlives the call that created it, so a caller that lost its connection c
    ```
    
 A task that is still running reports `TASK_STATE_WORKING` and has no artifacts yet. To stop a task that is still running, call `CancelTask` with the same `id`.
+
+## Register task callbacks {#task-callbacks}
+
+A task callback lets a webhook learn when a task needs input or reaches a final state. The callback receives a status update for future `INPUT_REQUIRED`, `AUTH_REQUIRED`, `COMPLETED`, `FAILED`, `CANCELED`, and `REJECTED` states. After the callback arrives, the receiver calls authenticated `GetTask` to read the current state and artifacts.
+
+The kagent CLI wraps the three push notification configuration methods, so the steps that follow use the CLI rather than building each request by hand. The CLI defaults to port 8083, which the prerequisites already forward.
+
+1. To register a callback before a new task is dispatched, add `--push-url` to the kagent CLI invocation. The command returns immediately with the task ID and callback ID.
+   ```bash
+   kagent agent invoke \
+     --session $SESSION_ID \
+     --task "Run the long task." \
+     --push-url https://receiver.example/callback \
+     -o json
+   ```
+
+2. Save the task ID from the command output so that later steps can address the task.
+   ```bash
+   export PUSH_TASK_ID=<your-task-id>
+   ```
+
+3. To add a second callback to a task that is still active, create one explicitly. The server rejects new callbacks after the task reaches a terminal state.
+   ```bash
+   kagent agent session push create \
+     $SESSION_ID $PUSH_TASK_ID \
+     --id audit-webhook \
+     --url https://receiver.example/callback
+   ```
+
+4. List the callbacks for the task.
+   ```bash
+   kagent agent session push list $SESSION_ID $PUSH_TASK_ID
+   ```
+
+5. Delete a callback that should no longer receive task updates.
+   ```bash
+   kagent agent session push delete $SESSION_ID $PUSH_TASK_ID audit-webhook
+   ```
+
+### Secure callback deliveries
+
+A callback URL is a public endpoint that receives task state from kagent. Before you register a callback in production, decide how the receiver establishes that a delivery came from kagent.
+
+> [!IMPORTANT]
+> kagent signs deliveries only when the installation names a signing key, and `controller.push.signing.secretName` is empty by default. Until you set it, kagent posts each callback without an `Authorization` header, and the controller serves `404` at `/.well-known/jwks.json`. A receiver cannot distinguish an unsigned kagent delivery from any other caller, so treat the default configuration as suitable for a trusted network only.
+
+kagent does not generate its own signing key, so you are responsible for creating the key, keeping it, and rotating it. The following steps turn signing on.
+
+1. Generate an Ed25519 private key in unencrypted PKCS#8 PEM form.
+   ```bash
+   openssl genpkey -algorithm ed25519 -out private-key.pem
+   ```
+
+   > [!NOTE]
+   > The `openssl` binary that ships with macOS is LibreSSL, which rejects this command with `Algorithm ed25519 not found`. Install OpenSSL 3, or generate the key on another machine.
+
+2. Store the key in a Secret. kagent reads the `private-key.pem` entry, so the entry name is not optional.
+   ```bash
+   kubectl create secret generic kagent-push-signing -n kagent \
+     --from-file=private-key.pem=private-key.pem
+   ```
+
+3. Name the Secret in `controller.push.signing.secretName`, and set `controller.push.signing.issuer` to a URL that reaches the controller. Use the Helm release name and version that you installed kagent with.
+   ```bash
+   helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --namespace kagent --reuse-values \
+     --set controller.push.signing.secretName=kagent-push-signing \
+     --set controller.push.signing.issuer=https://kagent.example
+   ```
+
+   The issuer that a receiver trusts must match the host that it fetches the JWKS from. When `controller.push.signing.issuer` is empty, Helm falls back to `ui.externalUrl` and then to the in-cluster A2A gateway URL. Either fallback can name a host that does not serve the JWKS.
+
+4. Confirm that the controller publishes a verification key. Before you set the Secret, this path returns `404`.
+   ```bash
+   curl -s http://localhost:8083/.well-known/jwks.json
+   ```
+
+   Example output, which carries the public key alone:
+   ```json
+   {"keys":[{"kty":"OKP","crv":"Ed25519","alg":"EdDSA","use":"sig","kid":"B1BP8zPNOTEGYyBUVgUAeTyA5hPlnrNc0OB416NY-CM","x":"xIc8dv_I-NrYSvWKg4aKm_X1CjHmiUBSMf9cDXEKesM"}]}
+   ```
+
+Receivers verify a signed delivery against the JSON Web Key Set (JWKS). The controller serves the path on the same port as its gRPC, A2A, and MCP endpoints, so a receiver outside of the cluster needs a stable HTTPS URL that routes to the controller. The UI does not proxy the path, so publishing only the UI leaves a receiver with no key to verify against.
+
+Receivers must not send a token or credential when they register a callback. kagent signs each delivery attempt with a fresh five-minute JWT whose audience is the exact callback URL, including the query string. Before you acknowledge the request with a 2xx response, verify the JWT signature, issuer, audience, expiry, and `taskId` claim. The `taskId` claim repeats the `statusUpdate.taskId` value in the body, so a receiver that compares them rejects a token replayed against a different task.
+
+By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. To reach a test receiver inside the cluster, set `controller.push.allowHTTP=true` or `controller.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
 
 ## When an agent needs a person
 

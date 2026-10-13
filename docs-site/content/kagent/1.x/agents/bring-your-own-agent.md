@@ -116,8 +116,9 @@ metadata:
   name: my-byo-agent
   namespace: kagent
 spec:
-  templateRef:
-    name: my-byo-template
+  template:
+    ref:
+      name: my-byo-template
   harnessRef:
     name: my-byo-harness
 EOF

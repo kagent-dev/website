@@ -192,8 +192,9 @@ kagent pulls an `oci` source as a container image and unpacks its flattened file
      name: release-writer
      namespace: kagent
    spec:
-     templateRef:
-       name: release-writer
+     template:
+       ref:
+         name: release-writer
      harnessRef:
        name: my-first-harness
    EOF

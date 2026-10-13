@@ -66,8 +66,9 @@ Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the sch
      name: structured-answer
      namespace: kagent
    spec:
-     templateRef:
-       name: structured-answer
+     template:
+       ref:
+         name: structured-answer
      harnessRef:
        name: my-first-harness
    EOF
@@ -157,8 +158,9 @@ Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that sev
      name: structured-answer-shared
      namespace: kagent
    spec:
-     templateRef:
-       name: structured-answer-shared
+     template:
+       ref:
+         name: structured-answer-shared
      harnessRef:
        name: my-first-harness
    EOF

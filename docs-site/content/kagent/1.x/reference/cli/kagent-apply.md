@@ -1,7 +1,7 @@
 ---
 title: kagent apply
 description: Create or update an Agent or AgentTemplate.
-weight: 130
+weight: 180
 ---
 
 Create or update an Agent or AgentTemplate

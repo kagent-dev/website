@@ -1,7 +1,7 @@
 ---
 title: kagent mcp
 description: MCP (Model Context Protocol) server management.
-weight: 290
+weight: 340
 ---
 
 MCP server management commands for creating and managing

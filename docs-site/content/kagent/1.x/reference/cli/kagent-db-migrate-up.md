@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate up
 description: Apply all pending migrations.
-weight: 260
+weight: 310
 ---
 
 Apply all pending migrations
@@ -15,6 +15,7 @@ kagent db migrate up [flags]
 
 **Global Flags:**
 - `--ca-file string` - CA certificate file for KAgent endpoints
+- `--db-role string` - Stable PostgreSQL role to assume after authentication
 - `--db-url string` - PostgreSQL connection URL
 - `--server-name string` - TLS server name for KAgent endpoints
 - `--source string` - Migration source for down, goto, or version

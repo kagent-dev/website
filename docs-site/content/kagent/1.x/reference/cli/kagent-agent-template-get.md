@@ -1,7 +1,7 @@
 ---
 title: kagent agent template get
 description: Get an AgentTemplate.
-weight: 110
+weight: 160
 ---
 
 Get an AgentTemplate

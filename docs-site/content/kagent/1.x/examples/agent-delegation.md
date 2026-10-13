@@ -122,8 +122,9 @@ Each binding renames the specialist that it points to, so the coordinator's syst
      name: incident-coordinator
      namespace: kagent
    spec:
-     templateRef:
-       name: incident-coordinator
+     template:
+       ref:
+         name: incident-coordinator
      harnessRef:
        name: my-first-harness
    EOF

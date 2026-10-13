@@ -1,7 +1,7 @@
 ---
 title: kagent agent template
 description: Discover reusable agent templates.
-weight: 100
+weight: 150
 ---
 
 Discover reusable agent templates
