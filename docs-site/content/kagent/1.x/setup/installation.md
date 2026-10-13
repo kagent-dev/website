@@ -42,7 +42,7 @@ author: kagent.dev
    {{% /tab %}}
 
    {{% tab name="Existing 1.37+ cluster" %}}
-   Kubernetes 1.37 and later serve the required APIs at `certificates.k8s.io/v1` by default, so you do not need to change the API server configuration. This includes managed control planes such as Amazon EKS, Google GKE, and Azure AKS.
+   Kubernetes 1.37 and later serve the required APIs at `certificates.k8s.io/v1` by default, so you do not need to change the API server configuration.
 
    Confirm that the cluster serves the required APIs.
    ```bash
