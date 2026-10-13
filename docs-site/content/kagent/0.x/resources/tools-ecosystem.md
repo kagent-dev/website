@@ -36,6 +36,7 @@ The following tools provide comprehensive cluster management.
 | `k8s_generate_resource` | Generate YAML for Istio, Gateway API, or Argo resources. |
 | `k8s_rollout` | Manage rollouts (restart, status, history). |
 | `k8s_scale` | Scale a resource (deployment, statefulset, etc.). |
+| `k8s_wait` | Wait for a condition on resources, and block until the condition is met or the timeout elapses. |
 
 ### Helm
 
