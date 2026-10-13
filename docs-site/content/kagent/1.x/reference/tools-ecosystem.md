@@ -13,7 +13,7 @@ Both servers arrive as subcharts of the kagent chart, and each one creates its o
 
 | RemoteMCPServer | Helm value | Serves |
 | --------------- | ---------- | ------ |
-| [`kagent-tool-server`](#kagent-tool-server) | `kagent-tools.enabled` | 124 tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. |
+| [`kagent-tool-server`](#kagent-tool-server) | `kagent-tools.enabled` | 126 tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. |
 | [`kagent-grafana-mcp`](#kagent-grafana-mcp) | `grafana-mcp.enabled` | Grafana's own MCP server, for dashboards, data sources, alerts, Loki logs, and incidents. |
 
 The kagent release pins the `kagent-tool-server` version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
@@ -73,6 +73,7 @@ Agents use the Kubernetes provider the most, and it covers both inspection and m
 | `k8s_get_available_api_resources` | Get available Kubernetes API resources. |
 | `k8s_get_cluster_configuration` | Get cluster configuration details. |
 | `k8s_generate_resource` | Generate a Kubernetes resource YAML from a description. |
+| `k8s_wait` | Wait for a condition on Kubernetes resources (kubectl wait). Blocks until the condition is met or the timeout elapses. |
 | `k8s_apply_manifest` * | Apply a YAML manifest to the Kubernetes cluster. |
 | `k8s_create_resource` * | Create a Kubernetes resource from YAML content. |
 | `k8s_create_resource_from_url` * | Create a Kubernetes resource from a URL that points to a YAML manifest. |
@@ -232,16 +233,17 @@ Kubescape's tools read scan results that the Kubescape operator has already prod
 
 ### Utilities
 
-Two tools sit outside any product. `shell` runs an arbitrary command in the server's container with the server's ServiceAccount, so treat it as the widest permission that this server grants.
+Three tools sit outside any product. `shell` runs an arbitrary command in the server's container with the server's ServiceAccount, so treat it as the widest permission that this server grants.
 
 | Tool | Description |
 | ---- | ----------- |
 | `datetime_get_current_time` | Return the current date and time in ISO 8601 format. |
+| `mcp_inspect` | Echo input and return all HTTP headers received with the MCP request for debugging. |
 | `shell` * | Execute shell commands. |
 
 ## Narrow what kagent-tool-server serves
 
-Serving all 124 tools costs an agent context on every turn, and it grants the server broad authority over your cluster. Two independent settings narrow it, and each one acts at a different layer.
+Serving all 126 tools costs an agent context on every turn, and it grants the server broad authority over your cluster. Two independent settings narrow it, and each one acts at a different layer.
 
 ```yaml
 kagent-tools:
