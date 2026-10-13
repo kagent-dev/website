@@ -204,15 +204,22 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
      --namespace kagent \
      --reuse-values \
      --values - <<EOF
-   otel:
-     exporter:
-       otlp:
+   config:
+     telemetry:
+       traces:
          endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
          protocol: grpc
-     traces:
-       enabled: true
-     logs:
-       enabled: true
+       logs:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+     runtimeDefaults:
+       telemetry:
+         traces:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+         logs:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
    controller:
      metrics:
        enabled: true
@@ -317,8 +324,8 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.traces.enabled=false \
-     --set otel.logs.enabled=false \
+     --set config.telemetry=null \
+     --set config.runtimeDefaults.telemetry=null \
      --set controller.metrics.enabled=false
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \

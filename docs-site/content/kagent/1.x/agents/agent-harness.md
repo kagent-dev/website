@@ -24,8 +24,8 @@ spec:
   workload:
     image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
   env:
-    - name: KAGENT_LOG_LEVEL
-      value: info
+    - name: OTEL_PROPAGATORS
+      value: tracecontext,baggage
   substrate:
     workerPoolRef:
       name: kagent-default
@@ -42,7 +42,7 @@ EOF
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, whatever language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
-| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
+| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. An installation's own settings, such as the runtime log level, come from the chart's `config.runtimeDefaults` block rather than from here. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
@@ -257,18 +257,21 @@ The `kagent` and `byo` runtimes take the full set. For more information about wh
 Tracing carries the prompts and replies that an agent exchanges with a model, and so does log export on the `claude` runtime. Two settings in the kagent Helm chart decide whether that content leaves the runtime, and each one reaches a different set of runtimes. Both default to `false`, and both take effect only where tracing or log export is already enabled.
 
 ```yaml
-otel:
-  capture:
-    messageContent: false
-    rawApiBodies: false
+config:
+  runtimeDefaults:
+    telemetry:
+      captureContent: false
+      captureRawApiBodies: false
+      maxCaptureBytes: 16384
 ```
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `otel.capture.messageContent` | Prompts and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, whatever this setting holds. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `otel.logs`. | `kagent`, `codex`, `claude` |
-| `otel.capture.rawApiBodies` | The complete provider API request and response bodies. This setting returns more than `otel.capture.messageContent` does, and it takes effect only when `otel.logs.enabled` is `true`. | `claude` |
+| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, whatever this setting holds. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `config.runtimeDefaults.telemetry.logs`. | `kagent`, `codex`, `claude` |
+| `config.runtimeDefaults.telemetry.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `captureContent` does, and it takes effect only when you set the logs endpoint. | `claude` |
+| `config.runtimeDefaults.telemetry.maxCaptureBytes` | The budget for each captured prompt or reply, in bytes. Defaults to `16384`, with a maximum of `65536`. | `codex`, `claude` |
 
-The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `otel.capture.messageContent`, so a Harness cannot change the capture decision for itself. Naming that variable in the Harness `spec.env` field fails the `claude` and `codex` runtimes outright, and is discarded on the `kagent` runtime. For the rest of the variables that behave this way, see [Controller-owned telemetry variables](#controller-owned-telemetry-variables).
+The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in every compiled runtime from `config.runtimeDefaults.telemetry.captureContent`, so a Harness cannot change the capture decision for itself. Naming that variable in the Harness `spec.env` field fails the `claude` and `codex` runtimes outright, and is discarded on the `kagent` runtime. For the rest of the variables that behave this way, see [Controller-owned telemetry variables](#controller-owned-telemetry-variables).
 
 The controller compiles the telemetry environment into the `byo` runtime as well whenever any signal is enabled, so `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` reaches a `byo` image. The `byo` runtime is the exception to the ownership rule. The controller applies the Harness `spec.env` field after the telemetry environment, so a `spec.env` entry wins where the two name the same variable, and an image that exports to its own backend keeps doing so. Whether the image acts on either setting depends on its own instrumentation. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 
@@ -299,7 +302,28 @@ Every other `OTEL_*` variable, such as the `OTEL_BSP_*` batch span processor set
 
 ### Baggage propagation
 
-kagent runtimes set `OTEL_PROPAGATORS` to `tracecontext` when the environment leaves it unset, so a caller's baggage reaches neither the tools an agent calls nor its model provider. Trace context still propagates. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field.
+kagent runtimes set `OTEL_PROPAGATORS` to `tracecontext` when the environment leaves it unset, so a caller's baggage reaches neither the tools an agent calls nor its model provider. Trace context still propagates. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field. The controller reads its own value from the `controller.env` Helm value, and each process reads only its own, so enabling baggage on a runtime does not enable it on the controller.
+
+`OTEL_PROPAGATORS` governs both directions. A format that the list omits is neither read from an incoming request nor written to an outgoing one, including the members that the runtime adds itself.
+
+With `baggage` listed, the `kagent` runtime adds the request's identity to the baggage of each model call and each MCP tool call.
+
+| Member | Model calls | MCP tool calls |
+| ------ | ----------- | -------------- |
+| `gen_ai.agent.name` | Yes | Yes |
+| `gen_ai.conversation.id` | Yes | Yes |
+| `a2a.task.id` | Yes | Yes |
+| `gen_ai.tool.name` | No | Yes |
+| `gen_ai.tool.call.id` | No | Yes |
+
+These members are identifiers rather than content or credentials, and the runtime replaces a caller's member of the same name, so a caller cannot claim another conversation's identity downstream.
+
+> [!WARNING]
+> **Enabling baggage sends the caller's own members to your model provider.** A caller baggage member that kagent does not replace is forwarded unchanged in the `baggage` header of each model API request and each MCP request, so a caller controls what reaches those external services. Enable baggage only where you trust what your callers attach.
+
+Two limits are worth planning around. The `claude` and `codex` runtimes receive `OTEL_PROPAGATORS`, but kagent adds no identity to their model and tool calls, and neither does the Python runtime, so those five members reach the `kagent` runtime alone. kagent also never copies a baggage member onto a span, so a backend that needs these values to be searchable must add a baggage-to-attributes span processor, in the service that receives the request or in its OpenTelemetry Collector.
+
+An MCP session is opened by one request and shared by every later one. The session makes three requests of its own: the event stream, the replies to server requests, and the close. None of the three carries trace context or baggage, because either would name a request that has already ended.
 
 ## Check that a Harness is ready
 

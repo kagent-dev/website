@@ -29,12 +29,12 @@ Every call on the Session API carries a principal. An authenticator resolves one
 
 ### Controller authentication modes
 
-The `controller.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it, because browser sign-in and controller authentication are separate boundaries. To authenticate both, enable oauth2-proxy and set `controller.auth.mode` to `trusted-proxy`.
+The `config.server.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it, because browser sign-in and controller authentication are separate boundaries. To authenticate both, enable oauth2-proxy and set `config.server.auth.mode` to `trusted-proxy`.
 
 | Mode | How a principal is resolved |
 | ---- | --------------------------- |
 | `insecure` | Every request is admitted. The caller's identity is read from the `X-User-Id` header, or from a `user_id` query parameter that takes precedence over it. A caller that supplies neither is named `admin@kagent.dev`. |
-| `trusted-proxy` | The request must carry a bearer token in the `Authorization` header. The identity comes from the claim that `controller.auth.userIdClaim` names, defaulting to `sub`. A missing custom claim falls back to `sub`, and a request with no identity is rejected. |
+| `trusted-proxy` | The request must carry a bearer token in the `Authorization` header. The identity comes from the claim that `config.server.auth.userIdClaim` names, defaulting to `sub`. A missing custom claim falls back to `sub`, and a request with no identity is rejected. |
 
 Any other value fails controller startup rather than falling back to a default.
 
@@ -73,7 +73,7 @@ A share carries one of two permissions.
 
 A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime, which starts when the share is created. Once that lifetime ends, the token grants no access and a token lookup returns not found. The owner still sees the expired share in `ListSessionShares` and can revoke it.
 
-The returned `SessionShare.expiresAt` field records when the token stops granting access. Omit `ttl` and `expiresAt` stays unset. The share then stays valid until it is revoked or the Session is deleted. An operator caps share lifetimes with `controller.sessionShareMaxTTL`. For more information, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
+The returned `SessionShare.expiresAt` field records when the token stops granting access. Omit `ttl` and `expiresAt` stays unset. The share then stays valid until it is revoked or the Session is deleted. An operator caps share lifetimes with `config.sessions.shareMaxTtl`. For more information, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
 A share widens what the holder can reach to what the owner can see, and the underlying record is read as the owner rather than as the visitor. Revoking the share withdraws that access.
 

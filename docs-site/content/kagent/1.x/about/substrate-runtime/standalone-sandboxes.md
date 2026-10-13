@@ -20,27 +20,26 @@ An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}M
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `controller.sandbox` values on the installation. Sandbox preparation needs a guest image digest, and the chart ships no default, so a SandboxTemplate never becomes ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
+1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `config.sandboxes` values on the installation. Sandbox preparation needs a guest image, and the chart ships no default, so a SandboxTemplate never becomes ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
    ```yaml
-   controller:
-     sandbox:
-       guestImage:
-         digest: sha256:1821780ef01958f63cb9a1a1d9a175f7e386e7c72859dd29ab86d8644a47d2d4
-       cpu: 1
+   config:
+     sandboxes:
+       guestImage: {{< reuse "kagent-docs/versions/sandbox-guest-image.md" >}}
+       cpu: "1"
        memory: 1Gi
-       defaultTTL: 1h
-       maxTTL: 24h
+       defaultTtl: 3600s
+       maxTtl: 86400s
    ```
 
    A SandboxTemplate cannot override these values, so they are the installation's policy rather than a per-template choice.
 
    | Value | Default | Description |
    | ----- | ------- | ----------- |
-   | `controller.sandbox.guestImage.digest` | `""` | The digest-pinned guest image. Required: preparation fails without it. The controller passes the digest to Agent Substrate unchanged and resolves no tags, so supply a digest rather than a tag. |
-   | `controller.sandbox.cpu` | `1` | CPU allocated to each Sandbox. |
-   | `controller.sandbox.memory` | `1Gi` | Memory allocated to each Sandbox. |
-   | `controller.sandbox.defaultTTL` | `1h` | Lifetime applied when `kagent sandbox create` omits `--ttl`. |
-   | `controller.sandbox.maxTTL` | `24h` | Upper bound on any requested lifetime. Note that activity does not extend a Sandbox's lifetime. A Sandbox expires the configured interval after it is created, however recently a command ran in it. |
+   | `config.sandboxes.guestImage` | `""` | The digest-pinned guest image, as a complete reference. Required: preparation fails without it. The controller passes the reference to Agent Substrate unchanged and resolves no tags, so pin a digest rather than a tag. Setting `global.imageRegistry` rewrites the registry host of this reference. |
+   | `config.sandboxes.cpu` | `1` | CPU allocated to each Sandbox. |
+   | `config.sandboxes.memory` | `1Gi` | Memory allocated to each Sandbox. |
+   | `config.sandboxes.defaultTtl` | `3600s` | Lifetime applied when `kagent sandbox create` omits `--ttl`. Durations in the `config` block take protobuf seconds notation, so `3600s` rather than `1h`. |
+   | `config.sandboxes.maxTtl` | `86400s` | Upper bound on any requested lifetime, which the controller caps at `86400s`. Note that activity does not extend a Sandbox's lifetime. A Sandbox expires the configured interval after it is created, however recently a command ran in it. |
 
 2. Download the kagent CLI. The `--version` flag matches the CLI to the release that these docs cover.
    ```bash
@@ -85,7 +84,7 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepar
    | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
    | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
-   A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `controller.sandbox.guestImage.digest` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
+   A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `config.sandboxes.guestImage` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
 
 2. Confirm that the template prepared a revision before you create a Sandbox from it.
    ```bash
@@ -163,7 +162,7 @@ tools:
         - list_sandboxes
 ```
 
-An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. The Go kagent runtime reads `KAGENT_PROPAGATE_TOKEN=true` to pass the caller's credentials and identity to the MCP servers that you trust.
+An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. Set `config.runtimeDefaults.tokenPropagation.enabled` to `true`, and the kagent runtime passes the caller's credentials and identity to the MCP servers that you trust.
 
 The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. An MCP transfer or output read is bounded at 1 MiB, encodes bytes as base64, and returns a continuation offset for reading more.
 

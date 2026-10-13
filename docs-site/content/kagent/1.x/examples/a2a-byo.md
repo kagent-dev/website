@@ -90,7 +90,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
    ```
 
    > [!NOTE]
-   > This Harness sets no `KAGENT_PORT` variable, because `byoa2a/main.go` pins `Port: "80"` in the image. An image that leaves the port to kagent listens on the wrong one and still reports `READY`. For that trap and its workaround, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
+   > This Harness sets no port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that does neither listens on the wrong port and still reports `READY`. For that trap, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
 
 2. Create the AgentTemplate and an Agent that pairs it with the Harness. `description` is the only field that this template needs.
    ```yaml
@@ -196,9 +196,24 @@ func (executor) Cancel(context.Context, *a2asrv.ExecutorContext) iter.Seq2[a2aty
 
 Two events make a complete turn. `NewSubmittedTask` acknowledges the message and opens the task, and a `TaskStateCompleted` status update carrying an agent message ends it. Between them, a real agent yields whatever its work produces.
 
-`app.New` serves the A2A gRPC service and the readiness endpoint on your behalf, and the `Port: "80"` line keeps the listener where kagent expects it. Both stay as they are in an agent of your own.
+`main` sets the rest up. `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`, `config.LoadAgentConfig` reads the document back, and `ProcessConfig` returns its `runtime` object. `app.New` then serves the A2A gRPC service and the readiness endpoint on your behalf.
 
-To read the AgentTemplate rather than ignore it, parse the `KAGENT_CONFIG_JSON` variable that kagent sets on the container. For what that variable holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
+```go
+compiled, err := config.LoadAgentConfig("/config/config.json")
+runtime := compiled.ProcessConfig()
+
+application, err := app.New(app.AppConfig{
+	ControlPlaneURL: runtime.ControlPlaneURL,
+	AgentCard:       a2atype.AgentCard{Name: "opaque-byo", Version: "v1", Capabilities: a2atype.AgentCapabilities{Streaming: true}},
+	Port:            cmp.Or(runtime.Port, "80"),
+	AppName:         cmp.Or(runtime.Name, "opaque-byo"),
+	Logger:          logger,
+}, executor{})
+```
+
+`ControlPlaneURL` is required, because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
+
+This agent ignores the rest of the compiled configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. For what it holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
 
 ## Build and run your own agent
 

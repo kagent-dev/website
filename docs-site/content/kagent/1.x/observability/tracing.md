@@ -83,7 +83,7 @@ A trace tells you which request you are looking at through attributes on its spa
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
 
 > [!WARNING]
-> When the `otel.capture.messageContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three.
+> When the `config.runtimeDefaults.telemetry.captureContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three.
 >
 > The setting does not govern tool content. An `execute_tool` span carries the call's arguments and the tool's reply in `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` whether the setting is `true` or `false`, so a tool that returns sensitive data sends it to your tracing backend on the default settings. Turn tracing off for an agent whose tools return data that must not leave the cluster. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
@@ -98,7 +98,7 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
 
 > [!IMPORTANT]
-> The telemetry values changed shape in 1.0. `otel.tracing.*`, `otel.logging.*`, `otel.captureSensitiveContent`, and the `insecure` flag were removed, and `otel.exporter.otlp.*`, `otel.traces.*`, `otel.logs.*`, and `otel.capture.*` replace them. The chart defines no check that rejects a removed setting, so neither Helm flag that reuses stored values carries you across. `--reuse-values` restores the previous chart's defaults, which leaves `otel.traces` and `otel.metrics` undefined and fails the upgrade while the controller ConfigMap renders. `--reset-then-reuse-values` completes, but the chart ignores the removed keys, so a release that set `otel.tracing.enabled` to `true` turns tracing off without reporting an error. If your release still holds the old settings, write the replacements into a values file and upgrade with `--values`, as shown in the following steps. On subsequent upgrades, `--reuse-values` works again.
+> The telemetry values moved again in {{< reuse "kagent-docs/versions/kagent.md" >}}. The whole top-level `otel` block was removed, and `config.telemetry` and `config.runtimeDefaults.telemetry` replace it. A release that still sets `otel.traces.enabled` or `otel.exporter.otlp.endpoint` keeps a value that no template reads, and tracing turns off without reporting an error. Write the replacements into a values file and upgrade with `--values`, as shown in the following steps. For the rest of the move and the Helm flags that do not carry you across it, see [Controller configuration]({{< link path="operations/operational-considerations#controller-configuration" >}}).
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -119,29 +119,33 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
 
 3. Add the tracing settings to the values file.
    ```yaml
-   otel:
-     exporter:
-       otlp:
+   config:
+     telemetry:
+       traces:
          endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
          protocol: grpc
-         timeout: 15000
-     traces:
-       enabled: true
+         timeout: 15s
+     runtimeDefaults:
+       telemetry:
+         traces:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+           timeout: 15s
    ```
 
    {{< reuse "kagent-docs/snippets/review-table.md" >}}
 
    | Field | Description |
    | ----- | ----------- |
-   | `traces.enabled` | Whether to export traces at all. Defaults to `false`. |
-   | `exporter.otlp.endpoint` | The OTLP endpoint that every signal exports to, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. Empty by default. When a signal is enabled and neither this setting nor its per-signal counterpart holds an endpoint, the controller disables that signal and reports `OTLP traces endpoint is required when traces export is enabled`. |
-   | `exporter.otlp.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
-   | `exporter.otlp.timeout` | The export timeout in milliseconds. Empty by default, which keeps the OTel SDK default. |
-   | `traces.endpoint`, `traces.protocol` | Send traces somewhere other than the other signals. Each one overrides its `exporter.otlp` counterpart for traces alone. Both are empty by default. |
+   | `config.telemetry.traces` | The traces of the kagent controller itself. |
+   | `config.runtimeDefaults.telemetry.traces` | The traces of every agent runtime that the controller compiles. The controller's own settings do not propagate to a runtime, so set both blocks to trace the whole path of a request. |
+   | `traces.endpoint` | Where the traces go, as an `http://` or `https://` URL. An `http://` endpoint sends plaintext. On the `http/protobuf` protocol, include the signal path, as in `http://otel-collector.telemetry.svc.cluster.local:4318/v1/traces`. |
+   | `traces.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
+   | `traces.timeout` | The export timeout, as a duration in seconds with an `s` suffix. Defaults to `10s`. |
 
-   An endpoint is an absolute `http://` or `https://` URL, and one that carries credentials, a query, or a fragment leaves its signal disabled in the same way. An invalid telemetry setting never fails the upgrade or the Harness. The controller reports each one as a warning when it starts, as the log record `invalid agent telemetry configuration; disabling signal`, and turns off only the signal that the setting belongs to. Check that log after you change these values, because no other surface reports the problem and an agent with a disabled signal runs normally.
+   A signal has no separate switch. The controller exports a signal when you set its endpoint, and compiles an explicit off state when you omit the endpoint. Omit the key rather than leaving it empty: an empty endpoint fails validation.
 
-   The two endpoint settings differ in how the controller treats the path. A per-signal endpoint such as `traces.endpoint` is used exactly as you write it. The shared `exporter.otlp.endpoint` is used as written on the `grpc` protocol, and gains a `/v1/traces` suffix on `http/protobuf`, so point the shared setting at the collector's root rather than at a signal path.
+   The controller validates its configuration file at startup and exits when a setting is invalid, so a malformed endpoint stops the controller rather than disabling one signal. An endpoint must be an absolute `http://` or `https://` URL. The controller rejects one that includes credentials, a query, or a fragment. Check the controller's logs after you change these values.
 
 4. Upgrade the kagent Helm release.
    ```bash
@@ -161,7 +165,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
      sleep 5
    done
    ```
-   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the Agent. Either the settings were already in place, or the chart did not recognize the `otel` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
+   If the command finishes without printing `Recompiled`, the upgrade did not change the settings that kagent compiles into the Agent. Either the settings were already in place, or the chart did not recognize the `config` keys. Helm accepts a key that a chart does not define without an error, so check that you upgraded to version {{< reuse "kagent-docs/versions/kagent.md" >}} of the chart, which uses the keys on this page.
 
 6. Create a new Session, so that its Actor starts from a runtime that has the tracing configuration.
    ```bash
@@ -253,19 +257,17 @@ The flush lets a kagent trace arrive promptly rather than on the exporter's own 
 
 ## Turn tracing off
 
-Turn off the trace exporter, then create a new Session so that the change takes effect.
+Turn off the trace exporter, then create a new Session so that the change takes effect. Turning tracing off compiles an explicit off state rather than an absent one. The controller sets the trace exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`. The controller sets `OTEL_SDK_DISABLED` to `true` only when traces, metrics, and logs are all off, and both stack guides turn logs on, so the SDK stays enabled.
 
-1. Disable tracing in the kagent Helm release.
+1. Remove the telemetry settings from the kagent Helm release. Null the whole `telemetry` block rather than one signal inside it. A `--set config.telemetry.traces=null` renders the literal `traces: null` into the controller's configuration file, and the controller rejects a null value and fails to start.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.traces.enabled=false
+     --set config.telemetry=null \
+     --set config.runtimeDefaults.telemetry=null
    ```
-
-   > [!NOTE]
-   > Turning tracing off compiles an explicit off state rather than an absent one. The controller sets the trace exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`. The controller sets `OTEL_SDK_DISABLED` to `true` only when traces, metrics, and logs are all off. Both stack guides turn logs on, so the SDK stays enabled after this step.
 
 2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
 

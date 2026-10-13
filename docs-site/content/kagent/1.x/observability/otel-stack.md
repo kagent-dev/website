@@ -339,15 +339,22 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
      --namespace kagent \
      --reuse-values \
      --values - <<EOF
-   otel:
-     exporter:
-       otlp:
+   config:
+     telemetry:
+       traces:
          endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
          protocol: grpc
-     traces:
-       enabled: true
-     logs:
-       enabled: true
+       logs:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+     runtimeDefaults:
+       telemetry:
+         traces:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+         logs:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
    controller:
      metrics:
        enabled: true
@@ -363,9 +370,10 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
 
    | Setting | Description |
    | ------- | ----------- |
-   | `otel.exporter.otlp` | The OTLP endpoint and protocol that every signal exports to. An `http://` endpoint sends plaintext. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
-   | `otel.traces` | Exports traces from the controller and from the agent runtimes that it starts. |
-   | `otel.logs` | Exports log records from the agent runtimes. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
+   | `config.telemetry` | The endpoint and protocol that the controller's own signals export to. An `http://` endpoint sends plaintext. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
+   | `config.runtimeDefaults.telemetry` | The same pair for every agent runtime that the controller starts. The controller's own settings do not propagate to a runtime, so both blocks name the collector. |
+   | `telemetry.traces` | Exports traces. A signal exports when you set its endpoint, and stays off when you omit the endpoint, so neither block takes an `enabled` field. |
+   | `telemetry.logs` | Exports log records. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
    | `controller.metrics.enabled` | Serves the controller's Prometheus metrics on port `8443` over HTTPS. |
    | `controller.metrics.serviceMonitor` | Creates a ServiceMonitor for the metrics endpoint. The `prometheusServiceAccount` setting binds the metrics reader role to the Prometheus ServiceAccount, which authorizes the scrape. |
 
@@ -495,8 +503,8 @@ Log in to Grafana, and query each backend from the **Explore** view.
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.traces.enabled=false \
-     --set otel.logs.enabled=false \
+     --set config.telemetry=null \
+     --set config.runtimeDefaults.telemetry=null \
      --set controller.metrics.enabled=false \
      --set controller.metrics.serviceMonitor.enabled=false
    helm upgrade substrate \

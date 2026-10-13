@@ -17,11 +17,13 @@ The controller serves its metrics over HTTPS, and accepts a scrape only from a S
 controller:
   metrics:
     enabled: true
+config:
+  metrics:
     bindAddress: ":8443"
-    secureServing: true
+    secure: true
 ```
 
-Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `KAGENT_METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
+The two blocks divide the listener from its Kubernetes packaging. `config.metrics` sets the address that the controller binds and whether it serves over HTTPS, and `controller.metrics` creates the Service, the ClusterRoles, and the optional ServiceMonitor. Setting `controller.metrics.enabled` to `false` overrides `config.metrics.bindAddress` with `0`, which disables the listener as well. Change the port through `config.metrics.bindAddress`, because the chart derives the Service `targetPort` and the pod `containerPort` from it at template time.
 
 Grant your Prometheus instance access in one of the following ways.
 

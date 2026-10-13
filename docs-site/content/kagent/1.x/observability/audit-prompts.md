@@ -15,14 +15,14 @@ The `kagent` runtime does not write prompts or replies to log records, so a logg
 
 ### What each runtime records
 
-Each runtime records the content on its own instrumentation, so where the content lands differs by runtime. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+Each runtime records the content on its own instrumentation, so where the content lands differs by runtime. The settings in the last column are the fields of the `config.runtimeDefaults.telemetry` Helm block. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 | Runtime | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |
-| `kagent` | The `generate_content` span of each model call, in three attributes. See [What a record holds](#what-a-record-holds). | `otel.capture.messageContent` |
-| `codex` | The runtime's own spans. | `otel.capture.messageContent` |
-| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `otel.capture.rawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `otel.capture.messageContent`, `otel.capture.rawApiBodies` |
-| `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in this runtime, but an image that does not read the variable records nothing. | `otel.capture.messageContent` |
+| `kagent` | The `generate_content` span of each model call, in three attributes. See [What a record holds](#what-a-record-holds). | `captureContent` |
+| `codex` | The runtime's own spans. | `captureContent` |
+| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `captureRawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `captureContent`, `captureRawApiBodies` |
+| `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in this runtime, but an image that does not read the variable records nothing. | `captureContent` |
 
 For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
@@ -40,11 +40,11 @@ The record holds more than the prompts that your team wrote.
 
 The system instruction holds the instructions that the runtime appends as well as the prompt your team wrote, and the message history holds the person's messages, the agent's earlier turns, and the model's tool calls.
 
-A tool's own arguments and reply are recorded separately, on the `execute_tool` span of each tool call, in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. `otel.capture.messageContent` does not govern those two attributes. The runtime records them whenever tracing is on. Treat them as part of the audit record, and as a disclosure to account for on an agent whose tools return sensitive data.
+A tool's own arguments and reply are recorded separately, on the `execute_tool` span of each tool call, in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. `config.runtimeDefaults.telemetry.captureContent` does not govern those two attributes. The runtime records them whenever tracing is on. Treat them as part of the audit record, and as a disclosure to account for on an agent whose tools return sensitive data.
 
 Each model call carries the full history again, so a long conversation repeats its earlier messages in every span. Account for that volume when you set a retention period.
 
-The `kagent` runtime does not shorten these attributes. The `claude` and `codex` runtimes bound each captured prompt and reply to the `otel.capture.maxBytes` budget, which defaults to 16384 bytes, and report a shortened capture with the `kagent.capture.input_truncated` and `kagent.capture.output_truncated` attributes. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
+The `kagent` runtime does not shorten these attributes. The `claude` and `codex` runtimes bound each captured prompt and reply to the `config.runtimeDefaults.telemetry.maxCaptureBytes` budget, which defaults to 16384 bytes, and report a shortened capture with the `kagent.capture.input_truncated` and `kagent.capture.output_truncated` attributes. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
 
 ### Delivery
 
@@ -83,10 +83,10 @@ Turn on content capture in the kagent Helm release, then create a Session that p
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent \
      --reuse-values \
-     --set otel.capture.messageContent=true
+     --set config.runtimeDefaults.telemetry.captureContent=true
    ```
 
-   For an agent on the `claude` runtime, also set `otel.logs.enabled` to `true`, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
+   For an agent on the `claude` runtime, also set `config.runtimeDefaults.telemetry.logs.endpoint` to the address of your collector, and send the logs to a backend that stores them, such as Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}). Without log export, the replies of a `claude` agent are not recorded.
 
 3. Wait for the controller to roll out.
    ```bash
@@ -174,7 +174,7 @@ Turn off content capture, then create a new Session so that the change takes eff
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.capture.messageContent=false
+     --set config.runtimeDefaults.telemetry.captureContent=false
    ```
 
 2. Create a new Session, because an existing Actor keeps the configuration that it started with. The spans of a Session that still captures content keep carrying it until you delete the Session.

@@ -11,7 +11,7 @@ This single Worker reports capacity for 1000 Actors, so a default pool serves ma
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `controller.grpc.reflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 
 2. Confirm that you have administrative access to the cluster, because this guide scales WorkerPools and reads cluster-scoped resources.
 

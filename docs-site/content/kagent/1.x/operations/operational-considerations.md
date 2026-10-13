@@ -7,6 +7,48 @@ author: kagent.dev
 
 A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation runs one controller replica against the development database that `kagent install` creates, and schedules agents onto any node in the cluster. Each default works for a trial installation, and each needs a decision before you run {{< reuse "kagent-docs/snippets/name-product.md" >}} in production: which database to run, how many controller replicas to keep, and how to treat the nodes that host Workers.
 
+## Controller configuration
+
+Every application setting that the controller reads lives under the chart's `config` block, and the chart renders that block into one configuration file at `/etc/kagent/controller.yaml`. Settings that describe how Kubernetes runs the controller, such as images, probes, volumes, Services, and Secret references, stay in the Helm values beside `config` rather than inside it. The two groups meet where a Secret stores a value that the controller reads, and the chart then projects the Secret and writes its path into the configuration file.
+
+```yaml
+config:
+  logging:
+    level: info
+  server:
+    grpcReflection: false
+    auth:
+      mode: insecure
+  sessions:
+    idleTtl: 604800s
+  runtimeDefaults:
+    logging:
+      level: info
+```
+
+Three rules govern the whole block, and each one rejects a value that the Helm keys it replaced accepted.
+
+| Rule | What it means |
+| ---- | ------------- |
+| Durations are seconds | A duration takes protobuf JSON notation. The value is a number with an `s` suffix, as in `604800s` or `0.5s`, and a Go duration string such as `168h` fails validation. |
+| The document is strict | The controller rejects an unknown field, a duplicate key, a null value, a YAML alias or merge, and a file with more than one document. |
+| Settings load once | The controller validates the whole file at startup, passes the result to its owners, and reads nothing from the environment afterward. A change therefore needs a restart. The chart triggers that restart by checksumming the ConfigMap into the pod. |
+
+An invalid setting stops the controller from starting rather than disabling one feature, so check the controller's logs after you change these values. To check a file before you apply it, run the CLI against the rendered document. The command connects to no services.
+
+```bash
+kagent config validate --component controller --config controller.yaml
+```
+
+Starting the controller with `--check-config` does the same from inside the image, and also confirms that the Secret files the document references are readable.
+
+> [!IMPORTANT]
+> The `config` block replaced the `controller`, `database.postgres`, and `otel` application settings in {{< reuse "kagent-docs/versions/kagent.md" >}}. Helm accepts a key that a chart does not define, so a release that still sets `controller.sessionIdleTTL` or `otel.traces.enabled` keeps a value that no template reads, and the setting reverts to its default without reporting an error. Neither Helm flag that reuses stored values carries you across, so write the replacements into a values file and upgrade with `--values`.
+
+### Runtime defaults
+
+`config.runtimeDefaults` is the one part of the block that the controller does not apply to itself. The controller compiles those settings into each agent runtime that it starts, so a setting such as the log level, the telemetry endpoints, or the content capture decision must appear in both `config` and `config.runtimeDefaults` to govern the controller and the agents together. A Harness overrides a few of them through its `spec.env` field, and owns none of the telemetry ones. For which variables a Harness may set, see [Controller-owned telemetry variables]({{< link path="agents/agent-harness#controller-owned-telemetry-variables" >}}).
+
 ## Choose a database
 
 kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart deploys no database of its own. It reads a connection string from a Kubernetes Secret, and `database.postgres.connectionStringSecretRef` names that Secret and the key inside it.
@@ -52,6 +94,8 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
          key: connectionString
        clientCertificate:
          enabled: false
+   config:
+     database:
        role: kagent_owner
        schema: kagent
        vectorEnabled: true
@@ -63,15 +107,17 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
      replicas: 3
    ```
 
+   The two blocks divide along the same line as the rest of the chart. `database.postgres` covers the Kubernetes packaging, meaning the Secret reference and the client certificate. `config.database` sets what the controller reads from its configuration file. For that division, see [Controller configuration](#controller-configuration).
+
    | Setting | Description |
    | ------- | ----------- |
    | `database.postgres.connectionStringSecretRef` | The Secret and key that hold the connection string. Keeping the string in a Secret keeps the credentials out of Helm values. The controller restarts to pick up a changed Secret. |
    | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. The connection string must then point its `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in the preceding example, leaves `enabled` at `false`. |
-   | `database.postgres.role` | The role that kagent assumes on each connection. Give each installation that shares one database a distinct role. |
-   | `database.postgres.schema` | The schema that holds kagent's tables. `database.postgres.vectorSchema` names the schema that holds the shared `pgvector` extension, and kagent needs `USAGE` on it. |
-   | `database.postgres.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
-   | `database.postgres.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. Omit the fields to keep the pgx library defaults. |
-   | `database.postgres.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies that the database is already migrated and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. |
+   | `config.database.role` | The role that kagent assumes on each connection. Give each installation that shares one database a distinct role. |
+   | `config.database.schema` | The schema that holds kagent's tables. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and kagent needs `USAGE` on it. |
+   | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
+   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. Omit the fields to keep the pgx library defaults. |
+   | `config.database.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies that the database is already migrated and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. |
 
 3. Apply the values to the kagent Helm release.
 
@@ -121,13 +167,16 @@ controller:
   push:
     signing:
       secretName: kagent-push-signing
+config:
+  gateway:
+    push:
       issuer: https://kagent.example.com
 ```
 
 | Setting | Description |
 | ------- | ----------- |
-| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. An invalid key stops the controller from starting. |
-| `controller.push.signing.issuer` | The stable URL that webhook receivers trust as the JWT issuer. Leave it empty to fall back to `ui.externalUrl`, and then to the in-cluster A2A gateway URL. |
+| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. An invalid key stops the controller from starting. Naming a Secret here projects it into the controller as the `config.gateway.push.signingPrivateKeyFile` setting. |
+| `config.gateway.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. Omit the key, and the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
 
 With a signing key configured, each callback attempt carries a fresh five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
 
@@ -175,14 +224,17 @@ When you scale a serving WorkerPool down, it removes pods without suspending the
 
 Every {{< gloss "Session" >}}Session{{< /gloss >}} holds database records and pins a runtime revision for as long as it exists, including a Session that is never opened again. The kagent controller deletes idle Sessions on a timer. Deleting idle sessions bounds the records that a kagent installation stores as well as the revisions that it holds open.
 
-A leader-only worker sweeps Sessions once a minute and deletes every Session that has been idle past the limit, using the same deletion workflow that a client delete uses.
+A leader-only worker sweeps Sessions once a minute and deletes every Session that has been idle past the limit, using the same deletion workflow that a client delete uses. `config.sessions.expirationInterval` sets that sweep interval, and it must be positive.
 
-To choose how long a Session can be idle before the worker deletes it, set `controller.sessionIdleTTL` in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values. The value is a Go duration, and it defaults to `168h`, or seven days. Setting it to `0` turns the worker off, retries included, and a negative value is rejected.
+To choose how long a Session can be idle before the worker deletes it, set `config.sessions.idleTtl` in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values. The value is a duration in seconds with an `s` suffix, and it defaults to `604800s`, or seven days. Setting it to `0s` turns the worker off, retries included, and a negative value is rejected.
 
 ```yaml
-controller:
-  sessionIdleTTL: "720h"
+config:
+  sessions:
+    idleTtl: 2592000s
 ```
+
+Durations in the `config` block follow protobuf JSON notation, so seconds are the only unit. A Go duration string such as `720h` fails validation and stops the controller from starting.
 
 No per-agent override exists, so this one value governs every Session in the installation. No maximum exists either, so a longer value is accepted.
 
@@ -197,11 +249,12 @@ Work in progress is never deleted. A Session with a running task survives past t
 
 <!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page, so it is parked here until a Sessions reference page exists. The behaviour: an expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone, so the same caller can reuse that request ID to start a fresh Session. -->
 
-A Session share carries its own lifetime, separate from the Session's idle limit. A client sets `CreateSessionShareRequest.ttl` when it creates a share, and `controller.sessionShareMaxTTL` caps what a client may ask for. A positive cap rejects any request that exceeds it, and supplies the lifetime for a request that omits `ttl`. The default `0` leaves a share unbounded unless the client sets `ttl`, and a negative value is rejected at startup.
+A Session share carries its own lifetime, separate from the Session's idle limit. A client sets `CreateSessionShareRequest.ttl` when it creates a share, and `config.sessions.shareMaxTtl` caps what a client may ask for. A positive cap rejects any request that exceeds it, and supplies the lifetime for a request that omits `ttl`. The default `0s` leaves a share unbounded unless the client sets `ttl`, and a negative value is rejected at startup.
 
 ```yaml
-controller:
-  sessionShareMaxTTL: "24h"
+config:
+  sessions:
+    shareMaxTtl: 86400s
 ```
 
 To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sessions that it removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.

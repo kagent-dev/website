@@ -27,7 +27,7 @@ The MCP server is part of the controller's HTTP port rather than a separate depl
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `controller.grpc.reflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have at least one Session in the `READY` state. The MCP server lists ready Sessions only.
 

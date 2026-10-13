@@ -92,6 +92,23 @@ spec:
     azureDeployment: gpt-4o-mini
 ```
 
+## Send a file to the model
+
+The `responses` format is the only one that sends a file with a prompt. It sends a link rather than the bytes, and Azure fetches that link itself, both on the turn that sends the link and on every turn that replays the conversation. A link must therefore stay reachable from Azure for as long as the conversation lives.
+
+What reaches Azure depends on whether the message gives a link or the bytes, and on the media type. The following table covers every combination that a message can include.
+
+| What the message includes | What the runtime sends |
+| ------------------------ | ---------------------- |
+| An `http://` or `https://` link with an `image/` media type | An `input_image` part with the link. |
+| An `http://` or `https://` link with any other media type, such as a PDF | An `input_file` part with the link. |
+| Inline image bytes | An `input_image` part with the bytes as a `data:` URL. |
+| Inline bytes of any other type, such as a PDF or an Office document | Nothing. Azure OpenAI takes no inline bytes outside an image. |
+
+The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. When an older message in the replayed conversation includes one, the runtime replaces the link with a text note that keeps the URL, so a model with a fetch tool can still retrieve the file.
+
+The runtime sends a file's display name as a text part of its own, placed before the file, because Azure rejects a filename next to a file URL.
+
 ## Authentication
 
 | Configuration | Credential |

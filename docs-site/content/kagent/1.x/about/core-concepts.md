@@ -134,7 +134,7 @@ kagent agent session create --agent assistant -n kagent
 
 After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session. The HTTP endpoint is `/agents/{namespace}/{name}` and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
 
-An expiration worker deletes a Session that records no task activity for seven days. The `controller.sessionIdleTTL` Helm value sets that window. A value of `0` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
+An expiration worker deletes a Session that records no task activity for seven days. The `config.sessions.idleTtl` Helm value sets that window. A value of `0s` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
 ## Actor
 
