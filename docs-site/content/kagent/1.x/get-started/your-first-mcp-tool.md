@@ -172,7 +172,7 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
 ## Clean up
 
 > [!IMPORTANT]
-> Leave the Harness, AgentTemplate, Agent, and Sessions in place. Other guides build on them, and [Your first agent]({{< link path="get-started/your-first-agent#clean-up" >}}) covers removing them when you are finished with the kagent guides. Leave `kagent-tool-server` in place as well, because the kagent installation owns it.
+> Leave the Harness, AgentTemplate, Agent, and Sessions in place. Other guides build on them, and [Your first agent]({{< link path="get-started/your-first-agent#optional-clean-up" >}}) covers removing them when you are finished with the kagent guides. Leave `kagent-tool-server` in place as well, because the kagent installation owns it.
 
 If you created a RemoteMCPServer of your own in [Bind your own MCP server](#bind-your-own-mcp-server), delete it.
 
