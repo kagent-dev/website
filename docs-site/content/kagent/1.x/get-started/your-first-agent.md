@@ -161,7 +161,7 @@ The `invoke` command takes a few more options that are useful beyond a first con
   {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Give your agent capabilities beyond its system prompt." >}}
 {{< /cards >}}
 
-## Optional: clean up
+## Optional: Clean up
 
 > [!IMPORTANT]
 > Other guides build on the Harness, AgentTemplate, and Agent that you created here, including [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}) and [Agent Substrate]({{< link path="examples/agent-substrate" >}}). Unless you are finished with the kagent guides, leave the resources in place.
