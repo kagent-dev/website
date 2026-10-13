@@ -91,6 +91,49 @@ Leader election keeps the replicas from conflicting. One replica holds a Kuberne
 
 PostgreSQL supports multiple controller replicas without further configuration. The bundled instance is still a single pod backed by one PVC, so an installation that runs several controllers for availability, against a bundled database, has only moved the single point of failure.
 
+## Sign push notification callbacks
+
+Agent-to-Agent (A2A) push notifications are unsigned by default. Callbacks include no `Authorization` header unless you provide an Ed25519 signing key. Without a key, push notifications still work, and the JSON Web Key Sets (JWKS) endpoint returns 404. To let receivers verify callbacks, store one unencrypted PKCS#8 PEM key in a Kubernetes Secret and reference the Secret in Helm.
+
+1. Generate the signing key once.
+   ```bash
+   openssl genpkey -algorithm ED25519 -out private-key.pem
+   ```
+
+2. Store the signing key in the kagent namespace. The Secret must contain a `private-key.pem` key.
+   ```bash
+   kubectl create secret generic kagent-push-signing -n kagent \
+     --from-file=private-key.pem
+   ```
+
+3. Add the Secret name and issuer to your `kagent.yaml` Helm values file.
+   ```yaml
+   controller:
+     push:
+       signing:
+         secretName: kagent-push-signing
+         issuer: https://kagent.example.com
+   ```
+
+   | Setting | Description |
+   | ------- | ----------- |
+   | `controller.push.signing.secretName` | Name of the Secret that contains `private-key.pem`. Leave empty to send push notifications without JSON Web Token (JWT) authentication. Helm references the Secret that you provide and does not generate or manage signing keys. An invalid key prevents controller startup. |
+   | `controller.push.signing.issuer` | Stable URL that webhook receivers trust as the JWT issuer. If empty, `controller.push.signing.issuer` uses `ui.externalUrl`, then the in-cluster A2A gateway URL. |
+
+4. Apply the values to the kagent Helm release.
+   ```bash
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent \
+     --reuse-values \
+     --values kagent.yaml
+   ```
+
+When a signing key is configured, each callback attempt includes a fresh five-minute Ed25519 JWT as `Authorization: Bearer <JWT>`. The `/.well-known/jwks.json` endpoint publishes the public key.
+
+All controller replicas must use the same key. After key rotation, restart all controller pods together so that replicas do not publish different JSON Web Key Sets.
+
 ## Reserve node pools for Workers
 
 {{< gloss "Worker" >}}Workers{{< /gloss >}} hold running {{< gloss "Actor" >}}Actors{{< /gloss >}}. An Actor that loses its node before it suspends loses its conversation, so the node pools that run Workers need stricter rules than the rest of the cluster.
