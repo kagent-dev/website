@@ -31,7 +31,7 @@ author: kagent.dev
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-3. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs, which are GA in 1.37 and served at `certificates.k8s.io/v1` by default.
+3. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
 
    {{< tabs >}}
    {{% tab name="Local kind cluster" %}}
