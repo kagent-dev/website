@@ -157,6 +157,43 @@ substrateWorkerPool:
 
 The chart writes `serviceAccountName` into the pool's pod template. A `serviceAccountName` that you set under `substrateWorkerPool.template` is overwritten rather than merged, so set the account through `substrateWorkerPool.serviceAccount.name`.
 
+### Keep placement scoped to the pool's namespace {#workerpool-placement-labels}
+
+kagent selects a WorkerPool by name and namespace when it compiles an ActorTemplate, and the generated ActorTemplate matches Workers on the `kagent.dev/worker-pool-name` and `kagent.dev/worker-pool-namespace` labels. Agent Substrate matches those labels across every pool rather than checking the WorkerPool's namespace, so a pool that carries only the name label can be selected from another namespace.
+
+The chart sets both labels from the pool's name and namespace, and applies them after `substrateWorkerPool.labels`. An extra label that reuses either key is overwritten rather than honored.
+
+```yaml
+substrateWorkerPool:
+  name: kagent-default
+  labels:
+    environment: production
+```
+
+A pool that you manage outside the chart carries no labels of its own. Set both keys yourself, and match each value to the pool's name and namespace.
+
+```yaml
+apiVersion: ate.dev/v1alpha1
+kind: WorkerPool
+metadata:
+  name: external-pool
+  namespace: team-a
+  labels:
+    kagent.dev/worker-pool-name: external-pool
+    kagent.dev/worker-pool-namespace: team-a
+spec:
+  replicas: 2
+  workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+```
+
+Earlier releases placed Actors with a single `kagent.dev/worker-pool` label, and the chart no longer sets it. A Session or Sandbox that is pinned to a revision from one of those releases still selects that key, so keep the old label on the pool until you recreate them.
+
+```yaml
+substrateWorkerPool:
+  labels:
+    kagent.dev/worker-pool: kagent-default
+```
+
 ## Configure snapshot storage
 
 Agent Substrate writes every suspended Actor to an object store, so the bucket stores the Session state that a resume restores. Two places decide where a snapshot lands:

@@ -97,6 +97,42 @@ Leader election keeps the replicas from conflicting. One replica takes a Kuberne
 > [!IMPORTANT]
 > If an installation runs on the development database, extra controller replicas do not make the installation highly available. That database is a single pod backed by one PersistentVolumeClaim, so losing it stops every replica at once. Run an external PostgreSQL instance before counting controller replicas toward availability.
 
+## Sign push notification callbacks
+
+Agent-to-Agent (A2A) push notifications are unsigned by default. A callback carries no `Authorization` header unless you supply an Ed25519 signing key, and the JSON Web Key Set (JWKS) endpoint returns `404`. Push notifications still work without a key, so sign them only where a receiver must verify that a callback came from your installation.
+
+To sign callbacks, generate one unencrypted PKCS#8 Ed25519 key and store it in a Secret in the kagent namespace.
+
+1. Generate the signing key.
+   ```bash
+   openssl genpkey -algorithm ED25519 -out private-key.pem
+   ```
+
+2. Store the key in a Secret. The Secret must hold the key under the `private-key.pem` key.
+   ```bash
+   kubectl create secret generic kagent-push-signing -n kagent \
+     --from-file=private-key.pem
+   ```
+
+Then name that Secret in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
+
+```yaml
+controller:
+  push:
+    signing:
+      secretName: kagent-push-signing
+      issuer: https://kagent.example.com
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. An invalid key stops the controller from starting. |
+| `controller.push.signing.issuer` | The stable URL that webhook receivers trust as the JWT issuer. Leave it empty to fall back to `ui.externalUrl`, and then to the in-cluster A2A gateway URL. |
+
+With a signing key configured, each callback attempt carries a fresh five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
+
+Every controller replica must load the same key. After you rotate the key, restart all controller pods together, because replicas that run on different keys publish different JSON Web Key Sets.
+
 ## Node operations
 
 A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so every node event reaches the {{< gloss "Actor" >}}Actors{{< /gloss >}} that this Worker hosts. What the event costs depends on what each Actor was doing when the node went away.
@@ -160,6 +196,13 @@ Work in progress is never deleted. A Session with a running task survives past t
 > **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, so `GetSession` returns not-found afterward. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
 
 <!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page, so it is parked here until a Sessions reference page exists. The behaviour: an expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone, so the same caller can reuse that request ID to start a fresh Session. -->
+
+A Session share carries its own lifetime, separate from the Session's idle limit. A client sets `CreateSessionShareRequest.ttl` when it creates a share, and `controller.sessionShareMaxTTL` caps what a client may ask for. A positive cap rejects any request that exceeds it, and supplies the lifetime for a request that omits `ttl`. The default `0` leaves a share unbounded unless the client sets `ttl`, and a negative value is rejected at startup.
+
+```yaml
+controller:
+  sessionShareMaxTTL: "24h"
+```
 
 To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sessions that it removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
 
