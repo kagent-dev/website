@@ -129,6 +129,55 @@ substrateWorkerPool:
 
 The same `template` block also accepts `nodeSelector`, `tolerations`, `priorityClassName`, and `nodeAffinity`, so you can keep Workers on nodes that you set aside for them.
 
+### Keep WorkerPool placement namespace-scoped {#workerpool-placement-labels}
+
+kagent selects a WorkerPool by name and namespace when it compiles an ActorTemplate. Generated ActorTemplates match Workers with `kagent.dev/worker-pool-name` and `kagent.dev/worker-pool-namespace`. Agent Substrate matches Worker labels across all pools and does not check the WorkerPool namespace.
+
+For the chart-managed WorkerPool, the kagent chart sets both placement labels from the WorkerPool name and namespace. You can use `substrateWorkerPool.labels` for additional labels. The chart keeps the placement labels authoritative even if extra labels set the same keys.
+
+```yaml
+substrateWorkerPool:
+  name: kagent-default
+  labels:
+    environment: production
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `substrateWorkerPool.name` | The WorkerPool name that kagent writes to `kagent.dev/worker-pool-name`. |
+| `substrateWorkerPool.labels` | Extra metadata labels for the chart-managed WorkerPool. Do not use this field to change `kagent.dev/worker-pool-name` or `kagent.dev/worker-pool-namespace`. |
+
+If you manage WorkerPools outside the kagent chart, add both placement labels to each WorkerPool. The label values must match the WorkerPool name and namespace.
+
+```yaml
+apiVersion: ate.dev/v1alpha1
+kind: WorkerPool
+metadata:
+  name: external-pool
+  namespace: team-a
+  labels:
+    kagent.dev/worker-pool-name: external-pool
+    kagent.dev/worker-pool-namespace: team-a
+spec:
+  replicas: 2
+  workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `metadata.labels["kagent.dev/worker-pool-name"]` | The WorkerPool name that generated ActorTemplates match. |
+| `metadata.labels["kagent.dev/worker-pool-namespace"]` | The WorkerPool namespace that generated ActorTemplates match. |
+| `spec.replicas` | The number of Workers that the WorkerPool keeps ready. |
+| `spec.workerImage` | The Worker image for the pool's sandbox class. |
+
+During an upgrade from a release that used name-only placement, existing Sessions and Sandboxes stay pinned to their old revisions. Those revisions still select Workers with `kagent.dev/worker-pool: <pool-name>`. To keep those Sessions and Sandboxes resumable during the transition, keep the old label on the pool until you recreate them.
+
+```yaml
+substrateWorkerPool:
+  labels:
+    kagent.dev/worker-pool: kagent-default
+```
+
 ## Configure snapshot storage
 
 Snapshot storage is configured in two independent places, and a mismatch between them breaks resume rather than install.
