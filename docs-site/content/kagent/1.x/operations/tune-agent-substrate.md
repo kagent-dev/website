@@ -137,6 +137,26 @@ The same `template` block also accepts `nodeSelector`, `tolerations`, `priorityC
 
 <!-- REVIEW (WorkerPool owner): the CPU and memory figures above are illustrative rather than measured, and the chart ships no defaults to derive them from. Confirm a recommended request and limit per Worker for a pool that carries production traffic, and the scheduling guidance that goes with it, before this section presents either as a recommendation. -->
 
+### Give Workers their own ServiceAccount
+
+Worker pods run as a ServiceAccount that the chart creates, named after the pool. On a default install that name is `kagent-default`. The chart binds no Role or ClusterRole to the account. Its purpose is to keep Workers off the namespace's `default` ServiceAccount, and to give you a Worker identity that you can attach your own policy to, such as an IAM role or an admission rule.
+
+To run Workers as an account that you manage outside the chart, stop the chart from creating one and name your own account instead. That account must already exist in the release namespace, because neither the chart nor Kubernetes creates it on demand.
+
+```yaml
+substrateWorkerPool:
+  serviceAccount:
+    create: false
+    name: my-worker-sa
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `substrateWorkerPool.serviceAccount.create` | Whether the chart creates the Worker ServiceAccount. Defaults to `true`. Set it to `false` to use an account that you manage yourself. |
+| `substrateWorkerPool.serviceAccount.name` | The ServiceAccount that Worker pods run as. Omit it to use the pool name. |
+
+The chart writes `serviceAccountName` into the pool's pod template. A `serviceAccountName` that you set under `substrateWorkerPool.template` is overwritten rather than merged, so set the account through `substrateWorkerPool.serviceAccount.name`.
+
 ## Configure snapshot storage
 
 Agent Substrate writes every suspended Actor to an object store, so the bucket stores the Session state that a resume restores. Two places decide where a snapshot lands:

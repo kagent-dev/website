@@ -275,6 +275,34 @@ Because the settings are per-installation, they change what every agent sees. To
 > [!WARNING]
 > A tool binding's tool list does not narrow anything on the Claude {{< gloss "Harness" >}}Harness{{< /gloss >}}. The compiler exposes the whole server instead, and names the tools that you selected in a warning on the AgentTemplate's `status.harnesses[].warnings`. The kagent and Codex harnesses both honor the list. Where an agent runs on the Claude harness and must not reach a tool, narrow the server with `tools.enabledTools` or `--read-only` rather than with the binding.
 
+## Reach kagent-tool-server from another namespace
+
+The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references from its own namespace only. Where an AgentTemplate in another namespace binds the server, the controller cannot resolve the binding and the AgentTemplate does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
+
+```yaml
+kagent-tools:
+  remoteMCPServer:
+    allowedNamespaces:
+      from: Selector
+      selector:
+        matchLabels:
+          kagent-tools: allowed
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `allowedNamespaces.from` | Where a reference may originate, one of `All`, `Same`, or `Selector`. Defaults to `Same`. The default admits the release namespace only. |
+| `allowedNamespaces.selector` | A label selector over namespaces. The server reads this field only where `from` is `Selector`, and the selector takes `matchLabels` and `matchExpressions`. |
+
+The selector follows the Gateway API pattern for cross-namespace attachment, so the label belongs on the Namespace rather than on the AgentTemplate that binds the server.
+
+```bash
+kubectl label namespace my-agents kagent-tools=allowed
+```
+
+> [!NOTE]
+> Admitting a namespace grants every agent in that namespace the server's full cluster authority, because all of the server's callers share one ServiceAccount. Narrow the server with `rbac.readOnly` before you widen `allowedNamespaces`.
+
 ## kagent-grafana-mcp
 
 The `kagent-grafana-mcp` server runs [mcp-grafana](https://github.com/grafana/mcp-grafana), Grafana's own MCP server. The kagent chart packages it as a subchart. Its tools fall into four groups:

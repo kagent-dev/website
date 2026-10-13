@@ -46,7 +46,7 @@ EOF
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
-A Harness names no AgentTemplate. An {{< gloss "Agent" >}}Agent{{< /gloss >}} pairs the two through either `spec.harnessRef` or an inline `spec.harness`, so whoever writes the Agent decides which template runs on which Harness. For more information about the pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
+A Harness names no AgentTemplate. An {{< gloss "Agent" >}}Agent{{< /gloss >}} pairs the two through `spec.harnessRef`, so whoever writes the Agent decides which template runs on which Harness. `spec.harnessRef` takes a reference only, so a Harness must exist before an Agent can name it. For more information about the pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
 
 A command or argument override belongs to the revision that kagent prepares. Changing one prepares a new revision rather than altering a running agent. A {{< gloss "Session" >}}Session{{< /gloss >}} pinned to an earlier revision keeps the command it was prepared with until it moves to the new one.
 
@@ -140,8 +140,9 @@ metadata:
   name: codex-agent
   namespace: kagent
 spec:
-  templateRef:
-    name: codex-template
+  template:
+    ref:
+      name: codex-template
   harnessRef:
     name: codex-harness
 EOF
@@ -194,8 +195,9 @@ metadata:
   name: claude-agent
   namespace: kagent
 spec:
-  templateRef:
-    name: claude-template
+  template:
+    ref:
+      name: claude-template
   harnessRef:
     name: claude-harness
 EOF
