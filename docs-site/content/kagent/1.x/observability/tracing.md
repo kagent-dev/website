@@ -70,15 +70,16 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 
 ### Correlation attributes
 
-A trace tells you which request you are looking at through attributes on its spans, not through the span names. The runtime stamps the following four attributes onto its root span and copies them onto every descendant span. A search on any one of these attributes returns the whole subtree rather than a single span.
+Use attributes, not span names, to identify a request in a trace. The runtime copies the request attributes to every descendant span. The runtime identity and main Agent identity are resource attributes, so use them to filter all spans from the same runtime process.
 
-| Attribute | Value |
-| --------- | ----- |
-| `a2a.task.id` | The A2A task ID, which identifies one turn of a conversation. |
-| `gen_ai.conversation.id` | The A2A context ID, which identifies the conversation and is stable across its turns. |
-| `gen_ai.agent.id` | The Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
-| `enduser.id` | The authenticated caller, such as `admin@kagent.dev`. |
-| `kagent.runtime` | The runtime that served the request, such as `adk-go`. |
+| Attribute | Where | Value |
+| --------- | ----- | ----- |
+| `a2a.task.id` | Span | The A2A task ID, which identifies one turn of a conversation. |
+| `gen_ai.conversation.id` | Span | The A2A context ID, which identifies the conversation and is stable across its turns. |
+| `gen_ai.agent.id` | Span | The Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
+| `enduser.id` | Span | The authenticated caller, such as `admin@kagent.dev`. |
+| `gen_ai.main_agent.id` | Resource | The main Agent that the runtime process was compiled for, as `<namespace>/<name>`. This resource attribute replaces the resource-level `gen_ai.agent.id` name. |
+| `kagent.runtime` | Resource | The runtime that served the request, such as `adk-go`. |
 
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
 
@@ -227,7 +228,7 @@ Send a request to a new Session, then find its trace in the backend that you set
                    HTTP POST                                my-first-agent
    ```
 
-4. To narrow a search to one conversation, search by a correlation attribute, such as `gen_ai.conversation.id=<context-id>`.
+4. Use a span attribute, such as `gen_ai.conversation.id=<context-id>`, to narrow a search to one conversation. Use a resource attribute, such as `gen_ai.main_agent.id=<namespace>/<agent>`, to narrow a search to one runtime process.
 
 ## Agent Substrate traces
 
