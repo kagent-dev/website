@@ -24,8 +24,8 @@ spec:
   workload:
     image: {{< reuse "kagent-docs/versions/runtime-image.md" >}}
   env:
-    - name: OTEL_PROPAGATORS
-      value: tracecontext,baggage
+    - name: OTEL_BSP_SCHEDULE_DELAY
+      value: "2000"
   substrate:
     workerPoolRef:
       name: kagent-default

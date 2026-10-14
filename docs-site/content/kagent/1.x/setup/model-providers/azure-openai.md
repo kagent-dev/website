@@ -107,8 +107,6 @@ A link reaches Azure regardless of its media type. Inline bytes reach Azure only
 
 The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. When an older message in the replayed conversation includes one, the runtime replaces the link with a text note that keeps the URL, so a model with a fetch tool can still retrieve the file.
 
-The runtime sends a file's display name as a text part of its own, placed before the file, because Azure rejects a filename next to a file URL.
-
 A link attachment with a display name gets an extra text part that reads `File: <name>` that is placed immediately before the file part. Azure rejects a filename beside a file URL, so the name reaches the model as ordinary text.
 
 ## Authentication

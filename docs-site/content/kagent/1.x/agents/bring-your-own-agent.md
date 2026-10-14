@@ -54,8 +54,8 @@ Both kinds of agent receive the same inputs. Agent Substrate delivers the two JS
 
 | Input | Contents |
 | ----- | -------- |
-| `/config/config.json` | The compiled agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
-| `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
+| `KAGENT_CONFIG_JSON`, which the helpers write to `/config/config.json` | The compiled agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
+| `KAGENT_AGENT_CARD_JSON`, which the helpers write to `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
 | Anything in `spec.env` | Literal values and `credentialRef` lookups from the Harness, resolved before the Actor starts. Agent Substrate accepts at most 32 environment variables on an Actor, and the compiled configuration counts toward that limit. A revision that exceeds it fails to compile rather than starting and misbehaving. |
 
 The `runtime` object is the root of the configuration document, and subagents inherit it. The object includes the settings that a process needs before it serves a request.
@@ -216,7 +216,7 @@ Implement the contract directly:
 
 1. Serve `lf.a2a.v1.A2AService` over gRPC on port 80. Generate the stubs from the [A2A protocol](https://a2a-protocol.org) definitions.
 2. Serve `GET /readyz` over HTTP on port 8081, returning `200`.
-3. To honor the AgentTemplate, read the compiled configuration from the `KAGENT_CONFIG_JSON` environment variable. An agent that ignores the variable runs as an opaque agen.
+3. To honor the AgentTemplate, read the compiled configuration from the `KAGENT_CONFIG_JSON` environment variable. An agent that ignores the variable runs as an opaque agent.
 
 The kagent helpers read `KAGENT_CONFIG_JSON` and materialize its contents into `/config/config.json`. An image without those helpers parses the variable directly.
 {{% /tab %}}

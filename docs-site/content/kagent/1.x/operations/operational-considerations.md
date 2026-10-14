@@ -55,9 +55,9 @@ After you change these values, you can verify their validity by checking the con
 
 ### Runtime defaults
 
-The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that settings in both `config` and `config.runtimeDefaults`.
+The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that setting in both `config` and `config.runtimeDefaults`.
 
-A Harness can override some runtime defaults through its `spec.env` field. The telemetry settings are the exception, because the controller owns those variables in every runtime. For the list, see [Controller-owned telemetry variables]({{< link path="agents/agent-harness#controller-owned-telemetry-variables" >}}).
+The controller compiles each `config.runtimeDefaults` setting into the runtime's configuration document rather than passing it as an environment variable, so a Harness cannot override one of these settings through its `spec.env` field. A Harness tunes only the standard `OTEL_*` variables that the controller does not own, such as the `OTEL_BSP_*` batch span processor settings. For the variables that the controller does own, see [Controller-owned telemetry variables]({{< link path="agents/agent-harness#controller-owned-telemetry-variables" >}}).
 
 ## Choose a database
 
@@ -185,7 +185,7 @@ config:
 
 | Setting | Description |
 | ------- | ----------- |
-| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the Secrey's name is added into the controller as the `config.gateway.push.signingPrivateKeyFile` setting. |
+| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the chart mounts the key and sets `config.gateway.push.signingPrivateKeyFile` to `/etc/kagent/secrets/push-private-key.pem`. |
 | `config.gateway.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
 
 With a signing key configured, each callback attempt carries a fresh five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.

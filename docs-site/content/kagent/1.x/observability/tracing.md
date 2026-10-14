@@ -255,7 +255,7 @@ The flush lets a kagent trace arrive promptly rather than on the exporter's own 
 
 Turn off the trace exporter, then create a new Session so that the change takes effect. The controller sets the trace exporter to `none` in each runtime, so an agent does not fall back to the OpenTelemetry SDK's default of exporting to `localhost`.
 
-1. Remove the telemetry settings from the kagent Helm release. Null the whole `telemetry` block rather than one signal inside it, because the controller rejects a null value for a single signal and fails to start.
+1. Remove the telemetry settings from the kagent Helm release. Remove the whole `telemetry` block rather than one signal inside it. The controller rejects a null value anywhere in its configuration and fails to start, so a values file that sets a single signal to `null` breaks the installation. A `--set` flag removes the key instead of nulling it.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
