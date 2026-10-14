@@ -7,7 +7,7 @@ author: kagent.dev
 
 A Harness defines how an agent is allowed to run. It selects the runtime that executes the agent, the container image that runtime starts from, and the Agent Substrate capacity and snapshot storage that the agent runs on. A Harness runs nothing by itself. To run an agent, create an Agent that references a Harness and an AgentTemplate, which supplies the system prompt, the model, and the tools.
 
-This page covers the Harness schema, the four runtimes it can select, and what each runtime supports. For the concept and how it relates to the other resources, see the [core concepts]({{< link path="about/core-concepts#harness" >}}).
+This page covers the Harness schema, the four runtimes that a Harness can select, and what each runtime supports. For the concept and how it relates to the other resources, see the [core concepts]({{< link path="about/core-concepts#harness" >}}).
 
 ## Configure a Harness
 
@@ -85,7 +85,7 @@ spec:
       eventRetentionSize: 20
 ```
 
-Memory settings persist facts across conversations. Compaction settings keep a single conversation's prompt bounded as the conversation grows, and kagent offers two strategies for that. Tail retention summarizes the older history once the prompt passes a token count. A sliding window summarizes each group of completed invocations as the conversation goes. Setting `compaction` requires at least one of the two strategies, and setting both is valid. For the rules that the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
+Memory settings persist facts across conversations. Compaction settings keep a single conversation's prompt bounded as the conversation grows, through either of two strategies. Tail retention summarizes the older history once the prompt passes a token count. A sliding window summarizes each group of completed invocations as the conversation goes. Setting `compaction` requires at least one of the two strategies, and setting both is valid. For the rules that the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
 
 | Field | Description |
 | ----- | ----------- |
@@ -275,7 +275,7 @@ EOF
 
 The `byo` runtime runs an agent that you built with an agent framework of your own, packaged as a container image. The runtime block is empty, and `workload.command` is required, because kagent cannot infer the entrypoint of an image that it does not build.
 
-kagent builds a `byo` revision in the same way that it builds a `kagent` one, so an image that reads the agent configuration accepts the same model providers and the same AgentTemplate features as the built-in runtime. Structured output is the one exception, because only the `kagent` runtime supports it. An image that ignores the configuration decides everything itself, and its AgentTemplate needs only a name. For the contract that the image must implement, how to read the configuration, and the known limitations, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
+An image that reads the agent configuration accepts the same model providers and AgentTemplate features as the built-in runtime, except for structured output. An image that ignores the configuration decides everything itself, and its AgentTemplate needs only a name. For the contract that the image must implement, how to read the configuration, and the known limitations, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
 
 ```yaml
 kubectl apply -f - <<EOF
