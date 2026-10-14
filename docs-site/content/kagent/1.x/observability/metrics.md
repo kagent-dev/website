@@ -47,11 +47,11 @@ The Agent Substrate `atecontroller` component reports the same `controller_runti
 
 ## Agent runtime metrics
 
-Agent runtimes export metrics over OTLP when the kagent Helm release sets `otel.metrics.enabled` to `true`. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
+Agent runtimes export metrics over OTLP when the kagent Helm release sets `otel.metrics.enabled` to `true`. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
 
 | Metric | Type | Measures |
 | ------ | ---- | -------- |
-| `gen_ai_invoke_agent_duration_seconds` | Histogram | Time that one `invoke_agent` execution segment takes. kagent records this metric with every `invoke_agent` span that it opens. A collector can derive the same metric from runtime-owned `invoke_agent` spans before sampling. |
+| `gen_ai_invoke_agent_duration_seconds` | Histogram | Time that one `invoke_agent` execution segment takes. Only the `claude` and `codex` runtimes record it. The `kagent` runtime emits its own `invoke_agent` spans, so its wrapper stays a transport span and records no duration. For that runtime, derive the metric from those spans in the collector before sampling. |
 
 The metric carries labels for the Agent name, model, and error type when those values exist. When the collector copies resource attributes to labels, the metric also carries labels such as `service_name`, `service_namespace`, `service_version`, `kagent_runtime`, and `gen_ai_main_agent_id`.
 
@@ -119,7 +119,7 @@ Run the following queries in Prometheus or Grafana.
   sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="kagent-controller-metrics"}[5m]))
   ```
 
-- The 95th percentile agent invocation duration, per Agent.
+- The 95th percentile agent invocation duration, per Agent. The query returns data only for Agents on the `claude` and `codex` runtimes.
   ```text
   histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_seconds_bucket[5m])))
   ```
