@@ -131,7 +131,7 @@ EOF
 | ------- | ----- |
 | The ModelConfig reports `Accepted` as `False` | A referenced Secret or `endpointFrom` ConfigMap does not exist, or does not hold the named key. Run `kubectl describe modelconfig` to see which one. |
 | Foundry returns `401 Unauthorized` or `403 Forbidden` | The API key does not have access to the resource. |
-| The AgentTemplate reports `Compatible` as `False` | The resolved configuration cannot run on the Harness. Read the condition message for the specific reason. |
+| The Agent reports `Compatible` as `False` | The resolved configuration cannot run on the Harness. Read the condition message for the specific reason. |
 
 ## Next steps
 

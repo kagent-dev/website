@@ -95,7 +95,7 @@ A provider on your own network may present a certificate that the agent does not
 | `caCertSecretKey` | The key within that Secret that holds the bundle. |
 
 > [!WARNING]
-> **Pinning a certificate authority is not currently supported.** Setting `tls.caCertSecretRef` and `tls.caCertSecretKey` makes kagent mount the bundle as a file, and an agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files. The AgentTemplate reports the `Compatible` condition as `False` with the message `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`. Use a certificate that chains to a public authority, or terminate TLS at a gateway that the agent can trust.
+> **Pinning a certificate authority is not currently supported.** The `tls` block defines no field for a CA bundle, because an agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files. The API server rejects `caCertSecretRef` and `caCertSecretKey` as unknown fields. Use a certificate that chains to a public authority, or terminate TLS at a gateway that the agent can trust.
 
 Turning verification off does not mount anything, so it does compile.
 

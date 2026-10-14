@@ -42,7 +42,7 @@ EOF
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, regardless of the language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
-| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}). Note that the kagent installation's settings, such as the runtime log level, come from the Helm chart's `config.runtimeDefaults` block rather than from this setting. |
+| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Note that the kagent installation's settings, such as the runtime log level, come from the Helm chart's `config.runtimeDefaults` block rather than from this setting. |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
@@ -223,9 +223,9 @@ The runtime that a Harness selects decides which ModelConfig an Agent that runs 
 | `Foundry` | ✅ | ✅ | ❌ | ❌ |
 | `Mistral` | ❌ | ❌ | ❌ | ❌ |
 
-kagent rejects `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` on every runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. No agent can use these providers. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
+kagent rejects `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` on every runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. No agent can use these providers. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
-kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so the controller rejects a Mistral ModelConfig and reports `unsupported model provider: Mistral`.
+kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so a Mistral ModelConfig reports `unsupported model provider: Mistral`.
 
 Some supported combinations still carry restrictions.
 
@@ -238,7 +238,7 @@ Some supported combinations still carry restrictions.
 | `Bedrock` on any runtime | The Secret must hold an `AWS_BEARER_TOKEN_BEDROCK` key. A Secret of IAM access keys is rejected, because IAM signs each request locally. |
 
 > [!IMPORTANT]
-> Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. Separately, every runtime rejects a credential that the egress gateway cannot place in an HTTP header, such as an IAM key pair or a Google service account key. For more information about that limitation, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
+> Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. Separately, every runtime rejects a credential that the egress gateway cannot place in an HTTP header, such as an IAM key pair or a Google service account key. For more information about that limitation, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
 ## Tool and skill support
 
@@ -289,8 +289,8 @@ A runtime that meets one of these names in `spec.env` either refuses the Harness
 
 | Runtime | Result of naming a controller-owned variable in `spec.env` |
 | ------- | ---------------------------------------------------------- |
-| `claude` | kagent rejects the Harness, and the controller reports `Harness env "<name>" conflicts with Claude-owned runtime configuration`. |
-| `codex` | kagent rejects the Harness, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
+| `claude` | Every Agent on the Harness reports `Compatible` as `False`, and the controller reports `Harness env "<name>" conflicts with Claude-owned runtime configuration`. |
+| `codex` | Every Agent on the Harness reports `Compatible` as `False`, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
 | `kagent` | The entry is dropped and the controller's own value is compiled in its place. No error is reported. |
 
 Two further variables fall outside that table:
