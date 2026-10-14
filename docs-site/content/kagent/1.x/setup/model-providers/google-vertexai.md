@@ -5,9 +5,9 @@ weight: 20
 author: kagent.dev
 ---
 
-Neither Vertex AI provider runs on kagent 1.0. `AnthropicVertexAI` and `GeminiVertexAI` both authenticate with a Google service account key, and such a key is signed locally to obtain an access token. An agent reaches its model provider through the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway, which injects a static credential into an HTTP header and performs no signing, so kagent rejects a Vertex AI {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} rather than passing the key to the runtime.
+Neither Vertex AI provider runs on kagent 1.0. `AnthropicVertexAI` and `GeminiVertexAI` both authenticate with a Google service account key, and such a key is signed locally to obtain an access token. An agent reaches its model provider through the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway, which injects a static credential into an HTTP header and does not sign the request, so kagent rejects a Vertex AI {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} rather than passing the key to the runtime.
 
-The rejection happens at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from it. On a `claude` {{< gloss "Harness" >}}Harness{{< /gloss >}} the message names the credential.
+The rejection happens at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent does not compile a revision from it. On a `claude` {{< gloss "Harness" >}}Harness{{< /gloss >}} the message names the credential.
 
 ```
 environment credential "KAGENT_CLAUDE_GOOGLE_CREDENTIALS_JSON" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported

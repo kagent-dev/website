@@ -51,7 +51,7 @@ For what kagent and Agent Substrate each send, see [About the stack]({{< link pa
 
 ## Install Jaeger
 
-Install [Jaeger](https://www.jaegertracing.io/) in all-in-one mode, which stores traces in memory and needs no other components.
+Install [Jaeger](https://www.jaegertracing.io/) in all-in-one mode, which stores traces in memory and does not need other components.
 
 ```bash
 helm upgrade --install jaeger jaeger \
@@ -226,7 +226,7 @@ Turn on the kagent trace, log, and metrics exporters, and point them at the coll
    echo "Current revision: $OLD_REVISION"
    ```
 
-2. Upgrade the kagent Helm release to export traces and logs to the collector, and to serve controller metrics.
+2. Upgrade the kagent Helm release to export traces, logs, and metrics to the collector, and to serve controller metrics.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
@@ -234,17 +234,28 @@ Turn on the kagent trace, log, and metrics exporters, and point them at the coll
      --namespace kagent \
      --reuse-values \
      --values - <<EOF
-   otel:
-     exporter:
-       otlp:
+   config:
+     telemetry:
+       traces:
          endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
          protocol: grpc
-     traces:
-       enabled: true
-     logs:
-       enabled: true
-     metrics:
-       enabled: true
+       logs:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+       metrics:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
+     runtimeDefaults:
+       telemetry:
+         traces:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+         logs:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+         metrics:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
    controller:
      metrics:
        enabled: true
@@ -349,9 +360,8 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent --reuse-values \
-     --set otel.traces.enabled=false \
-     --set otel.logs.enabled=false \
-     --set otel.metrics.enabled=false \
+     --set config.telemetry=null \
+     --set config.runtimeDefaults.telemetry=null \
      --set controller.metrics.enabled=false
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \

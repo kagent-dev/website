@@ -15,7 +15,7 @@ You can do this work from an MCP client such as Claude Code or Cursor, which bui
 
 The MCP server is part of the controller's HTTP port rather than a separate deployment, so a default installation already serves it at `/mcp` on port `8083`.
 
-- **Transport**: Streamable HTTP only. Server-Sent Events (SSE) as a standalone transport and stdio are both unsupported, so a client that offers a transport choice must use Streamable HTTP.
+- **Transport**: Streamable HTTP only. Server-Sent Events (SSE) as a standalone transport and stdio are both unsupported. A client that offers a transport choice must use Streamable HTTP.
 - **Sessions**: The handler is stateless, so each request stands alone and a client does not need to establish a session first.
 - **Extensions**: The server advertises the `io.modelcontextprotocol/tasks` extension, which changes how invocations behave. For more information, see [Invoke without waiting](#invoke-without-waiting).
 
@@ -27,11 +27,11 @@ The MCP server is part of the controller's HTTP port rather than a separate depl
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `controller.grpc.reflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have at least one Session in the `READY` state. The MCP server lists ready Sessions only.
 
-3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). Deleting a checkpoint has neither an MCP tool nor a kagent command, so cleaning one up calls `CheckpointService` directly.
+3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). Deleting a checkpoint has neither an MCP tool nor a kagent command. Cleaning one up calls `CheckpointService` directly.
 
 ## Connect a client
 
@@ -254,7 +254,7 @@ Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's 
      }'
    ```
 
-   The task carries an opaque ID of the form `v1.<encoded reference>` that identifies the namespace, the instance, and the A2A task together, so pass it back verbatim rather than parsing it. Example output:
+   The task carries an opaque ID of the form `v1.<encoded reference>` that identifies the namespace, the instance, and the A2A task together. Pass it back verbatim rather than parsing it. Example output:
    ```json
    {
      "taskId": "v1.eyJuYW1lc3BhY2UiOiJrYWdlbnQiLCJpbnN0YW5jZUlkIjoi...",
@@ -309,10 +309,10 @@ Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's 
 Two more methods complete the set. `tasks/cancel` stops a run that is still working, and `tasks/update` answers an agent that is waiting on a person.
 
 > [!WARNING]
-> Read `status` rather than `resultType` to decide that a run is over. A paused task reports `resultType` as `complete` while its `status` is still `input_required`, so `resultType` alone does not mean an answer is waiting.
+> Read `status` rather than `resultType` to decide that a run is over. A paused task reports `resultType` as `complete` while its `status` is still `input_required`. `resultType` alone therefore does not mean an answer is waiting.
 
 > [!NOTE]
-> `statusMessage` changes meaning with the status. On a `working` task it holds the raw task record rather than a readable sentence, because the agent has not produced any text yet, so do not present it to a person as progress text. On an `input_required` task it holds the agent's question, and on a `completed` task it holds the reply.
+> `statusMessage` changes meaning with the status. On a `working` task it holds the raw task record rather than a readable sentence, because the agent has not produced any text yet. Do not present it to a person as progress text. On an `input_required` task it holds the agent's question, and on a `completed` task it holds the reply.
 
 ### Answer an agent's question
 
@@ -382,7 +382,7 @@ When an agent pauses to ask something, the task's status becomes `input_required
      }'
    ```
 
-   The reply confirms only that the update was accepted, and carries no agent output. Example output:
+   The reply confirms only that the update was accepted, and does not include agent output. Example output:
    ```json
    { "resultType": "complete" }
    ```
@@ -408,7 +408,7 @@ For the pause types, the approval model, and what the agent receives, see [Human
 
 The checkpoint tools pin a Session's state. These tools do not need the tasks extension, so they do not carry `_meta`.
 
-1. Create a checkpoint. `expected_head_task_id` names the terminal task to pin, so the call fails rather than pinning the wrong turn when the conversation has advanced past it. Use the `$TASK_ID` that an earlier invocation returned. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
+1. Create a checkpoint. `expected_head_task_id` names the terminal task to pin. The call fails rather than pinning the wrong turn when the conversation has advanced past it. Use the `$TASK_ID` that an earlier invocation returned. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \

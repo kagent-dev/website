@@ -74,7 +74,7 @@ Skip this section if you already have an Ollama server that your cluster can rea
 
 ## Create the ModelConfig for a self-hosted server
 
-Create a `ModelConfig` that points at the Ollama server. No Secret is needed, because a self-hosted Ollama server takes no API key.
+Create a `ModelConfig` that points at the Ollama server. No Secret is needed, because a self-hosted Ollama server does not take an API key.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -96,7 +96,7 @@ EOF
 | `model` | The name of the model as Ollama knows it, such as `llama3`. This must be a model that you already pulled onto the server. |
 | `provider` | The provider to use, `Ollama`. |
 | `ollama.host` | The address of the Ollama server. Use the in-cluster Service address when Ollama runs in the same cluster. |
-| `apiKeySecret` | The name of a Secret that holds the API key. Leave this unset for a self-hosted server, which takes no key. |
+| `apiKeySecret` | The name of a Secret that holds the API key. Leave this unset for a self-hosted server, which does not take a key. |
 | `apiKeySecretKey` | The key inside the Secret that holds the API key. Leave this unset for a self-hosted server. |
 
 ## Use Ollama Cloud
@@ -145,7 +145,7 @@ Three inputs decide together whether a request reaches Ollama Cloud. All three m
 - `ollama.host` is empty, or set to `api.ollama.com`. Setting `ollama.com` satisfies this rule and then fails inside the Ollama SDK, so leave the host unset.
 - A credential is present: `apiKeySecret` is set, or `apiKeyPassthrough` is on.
 
-A non-empty `ollama.host` overrides the other two inputs. With `ollama.host` set to a self-hosted address, a cloud model name and a valid Secret together still reach the self-hosted daemon, not Ollama Cloud. Adding a key to the self-hosted example in [Create the ModelConfig for a self-hosted server](#create-the-modelconfig-for-a-self-hosted-server) produces no cloud request, and no error that accounts for it. Remove `ollama.host` to route to Ollama Cloud.
+A non-empty `ollama.host` overrides the other two inputs. With `ollama.host` set to a self-hosted address, a cloud model name and a valid Secret together still reach the self-hosted daemon, not Ollama Cloud. Adding a key to the self-hosted example in [Create the ModelConfig for a self-hosted server](#create-the-modelconfig-for-a-self-hosted-server) does not produce a cloud request, and kagent does not report an error that accounts for it. Remove `ollama.host` to route to Ollama Cloud.
 
 ### Ollama Cloud requirements that no error reports
 

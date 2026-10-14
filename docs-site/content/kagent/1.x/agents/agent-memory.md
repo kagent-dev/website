@@ -43,6 +43,8 @@ Memories are scoped to the agent and to the user who created them, and carry the
        connectionStringSecretRef:
          name: my-postgres-url-secret
          key: connectionString
+   config:
+     database:
        # Use the login user directly. To assume a role instead, create the role in PostgreSQL and set its name here.
        role: ""
        # Runs the vector migration, which creates the pgvector extension and the memory tables
@@ -196,7 +198,7 @@ The SQL query only reads the table. To list or clear memories, call the `MemoryS
 
 No CLI command wraps the service yet, so these examples call it with [grpcurl](https://github.com/fullstorydev/grpcurl), and both calls take the `agent_name` exactly as the memory table stores it. Be sure to copy the value out of the table rather than assembling it by hand, because an incorrect name fails silently.
 
-1. Port-forward the controller's gRPC port, and confirm that your kagent installation sets `controller.grpc.reflection=true`.
+1. Port-forward the controller's gRPC port, and confirm that your kagent installation sets `config.server.grpcReflection=true`.
    ```bash
    kubectl port-forward -n kagent svc/kagent-controller 8083:8083
    ```

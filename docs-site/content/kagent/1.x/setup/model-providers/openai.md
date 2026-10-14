@@ -8,7 +8,7 @@ author: kagent.dev
 The `OpenAI` provider calls the OpenAI API directly.
 
 > [!NOTE]
-> This provider works on the `kagent`, `byo`, and `codex` runtimes, but not on `claude`. A `codex` Harness additionally requires `openAI.apiFormat: responses` and accepts no other `openAI` settings beyond `baseUrl`. For more information, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}). It also backs every OpenAI-compatible endpoint, so several other providers in this section set `provider: OpenAI` and point `openAI.baseUrl` somewhere else.
+> This provider works on the `kagent`, `byo`, and `codex` runtimes, but not on `claude`. A `codex` Harness additionally requires `openAI.apiFormat: responses` and does not accept any other `openAI` setting beyond `baseUrl`. For more information, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}). It also backs every OpenAI-compatible endpoint, so several other providers in this section set `provider: OpenAI` and point `openAI.baseUrl` somewhere else.
 
 ## Create the ModelConfig
 

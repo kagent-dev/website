@@ -74,7 +74,7 @@ Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the sch
    EOF
    ```
 
-   The schema requires an object with an integer `answer` and a string `explanation`, and allows no other properties. The system prompt describes the same JSON, because some model providers do not receive the schema.
+   The schema requires an object with an integer `answer` and a string `explanation`, and does not allow other properties. The system prompt describes the same JSON, because some model providers do not receive the schema.
 
 2. Confirm that the Agent is ready.
    ```bash

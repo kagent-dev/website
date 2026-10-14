@@ -34,7 +34,7 @@ kubectl get remotemcpserver kagent-tool-server -n kagent \
 
 ### Turn tool discovery off for a server
 
-The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, accepts no credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
+The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, does not accept any credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
 
 To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at runtime with the credentials that they carry.
 
@@ -48,7 +48,7 @@ The label changes three things about the server:
 - `status.discoveredTools` stays empty, so the command in [Read the tools that a server serves](#read-the-tools-that-a-server-serves) returns nothing for this server. The server's own documentation becomes the only list of what it offers.
 - The catalog keeps the server but records it as disconnected, with no tools.
 
-You can also use this label on a kmcp `MCPServer` when agentgateway fronts the server. Agents bind a RemoteMCPServer that points at the gateway rather than binding the `MCPServer` itself, so discovery against the `MCPServer` serves no purpose and the label turns it off.
+You can also use this label on a kmcp `MCPServer` when agentgateway fronts the server. Agents bind a RemoteMCPServer that points at the gateway rather than binding the `MCPServer` itself, so discovery against the `MCPServer` is unnecessary and the label turns it off.
 
 > [!NOTE]
 > Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server with discovery off, but nothing validates those names at admission, so a typo surfaces as a failed tool call at runtime instead of a rejected binding.
@@ -331,7 +331,7 @@ grafana-mcp:
 | `grafana.secretRef` | The name of an existing Secret that holds `GRAFANA_SERVICE_ACCOUNT_TOKEN`. Use this instead of `serviceAccountToken` to keep the token out of your Helm values. |
 
 > [!NOTE]
-> Upstream publishes no tag other than `latest`, so this subchart tracks the `mcp/grafana:latest` image on Docker Hub. A kagent release therefore does not pin which tools this server serves, and the set can change without a kagent upgrade. Read `status.discoveredTools` on `kagent-grafana-mcp` for the tools that your installation has, rather than relying on a published list.
+> Upstream does not publish a tag other than `latest`, so this subchart tracks the `mcp/grafana:latest` image on Docker Hub. A kagent release therefore does not pin which tools this server serves, and the set can change without a kagent upgrade. Read `status.discoveredTools` on `kagent-grafana-mcp` for the tools that your installation has, rather than relying on a published list.
 
 ## Community and contributed servers
 

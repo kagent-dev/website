@@ -260,15 +260,15 @@ kagent does not generate its own signing key, so you are responsible for creatin
      --from-file=private-key.pem=private-key.pem
    ```
 
-3. Name the Secret in `controller.push.signing.secretName`, and set `controller.push.signing.issuer` to a URL that reaches the controller. Use the Helm release name and version that you installed kagent with.
+3. Name the Secret in `controller.push.signing.secretName`, and set `config.gateway.push.issuer` to a URL that reaches the controller. Use the Helm release name and version that you installed kagent with.
    ```bash
    helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
      --namespace kagent --reuse-values \
      --set controller.push.signing.secretName=kagent-push-signing \
-     --set controller.push.signing.issuer=https://kagent.example
+     --set config.gateway.push.issuer=https://kagent.example
    ```
 
-   The issuer that a receiver trusts must match the host that it fetches the JWKS from. When `controller.push.signing.issuer` is empty, Helm falls back to `ui.externalUrl` and then to the in-cluster A2A gateway URL. Either fallback can name a host that does not serve the JWKS.
+   The issuer that a receiver trusts must match the host that it fetches the JWKS from. When you omit `config.gateway.push.issuer`, Helm derives it from `ui.externalUrl` and then from the in-cluster A2A gateway URL. Either fallback can name a host that does not serve the JWKS.
 
 4. Confirm that the controller publishes a verification key. Before you set the Secret, this path returns `404`.
    ```bash
@@ -284,7 +284,7 @@ Receivers verify a signed delivery against the JSON Web Key Set (JWKS). The cont
 
 Receivers must not send a token or credential when they register a callback. kagent signs each delivery attempt with a fresh five-minute JWT whose audience is the exact callback URL, including the query string. Before you acknowledge the request with a 2xx response, verify the JWT signature, issuer, audience, expiry, and `taskId` claim. The `taskId` claim repeats the `statusUpdate.taskId` value in the body, so a receiver that compares them rejects a token replayed against a different task.
 
-By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. To reach a test receiver inside the cluster, set `controller.push.allowHTTP=true` or `controller.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
+By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. To reach a test receiver inside the cluster, set `config.gateway.push.allowHttp=true` or `config.gateway.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
 
 ## When an agent needs a person
 
@@ -351,13 +351,13 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
    ```
 
 > [!IMPORTANT]
-> A caller that does not request the extension is still interrupted. The task stops at `TASK_STATE_INPUT_REQUIRED` exactly as before, and the question arrives as ordinary text on the status message, but the metadata carries no request `id`. Without that `id` there is nothing to answer, so the task waits until something cancels it. Request the extension on any call to an agent that can pause.
+> A caller that does not request the extension is still interrupted. The task stops at `TASK_STATE_INPUT_REQUIRED` exactly as before, and the question arrives as ordinary text on the status message, but the metadata does not include a request `id`. Without that `id` there is nothing to answer, so the task waits until something cancels it. Request the extension on any call to an agent that can pause.
 
 A tool approval works the same way with a different payload, `tool_approval_request` answered by `tool_approval_response`. For the pause kinds, the approval model, and what a nested agent's pause looks like, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
 ## Clean up
 
-* This example creates no Kubernetes resources, so you have nothing to delete.
+* This example does not create Kubernetes resources, so you have nothing to delete.
 * You can stop the 8083 port-forward for the kagent-controller service with `Ctrl+C`.
 * The tasks that your messages created stay on the Session as part of its conversation, and deleting the Session removes them.
 
