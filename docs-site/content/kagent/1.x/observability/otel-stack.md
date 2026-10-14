@@ -257,6 +257,34 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
              endpoint: 0.0.0.0:4318
      processors:
        batch: {}
+     connectors:
+       signal_to_metrics:
+         spans:
+           - name: gen_ai.invoke_agent.duration
+             description: The duration of one agent invocation, derived from its span.
+             unit: s
+             conditions:
+               - span.attributes["gen_ai.operation.name"] == "invoke_agent" and instrumentation_scope.name != "github.com/kagent-dev/kagent/go/adk/pkg/a2a/server" and instrumentation_scope.name != "kagent.core.a2a"
+             histogram:
+               buckets: [0.5, 1, 2, 5, 10, 30, 60, 120, 300]
+               value: Seconds(span.end_time - span.start_time)
+             attributes:
+               - key: gen_ai.agent.name
+                 optional: true
+               - key: gen_ai.request.model
+                 optional: true
+               - key: error.type
+                 optional: true
+             include_resource_attributes:
+               - key: service.name
+               - key: service.namespace
+                 optional: true
+               - key: service.version
+                 optional: true
+               - key: kagent.runtime
+                 optional: true
+               - key: gen_ai.main_agent.id
+                 optional: true
      exporters:
        otlp_grpc/tempo:
          endpoint: tempo.telemetry.svc.cluster.local:4317
@@ -273,19 +301,21 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
          traces:
            receivers: [otlp]
            processors: [batch]
-           exporters: [otlp_grpc/tempo]
+           exporters: [signal_to_metrics, otlp_grpc/tempo]
          logs:
            receivers: [otlp]
            processors: [batch]
            exporters: [otlp_http/loki]
          metrics:
-           receivers: [otlp]
+           receivers: [otlp, signal_to_metrics]
            processors: [batch]
            exporters: [prometheus]
    EOF
    ```
 
    The `resource_to_telemetry_conversion` setting copies OTel resource attributes, such as the service name, onto each metric as labels. Without it, you cannot tell which Agent Substrate component reported a metric.
+
+   The `signal_to_metrics` connector derives the `gen_ai.invoke_agent.duration` metric from the `invoke_agent` spans that the `kagent` runtime emits, because that runtime does not record the metric itself. The connector reads the spans before any sampling, and its conditions skip the two instrumentation scopes that belong to the `claude` and `codex` runtimes, which record the metric themselves.
 
 2. Create a ServiceMonitor so that Prometheus scrapes the metrics that the collector serves.
    ```yaml

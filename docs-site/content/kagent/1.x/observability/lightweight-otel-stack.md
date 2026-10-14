@@ -124,7 +124,7 @@ Install the [Prometheus](https://github.com/prometheus-community/helm-charts/tre
 
 ## Install the OTel collector
 
-Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for HTTP. The collector sends traces to Jaeger, serves metrics on port `8889`, and prints logs to its own output. The configuration uses the `contrib` collector image, because the Prometheus exporter is not part of the core image. For production, start from the reference Collector values in the kagent source at `examples/observability/collector-values.yaml`. The smaller collector in this guide omits the persistent queue and content-scrubbing processors.
+Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for HTTP. The collector sends traces to Jaeger, serves metrics on port `8889`, and prints logs to its own output. The configuration uses the `contrib` collector image, because the Prometheus exporter is not part of the core image. The `signal_to_metrics` connector derives the `gen_ai.invoke_agent.duration` metric from the `invoke_agent` spans that the `kagent` runtime emits, because that runtime does not record the metric itself. For production, start from the reference Collector values in the kagent source at `examples/observability/collector-values.yaml`. The smaller collector in this guide omits the persistent queue and content-scrubbing processors.
 
 ```bash
 helm upgrade --install otel-collector opentelemetry-collector \
@@ -152,6 +152,34 @@ config:
           endpoint: 0.0.0.0:4318
   processors:
     batch: {}
+  connectors:
+    signal_to_metrics:
+      spans:
+        - name: gen_ai.invoke_agent.duration
+          description: The duration of one agent invocation, derived from its span.
+          unit: s
+          conditions:
+            - span.attributes["gen_ai.operation.name"] == "invoke_agent" and instrumentation_scope.name != "github.com/kagent-dev/kagent/go/adk/pkg/a2a/server" and instrumentation_scope.name != "kagent.core.a2a"
+          histogram:
+            buckets: [0.5, 1, 2, 5, 10, 30, 60, 120, 300]
+            value: Seconds(span.end_time - span.start_time)
+          attributes:
+            - key: gen_ai.agent.name
+              optional: true
+            - key: gen_ai.request.model
+              optional: true
+            - key: error.type
+              optional: true
+          include_resource_attributes:
+            - key: service.name
+            - key: service.namespace
+              optional: true
+            - key: service.version
+              optional: true
+            - key: kagent.runtime
+              optional: true
+            - key: gen_ai.main_agent.id
+              optional: true
   exporters:
     debug:
       verbosity: basic
@@ -168,13 +196,13 @@ config:
       traces:
         receivers: [otlp]
         processors: [batch]
-        exporters: [otlp_grpc/jaeger]
+        exporters: [signal_to_metrics, otlp_grpc/jaeger]
       logs:
         receivers: [otlp]
         processors: [batch]
         exporters: [debug]
       metrics:
-        receivers: [otlp]
+        receivers: [otlp, signal_to_metrics]
         processors: [batch]
         exporters: [prometheus]
 EOF
