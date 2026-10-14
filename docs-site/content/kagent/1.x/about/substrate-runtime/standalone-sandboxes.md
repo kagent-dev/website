@@ -161,11 +161,20 @@ tools:
         - list_sandbox_templates
         - create_sandbox
         - list_sandboxes
+        - write_sandbox_file
+        - read_sandbox_file
+        - read_sandbox_outputs
 ```
 
 An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. The Go kagent runtime reads `KAGENT_PROPAGATE_TOKEN=true` to pass the caller's credentials and identity to the MCP servers that you trust.
 
-The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. An MCP transfer or output read is bounded at 1 MiB, encodes bytes as base64, and returns a continuation offset for reading more.
+The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. `write_sandbox_file` and `read_sandbox_outputs` are bounded at 1 MiB and use base64. Output reads return continuation byte offsets.
+
+When an agent must inspect a result file, use `read_sandbox_file`. The tool returns content that the model reads directly rather than `data_base64`, in one of three shapes.
+
+Text returns as numbered lines. `offset` takes the first line to read, counting from 1, and `limit` takes the number of lines, which defaults to 2000. A page also stops at 32 KiB, whichever bound it reaches first. A line longer than 2000 bytes is truncated to 2000 bytes and marked `[line cut]`. A page that stops before the end of the file reports the offset to continue from.
+
+A PNG, JPEG, or GIF file of at most 10 MiB returns as an image. The Claude and Codex harnesses resize those images for their models. A larger image returns a message asking the agent to write a smaller copy in the Sandbox. Every other file type returns a description of the file rather than its bytes.
 
 ## Next steps
 
