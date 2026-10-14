@@ -7,7 +7,7 @@ author: kagent.dev
 
 The `SAPAICore` provider does not run on kagent 1.0. SAP AI Core authenticates with OAuth2 client credentials, which a client exchanges at a token endpoint for a short-lived access token before it calls the API. An agent reaches its model provider through the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway, which injects a static credential into an HTTP header and does not perform a token exchange, so kagent rejects a SAP AI Core {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} rather than passing the client secret to the runtime.
 
-The rejection happens at compile time on every runtime. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent does not compile a revision from it.
+kagent rejects the ModelConfig on every runtime. The AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and the Agent does not become ready.
 
 ```
 environment credential "SAP_AI_CORE_CLIENT_ID" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported
@@ -25,7 +25,7 @@ The SAP AI Core Orchestration Service serves models from several families, and k
 | GPT models | `OpenAI`, or `AzureOpenAI` for an Azure deployment | [OpenAI]({{< link path="setup/model-providers/openai" >}}), [Azure OpenAI]({{< link path="setup/model-providers/azure-openai" >}}) |
 | Gemini models | `Gemini` | [Gemini]({{< link path="setup/model-providers/gemini" >}}) |
 
-For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
 
 ## Next steps
 

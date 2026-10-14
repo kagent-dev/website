@@ -10,7 +10,7 @@ Amazon Bedrock serves models from several families behind one AWS API. {{< reuse
 Prefer the native provider. If you need the OpenAI request format, or an inference profile that only that endpoint exposes, use the OpenAI-compatible path.
 
 > [!NOTE]
-> Bedrock is the only provider that every runtime supports. On each runtime, the Bedrock credential must be a bearer token. For a `codex` Harness, you must use OpenAI `gpt-*` model IDs. Neither a `codex` nor a `claude` Harness accepts a `bedrock` setting beyond `region`. A Harness that asks for anything else fails to compile. For more information, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
+> Bedrock is the only provider that every runtime supports. On each runtime, the Bedrock credential must be a bearer token. For a `codex` Harness, you must use OpenAI `gpt-*` model IDs. Neither a `codex` nor a `claude` Harness accepts a `bedrock` setting beyond `region`. kagent rejects a Harness that asks for anything else. For more information, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 
 > [!IMPORTANT]
 > Both paths authenticate with credentials from a Kubernetes Secret. Attaching an AWS IAM role to the agent, such as with [EKS IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), is not currently supported: an agent runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to attach a role to.
@@ -37,7 +37,7 @@ The native provider authenticates with a Bedrock API key, which kagent sends as 
    ```
 
    > [!IMPORTANT]
-   > A Secret that holds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead does not work on any runtime. IAM credentials sign each request locally, and an agent reaches its provider through an egress gateway that injects a static header, so kagent rejects the ModelConfig at compile time. The AgentTemplate reports the `Compatible` condition as `False` with the message `environment credential "AWS_ACCESS_KEY_ID" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported`. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+   > A Secret that holds `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead does not work on any runtime. IAM credentials sign each request locally, and an agent reaches its provider through an egress gateway that injects a static header, so kagent rejects the ModelConfig. The AgentTemplate reports the `Compatible` condition as `False` with the message `environment credential "AWS_ACCESS_KEY_ID" cannot use gateway header injection; local signing and arbitrary secret environment variables are unsupported`. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
 
 3. Create a `ModelConfig` that uses the `Bedrock` provider.
    ```yaml

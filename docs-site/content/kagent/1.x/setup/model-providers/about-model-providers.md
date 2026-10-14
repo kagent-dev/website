@@ -9,18 +9,25 @@ A `ModelConfig` is a Kubernetes custom resource that names one model at one prov
 
 The kagent installation creates a `default-model-config` ModelConfig from the provider API key that you supply at install time, so a first agent does not need extra setup. To use a different provider, a different model, or a different set of credentials, create additional ModelConfigs.
 
-## How a ModelConfig reaches an agent
+## Configure a ModelConfig
 
 Every ModelConfig shares the same three parts, regardless of the provider that it names.
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and does not compile a revision. |
+| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so the controller rejects a Mistral ModelConfig and reports `unsupported model provider: Mistral`. |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
 
-Credentials come from a Kubernetes Secret in the same namespace as the ModelConfig. The `apiKeySecret` field names the Secret, and `apiKeySecretKey` names the key within that Secret. To forward the bearer token from the incoming request to the provider instead, set `apiKeyPassthrough: true`. A ModelConfig cannot set both `apiKeyPassthrough` and `apiKeySecret`. For every ModelConfig field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#modelconfigspec" >}}).
+Credentials come from a Kubernetes Secret in the same namespace as the ModelConfig. The `apiKeySecret` field names the Secret, and `apiKeySecretKey` names the key within that Secret. For every ModelConfig field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#modelconfigspec" >}}).
+
+### Forward the caller's token
+
+Set `apiKeyPassthrough: true` to send the bearer token from the incoming agent-to-agent (A2A) request to the provider as the API key, rather than reading a key from a Secret. An organization that already issues tokens that its model provider accepts can then skip managing a second credential for kagent. A ModelConfig cannot set both `apiKeyPassthrough` and `apiKeySecret`.
+
+<!-- REVIEW: this paragraph follows the API, which says the token is forwarded "directly to the LLM
+provider as the API key". Confirm whether a provider is expected to accept a caller's token at all. -->
 
 ### Turn off model streaming
 
@@ -65,9 +72,9 @@ When a request is made to a provider, the gateway puts the credential in the hea
 
 Substrate matches a destination on the exact DNS hostname, without path, port, or scheme. Two credentials that target the same hostname and header are rejected, including a conflict between an agent's model, a memory embedding model, and an MCP server. Give such origins distinct DNS names. A destination given as an IP address cannot carry an injected credential at all.
 
-### Credentials that do not compile
+### Credentials that kagent rejects
 
-Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent does not compile a revision from it. Any Session that already exists keeps running the last revision that compiled.
+Header injection accepts one shape of credential, a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and the Agent does not become ready. A Session that is already running keeps the revision that it started on.
 
 | Configuration | Why it cannot be injected | What to use instead |
 | ------------- | ------------------------- | ------------------- |
@@ -82,17 +89,17 @@ A rejected credential reports one of two messages. A credential that cannot be i
 
 The `Ollama` provider is unaffected when it points at a local daemon, which authenticates with no credential. An Ollama Cloud model reaches `api.ollama.com` with an API key, and that key is injected as a header like any other. For when a model routes to the cloud, see [Ollama]({{< link path="setup/model-providers/ollama" >}}).
 
-## The Harness runtime decides which providers are available
+## Runtime provider support
 
-A ModelConfig is only half of the decision. The runtime that a {{< gloss "Harness" >}}Harness{{< /gloss >}} selects also constrains which providers an agent can use, because each runtime integrates a different set.
+The runtime that a {{< gloss "Harness" >}}Harness{{< /gloss >}} selects constrains which providers an agent can use, because each runtime integrates a different set.
 
 - The **`kagent`** runtime integrates every provider, and the **`byo`** runtime integrates the same set, because both compile through the same path.
 - The **`codex`** runtime integrates only `OpenAI` and `Bedrock`.
 - The **`claude`** runtime integrates only `Anthropic` and `Bedrock`.
 
-A provider is available only when the runtime integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` runtimes integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials. kagent 1.0 rejects a ModelConfig that names any of the three, on every runtime, so no agent can reach these providers at all. For the alternatives, see [Credentials that do not compile](#credentials-that-do-not-compile).
+A provider is available only when the runtime integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` runtimes integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent rejects a ModelConfig that names any of the three on every runtime. For the alternatives, see [Credentials that kagent rejects](#credentials-that-kagent-rejects).
 
-Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings it takes. A pair that asks for a provider its runtime does not integrate fails to compile, and the AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
+Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings that it takes. When a ModelConfig names a provider that its runtime does not integrate, the AgentTemplate reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
 
 For the full matrix, including the per-combination restrictions, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 

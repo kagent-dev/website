@@ -5,7 +5,7 @@ weight: 40
 author: kagent.dev
 ---
 
-Many providers serve the [OpenAI API](https://platform.openai.com/docs/api-reference/introduction) rather than an API of their own. To use one, set `provider: OpenAI` and point `openAI.baseUrl` at the provider's endpoint. This is the same mechanism behind the [xAI]({{< link path="setup/model-providers/xai" >}}) and [Amazon Bedrock]({{< link path="setup/model-providers/amazon-bedrock" >}}) OpenAI-compatible paths.
+{{< reuse "kagent-docs/snippets/setup/byo-openai-intro.md" >}}
 
 ## Create the ModelConfig
 
@@ -51,7 +51,7 @@ For the rest of the settings that the `openAI` block accepts, see [OpenAI]({{< l
 
 ## Self-hosted vLLM behind a gateway
 
-A common self-hosted pattern puts an OpenAI-compatible gateway such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/) in front of a [vLLM](https://docs.vllm.ai/) server, so that requests travel from kagent to the gateway to vLLM. Configure the gateway as an OpenAI-compatible provider in the same way, with two extra things to get right.
+{{< reuse "kagent-docs/snippets/setup/byo-openai-gateway.md" >}}
 
 ### Enable tool calling in vLLM
 
