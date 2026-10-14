@@ -61,7 +61,7 @@ A Harness names exactly one of the following four runtimes, and that choice deci
 
 | Runtime | What it runs | When to use it |
 | ------- | ------------ | ----------- |
-| `kagent` | kagent's built-in Go engine | You want to define the agentic loop through configuration, with a system prompt, skills, plugins, and MCP servers, rather than by writing an agent. This runtime also supports the widest set of features. |
+| `kagent` | kagent's built-in Go engine | You want to define the agentic loop through configuration, with a system prompt, skills, plugins, and MCP servers. This runtime also supports the widest set of features. |
 | `codex` | Codex | You want Codex to do the work, and your model is OpenAI or an OpenAI-compatible Bedrock deployment. |
 | `claude` | Claude | You want Claude to do the work, with Anthropic or Bedrock as the model. |
 | `byo` | A container image of your own that implements kagent's A2A contract | You already have an agent that is built with an agent framework, and you want to run that agent in kagent. For more information, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
@@ -72,7 +72,7 @@ The agent chat in the kagent UI offers file attachments only on the `kagent` run
 
 ### kagent runtime
 
-The `kagent` runtime runs kagent's built-in Go engine, which reads the compiled agent configuration and runs the agentic loop from it. Choose this runtime to build an agent from a system prompt, tools, skills, and plugins instead of writing one. Three features are available on this runtime alone: [structured output]({{< link path="agents/structured-output" >}}), [long-term memory]({{< link path="agents/agent-memory" >}}), and file attachments in the UI chat.
+The `kagent` runtime runs kagent's built-in Go engine, which reads the compiled agent configuration and runs the agentic loop from it. Choose this runtime to build an agent from a system prompt, tools, skills, and plugins. Three features are available on this runtime alone: [structured output]({{< link path="agents/structured-output" >}}), [long-term memory]({{< link path="agents/agent-memory" >}}), and file attachments in the UI chat.
 
 `spec.kagent` is the only runtime block that takes settings of its own. The other three runtimes take their configuration from the AgentTemplate and the ModelConfig, so their blocks are empty.
 
@@ -278,9 +278,9 @@ EOF
 
 ### BYO runtime
 
-The `byo` runtime runs a container image that you build, and treats what is inside it as opaque. Choose this runtime when you already have an agent that is built with an agent framework, and you want to run that agent in kagent rather than rebuild it. The runtime block takes no settings, and `workload.command` is required, because kagent cannot infer the entrypoint of an image that it does not build.
+The `byo` runtime runs an agent that you built with an agent framework of your own, packaged as a container image. The runtime block takes no settings, and `workload.command` is required, because kagent cannot infer the entrypoint of an image that it does not build.
 
-A `byo` revision is compiled the same way as a `kagent` one, so a BYO image that reads the agent configuration accepts the same model providers and the same AgentTemplate features as the built-in runtime. Structured output is the one exception, and the `kagent` runtime alone supports it. An image that ignores the configuration decides everything itself, and its AgentTemplate needs only a name. For the A2A contract that the image must implement, how to read the configuration, and the known limitations, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
+kagent builds a `byo` revision the same way as a `kagent` one, so an image that reads the agent configuration accepts the same model providers and the same AgentTemplate features as the built-in runtime. Structured output is the one exception, and the `kagent` runtime alone supports it. An image that ignores the configuration decides everything itself, and its AgentTemplate needs only a name. For the contract that the image must implement, how to read the configuration, and the known limitations, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -353,7 +353,7 @@ Some supported combinations still carry restrictions.
 | `codex` with `Bedrock` | Accepts only OpenAI `gpt-*` model IDs, and no `bedrock` settings beyond `region`. |
 | `claude` with `Anthropic` | Accepts no `anthropic` settings beyond `baseUrl`. |
 | `claude` with `Bedrock` | Accepts no `bedrock` settings beyond `region`. |
-| `Bedrock` on any runtime | The Secret must hold an `AWS_BEARER_TOKEN_BEDROCK` key. A Secret of IAM access keys is rejected with `cannot use gateway header injection`, because IAM signs each request locally rather than sending a static header. |
+| `Bedrock` on any runtime | The Secret must hold an `AWS_BEARER_TOKEN_BEDROCK` key. A Secret of IAM access keys is rejected with `cannot use gateway header injection`, because IAM signs each request locally. |
 | `codex` and `claude` with any provider | Neither runtime accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. |
 
 ## Tool and skill support
@@ -363,7 +363,7 @@ The `kagent` runtime accepts every AgentTemplate feature. Codex and Claude run a
 | Constraint | Applies to |
 | ---------- | ---------- |
 | A subagent binding cannot itself carry tools, skills, plugins, or nested agents, and must use the same provider and credentials as the agent that binds it. | `codex`, `claude` |
-| An {{< gloss "MCP" >}}MCP{{< /gloss >}} server is bound whole. Claude does not support partial tool selection, so the agent sees every tool that the server offers rather than only the ones that a binding names. The Agent still reconciles, and reports the decision in `status.warnings` as `Claude RemoteMCPServer "<name>" does not support partial tool selection`. | `claude` |
+| An {{< gloss "MCP" >}}MCP{{< /gloss >}} server is bound whole. Claude does not support partial tool selection, so the agent sees every tool that the server offers. The Agent still reconciles, and reports the decision in `status.warnings` as `Claude RemoteMCPServer "<name>" does not support partial tool selection`. | `claude` |
 | A RemoteMCPServer must use the `STREAMABLE_HTTP` protocol. `SSE` is rejected. | `codex` |
 | Structured output is rejected, with `Harness runtime "<name>" does not support structured output`. | `codex`, `claude`, `byo` |
 
@@ -396,7 +396,7 @@ A `byo` image receives the same variable whenever any signal is enabled, but whe
 
 ## Reserved environment variables
 
-An installation's telemetry settings reach a runtime as defaults rather than as fixed values. Where a Harness `spec.env` entry names the same variable, the Harness value wins, which is how one Harness tunes exporter behavior for the agents that run on it. Two sets of names are reserved instead, and a Harness that names one of them is rejected.
+An installation's telemetry settings reach a runtime as defaults. Where a Harness `spec.env` entry names the same variable, the Harness value wins. One Harness can therefore tune exporter behavior for the agents that run on it, without changing the installation. Two sets of names are reserved instead, and a Harness that names one of them is rejected.
 
 Every runtime reserves the certificate trust variables, because the egress gateway intercepts HTTPS and each runtime must trust the gateway's certificate authority to reach a model at all.
 
@@ -416,14 +416,14 @@ The `codex` and `claude` runtimes each reserve a second set, which covers the cr
 
 Two variables take a value from a Harness without replacing the controller's.
 
-* `OTEL_RESOURCE_ATTRIBUTES` is merged rather than replaced. The value in `spec.env` is kept, and the agent identity attributes that the controller adds win where the two name the same attribute.
+* `OTEL_RESOURCE_ATTRIBUTES` is merged. The value in `spec.env` is kept, and the agent identity attributes that the controller adds win where the two name the same attribute.
 * `OTEL_EXPORTER_OTLP_HEADERS` has no controller value to replace. No Helm setting produces it and the controller never adds it, but a value in `spec.env` reaches every runtime unchanged. To attach headers without holding them in an Actor environment, export to an in-cluster collector that adds them.
 
 ### Baggage propagation
 
 Baggage is a W3C header that travels with a request alongside its trace context. Each entry in that header is a member, which pairs a name with a string value. Every service that the request reaches can read the members that it carries.
 
-By default, a kagent runtime sets `OTEL_PROPAGATORS` to `tracecontext`, which carries trace context and drops baggage. A caller's baggage therefore does not reach the tools that an agent calls or the agent's model provider. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field. The kagent controller reads its own value from the `controller.env` Helm value, so enabling baggage on a runtime does not enable it on the controller.
+By default, a kagent runtime sets `OTEL_PROPAGATORS` to `tracecontext`. That value propagates trace context and drops baggage. A caller's baggage therefore does not reach the tools that an agent calls or the agent's model provider. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field. The kagent controller reads its own value from the `controller.env` Helm value, so enabling baggage on a runtime does not enable it on the controller.
 
 `OTEL_PROPAGATORS` is a list of wire formats that apply to both incoming and outgoing requests. If an incoming request has a format that is not in the list, the format is not read. Similarly, the runtime does not write an omitted format to an outgoing request. When the list omits `baggage`, the runtime's own members are dropped too.
 
@@ -457,11 +457,19 @@ The Agent reports for all three resources instead, because an AgentTemplate repo
 kubectl get agent -n kagent
 ```
 
-An Agent that is not `Ready` carries the reason in its conditions. `ResolvedRefs` reports whether the resources that the Agent depends on exist, which covers the Harness, the AgentTemplate, and the ModelConfig, and also the WorkerPool that the Harness names. A missing pool is the most common cause, and it reports the reason `WorkerPoolNotFound`. `Compatible` reports whether the resolved configuration is one that the Harness's runtime accepts, which is where a rejected provider, a reserved environment variable, or an unsupported AgentTemplate feature appears. `Ready` reports whether Agent Substrate finished preparing the agent's capacity.
+An Agent that is not `Ready` states the reason in its conditions.
 
 ```bash
 kubectl describe agent <agent-name> -n kagent
 ```
+
+The following conditions report the three stages that an Agent passes through.
+
+| Condition | Report |
+| --------- | ------ |
+| `ResolvedRefs` | Whether the resources that the Agent depends on exist. The controller resolves the Harness, the AgentTemplate, and the ModelConfig, and also the WorkerPool that the Harness references. A missing WorkerPool is the most common failure, and the Agent then reports the reason as `WorkerPoolNotFound`. |
+| `Compatible` | Whether the Harness's runtime accepts the resolved configuration. A rejected model provider, a reserved environment variable, and an unsupported AgentTemplate feature all fail here. |
+| `Ready` | Whether Agent Substrate finished preparing the agent's capacity. |
 
 An Agent can also reconcile and still report a non-blocking decision in `status.warnings`, such as Claude binding an MCP server whole. For the conditions in full, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 

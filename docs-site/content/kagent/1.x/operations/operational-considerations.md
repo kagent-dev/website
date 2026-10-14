@@ -57,7 +57,7 @@ After you change these values, you can verify their validity by checking the con
 
 The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that setting in both `config` and `config.runtimeDefaults`.
 
-A `config.runtimeDefaults` setting is the installation's default rather than a fixed value. A Harness can replace most of them for the agents that run on it, by naming the equivalent variable in its `spec.env` field. A small set of names is reserved instead, such as the certificate trust variables that let a runtime reach the egress gateway. For the reserved names and the per-runtime differences, see [Reserved environment variables]({{< link path="agents/agent-harness#reserved-environment-variables" >}}).
+Each `config.runtimeDefaults` setting is the installation's default. A Harness can replace most of these settings for the agents that run on it by naming the equivalent variable in its `spec.env` field. A small set of names is reserved instead, such as the certificate trust variables that let a runtime reach the egress gateway. For the reserved names and the per-runtime differences, see [Reserved environment variables]({{< link path="agents/agent-harness#reserved-environment-variables" >}}).
 
 ## Choose a database
 

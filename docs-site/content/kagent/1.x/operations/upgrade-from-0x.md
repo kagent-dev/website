@@ -136,7 +136,7 @@ Four resource kinds are removed rather than replaced, so plan for each one befor
 
 ## Verify the new installation
 
-Confirm that the resources resolved before you retire anything. Neither a Harness nor an AgentTemplate reports status of its own, so the Agent that references both is where every problem surfaces.
+Confirm that the resources resolved before you retire anything. Harness and AgentTemplate resources do not report their own statuses, so check for issues in the Agent that references them both.
 
 1. Check that each Agent is ready.
    ```bash

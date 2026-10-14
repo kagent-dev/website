@@ -15,7 +15,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. Three of these values are rejected on every runtime. For more information, see [Credentials that kagent rejects](#credentials-that-do-not-compile). |
+| `provider` | The provider to use.<ul><li>Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`.</li><li>Defaults to `OpenAI`.</li><li>`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` are rejected on every runtime.</li></ul>For more information, see [Credentials that kagent rejects](#credentials-that-do-not-compile). |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
@@ -95,7 +95,7 @@ The `Ollama` provider is unaffected when it points at a local daemon, which auth
 
 The runtime that a {{< gloss "Harness" >}}Harness{{< /gloss >}} selects constrains which providers an agent can use, because each runtime integrates a different set.
 
-- The **`kagent`** runtime integrates every provider, and the **`byo`** runtime integrates the same set, because kagent builds a revision for both runtimes the same way.
+- The **`kagent`** runtime integrates every provider, and the **`byo`** runtime integrates the same set, because kagent builds a revision for both runtimes in the same way.
 - The **`codex`** runtime integrates only `OpenAI` and `Bedrock`.
 - The **`claude`** runtime integrates only `Anthropic` and `Bedrock`.
 
