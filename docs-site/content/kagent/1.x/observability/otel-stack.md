@@ -257,6 +257,7 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
              endpoint: 0.0.0.0:4318
      processors:
        batch: {}
+       deltatocumulative: {}
      connectors:
        signal_to_metrics:
          spans:
@@ -308,7 +309,7 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
            exporters: [otlp_http/loki]
          metrics:
            receivers: [otlp, signal_to_metrics]
-           processors: [batch]
+           processors: [deltatocumulative, batch]
            exporters: [prometheus]
    EOF
    ```

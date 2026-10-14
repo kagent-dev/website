@@ -154,6 +154,7 @@ config:
           endpoint: 0.0.0.0:4318
   processors:
     batch: {}
+    deltatocumulative: {}
   connectors:
     signal_to_metrics:
       spans:
@@ -205,7 +206,7 @@ config:
         exporters: [debug]
       metrics:
         receivers: [otlp, signal_to_metrics]
-        processors: [batch]
+        processors: [deltatocumulative, batch]
         exporters: [prometheus]
 EOF
 ```
