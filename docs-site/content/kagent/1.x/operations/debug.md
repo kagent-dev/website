@@ -22,7 +22,7 @@ NAME     READY   AGE
 kagent           30h
 ```
 
-The AgentTemplate list view carries no status column either, so a healthy template and a broken one look identical in it.
+The AgentTemplate list view does not include a status column either, so a healthy template and a broken one look identical in it.
 
 ```bash
 kubectl get agenttemplate -n kagent
@@ -65,7 +65,7 @@ When a stage fails, kagent marks that stage `False` with the real reason and mes
 
 **Read the first condition that is `False` and whose reason is not `Blocked`.** Everything after it is a consequence.
 
-In the following example, one missing ModelConfig is the whole problem, and the two conditions after it carry no independent information.
+In the following example, one missing ModelConfig is the whole problem, and the two conditions after it do not add independent information.
 
 ```console
 Harness: kagent
@@ -77,7 +77,7 @@ Harness: kagent
 
 The same entry carries two revision fields that answer a different question. `desiredRevision` is the {{< gloss "Revision" >}}revision{{< /gloss >}} that the current spec should produce, and `latestSuccessfulRevision` is the newest one that finished preparing. A missing `latestSuccessfulRevision` means the template has never been ready, and two differing values mean the newest edit has not prepared yet.
 
-## An AgentTemplate reports no conditions
+## An AgentTemplate does not report conditions
 
 An AgentTemplate that no Harness admits gets no `status.harnesses[]` entry at all, so any command that ranges over that array prints nothing.
 

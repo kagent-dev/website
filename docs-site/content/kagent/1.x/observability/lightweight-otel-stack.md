@@ -51,7 +51,7 @@ For what kagent and Agent Substrate each send, see [About the stack]({{< link pa
 
 ## Install Jaeger
 
-Install [Jaeger](https://www.jaegertracing.io/) in all-in-one mode, which stores traces in memory and needs no other components.
+Install [Jaeger](https://www.jaegertracing.io/) in all-in-one mode, which stores traces in memory and does not need other components.
 
 ```bash
 helm upgrade --install jaeger jaeger \

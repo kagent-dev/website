@@ -34,7 +34,7 @@ kubectl get remotemcpserver kagent-tool-server -n kagent \
 
 ### Turn tool discovery off for a server
 
-The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, accepts no credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
+The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, does not accept any credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
 
 To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at runtime with the credentials that they carry.
 

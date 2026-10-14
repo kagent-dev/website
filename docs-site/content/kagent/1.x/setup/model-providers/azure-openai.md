@@ -71,7 +71,7 @@ The `azureOpenAI` block takes the following settings. For every field, including
 | Value | What the runtime calls | `azureOpenAI.apiVersion` |
 | ----- | ---------------------- | ------------------------ |
 | `chatCompletions` | The dated deployments path, which addresses `azureDeployment` under a pinned API version. This value is the default. | Required. The API server rejects a ModelConfig that omits it. |
-| `responses` | The Azure Responses API at `<azureEndpoint>/openai/v1/`. This surface takes no dated version. | Omit this field. |
+| `responses` | The Azure Responses API at `<azureEndpoint>/openai/v1/`. This surface does not take a dated version. | Omit this field. |
 
 The following ModelConfig calls the Responses API.
 
@@ -103,7 +103,7 @@ What reaches Azure depends on whether the message gives a link or the bytes, and
 | An `http://` or `https://` link with an `image/` media type | An `input_image` part with the link. |
 | An `http://` or `https://` link with any other media type, such as a PDF | An `input_file` part with the link. |
 | Inline image bytes | An `input_image` part with the bytes as a `data:` URL. |
-| Inline bytes of any other type, such as a PDF or an Office document | Nothing. Azure OpenAI takes no inline bytes outside an image. |
+| Inline bytes of any other type, such as a PDF or an Office document | Nothing. Azure OpenAI does not take inline bytes outside an image. |
 
 The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. When an older message in the replayed conversation includes one, the runtime replaces the link with a text note that keeps the URL, so a model with a fetch tool can still retrieve the file.
 

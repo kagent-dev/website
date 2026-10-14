@@ -127,7 +127,7 @@ spec:
 
 Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. No new revision compiles. An {{< gloss "Agent" >}}Agent{{< /gloss >}} that has never been ready cannot start a Session, and one that was ready before keeps starting new Sessions from its last ready revision.
 
-An AgentTemplate carries no status of its own, so read the conditions from the Agent that names it.
+An AgentTemplate does not report status of its own, so read the conditions from the Agent that names it.
 
 ```bash
 kubectl get agent my-first-agent -n kagent -o json \

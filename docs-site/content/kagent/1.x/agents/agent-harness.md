@@ -42,7 +42,7 @@ EOF
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, whatever language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
-| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. An installation's own settings, such as the runtime log level, come from the chart's `config.runtimeDefaults` block rather than from here. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). |
+| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Note that the kagent installation's settings, such as the runtime log level, come from the Helm chart's `config.runtimeDefaults` block rather than from this setting. |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
@@ -231,7 +231,7 @@ Some supported combinations still carry restrictions.
 
 | Combination | Restriction |
 | ----------- | ----------- |
-| `codex` with `OpenAI` | Requires `openAI.apiFormat: responses`, and accepts no other `openAI` settings beyond `baseUrl`. |
+| `codex` with `OpenAI` | Requires `openAI.apiFormat: responses`, and does not accept any other `openAI` setting beyond `baseUrl`. |
 | `codex` with `Bedrock` | Accepts only OpenAI `gpt-*` model IDs, and no `bedrock` settings beyond `region`. |
 | `claude` with `Anthropic` | Accepts no `anthropic` settings beyond `baseUrl`. |
 | `claude` with `Bedrock` | Accepts no `bedrock` settings beyond `region`. |
@@ -302,28 +302,31 @@ Every other `OTEL_*` variable, such as the `OTEL_BSP_*` batch span processor set
 
 ### Baggage propagation
 
-kagent runtimes set `OTEL_PROPAGATORS` to `tracecontext` when the environment leaves it unset, so a caller's baggage reaches neither the tools an agent calls nor its model provider. Trace context still propagates. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field. The controller reads its own value from the `controller.env` Helm value, and each process reads only its own, so enabling baggage on a runtime does not enable it on the controller.
+Baggage is a W3C header that travels with a request alongside its trace context. Each entry in that header is a member, which pairs a name with a string value. Every service that the request reaches can read the members that it carries.
 
-`OTEL_PROPAGATORS` governs both directions. A format that the list omits is neither read from an incoming request nor written to an outgoing one, including the members that the runtime adds itself.
+When the environment leaves `OTEL_PROPAGATORS` unset, kagent runtimes set it to `tracecontext`. A caller's baggage does not reach the tools that an agent calls or the agent's model provider, but trace context still propagates. To carry baggage as well, set `OTEL_PROPAGATORS` to `tracecontext,baggage` in the Harness `spec.env` field. The kagent controller reads its own value only from the `controller.env` Helm value, so enabling baggage on a runtime does not enable it on the kagent controller.
 
-With `baggage` listed, the `kagent` runtime adds the request's identity to the baggage of each model call and each MCP tool call.
+`OTEL_PROPAGATORS` is a list of wire formats that apply to both incoming and outgoing requests. If an incoming request has a format that is not in the list, the format is not read. Similarly, the runtime does not write an omitted format to an outgoing one. When the list omits `baggage`, the runtime's own members are dropped too.
+
+When `baggage` is listed, the `kagent` runtime adds the request's identity to the baggage of each model call and each MCP tool call.
 
 | Member | Model calls | MCP tool calls |
 | ------ | ----------- | -------------- |
 | `gen_ai.agent.name` | Yes | Yes |
 | `gen_ai.conversation.id` | Yes | Yes |
 | `a2a.task.id` | Yes | Yes |
-| `gen_ai.tool.name` | No | Yes |
 | `gen_ai.tool.call.id` | No | Yes |
 
-These members are identifiers rather than content or credentials, and the runtime replaces a caller's member of the same name, so a caller cannot claim another conversation's identity downstream.
+These members serve as identifiers only, and the runtime can replace a caller's member of the same name.
 
 > [!WARNING]
-> **Enabling baggage sends the caller's own members to your model provider.** A caller baggage member that kagent does not replace is forwarded unchanged in the `baggage` header of each model API request and each MCP request, so a caller controls what reaches those external services. Enable baggage only where you trust what your callers attach.
+> **Enabling baggage sends the caller's own members to your model provider.** A caller baggage member that kagent does not replace is forwarded unchanged in the `baggage` header of each model API request and each MCP request. This means that a caller controls what reaches those external services in the header. Enable baggage only where you trust what your callers attach.
 
-Two limits are worth planning around. The `claude` and `codex` runtimes receive `OTEL_PROPAGATORS`, but kagent adds no identity to their model and tool calls, and neither does the Python runtime, so those five members reach the `kagent` runtime alone. kagent also never copies a baggage member onto a span, so a backend that needs these values to be searchable must add a baggage-to-attributes span processor, in the service that receives the request or in its OpenTelemetry Collector.
+Review and plan for the following considerations.
+* The `claude` and `codex` runtimes receive `OTEL_PROPAGATORS`, but kagent does not add identity to their model and tool calls. The Python runtime does not add any either, so the four members reach the `kagent` runtime alone.
+* kagent never copies a baggage member onto a span. To make these values searchable, add a baggage-to-attributes span processor to the service that receives the request or to its OpenTelemetry Collector.
 
-An MCP session is opened by one request and shared by every later one. The session makes three requests of its own: the event stream, the replies to server requests, and the close. None of the three carries trace context or baggage, because either would name a request that has already ended.
+When an agent requires an MCP server, the first tool listing or tool call opens a session with the MCP server, and every later request to that server shares it. The session makes three requests: the event stream, the replies to server requests, and the close. These requests do not carry trace context or baggage, because these name a request that has already ended.
 
 ## Check that a Harness is ready
 
@@ -334,7 +337,7 @@ kubectl get harness -n kagent
 
 A Harness that is not `Ready` most often names a WorkerPool that does not exist yet. For the specific reason, read its conditions with `kubectl describe harness <harness-name> -n kagent`.
 
-`Ready` covers the Harness's own dependencies, not whether a given agent runs on it. Whether a template compiles against this Harness is reported on the Agent that pairs the two, because an AgentTemplate carries no status of its own. For that check and the conditions it reports, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+`Ready` covers the Harness's own dependencies, not whether a given agent runs on it. Whether a template compiles against this Harness is reported on the Agent that pairs the two, because an AgentTemplate does not report status of its own. For that check and the conditions it reports, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Next steps
 

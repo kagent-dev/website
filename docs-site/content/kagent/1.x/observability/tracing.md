@@ -66,7 +66,7 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 | `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, with each hyphen replaced by an underscore. The Agent `my-first-agent` produces `invoke_agent my_first_agent`, while its service name keeps the hyphens, so the two spellings differ. |
 | `generate_content <model>` | Once per model call, named for the model that was called. |
 | `execute_tool <tool>` | Once per tool call, named for the tool that was called. Records the call's arguments and the tool's reply in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. |
-| `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool creates no merged span. |
+| `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool does not create a merged span. |
 
 ### Correlation attributes
 
@@ -96,9 +96,6 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 ## Enable tracing
 
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
-
-> [!IMPORTANT]
-> The telemetry values moved again in {{< reuse "kagent-docs/versions/kagent.md" >}}. The whole top-level `otel` block was removed, and `config.telemetry` and `config.runtimeDefaults.telemetry` replace it. A release that still sets `otel.traces.enabled` or `otel.exporter.otlp.endpoint` keeps a value that no template reads, and tracing turns off without reporting an error. Write the replacements into a values file and upgrade with `--values`, as shown in the following steps. For the rest of the move and the Helm flags that do not carry you across it, see [Controller configuration]({{< link path="operations/operational-considerations#controller-configuration" >}}).
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -143,9 +140,7 @@ Tracing is off by default. Turning it on is a Helm change, because the controlle
    | `traces.protocol` | `grpc` or `http/protobuf`. Defaults to `grpc`, which matches the port `4317` in the example endpoint. Point `http/protobuf` at port `4318` instead. |
    | `traces.timeout` | The export timeout, as a duration in seconds with an `s` suffix. Defaults to `10s`. |
 
-   A signal has no separate switch. The controller exports a signal when you set its endpoint, and compiles an explicit off state when you omit the endpoint. Omit the key rather than leaving it empty: an empty endpoint fails validation.
-
-   The controller validates its configuration file at startup and exits when a setting is invalid, so a malformed endpoint stops the controller rather than disabling one signal. An endpoint must be an absolute `http://` or `https://` URL. The controller rejects one that includes credentials, a query, or a fragment. Check the controller's logs after you change these values.
+   A signal does not have a separate switch. When you set a signal's endpoint, the controller exports the signal. When you omit a signal's endpoint, the controller compiles an explicit off state for the signal. Omit the endpoint key rather than leaving it empty, because an empty endpoint fails validation. An endpoint must be an absolute `http://` or `https://` URL. The controller rejects one that includes credentials, a query, or a fragment. Check the controller's logs after you change these values.
 
 4. Upgrade the kagent Helm release.
    ```bash
@@ -257,9 +252,9 @@ The flush lets a kagent trace arrive promptly rather than on the exporter's own 
 
 ## Turn tracing off
 
-Turn off the trace exporter, then create a new Session so that the change takes effect. Turning tracing off compiles an explicit off state rather than an absent one. The controller sets the trace exporter to `none` in each runtime, so an agent never falls back to the OpenTelemetry SDK's own default of exporting to `localhost`. The controller sets `OTEL_SDK_DISABLED` to `true` only when traces, metrics, and logs are all off, and both stack guides turn logs on, so the SDK stays enabled.
+Turn off the trace exporter, then create a new Session so that the change takes effect. The controller sets the trace exporter to `none` in each runtime, so an agent does not fall back to the OpenTelemetry SDK's default of exporting to `localhost`.
 
-1. Remove the telemetry settings from the kagent Helm release. Null the whole `telemetry` block rather than one signal inside it. A `--set config.telemetry.traces=null` renders the literal `traces: null` into the controller's configuration file, and the controller rejects a null value and fails to start.
+1. Remove the telemetry settings from the kagent Helm release. Null the whole `telemetry` block rather than one signal inside it, because the controller rejects a null value for a single signal and fails to start.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \

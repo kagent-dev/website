@@ -84,7 +84,7 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepar
    | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
    | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
-   A SandboxTemplate takes no startup command and no guest toggle. kagent supplies the guest entrypoint from the image that `config.sandboxes.guestImage` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
+   A SandboxTemplate does not take a startup command or a guest toggle. kagent supplies the guest entrypoint from the image that `config.sandboxes.guestImage` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
 
 2. Confirm that the template prepared a revision before you create a Sandbox from it.
    ```bash

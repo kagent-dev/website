@@ -15,7 +15,7 @@ The `kagent` runtime does not write prompts or replies to log records, so a logg
 
 ### What each runtime records
 
-Each runtime records the content on its own instrumentation, so where the content lands differs by runtime. The settings in the last column are the fields of the `config.runtimeDefaults.telemetry` Helm block. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+Each runtime records the content on its own instrumentation, so where the content lands differs by runtime. The settings in the last column are the fields in the `config.runtimeDefaults.telemetry` Helm block. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 | Runtime | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |

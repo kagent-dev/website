@@ -70,7 +70,7 @@ Apply two ordinary AgentTemplates. Nothing marks them as bound, because a templa
    EOF
    ```
 
-2. Confirm that both templates exist. An AgentTemplate carries no status of its own, because the Agent that pairs it with a Harness owns readiness.
+2. Confirm that both templates exist. An AgentTemplate does not report status of its own, because the Agent that pairs it with a Harness owns readiness.
    ```bash
    kagent agent template list
    ```

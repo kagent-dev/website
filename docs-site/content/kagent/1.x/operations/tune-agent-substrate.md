@@ -103,7 +103,7 @@ substrateWorkerPool:
 
 ### Recognize an undersized pool
 
-Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use. A placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
+Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use. A placement that does not find a suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure, so it does not set an error type and does not raise an alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
 
 None of those signals reach the caller. A turn that cannot get a Worker waits for one, and a turn that waits too long fails with a generic timeout that names neither capacity nor the pool.
 
@@ -117,7 +117,7 @@ Because short turns release their capacity quickly, a pool under mild pressure a
 
 ### Set resource requests on Workers
 
-Generated Worker pods carry no resource requests or limits unless you supply them, and the effect on scheduling is easy to miss.
+Generated Worker pods do not set resource requests or limits unless you supply them, and the effect on scheduling is easy to miss.
 
 A Worker with no limits reports its node's entire allocatable capacity as its own. Every Worker on that node reports the same figures, so Agent Substrate cannot use resource capacity to place Actors, and Kubernetes cannot stop you from packing more Workers onto a node than it can carry. Set requests and limits on any pool that carries production traffic.
 
@@ -170,7 +170,7 @@ substrateWorkerPool:
     environment: production
 ```
 
-A pool that you manage outside the chart carries no labels of its own. Set both keys yourself, and match each value to the pool's name and namespace.
+kagent does not label a pool that you manage outside the chart. Set both keys yourself, and match each value to the pool's name and namespace.
 
 ```yaml
 apiVersion: ate.dev/v1alpha1

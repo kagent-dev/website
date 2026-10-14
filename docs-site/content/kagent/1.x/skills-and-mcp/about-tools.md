@@ -66,7 +66,7 @@ Every field is required. For the complete schema, see the [API reference]({{< li
 | `subAgent.description` | The text that tells the parent agent when to route work here. |
 | `subAgent.templateRef.name` | The AgentTemplate to bind, in the same namespace. |
 
-A bound template compiles under the parent {{< gloss "Agent" >}}Agent{{< /gloss >}}'s Harness and runs inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}, so nesting costs no extra compute and the two agents share one sandbox. A subagent needs no Agent of its own.
+A bound template compiles under the parent {{< gloss "Agent" >}}Agent{{< /gloss >}}'s Harness and runs inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}, so nesting does not add compute and the two agents share one sandbox. A subagent does not need an Agent of its own.
 
 > [!NOTE]
 > Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor and reach it over A2A, are not part of the served API. The `subAgent.agentRef` field that would select one is deferred until a dedicated subagent can create and invoke its own Session, so the only binding a reader can write today is `templateRef`.

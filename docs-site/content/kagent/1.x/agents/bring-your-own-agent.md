@@ -54,11 +54,11 @@ Both kinds of agent receive the same inputs. Agent Substrate delivers the two JS
 
 | Input | Contents |
 | ----- | -------- |
-| `/config/config.json` | The compiled agent configuration: the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
+| `/config/config.json` | The compiled agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
 | `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
 | Anything in `spec.env` | Literal values and `credentialRef` lookups from the Harness, resolved before the Actor starts. Agent Substrate accepts at most 32 environment variables on an Actor, and the compiled configuration counts toward that limit. A revision that exceeds it fails to compile rather than starting and misbehaving. |
 
-The `runtime` object is the root of the configuration document, and subagents inherit it. It includes the settings that a process needs before it serves a request.
+The `runtime` object is the root of the configuration document, and subagents inherit it. The object includes the settings that a process needs before it serves a request.
 
 ```json
 {
@@ -76,15 +76,15 @@ The `runtime` object is the root of the configuration document, and subagents in
 
 | Field | Contents |
 | ----- | -------- |
-| `control_plane_url` | The kagent API that the agent reports task state to. The Go and Python helpers both require it. |
+| `control_plane_url` | The kagent API that the agent reports task state to. Required by the Go and Python helpers. |
 | `gateway_url` | The A2A gateway that the agent reaches other agents and MCP servers through. |
-| `name` and `namespace` | The Agent's name and the AgentTemplate's namespace, which kagent's own helpers use to scope sessions. |
+| `name` and `namespace` | The Agent's name and the AgentTemplate's namespace, which kagent's helpers use to scope sessions. |
 | `port` | The port to serve A2A on. The controller sets `80` for every runtime, and the agent card advertises that same port. |
 | `log_level` | `debug`, `info`, `warn`, or `error`, from the `config.runtimeDefaults.logging.level` Helm value. |
 | `max_content_length` | The largest A2A request body to accept, in bytes. Zero means unlimited, and an absent field keeps the helper's own default. |
 
 > [!IMPORTANT]
-> The process settings moved into the configuration document in {{< reuse "kagent-docs/versions/kagent.md" >}}. An image that reads `KAGENT_PORT`, `KAGENT_NAME`, `KAGENT_NAMESPACE`, `KAGENT_API_URL`, or `KAGENT_A2A_GRPC_ADDRESS` finds none of them set, and naming one in `spec.env` sets a variable that nothing reads. Read the `runtime` object instead.
+> The process settings moved into the configuration document in {{< reuse "kagent-docs/versions/kagent.md" >}}. An image that reads `KAGENT_PORT`, `KAGENT_NAME`, `KAGENT_NAMESPACE`, `KAGENT_API_URL`, or `KAGENT_A2A_GRPC_ADDRESS` reads them as unset, and naming one of these variables in `spec.env` sets a variable that nothing reads. Read the `runtime` object instead.
 
 ## Configure a BYO Harness
 
@@ -186,7 +186,7 @@ if err != nil {
 return application.Run()
 ```
 
-`ControlPlaneURL` is required unless you supply a `ControllerClient` of your own, because the helper reports task state to the kagent API. `Port` defaults to `8080` when both the field and `runtime.port` are empty, and kagent never dials that port, so keep the `cmp.Or` fallback to `80`.
+Because the helper reports task state to the kagent API, you must set either `ControlPlaneURL` or your own `ControllerClient` in `app.AppConfig`. When `runtime.port` is omitted or unset, `cmp.Or` supplies `80`. Without that fallback, the helper listens on its own `8080` by default, which kagent never dials.
 
 For a complete executor, see [`go/core/test/byoa2a/main.go`](https://github.com/kagent-dev/kagent/blob/main/go/core/test/byoa2a/main.go) in the kagent repository.
 {{% /tab %}}
@@ -207,20 +207,24 @@ app = KAgentApp(
 ).build()
 ```
 
-`from_file` raises when `control_plane_url`, `gateway_url`, `name`, or `namespace` is missing, so a standalone process that runs outside Agent Substrate must supply its own `/config/config.json`. `KAgentApp` wraps a Google Agent Development Kit (ADK) agent rather than an arbitrary framework. To bind the address that the configuration names rather than the default, pass the parsed document as the `agent_config` argument. The `a2a_grpc_address` argument overrides both.
+`from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`, so a standalone process that runs outside Agent Substrate must supply its own `/config/config.json`. `KAgentApp` wraps a Google Agent Development Kit (ADK) agent rather than an arbitrary framework.
+
+To bind the address that the configuration names rather than the default, pass the parsed document as the `agent_config` argument. The `a2a_grpc_address` argument overrides both.
 {{% /tab %}}
 {{% tab name="Any other language" %}}
 Implement the contract directly:
 
 1. Serve `lf.a2a.v1.A2AService` over gRPC on port 80. Generate the stubs from the [A2A protocol](https://a2a-protocol.org) definitions.
 2. Serve `GET /readyz` over HTTP on port 8081, returning `200`.
-3. Read the compiled configuration from the `KAGENT_CONFIG_JSON` environment variable if the agent should honor its AgentTemplate, or ignore it and run an opaque agent. The variable is the delivery mechanism that the kagent helpers materialize into `/config/config.json`, and an image without those helpers parses it directly.
+3. To honor the AgentTemplate, read the compiled configuration from the `KAGENT_CONFIG_JSON` environment variable. An agent that ignores the variable runs as an opaque agen.
+
+The kagent helpers read `KAGENT_CONFIG_JSON` and materialize its contents into `/config/config.json`. An image without those helpers parses the variable directly.
 {{% /tab %}}
 {{< /tabs >}}
 
 ## Known limitations
 
-- **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` takes no field to change the address, the port, or the protocol. An image that serves A2A over HTTP JSON-RPC alone cannot run on this runtime.
+- **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` does not take a field that changes the address, the port, or the protocol. An image that serves A2A over HTTP JSON-RPC alone cannot run on this runtime.
 - **The `kagent-langgraph` and `kagent-crewai` adapters do not qualify yet.** Both build a FastAPI application with A2A JSON-RPC routes and no gRPC server, so neither satisfies the contract as shipped. Running LangGraph or CrewAI under `byo` currently means serving A2A over gRPC yourself.
 - **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory` and wired only by the `kagent` runtime's compiler. A `byo` Harness has no equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
 - **A broken port mapping presents as a healthy agent.** For the failure and what avoids it, see [The A2A contract](#the-a2a-contract).

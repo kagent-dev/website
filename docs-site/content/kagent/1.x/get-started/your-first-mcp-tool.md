@@ -37,7 +37,7 @@ kagent records what it discovered on the server's status, so the tool names come
    ```
 
    > [!NOTE]
-   > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command returns no resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
+   > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command does not return any resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
 
 2. Re-apply the `my-first-template` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
    ```yaml

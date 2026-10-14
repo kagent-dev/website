@@ -351,13 +351,13 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
    ```
 
 > [!IMPORTANT]
-> A caller that does not request the extension is still interrupted. The task stops at `TASK_STATE_INPUT_REQUIRED` exactly as before, and the question arrives as ordinary text on the status message, but the metadata carries no request `id`. Without that `id` there is nothing to answer, so the task waits until something cancels it. Request the extension on any call to an agent that can pause.
+> A caller that does not request the extension is still interrupted. The task stops at `TASK_STATE_INPUT_REQUIRED` exactly as before, and the question arrives as ordinary text on the status message, but the metadata does not include a request `id`. Without that `id` there is nothing to answer, so the task waits until something cancels it. Request the extension on any call to an agent that can pause.
 
 A tool approval works the same way with a different payload, `tool_approval_request` answered by `tool_approval_response`. For the pause kinds, the approval model, and what a nested agent's pause looks like, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
 ## Clean up
 
-* This example creates no Kubernetes resources, so you have nothing to delete.
+* This example does not create Kubernetes resources, so you have nothing to delete.
 * You can stop the 8083 port-forward for the kagent-controller service with `Ctrl+C`.
 * The tasks that your messages created stay on the Session as part of its conversation, and deleting the Session removes them.
 

@@ -67,7 +67,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    EOF
    ```
 
-2. Save a CLI configuration file that points the installer at those values. `kagent install` takes no Helm flags of its own, so chart values reach it through this file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
+2. Save a CLI configuration file that points the installer at those values. `kagent install` does not take Helm flags of its own, so chart values reach it through this file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
    ```bash
    cat > kagent-config.yaml <<EOF
    install:

@@ -90,7 +90,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
    ```
 
    > [!NOTE]
-   > This Harness sets no port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that does neither listens on the wrong port and still reports `READY`. For that trap, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
+   > This Harness does not set a port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that neither reads `runtime.port` nor defaults to `80` listens on the wrong port and still reports `READY`. For that trap, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
 
 2. Create the AgentTemplate and an Agent that pairs it with the Harness. `description` is the only field that this template needs.
    ```yaml
@@ -119,7 +119,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
 
    `modelConfig` is absent on purpose. kagent requires one for the `kagent` runtime and treats it as optional for `byo`, because a BYO image chooses its own model, or no model at all.
 
-3. Confirm that the Agent compiled. An AgentTemplate carries no status, so the Agent reports the state of the pair.
+3. Confirm that the Agent compiled. An AgentTemplate does not report status, so the Agent reports the state of the pair.
    ```bash
    kubectl get agent byo-example-agent -n kagent \
      -o jsonpath='{.status.conditions[*].type}{"\n"}{.status.conditions[*].status}{"\n"}'
@@ -211,9 +211,9 @@ application, err := app.New(app.AppConfig{
 }, executor{})
 ```
 
-`ControlPlaneURL` is required, because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
+`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
 
-This agent ignores the rest of the compiled configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. For what it holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
+This agent ignores the rest of the compiled configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what it holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
 
 ## Build and run your own agent
 

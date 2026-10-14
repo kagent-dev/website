@@ -7,7 +7,7 @@ author: kagent.dev
 
 A `ModelConfig` is a Kubernetes custom resource that names one model at one provider, along with the credentials to reach it. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} references a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} by name in its `spec.modelConfig.name` field, and every agent compiled from that template calls the model that the ModelConfig names.
 
-The kagent installation creates a `default-model-config` ModelConfig from the provider API key that you supply at install time, so a first agent needs no extra setup. To use a different provider, a different model, or a different set of credentials, create additional ModelConfigs.
+The kagent installation creates a `default-model-config` ModelConfig from the provider API key that you supply at install time, so a first agent does not need extra setup. To use a different provider, a different model, or a different set of credentials, create additional ModelConfigs.
 
 ## How a ModelConfig reaches an agent
 
@@ -18,7 +18,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 | `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision. |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
-| Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider needs no extra settings. |
+| Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
 
 Credentials come from a Kubernetes Secret in the same namespace as the ModelConfig. The `apiKeySecret` field names the Secret, and `apiKeySecretKey` names the key within that Secret. To forward the bearer token from the incoming request to the provider instead, set `apiKeyPassthrough: true`. A ModelConfig cannot set both `apiKeyPassthrough` and `apiKeySecret`. For every ModelConfig field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#modelconfigspec" >}}).
 
@@ -48,7 +48,7 @@ Changing `stream` compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}},
 
 A credential never enters the agent. kagent compiles the Secret that a ModelConfig names into a destination-scoped binding, and the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway fetches the Secret and writes the value into an outgoing HTTP header. Where an SDK requires an API key, the runtime receives the inert placeholder `kagent-credential-injected`. A compiled {{< gloss "Revision" >}}revision{{< /gloss >}} therefore records the Secret name, key, destination, and header, and never the credential itself.
 
-To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation needs no recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
+To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation does not require a recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
 
 When a request is made to a provider, the gateway puts the credential in the header that the provider expects. The destination is the endpoint that the ModelConfig resolves to.
 

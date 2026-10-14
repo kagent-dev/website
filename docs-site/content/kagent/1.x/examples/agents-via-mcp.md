@@ -382,7 +382,7 @@ When an agent pauses to ask something, the task's status becomes `input_required
      }'
    ```
 
-   The reply confirms only that the update was accepted, and carries no agent output. Example output:
+   The reply confirms only that the update was accepted, and does not include agent output. Example output:
    ```json
    { "resultType": "complete" }
    ```

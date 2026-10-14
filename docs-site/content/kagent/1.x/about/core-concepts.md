@@ -92,7 +92,7 @@ For the complete AgentTemplate schema, see the [API reference]({{< link path="re
 
 An **Agent** is a Kubernetes custom resource that pairs _one AgentTemplate with one Harness_. Both sides are required. Under `spec.template`, the Agent sets exactly one of `ref`, which names an existing AgentTemplate, or `inline`, which carries a complete template spec. Under `spec.harnessRef`, the Agent names an existing Harness. A Harness has no inline form.
 
-An inline template is a complete definition rather than an override of a named AgentTemplate, and kagent creates no Kubernetes resource to back one. Every name resolves in the Agent's own namespace, including a name nested inside an inline template. For the fields that express each choice, see the [API reference]({{< link path="reference/api-ref#agent" >}}).
+An inline template is a complete definition rather than an override of a named AgentTemplate, and kagent does not create a Kubernetes resource to back one. Every name resolves in the Agent's own namespace, including a name nested inside an inline template. For the fields that express each choice, see the [API reference]({{< link path="reference/api-ref#agent" >}}).
 
 The following Agent resource references both sides:
 
@@ -110,7 +110,7 @@ spec:
     name: kagent
 ```
 
-The Agent owns readiness. Its status reports the desired revision, the latest revision that compiled and prepared successfully, any non-blocking compatibility warnings, and the `Accepted`, `ResolvedRefs`, `Compatible`, and `Ready` conditions. An AgentTemplate and a Harness are shared configuration and report no runtime status of their own.
+The Agent owns readiness. Its status reports the desired revision, the latest revision that compiled and prepared successfully, any non-blocking compatibility warnings, and the `Accepted`, `ResolvedRefs`, `Compatible`, and `Ready` conditions. An AgentTemplate and a Harness are shared configuration and do not report runtime status of their own.
 
 Deleting an Agent retires its definition. Existing Sessions keep the revisions that they pinned. Recreating an Agent under the same name creates a new identity, which cannot inherit the deleted Agent's last successful revision.
 
@@ -132,7 +132,7 @@ You can create a Session with the following command:
 kagent agent session create --agent assistant -n kagent
 ```
 
-After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session. The HTTP endpoint is `/agents/{namespace}/{name}` and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that carries no context identifier starts a new conversation, and a message that repeats one continues that conversation.
+After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol, through kagent's A2A gateway. Callers address the Agent rather than the Session. The HTTP endpoint is `/agents/{namespace}/{name}` and gRPC carries the same `namespace/name` in the standard A2A `tenant` field. The Session's ID is the A2A `contextId`, so a message that does not include a context identifier starts a new conversation, and a message that repeats one continues that conversation.
 
 An expiration worker deletes a Session that records no task activity for seven days. The `config.sessions.idleTtl` Helm value sets that window. A value of `0s` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
@@ -169,7 +169,7 @@ Each Actor runs in its own sandbox, with its own filesystem and its own durable 
 
 An agent tool binding can point at another AgentTemplate instead of an MCP server, so a broad-scope agent can hand part of a task to a specialist. For example, a release agent delegates a database question to another agent, gets the answer, and carries on. The specialist keeps its own prompt and its own tools, and the conversation stays with the agent that the caller addressed.
 
-Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting creates no second Actor. A subagent needs no Agent of its own and no matching Harness reference.
+Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting does not create a second Actor. A subagent does not need an Agent of its own or a matching Harness reference.
 
 Because a subagent runs inside its parent's runtime boundary, nesting stops at one level, and a bound template cannot bind a third. Every agent therefore runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must satisfy, see [What a subagent tree allows]({{< link path="skills-and-mcp/about-tools#what-a-subagent-tree-allows" >}}).
 

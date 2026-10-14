@@ -9,7 +9,9 @@ A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation runs
 
 ## Controller configuration
 
-Every application setting that the controller reads lives under the chart's `config` block, and the chart renders that block into one configuration file at `/etc/kagent/controller.yaml`. Settings that describe how Kubernetes runs the controller, such as images, probes, volumes, Services, and Secret references, stay in the Helm values beside `config` rather than inside it. The two groups meet where a Secret stores a value that the controller reads, and the chart then projects the Secret and writes its path into the configuration file.
+Controller configuration fields are set in the `config` section of the {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm chart values. The chart renders these settings into a configuration file at `/etc/kagent/controller.yaml`, which the kagent controller reads.
+
+Settings that describe how Kubernetes runs the controller stay in the Helm values outside of `config`. These include images, probes, volumes, Services, and Secret references. A Secret reference belongs to both groups. The chart projects the Secret into the controller pod, then writes the path of the projected file into the configuration file.
 
 ```yaml
 config:
@@ -26,7 +28,7 @@ config:
       level: info
 ```
 
-Three rules govern the whole block, and each one rejects a value that the Helm keys it replaced accepted.
+The controller enforces the following rules when it reads the settings at start time.
 
 | Rule | What it means |
 | ---- | ------------- |
@@ -34,16 +36,13 @@ Three rules govern the whole block, and each one rejects a value that the Helm k
 | The document is strict | The controller rejects an unknown field, a duplicate key, a null value, a YAML alias or merge, and a file with more than one document. |
 | Settings load once | The controller validates the whole file at startup, passes the result to its owners, and reads nothing from the environment afterward. A change therefore needs a restart. The chart triggers that restart by checksumming the ConfigMap into the pod. |
 
-An invalid setting stops the controller from starting rather than disabling one feature, so check the controller's logs after you change these values. To check a file before you apply it, run the CLI against the rendered document. The command connects to no services.
+An invalid setting stops the controller from starting rather than disabling one feature, so check the controller's logs after you change these values. To check a file before you apply it, run the CLI against the rendered document. The command does not connect to any service.
 
 ```bash
 kagent config validate --component controller --config controller.yaml
 ```
 
 Starting the controller with `--check-config` does the same from inside the image, and also confirms that the Secret files the document references are readable.
-
-> [!IMPORTANT]
-> The `config` block replaced the `controller`, `database.postgres`, and `otel` application settings in {{< reuse "kagent-docs/versions/kagent.md" >}}. Helm accepts a key that a chart does not define, so a release that still sets `controller.sessionIdleTTL` or `otel.traces.enabled` keeps a value that no template reads, and the setting reverts to its default without reporting an error. Neither Helm flag that reuses stored values carries you across, so write the replacements into a values file and upgrade with `--values`.
 
 ### Runtime defaults
 
@@ -61,13 +60,13 @@ database:
       key: connectionString
 ```
 
-`kagent install` creates a development database in the cluster, so an installation needs no external database to start. Run your own PostgreSQL instance for production, so that the data outlives the cluster that kagent runs on.
+`kagent install` creates a development database in the cluster, so an installation does not need an external database to start. Run your own PostgreSQL instance for production, so that the data outlives the cluster that kagent runs on.
 
 ### The development database
 
 `kagent install` creates a database for you unless you pass `--skip-database-setup`. It deploys a single-replica `kagent-postgresql` Deployment backed by a 500Mi PersistentVolumeClaim, creates the roles that kagent and Agent Substrate connect as, and writes the connection Secrets for both: `kagent-postgres` in the kagent namespace, and `substrate-postgres-readwrite` and `substrate-postgres-owner` in `ate-system`.
 
-Connections to this database carry no password. When `database.postgres.clientCertificate.enabled` is set to `true`, which `kagent install` does, each client authenticates with a Pod Certificate projected into its pod under `/run/postgres.podcert.ate.dev`. The connection string points its `sslcert` and `sslkey` parameters at those files.
+Connections to this database do not use a password. When `database.postgres.clientCertificate.enabled` is set to `true`, which `kagent install` does, each client authenticates with a Pod Certificate projected into its pod under `/run/postgres.podcert.ate.dev`. The connection string points its `sslcert` and `sslkey` parameters at those files.
 
 > [!IMPORTANT]
 > The development database is a single pod backed by one PersistentVolumeClaim, and `kagent install` sizes that claim at 500Mi. Losing the pod's volume loses every Session and every compiled revision, so move a production installation to a PostgreSQL instance that you manage.

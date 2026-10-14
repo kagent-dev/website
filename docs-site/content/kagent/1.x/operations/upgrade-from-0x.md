@@ -143,7 +143,7 @@ Confirm that the resources resolved before you retire anything, because a Harnes
    kubectl get harness -n kagent
    ```
 
-2. Check that each Agent compiled. An AgentTemplate carries no status, so the Agent that pairs it with a Harness is where readiness is reported.
+2. Check that each Agent compiled. An AgentTemplate does not report status, so the Agent that pairs it with a Harness is where readiness is reported.
    ```bash
    kagent agent list
    ```
