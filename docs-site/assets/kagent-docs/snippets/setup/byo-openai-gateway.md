@@ -1,3 +1,3 @@
-To serve your own model, run a [vLLM](https://docs.vllm.ai/) server behind an OpenAI-compatible gateway, such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/). Requests then travel from kagent to the gateway to vLLM.
+To serve your own model, run a [vLLM](https://docs.vllm.ai/) server behind an OpenAI-compatible gateway, such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/). Requests then travel from kagent through the gateway to vLLM, and you configure the gateway as the provider endpoint.
 
-Configure the gateway as an OpenAI-compatible provider in the same way, and get two further things right.
+Launch vLLM with automatic tool choice, and set `model` to the identifier that the gateway routes on.
