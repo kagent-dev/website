@@ -1,11 +1,11 @@
 ---
 title: kagent db migrate
 description: Apply, roll back, and inspect database migrations.
-weight: 270
+weight: 310
 ---
 
 Apply, roll back, and inspect database migrations.
-The command reads KAGENT_POSTGRES_DATABASE_URL and KAGENT_POSTGRES_DATABASE_ROLE when their flags are empty.
+Connection settings come from the CLI configuration or explicit database flags.
 
 ```bash
 kagent db migrate [command]
@@ -21,10 +21,13 @@ kagent db migrate [command]
 **Flags:**
 - `--db-role string` - Stable PostgreSQL role to assume after authentication
 - `--db-url string` - PostgreSQL connection URL
+- `--db-url-file string` - File containing the PostgreSQL connection URL
 - `-h, --help` - help for migrate
 - `--source string` - Migration source for down, goto, or version
 
 **Global Flags:**
 - `--ca-file string` - CA certificate file for KAgent endpoints
+- `--config string` - Configuration file (default: user config directory/kagent/config.yaml)
+- `--log-level string` - Log level: debug, info, warn, error (default "info")
 - `--server-name string` - TLS server name for KAgent endpoints
 - `--user-id string` - Caller identity used to select the server-side data partition (default "admin@kagent.dev")
