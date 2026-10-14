@@ -223,9 +223,9 @@ The runtime that a Harness selects decides which ModelConfig an Agent that runs 
 | `Foundry` | ✅ | ✅ | ❌ | ❌ |
 | `Mistral` | ❌ | ❌ | ❌ | ❌ |
 
-kagent rejects `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` on every runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. The ModelConfig never compiles, so no agent can use these providers. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+kagent rejects `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` on every runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. No agent can use these providers. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
-kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and does not compile a revision.
+kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so a Mistral ModelConfig reports `unsupported model provider: Mistral`.
 
 Some supported combinations still carry restrictions.
 
@@ -289,8 +289,8 @@ A runtime that meets one of these names in `spec.env` either refuses the Harness
 
 | Runtime | Result of naming a controller-owned variable in `spec.env` |
 | ------- | ---------------------------------------------------------- |
-| `claude` | The Harness fails to compile, and the controller reports `Harness env "<name>" conflicts with Claude-owned runtime configuration`. |
-| `codex` | The Harness fails to compile, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
+| `claude` | Every Agent on the Harness reports `Compatible` as `False`, and the controller reports `Harness env "<name>" conflicts with Claude-owned runtime configuration`. |
+| `codex` | Every Agent on the Harness reports `Compatible` as `False`, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
 | `kagent` | The entry is dropped and the controller's own value is compiled in its place. No error is reported. |
 
 Two further variables fall outside that table:

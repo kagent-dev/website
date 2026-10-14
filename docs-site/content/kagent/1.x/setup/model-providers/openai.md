@@ -68,7 +68,7 @@ The `openAI` block takes the following optional settings. For every field, inclu
 | `timeout` | How long to wait on a request to the provider. |
 
 > [!WARNING]
-> The `openAI` block also accepts `tokenExchange`, which acquires a bearer token from a mounted service account file. That configuration mounts a credential file into the agent, so it does not compile on a Harness. For the full list of configurations that this affects, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
+> The `openAI` block also accepts `tokenExchange`, which acquires a bearer token from a mounted service account file. That configuration mounts a credential file into the agent, which a Harness does not accept. For the full list of configurations that this affects, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
 
 ## Use the ModelConfig
 

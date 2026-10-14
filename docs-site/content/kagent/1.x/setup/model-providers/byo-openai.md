@@ -5,7 +5,7 @@ weight: 40
 author: kagent.dev
 ---
 
-Many providers serve the [OpenAI API](https://platform.openai.com/docs/api-reference/introduction) rather than an API of their own. To use one, set `provider: OpenAI` and point `openAI.baseUrl` at the provider's endpoint. This is the same mechanism behind the [xAI]({{< link path="setup/model-providers/xai" >}}) and [Amazon Bedrock]({{< link path="setup/model-providers/amazon-bedrock" >}}) OpenAI-compatible paths.
+{{< reuse "kagent-docs/snippets/setup/byo-openai-intro.md" >}}
 
 ## Create the ModelConfig
 
@@ -51,7 +51,7 @@ For the rest of the settings that the `openAI` block accepts, see [OpenAI]({{< l
 
 ## Self-hosted vLLM behind a gateway
 
-A common self-hosted pattern puts an OpenAI-compatible gateway such as [Bifrost](https://github.com/maximhq/bifrost) or [LiteLLM](https://docs.litellm.ai/) in front of a [vLLM](https://docs.vllm.ai/) server, so that requests travel from kagent to the gateway to vLLM. Configure the gateway as an OpenAI-compatible provider in the same way, with two extra things to get right.
+{{< reuse "kagent-docs/snippets/setup/byo-openai-gateway.md" >}}
 
 ### Enable tool calling in vLLM
 
@@ -95,7 +95,7 @@ A provider on your own network may present a certificate that the agent does not
 | `caCertSecretKey` | The key within that Secret that holds the bundle. |
 
 > [!WARNING]
-> **Pinning a certificate authority is not currently supported.** Setting `tls.caCertSecretRef` and `tls.caCertSecretKey` makes kagent mount the bundle as a file, and an agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files. The AgentTemplate reports the `Compatible` condition as `False` with the message `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`. Use a certificate that chains to a public authority, or terminate TLS at a gateway that the agent can trust.
+> **Pinning a certificate authority is not currently supported.** The `tls` block defines no field for a CA bundle, because an agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files. The API server rejects `caCertSecretRef` and `caCertSecretKey` as unknown fields. Use a certificate that chains to a public authority, or terminate TLS at a gateway that the agent can trust.
 
 Turning verification off does not mount anything, so it does compile.
 
