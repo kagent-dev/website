@@ -29,28 +29,39 @@ config:
 ```
 
 The controller enforces the following rules when it reads the settings at start time.
+* Durations are in seconds. A duration takes protobuf JSON notation. The value is a number with an `s` suffix, as in `604800s` or `0.5s`. A Go duration string such as `168h` fails validation.
+* The document is strict. The controller rejects an unknown field, a duplicate key, a null value, a YAML alias or merge, and a file with more than one document.
+* Settings load once. The controller validates the whole file at startup, passes the result to its owners, and reads nothing from the environment afterward. A change therefore needs a restart. The chart triggers that restart by checksumming the ConfigMap into the pod.
 
-| Rule | What it means |
-| ---- | ------------- |
-| Durations are seconds | A duration takes protobuf JSON notation. The value is a number with an `s` suffix, as in `604800s` or `0.5s`, and a Go duration string such as `168h` fails validation. |
-| The document is strict | The controller rejects an unknown field, a duplicate key, a null value, a YAML alias or merge, and a file with more than one document. |
-| Settings load once | The controller validates the whole file at startup, passes the result to its owners, and reads nothing from the environment afterward. A change therefore needs a restart. The chart triggers that restart by checksumming the ConfigMap into the pod. |
+To check your settings before you apply them, render the document that the chart builds from your Helm values.
 
-An invalid setting stops the controller from starting rather than disabling one feature, so check the controller's logs after you change these values. To check a file before you apply it, run the CLI against the rendered document. The command does not connect to any service.
+```bash
+helm template kagent \
+  {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+  --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+  --namespace kagent \
+  --values kagent.yaml \
+  --show-only templates/controller-configmap.yaml \
+  | yq '.data."controller.yaml"' > controller.yaml
+```
+
+Then run `kagent config validate` against the rendered document.
 
 ```bash
 kagent config validate --component controller --config controller.yaml
 ```
 
-Starting the controller with `--check-config` does the same from inside the image, and also confirms that the Secret files the document references are readable.
+After you change these values, you can verify their validity by checking the controller's logs, as an invalid field prevents the controller from starting. 
 
 ### Runtime defaults
 
-`config.runtimeDefaults` is the one part of the block that the controller does not apply to itself. The controller compiles those settings into each agent runtime that it starts, so a setting such as the log level, the telemetry endpoints, or the content capture decision must appear in both `config` and `config.runtimeDefaults` to govern the controller and the agents together. A Harness overrides a few of them through its `spec.env` field, and owns none of the telemetry ones. For which variables a Harness may set, see [Controller-owned telemetry variables]({{< link path="agents/agent-harness#controller-owned-telemetry-variables" >}}).
+The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that settings in both `config` and `config.runtimeDefaults`.
+
+A Harness can override some runtime defaults through its `spec.env` field. The telemetry settings are the exception, because the controller owns those variables in every runtime. For the list, see [Controller-owned telemetry variables]({{< link path="agents/agent-harness#controller-owned-telemetry-variables" >}}).
 
 ## Choose a database
 
-kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart deploys no database of its own. It reads a connection string from a Kubernetes Secret, and `database.postgres.connectionStringSecretRef` names that Secret and the key inside it.
+kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart does not deploy a database of its own. It reads a connection string from a Kubernetes Secret, and `database.postgres.connectionStringSecretRef` names that Secret and the key inside it.
 
 ```yaml
 database:
@@ -106,7 +117,7 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
      replicas: 3
    ```
 
-   The two blocks divide along the same line as the rest of the chart. `database.postgres` covers the Kubernetes packaging, meaning the Secret reference and the client certificate. `config.database` sets what the controller reads from its configuration file. For that division, see [Controller configuration](#controller-configuration).
+   `database.postgres` configures the Kubernetes packaging, including the Secret reference and the client certificate. `config.database` sets what the controller reads from its configuration file. For more information about these settings, see [Controller configuration](#controller-configuration).
 
    | Setting | Description |
    | ------- | ----------- |
@@ -174,8 +185,8 @@ config:
 
 | Setting | Description |
 | ------- | ----------- |
-| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. An invalid key stops the controller from starting. Naming a Secret here projects it into the controller as the `config.gateway.push.signingPrivateKeyFile` setting. |
-| `config.gateway.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. Omit the key, and the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
+| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the Secrey's name is added into the controller as the `config.gateway.push.signingPrivateKeyFile` setting. |
+| `config.gateway.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
 
 With a signing key configured, each callback attempt carries a fresh five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
 
@@ -223,7 +234,7 @@ When you scale a serving WorkerPool down, it removes pods without suspending the
 
 Every {{< gloss "Session" >}}Session{{< /gloss >}} holds database records and pins a runtime revision for as long as it exists, including a Session that is never opened again. The kagent controller deletes idle Sessions on a timer. Deleting idle sessions bounds the records that a kagent installation stores as well as the revisions that it holds open.
 
-A leader-only worker sweeps Sessions once a minute and deletes every Session that has been idle past the limit, using the same deletion workflow that a client delete uses. `config.sessions.expirationInterval` sets that sweep interval, and it must be positive.
+A leader-only worker sweeps Sessions once a minute and deletes every Session that has been idle past the limit, using the same deletion workflow that a client delete uses. To change this sweep interval, you can configure `config.sessions.expirationInterval`.
 
 To choose how long a Session can be idle before the worker deletes it, set `config.sessions.idleTtl` in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values. The value is a duration in seconds with an `s` suffix, and it defaults to `604800s`, or seven days. Setting it to `0s` turns the worker off, retries included, and a negative value is rejected.
 
@@ -233,11 +244,11 @@ config:
     idleTtl: 2592000s
 ```
 
-Durations in the `config` block follow protobuf JSON notation, so seconds are the only unit. A Go duration string such as `720h` fails validation and stops the controller from starting.
+Durations in the `config` block follow protobuf JSON notation. Seconds are the only supported unit, and a Go duration string such as `720h` fails validation and stops the controller from starting.
 
-No per-agent override exists, so this one value governs every Session in the installation. No maximum exists either, so a longer value is accepted.
+This value governs every Session in the installation. kagent does not provide a per-agent override, and it does not cap the value.
 
-Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset it, so a Session that is only ever listed still expires.
+Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset it. A Session that is only ever listed still expires.
 
 <!-- REVIEW (docs): forking a checkpoint is unavailable at kagent v1.0.0-alpha11, so the fork expiry behavior is removed from here rather than described as something a reader can reach. Restore it when ForkSession stops rejecting: a fork keeps its source's event timestamps, and its own creation time gives it a full lifetime rather than an almost-expired one. -->
 

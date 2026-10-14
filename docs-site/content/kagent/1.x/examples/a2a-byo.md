@@ -7,7 +7,7 @@ author: kagent.dev
 
 The `byo` runtime runs a container image that you build, so long as the image implements kagent's {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) contract. This example takes the shortest path through that contract: build the minimal BYO agent that kagent tests itself against, run it on a {{< gloss "Harness" >}}Harness{{< /gloss >}}, and invoke it.
 
-The agent that you build here calls no model and binds no tools. It answers every message with a fixed string, which makes it a poor agent and a clear demonstration: everything that happens between `kagent agent invoke` and that reply is kagent's half of the contract. To review the contract and the configured agents that read their AgentTemplate instead of ignoring it, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
+The agent that you build here does not call a model or bind tools. It answers every message with a fixed string, which makes it a poor agent and a clear demonstration: everything that happens between `kagent agent invoke` and that reply is kagent's half of the contract. To review the contract and the configured agents that read their AgentTemplate instead of ignoring it, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
 
 ## Before you begin
 
@@ -228,7 +228,7 @@ An agent of your own takes the same path as the example image, with two differen
    docker push $DOCKER_REGISTRY/kagent-dev/kagent/my-agent:v1
    ```
 
-   That Dockerfile copies `api`, `core`, `adk`, `harness`, and `pkg` from the kagent module, so it suits an agent written inside a checkout. An agent in a module of your own needs a Dockerfile of your own. kagent places no requirement on how the image is built, only on what it serves.
+   That Dockerfile copies `api`, `core`, `adk`, `harness`, and `pkg` from the kagent module, so it suits an agent written inside a checkout. An agent in a module of your own needs a Dockerfile of your own. kagent constrains what the image serves rather than how you build it.
 
 3. Resolve the digest of the new image, as in [Build the agent image](#build-the-agent-image). A Harness rejects an image that names only a tag.
    ```bash

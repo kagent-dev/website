@@ -48,7 +48,7 @@ The `kagent` runtime does not shorten these attributes. The `claude` and `codex`
 
 ### Delivery
 
-Agent Substrate suspends an Actor as soon as a response completes. The controller therefore sets the `kagent` and `codex` runtimes to flush their spans before each response completes, so that the records of a turn reach your backend before the Actor suspends. The `claude` runtime gets no such flush, so the records of a conversation's last turn can be lost. For more information, see [Traces from a suspended Actor]({{< link path="observability/tracing#traces-from-a-suspended-actor" >}}).
+Agent Substrate suspends an Actor as soon as a response completes. The controller therefore sets the `kagent` and `codex` runtimes to flush their spans before each response completes, so that the records of a turn reach your backend before the Actor suspends. The `claude` runtime does not perform that flush, so the records of a conversation's last turn can be lost. For more information, see [Traces from a suspended Actor]({{< link path="observability/tracing#traces-from-a-suspended-actor" >}}).
 
 > [!IMPORTANT]
 > Traces are a best-effort record. An exporter drops spans without an error when the collector is unreachable or its queue is full, and nothing in the trace shows that a record is missing. Treat captured spans as a review aid, not as a complete or tamper-proof compliance log.

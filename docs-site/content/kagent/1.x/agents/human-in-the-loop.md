@@ -61,7 +61,7 @@ The `kagent` and `codex` runtimes both raise `ask_user_request`. The `claude` ru
 
 ## Require approval for a tool
 
-An agent pauses for a tool only when its binding asks for that. Set `requireApproval` on an `mcp` tool binding in the AgentTemplate, and the agent stops before each call to a tool that the binding exposes.
+An agent pauses for a tool only when its binding asks for that. If you set `requireApproval` on an `mcp` tool binding in the AgentTemplate, the agent stops before each call to a tool that the binding exposes.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3

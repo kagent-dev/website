@@ -51,7 +51,7 @@ Authorization is separate from both modes. kagent installs an authorizer that pe
 kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The authenticator above resolves the caller instead.
 
 > [!WARNING]
-> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
+> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, regardless of their Kubernetes permissions. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
 
 ### Creator ownership
 
@@ -71,7 +71,7 @@ A share carries one of two permissions.
 - **`READ_ONLY`**: The holder can read the conversation. kagent refuses any call that is not a read before the request reaches the service.
 - **`READ_WRITE`**: The holder can also send messages to the Session.
 
-A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime, which starts when the share is created. Once that lifetime ends, the token grants no access and a token lookup returns not found. The owner still sees the expired share in `ListSessionShares` and can revoke it.
+A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime, which starts when the share is created. Once that lifetime ends, the token does not grant access, and a token lookup returns not found. The owner still sees the expired share in `ListSessionShares` and can revoke it.
 
 The returned `SessionShare.expiresAt` field records when the token stops granting access. Omit `ttl` and `expiresAt` stays unset. The share then stays valid until it is revoked or the Session is deleted. An operator caps share lifetimes with `config.sessions.shareMaxTtl`. For more information, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 

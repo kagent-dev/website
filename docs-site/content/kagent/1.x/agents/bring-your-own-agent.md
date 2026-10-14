@@ -36,7 +36,7 @@ A `byo` image must meet four requirements to run as an agent. kagent enforces on
 | `spec.workload.command` is set on the Harness | A `byo` Harness must override the image entrypoint, because kagent does not infer it. |
 | The container serves gRPC on port 80 | kagent builds the agent card with a single interface, `http://127.0.0.1:80` bound to gRPC, and that address is not configurable. The service is `lf.a2a.v1.A2AService`. |
 | The container answers `GET /readyz` on port 8081 | Agent Substrate probes this path to decide when the Actor is ready, with a 30-second timeout. The probe is on a different port from the A2A service on purpose, so serve it independently. |
-| The A2A service speaks gRPC, not JSON-RPC | The agent card fixes the protocol binding to gRPC. An image that serves A2A over JSON-RPC alone is never reached, whatever port it listens on. |
+| The A2A service speaks gRPC, not JSON-RPC | The agent card fixes the protocol binding to gRPC. An image that serves A2A over JSON-RPC alone is never reached, regardless of the port it listens on. |
 
 > [!WARNING]
 > **An image that listens on another port still reports `READY`.** Readiness is probed on port 8081, which succeeds no matter what the A2A service does, so nothing surfaces the mismatch until an invoke fails with `Connect: tunnel failed`. The compiled configuration sets port `80` in its `runtime.port` field, so an image that reads the configuration binds the right port. An image that ignores the configuration must pin port 80 itself. This gap is tracked as [kagent#2758](https://github.com/kagent-dev/kagent/issues/2758).

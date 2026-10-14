@@ -106,7 +106,7 @@ Example output:
 {"matchLabels":{"kagent.dev/harness":"kagent"}}
 ```
 
-Add the label that the selector expects, and the conditions appear within seconds.
+If you add the label that the selector expects, the conditions appear within seconds.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -123,7 +123,7 @@ metadata:
 
 ## An agent turn times out
 
-A turn that fails with a timeout reports the same error whatever the underlying cause, so this symptom needs elimination rather than reading.
+A turn that fails with a timeout reports the same error regardless of the underlying cause, so this symptom needs elimination rather than reading.
 
 ```console
 ERROR:
@@ -133,7 +133,7 @@ ERROR:
 
 Work through the causes in this order.
 
-1. **Check that the {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} has ready Workers.** A pool with too few Workers produces exactly this error and logs no capacity message anywhere. To learn how to recognize this problem and size the pool, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
+1. **Check that the {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} has ready Workers.** A pool with too few Workers produces exactly this error and does not log a capacity message anywhere. To learn how to recognize this problem and size the pool, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
    ```bash
    kubectl get workerpools -n kagent
    ```

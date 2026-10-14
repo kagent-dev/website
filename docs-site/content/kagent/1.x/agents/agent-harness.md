@@ -40,9 +40,9 @@ EOF
 | ----- | -------- | ----------- |
 | One of `kagent`, `codex`, `claude`, `byo` | Yes | The runtime that executes the agent. Naming none, or more than one, is rejected. For the available runtimes, see [Choose a runtime](#choose-a-runtime). |
 | `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
-| `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, whatever language its image is written in. |
+| `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, regardless of the language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
-| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Note that the kagent installation's settings, such as the runtime log level, come from the Helm chart's `config.runtimeDefaults` block rather than from this setting. |
+| `env` | No | Environment variables for the runtime, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Note that the kagent installation's settings, such as the runtime log level, come from the Helm chart's `config.runtimeDefaults` block rather than from this setting. |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
@@ -225,7 +225,7 @@ The runtime that a Harness selects decides which ModelConfig an Agent that runs 
 
 kagent rejects `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` on every runtime, because each authenticates with a credential that the egress gateway cannot place in an HTTP header. The ModelConfig never compiles, so no agent can use these providers. For the alternatives, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
 
-kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision.
+kagent rejects `Mistral` for a different reason. The controller does not resolve the provider at all, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and does not compile a revision.
 
 Some supported combinations still carry restrictions.
 
@@ -267,7 +267,7 @@ config:
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, whatever this setting holds. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `config.runtimeDefaults.telemetry.logs`. | `kagent`, `codex`, `claude` |
+| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies in the runtime's telemetry. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, regardless of this setting. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `config.runtimeDefaults.telemetry.logs`. | `kagent`, `codex`, `claude` |
 | `config.runtimeDefaults.telemetry.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `captureContent` does, and it takes effect only when you set the logs endpoint. | `claude` |
 | `config.runtimeDefaults.telemetry.maxCaptureBytes` | The budget for each captured prompt or reply, in bytes. Defaults to `16384`, with a maximum of `65536`. | `codex`, `claude` |
 

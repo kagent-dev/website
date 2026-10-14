@@ -20,7 +20,7 @@ An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}M
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `config.sandboxes` values on the installation. Sandbox preparation needs a guest image, and the chart ships no default, so a SandboxTemplate never becomes ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
+1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `config.sandboxes` values on the installation. Sandbox preparation needs a guest image, and the chart does not ship a default, so a SandboxTemplate never becomes ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
    ```yaml
    config:
      sandboxes:
@@ -35,7 +35,7 @@ An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}M
 
    | Value | Default | Description |
    | ----- | ------- | ----------- |
-   | `config.sandboxes.guestImage` | `""` | The digest-pinned guest image, as a complete reference. Required: preparation fails without it. The controller passes the reference to Agent Substrate unchanged and resolves no tags, so pin a digest rather than a tag. Setting `global.imageRegistry` rewrites the registry host of this reference. |
+   | `config.sandboxes.guestImage` | `""` | The digest-pinned guest image, as a complete reference. Required: preparation fails without it. The controller passes the reference to Agent Substrate unchanged and does not resolve tags, so pin a digest rather than a tag. Setting `global.imageRegistry` rewrites the registry host of this reference. |
    | `config.sandboxes.cpu` | `1` | CPU allocated to each Sandbox. |
    | `config.sandboxes.memory` | `1Gi` | Memory allocated to each Sandbox. |
    | `config.sandboxes.defaultTtl` | `3600s` | Lifetime applied when `kagent sandbox create` omits `--ttl`. Durations in the `config` block take protobuf seconds notation, so `3600s` rather than `1h`. |
@@ -80,7 +80,7 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepar
    | Field | Required | Description |
    | ----- | -------- | ----------- |
    | `workload.image` | Yes | The tools image, pinned by `sha256` digest. A tag alone is rejected, because a prepared revision must be reproducible. |
-   | `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and may be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
+   | `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and may be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
    | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
    | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
 
@@ -97,7 +97,7 @@ Editing a template prepares a new revision. A Sandbox that already exists keeps 
 ## Run a command
 
 > [!WARNING]
-> **The gateway denies every outbound connection from a Sandbox.** kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) as it creates a Sandbox, and the gateway rejects any destination that the policy does not name, so a command that fetches a package, clones a repository, or calls an API fails. The SandboxTemplate schema defines no destination field, so no configuration opens one. Move what a command needs into the Sandbox with `kagent sandbox upload`.
+> **The gateway denies every outbound connection from a Sandbox.** kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) as it creates a Sandbox, and the gateway rejects any destination that the policy does not name, so a command that fetches a package, clones a repository, or calls an API fails. The SandboxTemplate schema does not define a destination field, so no configuration opens one. Move what a command needs into the Sandbox with `kagent sandbox upload`.
 
 Each `kagent sandbox` command makes one lifecycle attempt rather than retrying for you, so `create` takes a stable `--request-id` that you reuse to retry the same creation.
 
@@ -162,7 +162,7 @@ tools:
         - list_sandboxes
 ```
 
-An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token grants no access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. Set `config.runtimeDefaults.tokenPropagation.enabled` to `true`, and the kagent runtime passes the caller's credentials and identity to the MCP servers that you trust.
+An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token does not grant access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. Set `config.runtimeDefaults.tokenPropagation.enabled` to `true`, and the kagent runtime passes the caller's credentials and identity to the MCP servers that you trust.
 
 The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. An MCP transfer or output read is bounded at 1 MiB, encodes bytes as base64, and returns a continuation offset for reading more.
 
