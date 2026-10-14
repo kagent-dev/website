@@ -152,6 +152,31 @@ config:
           endpoint: 0.0.0.0:4318
   processors:
     batch: {}
+  connectors:
+    signaltometrics:
+      spans:
+        - name: gen_ai.invoke_agent.duration
+          description: The duration of one agent invocation, derived from its span.
+          unit: s
+          conditions:
+            - span.attributes["gen_ai.operation.name"] == "invoke_agent" and instrumentation_scope.name != "github.com/kagent-dev/kagent/go/adk/pkg/a2a/server" and instrumentation_scope.name != "kagent.core.a2a"
+          attributes:
+            - key: gen_ai.agent.name
+              optional: true
+            - key: gen_ai.request.model
+              optional: true
+            - key: error.type
+              optional: true
+          include_resource_attributes:
+            - key: service.name
+            - key: service.namespace
+              optional: true
+            - key: service.version
+              optional: true
+            - key: kagent.runtime
+              optional: true
+            - key: gen_ai.main_agent.id
+              optional: true
   exporters:
     debug:
       verbosity: basic
@@ -168,13 +193,13 @@ config:
       traces:
         receivers: [otlp]
         processors: [batch]
-        exporters: [otlp_grpc/jaeger]
+        exporters: [signaltometrics, otlp_grpc/jaeger]
       logs:
         receivers: [otlp]
         processors: [batch]
         exporters: [debug]
       metrics:
-        receivers: [otlp]
+        receivers: [otlp, signaltometrics]
         processors: [batch]
         exporters: [prometheus]
 EOF
@@ -213,6 +238,8 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
        enabled: true
      logs:
        enabled: true
+    metrics:
+      enabled: true
    controller:
      metrics:
        enabled: true
@@ -303,6 +330,10 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
       ```
    2. In your browser, open Prometheus at [http://localhost:9090/targets](http://localhost:9090/targets), and confirm that the `otel-collector` and `kagent-controller` targets are `UP`.
    3. Open the **Query** page, and run a query such as `ate_workerpool_ready_workers`. For more metrics, see [Metrics]({{< link path="observability/metrics" >}}).
+      To check agent invocation latency, run the following query.
+      ```text
+      histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_seconds_bucket[5m])))
+      ```
 
 3. Check that the collector receives logs. Each line reports a batch of log records from one source.
    ```bash
@@ -319,6 +350,7 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
      --namespace kagent --reuse-values \
      --set otel.traces.enabled=false \
      --set otel.logs.enabled=false \
+     --set otel.metrics.enabled=false \
      --set controller.metrics.enabled=false
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \

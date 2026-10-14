@@ -43,7 +43,7 @@ Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing ba
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
 - **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
-- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. This is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
+- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. Its resource carries the main agent identity as `gen_ai.main_agent.name` and `gen_ai.main_agent.id`. Request spans carry the invoked agent identity as `gen_ai.agent.name` and `gen_ai.agent.id`. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
 
 ### Runtime coverage
 
@@ -70,15 +70,16 @@ The `kagent` runtime creates the same spans for every agent, and most span names
 
 ### Correlation attributes
 
-A trace tells you which request you are looking at through attributes on its spans, not through the span names. The runtime stamps the following four attributes onto its root span and copies them onto every descendant span. A search on any one of these attributes returns the whole subtree rather than a single span.
+A trace tells you which request you are looking at through attributes, not through the span names. A search on a span attribute returns the request subtree. A search on a resource attribute returns all spans and metrics from that runtime process.
 
-| Attribute | Value |
-| --------- | ----- |
-| `a2a.task.id` | The A2A task ID, which identifies one turn of a conversation. |
-| `gen_ai.conversation.id` | The A2A context ID, which identifies the conversation and is stable across its turns. |
-| `gen_ai.agent.id` | The Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
-| `enduser.id` | The authenticated caller, such as `admin@kagent.dev`. |
-| `kagent.runtime` | The runtime that served the request, such as `adk-go`. |
+| Attribute | Location | Value |
+| --------- | -------- | ----- |
+| `a2a.task.id` | Span | The A2A task ID, which identifies one turn of a conversation. |
+| `gen_ai.conversation.id` | Span | The A2A context ID, which identifies the conversation and is stable across its turns. |
+| `gen_ai.agent.id` | Span | The invoked Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
+| `enduser.id` | Span | The authenticated caller, such as `admin@kagent.dev`. |
+| `gen_ai.main_agent.id` | Resource | The top-level Agent that the runtime was compiled from. The shorter `gen_ai.main_agent.name` carries the name alone. |
+| `kagent.runtime` | Resource | The runtime that served the request, such as `adk-go`. |
 
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
 

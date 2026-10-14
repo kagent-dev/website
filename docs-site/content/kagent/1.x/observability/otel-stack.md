@@ -52,7 +52,7 @@ The following table lists what each source sends. For the meaning of each signal
 
 | Source | Traces | Logs | Metrics |
 | ------ | ------ | ---- | ------- |
-| kagent controller and agent runtimes | One trace per agent request, across the controller, the Agent Substrate proxy, and the agent runtime. | Log records from the agent runtimes. Prompts and replies are not among them on the `kagent` runtime, which puts them on spans instead. For how to capture them, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). | Reconciliation, work queue, and gRPC API metrics, scraped from the controller's `/metrics` endpoint. |
+| kagent controller and agent runtimes | One trace per agent request, across the controller, the Agent Substrate proxy, and the agent runtime. | Log records from the agent runtimes. Prompts and replies are not among them on the `kagent` runtime, which puts them on spans instead. For how to capture them, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). | Reconciliation, work queue, and gRPC API metrics, scraped from the controller's `/metrics` endpoint. Agent invocation duration metrics, exported by the runtimes over OTLP and derived from `invoke_agent` spans before sampling. |
 | Agent Substrate | Separate traces for its own work, such as routing a request to a Worker and resuming an Actor. | A record of every Actor state change, and the router access log. | Actor lifecycle, scheduling, snapshot, image cache, and WorkerPool capacity metrics. |
 
 Agent Substrate traces do not join the trace of the agent request that caused them. To see why a request was slow to start, look up the Agent Substrate trace from the same time window.
@@ -257,6 +257,31 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
              endpoint: 0.0.0.0:4318
      processors:
        batch: {}
+     connectors:
+       signaltometrics:
+         spans:
+           - name: gen_ai.invoke_agent.duration
+             description: The duration of one agent invocation, derived from its span.
+             unit: s
+             conditions:
+               - span.attributes["gen_ai.operation.name"] == "invoke_agent" and instrumentation_scope.name != "github.com/kagent-dev/kagent/go/adk/pkg/a2a/server" and instrumentation_scope.name != "kagent.core.a2a"
+             attributes:
+               - key: gen_ai.agent.name
+                 optional: true
+               - key: gen_ai.request.model
+                 optional: true
+               - key: error.type
+                 optional: true
+             include_resource_attributes:
+               - key: service.name
+               - key: service.namespace
+                 optional: true
+               - key: service.version
+                 optional: true
+               - key: kagent.runtime
+                 optional: true
+               - key: gen_ai.main_agent.id
+                 optional: true
      exporters:
        otlp_grpc/tempo:
          endpoint: tempo.telemetry.svc.cluster.local:4317
@@ -273,13 +298,13 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
          traces:
            receivers: [otlp]
            processors: [batch]
-           exporters: [otlp_grpc/tempo]
+           exporters: [signaltometrics, otlp_grpc/tempo]
          logs:
            receivers: [otlp]
            processors: [batch]
            exporters: [otlp_http/loki]
          metrics:
-           receivers: [otlp]
+           receivers: [otlp, signaltometrics]
            processors: [batch]
            exporters: [prometheus]
    EOF
@@ -348,6 +373,8 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
        enabled: true
      logs:
        enabled: true
+     metrics:
+       enabled: true
    controller:
      metrics:
        enabled: true
@@ -366,6 +393,7 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    | `otel.exporter.otlp` | The OTLP endpoint and protocol that every signal exports to. An `http://` endpoint sends plaintext. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
    | `otel.traces` | Exports traces from the controller and from the agent runtimes that it starts. |
    | `otel.logs` | Exports log records from the agent runtimes. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
+   | `otel.metrics` | Exports OTLP metrics from the agent runtimes. The collector also derives `gen_ai.invoke_agent.duration` from `invoke_agent` spans before sampling. |
    | `controller.metrics.enabled` | Serves the controller's Prometheus metrics on port `8443` over HTTPS. |
    | `controller.metrics.serviceMonitor` | Creates a ServiceMonitor for the metrics endpoint. The `prometheusServiceAccount` setting binds the metrics reader role to the Prometheus ServiceAccount, which authorizes the scrape. |
 
@@ -483,6 +511,11 @@ Log in to Grafana, and query each backend from the **Explore** view.
    sum by (method) (rate(kagent_grpc_server_requests_total[5m]))
    ```
 
+   The following query returns the 95th percentile invocation duration by Agent.
+   ```text
+   histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_seconds_bucket[5m])))
+   ```
+
    For more metrics, see [Metrics]({{< link path="observability/metrics" >}}).
    {{% /tab %}}
    {{< /tabs >}}
@@ -497,6 +530,7 @@ Log in to Grafana, and query each backend from the **Explore** view.
      --namespace kagent --reuse-values \
      --set otel.traces.enabled=false \
      --set otel.logs.enabled=false \
+     --set otel.metrics.enabled=false \
      --set controller.metrics.enabled=false \
      --set controller.metrics.serviceMonitor.enabled=false
    helm upgrade substrate \

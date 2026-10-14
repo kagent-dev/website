@@ -5,7 +5,7 @@ weight: 40
 author: kagent.dev
 ---
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} and Agent Substrate report metrics in two different ways. The kagent controller serves a Prometheus `/metrics` endpoint that Prometheus scrapes. Agent Substrate pushes its metrics over the OpenTelemetry Protocol (OTLP) to a collector, which serves them for Prometheus to scrape. Both are off by default. The [OTel stack]({{< link path="observability/otel-stack" >}}) and [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) guides turn both on and set up Prometheus to collect them.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} and Agent Substrate report metrics in two different ways. The kagent controller serves a Prometheus `/metrics` endpoint that Prometheus scrapes. Agent runtimes and Agent Substrate push their metrics over the OpenTelemetry Protocol (OTLP) to a collector, which serves them for Prometheus to scrape. Both are off by default. The [OTel stack]({{< link path="observability/otel-stack" >}}) and [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) guides turn both on and set up Prometheus to collect them.
 
 ## kagent controller metrics
 
@@ -44,6 +44,30 @@ Besides the standard Go runtime and process metrics, the controller reports the 
 | `kagent_runtime_revision_gc_duration_seconds` | Histogram | Time that one revision cleanup attempt takes, by the `kagent_gc_stage` label: `discovery` or `collection`. A `collection` attempt covers the database claim, the Agent Substrate read and deletion, and the database finalization. A failed attempt carries an `error_type` label holding a gRPC status code name, or `_OTHER` for every other failure, so the series that carry the label give both the failure rate and the reason. |
 
 The Agent Substrate `atecontroller` component reports the same `controller_runtime_*` and `workqueue_*` metrics for its own reconcilers. To keep the two apart in a query, filter by the scrape job, such as `job="kagent-controller-metrics"` in the OTel stack.
+
+## kagent runtime metrics {#runtime-metrics}
+
+### Export the metrics
+
+kagent runtimes export metrics over OTLP when metric export is enabled and an OTLP endpoint is configured. The setting affects new runtime revisions, so create a new Session after the Helm upgrade.
+
+```yaml
+otel:
+  exporter:
+    otlp:
+      endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+      protocol: grpc
+  metrics:
+    enabled: true
+```
+
+### Metric reference
+
+The collector's Prometheus exporter converts OpenTelemetry metric names to Prometheus names. For example, `gen_ai.invoke_agent.duration` becomes the `gen_ai_invoke_agent_duration_seconds` histogram.
+
+| Metric | Type | Measures |
+| ------ | ---- | -------- |
+| `gen_ai.invoke_agent.duration` | Histogram | Time for one execution segment of a kagent Agent. The metric carries `gen_ai.agent.name`, `gen_ai.request.model` when the runtime is compiled against one model, and `error.type` on failed invocations. The stack guides also derive the metric from `invoke_agent` spans that the runtime emits before sampling. |
 
 ## Agent Substrate metrics
 
@@ -107,6 +131,11 @@ Run the following queries in Prometheus or Grafana.
 - The rate of failed reconciliations in the kagent controller, by reconciler. The query uses the job name from the OTel stack. In the lightweight stack, the job is `kagent-controller`.
   ```text
   sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="kagent-controller-metrics"}[5m]))
+  ```
+
+- The 95th percentile time for agent invocations, by Agent.
+  ```text
+  histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_seconds_bucket[5m])))
   ```
 
 ## Next steps
