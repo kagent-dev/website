@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-The `byo` runtime runs a container image that you build, and treats what is inside it as opaque. {{< reuse "kagent-docs/snippets/name-product.md" >}} still compiles the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} into a {{< gloss "Revision" >}}revision{{< /gloss >}}, schedules that revision onto {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}}, and routes conversations to it. What the image does with a message is yours to decide. Choose this runtime when you have an agent framework that kagent does not adapt, and you would rather bring the image than the integration.
+The `byo` runtime runs a container image that you build, and treats what is inside it as opaque. {{< reuse "kagent-docs/snippets/name-product.md" >}} still compiles the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} into a {{< gloss "Revision" >}}revision{{< /gloss >}}, schedules that revision onto {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}}, and routes conversations to it. What the image does with a message is yours to decide. Choose this runtime when you already have an agent that is built with an agent framework, and you want to run that agent in kagent rather than rebuild it.
 
 ## What kagent runs and what your image runs
 
@@ -43,12 +43,12 @@ A `byo` image must meet four requirements to run as an agent. kagent enforces on
 
 ## Opaque and configured agents
 
-kagent compiles an AgentTemplate for a `byo` Harness in the same way as for the `kagent` runtime, then hands the result to the container. The two ways of using this runtime differ only in whether the image reads it.
+kagent resolves an AgentTemplate for a `byo` Harness in the same way as for the `kagent` runtime, then hands the result to the container. The two ways of using this runtime differ only in whether the image reads it.
 
 - **An opaque agent ignores the compiled configuration.** The AgentTemplate exists to give the agent an identity and a description, and the image decides everything else, including which model to call and which tools to offer. Every field on an opaque AgentTemplate is optional, `modelConfig` included.
 - **A configured agent reads the compiled configuration.** The image honors the AgentTemplate's system prompt, ModelConfig, tool bindings, skills, and plugins, so an operator changes the agent's behavior by editing the AgentTemplate rather than by rebuilding the image.
 
-The `kagent` and `byo` runtimes compile through the same path, so a configured BYO agent accepts the same model providers and the same AgentTemplate features as the built-in runtime. For the provider matrix, see [Model provider support]({{< link path="agents/agent-harness#model-provider-support" >}}). For what an AgentTemplate can bind, see [Tool and skill support]({{< link path="agents/agent-harness#tool-and-skill-support" >}}).
+kagent builds a revision for the `byo` runtime the same way as for the `kagent` runtime, so a configured BYO agent accepts the same model providers and the same AgentTemplate features as the built-in runtime. For the provider matrix, see [Model provider support]({{< link path="agents/agent-harness#model-provider-support" >}}). For what an AgentTemplate can bind, see [Tool and skill support]({{< link path="agents/agent-harness#tool-and-skill-support" >}}).
 
 Both kinds of agent receive the same inputs. Agent Substrate delivers the two JSON payloads as private environment variables, and the kagent helpers write them to files before the agent starts. An image in another language either reads the files that `MaterializeFromEnv` writes or parses the variables itself.
 
@@ -56,7 +56,7 @@ Both kinds of agent receive the same inputs. Agent Substrate delivers the two JS
 | ----- | -------- |
 | `KAGENT_CONFIG_JSON`, which the helpers write to `/config/config.json` | The compiled agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
 | `KAGENT_AGENT_CARD_JSON`, which the helpers write to `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
-| Anything in `spec.env` | Literal values and `credentialRef` lookups from the Harness, resolved before the Actor starts. Agent Substrate accepts at most 32 environment variables on an Actor, and the compiled configuration counts toward that limit. A revision that exceeds it fails to compile rather than starting and misbehaving. |
+| Anything in `spec.env` | The literal values that the Harness sets. The field takes no secret-backed source, so put credentials on a ModelConfig or a RemoteMCPServer instead. Agent Substrate accepts at most 32 environment variables on an Actor, and the variables that kagent adds count toward that limit. A revision that exceeds 32 is rejected rather than starting and misbehaving. |
 
 The `runtime` object is the root of the configuration document, and subagents inherit it. The object includes the settings that a process needs before it serves a request.
 
@@ -226,7 +226,7 @@ The kagent helpers read `KAGENT_CONFIG_JSON` and materialize its contents into `
 
 - **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` does not take a field that changes the address, the port, or the protocol. An image that serves A2A over HTTP JSON-RPC alone cannot run on this runtime.
 - **The `kagent-langgraph` and `kagent-crewai` adapters do not qualify yet.** Both build a FastAPI application with A2A JSON-RPC routes and no gRPC server, so neither satisfies the contract as shipped. Running LangGraph or CrewAI under `byo` currently means serving A2A over gRPC yourself.
-- **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory` and wired only by the `kagent` runtime's compiler. A `byo` Harness has no equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
+- **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory`, and only the `kagent` runtime wires it up. A `byo` Harness has no equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
 - **A broken port mapping presents as a healthy agent.** For the failure and what avoids it, see [The A2A contract](#the-a2a-contract).
 
 ## Next steps

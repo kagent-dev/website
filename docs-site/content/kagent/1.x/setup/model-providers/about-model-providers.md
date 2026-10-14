@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-A `ModelConfig` is a Kubernetes custom resource that names one model at one provider, along with the credentials to reach it. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} references a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} by name in its `spec.modelConfig.name` field, and every agent compiled from that template calls the model that the ModelConfig names.
+A `ModelConfig` is a Kubernetes custom resource that names one model at one provider, along with the credentials to reach it. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} references a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} by name in its `spec.modelConfig.name` field, and every agent that runs from that template calls the model that the ModelConfig names.
 
 The kagent installation creates a `default-model-config` ModelConfig from the provider API key that you supply at install time, so a first agent does not need extra setup. To use a different provider, a different model, or a different set of credentials, create additional ModelConfigs.
 
@@ -15,7 +15,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so the controller rejects a Mistral ModelConfig and reports `unsupported model provider: Mistral`. |
+| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. Three of these values are rejected on every runtime. For more information, see [Credentials that kagent rejects](#credentials-that-do-not-compile). |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
@@ -51,11 +51,11 @@ spec:
 
 The setting belongs to the root agent's ModelConfig, and the root runner applies it to its subagents as well. Turning streaming off does not stop a caller from streaming the conversation: A2A task events remain streamable either way. The `codex` and `claude` harnesses do not read this setting.
 
-Changing `stream` compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, so create a new {{< gloss "Session" >}}Session{{< /gloss >}} to use the change.
+Changing `stream` produces a new {{< gloss "Revision" >}}revision{{< /gloss >}}, so create a new {{< gloss "Session" >}}Session{{< /gloss >}} to use the change.
 
 ## How a credential reaches the provider
 
-A credential never enters the agent. kagent compiles the Secret that a ModelConfig names into a destination-scoped binding, and the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway fetches the Secret and writes the value into an outgoing HTTP header. Where an SDK requires an API key, the runtime receives the inert placeholder `kagent-credential-injected`. A compiled {{< gloss "Revision" >}}revision{{< /gloss >}} therefore records the Secret name, key, destination, and header, and never the credential itself.
+A credential never enters the agent. kagent records the Secret that a ModelConfig names as a destination-scoped binding, and the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway fetches the Secret and writes the value into an outgoing HTTP header. Where an SDK requires an API key, the runtime receives the inert placeholder `kagent-credential-injected`. A {{< gloss "Revision" >}}revision{{< /gloss >}} therefore records the Secret name, key, destination, and header, and never the credential itself.
 
 To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation does not require a recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
 
@@ -95,7 +95,7 @@ The `Ollama` provider is unaffected when it points at a local daemon, which auth
 
 The runtime that a {{< gloss "Harness" >}}Harness{{< /gloss >}} selects constrains which providers an agent can use, because each runtime integrates a different set.
 
-- The **`kagent`** runtime integrates every provider, and the **`byo`** runtime integrates the same set, because both compile through the same path.
+- The **`kagent`** runtime integrates every provider, and the **`byo`** runtime integrates the same set, because kagent builds a revision for both runtimes the same way.
 - The **`codex`** runtime integrates only `OpenAI` and `Bedrock`.
 - The **`claude`** runtime integrates only `Anthropic` and `Bedrock`.
 
@@ -121,4 +121,4 @@ spec:
   systemPrompt: You are a concise, helpful assistant.
 ```
 
-Editing a ModelConfig produces a new compiled {{< gloss "Revision" >}}revision{{< /gloss >}} for every {{< gloss "Agent" >}}Agent{{< /gloss >}} whose template references it. A {{< gloss "Session" >}}Session{{< /gloss >}} keeps running the revision that it was created from, so create a new Session to pick up a changed model.
+Editing a ModelConfig produces a new {{< gloss "Revision" >}}revision{{< /gloss >}} for every {{< gloss "Agent" >}}Agent{{< /gloss >}} whose template references it. A {{< gloss "Session" >}}Session{{< /gloss >}} keeps running the revision that it was created from, so create a new Session to pick up a changed model.

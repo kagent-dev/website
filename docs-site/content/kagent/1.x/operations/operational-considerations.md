@@ -57,7 +57,7 @@ After you change these values, you can verify their validity by checking the con
 
 The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that setting in both `config` and `config.runtimeDefaults`.
 
-The controller compiles each `config.runtimeDefaults` setting into the runtime's configuration document rather than passing it as an environment variable, so a Harness cannot override one of these settings through its `spec.env` field. A Harness tunes only the standard `OTEL_*` variables that the controller does not own, such as the `OTEL_BSP_*` batch span processor settings. For the variables that the controller does own, see [Controller-owned telemetry variables]({{< link path="agents/agent-harness#controller-owned-telemetry-variables" >}}).
+A `config.runtimeDefaults` setting is the installation's default rather than a fixed value. A Harness can replace most of them for the agents that run on it, by naming the equivalent variable in its `spec.env` field. A small set of names is reserved instead, such as the certificate trust variables that let a runtime reach the egress gateway. For the reserved names and the per-runtime differences, see [Reserved environment variables]({{< link path="agents/agent-harness#reserved-environment-variables" >}}).
 
 ## Choose a database
 

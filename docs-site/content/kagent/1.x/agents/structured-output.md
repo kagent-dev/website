@@ -19,7 +19,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 
 1. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-harness` Harness and the `default-model-config` {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that the AgentTemplates in this guide use. That guide also has you install the kagent CLI and `jq`.
 
-   Structured output needs a Harness that uses the `kagent` runtime with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` runtime block and the same `workload.image` as `my-first-harness`. With the `codex`, `claude`, or `byo` runtime, an Agent whose template sets a schema fails to compile. With the `kagent` runtime and an image of kagent's Python engine, the AgentTemplate compiles, but the agent ignores the schema. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+   Structured output needs a Harness that uses the `kagent` runtime with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` runtime block and the same `workload.image` as `my-first-harness`. With the `codex`, `claude`, or `byo` runtime, an Agent whose template sets a schema is rejected with `Harness runtime "<name>" does not support structured output`. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
 
 2. Check your kagent CLI version. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI. A CLI from another release can fail with `unknown command`.
    ```bash

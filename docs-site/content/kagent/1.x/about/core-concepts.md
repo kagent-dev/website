@@ -63,12 +63,12 @@ Examples include [Claude Code](https://code.claude.com/docs/en/how-claude-code-w
 
 A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 
-- **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`, and kagent compiles all four. `kagent` runs kagent's own agent engine, `codex` and `claude` run those coding agents, and `byo` runs any image that implements kagent's A2A contract.
+- **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`. `kagent` runs kagent's own agent engine, `codex` runs Codex, `claude` runs Claude, and `byo` runs any image that implements kagent's A2A contract. The four runtimes accept different model providers and different AgentTemplate features.
 - **Workload**: The container image, command, and arguments that the runtime runs as.
 - **Environment**: Literal environment values for the runtime, set in `spec.env`.
 - **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. The Harness names a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) to schedule onto and the storage location that snapshots write to.
 
-A Harness names no AgentTemplate, and an AgentTemplate names no Harness. An [Agent](#agent) pairs the two, and nothing pairs them implicitly. Applying a Harness runs nothing on its own. It registers a runtime and policy that an Agent can select.
+A Harness and an AgentTemplate do not reference each other. An [Agent](#agent) references both, and nothing pairs them implicitly. Applying a Harness runs nothing on its own. It registers a runtime and policy that an Agent can select.
 
 Each runtime accepts a different subset of configuration, and an Agent that asks for something its runtime cannot do reports a compatibility condition rather than running. For the per-runtime restrictions and the complete Harness schema, see the [API reference]({{< link path="reference/api-ref#harness" >}}).
 

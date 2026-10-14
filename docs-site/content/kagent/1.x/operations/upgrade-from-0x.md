@@ -136,19 +136,19 @@ Four resource kinds are removed rather than replaced, so plan for each one befor
 
 ## Verify the new installation
 
-Confirm that the resources resolved before you retire anything, because a Harness that is missing a dependency reports the reason on itself.
+Confirm that the resources resolved before you retire anything. Neither a Harness nor an AgentTemplate reports status of its own, so the Agent that references both is where every problem surfaces.
 
-1. Check that each Harness is ready. A Harness that is not ready most often names a WorkerPool that does not exist.
-   ```bash
-   kubectl get harness -n kagent
-   ```
-
-2. Check that each Agent compiled. An AgentTemplate does not report status, so the Agent that pairs it with a Harness is where readiness is reported.
+1. Check that each Agent is ready.
    ```bash
    kagent agent list
    ```
 
-3. Create a Session against a migrated Agent and send it a message. A reply confirms the whole path, from the compiled revision to the model credentials.
+2. Read the conditions on any Agent that is not ready. `ResolvedRefs` reports a missing reference, and a Harness that names a WorkerPool that does not exist is the most common cause.
+   ```bash
+   kubectl describe agent <agent-name> -n kagent
+   ```
+
+3. Create a Session against a migrated Agent and send it a message. A reply confirms the whole path, from the revision to the model credentials.
    ```bash
    kagent agent session create --agent <agent-name>
    ```
