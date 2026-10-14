@@ -49,7 +49,7 @@ The Agent Substrate `atecontroller` component reports the same `controller_runti
 
 ## Agent runtime metrics
 
-Agent runtimes export metrics over OTLP when the kagent Helm release sets `otel.metrics.enabled` to `true`. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
+When the kagent Helm release sets an endpoint in `config.runtimeDefaults.telemetry.metrics`, agent runtimes export metrics over OTLP. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
 
 | Metric | Type | Measures |
 | ------ | ---- | -------- |
