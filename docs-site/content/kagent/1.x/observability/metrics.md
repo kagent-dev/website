@@ -49,11 +49,11 @@ The Agent Substrate `atecontroller` component reports the same `controller_runti
 
 ## Agent runtime metrics
 
-When the kagent Helm release sets an endpoint in `config.runtimeDefaults.telemetry.metrics`, agent runtimes export metrics over OTLP. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. For the `kagent` runtime, both stack guides derive the metric from spans instead. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
+When the kagent Helm release sets an endpoint in `config.runtimeDefaults.telemetry.metrics`, agent runtimes export metrics over OTLP. A runtime reports the histogram in this section only when kagent's own A2A wrapper opens the `invoke_agent` span for it. For the runtimes that open that span themselves, both stack guides derive the metric from the spans instead. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
 
 | Metric | Type | Measures |
 | ------ | ---- | -------- |
-| `gen_ai_invoke_agent_duration_seconds` | Histogram | Time that one `invoke_agent` execution segment takes. Only the `claude` and `codex` runtimes record it. The `kagent` runtime emits its own `invoke_agent` spans, so its wrapper stays a transport span and does not record a duration. Both stack guides add a `signal_to_metrics` connector that derives the metric from those spans before sampling. The derived series covers every runtime. |
+| `gen_ai_invoke_agent_duration_seconds` | Histogram | Time that one `invoke_agent` execution segment takes. The `claude`, `codex`, `langgraph`, `crewai`, and `byo` runtimes record it themselves, because kagent's wrapper opens their `invoke_agent` span and measures it. The `kagent`, `adk-python`, and `openai-agents` runtimes open that span in their own instrumentation, so the wrapper stays a transport span and records no duration. Both stack guides add a `signal_to_metrics` connector that derives the metric from those spans before any sampling in the collector. Between the two paths, every runtime reports the metric, except a `byo` image that is not built on `kagent-core` and opens no `invoke_agent` span of its own. |
 
 The metric carries labels for the Agent name, model, and error type when those values exist. When the collector copies resource attributes to labels, the metric also carries labels such as `service_name`, `service_namespace`, `service_version`, `kagent_runtime`, and `gen_ai_main_agent_id`.
 
@@ -121,7 +121,7 @@ Run the following queries in Prometheus or Grafana.
   sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="kagent-controller-metrics"}[5m]))
   ```
 
-- The 95th percentile agent invocation duration, per Agent. The query covers every runtime, because both stack guides configure the collector to derive the metric.
+- The 95th percentile agent invocation duration, per Agent. Because both stack guides configure the collector to derive the metric, the query covers every runtime that opens an `invoke_agent` span.
   ```text
   histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_seconds_bucket[5m])))
   ```
