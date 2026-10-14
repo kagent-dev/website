@@ -56,7 +56,7 @@ Both kinds of agent receive the same inputs. Agent Substrate delivers the two JS
 | ----- | -------- |
 | `KAGENT_CONFIG_JSON`, which the helpers write to `/config/config.json` | The compiled agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
 | `KAGENT_AGENT_CARD_JSON`, which the helpers write to `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
-| Anything in `spec.env` | The literal values that the Harness sets. The field takes no secret-backed source, so put credentials on a ModelConfig or a RemoteMCPServer instead. Agent Substrate accepts at most 32 environment variables on an Actor, and the variables that kagent adds count toward that limit. A revision that exceeds 32 is rejected. |
+| Anything in `spec.env` | The literal values that the Harness sets. The field does not take a secret-backed source, so put credentials on a ModelConfig or a RemoteMCPServer instead. Agent Substrate accepts at most 32 environment variables on an Actor, and the variables that kagent adds count toward that limit. A revision that exceeds 32 is rejected. |
 
 The `runtime` object is the root of the configuration document, and subagents inherit it. The object includes the settings that a process needs before it serves a request.
 

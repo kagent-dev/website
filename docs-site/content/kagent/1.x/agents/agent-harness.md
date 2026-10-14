@@ -41,15 +41,12 @@ EOF
 | Field | Required | Description |
 | ----- | -------- | ----------- |
 | One of `kagent`, `codex`, `claude`, `byo` | Yes | The runtime that executes the agent. Naming none, or more than one, is rejected. For the available runtimes, see [Choose a runtime](#choose-a-runtime). |
-| `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
+| `workload.image` | Yes | The runtime image, pinned by `sha256` digest. A tag with no digest is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` runtime, optional otherwise. Every runtime honors an explicit value, the `kagent` runtime included, regardless of the language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
-| `env` | No | Environment variables for the runtime, up to 100 entries. Each entry sets a literal `value`, which is required and can be an empty string. The schema defines no secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Some names are reserved. For more information, see [Reserved environment variables](#reserved-environment-variables). |
+| `env` | No | Environment variables for the runtime. Each entry sets a literal `value`, which is required and can be an empty string. The schema accepts up to 100 entries, but Agent Substrate accepts at most 32 environment variables on an Actor, and the variables that the controller adds to every revision count toward that limit. A revision that exceeds 32 reports `runtime revision has <n> environment variables; Substrate supports at most 32`. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials on a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Some names are reserved. For more information, see [Reserved environment variables](#reserved-environment-variables). |
 | `substrate.workerPoolRef.name` | Yes | The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that this Harness's Actors are scheduled onto. An operator must provision one before any agent can run. |
 | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
-
-> [!NOTE]
-> Although the schema accepts up to 100 `env` entries, Agent Substrate accepts at most 32 environment variables on an Actor. The controller adds its own variables to every revision, such as the agent configuration and the certificate trust settings, and those count toward the limit. A revision that exceeds 32 reports `runtime revision has <n> environment variables; Substrate supports at most 32`.
 
 A Harness and an AgentTemplate do not reference each other. An {{< gloss "Agent" >}}Agent{{< /gloss >}} references both, through `spec.harnessRef` and `spec.template.ref`, so whoever writes the Agent decides which template runs on which Harness. Both fields take a reference only, so the Harness must exist before an Agent can name it. For more information about the pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
 
@@ -66,15 +63,15 @@ A Harness names exactly one of the following four runtimes, and that choice deci
 | `claude` | Claude | You want Claude to do the work, with Anthropic or Bedrock as the model. |
 | `byo` | A container image of your own that implements kagent's A2A contract | You already have an agent that is built with an agent framework, and you want to run that agent in kagent. For more information, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
 
-The runtimes differ in two ways that decide what an agent on them can do. They accept different model providers, which [Model provider support](#model-provider-support) lists, and they accept different AgentTemplate features, which [Tool and skill support](#tool-and-skill-support) lists.
+The runtimes differ in two ways that decide what an agent running on them can do. They accept different model providers, which [Model provider support](#model-provider-support) lists, and they accept different AgentTemplate features, which [Tool and skill support](#tool-and-skill-support) lists.
 
 The agent chat in the kagent UI offers file attachments only on the `kagent` runtime. An agent on a `byo`, `codex`, or `claude` Harness has no option to attach files in the chat. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
 
 ### kagent runtime
 
-The `kagent` runtime runs kagent's built-in Go engine, which reads the compiled agent configuration and runs the agentic loop from it. Choose this runtime to build an agent from a system prompt, tools, skills, and plugins. Three features are available on this runtime alone: [structured output]({{< link path="agents/structured-output" >}}), [long-term memory]({{< link path="agents/agent-memory" >}}), and file attachments in the UI chat.
+The `kagent` runtime runs kagent's built-in Go engine, which reads the compiled agent configuration and runs the agentic loop from it. Choose this runtime to build an agent from a system prompt, tools, skills, and plugins. Three features are available only on the kagent runtime: [structured output]({{< link path="agents/structured-output" >}}), [long-term memory]({{< link path="agents/agent-memory" >}}), and file attachments in the UI chat.
 
-`spec.kagent` is the only runtime block that takes settings of its own. The other three runtimes take their configuration from the AgentTemplate and the ModelConfig, so their blocks are empty.
+Add runtime settings in the `spec.kagent` section of the Harness resource.
 
 ```yaml
 spec:
@@ -88,19 +85,17 @@ spec:
       eventRetentionSize: 20
 ```
 
-The settings fall into two groups. Memory persists facts across conversations, and compaction keeps a single conversation's prompt bounded as the conversation grows.
+Memory settings persist facts across conversations. Compaction settings keep a single conversation's prompt bounded as the conversation grows, and kagent offers two strategies for that. Tail retention summarizes the older history once the prompt passes a token count. A sliding window summarizes each group of completed invocations as the conversation goes. Setting `compaction` requires at least one of the two strategies, and setting both is valid. For the rules that the API server enforces, see [Context management]({{< link path="agents/context-management" >}}).
 
 | Field | Description |
 | ----- | ----------- |
-| `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model, in the Harness's namespace. Required when `memory` is set. Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}). |
+| `memory.modelConfigRef.name` | The ModelConfig that supplies the embedding model, in the Harness's namespace. Required when `memory` is set. Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}). |
 | `memory.ttlDays` | How many days a stored memory entry stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
-| `compaction.tokenThreshold` | The prompt token count at which kagent summarizes the history before the next model call. Set it with `compaction.eventRetentionSize`. |
-| `compaction.eventRetentionSize` | The number of most recent events that stay uncompacted. Set it with `compaction.tokenThreshold`. |
-| `compaction.compactionInterval` | The number of new user-initiated invocations that triggers a sliding-window compaction of those invocations. An alternative to the two tail-retention settings, and `compaction` requires one strategy or the other. |
-| `compaction.overlapSize` | The number of already-compacted invocations pulled back into the next window, so that consecutive summaries overlap. Requires `compaction.compactionInterval`. |
-| `compaction.summarizer` | The ModelConfig and prompt template that write the summaries. When omitted, kagent summarizes with the agent's own model and the runtime's default prompt. |
-
-For the two compaction strategies and the rules that the API server enforces on them, see [Context management]({{< link path="agents/context-management" >}}).
+| `compaction.tokenThreshold` | Tail retention. The prompt token count that triggers a summary. Once the prompt passes this count, kagent summarizes the older history before the next model call. Requires `compaction.eventRetentionSize`. |
+| `compaction.eventRetentionSize` | Tail retention. The number of most recent events that kagent leaves out of that summary, so the latest exchanges reach the model in full. Requires `compaction.tokenThreshold`. |
+| `compaction.compactionInterval` | Sliding window. The number of new user-initiated invocations that triggers a summary of those invocations. Set `5` to summarize each group of five. |
+| `compaction.overlapSize` | Sliding window. The number of already-summarized invocations that kagent includes in the next summary, so that consecutive summaries overlap and carry context forward. Requires `compaction.compactionInterval`. |
+| `compaction.summarizer` | Both strategies. The ModelConfig and prompt template that write the summaries. When omitted, kagent summarizes with the agent's own model and the runtime's default prompt. |
 
 The following example applies a complete `kagent` agent, from the ModelConfig to the Agent that runs it. The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) guide creates.
 
@@ -159,7 +154,7 @@ EOF
 
 ### Codex runtime
 
-The `codex` runtime runs Codex against an OpenAI or Bedrock model. The runtime block takes no settings. Codex accepts a narrower set of AgentTemplate features than the built-in runtime, and the restrictions are in [Tool and skill support](#tool-and-skill-support).
+The `codex` runtime runs Codex against an OpenAI or Bedrock model. The runtime block is empty. Codex accepts a narrower set of AgentTemplate features than the built-in runtime. To understand the restrictions, see [Tool and skill support](#tool-and-skill-support).
 
 The ModelConfig must set `openAI.apiFormat: responses`, and the API key must be entitled to the model that you name. A key without access to that model fails the turn with `Codex execution failed`. The ModelConfig in the following example reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) guide creates.
 
@@ -219,7 +214,7 @@ EOF
 
 ### Claude runtime
 
-The `claude` runtime runs Claude against an Anthropic or Bedrock model. The runtime block takes no settings. Claude accepts a narrower set of AgentTemplate features than the built-in runtime, and the restrictions are in [Tool and skill support](#tool-and-skill-support).
+The `claude` runtime runs Claude against an Anthropic or Bedrock model. The runtime block is empty. Claude accepts a narrower set of AgentTemplate features than the built-in runtime. To understand the restrictions, see [Tool and skill support](#tool-and-skill-support).
 
 The ModelConfig in the following example reads its API key from the `kagent-anthropic` Secret that the [Anthropic]({{< link path="setup/model-providers/anthropic#create-the-modelconfig" >}}) guide creates.
 
@@ -278,9 +273,9 @@ EOF
 
 ### BYO runtime
 
-The `byo` runtime runs an agent that you built with an agent framework of your own, packaged as a container image. The runtime block takes no settings, and `workload.command` is required, because kagent cannot infer the entrypoint of an image that it does not build.
+The `byo` runtime runs an agent that you built with an agent framework of your own, packaged as a container image. The runtime block is empty, and `workload.command` is required, because kagent cannot infer the entrypoint of an image that it does not build.
 
-kagent builds a `byo` revision the same way as a `kagent` one, so an image that reads the agent configuration accepts the same model providers and the same AgentTemplate features as the built-in runtime. Structured output is the one exception, and the `kagent` runtime alone supports it. An image that ignores the configuration decides everything itself, and its AgentTemplate needs only a name. For the contract that the image must implement, how to read the configuration, and the known limitations, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
+kagent builds a `byo` revision in the same way that it builds a `kagent` one, so an image that reads the agent configuration accepts the same model providers and the same AgentTemplate features as the built-in runtime. Structured output is the one exception, because only the `kagent` runtime supports it. An image that ignores the configuration decides everything itself, and its AgentTemplate needs only a name. For the contract that the image must implement, how to read the configuration, and the known limitations, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -340,19 +335,19 @@ The runtime that a Harness selects decides which ModelConfig an Agent that runs 
 | `GeminiVertexAI` | ❌ | ❌ | ❌ | ❌ |
 | `SAPAICore` | ❌ | ❌ | ❌ | ❌ |
 
-kagent reaches a model provider through the egress gateway, which holds the credential and adds it to each request as an HTTP header. The three rejected providers authenticate in a way that this design cannot serve, and they fail in two different ways.
+kagent reaches a model provider through the egress gateway, which holds the credential and adds it to each request as an HTTP header. The three rejected providers authenticate in a way that this design cannot serve:
 
-* `AnthropicVertexAI` and `GeminiVertexAI` authenticate with a Google service account key, which kagent would have to mount as a file. An Actor takes no volumes, so a ModelConfig that names a credential Secret is rejected with `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`.
+* `AnthropicVertexAI` and `GeminiVertexAI` authenticate with a Google service account key, which kagent would have to mount as a file. An Actor does not take volumes, so a ModelConfig that names a credential Secret is rejected with `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`.
 * `SAPAICore` authenticates with an OAuth client ID and secret, which the runtime exchanges for a token itself. A ModelConfig that names a credential Secret is rejected with `environment credential "<name>" cannot use gateway header injection`.
 
 Some supported combinations still carry restrictions.
 
 | Combination | Restriction |
 | ----------- | ----------- |
-| `codex` with `OpenAI` | Requires `openAI.apiFormat: responses`, and accepts no other `openAI` setting beyond `baseUrl`. |
-| `codex` with `Bedrock` | Accepts only OpenAI `gpt-*` model IDs, and no `bedrock` settings beyond `region`. |
-| `claude` with `Anthropic` | Accepts no `anthropic` settings beyond `baseUrl`. |
-| `claude` with `Bedrock` | Accepts no `bedrock` settings beyond `region`. |
+| `codex` with `OpenAI` | Requires `openAI.apiFormat: responses`, and does not accept any other `openAI` setting beyond `baseUrl`. |
+| `codex` with `Bedrock` | Accepts only OpenAI `gpt-*` model IDs, and does not accept any `bedrock` setting beyond `region`. |
+| `claude` with `Anthropic` | Does not accept any `anthropic` setting beyond `baseUrl`. |
+| `claude` with `Bedrock` | Does not accept any `bedrock` setting beyond `region`. |
 | `Bedrock` on any runtime | The Secret must hold an `AWS_BEARER_TOKEN_BEDROCK` key. A Secret of IAM access keys is rejected with `cannot use gateway header injection`, because IAM signs each request locally. |
 | `codex` and `claude` with any provider | Neither runtime accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`. |
 
@@ -371,7 +366,7 @@ For more information about what an AgentTemplate can bind, see [About tools]({{<
 
 ## Telemetry content settings
 
-Enabling content capture puts the prompts and replies that an agent exchanges with a model into your telemetry backend, where anyone with access to that backend can read them. Both settings that do this default to `false`, and both take effect only where tracing or log export is already enabled. Set them in the kagent Helm chart.
+By default, kagent's telemetry records that a model call happened, without the prompt or the reply. Two settings in the kagent Helm chart add that content, and both default to `false`. `captureContent` adds the prompts and assistant replies. `captureRawApiBodies` adds the complete provider request and response bodies. Neither takes effect until you enable tracing or log export, and anyone who can read your telemetry backend can read whatever you capture.
 
 ```yaml
 config:
@@ -382,35 +377,35 @@ config:
       maxCaptureBytes: 16384
 ```
 
-The two capture settings differ in how much they return and which runtimes read them. The third setting bounds the size of what either one captures.
+Each setting reaches a different set of runtimes, and `maxCaptureBytes` bounds the size of what either capture setting records.
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, whatever this setting is. On the `claude` runtime, tool results need tracing, and assistant replies need log export through `config.runtimeDefaults.telemetry.logs`. | `kagent`, `codex`, `claude` |
+| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, regardless of this setting. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `config.runtimeDefaults.telemetry.logs`. | `kagent`, `codex`, `claude` |
 | `config.runtimeDefaults.telemetry.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `captureContent` does, and it takes effect only when you set the logs endpoint. | `claude` |
 | `config.runtimeDefaults.telemetry.maxCaptureBytes` | The budget for each captured prompt or reply, in bytes. Defaults to `16384`, with a maximum of `65536`. | `codex`, `claude` |
 
 These settings are the installation's default. To change the capture decision for one Harness, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in that Harness's `spec.env` field. The `kagent`, `codex`, and `claude` runtimes all read the variable and apply it in place of the installation default. Set `SPAN_ONLY` to put prompts and replies on spans, or `NO_CONTENT` to turn capture off.
 
-A `byo` image receives the same variable whenever any signal is enabled, but whether the image acts on it depends on its own instrumentation. An image that exports to its own backend keeps doing so. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
+A `byo` image receives the same variable whenever any signal is enabled, but whether the image acts on it depends on its own instrumentation. An image that exports to its own backend continues to do so. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 
 ## Reserved environment variables
 
-An installation's telemetry settings reach a runtime as defaults. Where a Harness `spec.env` entry names the same variable, the Harness value wins. One Harness can therefore tune exporter behavior for the agents that run on it, without changing the installation. Two sets of names are reserved instead, and a Harness that names one of them is rejected.
+A Harness tunes telemetry for its own agents by setting `OTEL_*` variables in its `spec.env` field. Each runtime reads its environment first and falls back to the installation's telemetry settings, so a value in `spec.env` wins for that Harness only and leaves every other Harness unchanged. Some variable names are reserved, and a Harness that sets one is rejected.
 
-Every runtime reserves the certificate trust variables, because the egress gateway intercepts HTTPS and each runtime must trust the gateway's certificate authority to reach a model at all.
+Every runtime reserves the following certificate trust variables. The egress gateway intercepts HTTPS, so a runtime that does not trust the gateway's certificate authority cannot reach a model.
 
 * `SSL_CERT_FILE` and `SSL_CERT_DIR`
 * `REQUESTS_CA_BUNDLE`, `AWS_CA_BUNDLE`, and `CURL_CA_BUNDLE`
 * `NODE_EXTRA_CA_CERTS`
 * `GIT_SSL_CAINFO`
 
-A Harness that names one of these variables reports `runtime environment "<name>" conflicts with gateway trust`.
+A Harness that sets one of these variables reports `runtime environment "<name>" conflicts with gateway trust`.
 
-The `codex` and `claude` runtimes each reserve a second set, which covers the credentials and runtime state that their adapters write. The `kagent` and `byo` runtimes reserve nothing beyond the trust variables.
+The `codex` and `claude` runtimes each reserve a second set of variables, which describe the credentials and runtime state that their adapters write.
 
-| Runtime | Also reserved | Result |
-| ------- | ------------- | ------ |
+| Runtime | Additional reserved variables | Effect if set by a Harness |
+| ------- | ----------------------------- | -------------------------- |
 | `claude` | The Anthropic, AWS, and Vertex AI credential variables, `CLAUDE_CONFIG_DIR`, `DISABLE_UPDATES`, `IS_SANDBOX`, `CLAUDE_CODE_ENABLE_TELEMETRY`, `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`, `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER`, `OTEL_LOGS_EXPORTER`, Claude's `OTEL_LOG_*` capture flags, `TRACEPARENT`, `TRACESTATE`, and the Prometheus exporter host and port | Every Agent on the Harness reports `Compatible` as `False`, and the controller reports `Harness env "<name>" conflicts with Claude-owned runtime configuration`. |
 | `codex` | `CODEX_HOME`, `OPENAI_API_KEY`, `AWS_REGION`, `AWS_BEARER_TOKEN_BEDROCK`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` | Every Agent on the Harness reports `Compatible` as `False`, and the controller reports `Harness env "<name>" conflicts with Codex's compiled configuration`. |
 
@@ -442,20 +437,14 @@ These members serve as identifiers only, and the runtime can replace a caller's 
 > **Enabling baggage sends the caller's own members to your model provider.** A caller baggage member that kagent does not replace is forwarded unchanged in the `baggage` header of each model API request and each MCP request. This means that a caller controls what reaches those external services in the header. Enable baggage only where you trust what your callers attach.
 
 Review and plan for the following considerations.
-* The `claude` and `codex` runtimes receive `OTEL_PROPAGATORS`, but kagent does not add identity to their model and tool calls. The four members reach the `kagent` runtime alone.
+* The `claude` and `codex` runtimes receive `OTEL_PROPAGATORS`, but kagent does not add identity to their model and tool calls. The four members reach only the `kagent` runtime.
 * kagent never copies a baggage member onto a span. To make these values searchable, add a baggage-to-attributes span processor to the service that receives the request or to its OpenTelemetry Collector.
 
 When an agent requires an MCP server, the first tool listing or tool call opens a session with the MCP server, and every later request to that server shares it. The session makes three requests: the event stream, the replies to server requests, and the close. These requests do not carry trace context or baggage, because these name a request that has already ended.
 
 ## Check that an agent can run
 
-A Harness reports no status of its own. The `READY` column in `kubectl get harness` output is always empty, and `kubectl describe harness` shows no conditions, because nothing writes them.
-
-The Agent reports for all three resources instead, because an AgentTemplate reports no status of its own either.
-
-```bash
-kubectl get agent -n kagent
-```
+To check the status of a Harness, AgentTemplate, or Agent, check the status of only the Agent. It reports for all three resources, because neither a Harness nor an AgentTemplate reports a status of its own. For example, the `READY` column in `kubectl get harness` output is always empty.
 
 An Agent that is not `Ready` states the reason in its conditions.
 
