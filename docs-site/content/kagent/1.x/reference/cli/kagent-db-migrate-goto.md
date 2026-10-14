@@ -1,7 +1,7 @@
 ---
 title: kagent db migrate goto
 description: Move one source to version V.
-weight: 290
+weight: 330
 ---
 
 Move one source to version V. Version zero removes its schema.
@@ -15,8 +15,11 @@ kagent db migrate goto V [flags]
 
 **Global Flags:**
 - `--ca-file string` - CA certificate file for KAgent endpoints
+- `--config string` - Configuration file (default: user config directory/kagent/config.yaml)
 - `--db-role string` - Stable PostgreSQL role to assume after authentication
 - `--db-url string` - PostgreSQL connection URL
+- `--db-url-file string` - File containing the PostgreSQL connection URL
+- `--log-level string` - Log level: debug, info, warn, error (default "info")
 - `--server-name string` - TLS server name for KAgent endpoints
 - `--source string` - Migration source for down, goto, or version
 - `--user-id string` - Caller identity used to select the server-side data partition (default "admin@kagent.dev")

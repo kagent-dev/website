@@ -1,7 +1,7 @@
 ---
 title: kagent mcp init go
 description: Initialize a new Go MCP server project.
-weight: 400
+weight: 440
 ---
 
 Initialize a new MCP server project using the mcp-go framework.
@@ -23,10 +23,12 @@ kagent mcp init go [project-name] [flags]
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")
 - `--author string` - Author name for the project
 - `--ca-file string` - CA certificate file for KAgent endpoints
+- `--config string` - Configuration file (default: user config directory/kagent/config.yaml)
 - `--description string` - Description for the project
 - `--email string` - Author email for the project
 - `--force` - Overwrite existing directory
 - `--gateway-url string` - KAgent A2A and MCP gateway URL (default "http://localhost:8083")
+- `--log-level string` - Log level: debug, info, warn, error (default "info")
 - `--namespace string` - Default namespace for project resources (default "default")
 - `--no-git` - Skip git initialization
 - `--non-interactive` - Run in non-interactive mode

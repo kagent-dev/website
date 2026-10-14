@@ -152,6 +152,35 @@ config:
           endpoint: 0.0.0.0:4318
   processors:
     batch: {}
+    delta_to_cumulative: {}
+  connectors:
+    signal_to_metrics:
+      spans:
+        - name: gen_ai.invoke_agent.duration
+          description: The duration of one agent invocation, derived from its span.
+          unit: s
+          conditions:
+            - span.attributes["gen_ai.operation.name"] == "invoke_agent" and instrumentation_scope.name != "github.com/kagent-dev/kagent/go/adk/pkg/a2a/server" and instrumentation_scope.name != "kagent.core.a2a"
+          histogram:
+            buckets: [0.5, 1, 2, 5, 10, 30, 60, 120, 300]
+            value: Seconds(span.end_time - span.start_time)
+          attributes:
+            - key: gen_ai.agent.name
+              optional: true
+            - key: gen_ai.request.model
+              optional: true
+            - key: error.type
+              optional: true
+          include_resource_attributes:
+            - key: service.name
+            - key: service.namespace
+              optional: true
+            - key: service.version
+              optional: true
+            - key: kagent.runtime
+              optional: true
+            - key: gen_ai.main_agent.id
+              optional: true
   exporters:
     debug:
       verbosity: basic
@@ -168,17 +197,19 @@ config:
       traces:
         receivers: [otlp]
         processors: [batch]
-        exporters: [otlp_grpc/jaeger]
+        exporters: [signal_to_metrics, otlp_grpc/jaeger]
       logs:
         receivers: [otlp]
         processors: [batch]
         exporters: [debug]
       metrics:
-        receivers: [otlp]
-        processors: [batch]
+        receivers: [otlp, signal_to_metrics]
+        processors: [delta_to_cumulative, batch]
         exporters: [prometheus]
 EOF
 ```
+
+{{< reuse "kagent-docs/snippets/signal-to-metrics-connector.md" >}}
 
 ## Send kagent telemetry to the collector
 

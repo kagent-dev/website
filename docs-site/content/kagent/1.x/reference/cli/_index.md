@@ -10,6 +10,7 @@ Review the kagent CLI commands and learn how to use them effectively.
 - [`kagent apply`]({{< link path="reference/cli/kagent-apply" >}}) - Create or update an Agent or AgentTemplate
 - [`kagent bug-report`]({{< link path="reference/cli/kagent-bug-report" >}}) - Generate a bug report
 - [`kagent completion`]({{< link path="reference/cli/kagent-completion" >}}) - Generate the autocompletion script for the specified shell
+- [`kagent config`]({{< link path="reference/cli/kagent-config" >}}) - Inspect and validate configuration
 - [`kagent dashboard`]({{< link path="reference/cli/kagent-dashboard" >}}) - Open the kagent dashboard
 - [`kagent db`]({{< link path="reference/cli/kagent-db" >}}) - Database operations (migrations, inspection)
 - [`kagent install`]({{< link path="reference/cli/kagent-install" >}}) - Install kagent
