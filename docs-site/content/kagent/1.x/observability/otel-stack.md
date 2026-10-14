@@ -33,7 +33,7 @@ flowchart LR
         prom["Prometheus"]
     end
     grafana["Grafana"]
-    kagent -->|traces, logs| collector
+    kagent -->|traces, logs, runtime metrics| collector
     substrate -->|traces, logs, metrics| collector
     kagent -->|metrics scrape| prom
     collector --> tempo
@@ -52,7 +52,7 @@ The following table lists what each source sends. For the meaning of each signal
 
 | Source | Traces | Logs | Metrics |
 | ------ | ------ | ---- | ------- |
-| kagent controller and agent runtimes | One trace per agent request, across the controller, the Agent Substrate proxy, and the agent runtime. | Log records from the agent runtimes. Prompts and replies are not among them on the `kagent` runtime, which puts them on spans instead. For how to capture them, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). | Reconciliation, work queue, and gRPC API metrics, scraped from the controller's `/metrics` endpoint. |
+| kagent controller and agent runtimes | One trace per agent request, across the controller, the Agent Substrate proxy, and the agent runtime. | Log records from the agent runtimes. Prompts and replies are not among them on the `kagent` runtime, which puts them on spans instead. For how to capture them, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). | Agent runtimes export runtime metrics over OTLP. Prometheus scrapes reconciliation, work queue, and gRPC API metrics from the controller's `/metrics` endpoint. |
 | Agent Substrate | Separate traces for its own work, such as routing a request to a Worker and resuming an Actor. | A record of every Actor state change, and the router access log. | Actor lifecycle, scheduling, snapshot, image cache, and WorkerPool capacity metrics. |
 
 Agent Substrate traces do not join the trace of the agent request that caused them. To see why a request was slow to start, look up the Agent Substrate trace from the same time window.
@@ -317,7 +317,7 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
 
 ## Send kagent telemetry to the collector
 
-Turn on the kagent trace and log exporters, and point both at the collector. Also turn on the controller's metrics endpoint, together with the ServiceMonitor that the kagent chart creates for it.
+Turn on the kagent trace, log, and metrics exporters, and point them at the collector. Also turn on the controller's metrics endpoint, together with the ServiceMonitor that the kagent chart creates for it.
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -347,12 +347,18 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
        logs:
          endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
          protocol: grpc
+       metrics:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
      runtimeDefaults:
        telemetry:
          traces:
            endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
            protocol: grpc
          logs:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+         metrics:
            endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
            protocol: grpc
    controller:
@@ -371,9 +377,10 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    | Setting | Description |
    | ------- | ----------- |
    | `config.telemetry` | The endpoint and protocol that the controller's own signals export to. An `http://` endpoint sends plaintext. For each field, see [Tracing]({{< link path="observability/tracing#enable-tracing" >}}). |
-   | `config.runtimeDefaults.telemetry` | The same pair for every agent runtime that the controller starts. The controller's own settings do not propagate to a runtime, so both blocks name the collector. |
+   | `config.runtimeDefaults.telemetry` | The same set for every agent runtime that the controller starts. The controller's own settings do not propagate to a runtime, so both blocks name the collector. |
    | `telemetry.traces` | Exports traces. A signal exports when you set its endpoint, and stays off when you omit the endpoint, so neither block takes an `enabled` field. |
    | `telemetry.logs` | Exports log records. The `kagent` runtime never puts prompts or replies in a log record. For where that content goes, see [Audit prompts]({{< link path="observability/audit-prompts" >}}). |
+   | `telemetry.metrics` | Exports runtime metrics, such as `gen_ai.invoke_agent.duration`. |
    | `controller.metrics.enabled` | Serves the controller's Prometheus metrics on port `8443` over HTTPS. |
    | `controller.metrics.serviceMonitor` | Creates a ServiceMonitor for the metrics endpoint. The `prometheusServiceAccount` setting binds the metrics reader role to the Prometheus ServiceAccount, which authorizes the scrape. |
 

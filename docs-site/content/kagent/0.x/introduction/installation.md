@@ -468,6 +468,28 @@ When unset, the `registry` and `pullPolicy` fields of `agentImage` and `goAgentI
 
 > **Note**: If you set only `agentImage` without also setting `controller.goAgentImage`, Go declarative agents still try to pull the Go ADK image from its default location, `ghcr.io`. The controller logs a startup warning when the two image registries differ.
 
+#### Digest-pinned image tags
+
+Agents that declare skills, agents that set `declarative.executeCodeBlocks: true`, and BYO agents that run in a sandbox pull the full runtime image instead of the slim one. The controller derives the full image by appending `-full` to the tag name, because the slim and full images have separate manifests and cannot share a digest.
+
+When `agentImage.tag` or `goAgentImage.tag` embeds a digest, such as `0.10.3@sha256:...`, you must also set the matching `fullDigest` value. Without it, the controller fails reconciliation for every agent that needs the full image rather than falling back to a mutable tag.
+
+```yaml
+controller:
+  agentImage:
+    registry: my-registry.example.com
+    repository: kagent/app
+    tag: 0.10.3@sha256:<slim Python image digest>
+    fullDigest: sha256:<full Python image digest>
+  goAgentImage:
+    registry: my-registry.example.com
+    repository: kagent/golang-adk
+    tag: 0.10.3@sha256:<slim Go image digest>
+    fullDigest: sha256:<full Go image digest>
+```
+
+When the tag is a bare tag, you can omit `fullDigest`, and the controller uses the published `<tag>-full` image.
+
 ## Uninstallation
 
 Refer to the [Uninstall]({{< link path="operations/uninstall" >}}) guide.

@@ -13,20 +13,20 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../agents/argo-rollouts | argo-rollouts-agent | 0.10.2 |
-| file://../agents/cilium-debug | cilium-debug-agent | 0.10.2 |
-| file://../agents/cilium-manager | cilium-manager-agent | 0.10.2 |
-| file://../agents/cilium-policy | cilium-policy-agent | 0.10.2 |
-| file://../agents/helm | helm-agent | 0.10.2 |
-| file://../agents/istio | istio-agent | 0.10.2 |
-| file://../agents/k8s | k8s-agent | 0.10.2 |
-| file://../agents/kgateway | kgateway-agent | 0.10.2 |
-| file://../agents/observability | observability-agent | 0.10.2 |
-| file://../agents/promql | promql-agent | 0.10.2 |
-| file://../tools/grafana-mcp | grafana-mcp | 0.10.2 |
+| file://../agents/argo-rollouts | argo-rollouts-agent | 0.10.3 |
+| file://../agents/cilium-debug | cilium-debug-agent | 0.10.3 |
+| file://../agents/cilium-manager | cilium-manager-agent | 0.10.3 |
+| file://../agents/cilium-policy | cilium-policy-agent | 0.10.3 |
+| file://../agents/helm | helm-agent | 0.10.3 |
+| file://../agents/istio | istio-agent | 0.10.3 |
+| file://../agents/k8s | k8s-agent | 0.10.3 |
+| file://../agents/kgateway | kgateway-agent | 0.10.3 |
+| file://../agents/observability | observability-agent | 0.10.3 |
+| file://../agents/promql | promql-agent | 0.10.3 |
+| file://../tools/grafana-mcp | grafana-mcp | 0.10.3 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
-| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.2.1 |
+| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
 
 ## Values
 
@@ -73,6 +73,7 @@ A Helm chart for kagent, built with Google ADK
 | controller.agentDeployment.nodeSelector | object | {} (no default nodeSelector) | Default nodeSelector applied to all agent deployments. Useful when admission policies require a nodeSelector on every Deployment, since wizard-created Agents carry none. A per-agent nodeSelector in the Agent CRD takes precedence over these defaults. |
 | controller.agentDeployment.podLabels | object | {} (no extra labels) | Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults. |
 | controller.agentDeployment.serviceAccountName | string | "" (auto-create per-agent ServiceAccount) | Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA. |
+| controller.agentImage.fullDigest | string | "" (bare tag: tag-full; tag@digest without this: reconcile error; sandbox: link-time digest) | Explicit manifest digest (sha256:...) of the full (skills/SRT) Python agent image. Forwarded as APP_FULL_IMAGE_DIGEST. When agentImage.tag is a bare tag, declarative skills agents use the tag-full image and this may be omitted. When agentImage.tag embeds a digest (tag@sha256:...), this value is required or reconciliation fails. The controller's link-time digest is not used for declarative skills agents. Sandbox agents use this when set, otherwise the link-time digest. |
 | controller.agentImage.pullPolicy | string | `""` |  |
 | controller.agentImage.pullSecret | string | `""` | Image pull secret name set on agent pods created by the controller |
 | controller.agentImage.registry | string | `""` |  |
@@ -83,7 +84,8 @@ A Helm chart for kagent, built with Google ADK
 | controller.auth.userIdClaim | string | `""` |  |
 | controller.env | list | `[]` |  |
 | controller.envFrom | list | `[]` |  |
-| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
+| controller.goAgentImage | object | `{"fullDigest":"","pullPolicy":"","registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
+| controller.goAgentImage.fullDigest | string | "" (bare tag: tag-full; tag@digest without this: reconcile error; sandbox: link-time digest) | Explicit manifest digest (sha256:...) of the full (skills/SRT) Go agent image. Forwarded as GOLANG_ADK_FULL_IMAGE_DIGEST. Same rules as agentImage.fullDigest: required when goAgentImage.tag embeds a digest, optional on a bare tag. |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.image.registry | string | `""` |  |
 | controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |

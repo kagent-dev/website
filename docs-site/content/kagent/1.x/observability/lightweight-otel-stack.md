@@ -124,7 +124,7 @@ Install the [Prometheus](https://github.com/prometheus-community/helm-charts/tre
 
 ## Install the OTel collector
 
-Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for HTTP. The collector sends traces to Jaeger, serves metrics on port `8889`, and prints logs to its own output. The configuration uses the `contrib` collector image, because the Prometheus exporter is not part of the core image.
+Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for HTTP. The collector sends traces to Jaeger, serves metrics on port `8889`, and prints logs to its own output. The configuration uses the `contrib` collector image, because the Prometheus exporter is not part of the core image. For production, start from the reference Collector values in the kagent source at `examples/observability/collector-values.yaml`. The smaller collector in this guide omits the persistent queue and content-scrubbing processors.
 
 ```bash
 helm upgrade --install otel-collector opentelemetry-collector \
@@ -182,7 +182,7 @@ EOF
 
 ## Send kagent telemetry to the collector
 
-Turn on the kagent trace and log exporters, and point both at the collector. Also turn on the controller's metrics endpoint, and allow Prometheus to scrape it.
+Turn on the kagent trace, log, and metrics exporters, and point them at the collector. Also turn on the controller's metrics endpoint, and allow Prometheus to scrape it.
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -196,7 +196,7 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
    echo "Current revision: $OLD_REVISION"
    ```
 
-2. Upgrade the kagent Helm release to export traces and logs to the collector, and to serve controller metrics.
+2. Upgrade the kagent Helm release to export traces, logs, and metrics to the collector, and to serve controller metrics.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
@@ -212,12 +212,18 @@ Turn on the kagent trace and log exporters, and point both at the collector. Als
        logs:
          endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
          protocol: grpc
+       metrics:
+         endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+         protocol: grpc
      runtimeDefaults:
        telemetry:
          traces:
            endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
            protocol: grpc
          logs:
+           endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
+           protocol: grpc
+         metrics:
            endpoint: http://otel-collector.telemetry.svc.cluster.local:4317
            protocol: grpc
    controller:
