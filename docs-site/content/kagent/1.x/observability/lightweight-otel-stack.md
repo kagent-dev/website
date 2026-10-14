@@ -124,7 +124,9 @@ Install the [Prometheus](https://github.com/prometheus-community/helm-charts/tre
 
 ## Install the OTel collector
 
-Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for HTTP. The collector sends traces to Jaeger, serves metrics on port `8889`, and prints logs to its own output. The configuration uses the `contrib` collector image, because the Prometheus exporter is not part of the core image. The `signal_to_metrics` connector derives the `gen_ai.invoke_agent.duration` metric from the `invoke_agent` spans that the `kagent` runtime emits, because that runtime does not record the metric itself. For production, start from the reference Collector values in the kagent source at `examples/observability/collector-values.yaml`. The smaller collector in this guide omits the persistent queue and content-scrubbing processors.
+Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for HTTP. The collector sends traces to Jaeger, serves metrics on port `8889`, and prints logs to its own output. The configuration uses the `contrib` collector image, because the Prometheus exporter is not part of the core image. For production, start from the reference Collector values in the kagent source at `examples/observability/collector-values.yaml`. The smaller collector in this guide omits the persistent queue and content-scrubbing processors.
+
+{{< reuse "kagent-docs/snippets/signal-to-metrics-connector.md" >}}
 
 ```bash
 helm upgrade --install otel-collector opentelemetry-collector \

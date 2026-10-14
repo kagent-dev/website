@@ -315,7 +315,7 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
 
    The `resource_to_telemetry_conversion` setting copies OTel resource attributes, such as the service name, onto each metric as labels. Without it, you cannot tell which Agent Substrate component reported a metric.
 
-   The `signal_to_metrics` connector derives the `gen_ai.invoke_agent.duration` metric from the `invoke_agent` spans that the `kagent` runtime emits, because that runtime does not record the metric itself. The connector reads the spans before any sampling, and its conditions skip the two instrumentation scopes that belong to the `claude` and `codex` runtimes, which record the metric themselves.
+   {{< reuse "kagent-docs/snippets/signal-to-metrics-connector.md" >}}
 
 2. Create a ServiceMonitor so that Prometheus scrapes the metrics that the collector serves.
    ```yaml

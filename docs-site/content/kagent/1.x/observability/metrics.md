@@ -47,11 +47,11 @@ The Agent Substrate `atecontroller` component reports the same `controller_runti
 
 ## Agent runtime metrics
 
-Agent runtimes export metrics over OTLP when the kagent Helm release sets `otel.metrics.enabled` to `true`. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. The `kagent` runtime emits `invoke_agent` spans instead, so both stack guides derive the same metric from those spans in the collector, which also converts these OpenTelemetry metrics to Prometheus names.
+Agent runtimes export metrics over OTLP when the kagent Helm release sets `otel.metrics.enabled` to `true`. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. For the `kagent` runtime, both stack guides derive the metric from spans instead. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
 
 | Metric | Type | Measures |
 | ------ | ---- | -------- |
-| `gen_ai_invoke_agent_duration_seconds` | Histogram | Time that one `invoke_agent` execution segment takes. Only the `claude` and `codex` runtimes record it. The `kagent` runtime emits its own `invoke_agent` spans, so its wrapper stays a transport span and records no duration. Both stack guides add a `signal_to_metrics` connector that derives the metric from those spans before sampling, so the series covers every runtime. |
+| `gen_ai_invoke_agent_duration_seconds` | Histogram | Time that one `invoke_agent` execution segment takes. Only the `claude` and `codex` runtimes record it. The `kagent` runtime emits its own `invoke_agent` spans, so its wrapper stays a transport span and does not record a duration. Both stack guides add a `signal_to_metrics` connector that derives the metric from those spans before sampling. The derived series covers every runtime. |
 
 The metric carries labels for the Agent name, model, and error type when those values exist. When the collector copies resource attributes to labels, the metric also carries labels such as `service_name`, `service_namespace`, `service_version`, `kagent_runtime`, and `gen_ai_main_agent_id`.
 
@@ -119,7 +119,7 @@ Run the following queries in Prometheus or Grafana.
   sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="kagent-controller-metrics"}[5m]))
   ```
 
-- The 95th percentile agent invocation duration, per Agent. The query covers every runtime when the collector derives the metric, as both stack guides configure it to do.
+- The 95th percentile agent invocation duration, per Agent. The query covers every runtime, because both stack guides configure the collector to derive the metric.
   ```text
   histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_seconds_bucket[5m])))
   ```
