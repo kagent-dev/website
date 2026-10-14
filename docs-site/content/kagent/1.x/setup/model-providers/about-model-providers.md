@@ -7,7 +7,7 @@ author: kagent.dev
 
 A `ModelConfig` is a Kubernetes custom resource that names one model at one provider, along with the credentials to reach it. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} references a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} by name in its `spec.modelConfig.name` field, and every agent compiled from that template calls the model that the ModelConfig names.
 
-The kagent installation creates a `default-model-config` ModelConfig from the provider API key that you supply at install time, so a first agent needs no extra setup. To use a different provider, a different model, or a different set of credentials, create additional ModelConfigs.
+The kagent installation creates a `default-model-config` ModelConfig from the provider API key that you supply at install time, so a first agent does not need extra setup. To use a different provider, a different model, or a different set of credentials, create additional ModelConfigs.
 
 ## How a ModelConfig reaches an agent
 
@@ -15,10 +15,10 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and compiles no revision. |
+| `provider` | The provider to use. Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`. Defaults to `OpenAI`. The API accepts `Mistral`, but the controller does not resolve it, so a Mistral ModelConfig reports `unsupported model provider: Mistral` and does not compile a revision. |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
-| Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider needs no extra settings. |
+| Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
 
 Credentials come from a Kubernetes Secret in the same namespace as the ModelConfig. The `apiKeySecret` field names the Secret, and `apiKeySecretKey` names the key within that Secret. To forward the bearer token from the incoming request to the provider instead, set `apiKeyPassthrough: true`. A ModelConfig cannot set both `apiKeyPassthrough` and `apiKeySecret`. For every ModelConfig field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#modelconfigspec" >}}).
 
@@ -48,7 +48,7 @@ Changing `stream` compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}},
 
 A credential never enters the agent. kagent compiles the Secret that a ModelConfig names into a destination-scoped binding, and the {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} egress gateway fetches the Secret and writes the value into an outgoing HTTP header. Where an SDK requires an API key, the runtime receives the inert placeholder `kagent-credential-injected`. A compiled {{< gloss "Revision" >}}revision{{< /gloss >}} therefore records the Secret name, key, destination, and header, and never the credential itself.
 
-To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation needs no recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
+To rotate a credential, update the Secret. The revision records the Secret name and key rather than the value, so a rotation does not require a recompile. The gateway caches what it fetches, so allow a short delay before the new value is in use.
 
 When a request is made to a provider, the gateway puts the credential in the header that the provider expects. The destination is the endpoint that the ModelConfig resolves to.
 
@@ -67,14 +67,14 @@ Substrate matches a destination on the exact DNS hostname, without path, port, o
 
 ### Credentials that do not compile
 
-Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent compiles no revision from it. Any Session that already exists keeps running the last revision that compiled.
+Header injection accepts one shape of credential: a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and kagent does not compile a revision from it. Any Session that already exists keeps running the last revision that compiled.
 
 | Configuration | Why it cannot be injected | What to use instead |
 | ------------- | ------------------------- | ------------------- |
 | `Bedrock` with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` | IAM keys sign each request locally. | A Bedrock bearer token in `AWS_BEARER_TOKEN_BEDROCK`. See [Amazon Bedrock]({{< link path="setup/model-providers/amazon-bedrock" >}}). |
 | `AnthropicVertexAI` and `GeminiVertexAI` | A Google service account key is signed locally to obtain a token, and the `kagent` and `byo` runtimes also mount it as a file. | `Anthropic` or `Bedrock` for Claude models, and `Gemini` for Gemini models. See [Google Vertex AI]({{< link path="setup/model-providers/google-vertexai" >}}). |
 | `SAPAICore` | OAuth2 client credentials are exchanged for a token before any request. | A provider that authenticates with an API key. See [SAP AI Core]({{< link path="setup/model-providers/sap-ai-core" >}}). |
-| A `credentialRef` in a Harness `spec.env` entry | An arbitrary variable names no destination and no header to bind it to. | A ModelConfig or a RemoteMCPServer, each of which carries a destination. See [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}). |
+| A `credentialRef` in a Harness `spec.env` entry | An arbitrary variable does not name a destination or a header to bind it to. | A ModelConfig or a RemoteMCPServer, each of which carries a destination. See [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}). |
 | `openAI.tokenExchange` | The block reads a mounted service account file to acquire a token. | An endpoint that accepts a static API key. See [OpenAI]({{< link path="setup/model-providers/openai" >}}). |
 | `tls.caCertSecretRef`, on any provider | The CA bundle is mounted as a file. | An endpoint whose certificate chains to a public CA. Setting `tls.disableVerify: true` skips certificate verification entirely and belongs only in a test environment. |
 

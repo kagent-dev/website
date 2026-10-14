@@ -72,10 +72,10 @@ Install 1.0 the same way as a first-time installation, with one addition: point 
    | ----- | --- |
    | `database.postgres.connectionStringSecretRef.name=kagent-upgrade-postgres` | Reads the connection string from the Secret that you created. |
    | `database.postgres.connectionStringSecretRef.key=connectionString` | Names the key in the Secret that holds the connection string. |
-   | `database.postgres.role=""` | Uses the database login user directly. If you created a separate role such as `kagent_owner`, set that role name instead. |
-   | `database.postgres.vectorEnabled=true` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. Your database must have the pgvector extension installed. |
+   | `config.database.role=""` | Uses the database login user directly. If you created a separate role such as `kagent_owner`, set that role name instead. |
+   | `config.database.vectorEnabled=true` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. Your database must have the pgvector extension installed. |
 
-   The controller applies migrations at startup. To apply them from a pipeline instead, set `database.postgres.skipMigrations=true` and run `kagent db migrate up` yourself. The controller then verifies the schema and fails if it is not already current. For sizing and connection guidance on the database itself, see [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}).
+   The controller applies migrations at startup. To apply them from a pipeline instead, set `config.database.skipMigrations=true` and run `kagent db migrate up` yourself. The controller then verifies the schema and fails if it is not already current. For sizing and connection guidance on the database itself, see [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}).
 
 3. Verify the schema before continuing.
    ```bash
@@ -143,7 +143,7 @@ Confirm that the resources resolved before you retire anything, because a Harnes
    kubectl get harness -n kagent
    ```
 
-2. Check that each Agent compiled. An AgentTemplate carries no status, so the Agent that pairs it with a Harness is where readiness is reported.
+2. Check that each Agent compiled. An AgentTemplate does not report status, so the Agent that pairs it with a Harness is where readiness is reported.
    ```bash
    kagent agent list
    ```

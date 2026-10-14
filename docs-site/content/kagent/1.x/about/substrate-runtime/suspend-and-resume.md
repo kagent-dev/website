@@ -79,7 +79,7 @@ A suspended Session resumes when the next message arrives for it. The kagent con
 
 Agent Substrate resolves the Actor's address on every request, so the Actor stays reachable at one name no matter which Worker it is placed on. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing#how-traffic-reaches-a-sandboxed-actor" >}}).
 
-Because kagent suspends at every turn boundary, every message to a Session pays for one resume. An idle Session costs no compute, and the next message waits for its Actor to come back.
+Because kagent suspends at every turn boundary, every message to a Session pays for one resume. An idle Session does not consume compute, and the next message waits for its Actor to come back.
 
 <!-- REVIEW (performance reviewer): an earlier draft stated a 100 ms activation target at the ninety-fifth percentile. Its source is the "North Star Metrics" section of the Agent Substrate architecture document, which frames it as a goal the project is aiming at rather than measured behaviour, and lists a target of one billion agents per cluster beside it. Published here it would read as a performance characteristic a customer can expect. Removed pending a decision on whether any activation figure is publishable, and on what it would be measured against for kagent specifically. The same removal is on about/architecture/agent-substrate.md. -->
 

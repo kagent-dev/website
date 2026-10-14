@@ -69,7 +69,7 @@ Only `policies.promptGuard` is new in this example. The routing fields and `poli
 
 2. Set up [agentgateway model routing]({{< link path="setup/model-providers/byo-agentgateway#set-up-agentgateway-model-routing" >}}), which installs agentgateway with `--set agentgatewayModels.enabled=true` and creates a `Gateway` named `agentgateway-proxy` and an `AgentgatewayModel` named `gpt-4o-mini`.
 
-3. Create the [ModelConfig]({{< link path="setup/model-providers/byo-agentgateway#create-the-modelconfig" >}}) that points at the gateway. This example uses a ModelConfig named `agentgateway-model-config` in the `kagent` namespace, and the deployment that it reaches enforces no API key authentication.
+3. Create the [ModelConfig]({{< link path="setup/model-providers/byo-agentgateway#create-the-modelconfig" >}}) that points at the gateway. This example uses a ModelConfig named `agentgateway-model-config` in the `kagent` namespace, and the deployment that it reaches does not enforce API key authentication.
 
 ## Add the prompt guard to the model
 
@@ -153,7 +153,7 @@ Two paths are worth checking in order. Calling the gateway directly isolates the
    The prompt contained personally identifiable information.
    ```
 
-3. To confirm that ordinary traffic still reaches the provider, send a prompt that carries no PII.
+3. To confirm that ordinary traffic still reaches the provider, send a prompt that does not contain PII.
    ```bash
    curl -i http://$AGENTGATEWAY_ADDRESS/v1/chat/completions \
      -H "Content-Type: application/json" \
@@ -219,7 +219,7 @@ Two paths are worth checking in order. Calling the gateway directly isolates the
 > [!CAUTION]
 > **A rejected turn strands the conversation permanently.** An agent is not a single-shot chat client: the {{< gloss "Transcript" >}}transcript{{< /gloss >}} is append-only, and a failed turn does not remove the message that failed. The Session resends the whole conversation on every turn, so the prompt that tripped the guard is sent again, and rejected again, for the rest of that Session's life.
 >
-> The following sequence reproduces it. A fresh Session answers `Summarize the most recent ticket` normally. Send `Summarize the ticket from alex@example.com` next, and that turn fails with the `403`. Then send `What is 2+2?`, which carries no PII of its own: that turn fails with a `403` as well, and so does every turn after it.
+> The following sequence reproduces it. A fresh Session answers `Summarize the most recent ticket` normally. Send `Summarize the ticket from alex@example.com` next, and that turn fails with the `403`. Then send `What is 2+2?`, which does not contain PII of its own: that turn fails with a `403` as well, and so does every turn after it.
 >
 > Creating a new Session is the only way to recover a conversation that a `Reject` guard has stopped. For agents, that cost is the strongest argument for [masking instead](#mask-instead-of-reject).
 
@@ -241,7 +241,7 @@ Masking also repairs a conversation that a `Reject` guard already stopped. Chang
      --task "Summarize this ticket: alex@example.com reports that checkout returns 503 errors during peak hours."
    ```
 
-   The turn succeeds this time. The agent answers, or asks a follow-up question, and the address never reaches the provider. The patch replaces the whole `request` list, so it also drops the `response.message` that the rejection used. A `Mask` guard returns no message, because it rejects nothing.
+   The turn succeeds this time. The agent answers, or asks a follow-up question, and the address never reaches the provider. The patch replaces the whole `request` list, so it also drops the `response.message` that the rejection used. A `Mask` guard does not return a message, because it rejects nothing.
 
 > [!WARNING]
 > **A guard on the response does not inspect streamed content unless you enable it.** Prompt guards default to skipping streaming responses to preserve throughput. Set `policies.promptGuard.streaming: Enabled` to guard them, and note that `Mask` is never applied to a streamed response even then: a guard can reject streamed content, and matched text in a stream that is not rejected passes through unmodified.
@@ -362,7 +362,7 @@ An `AgentgatewayPolicy` holds the same `promptGuard` configuration, and one poli
    kubectl delete agenttemplate support-triage -n kagent
    ```
 
-2. Remove the guard from the model, leaving the routing and the provider credentials in place. The patch names `promptGuard` rather than `policies`, because `policies` also holds the `auth` that lets the gateway reach the provider. A merge patch also succeeds when the model carries no guard, which is the case if you followed [Attach the guard to a route instead](#attach-the-guard-to-a-route-instead).
+2. Remove the guard from the model, leaving the routing and the provider credentials in place. The patch names `promptGuard` rather than `policies`, because `policies` also holds the `auth` that lets the gateway reach the provider. A merge patch also succeeds when the model does not name a guard, which is the case if you followed [Attach the guard to a route instead](#attach-the-guard-to-a-route-instead).
    ```bash
    kubectl patch agentgatewaymodel gpt-4o-mini -n agentgateway-system --type merge -p '{"spec":{"policies":{"promptGuard":null}}}'
    ```

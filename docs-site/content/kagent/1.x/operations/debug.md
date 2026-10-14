@@ -22,7 +22,7 @@ NAME     READY   AGE
 kagent           30h
 ```
 
-The AgentTemplate list view carries no status column either, so a healthy template and a broken one look identical in it.
+The AgentTemplate list view does not include a status column either, so a healthy template and a broken one look identical in it.
 
 ```bash
 kubectl get agenttemplate -n kagent
@@ -65,7 +65,7 @@ When a stage fails, kagent marks that stage `False` with the real reason and mes
 
 **Read the first condition that is `False` and whose reason is not `Blocked`.** Everything after it is a consequence.
 
-In the following example, one missing ModelConfig is the whole problem, and the two conditions after it carry no independent information.
+In the following example, one missing ModelConfig is the whole problem, and the two conditions after it do not add independent information.
 
 ```console
 Harness: kagent
@@ -77,7 +77,7 @@ Harness: kagent
 
 The same entry carries two revision fields that answer a different question. `desiredRevision` is the {{< gloss "Revision" >}}revision{{< /gloss >}} that the current spec should produce, and `latestSuccessfulRevision` is the newest one that finished preparing. A missing `latestSuccessfulRevision` means the template has never been ready, and two differing values mean the newest edit has not prepared yet.
 
-## An AgentTemplate reports no conditions
+## An AgentTemplate does not report conditions
 
 An AgentTemplate that no Harness admits gets no `status.harnesses[]` entry at all, so any command that ranges over that array prints nothing.
 
@@ -106,7 +106,7 @@ Example output:
 {"matchLabels":{"kagent.dev/harness":"kagent"}}
 ```
 
-Add the label that the selector expects, and the conditions appear within seconds.
+If you add the label that the selector expects, the conditions appear within seconds.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -123,7 +123,7 @@ metadata:
 
 ## An agent turn times out
 
-A turn that fails with a timeout reports the same error whatever the underlying cause, so this symptom needs elimination rather than reading.
+A turn that fails with a timeout reports the same error regardless of the underlying cause, so this symptom needs elimination rather than reading.
 
 ```console
 ERROR:
@@ -133,7 +133,7 @@ ERROR:
 
 Work through the causes in this order.
 
-1. **Check that the {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} has ready Workers.** A pool with too few Workers produces exactly this error and logs no capacity message anywhere. To learn how to recognize this problem and size the pool, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
+1. **Check that the {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} has ready Workers.** A pool with too few Workers produces exactly this error and does not log a capacity message anywhere. To learn how to recognize this problem and size the pool, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
    ```bash
    kubectl get workerpools -n kagent
    ```

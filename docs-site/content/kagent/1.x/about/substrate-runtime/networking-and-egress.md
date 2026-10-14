@@ -84,7 +84,7 @@ The gateway caches each Actor's policy rather than fetching it per request, so p
 
 ## Diagnose a denied request
 
-A denied request gives no explanation. The agent sees a rejected call, and its own error text names neither the destination nor the rule that refused it. The gateway records the reason in its log.
+Agent Substrate does not explain why it denied a request. The agent sees a rejected call, and its own error text names neither the destination nor the rule that refused it. The gateway records the reason in its log.
 
 ```bash
 kubectl logs -n ate-system deploy/atenet-egress -c agentgateway --tail=100

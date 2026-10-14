@@ -45,7 +45,7 @@ A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}}'s `sandboxClass` field sets
 
 A **SandboxConfig** is a cluster-scoped resource that describes the runtime files a sandbox class requires to start. The resource stores none of those files. Instead, it records the location that the node agent fetches each file from, keyed by processor architecture. It also names the pause image, which holds the sandbox's namespaces as its root container.
 
-Every ActorTemplate must name a SandboxConfig, and Agent Substrate supplies no name of its own. A template cannot be prepared until the configuration that it names exists in the cluster. Many ActorTemplates can share one SandboxConfig. The runtime version is then pinned in a single place, rather than repeated on every template.
+Every ActorTemplate must name a SandboxConfig, and Agent Substrate does not supply a name of its own. A template cannot be prepared until the configuration that it names exists in the cluster. Many ActorTemplates can share one SandboxConfig. The runtime version is then pinned in a single place, rather than repeated on every template.
 
 A default installation creates one SandboxConfig, named `gvisor-default`. kagent writes this name onto every ActorTemplate that it generates, so each template names it explicitly. The configuration looks like the following:
 
@@ -71,7 +71,7 @@ spec:
 | Field | Description |
 | ----- | ----------- |
 | `sandboxClass` | The sandbox runtime family that this configuration applies to, `gvisor` or `microvm`. An ActorTemplate only uses configurations whose class matches its own, and preparation fails if the two disagree. |
-| `pauseImage` | The image for the root sandbox container, which holds the sandbox's namespaces and runs no workload code. It must be pinned to a digest, because the snapshot manifest records it, and changing the image invalidates the snapshots that were taken with it. |
+| `pauseImage` | The image for the root sandbox container, which holds the sandbox's namespaces and does not run workload code. It must be pinned to a digest, because the snapshot manifest records it, and changing the image invalidates the snapshots that were taken with it. |
 | `assets` | The files that the node agent fetches, keyed first by processor architecture and then by asset name. A `gvisor` class expects one `gvisor` asset, the release archive that the node agent extracts. A `microvm` class expects several, such as `cloud-hypervisor`, `kata-kernel`, and `kata-image`. |
 | `assets.<arch>.<name>.sha256` | The lowercase hex digest of the file. The node agent verifies each download against it, and caches the result under a path that includes the digest, so changing the digest fetches the new asset instead of reusing the cached one. To read the configuration that your own cluster installed, including the pinned digests, run `kubectl get sandboxconfig gvisor-default -o yaml`.|
 
@@ -103,6 +103,6 @@ Agent Substrate creates a Kubernetes NetworkPolicy for each WorkerPool, selectin
 
 That policy governs inbound traffic only. Outbound traffic is governed separately by an egress policy that the gateway enforces on every connection that an Actor opens. That policy is default-deny. An Actor reaches a destination only when a rule allows it, and the gateway denies the connection when no rule does.
 
-kagent derives the egress policy from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, so an agent needs no egress configuration of its own. The destinations it allows come from what the AgentTemplate already names, such as its model provider and its MCP servers. You author neither policy. Agent Substrate owns the ingress policy, and kagent regenerates the egress policy whenever the AgentTemplate changes. For what the policy holds, how a rule is matched, and how to diagnose a denied request, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress" >}}).
+kagent derives the egress policy from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, so an agent does not need egress configuration of its own. The destinations it allows come from what the AgentTemplate already names, such as its model provider and its MCP servers. You author neither policy. Agent Substrate owns the ingress policy, and kagent regenerates the egress policy whenever the AgentTemplate changes. For what the policy holds, how a rule is matched, and how to diagnose a denied request, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress" >}}).
 
 <!-- REVIEW (egress API owner): whether a user can add a destination that the AgentTemplate does not name is unconfirmed, so this section claims no explicit allowlist either way. Confirm current and planned support before stating one. -->

@@ -61,7 +61,7 @@ The `kagent` and `codex` runtimes both raise `ask_user_request`. The `claude` ru
 
 ## Require approval for a tool
 
-An agent pauses for a tool only when its binding asks for that. Set `requireApproval` on an `mcp` tool binding in the AgentTemplate, and the agent stops before each call to a tool that the binding exposes.
+An agent pauses for a tool only when its binding asks for that. If you set `requireApproval` on an `mcp` tool binding in the AgentTemplate, the agent stops before each call to a tool that the binding exposes.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -178,7 +178,7 @@ An `ask_user_request` carries an `id` and a list of `questions`. The response ec
 
 A paused task waits. To resume, the client sends a message on the same task and context, carrying the response payload. kagent rejects a resume attempt on a task that is not waiting, with `task is not waiting for input`.
 
-While the task waits, kagent pauses the {{< gloss "Actor" >}}Actor{{< /gloss >}} rather than suspending it. A pause keeps the running process in a full {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} on node-local storage, so a runtime that holds a live process across the wait, such as `codex` or `claude`, continues the same turn on resume. The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a conversation that sits at `INPUT_REQUIRED` costs no pool capacity. For more information on the suspend that a finished turn uses instead, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
+While the task waits, kagent pauses the {{< gloss "Actor" >}}Actor{{< /gloss >}} rather than suspending it. A pause keeps the running process in a full {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} on node-local storage, so a runtime that holds a live process across the wait, such as `codex` or `claude`, continues the same turn on resume. The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a conversation that sits at `INPUT_REQUIRED` does not consume pool capacity. For more information on the suspend that a finished turn uses instead, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
 Because the {{< gloss "Transcript" >}}transcript{{< /gloss >}} only grows, the question and the answer both stay in the task history, so a later reader can see what was asked and what a person decided.
 

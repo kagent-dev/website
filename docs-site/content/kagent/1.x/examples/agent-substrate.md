@@ -38,7 +38,7 @@ Checkpoints have no kagent CLI commands yet, so this example calls `CheckpointSe
    kubectl ate get actors --atespace kagent
    ```
 
-   Between turns, the Actor reports `ACTOR_STATE_SUSPENDED` and holds no Worker, so the `ATEOM POD` column reads `<none>` and the `ATEOM IP` column is blank. The `VERSION` column is the Actor record's revision counter, which increases each time the record is updated. Example output:
+   Between turns, the Actor reports `ACTOR_STATE_SUSPENDED` and does not hold a Worker, so the `ATEOM POD` column reads `<none>` and the `ATEOM IP` column is blank. The `VERSION` column is the Actor record's revision counter, which increases each time the record is updated. Example output:
    ```console
    ATESPACE   NAME                                      TEMPLATE                                              STATE                   ATEOM POD   ATEOM IP   VERSION   AGE
    kagent     session-0198c3d7-4f2a-7b61-9c3e-5d8f7a2b4e10   kagent/my-first-agent-5f2b3c1a9e8d   ACTOR_STATE_SUSPENDED   <none>                 4         11m
@@ -67,7 +67,7 @@ Checkpoints have no kagent CLI commands yet, so this example calls `CheckpointSe
    kubectl ate get actors --atespace kagent
    ```
 
-   The Actor is back to `ACTOR_STATE_SUSPENDED` and holds no Worker again, at a higher `VERSION` than the listing in step 1. The `NAME` and `AGE` columns confirm that this is the same Actor throughout, rather than a new one per turn. Example output:
+   The Actor is back to `ACTOR_STATE_SUSPENDED` and again does not hold a Worker, at a higher `VERSION` than the listing in step 1. The `NAME` and `AGE` columns confirm that this is the same Actor throughout, rather than a new one per turn. Example output:
    ```console
    ATESPACE   NAME                                      TEMPLATE                                              STATE                   ATEOM POD   ATEOM IP   VERSION   AGE
    kagent     session-0198c3d7-4f2a-7b61-9c3e-5d8f7a2b4e10   kagent/my-first-agent-5f2b3c1a9e8d   ACTOR_STATE_SUSPENDED   <none>                 8         13m
@@ -78,7 +78,7 @@ Checkpoints have no kagent CLI commands yet, so this example calls `CheckpointSe
    kagent agent session list
    ```
 
-   The Session reports `READY`, even though the Actor that runs it holds no Worker. Example output:
+   The Session reports `READY`, even though the Actor that runs it does not hold a Worker. Example output:
    ```console
    +--------------------------------------+----------------+-------+----------------------+
    | ID                                   | AGENT          | STATE | CREATED              |

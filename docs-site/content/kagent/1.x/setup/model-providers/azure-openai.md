@@ -71,7 +71,7 @@ The `azureOpenAI` block takes the following settings. For every field, including
 | Value | What the runtime calls | `azureOpenAI.apiVersion` |
 | ----- | ---------------------- | ------------------------ |
 | `chatCompletions` | The dated deployments path, which addresses `azureDeployment` under a pinned API version. This value is the default. | Required. The API server rejects a ModelConfig that omits it. |
-| `responses` | The Azure Responses API at `<azureEndpoint>/openai/v1/`. This surface takes no dated version. | Omit this field. |
+| `responses` | The Azure Responses API at `<azureEndpoint>/openai/v1/`. This surface does not take a dated version. | Omit this field. |
 
 The following ModelConfig calls the Responses API.
 
@@ -91,6 +91,23 @@ spec:
     apiFormat: responses
     azureDeployment: gpt-4o-mini
 ```
+
+## Send a file to the model
+
+The `responses` format attaches a file to a prompt as a link, or as inline bytes when the file is an image. Azure fetches a link both on the turn that sends it and on every turn that replays the conversation, so a file link must be reachable from Azure for as long as the conversation lives.
+
+A link reaches Azure regardless of its media type. Inline bytes reach Azure only for an image.
+
+| What the message includes | What the runtime sends |
+| ------------------------ | ---------------------- |
+| An `http://` or `https://` link with an `image/` media type | An `input_image` part with the link. |
+| An `http://` or `https://` link with any other media type, such as a PDF | An `input_file` part with the link. |
+| Inline image bytes | An `input_image` part with the bytes as a `data:` URL. |
+| Inline bytes of any other type, such as a PDF or an Office document | Nothing. Azure OpenAI does not take inline bytes outside an image. |
+
+The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. When an older message in the replayed conversation includes one, the runtime replaces the link with a text note that keeps the URL, so a model with a fetch tool can still retrieve the file.
+
+A link attachment with a display name gets an extra text part that reads `File: <name>` that is placed immediately before the file part. Azure rejects a filename beside a file URL, so the name reaches the model as ordinary text.
 
 ## Authentication
 

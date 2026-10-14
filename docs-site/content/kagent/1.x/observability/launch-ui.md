@@ -61,7 +61,7 @@ The UI service is a `ClusterIP` by default, so it is reachable only from inside 
 {{% /tab %}}
 {{< /tabs >}}
 
-The dashboard opens on a summary of what the controller has loaded. A fresh installation reports no agents and no conversations, and already counts the model configuration and the {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that the chart installed.
+The dashboard opens on a summary of what the controller has loaded. A fresh installation counts zero agents and zero conversations, and already counts the model configuration and the {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that the chart installed.
 
 {{< reuse-image-light src="img/kagent-ui-dashboard.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-dashboard-dark.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
@@ -131,7 +131,7 @@ The following limits apply to attachments:
 | gRPC message that the kagent API accepts | 16 MiB | The controller's gRPC server, and every kagent gRPC client. The limit is a compiled-in constant that no Helm value changes. |
 | Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the 16 MiB gRPC message limit. |
 
-The UI falls back to the file extension when the browser reports no media type, or the wrong one, for a file. For example, browsers report no media type for `.md` files.
+The UI falls back to the file extension when the browser does not report a media type for a file, or reports the wrong one. For example, browsers do not report a media type for `.md` files.
 
 If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit, and a default nginx allows only `1m`. Raise the limit as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
 

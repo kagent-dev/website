@@ -7,7 +7,7 @@ author: kagent.dev
 
 The `byo` runtime runs a container image that you build, so long as the image implements kagent's {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) contract. This example takes the shortest path through that contract: build the minimal BYO agent that kagent tests itself against, run it on a {{< gloss "Harness" >}}Harness{{< /gloss >}}, and invoke it.
 
-The agent that you build here calls no model and binds no tools. It answers every message with a fixed string, which makes it a poor agent and a clear demonstration: everything that happens between `kagent agent invoke` and that reply is kagent's half of the contract. To review the contract and the configured agents that read their AgentTemplate instead of ignoring it, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
+The agent that you build here does not call a model or bind tools. It answers every message with a fixed string, which makes it a poor agent and a clear demonstration: everything that happens between `kagent agent invoke` and that reply is kagent's half of the contract. To review the contract and the configured agents that read their AgentTemplate instead of ignoring it, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
 
 ## Before you begin
 
@@ -90,7 +90,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
    ```
 
    > [!NOTE]
-   > This Harness sets no `KAGENT_PORT` variable, because `byoa2a/main.go` pins `Port: "80"` in the image. An image that leaves the port to kagent listens on the wrong one and still reports `READY`. For that trap and its workaround, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
+   > This Harness does not set a port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that neither reads `runtime.port` nor defaults to `80` listens on the wrong port and still reports `READY`. For that trap, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
 
 2. Create the AgentTemplate and an Agent that pairs it with the Harness. `description` is the only field that this template needs.
    ```yaml
@@ -119,7 +119,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
 
    `modelConfig` is absent on purpose. kagent requires one for the `kagent` runtime and treats it as optional for `byo`, because a BYO image chooses its own model, or no model at all.
 
-3. Confirm that the Agent compiled. An AgentTemplate carries no status, so the Agent reports the state of the pair.
+3. Confirm that the Agent compiled. An AgentTemplate does not report status, so the Agent reports the state of the pair.
    ```bash
    kubectl get agent byo-example-agent -n kagent \
      -o jsonpath='{.status.conditions[*].type}{"\n"}{.status.conditions[*].status}{"\n"}'
@@ -196,9 +196,24 @@ func (executor) Cancel(context.Context, *a2asrv.ExecutorContext) iter.Seq2[a2aty
 
 Two events make a complete turn. `NewSubmittedTask` acknowledges the message and opens the task, and a `TaskStateCompleted` status update carrying an agent message ends it. Between them, a real agent yields whatever its work produces.
 
-`app.New` serves the A2A gRPC service and the readiness endpoint on your behalf, and the `Port: "80"` line keeps the listener where kagent expects it. Both stay as they are in an agent of your own.
+`main` sets the rest up. `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`, `config.LoadAgentConfig` reads the document back, and `ProcessConfig` returns its `runtime` object. `app.New` then serves the A2A gRPC service and the readiness endpoint on your behalf.
 
-To read the AgentTemplate rather than ignore it, parse the `KAGENT_CONFIG_JSON` variable that kagent sets on the container. For what that variable holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
+```go
+compiled, err := config.LoadAgentConfig("/config/config.json")
+runtime := compiled.ProcessConfig()
+
+application, err := app.New(app.AppConfig{
+	ControlPlaneURL: runtime.ControlPlaneURL,
+	AgentCard:       a2atype.AgentCard{Name: "opaque-byo", Version: "v1", Capabilities: a2atype.AgentCapabilities{Streaming: true}},
+	Port:            cmp.Or(runtime.Port, "80"),
+	AppName:         cmp.Or(runtime.Name, "opaque-byo"),
+	Logger:          logger,
+}, executor{})
+```
+
+`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
+
+This agent ignores the rest of the compiled configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what it holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
 
 ## Build and run your own agent
 
@@ -213,7 +228,7 @@ An agent of your own takes the same path as the example image, with two differen
    docker push $DOCKER_REGISTRY/kagent-dev/kagent/my-agent:v1
    ```
 
-   That Dockerfile copies `api`, `core`, `adk`, `harness`, and `pkg` from the kagent module, so it suits an agent written inside a checkout. An agent in a module of your own needs a Dockerfile of your own. kagent places no requirement on how the image is built, only on what it serves.
+   That Dockerfile copies `api`, `core`, `adk`, `harness`, and `pkg` from the kagent module, so it suits an agent written inside a checkout. An agent in a module of your own needs a Dockerfile of your own. kagent constrains what the image serves rather than how you build it.
 
 3. Resolve the digest of the new image, as in [Build the agent image](#build-the-agent-image). A Harness rejects an image that names only a tag.
    ```bash

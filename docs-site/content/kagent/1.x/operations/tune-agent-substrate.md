@@ -11,11 +11,11 @@ This single Worker reports capacity for 1000 Actors, so a default pool serves ma
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `controller.grpc.reflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 
 2. Confirm that you have administrative access to the cluster, because this guide scales WorkerPools and reads cluster-scoped resources.
 
-3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). `GetSubstrateStatus` has no kubectl or kagent command equivalent, so calling it directly is the only way to see the full runtime state.
+3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). No kubectl or kagent command covers `GetSubstrateStatus`. Calling it directly is the only way to see the full runtime state.
 
 ## Inspect the runtime
 
@@ -84,7 +84,7 @@ A {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts many Actors at the same time,
 
 Each Worker reports an Actor capacity when it starts, fixed by the Worker build rather than by a field on the WorkerPool. The gVisor and micro-VM Workers that Agent Substrate ships both report a capacity of 1000 Actors, and no setting raises or lowers it.
 
-Agent Substrate checks this capacity on every placement. It weighs a Worker's spare CPU and memory only when the ActorTemplate states how much CPU and memory one Actor needs. An ActorTemplate that the kagent controller compiles states no per-Actor CPU or memory, so a pool places a Session's Actor on a Worker's available slots alone, regardless of how loaded the Worker's node already is. Worker resource limits still matter, because they govern how Kubernetes packs Workers onto nodes.
+Agent Substrate checks this capacity on every placement. It weighs a Worker's spare CPU and memory only when the ActorTemplate states how much CPU and memory one Actor needs. An ActorTemplate that the kagent controller compiles does not state per-Actor CPU or memory, so a pool places a Session's Actor on a Worker's available slots alone, regardless of how loaded the Worker's node already is. Worker resource limits still matter, because they govern how Kubernetes packs Workers onto nodes.
 
 Size the pool for the number of turns that run at the same time, not for the number of Agents or Sessions that you have created. A cluster with hundreds of Sessions that are each used occasionally needs far fewer Workers than the session count suggests.
 
@@ -103,7 +103,7 @@ substrateWorkerPool:
 
 ### Recognize an undersized pool
 
-Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use. A placement that finds no suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure, so it carries no error type and raises no alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
+Agent Substrate reports pool capacity through its metrics rather than through an error that reaches the caller. Each Worker publishes a state of `idle`, `partial`, `at_capacity`, or `unschedulable`, which together show how much of a pool is in use. A placement that does not find a suitable Worker records a `no_capacity` outcome. Agent Substrate treats this outcome as a normal result rather than a failure. It does not set an error type, and it does not raise an alert on its own. Watch the share of Workers at `at_capacity` and the rate of `no_capacity` placements to tell a pool that is merely busy from one that is too small.
 
 None of those signals reach the caller. A turn that cannot get a Worker waits for one, and a turn that waits too long fails with a generic timeout that names neither capacity nor the pool.
 
@@ -117,7 +117,7 @@ Because short turns release their capacity quickly, a pool under mild pressure a
 
 ### Set resource requests on Workers
 
-Generated Worker pods carry no resource requests or limits unless you supply them, and the effect on scheduling is easy to miss.
+Generated Worker pods do not set resource requests or limits unless you supply them, and the effect on scheduling is easy to miss.
 
 A Worker with no limits reports its node's entire allocatable capacity as its own. Every Worker on that node reports the same figures, so Agent Substrate cannot use resource capacity to place Actors, and Kubernetes cannot stop you from packing more Workers onto a node than it can carry. Set requests and limits on any pool that carries production traffic.
 
@@ -155,11 +155,11 @@ substrateWorkerPool:
 | `substrateWorkerPool.serviceAccount.create` | Whether the chart creates the Worker ServiceAccount. Defaults to `true`. Set it to `false` to use an account that you manage yourself. |
 | `substrateWorkerPool.serviceAccount.name` | The ServiceAccount that Worker pods run as. Omit it to use the pool name. |
 
-The chart writes `serviceAccountName` into the pool's pod template. A `serviceAccountName` that you set under `substrateWorkerPool.template` is overwritten rather than merged, so set the account through `substrateWorkerPool.serviceAccount.name`.
+The chart writes `serviceAccountName` into the pool's pod template. A `serviceAccountName` that you set under `substrateWorkerPool.template` is overwritten rather than merged. Set the account through `substrateWorkerPool.serviceAccount.name`.
 
 ### Keep placement scoped to the pool's namespace {#workerpool-placement-labels}
 
-kagent selects a WorkerPool by name and namespace when it compiles an ActorTemplate, and the generated ActorTemplate matches Workers on the `kagent.dev/worker-pool-name` and `kagent.dev/worker-pool-namespace` labels. Agent Substrate matches those labels across every pool rather than checking the WorkerPool's namespace, so a pool that carries only the name label can be selected from another namespace.
+kagent selects a WorkerPool by name and namespace when it compiles an ActorTemplate, and the generated ActorTemplate matches Workers on the `kagent.dev/worker-pool-name` and `kagent.dev/worker-pool-namespace` labels. Agent Substrate matches those labels across every pool rather than checking the WorkerPool's namespace. A pool that sets only the name label can therefore be selected from another namespace.
 
 The chart sets both labels from the pool's name and namespace, and applies them after `substrateWorkerPool.labels`. An extra label that reuses either key is overwritten rather than honored.
 
@@ -170,7 +170,7 @@ substrateWorkerPool:
     environment: production
 ```
 
-A pool that you manage outside the chart carries no labels of its own. Set both keys yourself, and match each value to the pool's name and namespace.
+kagent does not label a pool that you manage outside the chart. Set both keys yourself, and match each value to the pool's name and namespace.
 
 ```yaml
 apiVersion: ate.dev/v1alpha1
@@ -186,7 +186,7 @@ spec:
   workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
 ```
 
-Earlier releases placed Actors with a single `kagent.dev/worker-pool` label, and the chart no longer sets it. A Session or Sandbox that is pinned to a revision from one of those releases still selects that key, so keep the old label on the pool until you recreate them.
+Earlier releases placed Actors with a single `kagent.dev/worker-pool` label, and the chart no longer sets it. A Session or Sandbox that is pinned to a revision from one of those releases still selects that key. Keep the old label on the pool until you recreate them.
 
 ```yaml
 substrateWorkerPool:
@@ -210,7 +210,7 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 ### Move snapshots to an external bucket
 
-1. Turn the bundled store off and select the backend in your Agent Substrate Helm values. Setting `atelet.storageBackend` to `s3` selects the S3 client, and setting it to `gcs` selects Google Cloud Storage. Agent Substrate matches only the `s3` value, so every other value, an empty one included, selects Google Cloud Storage.
+1. Turn the bundled store off and select the backend in your Agent Substrate Helm values. Setting `atelet.storageBackend` to `s3` selects the S3 client, and setting it to `gcs` selects Google Cloud Storage. Agent Substrate matches only the `s3` value. Every other value, an empty one included, selects Google Cloud Storage.
 
    ```yaml
    rustfs:
@@ -221,7 +221,7 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 2. Supply the credentials that your backend needs. Setting `rustfs.enabled` to `false` stops the chart from setting the `AWS_*` variables, so neither component receives an endpoint or a key from Helm. Each storage client reads its credentials from the pod's own environment instead.
 
-   - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through [Workload Identity Federation for GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart renders no Helm value for Google credentials, so set nothing further.
+   - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through [Workload Identity Federation for GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart does not render a Helm value for Google credentials. Set nothing further.
    - For Amazon S3, the client reads the standard AWS environment and uses a role that the pod assumes. No static key is needed.
    - For an S3-compatible store, pass two variables and the static credentials through `atelet.extraEnv`. `AWS_ENDPOINT_URL` names the store's API endpoint, which the client otherwise resolves to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname, which most S3-compatible stores require.
 
@@ -265,7 +265,7 @@ Reading these variables off a running pod helps when a snapshot fails to write. 
 
 ### Snapshot layout in the bucket
 
-Agent Substrate builds a path per Actor under the Harness prefix, so one bucket serves many Harnesses without collision. The `<actor-uid>` segment is the Actor's `metadata.uid`, not the `actorId` that `GetSubstrateStatus` reports. Both values are UUIDs, so read `latestSnapshot` off the Actor rather than matching a path to an Actor by eye.
+Agent Substrate builds a path per Actor under the Harness prefix, so one bucket serves many Harnesses without collision. The `<actor-uid>` segment is the Actor's `metadata.uid`, not the `actorId` that `GetSubstrateStatus` reports. Both values are UUIDs. Read `latestSnapshot` off the Actor rather than matching a path to an Actor by eye.
 
 ```console
 s3://ate-snapshots/kagent/atespaces/<atespace>/actors/<actor-uid>/snapshots/<snapshot-uid>

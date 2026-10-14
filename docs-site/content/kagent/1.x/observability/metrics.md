@@ -17,11 +17,13 @@ The controller serves its metrics over HTTPS, and accepts a scrape only from a S
 controller:
   metrics:
     enabled: true
+config:
+  metrics:
     bindAddress: ":8443"
-    secureServing: true
+    secure: true
 ```
 
-Change the port through `bindAddress` rather than through `controller.env`, because the chart derives the Service `targetPort` and the pod `containerPort` from `bindAddress` at template time. Overriding `KAGENT_METRICS_BIND_ADDRESS` directly moves the listener and leaves the Service pointing at the old port.
+These two sections divide the listener from its Kubernetes packaging. `config.metrics` sets the address that the controller binds and whether it serves over HTTPS. `controller.metrics` creates the Service, the ClusterRoles, and the optional ServiceMonitor. Setting `controller.metrics.enabled` to `false` overrides `config.metrics.bindAddress` with `0`, which disables the listener as well. Change the port through `config.metrics.bindAddress`, because the chart derives the Service `targetPort` and the pod `containerPort` from it at template time.
 
 Grant your Prometheus instance access in one of the following ways.
 
@@ -40,14 +42,14 @@ Besides the standard Go runtime and process metrics, the controller reports the 
 | `workqueue_depth`, `workqueue_queue_duration_seconds`, `workqueue_retries_total` | Gauge, histogram, counter | Work waiting for a reconciler, how long it waits, and how often it is retried. |
 | `leader_election_master_status` | Gauge | `1` on the controller replica that holds the leader lease. With several replicas, exactly one reports `1`. |
 | `rest_client_requests_total` | Counter | Requests from the controller to the Kubernetes API server, by status code. |
-| `kagent_runtime_revision_gc_pending` | Gauge | Runtime revisions that the last successful discovery found eligible for cleanup. The controller reports a cached count, so a scrape costs no database or network call. The metric is absent until a discovery succeeds, and `0` reports a discovery that matched nothing. A failed discovery holds the previous value rather than clearing it. |
+| `kagent_runtime_revision_gc_pending` | Gauge | Runtime revisions that the last successful discovery found eligible for cleanup. The controller reports a cached count, so a scrape does not make a database or network call. The metric is absent until a discovery succeeds, and `0` reports a discovery that matched nothing. A failed discovery holds the previous value rather than clearing it. |
 | `kagent_runtime_revision_gc_duration_seconds` | Histogram | Time that one revision cleanup attempt takes, by the `kagent_gc_stage` label: `discovery` or `collection`. A `collection` attempt covers the database claim, the Agent Substrate read and deletion, and the database finalization. A failed attempt carries an `error_type` label holding a gRPC status code name, or `_OTHER` for every other failure, so the series that carry the label give both the failure rate and the reason. |
 
 The Agent Substrate `atecontroller` component reports the same `controller_runtime_*` and `workqueue_*` metrics for its own reconcilers. To keep the two apart in a query, filter by the scrape job, such as `job="kagent-controller-metrics"` in the OTel stack.
 
 ## Agent runtime metrics
 
-Agent runtimes export metrics over OTLP when the kagent Helm release sets `otel.metrics.enabled` to `true`. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
+When the kagent Helm release sets an endpoint in `config.runtimeDefaults.telemetry.metrics`, agent runtimes export metrics over OTLP. The `claude` and `codex` runtimes are the only ones that report the histogram in this section. The stack guides convert these OpenTelemetry metrics to Prometheus names in the collector.
 
 | Metric | Type | Measures |
 | ------ | ---- | -------- |

@@ -153,7 +153,7 @@ The Agent Substrate API server, `ateapi`, writes an `Actor state changed` record
 | `resuming` | A turn woke the Actor, and a Worker is restoring it. |
 | `running` | The Actor is on a Worker and can serve the turn. |
 | `suspending` | The turn ended, and the Actor is writing its snapshot. |
-| `suspended` | The snapshot is written, and the Actor holds no Worker. |
+| `suspended` | The snapshot is written, and the Actor does not hold a Worker. |
 | `deleting`, `deleted` | The Session was deleted. `deleted` is the last record that an Actor gets. |
 
 `ateapi` runs more than one replica, and each replica writes only the changes that it handles. Read the logs of every replica.

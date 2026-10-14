@@ -29,12 +29,12 @@ Every call on the Session API carries a principal. An authenticator resolves one
 
 ### Controller authentication modes
 
-The `controller.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it, because browser sign-in and controller authentication are separate boundaries. To authenticate both, enable oauth2-proxy and set `controller.auth.mode` to `trusted-proxy`.
+The `config.server.auth.mode` Helm value selects which authenticator the controller installs. The chart defaults to `insecure`, and enabling the bundled oauth2-proxy does not change it, because browser sign-in and controller authentication are separate boundaries. To authenticate both, enable oauth2-proxy and set `config.server.auth.mode` to `trusted-proxy`.
 
 | Mode | How a principal is resolved |
 | ---- | --------------------------- |
 | `insecure` | Every request is admitted. The caller's identity is read from the `X-User-Id` header, or from a `user_id` query parameter that takes precedence over it. A caller that supplies neither is named `admin@kagent.dev`. |
-| `trusted-proxy` | The request must carry a bearer token in the `Authorization` header. The identity comes from the claim that `controller.auth.userIdClaim` names, defaulting to `sub`. A missing custom claim falls back to `sub`, and a request with no identity is rejected. |
+| `trusted-proxy` | The request must carry a bearer token in the `Authorization` header. The identity comes from the claim that `config.server.auth.userIdClaim` names, defaulting to `sub`. A missing custom claim falls back to `sub`, and a request with no identity is rejected. |
 
 Any other value fails controller startup rather than falling back to a default.
 
@@ -51,7 +51,7 @@ Authorization is separate from both modes. kagent installs an authorizer that pe
 kagent's gRPC API reaches the same resources by a second path. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The authenticator above resolves the caller instead.
 
 > [!WARNING]
-> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, whatever their Kubernetes permissions are. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
+> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's runtime and behavior, regardless of their Kubernetes permissions. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
 
 ### Creator ownership
 
@@ -71,9 +71,9 @@ A share carries one of two permissions.
 - **`READ_ONLY`**: The holder can read the conversation. kagent refuses any call that is not a read before the request reaches the service.
 - **`READ_WRITE`**: The holder can also send messages to the Session.
 
-A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime, which starts when the share is created. Once that lifetime ends, the token grants no access and a token lookup returns not found. The owner still sees the expired share in `ListSessionShares` and can revoke it.
+A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime, which starts when the share is created. Once that lifetime ends, the token does not grant access, and a token lookup returns not found. The owner still sees the expired share in `ListSessionShares` and can revoke it.
 
-The returned `SessionShare.expiresAt` field records when the token stops granting access. Omit `ttl` and `expiresAt` stays unset. The share then stays valid until it is revoked or the Session is deleted. An operator caps share lifetimes with `controller.sessionShareMaxTTL`. For more information, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
+The returned `SessionShare.expiresAt` field records when the token stops granting access. Omit `ttl` and `expiresAt` stays unset. The share then stays valid until it is revoked or the Session is deleted. An operator caps share lifetimes with `config.sessions.shareMaxTtl`. For more information, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
 A share widens what the holder can reach to what the owner can see, and the underlying record is read as the owner rather than as the visitor. Revoking the share withdraws that access.
 

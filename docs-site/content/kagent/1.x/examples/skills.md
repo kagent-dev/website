@@ -32,7 +32,7 @@ On a `kagent` Harness, attaching a skill adds seven tools to the agent, whether 
 | `edit_file` | Replaces an exact string in a file that the agent has already read. |
 | `bash` | Runs a shell command in the session directory `/tmp/kagent/<session-id>/`. Commands time out after 30 seconds. |
 
-Two further tools are available but off by default. Set `KAGENT_ENABLE_FILE_SEARCH_TOOLS` to `true` on the agent's env to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. Both are confined to the same skills and session roots as `read_file`. They stay opt-in because they give an agent broad visibility of the filesystem, and they are how an agent keeps that visibility when a deployment disables `bash`.
+Two further tools are available but off by default. Set the `config.runtimeDefaults.fileSearchTools` Helm value to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. The setting applies to every agent in the installation, because a Harness has no per-agent equivalent. Both are confined to the same skills and session roots as `read_file`. They stay opt-in because they give an agent broad visibility of the filesystem, and they are how an agent keeps that visibility when a deployment disables `bash`.
 
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 

@@ -81,7 +81,7 @@ Choose the tab that matches how your agentgateway deployment authenticates calle
 
 {{< tabs >}}
 {{% tab name="No authentication" %}}
-When your agentgateway deployment enforces no API key authentication, the ModelConfig needs no Secret.
+When your agentgateway deployment does not enforce API key authentication, the ModelConfig does not need a Secret.
 
 ```yaml
 kubectl apply -f - <<EOF
