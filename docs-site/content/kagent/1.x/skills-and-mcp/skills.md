@@ -5,19 +5,19 @@ weight: 20
 author: kagent.dev
 ---
 
-A **{{< gloss "Skill" >}}skill{{< /gloss >}}** packages a piece of know-how that an agent can pick up: a set of instructions, together with whatever scripts or reference files those instructions depend on. An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} attaches skills by naming where each one comes from, and kagent fetches them and places them where the agent runtime can find them.
+A **{{< gloss "Skill" >}}skill{{< /gloss >}}** packages a piece of know-how that an agent can pick up: a set of instructions, together with whatever scripts, command-line tools, or reference files those instructions depend on. You attach a skill to an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} by specifying where it comes from, and kagent fetches it and places it where the agent can find it.
 
 ## About
 
 A skill is a directory whose root holds a `SKILL.md` file. That file carries front matter naming the skill and describing what it is for, followed by the instructions themselves.
 
-The description makes a skill usable. When an agent starts, the runtime reads the front matter of every skill that is attached to it, and offers those skills to the model as tools that it can call. The model chooses a skill from its description, in the same way that it chooses any other tool. This means that a description that states plainly when to use the skill matters more than the length of the instructions behind it.
+The description makes a skill usable. When an agent starts, it reads the front matter of every skill that is attached to it. The agent then offers those skills to the model as tools that the model can call. The model chooses a skill from its description in the same way that it chooses any other tool. A description that states plainly when to use the skill therefore matters more than the length of the instructions behind it.
 
-A skill can be published on its own, or bundled with other skills in a [plugin package]({{< link path="skills-and-mcp/plugins" >}}), which can also declare {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that kagent adds to the agent's [tools]({{< link path="skills-and-mcp/about-tools" >}}).
+A skill can be published on its own, or bundled with other skills in a {{< gloss "Plugin" >}}plugin{{< /gloss >}}. For what a plugin contains and how to attach one, see [Plugins]({{< link path="skills-and-mcp/plugins" >}}).
 
 ## Attach skills to an AgentTemplate
 
-An AgentTemplate attaches skills in two ways, and it can use both at once. Use `spec.skills` for a standalone skill, and `spec.plugins` for a {{< gloss "Plugin package" >}}plugin package{{< /gloss >}}.
+Use `spec.skills` to attach a standalone skill. Each entry gives the skill a name and an immutable source to fetch it from.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -33,39 +33,21 @@ spec:
     - name: incident-triage
       source:
         oci: registry.example.com/skills/incident-triage@sha256:<digest>
-  plugins:
-    - source:
-        git:
-          url: https://github.com/example/agent-plugins
-          commit: <full-commit-id>
-        path: bundles/observability
-      skills:
-        - log-search
-        - runbook-lookup
 ```
 
 | Field | Description |
 | ----- | ----------- |
 | `skills[].name` | The name that the skill is mounted under, and the name that the model sees. |
-| `skills[].source` | The location to fetch this one skill from. The source root must hold a `SKILL.md` file. |
-| `plugins[].source` | The location to fetch the plugin package from. The source root must hold a `plugin.json` manifest. |
-| `plugins[].skills` | The names of the skills inside that package to enable. Omit or leave empty to enable none. |
+| `skills[].source` | The location to fetch this one skill from. The source root must contain a `SKILL.md` file. |
 | `source.path` | The directory to select inside the artifact, when the content is not at its root. The path must be relative, and it cannot climb out of the artifact with `..` segments. |
 
-### Plugin allowlist
-
-Attaching a plugin package does not enable any of the skills that it carries. Only the names listed in `plugins[].skills` are enabled.
-
-> [!IMPORTANT]
-> An empty skills list enables nothing. Adding a plugin package and omitting its `skills` list gives the agent no skills from that package, which is the safe default rather than an error. Listing skills explicitly also means that a package gaining new skills in a later version does not silently grant them to your agent.
+One AgentTemplate accepts up to 50 standalone skills. To give an agent the skills that a plugin contains, [use `spec.plugins` instead]({{< link path="skills-and-mcp/plugins#attach-a-plugin-to-an-agenttemplate" >}}). An AgentTemplate can use both fields at once.
 
 {{< reuse "kagent-docs/snippets/artifact-sources.md" >}}
 
 ## Naming rules
 
-Skill names are checked before anything is fetched, and two rules apply across every skill on an AgentTemplate.
+kagent checks skill names before it fetches anything. These rules apply to every skill on an AgentTemplate, whether the skill is standalone or comes from a plugin.
 
 - A name must be a single path component. A name containing a slash, or a name of `.` or `..`, is rejected.
-- Names must be unique across the whole AgentTemplate. Because standalone skills and plugin skills are mounted into the same place, a standalone skill cannot reuse the name of an enabled plugin skill, and two plugin packages cannot both contribute the same name.
-
-Plugin package names must also be unique. Two entries in `plugins` whose manifests declare the same name are rejected. Unlike skill names, kagent checks this as each package is fetched, because the name comes from the package's `plugin.json` manifest rather than from your AgentTemplate.
+- Names must be unique across the whole AgentTemplate. Because standalone skills and plugin skills are mounted into the same place, a standalone skill cannot reuse the name of an enabled plugin skill, and two plugins cannot both contribute the same name.

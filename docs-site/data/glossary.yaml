@@ -111,15 +111,15 @@ Transcript:
   short: "The record of a Session's conversation, held server-side and append-only. It survives the Actor suspending between turns, and a resumed runtime cannot shrink it."
 
 Skill:
-  short: "A packaged piece of know-how that an agent can pick up: a directory holding a SKILL.md file of instructions, plus any scripts or reference files those instructions use. An AgentTemplate attaches skills by naming where each one comes from."
+  short: "A packaged piece of know-how that an agent can pick up: a directory holding a SKILL.md file of instructions, plus any scripts, command-line tools, or reference files those instructions use. You attach a skill to an AgentTemplate by specifying where it comes from."
   link: "/docs/kagent/1.x/skills-and-mcp/skills/"
 
-Plugin package:
-  short: "A bundle that an AgentTemplate attaches with spec.plugins, carrying skills and optionally declaring Model Context Protocol servers. Packages follow the Agent Plugins format, which kagent consumes rather than defines."
+Plugin:
+  short: "A bundle that an AgentTemplate attaches with spec.plugins. A plugin carries skills and can also declare Model Context Protocol servers. Plugins follow the Agent Plugins specification."
   link: "/docs/kagent/1.x/skills-and-mcp/plugins/"
 
 Tool binding:
-  short: "One entry in an AgentTemplate's spec.tools list. Each binding selects exactly one source: tools from a Model Context Protocol server, or another AgentTemplate used as a tool."
+  short: "One entry in an AgentTemplate's spec.tools list. Each binding connects the agent to one source: tools from a Model Context Protocol server, or another agent that takes work from it."
   link: "/docs/kagent/1.x/skills-and-mcp/about-tools/"
 
 Model Context Protocol:

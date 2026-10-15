@@ -7,11 +7,11 @@ author: kagent.dev
 
 A {{< gloss "Skill" >}}skill{{< /gloss >}} packages know-how that an agent picks up at run time: a `SKILL.md` file of instructions, together with the scripts and reference files those instructions depend on. This example builds a skill that turns raw commit subjects into release notes, publishes it as an OCI image, and attaches it to an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
 
-For the fields that attach a skill and the rules that govern their names, see [Skills]({{< link path="skills-and-mcp/skills" >}}). For the format of a multi-skill package, see [Plugins]({{< link path="skills-and-mcp/plugins" >}}).
+For the fields that attach a skill and the rules that govern their names, see [Skills]({{< link path="skills-and-mcp/skills" >}}). For the format of a plugin, see [Plugins]({{< link path="skills-and-mcp/plugins" >}}).
 
 ## About skills at run time
 
-kagent does not fetch a skill when you apply an AgentTemplate. The compiled revision records where each skill comes from, and the {{< gloss "Actor" >}}Actor{{< /gloss >}} fetches it when the agent starts. Every artifact is unpacked under `/plugins`, whether it holds one skill or a package of them, and each enabled skill is then copied to `/skills/<skill-name>`. The agent reads skills only from `/skills`.
+kagent does not fetch a skill when you apply an AgentTemplate. The compiled revision records where each skill comes from, and the {{< gloss "Actor" >}}Actor{{< /gloss >}} fetches it when the agent starts. Every artifact is unpacked under `/plugins`, whether it contains a single skill or a plugin, and each enabled skill is then copied to `/skills/<skill-name>`. The agent reads skills only from `/skills`.
 
 Because kagent fetches a skill this late, review the following considerations.
 
@@ -265,11 +265,11 @@ A source is immutable, so changing a skill is a two-step change: publish new con
 
 4. Create a new Session. Conversations that are already running keep the skill content they started with, because their revision is pinned.
 
-## Bundle the skill in a plugin package
+## Bundle the skill in a plugin
 
-A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin package{{< /gloss >}} carries several skills, and an AgentTemplate attaches the package once and names the skills it wants. Use a package when you ship a set of skills together, or when you want the same artifact to contribute [MCP servers]({{< link path="skills-and-mcp/plugins" >}}) as well.
+While a standalone source carries one skill, a {{< gloss "Plugin" >}}plugin{{< /gloss >}} contains multiple skills. An AgentTemplate attaches the plugin once and lists the skills that it wants. Use a plugin when you ship a set of skills together, or when you want the same artifact to contribute [MCP servers]({{< link path="skills-and-mcp/plugins#mcp-servers" >}}) as well.
 
-1. Restructure the directory so that each skill sits under `skills/`, and add the manifest that makes it a package.
+1. Restructure the directory so that each skill sits under `skills/`, and add the manifest that makes it a plugin.
    ```bash
    cd ..
    mkdir -p release-tools/skills
@@ -286,7 +286,7 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
    > [!NOTE]
    > kagent compares the `$schema` value literally and rejects anything else, so copy it exactly. Of the remaining manifest fields, kagent reads only `name`.
 
-2. Build and push the package, and read its digest. A package image is built the same way as a single skill, from `scratch`, so that the package root is the image root.
+2. Build and push the plugin, and read its digest. A plugin image is built in the same way as a single skill from `scratch`, so that the plugin root is the image root.
    ```bash
    export PLUGIN_REPO=ghcr.io/<your-org>/release-tools
    mv skills/release-notes/Dockerfile .
@@ -294,7 +294,7 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
    export PLUGIN_OCI="$PLUGIN_REPO@$(docker buildx imagetools inspect --format '{{.Manifest.Digest}}' "$PLUGIN_REPO:1.0.0")"
    ```
 
-3. Attach the package with `plugins` instead of `skills`, and list the skills to enable.
+3. Attach the plugin with `plugins` instead of `skills`, and list the skills to enable.
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -316,7 +316,7 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
    ```
 
    > [!IMPORTANT]
-   > A package enables only the skills that you list. If you omit `plugins[].skills`, or leave it empty, the agent gets none of them, and kagent accepts that rather than reporting an error. For why an explicit list is the safer default, see [Skills]({{< link path="skills-and-mcp/skills" >}}).
+   > A plugin enables only the skills that you list. If you omit `plugins[].skills`, or leave it empty, the agent gets none of them, and kagent accepts an empty list rather than reporting an error. For why an explicit list is the safer default, see [Plugins]({{< link path="skills-and-mcp/plugins#skill-allowlist" >}}).
 
 4. Create a Session on the new revision, and confirm that the agent still has the skill. The session from the previous section is pinned to the revision that carried the standalone skill.
    ```bash
@@ -324,16 +324,16 @@ A standalone source carries one skill. A {{< gloss "Plugin package" >}}plugin pa
    kagent agent invoke --session $PLUGIN_SESSION_ID --task "What skills do you have?"
    ```
 
-   The agent reports `release-notes` exactly as before. A skill behaves the same whether it arrives on its own or inside a package, because kagent copies both into `/skills` before the agent starts.
+   The agent reports `release-notes` exactly as before. A skill behaves the same whether it arrives on its own or inside a plugin, because kagent copies both into `/skills` before the agent starts.
 
 ## Troubleshoot a skill that does not load
 
-A skill that kagent cannot fetch stops the agent from starting at all, rather than producing an agent without that skill. The runtime logs the failure and exits, and the AgentTemplate never becomes ready.
+A skill that kagent cannot fetch stops the agent from starting at all, rather than producing an agent without that skill. The agent logs the failure and exits, and the Agent never becomes ready.
 
-1. Check the AgentTemplate's `Ready` condition. A skill that cannot be fetched leaves it waiting, because the Actor that builds the template's golden snapshot is the Actor that fetches the skill.
+1. Check the Agent's `Ready` condition. A skill that cannot be fetched leaves the Agent waiting, because the Actor that builds the golden snapshot is the Actor that fetches the skill.
    ```bash
-   kubectl get agenttemplate <template-name> -n kagent \
-     -o jsonpath='{range .status.harnesses[0].conditions[?(@.type=="Ready")]}{.status} {.reason} {.message}{end}'
+   kubectl get agent <agent-name> -n kagent \
+     -o jsonpath='{range .status.conditions[?(@.type=="Ready")]}{.status} {.reason} {.message}{end}'
    ```
 
    Example output:
@@ -344,7 +344,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
    > [!NOTE]
    > This condition does not name the skill, and reports the same reason for any Actor that has not yet produced a snapshot. An agent that is merely still starting looks identical to one whose skill cannot be fetched.
 
-2. Find the WorkerPool that the Harness runs on, and read its Workers' logs. The Actor writes the failure there rather than to the AgentTemplate.
+2. Find the WorkerPool that the Harness runs on, and read its Workers' logs. The Actor writes the failure there rather than to the Agent.
    ```bash
    export WORKER_POOL=$(kubectl get harness my-first-harness -n kagent \
      -o jsonpath='{.spec.substrate.workerPoolRef.name}')
@@ -367,14 +367,14 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
    | `pull <image>: ... x509` or a TLS error | The registry does not serve HTTPS with a certificate the runtime trusts. |
    | `SKILL.md is required` | The artifact was fetched, but no `SKILL.md` file sits at the root that `source.path` selects. |
    | `symlink "..." escapes artifact root` | A symlink in the artifact points outside it. |
-   | `artifact contains more than 10000 filesystem entries`, or `artifact exceeds 104857600 bytes` | The artifact is over one of the package limits. |
+   | `artifact contains more than 10000 filesystem entries`, or `artifact exceeds 104857600 bytes` | The artifact is over one of the plugin limits. |
 
 > [!TIP]
 > Build the skill image with `--platform` set to the architecture of your worker nodes. kagent asks the registry for the `linux/amd64` or `linux/arm64` manifest that matches the node it runs on, so an image published for one architecture alone fails on the other.
 
 ## Clean up
 
-1. Delete the Sessions that you created. Deleting the Agent does not remove them. Skip the second command if you did not complete the plugin package section.
+1. Delete the Sessions that you created. Deleting the Agent does not remove them. Skip the second command if you did not complete the plugin section.
    ```bash
    kagent agent session delete $SESSION_ID
    kagent agent session delete $PLUGIN_SESSION_ID
@@ -386,7 +386,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
    kubectl delete agenttemplate release-writer -n kagent
    ```
 
-3. Remove the skill directory from your machine. The directory is `release-notes`, or `release-tools` if you completed the plugin package section.
+3. Remove the skill directory from your machine. The directory is `release-notes`, or `release-tools` if you completed the plugin section.
    ```bash
    cd ..
    rm -rf release-notes release-tools
@@ -397,7 +397,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="skills-and-mcp/plugins" >}}` title="Plugins" subtitle="Bundle several skills, and MCP servers, into one package that an AgentTemplate attaches at once." >}}
+  {{< card link=`{{< link path="skills-and-mcp/plugins" >}}` title="Plugins" subtitle="Bundle several skills, and MCP servers, into one plugin that an AgentTemplate attaches at once." >}}
   {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Read the full set of skill fields, source kinds, and naming rules." >}}
   {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Give the same agent a tool from an MCP server alongside its skills." >}}
 {{< /cards >}}

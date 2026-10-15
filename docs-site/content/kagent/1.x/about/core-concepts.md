@@ -169,9 +169,9 @@ Each Actor runs in its own sandbox, with its own filesystem and its own durable 
 
 An agent tool binding can point at another AgentTemplate instead of an MCP server, so a broad-scope agent can hand part of a task to a specialist. For example, a release agent delegates a database question to another agent, gets the answer, and carries on. The specialist keeps its own prompt and its own tools, and the conversation stays with the agent that the caller addressed.
 
-Each subagent binding sets `tools[].subAgent.templateRef` to name an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting does not create a second Actor. A subagent does not need an Agent of its own or a matching Harness reference.
+Each subagent binding sets `tools[].subAgent.templateRef` to reference an AgentTemplate in the same namespace. The named template compiles under the parent Agent's Harness and runs inside the parent's Actor, so the two agents share one sandbox and the nesting does not create a second Actor. A subagent does not need an Agent of its own or a matching Harness reference.
 
-Because a subagent runs inside its parent's runtime boundary, nesting stops at one level, and a bound template cannot bind a third. Every agent therefore runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must satisfy, see [What a subagent tree allows]({{< link path="skills-and-mcp/about-tools#what-a-subagent-tree-allows" >}}).
+Because a subagent runs inside its parent's runtime boundary, nesting stops at one level, and a bound template cannot bind a third. Every agent therefore runs either in its own Actor or in the Actor of the agent that bound it, never deeper. For the remaining rules that a tree must meet, see [Subagent tree rules]({{< link path="skills-and-mcp/about-tools#subagent-tree-rules" >}}).
 
 > [!NOTE]
-> Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor and reach it over A2A, are not part of the served API. The `subAgent.agentRef` field that would select one is deferred until a dedicated subagent can create and invoke its own Session.
+> Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor and reach it over A2A, are not part of the served API. The `subAgent.agentRef` field that would select one is unavailable.
