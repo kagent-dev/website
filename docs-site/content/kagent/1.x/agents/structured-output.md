@@ -5,7 +5,7 @@ weight: 35
 author: kagent.dev
 ---
 
-An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it builds a {{< gloss "Revision" >}}revision{{< /gloss >}} for an {{< gloss "Agent" >}}Agent{{< /gloss >}}. The revision records the schema and its digest. A schema that fails the checks stops the revision from compiling, so an Agent that has never been ready cannot start a {{< gloss "Session" >}}Session{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} can require that its final answer is JSON matching a schema. {{< reuse "kagent-docs/snippets/name-product.md" >}} checks the schema when it builds a {{< gloss "Revision" >}}revision{{< /gloss >}} for an {{< gloss "Agent" >}}Agent{{< /gloss >}}. The revision records the schema and its digest. kagent does not build a revision from a schema that fails the checks, so an Agent that has never been ready cannot start a {{< gloss "Session" >}}Session{{< /gloss >}}. At runtime, the agent validates its complete answer against the recorded schema before it publishes the answer.
 
 The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec.outputSchemaFrom`. The fields are mutually exclusive. An AgentTemplate that sets both is rejected when you apply it, with the message `outputSchema and outputSchemaFrom are mutually exclusive`. If you omit both fields, the agent's final answer is not constrained.
 
@@ -19,7 +19,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 
 1. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-harness` Harness and the `default-model-config` {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that the AgentTemplates in this guide use. That guide also has you install the kagent CLI and `jq`.
 
-   Structured output needs a Harness that uses the `kagent` harness with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` block and the same `workload.image` as `my-first-harness`. On the `codex`, `claude`, or `byo` harness, an Agent whose template sets a schema is rejected with `Harness runtime "<name>" does not support structured output`. For the differences between runtimes, see [Agent harness]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+   Structured output needs a Harness resource that selects the `kagent` harness with the `golang-adk` image, as `my-first-harness` does. For a Harness of your own, use the `kagent` block and the same `workload.image` as `my-first-harness`. On the `codex`, `claude`, or `byo` harness, an Agent whose template sets a schema is rejected with `Harness runtime "<name>" does not support structured output`. For the differences between harnesses, see [Choose a harness]({{< link path="agents/agent-harness#choose-a-harness" >}}).
 
 2. Check your kagent CLI version. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI. A CLI from another release can fail with `unknown command`.
    ```bash
@@ -300,7 +300,7 @@ For example, if the `shared-schemas` ConfigMap no longer has the `arithmetic-ans
 If the Agent has never been ready, `kagent agent session create` fails with `Agent does not have a ready prepared revision`.
 
 > [!WARNING]
-> A Session keeps the revision that it was created from, and validates its answers against that revision's schema. After you change a schema, create a new Session to use it. A changed schema that fails to compile does not stop new Sessions from starting. They start from the Agent's latest ready revision, which `status.latestSuccessfulRevision` reports, so they use the previous schema.
+> A Session keeps the revision that it was created from, and validates its answers against that revision's schema. After you change a schema, create a new Session to use it. A changed schema that fails the checks does not stop new Sessions from starting. They start from the Agent's latest ready revision, which `status.latestSuccessfulRevision` reports, so they use the previous schema.
 
 A change to a ConfigMap does not change the AgentTemplate's `metadata.generation`, so check each condition's `lastTransitionTime` to tell whether kagent has seen your fix.
 

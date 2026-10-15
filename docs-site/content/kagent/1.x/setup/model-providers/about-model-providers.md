@@ -15,7 +15,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use.<ul><li>Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`.</li><li>Defaults to `OpenAI`.</li><li>`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` are rejected on every runtime.</li></ul>For more information, see [Credentials that kagent rejects](#credentials-that-do-not-compile). |
+| `provider` | The provider to use.<ul><li>Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`.</li><li>Defaults to `OpenAI`.</li><li>`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` are rejected on every harness.</li></ul>For more information, see [Credentials that kagent rejects](#credentials-that-do-not-compile). |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
@@ -81,7 +81,7 @@ Header injection accepts one shape of credential, a static string. A credential 
 | Configuration | Why it cannot be injected | What to use instead |
 | ------------- | ------------------------- | ------------------- |
 | `Bedrock` with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` | IAM keys sign each request locally. | A Bedrock bearer token in `AWS_BEARER_TOKEN_BEDROCK`. See [Amazon Bedrock]({{< link path="setup/model-providers/amazon-bedrock" >}}). |
-| `AnthropicVertexAI` and `GeminiVertexAI` | A Google service account key is signed locally to obtain a token, and the `kagent` and `byo` runtimes also mount it as a file. | `Anthropic` or `Bedrock` for Claude models, and `Gemini` for Gemini models. See [Google Vertex AI]({{< link path="setup/model-providers/google-vertexai" >}}). |
+| `AnthropicVertexAI` and `GeminiVertexAI` | A Google service account key is signed locally to obtain a token, and the `kagent` and `byo` harnesses also mount it as a file. | `Anthropic` or `Bedrock` for Claude models, and `Gemini` for Gemini models. See [Google Vertex AI]({{< link path="setup/model-providers/google-vertexai" >}}). |
 | `SAPAICore` | OAuth2 client credentials are exchanged for a token before any request. | A provider that authenticates with an API key. See [SAP AI Core]({{< link path="setup/model-providers/sap-ai-core" >}}). |
 | A `credentialRef` in a Harness `spec.env` entry | An arbitrary variable does not name a destination or a header to bind it to. | A ModelConfig or a RemoteMCPServer, each of which carries a destination. See [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}). |
 | `openAI.tokenExchange` | The block reads a mounted service account file to acquire a token. | An endpoint that accepts a static API key. See [OpenAI]({{< link path="setup/model-providers/openai" >}}). |
@@ -91,17 +91,17 @@ A rejected credential reports one of two messages. A credential that cannot be i
 
 The `Ollama` provider is unaffected when it points at a local daemon, which authenticates with no credential. An Ollama Cloud model reaches `api.ollama.com` with an API key, and that key is injected as a header like any other. For when a model routes to the cloud, see [Ollama]({{< link path="setup/model-providers/ollama" >}}).
 
-## Runtime provider support
+## Provider support by harness
 
-The runtime that a {{< gloss "Harness" >}}Harness{{< /gloss >}} selects constrains which providers an agent can use, because each runtime integrates a different set.
+The harness that a {{< gloss "Harness" >}}Harness{{< /gloss >}} resource selects constrains which providers an agent can use, because each harness integrates a different set.
 
-- The **`kagent`** runtime integrates every provider, and the **`byo`** runtime integrates the same set, because kagent builds a revision for both runtimes in the same way.
-- The **`codex`** runtime integrates only `OpenAI` and `Bedrock`.
-- The **`claude`** runtime integrates only `Anthropic` and `Bedrock`.
+- The **`kagent`** harness integrates every provider, and the **`byo`** harness integrates the same set, because kagent builds a revision for both harnesses in the same way.
+- The **`codex`** harness integrates only `OpenAI` and `Bedrock`.
+- The **`claude`** harness integrates only `Anthropic` and `Bedrock`.
 
-A provider is available only when the runtime integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` runtimes integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent rejects a ModelConfig that names any of the three on every runtime. For the alternatives, see [Credentials that kagent rejects](#credentials-that-do-not-compile).
+A provider is available only when the harness integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` harnesses integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent rejects a ModelConfig that names any of the three on every harness. For the alternatives, see [Credentials that kagent rejects](#credentials-that-do-not-compile).
 
-Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings that it takes. When a ModelConfig names a provider that its runtime does not integrate, the Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
+Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings that it takes. When a ModelConfig names a provider that its harness does not integrate, the Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
 
 For the full matrix, including the per-combination restrictions, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 

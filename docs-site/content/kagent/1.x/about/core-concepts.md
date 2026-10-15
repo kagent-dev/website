@@ -14,7 +14,7 @@ author: kagent.dev
 
 The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 
-- A [**Harness**](#harness) defines how an agent is allowed to run. It picks a harness and the infrastructure policy around it.
+- A [**Harness**](#harness) resource defines how an agent is allowed to run. It names the harness that executes the agent, and the infrastructure policy around it.
 - An [**AgentTemplate**](#agenttemplate) defines what an agent can do: its model, prompt, and tools.
 - An [**Agent**](#agent) pairs one AgentTemplate with one Harness. Callers address the Agent, and the controller compiles it.
 - A [**Session**](#session) is a running conversation with an Agent.
@@ -64,7 +64,7 @@ Examples include [Claude Code](https://code.claude.com/docs/en/how-claude-code-w
 A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 
 - **Execution**: What runs the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`. `kagent` runs kagent's own agent engine, `codex` runs Codex, `claude` runs Claude, and `byo` runs any image that exposes kagent's A2A contract. Each accepts different model providers and different AgentTemplate features.
-- **Workload**: The container image, command, and arguments that the harness runs as.
+- **Workload**: The container image, command, and arguments that the agent process runs as.
 - **Environment**: Literal environment values for the agent process, set in `spec.env`.
 - **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. The Harness names a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) to schedule onto and the storage location that snapshots write to.
 

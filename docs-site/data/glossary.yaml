@@ -69,7 +69,7 @@ AgentTemplate:
   link: "/docs/kagent/1.x/about/core-concepts/#agenttemplate"
 
 Harness:
-  short: "A Kubernetes custom resource defining how an agent is allowed to run: which of the four harnesses executes it, its workload image, and its WorkerPool and snapshot storage. An Agent pairs it with the AgentTemplate that it runs."
+  short: "A Kubernetes custom resource defining how an agent is allowed to run: which harness executes the agent, its workload image, and its WorkerPool and snapshot storage. An Agent pairs it with the AgentTemplate that it runs."
   link: "/docs/kagent/1.x/about/core-concepts/#harness"
 
 Worker:

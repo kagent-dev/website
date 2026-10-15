@@ -55,7 +55,7 @@ For the fields that every Harness shares, such as the workload image and the Age
 
 ## Apply a complete declarative agent
 
-The following example applies a declarative agent end to end, from the ModelConfig to the Agent that runs it. The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) guide creates.
+The following example applies a declarative agent end to end, from the ModelConfig to the Agent that runs it. The ModelConfig reads its API key from the `kagent-openai` Secret that the [OpenAI]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) guide creates. `spec.kagent` is an empty object because memory and compaction are both optional.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -110,7 +110,13 @@ spec:
 EOF
 ```
 
-`spec.kagent` is an empty object in this example, because memory and compaction are both optional. The agent runs without them.
+To confirm that the Agent is ready, run the following command. In the output, `READY` reports whether kagent built and prepared a {{< gloss "Revision" >}}revision{{< /gloss >}} for the pair.
+
+```bash
+kagent agent get my-agent
+```
+
+A `READY` value of `False` immediately after you apply the Agent is expected, because kagent builds a snapshot of the agent before it reports the Agent ready. If `READY` stays `False`, read the conditions on the Agent to find the stage that failed, asdescribed in [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}). To start a conversation with the agent, see [Create a Session]({{< link path="get-started/your-first-agent#create-a-session" >}}).
 
 ## Next steps
 

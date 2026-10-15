@@ -11,7 +11,7 @@ This page covers the Harness schema, the four options that a Harness can select,
 
 ## Configure a Harness
 
-The following configuration shows a complete Harness. Only `workload`, `substrate`, and one harness block are required.
+The following configuration shows a complete Harness resource. Only `workload`, `substrate`, and one harness block are required.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -238,7 +238,7 @@ EOF
 
 ## Model provider support
 
-The harness that an agent runs on decides which ModelConfig it can use. The following table covers every value that the ModelConfig `provider` field accepts, including the three that no runtime accepts with a credential Secret.
+The harness that an agent runs on decides which ModelConfig it can use. The following table covers every value that the ModelConfig `provider` field accepts, including the three that no harness accepts with a credential Secret.
 
 | Provider | `kagent` | `byo` | `codex` | `claude` |
 | -------- | :------: | :---: | :-----: | :------: |
@@ -272,7 +272,7 @@ Some supported combinations still carry restrictions.
 
 ## Tool and skill support
 
-The `kagent` harness accepts every AgentTemplate feature. Codex and Claude run agentic loops of their own, so each constrains what an AgentTemplate can ask for. The `byo` harness takes the same set as the built-in runtime, apart from structured output.
+The `kagent` harness accepts every AgentTemplate feature. Codex and Claude run agentic loops of their own, so each constrains what an AgentTemplate can ask for. The `byo` harness takes the same set as the `kagent` harness, apart from structured output.
 
 | Constraint | Applies to |
 | ---------- | ---------- |
@@ -304,7 +304,7 @@ Each setting reaches a different set of harnesses, and `maxCaptureBytes` bounds 
 | `config.runtimeDefaults.telemetry.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `captureContent` does, and it takes effect only when you set the logs endpoint. | `claude` |
 | `config.runtimeDefaults.telemetry.maxCaptureBytes` | The budget for each captured prompt or reply, in bytes. Defaults to `16384`, with a maximum of `65536`. | `codex`, `claude` |
 
-These settings are the installation's default. To change the capture decision for one Harness, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in that Harness's `spec.env` field. The `kagent`, `codex`, and `claude` runtimes all read the variable and apply it in place of the installation default. Set `SPAN_ONLY` to put prompts and replies on spans, or `NO_CONTENT` to turn capture off.
+These settings are the installation's default. To change the capture decision for one Harness, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in that Harness's `spec.env` field. The `kagent`, `codex`, and `claude` harnesses all read the variable and apply it in place of the installation default. Set `SPAN_ONLY` to put prompts and replies on spans, or `NO_CONTENT` to turn capture off.
 
 A `byo` image receives the same variable whenever any signal is enabled, but whether the image acts on it depends on its own instrumentation. An image that exports to its own backend continues to do so. For more information, see [Tracing]({{< link path="observability/tracing#about-trace-coverage" >}}).
 
