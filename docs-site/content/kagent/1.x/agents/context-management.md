@@ -1,15 +1,15 @@
 ---
 title: Context management
 description: Summarize older session events so an agent's prompt stays bounded as a conversation grows, with two strategies configured on the Harness.
-weight: 35
+weight: 40
 author: kagent.dev
 ---
 
 An agent's prompt grows with the conversation: every message, tool call, and tool result accumulates, and long sessions eventually exceed the model's context window or degrade answer quality. Context compaction solves that by summarizing older session events so the prompt stays bounded while the agent keeps enough recent context to stay coherent.
 
-Compaction is configured on the {{< gloss "Harness" >}}Harness{{< /gloss >}}, not on the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. It is a property of the runner that drives the root agent, so it is runtime policy rather than portable agent behavior. This is the same Harness-versus-AgentTemplate split that [agent memory]({{< link path="agents/agent-memory" >}}) follows. An AgentTemplate cannot enable, disable, or tune compaction on its own.
+This page applies to [declarative agents]({{< link path="agents/declarative-agents" >}}), which run on the `kagent` harness. Compaction is a `spec.kagent` setting, so a Harness that selects `codex`, `claude`, or `byo` does not take compaction settings. Omitting the `compaction` block leaves the history uncompacted.
 
-Compaction is a `spec.kagent` setting, so it applies to the **kagent runtime only**. A Harness that selects `codex`, `claude`, or `byo` has no compaction settings. Omitting the `compaction` block leaves the history uncompacted.
+Compaction is configured on the {{< gloss "Harness" >}}Harness{{< /gloss >}}, not on the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The setting belongs to the runner that drives the root agent, which makes compaction harness policy rather than portable agent behavior. This is the same Harness-versus-AgentTemplate split that [agent memory]({{< link path="agents/agent-memory" >}}) follows. An AgentTemplate cannot enable, disable, or tune compaction on its own.
 
 Two strategies ship, and both are configured on the same field:
 
@@ -18,7 +18,7 @@ Two strategies ship, and both are configured on the same field:
 
 ## Configure compaction
 
-The following manifest enables both strategies on a Harness that already selects the kagent runtime. The `compaction` block is the only change; the rest of the Harness is unchanged.
+The following manifest enables both strategies on a Harness that already selects the `kagent` harness. The `compaction` block is the only change. The rest of the Harness is unchanged.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -57,7 +57,7 @@ spec:
       location: s3://ate-snapshots/kagent/
 ```
 
-`Harness.spec.kagent.compaction` is the only field this page owns. The field-by-field schema — types, defaults, and validation rules — lives in the generated [API reference]({{< link path="reference/api-ref#kagentharnesscompaction" >}}); the complete Harness schema, including `workload`, `substrate`, and the runtime selection, lives on [Agent harness]({{< link path="agents/agent-harness" >}}).
+`Harness.spec.kagent.compaction` is the only field this page owns. The generated [API reference]({{< link path="reference/api-ref#kagentharnesscompaction" >}}) carries the field-by-field schema, with types, defaults, and validation rules. [Agent harness]({{< link path="agents/agent-harness" >}}) carries the complete Harness schema, including `workload`, `substrate`, and the harness selection.
 
 The table below lists the compaction fields and their requirements:
 
@@ -81,21 +81,19 @@ These are CEL validations on the CRD, so a manifest that breaks one is rejected 
 
 ## Summarizer model and revisions
 
-The summarizer model resolves the same way the agent's own model does: its config lands in the compiled revision, its credentials and egress join the revision, and it joins the provenance. Changing the summarizer model therefore compiles a new revision for every {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses the Harness.
+The summarizer model resolves in the same way as the agent's own model: its config lands in the revision, its credentials and egress join the revision, and it joins the provenance. Changing the summarizer model therefore builds a new revision for every {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses the Harness. A {{< gloss "Session" >}}Session{{< /gloss >}} that is already running keeps summarizing with the model that it started with.
 
-Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantically a no-op for that AgentTemplate, because the runtime already summarizes with that model by default. The setting applies to every Agent that uses the Harness, so templates that use a different model summarize with the named one instead. It is not free, though. Revision IDs are not content hashes, so any change to the spec recompiles the revision, semantically identical or not, and setting this field carries that revision cost.
-
-These are the same {{< gloss "Revision" >}}revision{{< /gloss >}} mechanics the rest of the Harness configuration follows — the value is compiled in, not read at request time.
+Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantically a no-op for that AgentTemplate, because the runtime already summarizes by using that model by default. The setting applies to every Agent that uses the Harness, so templates that use a different model summarize with the named one instead. Setting the field still builds a new revision. A {{< gloss "Revision" >}}revision{{< /gloss >}} ID is a digest of the inputs that kagent resolved, and those inputs include each source resource's `metadata.generation`. Editing the Harness bumps that generation regardless of whether or not the result differs.
 
 ## Verify the configuration
 
-If the summarizer names a ModelConfig that does not exist in the Harness namespace, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm the Agent compiled before relying on compaction:
+If the summarizer names a ModelConfig that does not exist in the Harness namespace, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm that the Agent is ready before relying on compaction:
 
 ```bash
 kagent agent get <agent-name>
 ```
 
-`READY` reports whether kagent compiled and prepared a runtime revision. If `READY` stays `False`, inspect the Agent's conditions to find the failing reference:
+`READY` reports whether kagent built and prepared a revision. If `READY` stays `False`, inspect the Agent's conditions to find the failing reference:
 
 ```bash
 kubectl get agent <agent-name> -n kagent -o jsonpath='{.status.conditions}' | jq
@@ -106,7 +104,7 @@ For more information, see [Your first agent]({{< link path="get-started/your-fir
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Configure the rest of the Harness that compaction is enabled on." >}}
+  {{< card link=`{{< link path="agents/declarative-agents" >}}` title="Declarative agents" subtitle="Configure the rest of the kagent harness that compaction is enabled on." >}}
   {{< card link=`{{< link path="agents/agent-memory" >}}` title="Agent memory" subtitle="Give agents on this Harness memory that outlasts a single conversation." >}}
   {{< card link=`{{< link path="reference/api-ref#kagentharnesscompaction" >}}` title="API reference" subtitle="Field-by-field schema for Harness.spec.kagent.compaction." >}}
 {{< /cards >}}

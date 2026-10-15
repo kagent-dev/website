@@ -58,7 +58,7 @@ Your Kubernetes resources do carry forward, so export them before anything repla
 
 ## Install kagent 1.0
 
-Install 1.0 the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure installs Agent Substrate, kagent, and the identity material that they need.
+Install 1.0 in the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure installs Agent Substrate, kagent, and the identity material that they need.
 
 1. Store the connection string for the empty database in a Secret in the new cluster.
    ```bash

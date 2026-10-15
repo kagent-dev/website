@@ -14,7 +14,7 @@ author: kagent.dev
 
 The new model separates what an agent can do from how it is allowed to run, and then names the pairing explicitly:
 
-- A [**Harness**](#harness) defines how an agent is allowed to run. It picks a runtime and the infrastructure policy around it.
+- A [**Harness**](#harness) defines how an agent is allowed to run. It picks a harness and the infrastructure policy around it.
 - An [**AgentTemplate**](#agenttemplate) defines what an agent can do: its model, prompt, and tools.
 - An [**Agent**](#agent) pairs one AgentTemplate with one Harness. Callers address the Agent, and the controller compiles it.
 - A [**Session**](#session) is a running conversation with an Agent.
@@ -63,14 +63,14 @@ Examples include [Claude Code](https://code.claude.com/docs/en/how-claude-code-w
 
 A **Harness** in kagent is a Kubernetes custom resource that applies that idea to a cluster. It defines _how an agent is allowed to run_, and specifies:
 
-- **Runtime**: The engine that executes the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`. `kagent` runs kagent's own agent engine, `codex` runs Codex, `claude` runs Claude, and `byo` runs any image that implements kagent's A2A contract. The four runtimes accept different model providers and different AgentTemplate features.
-- **Workload**: The container image, command, and arguments that the runtime runs as.
-- **Environment**: Literal environment values for the runtime, set in `spec.env`.
+- **Execution**: What runs the agent. A Harness selects exactly one of `kagent`, `codex`, `claude`, or `byo`. `kagent` runs kagent's own agent engine, `codex` runs Codex, `claude` runs Claude, and `byo` runs any image that exposes kagent's A2A contract. Each accepts different model providers and different AgentTemplate features.
+- **Workload**: The container image, command, and arguments that the harness runs as.
+- **Environment**: Literal environment values for the agent process, set in `spec.env`.
 - **Substrate policy**: The capacity that the agent runs on, and where its state is kept when it goes idle. The Harness names a [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) to schedule onto and the storage location that snapshots write to.
 
 A Harness and an AgentTemplate do not reference each other. An [Agent](#agent) references both, and nothing pairs them implicitly. Applying a Harness runs nothing on its own. It registers a runtime and policy that an Agent can select.
 
-Each runtime accepts a different subset of configuration, and an Agent that asks for something its runtime cannot do reports a compatibility condition rather than running. For the per-runtime restrictions and the complete Harness schema, see the [API reference]({{< link path="reference/api-ref#harness" >}}).
+Each harness accepts a different subset of configuration, and an Agent that asks for something its harness cannot do reports a compatibility condition rather than running. For the per-harness restrictions and the complete Harness schema, see the [API reference]({{< link path="reference/api-ref#harness" >}}).
 
 > [!IMPORTANT]
 > This `Harness` is unrelated to 0.x's `AgentHarness` resource, which provisions OpenClaw or Hermes coding-agent sandboxes. `Harness` is a different resource that covers how any agent is allowed to run, not a renamed or expanded version of `AgentHarness`.
@@ -110,7 +110,7 @@ spec:
     name: kagent
 ```
 
-The Agent owns readiness. Its status reports the desired revision, the latest revision that compiled and prepared successfully, any non-blocking compatibility warnings, and the `Accepted`, `ResolvedRefs`, `Compatible`, and `Ready` conditions. An AgentTemplate and a Harness are shared configuration and do not report runtime status of their own.
+The Agent owns readiness. Its status reports the desired revision, the latest revision that was built and prepared successfully, any non-blocking compatibility warnings, and the `Accepted`, `ResolvedRefs`, `Compatible`, and `Ready` conditions. An AgentTemplate and a Harness are shared configuration and do not report runtime status of their own.
 
 Deleting an Agent retires its definition. Existing Sessions keep the revisions that they pinned. Recreating an Agent under the same name creates a new identity, which cannot inherit the deleted Agent's last successful revision.
 
