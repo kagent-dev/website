@@ -7,7 +7,7 @@ author: kagent.dev
 
 A Harness defines how an agent is allowed to run. It names what executes the agent, the container image to start from, and the Agent Substrate capacity and snapshot storage that the agent runs on. A Harness runs nothing by itself. To run an agent, create an Agent that references a Harness and an AgentTemplate, which supplies the system prompt, the model, and the tools.
 
-This page covers the Harness schema, the four options that a Harness can select, and what each one supports. For the concept and how it relates to the other resources, see the [core concepts]({{< link path="about/core-concepts#harness" >}}).
+This page covers the Harness schema, the four harnesses, and what each one supports. For the concept and how it relates to the other resources, see the [core concepts]({{< link path="about/core-concepts#harness" >}}).
 
 ## Configure a Harness
 
@@ -40,7 +40,7 @@ EOF
 
 | Field | Required | Description |
 | ----- | -------- | ----------- |
-| One of `kagent`, `codex`, `claude`, `byo` | Yes | The harness that executes the agent. Naming none, or more than one, is rejected. For the four available, see [Choose a harness](#choose-a-harness). |
+| One of `kagent`, `codex`, `claude`, `byo` | Yes | The harness that executes the agent. Naming none, or more than one, is rejected. To compare the four harnesses, see [Choose a harness](#choose-a-harness). |
 | `workload.image` | Yes | The container image to run, pinned by `sha256` digest. A tag with no digest is rejected, because a revision must be reproducible. |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` harness, optional otherwise. Every harness honors an explicit value, the `kagent` harness included, regardless of the language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
@@ -54,7 +54,7 @@ The image, command, arguments, environment, and resolved AgentTemplate together 
 
 ## Choose a harness
 
-A Harness names exactly one of the following four options, and that choice decides what executes an agent and how much of kagent's feature set the agent can use.
+A Harness resource names exactly one of the following four harnesses, and that choice decides what executes an agent and how much of kagent's feature set the agent can use.
 
 | Harness | What it runs | When to use it |
 | ------- | ------------ | ----------- |
@@ -63,7 +63,7 @@ A Harness names exactly one of the following four options, and that choice decid
 | `claude` | Claude | You want Claude to do the work, with Anthropic or Bedrock as the model. |
 | `byo` | A container image of your own that implements kagent's A2A contract | You already have an agent that is built with an agent framework, and you want to run that agent in kagent. For more information, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}). |
 
-The harnesses differ in two ways that decide what an agent running on them can do. They accept different model providers, which [Model provider support](#model-provider-support) lists, and they accept different AgentTemplate features, which [Tool and skill support](#tool-and-skill-support) lists.
+The harnesses accept different model providers, which [Model provider support](#model-provider-support) lists, and they accept different AgentTemplate features, which [Tool and skill support](#tool-and-skill-support) lists.
 
 The agent chat in the kagent UI offers file attachments only on the `kagent` harness. An agent on a `byo`, `codex`, or `claude` Harness cannot attach files in the chat. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
 
@@ -254,7 +254,7 @@ The harness that an agent runs on decides which ModelConfig it can use. The foll
 | `GeminiVertexAI` | ❌ | ❌ | ❌ | ❌ |
 | `SAPAICore` | ❌ | ❌ | ❌ | ❌ |
 
-kagent reaches a model provider through the egress gateway, which holds the credential and adds it to each request as an HTTP header. The three rejected providers authenticate in a way that this design cannot serve:
+kagent reaches a model provider through the egress gateway, which holds the credential and adds it to each request as an HTTP header. However, the following providers authenticate in a way that this design cannot serve:
 
 * `AnthropicVertexAI` and `GeminiVertexAI` authenticate with a Google service account key, which kagent would have to mount as a file. An Actor does not take volumes, so a ModelConfig that names a credential Secret is rejected with `ModelConfig requires volume mounts unsupported by Substrate ActorTemplate`.
 * `SAPAICore` authenticates with an OAuth client ID and secret, which the runtime exchanges for a token itself. A ModelConfig that names a credential Secret is rejected with `environment credential "<name>" cannot use gateway header injection`.
@@ -277,7 +277,7 @@ The `kagent` harness accepts every AgentTemplate feature. Codex and Claude run a
 | Constraint | Applies to |
 | ---------- | ---------- |
 | A subagent binding cannot itself carry tools, skills, plugins, or nested agents, and must use the same provider and credentials as the agent that binds it. | `codex`, `claude` |
-| An {{< gloss "MCP" >}}MCP{{< /gloss >}} server is bound whole. Claude does not support partial tool selection, so the agent sees every tool that the server offers. The Agent still reconciles, and reports the decision in `status.warnings` as `Claude RemoteMCPServer "<name>" does not support partial tool selection`. | `claude` |
+| The agent sees every tool that an {{< gloss "MCP" >}}MCP{{< /gloss >}} server offers, because Claude does not support partial tool selection. A binding that names a subset of tools binds the whole server instead. The Agent still reconciles, and reports the decision in `status.warnings` as `Claude RemoteMCPServer "<name>" does not support partial tool selection`. | `claude` |
 | A RemoteMCPServer must use the `STREAMABLE_HTTP` protocol. `SSE` is rejected. | `codex` |
 | Structured output is rejected, with `Harness runtime "<name>" does not support structured output`. | `codex`, `claude`, `byo` |
 
@@ -386,7 +386,7 @@ The following conditions report the three stages that an Agent passes through.
 | `Compatible` | Whether the harness accepts the resolved configuration. A rejected model provider, a reserved environment variable, and an unsupported AgentTemplate feature all fail here. |
 | `Ready` | Whether Agent Substrate finished preparing the agent's capacity. |
 
-An Agent can also reconcile and still report a non-blocking decision in `status.warnings`, such as Claude binding an MCP server whole. For the conditions in full, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+An Agent can also reconcile and still report a non-blocking decision in `status.warnings`, such as Claude binding every tool on an MCP server. For the conditions in full, see [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Next steps
 

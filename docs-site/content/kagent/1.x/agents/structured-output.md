@@ -324,5 +324,5 @@ A change to a ConfigMap does not change the AgentTemplate's `metadata.generation
 
 {{< cards >}}
   {{< card link=`{{< link path="agents/system-prompts" >}}` title="System prompts" subtitle="Tell the agent what to put in the fields that the schema requires." >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the four options that a Harness can select." >}}
+  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the four harnesses and what each one supports." >}}
 {{< /cards >}}

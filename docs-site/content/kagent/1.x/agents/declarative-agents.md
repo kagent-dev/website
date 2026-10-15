@@ -123,6 +123,6 @@ A `READY` value of `False` immediately after you apply the Agent is expected, be
 {{< cards >}}
   {{< card link=`{{< link path="agents/system-prompts" >}}` title="System prompts" subtitle="Write the instruction that shapes what a declarative agent does." >}}
   {{< card link=`{{< link path="skills-and-mcp/about-tools" >}}` title="About tools" subtitle="Bind the tools that the agent can call." >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the kagent harness against the three other ways to run an agent." >}}
+  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the kagent harness against the other three." >}}
   {{< card link=`{{< link path="agents/bring-your-own-agent" >}}` title="Bring your own agent" subtitle="Run an agent that you built yourself, on your own container image." >}}
 {{< /cards >}}

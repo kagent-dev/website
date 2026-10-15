@@ -9,7 +9,7 @@ An agent's prompt grows with the conversation: every message, tool call, and too
 
 This page applies to [declarative agents]({{< link path="agents/declarative-agents" >}}), which run on the `kagent` harness. Compaction is a `spec.kagent` setting, so a Harness that selects `codex`, `claude`, or `byo` does not take compaction settings. Omitting the `compaction` block leaves the history uncompacted.
 
-Compaction is configured on the {{< gloss "Harness" >}}Harness{{< /gloss >}}, not on the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The setting belongs to the runner that drives the root agent, which makes compaction harness policy rather than portable agent behavior. [Agent memory]({{< link path="agents/agent-memory" >}}) follows the same Harness-versus-AgentTemplate split. An AgentTemplate cannot enable, disable, or tune compaction on its own.
+Compaction is configured on the {{< gloss "Harness" >}}Harness{{< /gloss >}}, not on the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The setting belongs to the runner that drives the root agent, so the same AgentTemplate compacts differently on two Harnesses that set different values. An AgentTemplate cannot enable, disable, or tune compaction on its own. [Agent memory]({{< link path="agents/agent-memory" >}}) follows the same Harness-versus-AgentTemplate split.
 
 Two strategies ship, and both are configured on the same field:
 
