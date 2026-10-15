@@ -250,7 +250,7 @@ Error: Session task 01a0ec27-157f-7034-bb89-09855f485b2a ended in TASK_STATE_FAI
 
 ## Troubleshooting
 
-A schema problem appears on the Agent's status conditions. `ResolvedRefs` reports a ConfigMap or key that kagent cannot find, and `Compatible` reports a schema that kagent found but cannot accept, or a Harness that does not use the `kagent` harness.
+A schema problem appears on the Agent's status conditions. `ResolvedRefs` reports a ConfigMap or key that kagent cannot find. `Compatible` reports a schema that kagent found but cannot accept, or a Harness that does not use the `kagent` harness.
 
 ```bash
 kubectl get agent structured-answer-shared -n kagent -o json \

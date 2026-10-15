@@ -87,7 +87,7 @@ Ready=False  Blocked: blocked by ResolvedRefs
 
 The Agent's status reports two revision fields that answer a different question. `desiredRevision` is the {{< gloss "Revision" >}}revision{{< /gloss >}} that the current spec should produce, and `latestSuccessfulRevision` is the newest revision that finished preparing. A missing `latestSuccessfulRevision` means that the Agent was never ready, and two differing values mean that the newest edit is not yet prepared.
 
-The status also reports a `warnings` list, which shows the compatibility decisions that kagent made without blocking the revision. A warning does not stop an Agent from becoming ready, so no condition reports it.
+The status also reports a `warnings` list, which shows the compatibility decisions that kagent made without blocking the revision. A warning does not stop an Agent from becoming ready, and the conditions do not report it.
 
 ```bash
 kubectl get agent <name> -n kagent -o jsonpath='{.status.warnings}'
@@ -95,7 +95,7 @@ kubectl get agent <name> -n kagent -o jsonpath='{.status.warnings}'
 
 ## A new AgentTemplate never runs
 
-When you create an AgentTemplate directly, it never becomes ready. This is because an AgentTemplate is not runnable by itself, and nothing prepares a template until an Agent references it. The template also has no status for a failure to appear on, so the problem surfaces only when you try to start a conversation.
+When you create an AgentTemplate directly, it never becomes ready. An AgentTemplate is not runnable by itself, and nothing prepares a template until an Agent references it. The template also has no status for a failure to appear on, so the problem surfaces only when you try to start a conversation.
 
 ```console
 ERROR:
@@ -132,7 +132,7 @@ spec:
 ```
 
 > [!NOTE]
-> An Agent with no conditions at all means that the controller did not reconcile it yet. An Agent with a failing condition means that reconciliation reached that stage and stopped.
+> An Agent with no conditions at all means that the controller has not reconciled it yet. An Agent with a failing condition means that reconciliation reached that stage and stopped.
 
 ## An agent turn times out
 

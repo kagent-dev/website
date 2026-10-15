@@ -84,7 +84,7 @@ A bound agent runs inside its parent, so kagent constrains the shape of the resu
 - **No reuse within one tree.** The same AgentTemplate cannot appear twice in the same tree.
 - **Unique binding names.** Two bindings on one AgentTemplate cannot share a `name`.
 
-When kagent rejects a tree, the Agent's `Compatible` condition becomes `False`. The condition reports the reason as `UnsupportedConfiguration` and returns a message that identifies the rule that failed. Read both in the output of the following command.
+When kagent rejects a tree, the Agent's `Compatible` condition becomes `False`. The condition reports the reason `UnsupportedConfiguration`, and its message identifies the rule that failed. Read both in the output of the following command.
 
 ```sh
 kubectl get agent <name> -n <namespace> \

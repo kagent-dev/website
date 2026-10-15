@@ -397,7 +397,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="skills-and-mcp/plugins" >}}` title="Plugins" subtitle="Bundle several skills, and MCP servers, into one plugin that an AgentTemplate attaches at once." >}}
+  {{< card link=`{{< link path="skills-and-mcp/plugins" >}}` title="Plugins" subtitle="Bundle skills and MCP servers into one plugin that an AgentTemplate attaches at once." >}}
   {{< card link=`{{< link path="skills-and-mcp/skills" >}}` title="Skills" subtitle="Read the full set of skill fields, source kinds, and naming rules." >}}
   {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Give the same agent a tool from an MCP server alongside its skills." >}}
 {{< /cards >}}
