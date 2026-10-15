@@ -96,7 +96,7 @@ The Session stays `READY` throughout all steps. A suspended agent remains listed
 
 Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent Substrate is free to collect that snapshot once a newer one supersedes it. A {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} pins a snapshot so that you can come back to it.
 
-1. Create a checkpoint. A checkpoint keeps the conversation through the turn that you name. `expectedHeadTaskId` names the terminal task to pin. When the conversation has advanced past that task, the call fails rather than pinning the wrong turn. `requestId` is a required idempotency key of 1 to 128 characters. Repeating a `requestId` returns the checkpoint that the earlier call created rather than pinning a second one.
+1. Create a checkpoint. A checkpoint keeps the conversation through the turn that you name. `expectedHeadTaskId` names the finished turn to pin. When the conversation has advanced past that task, the call fails rather than pinning the wrong turn. `requestId` is a required idempotency key of 1 to 128 characters. Repeating a `requestId` returns the checkpoint that the earlier call created rather than pinning a second one.
    ```bash
    grpcurl -plaintext \
      -d '{"sessionId":"'"$SESSION_ID"'","expectedHeadTaskId":"'"$TASK_ID"'","requestId":"'"$(uuidgen)"'"}' \
@@ -119,10 +119,11 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
    ```
 
    > [!NOTE]
-   > A checkpoint captures a turn boundary. The task that you name must be terminal, and its snapshot must be written.
+   > A checkpoint captures a turn boundary. The call succeeds only once every turn on the Session has reached a final state, meaning `TASK_STATE_COMPLETED`, `TASK_STATE_FAILED`, `TASK_STATE_CANCELED`, or `TASK_STATE_REJECTED`.
    >
+   > * When a turn on the Session is still running, the call fails with `checkpoint requires all tasks to be terminal`. Wait for the turn to finish, then send the request again.
    > * When a newer turn has already started, the call fails with `conversation advanced beyond the expected task`. Name the current task ID and send the request again.
-   > * When the snapshot for the named task is still being written, the call fails with `snapshot for the expected task is not ready`. Send the same request again.
+   > * When Agent Substrate is still writing the snapshot, the call fails with `snapshot for the expected task is not ready`. Send the same request again.
 
 2. Save the checkpoint's `id` so that you can delete it during cleanup.
    ```bash

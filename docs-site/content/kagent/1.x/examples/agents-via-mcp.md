@@ -100,7 +100,7 @@ Claude Code and Cursor read the tool schemas and build each call, so you work in
 
 3. Ask a follow-up that depends on the previous answer, such as `Multiply that by 10.`, against the same Session. The word "that" points back to the earlier answer. The model can follow the reference because the transcript belongs to the Session rather than to the client.
 
-   A Session **is** one conversation, so a second message to the same `session_id` continues where the first left off. The reply's `context_id` is the Session's own ID. To hold two independent conversations with one {{< gloss "Agent" >}}Agent{{< /gloss >}}, create two Sessions.
+   Because a Session _is_ one conversation, a second message to the same `session_id` continues where the first left off. The reply's `context_id` is the Session's own ID. To hold two independent conversations with one {{< gloss "Agent" >}}Agent{{< /gloss >}}, create two Sessions.
 
 > [!NOTE]
 > Nothing here configures whether an invocation blocks or returns a task to poll, because a client declares its own capabilities on each request. A reply means your client did not declare the `io.modelcontextprotocol/tasks` extension and the call waited for the agent to finish. A task ID means it did, and the client polls in the background so that a long agent run never holds a request open.
@@ -405,7 +405,7 @@ For the pause types, the approval model, and what the agent receives, see [Human
 
 The checkpoint tools pin a Session's state. These tools do not need the tasks extension, so they do not carry `_meta`.
 
-1. Create a checkpoint. `expected_head_task_id` names the terminal task to pin. The call fails rather than pinning the wrong turn when the conversation has advanced past it. Use the `$TASK_ID` that an earlier invocation returned. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
+1. Create a checkpoint. `expected_head_task_id` names the finished turn to pin. When the conversation has advanced past that turn, the call fails rather than pinning the wrong one. Use the `$TASK_ID` that an earlier invocation returned. `request_id` is an idempotency key. Repeating the call with the same value returns the checkpoint that the earlier call created rather than pinning a second one.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \

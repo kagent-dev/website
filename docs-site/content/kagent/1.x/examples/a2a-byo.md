@@ -90,7 +90,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
    ```
 
    > [!NOTE]
-   > This Harness does not set a port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. When an image ignores `runtime.port` and does not default to `80`, it listens on the wrong port and still reports `READY`. For this failure, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
+   > This Harness does not set a port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that binds another port still reports `READY`. The mismatch surfaces only on the first invoke. For the requirements that a BYO image must meet, and the error that the invoke returns, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
 
 2. Create the AgentTemplate and an Agent that pairs it with the Harness. `description` is the only field that this template needs.
    ```yaml

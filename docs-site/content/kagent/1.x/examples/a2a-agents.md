@@ -33,7 +33,7 @@ A caller addresses the Agent rather than one conversation. The message's `contex
 
 ### A2A methods
 
-The following table covers the methods that this example uses. The kagent CLI wraps the three `TaskPushNotificationConfig` calls, which manage a task's callbacks. `lf.a2a.v1.A2AService` defines further methods. For the ones that this example leaves out, see the [A2A protocol](https://a2a-protocol.org) specification.
+The following table covers the methods that this example uses. The kagent CLI wraps the three `TaskPushNotificationConfig` calls, which manage a task's callbacks. For the further methods that `lf.a2a.v1.A2AService` defines, see the [A2A protocol](https://a2a-protocol.org) specification.
 
 | Method | What it does |
 | ------ | ------------ |
