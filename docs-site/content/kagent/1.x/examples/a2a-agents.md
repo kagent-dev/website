@@ -5,7 +5,9 @@ weight: 30
 author: kagent.dev
 ---
 
-Every {{< gloss "Agent" >}}Agent{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. {{< reuse "kagent-docs/snippets/name-product.md" >}} uses the A2A protocol for its own agent traffic, rather than an extra interface beside it. The CLI, the [MCP server]({{< link path="examples/agents-via-mcp" >}}), and any client you write all take the same path.
+Every {{< gloss "Agent" >}}Agent{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. This example calls that service directly to read an Agent's card, send it a message, stream a reply, and answer the agent when it pauses for a person.
+
+In {{< reuse "kagent-docs/snippets/name-product.md" >}}, agent traffic runs over A2A. The CLI and the [MCP server]({{< link path="examples/agents-via-mcp" >}}) reach an Agent through the same service.
 
 This example uses [grpcurl](https://github.com/fullstorydev/grpcurl) to show the requests and replies directly. Real callers use an A2A client library rather than assembling requests by hand.
 
@@ -20,19 +22,18 @@ A gRPC caller names the Agent in the standard A2A `tenant` field, as `<namespace
 | gRPC | The `tenant` field on each request, as `<namespace>/<name>` |
 | HTTP JSON-RPC | `POST /agents/{namespace}/{name}`, with the card at `GET /agents/{namespace}/{name}/.well-known/agent-card.json` |
 
-An HTTP request that also sets a tenant must set one that matches its URL. There is no deployment-wide agent card, because the gateway serves many agents.
+An HTTP request that also sets the `tenant` field must set a value that matches its URL. There is no deployment-wide agent card, because the controller serves many Agents.
+
+Both forms replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP.
 
 A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
-> [!NOTE]
-> `tenant` and the `/agents/{namespace}/{name}` path replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP.
-
 > [!WARNING]
-> The open source build does not authenticate this port. Any caller that can reach it can invoke any Agent, so do not expose port `8083` outside the cluster. For what the open source build does guarantee, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
+> A default installation sets `config.server.auth.mode` to `insecure`. In this mode any caller that can reach the port can invoke any Agent. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 
 ### A2A methods
 
-This example calls each method in the following table except the three `TaskPushNotificationConfig` calls, which manage a task's callbacks and which the kagent CLI wraps. The service defines more, including `ListTasks`. `GetTaskPushNotificationConfig` reads a single callback by ID.
+The following table covers the methods that this example uses. The `TaskPushNotificationConfig` calls manage a task's callbacks, and this example reaches them through the kagent CLI. For the further methods that `lf.a2a.v1.A2AService` defines, see the [A2A protocol specification](https://a2a-protocol.org/latest/specification/#31-core-operations).
 
 | Method | What it does |
 | ------ | ------------ |
@@ -67,9 +68,15 @@ An A2A client typically starts by reading the agent card, which tells it what th
      "description": "My first kagent agent",
      "supportedInterfaces": [
        {
+         "url": "http://kagent-controller.kagent.svc:8083/agents/kagent/my-first-agent",
+         "protocolBinding": "JSONRPC",
+         "protocolVersion": "1.0"
+       },
+       {
          "url": "http://kagent-controller.kagent.svc:8083",
          "protocolBinding": "GRPC",
-         "protocolVersion": "1.0"
+         "protocolVersion": "1.0",
+         "tenant": "kagent/my-first-agent"
        }
      ],
      "version": "v1",
@@ -91,7 +98,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 2. Read the card for what a caller acts on.
    * Both `name` and `description` come from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. `name` replaces hyphens with underscores, and `description` is `spec.description` verbatim, so a caller sees the description you wrote.
-   * The `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The gRPC interface carries the `tenant` value to send.
+   * Each `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The JSON-RPC URL identifies the Agent in its path. The gRPC entry sets the `tenant` value instead.
    * The `capabilities.pushNotifications` value advertises task callbacks. Each callback belongs to one task, not to the whole Session.
    * The `capabilities.extensions` list advertises human-in-the-loop support, which a client opts into per call.
 

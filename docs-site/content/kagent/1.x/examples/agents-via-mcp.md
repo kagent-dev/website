@@ -15,15 +15,12 @@ You can do this work from an MCP client such as Claude Code or Cursor, which bui
 
 The MCP server is part of the controller's HTTP port rather than a separate deployment, so a default installation already serves it at `/mcp` on port `8083`.
 
-- **Transport**: Streamable HTTP only. Server-Sent Events (SSE) as a standalone transport and stdio are both unsupported. A client that offers a transport choice must use Streamable HTTP.
+- **Transport**: Clients connect over Streamable HTTP. Standalone Server-Sent Events (SSE) and stdio are unsupported.
 - **Sessions**: The handler is stateless, so each request stands alone and a client does not need to establish a session first.
 - **Extensions**: The server advertises the `io.modelcontextprotocol/tasks` extension, which changes how invocations behave. For more information, see [Invoke without waiting](#invoke-without-waiting).
 
-> [!NOTE]
-> A Session **is** one conversation, so sending a second message to the same `session_id` continues where the first left off. The reply's `context_id` is the Session's own ID. To hold two independent conversations with one {{< gloss "Agent" >}}Agent{{< /gloss >}}, create two Sessions.
-
 > [!WARNING]
-> The open source build does not authenticate this endpoint. Every request is accepted, and the caller's identity is read from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. Because the endpoint can invoke agents, create checkpoints, and create Sessions, do not expose port `8083` outside the cluster. For the wider identity model and what the open source build does guarantee, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
+> A default installation sets `config.server.auth.mode` to `insecure`. In this mode the endpoint accepts every request and reads the caller's identity from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. The endpoint can invoke agents, create checkpoints, and create Sessions. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 
 ## Before you begin
 
@@ -93,7 +90,7 @@ Claude Code and Cursor read the tool schemas and build each call, so you work in
    > List my kagent sessions.
    ```
 
-   An unexpectedly empty list is typically due to creator scoping rather than a missing agent. The tool returns only the Sessions that the calling identity created, and has no option to widen that scope. The kagent command line interface and this endpoint both default to `admin@kagent.dev`, so they see each other's Sessions. If you created the Session with `kagent --user-id <someone-else>`, send a matching `X-User-Id` header from the client.
+   The tool returns only the Sessions that the calling identity created, and cannot widen that scope. An empty list therefore means that this identity has not created a Session. The kagent command line interface and this endpoint both default to `admin@kagent.dev`, so they see each other's Sessions. When you created the Session as another user with `kagent --user-id <someone-else>`, send a matching `X-User-Id` header from the client.
 
 2. Ask the agent a question by naming the Session you want to use. The client calls `invoke_session` and fills in the arguments from the tool schema.
    ```console
@@ -101,7 +98,9 @@ Claude Code and Cursor read the tool schemas and build each call, so you work in
      Answer with just the number.
    ```
 
-3. Ask a follow-up that depends on the previous answer, such as `Multiply that by 10.`, against the same Session. The word "that" resolves only when the earlier turns are in context, because the transcript belongs to the Session rather than to the client.
+3. Ask a follow-up that depends on the previous answer, such as `Multiply that by 10.`, against the same Session. The word "that" points back to the earlier answer. The model can follow the reference because the transcript belongs to the Session rather than to the client.
+
+   Because a Session _is_ one conversation, a second message to the same `session_id` continues where the first left off. The reply's `context_id` is the Session's own ID. To hold two independent conversations with one {{< gloss "Agent" >}}Agent{{< /gloss >}}, create two Sessions.
 
 > [!NOTE]
 > Nothing here configures whether an invocation blocks or returns a task to poll, because a client declares its own capabilities on each request. A reply means your client did not declare the `io.modelcontextprotocol/tasks` extension and the call waited for the agent to finish. A task ID means it did, and the client polls in the background so that a long agent run never holds a request open.
@@ -127,8 +126,6 @@ You can checkpoint a Session before letting an agent try something risky. The cl
    The client reports the checkpoint's own ID, the turn that it pinned, and a state of `CHECKPOINT_STATE_READY`. Because the client holds that result in context, you can refer to the checkpoint without repeating its ID.
 
 2. Keep the checkpoint ID if you need to inspect or delete the checkpoint later.
-
-Forking a checkpoint is temporarily unavailable. The current release stores process memory in suspended Actor snapshots, so `fork_session` returns `FAILED_PRECONDITION` instead of creating a second Session from a checkpoint.
 
 You can now safely [clean up these resources](#clean-up).
 
@@ -197,7 +194,7 @@ With `curl` you build each request yourself, so every field is visible: the tool
    }
    ```
 
-4. Send the same request again with `Multiply that by 10.` as the `message`. The word "that" resolves only when the earlier turns are in context. Note that `context_id` is unchanged while `task_id` is new, so the second turn joined the first conversation instead of starting its own. 
+4. Send the same request again with `Multiply that by 10.` as the `message`. The word "that" points back to the earlier answer. The model can follow the reference because the transcript belongs to the Session. Note that `context_id` is unchanged while `task_id` is new, so the second turn joined the first conversation instead of starting its own. 
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -408,7 +405,7 @@ For the pause types, the approval model, and what the agent receives, see [Human
 
 The checkpoint tools pin a Session's state. These tools do not need the tasks extension, so they do not carry `_meta`.
 
-1. Create a checkpoint. `expected_head_task_id` names the terminal task to pin. The call fails rather than pinning the wrong turn when the conversation has advanced past it. Use the `$TASK_ID` that an earlier invocation returned. The `request_id` is an idempotency key, so repeating the call with the same value returns the checkpoint that the first call created rather than pinning a second one.
+1. Create a checkpoint. `expected_head_task_id` names the finished turn to pin. When the conversation has advanced past that turn, the call fails rather than pinning the wrong one. Use the `$TASK_ID` that an earlier invocation returned. `request_id` is an idempotency key. Repeating the call with the same value returns the checkpoint that the earlier call created rather than pinning a second one.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -489,27 +486,22 @@ The checkpoint tools pin a Session's state. These tools do not need the tasks ex
    }
    ```
 
-Forking a checkpoint is temporarily unavailable. The current release stores process memory in suspended Actor snapshots, so `fork_session` returns `FAILED_PRECONDITION` instead of creating a second Session from a checkpoint. For what a checkpoint captures and why forking is rejected, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+To start a second Session from a checkpoint, call `fork_session` with the checkpoint ID. For what a fork replays and where it diverges, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
 You can now safely [clean up these resources](#clean-up).
 
 ## Clean up
 
-1. Port-forward the controller's gRPC port, and leave the command running. `CheckpointService` listens there rather than on the HTTP port that serves MCP.
-   ```bash
-   kubectl port-forward -n kagent svc/kagent-controller 8083:8083
-   ```
-
-2. Delete the checkpoint that you created.
+1. Delete the checkpoint that you created. `CheckpointService` listens on the same port that serves MCP, so the port-forward from [Connect a client](#connect-a-client) already reaches the service.
    ```bash
    grpcurl -plaintext \
      -d '{"checkpointId":"<checkpoint-id>"}' \
      localhost:8083 kagent.api.v1alpha1.CheckpointService/DeleteCheckpoint
    ```
 
-3. Remove the server entry from your client. In Claude Code, run `claude mcp remove kagent`. In Cursor, delete the `kagent` entry from your MCP settings.
+2. Remove the server entry from your client. In Claude Code, run `claude mcp remove kagent`. In Cursor, delete the `kagent` entry from your MCP settings.
 
-4. Stop both port-forwards with `Ctrl+C`.
+3. Stop the port-forward with `Ctrl+C`.
 
 ## MCP tool reference
 
@@ -521,7 +513,7 @@ The server exposes five Session tools. Two cover discovery and conversation. Thr
 | `invoke_session` | `session_id`, `message` | Sends a message and returns the agent's reply. Takes `message_id` for idempotency. |
 | `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the conversation at a turn boundary. The call fails if the conversation has advanced past that task. Takes `request_id` for idempotency. |
 | `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
-| `fork_session` | `checkpoint_id` | Temporarily rejects checkpoints with `FAILED_PRECONDITION` while suspended snapshots include process memory. Takes `request_id` for idempotency. |
+| `fork_session` | `checkpoint_id` | Starts a second Session from a checkpoint, replaying the conversation through the pinned turn. Takes `request_id` for idempotency. |
 
 ## Next steps
 

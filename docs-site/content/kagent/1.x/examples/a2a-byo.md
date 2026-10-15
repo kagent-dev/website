@@ -90,7 +90,7 @@ A `byo` Harness carries two fields that the other runtimes do not need: an empty
    ```
 
    > [!NOTE]
-   > This Harness does not set a port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that neither reads `runtime.port` nor defaults to `80` listens on the wrong port and still reports `READY`. For that trap, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
+   > This Harness does not set a port, because `byoa2a/main.go` reads `runtime.port` from the compiled configuration and falls back to `80`. An image that binds another port still reports `READY`. The mismatch surfaces only on the first invoke. For the requirements that a BYO image must meet, and the error that the invoke returns, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#the-a2a-contract" >}}).
 
 2. Create the AgentTemplate and an Agent that pairs it with the Harness. `description` is the only field that this template needs.
    ```yaml
@@ -164,7 +164,7 @@ At this point, the BYO agent behaves in the same way as any other. The {{< gloss
    BYO agent response
    ```
 
-   That string is hardcoded, so the reply itself proves nothing. Its path proves the contract: kagent compiled a revision, Agent Substrate started a sandboxed {{< gloss "Actor" >}}Actor{{< /gloss >}} from your image, the controller's A2A gateway routed the message to it, and your executor answered.
+   That string is hardcoded, so the reply itself proves nothing. Its path proves the contract: kagent compiled a revision, Agent Substrate started a sandboxed {{< gloss "Actor" >}}Actor{{< /gloss >}} from your image, the controller routed the message to it, and your executor answered.
 
 4. Send another message to the same Session. The reply does not change, but the message reaches the same Actor. Agent Substrate suspended that Actor after the first turn and resumed it for this message. For more information about the Actor lifecycle, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#suspension-between-turns" >}}).
    ```bash
