@@ -161,14 +161,14 @@ Work through the causes in this order.
 
 An edit that appears to do nothing has two possible causes, and the Agent's conditions distinguish them.
 
-The first cause is a revision that never prepared. Compare the two revision fields on the Agent that references the template. When `desiredRevision` and `latestSuccessfulRevision` differ, the edit produces a new revision that is not ready, and the conditions say why.
+One cause is a revision that never prepared. Compare the two revision fields on the Agent that references the template. When `desiredRevision` and `latestSuccessfulRevision` differ, the edit produces a new revision that is not ready, and the conditions say why.
 
 ```bash
 kubectl get agent <name> -n kagent \
   -o jsonpath='{"desired="}{.status.desiredRevision}{" latestSuccessful="}{.status.latestSuccessfulRevision}{"\n"}'
 ```
 
-The second cause is deliberate. A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was created from for its whole life, so editing an AgentTemplate never changes a conversation that already exists. Create a new Session to pick up the edit.
+The other cause is deliberate. A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was created from for its whole life, so editing an AgentTemplate never changes a conversation that already exists. Create a new Session to pick up the edit.
 
 ## Collect logs
 

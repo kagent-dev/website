@@ -96,7 +96,7 @@ The Session stays `READY` throughout all steps. A suspended agent remains listed
 
 Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent Substrate is free to collect that snapshot once a newer one supersedes it. A {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} pins a snapshot so that you can come back to it.
 
-1. Create a checkpoint. The checkpoint records the snapshot that it pinned and how far the {{< gloss "Transcript" >}}transcript{{< /gloss >}} had advanced. `expectedHeadTaskId` names the terminal task to pin, so the call fails rather than pinning the wrong turn when the conversation has advanced. The `requestId` field is a required idempotency key of 1 to 128 characters, so reusing it returns the same checkpoint rather than creating a second one.
+1. Create a checkpoint. A checkpoint keeps the conversation through the turn that you name. `expectedHeadTaskId` names the terminal task to pin. When the conversation has advanced past that task, the call fails rather than pinning the wrong turn. `requestId` is a required idempotency key of 1 to 128 characters. Repeating a `requestId` returns the checkpoint that the earlier call created rather than pinning a second one.
    ```bash
    grpcurl -plaintext \
      -d '{"sessionId":"'"$SESSION_ID"'","expectedHeadTaskId":"'"$TASK_ID"'","requestId":"'"$(uuidgen)"'"}' \
@@ -119,7 +119,10 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
    ```
 
    > [!NOTE]
-   > A checkpoint captures a turn boundary, so the named task must be terminal and its snapshot must be written. A newer turn that has already started fails the call with `conversation advanced beyond the expected task`, and a snapshot that is still being written fails it with `snapshot for the expected task is not ready`. The second is safe to retry with the same values; the first needs a newer task ID.
+   > A checkpoint captures a turn boundary. The task that you name must be terminal, and its snapshot must be written.
+   >
+   > * When a newer turn has already started, the call fails with `conversation advanced beyond the expected task`. Name the current task ID and send the request again.
+   > * When the snapshot for the named task is still being written, the call fails with `snapshot for the expected task is not ready`. Send the same request again.
 
 2. Save the checkpoint's `id` so that you can delete it during cleanup.
    ```bash
@@ -134,12 +137,6 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
    ```
 
 Underneath, the checkpoint attaches a {{< gloss "Tag" >}}Tag{{< /gloss >}} named `checkpoint-<checkpoint-id>` to the snapshot, and Agent Substrate does not collect a snapshot while a tag names it. You can see the tag by running `kubectl ate get tags --atespace kagent`.
-
-## Forking is temporarily unavailable
-
-Forking creates a second Session from a checkpoint only when the pinned snapshot contains durable data without process memory. In the current kagent release, suspended Actors use `Full` snapshots so that their process memory survives suspend and resume. A `ForkSession` request for these checkpoints is rejected with `FAILED_PRECONDITION`, because a restored Actor would resume processes that still hold the source Session's identifiers.
-
-Checkpoint creation is still useful without forking. A checkpoint pins the snapshot for retention, gives the turn boundary a stable record, and keeps the checkpoint visible in the API while the original Session continues.
 
 ## Clean up
 

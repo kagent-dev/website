@@ -115,7 +115,7 @@ Skill:
   link: "/docs/kagent/1.x/skills-and-mcp/skills/"
 
 Plugin:
-  short: "A bundle that an AgentTemplate attaches with spec.plugins. A plugin carries skills and can also declare Model Context Protocol servers. Plugins follow the Agent Plugins specification."
+  short: "A bundle that an AgentTemplate attaches with spec.plugins. A plugin contains skills and can also declare Model Context Protocol servers. Plugins follow the Agent Plugins specification."
   link: "/docs/kagent/1.x/skills-and-mcp/plugins/"
 
 Tool binding:

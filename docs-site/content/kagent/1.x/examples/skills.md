@@ -32,7 +32,7 @@ On a `kagent` Harness, attaching a skill adds seven tools to the agent, whether 
 | `edit_file` | Replaces an exact string in a file that the agent has already read. |
 | `bash` | Runs a shell command in the session directory `/tmp/kagent/<session-id>/`. Commands time out after 30 seconds. |
 
-Two further tools are available but off by default. Set the `config.runtimeDefaults.fileSearchTools` Helm value to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. The setting applies to every agent in the installation, because a Harness has no per-agent equivalent. Both are confined to the same skills and session roots as `read_file`. They stay opt-in because they give an agent broad visibility of the filesystem, and they are how an agent keeps that visibility when a deployment disables `bash`.
+Two further tools are available but off by default. Set the `config.runtimeDefaults.fileSearchTools` Helm value to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. The setting applies to every agent in the installation, because a Harness has no per-agent equivalent. `list_files` and `grep_file` reach only the skills and session roots that `read_file` reads. They stay opt-in because they give an agent broad visibility of the filesystem, and they are how an agent keeps that visibility when a deployment disables `bash`.
 
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
@@ -90,7 +90,7 @@ A skill is a directory whose root holds a `SKILL.md` file. Everything else in th
    EOF
    ```
 
-   The `description` decides whether the skill is ever used. The agent sees every attached skill's name and description, and chooses among them the same way it chooses any other tool, so state plainly when the skill applies. The instructions in the body are only read after the agent calls `load_skill`.
+   The model reads the `description` and decides whether to load the skill. The model sees the name and description of every attached skill, and chooses among them in the same way that it chooses any other tool. State plainly when the skill applies. The instructions in the body are only read after the agent calls `load_skill`.
 
 3. Add the script that the instructions call. The script runs in the agent's runtime image, so it uses `bash` rather than Python.
    ```bash
@@ -267,7 +267,7 @@ A source is immutable, so changing a skill is a two-step change: publish new con
 
 ## Bundle the skill in a plugin
 
-While a standalone source carries one skill, a {{< gloss "Plugin" >}}plugin{{< /gloss >}} contains multiple skills. An AgentTemplate attaches the plugin once and lists the skills that it wants. Use a plugin when you ship a set of skills together, or when you want the same artifact to contribute [MCP servers]({{< link path="skills-and-mcp/plugins#mcp-servers" >}}) as well.
+While a standalone source contains one skill, a {{< gloss "Plugin" >}}plugin{{< /gloss >}} contains multiple skills. An AgentTemplate attaches the plugin once and lists the skills that it wants. Use a plugin when you ship a set of skills together, or when you want the same artifact to contribute [MCP servers]({{< link path="skills-and-mcp/plugins#mcp-servers" >}}) as well.
 
 1. Restructure the directory so that each skill sits under `skills/`, and add the manifest that makes it a plugin.
    ```bash
@@ -374,7 +374,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
 
 ## Clean up
 
-1. Delete the Sessions that you created. Deleting the Agent does not remove them. Skip the second command if you did not complete the plugin section.
+1. Delete the Sessions that you created. Deleting the Agent does not remove them. If you did not complete the plugin section, skip the `$PLUGIN_SESSION_ID` command.
    ```bash
    kagent agent session delete $SESSION_ID
    kagent agent session delete $PLUGIN_SESSION_ID
