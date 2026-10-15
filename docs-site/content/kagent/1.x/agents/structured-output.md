@@ -250,37 +250,34 @@ Error: Session task 01a0ec27-157f-7034-bb89-09855f485b2a ended in TASK_STATE_FAI
 
 ## Troubleshooting
 
-A schema problem appears on the AgentTemplate's status, in the entry for each Harness under `status.harnesses`. `ResolvedRefs` reports a ConfigMap or key that kagent cannot find, and `Compatible` reports a schema that kagent found but cannot accept, or a Harness that does not use the `kagent` runtime.
+A schema problem appears on the Agent's status conditions. `ResolvedRefs` reports a ConfigMap or key that kagent cannot find. `Compatible` reports a schema that kagent found but cannot accept, or a Harness whose runtime is not `kagent`.
 
 ```bash
-kubectl get agenttemplate structured-answer-shared -n kagent -o json \
-  | jq '.status.harnesses[] | {harness, conditions: [.conditions[] | select(.type == "ResolvedRefs" or .type == "Compatible")]}'
+kubectl get agent structured-answer-shared -n kagent -o json \
+  | jq '[.status.conditions[] | select(.type == "ResolvedRefs" or .type == "Compatible")]'
 ```
 
 For example, if the `shared-schemas` ConfigMap no longer has the `arithmetic-answer` key, the output is similar to the following. When `ResolvedRefs` fails, `Compatible` reports `Blocked` instead of a result of its own.
 
 ```json
-{
-  "harness": "my-first-harness",
-  "conditions": [
-    {
-      "lastTransitionTime": "2026-09-29T07:52:08Z",
-      "message": "resolve output schema ConfigMap \"shared-schemas\": key \"arithmetic-answer\" not found",
-      "observedGeneration": 1,
-      "reason": "ReferenceResolutionFailed",
-      "status": "False",
-      "type": "ResolvedRefs"
-    },
-    {
-      "lastTransitionTime": "2026-09-29T07:52:08Z",
-      "message": "blocked by ResolvedRefs",
-      "observedGeneration": 1,
-      "reason": "Blocked",
-      "status": "False",
-      "type": "Compatible"
-    }
-  ]
-}
+[
+  {
+    "lastTransitionTime": "2026-09-29T07:52:08Z",
+    "message": "resolve output schema ConfigMap \"shared-schemas\": key \"arithmetic-answer\" not found",
+    "observedGeneration": 1,
+    "reason": "ReferenceResolutionFailed",
+    "status": "False",
+    "type": "ResolvedRefs"
+  },
+  {
+    "lastTransitionTime": "2026-09-29T07:52:08Z",
+    "message": "blocked by ResolvedRefs",
+    "observedGeneration": 1,
+    "reason": "Blocked",
+    "status": "False",
+    "type": "Compatible"
+  }
+]
 ```
 
 | Message | Condition and reason | Cause |

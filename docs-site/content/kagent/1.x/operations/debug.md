@@ -5,13 +5,13 @@ weight: 30
 author: kagent.dev
 ---
 
-Most {{< reuse "kagent-docs/snippets/name-product.md" >}} failures surface in one place: the readiness conditions that a {{< gloss "Harness" >}}Harness{{< /gloss >}} writes onto the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} that it admits. This page explains where to read those conditions, how to tell the real failure from the ones that follow it, and how to work back from the symptoms that report nothing useful on their own.
+Most {{< reuse "kagent-docs/snippets/name-product.md" >}} failures surface in one place: the readiness conditions on the {{< gloss "Agent" >}}Agent{{< /gloss >}}. This page explains where to read those conditions, how to tell the real failure from the ones that follow it, and how to work back from the symptoms that report nothing useful on their own.
 
 ## Where kagent reports status
 
 Two habits from Kubernetes lead nowhere here, so it is worth knowing what reports nothing before you start.
 
-A Harness carries **no status at all**. Its `READY` column is always blank, and the resource has no `status` key to read.
+A {{< gloss "Harness" >}}Harness{{< /gloss >}} has a `READY` column, but because nothing writes the Harness status, the column is always empty.
 
 ```bash
 kubectl get harness -n kagent
@@ -22,7 +22,7 @@ NAME     READY   AGE
 kagent           30h
 ```
 
-The AgentTemplate list view does not include a status column either, so a healthy template and a broken one look identical in it.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} has **no status at all**, and its list view has no status column, so a healthy template and a broken one look identical.
 
 ```bash
 kubectl get agenttemplate -n kagent
@@ -33,19 +33,30 @@ NAME        AGE
 assistant   30h
 ```
 
-The diagnostic surface is the AgentTemplate's `status.harnesses[]` array. Each entry covers one Harness that admits the template, and it holds that pairing's conditions and revisions. Read it directly.
+The diagnostic surface is the Agent. An Agent pairs one AgentTemplate with one Harness, and its conditions cover that pairing.
 
 ```bash
-kubectl get agenttemplate <name> -n kagent \
-  -o jsonpath='{range .status.harnesses[*]}{"Harness: "}{.harness}{"\n"}{range .conditions[*]}{"  "}{.type}{"="}{.status}{"  "}{.reason}{": "}{.message}{"\n"}{end}{end}'
+kubectl get agent -n kagent
 ```
-Example output from a healthy pairing:
+Example output:
 ```console
-Harness: kagent
-  Accepted=True  Accepted: Harness admission selector matches the AgentTemplate
-  ResolvedRefs=True  Resolved: All runtime references resolved
-  Compatible=True  Compatible: Resolved configuration is compatible with the Harness
-  Ready=True  Ready: ActorTemplate golden snapshot is ready
+NAME        READY   AGE
+assistant   True    30h
+```
+
+The `READY` column reports the status of the `Ready` condition and nothing else. To find the condition's reason and message, read the Agent's conditions directly.
+
+```bash
+kubectl get agent <name> -n kagent \
+  -o jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{"  "}{.reason}{": "}{.message}{"\n"}{end}'
+```
+
+Example output for a healthy Agent:
+```console
+Accepted=True  Accepted: Agent explicitly selects its template and harness
+ResolvedRefs=True  Resolved: All runtime references resolved
+Compatible=True  Compatible: Resolved configuration is compatible with the Harness
+Ready=True  Ready: ActorTemplate golden snapshot is ready
 ```
 
 ## Read the readiness conditions
@@ -56,10 +67,10 @@ Each condition covers one stage, and a stage runs only when the stage before it 
 
 | Condition | Stage it covers | A failure here means |
 | --------- | --------------- | -------------------- |
-| `Accepted` | The Harness admission selector matched this AgentTemplate. | Nothing. This condition is only ever written as `True`, so a template that fails admission has no entry rather than a false one. |
-| `ResolvedRefs` | Every resource that the template names was found, including its ModelConfig and any tool servers. | A reference points at something that does not exist, or the controller cannot read it. |
-| `Compatible` | The resolved configuration is valid for the Harness runtime. | The template asks for something that its Harness runtime does not support. |
-| `Ready` | The ActorTemplate's golden {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} exists, so instances can start from it. | Agent Substrate has not finished capturing the golden snapshot, or capture failed. |
+| `Accepted` | The Agent selects a template and a Harness. | Nothing. kagent writes this condition only as `True`, because an Agent references both resources explicitly. |
+| `ResolvedRefs` | Every resource that the Agent references was found, including its AgentTemplate, its Harness, its ModelConfig, and any tool servers. | A reference points at something that does not exist, or the controller cannot read it. |
+| `Compatible` | The resolved configuration is valid for the Harness. | The configuration asks for something that its Harness does not support. |
+| `Ready` | The ActorTemplate's golden {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} exists, so Sessions can start from it. | Agent Substrate has not finished capturing the golden snapshot, or capture failed. |
 
 When a stage fails, kagent marks that stage `False` with the real reason and message, then marks **every later stage `False` with the reason `Blocked`**. Only the first failure describes an actual problem.
 
@@ -68,58 +79,60 @@ When a stage fails, kagent marks that stage `False` with the real reason and mes
 In the following example, one missing ModelConfig is the whole problem, and the two conditions after it do not add independent information.
 
 ```console
-Harness: kagent
-  Accepted=True  Accepted: Harness admission selector matches the AgentTemplate
-  ResolvedRefs=False  ReferenceResolutionFailed: resolve ModelConfig "does-not-exist": not found
-  Compatible=False  Blocked: blocked by ResolvedRefs
-  Ready=False  Blocked: blocked by ResolvedRefs
+Accepted=True  Accepted: Agent explicitly selects its template and harness
+ResolvedRefs=False  ReferenceResolutionFailed: resolve ModelConfig "does-not-exist": not found
+Compatible=False  Blocked: blocked by ResolvedRefs
+Ready=False  Blocked: blocked by ResolvedRefs
 ```
 
-The same entry carries two revision fields that answer a different question. `desiredRevision` is the {{< gloss "Revision" >}}revision{{< /gloss >}} that the current spec should produce, and `latestSuccessfulRevision` is the newest one that finished preparing. A missing `latestSuccessfulRevision` means the template has never been ready, and two differing values mean the newest edit has not prepared yet.
+The Agent's status reports two revision fields that answer a different question. `desiredRevision` is the {{< gloss "Revision" >}}revision{{< /gloss >}} that the current spec should produce, and `latestSuccessfulRevision` is the newest revision that finished preparing. A missing `latestSuccessfulRevision` means that the Agent was never ready, and two differing values mean that the newest edit is not yet prepared.
 
-## An AgentTemplate does not report conditions
+The status also reports a `warnings` list, which shows the compatibility decisions that kagent made without blocking the revision. A warning does not stop an Agent from becoming ready, and the conditions do not report it.
 
-An AgentTemplate that no Harness admits gets no `status.harnesses[]` entry at all, so any command that ranges over that array prints nothing.
-
-The status object holds an `observedGeneration` and nothing else.
-
-```console
-status:
-  observedGeneration: 1
+```bash
+kubectl get agent <name> -n kagent -o jsonpath='{.status.warnings}'
 ```
 
-No error appears on either resource, because the Harness has no status to write one to and the AgentTemplate was never paired. The failure surfaces only when you try to use the template.
+## A new AgentTemplate never runs
+
+When you create an AgentTemplate directly, nothing prepares it until an Agent references it. The template also has no status for a failure to appear on, so the problem surfaces only when you try to start a conversation.
 
 ```console
 ERROR:
   Code: FailedPrecondition
-  Message: AgentTemplate and Harness do not have a ready prepared revision
+  Message: Agent does not have a ready prepared revision
 ```
 
-The cause is almost always a missing admission label. A Harness admits AgentTemplates through `spec.allowedAgentTemplates.selector`, and the Harness that ships with kagent selects on one label.
+Check which Agents exist and what each one references.
 
 ```bash
-kubectl get harness kagent -n kagent -o jsonpath='{.spec.allowedAgentTemplates.selector}'
-```
-Example output:
-```console
-{"matchLabels":{"kagent.dev/harness":"kagent"}}
+kubectl get agents -n kagent \
+  -o jsonpath='{range .items[*]}{.metadata.name}{" template="}{.spec.template.ref.name}{" harness="}{.spec.harnessRef.name}{"\n"}{end}'
 ```
 
-If you add the label that the selector expects, the conditions appear within seconds.
+Example output:
+```console
+assistant template=assistant harness=kagent
+```
+
+An Agent that defines its behavior inline prints an empty `template=`, because it has no `spec.template.ref` to read. If no Agent references your template, create one.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
-kind: AgentTemplate
+kind: Agent
 metadata:
   name: assistant
   namespace: kagent
-  labels:
-    kagent.dev/harness: kagent
+spec:
+  template:
+    ref:
+      name: assistant
+  harnessRef:
+    name: kagent
 ```
 
 > [!NOTE]
-> No entry in `status.harnesses[]` means admission never happened, so check the label first. An entry with a failing condition means admission succeeded and a later stage failed.
+> An Agent with no conditions at all means that the controller has not reconciled it yet. An Agent with a failing condition means that reconciliation reached that stage and stopped.
 
 ## An agent turn times out
 
@@ -146,13 +159,13 @@ Work through the causes in this order.
 
 ## An edit to an AgentTemplate has no effect
 
-An edit that appears to do nothing has two possible causes, and the conditions distinguish them.
+An edit that appears to do nothing has two possible causes, and the Agent's conditions distinguish them.
 
-The first cause is a revision that never prepared. Compare the two revision fields on the AgentTemplate: when `desiredRevision` and `latestSuccessfulRevision` differ, the edit produced a new revision that has not become ready, and the conditions say why.
+The first cause is a revision that never prepared. Compare the two revision fields on the Agent that references the template. When `desiredRevision` and `latestSuccessfulRevision` differ, the edit produces a new revision that is not ready, and the conditions say why.
 
 ```bash
-kubectl get agenttemplate <name> -n kagent \
-  -o jsonpath='{range .status.harnesses[*]}{.harness}{" desired="}{.desiredRevision}{" latestSuccessful="}{.latestSuccessfulRevision}{"\n"}{end}'
+kubectl get agent <name> -n kagent \
+  -o jsonpath='{"desired="}{.status.desiredRevision}{" latestSuccessful="}{.status.latestSuccessfulRevision}{"\n"}'
 ```
 
 The second cause is deliberate. A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was created from for its whole life, so editing an AgentTemplate never changes a conversation that already exists. Create a new Session to pick up the edit.

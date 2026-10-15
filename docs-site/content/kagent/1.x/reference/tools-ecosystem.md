@@ -274,12 +274,11 @@ kagent-tools:
 
 Because the settings are per-installation, they change what every agent sees. To give one agent a smaller set while leaving the server intact, list the tools on the tool binding instead, as described in [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
 
-> [!WARNING]
-> A tool binding's tool list does not narrow anything on the Claude {{< gloss "Harness" >}}Harness{{< /gloss >}}. The compiler exposes the whole server instead, and names the tools that you selected in a warning on the AgentTemplate's `status.harnesses[].warnings`. The kagent and Codex harnesses both honor the list. Where an agent runs on the Claude harness and must not reach a tool, narrow the server with `tools.enabledTools` or `--read-only` rather than with the binding.
+The kagent and Codex harnesses both honor this tool list. On the Claude {{< gloss "Harness" >}}Harness{{< /gloss >}}, a tool binding's tool list does not narrow the server, so an agent on Claude reaches every tool that kagent-tool-server serves. Narrow the server with `tools.enabledTools` or `--read-only` instead. For more information about this behavior, see [Tool selection on the Claude harness]({{< link path="skills-and-mcp/about-tools#tool-selection-on-the-claude-harness" >}}).
 
 ## Reach kagent-tool-server from another namespace
 
-The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references from its own namespace only. Where an AgentTemplate in another namespace binds the server, the controller cannot resolve the binding and the AgentTemplate does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
+The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references from its own namespace only. Where an AgentTemplate in another namespace binds the server, the controller cannot resolve the binding, and the Agent that runs that template does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
 
 ```yaml
 kagent-tools:
