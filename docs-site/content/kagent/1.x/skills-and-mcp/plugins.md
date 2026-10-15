@@ -58,7 +58,7 @@ One AgentTemplate accepts up to 20 plugins.
 
 List the name of each skill that you want in `plugins[].skills`. A skill's name is the name of its subdirectory under `skills/` in the plugin.
 
-Attaching a plugin does not enable the skills that it contains, and an empty list does not enable any of them. kagent accepts an empty list as a safe default rather than reporting an error. An explicit list also means that a later version of the plugin cannot add skills to your agent. To enable a new skill, add its name.
+Attaching a plugin does not enable the skills that it contains, and an empty list does not enable any of them. kagent accepts an empty list rather than reporting an error, and the agent starts with no skills from that plugin. An explicit list also means that a later version of the plugin cannot add skills to your agent. To enable a new skill, add its name.
 
 Plugin names must be unique. If two entries in `plugins` declare the same name in their manifests, the agent fails to start. Skill names come from your AgentTemplate, so kagent checks them before it fetches anything. A plugin name comes from the plugin's own manifest, and kagent can only check that name as each plugin is fetched.
 
@@ -73,13 +73,13 @@ kagent also does not check the `$schema` value in a Claude-format manifest.
 
 ## MCP servers
 
-A plugin that includes `mcp.json` contributes MCP servers to every agent that enables it, alongside any bound directly on the AgentTemplate. The file has an `mcpServers` object, keyed by server name, and its `$schema` must be exactly `https://agent-plugins.org/schemas/1.0.0/mcp.schema.json`.
+A plugin that includes `mcp.json` contributes MCP servers alongside any bound directly on the AgentTemplate. Only the kagent harness reads `mcp.json`. On every other harness, an agent gets only the servers that its AgentTemplate binds. The file has an `mcpServers` object, keyed by server name, and its `$schema` must be exactly `https://agent-plugins.org/schemas/1.0.0/mcp.schema.json`.
 
 Each server specifies a transport in its `type` field, and the transport determines which other fields are allowed.
 
 | Transport | Fields | Description |
 | --------- | ------ | ----------- |
-| `stdio` | `command`, `args`, `env`, `cwd` | Runs a process in the same place as the agent. Specifying `url` or `headers` is rejected. |
+| `stdio` | `command`, `args`, `env`, `cwd` | Runs a process in the agent's sandbox. Specifying `url` or `headers` is rejected. |
 | `streamable-http` | `url`, `headers` | Calls a remote server. Specifying `command`, `args`, `env`, or `cwd` is rejected. |
 | `sse` | `url`, `headers` | Calls a remote server over Server-Sent Events. Accepts the same fields as `streamable-http`. |
 

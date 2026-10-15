@@ -8,7 +8,7 @@ author: kagent.dev
 An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s `spec.tools` list defines what an agent can do beyond its system prompt. Each entry is a **{{< gloss "Tool binding" >}}tool binding{{< /gloss >}}**, and each binding connects the agent to one source.
 
 - `mcp`: Tools from a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server.
-- `subAgent`: Another agent that takes work from the agent that you are configuring.
+- `subAgent`: Another AgentTemplate that takes work from the agent that you are configuring.
 
 You must set exactly one of these fields on a binding. If you set both or neither fields, the API server rejects the AgentTemplate with the error `exactly one of the fields in [mcp subAgent] must be set`.
 
@@ -39,13 +39,13 @@ tools:
 
 ### Tool selection on the Claude harness
 
-Claude's MCP configuration has no per-tool allowlist. On the Claude harness, the `tools` list does not narrow a server, and the agent reaches every tool that the server serves. kagent admits the {{< gloss "Revision" >}}revision{{< /gloss >}} either way. If the list that you wrote does not already cover every tool that the server offers, kagent also records a warning on the Agent.
+Claude's MCP configuration has no per-tool allowlist. On the Claude harness, the `tools` list does not narrow a server, and the agent reaches every tool that the server serves. kagent admits the {{< gloss "Revision" >}}revision{{< /gloss >}} either way. Unless the list exactly matches the tools that kagent currently discovers on the server, kagent also records a warning on the Agent.
 
 ```sh
 kubectl get agent <name> -n <namespace> -o jsonpath='{.status.warnings}'
 ```
 
-To keep an agent on the Claude harness away from a tool, limit what the server exposes rather than what the binding selects. For example, put the MCP server behind agentgateway and apply [tool access](https://agentgateway.dev/docs/kubernetes/latest/documentation/mcp/tool-access/) rules to the route. Those rules filter a disallowed tool out of the `tools/list` response, so the agent never sees it. Then point the RemoteMCPServer at that route. To put more than one MCP server behind one route, see [Virtual MCP](https://agentgateway.dev/docs/kubernetes/latest/documentation/mcp/virtual/).
+To keep an agent on the Claude harness away from a tool, limit what the server exposes rather than what the binding selects. Give the agent its own RemoteMCPServer that serves only the tools that you intend. Where you do not control what the server serves, put the MCP server behind agentgateway and apply [tool access](https://agentgateway.dev/docs/kubernetes/latest/documentation/mcp/tool-access/) rules to the route. Those rules filter a disallowed tool out of the `tools/list` response, so the agent never sees it. Then point the RemoteMCPServer at that route. To put more than one MCP server behind one route, see [Virtual MCP](https://agentgateway.dev/docs/kubernetes/latest/documentation/mcp/virtual/).
 
 For the bundled tool server, see the installation-level settings that drop providers and write tools in [Tools ecosystem]({{< link path="reference/tools-ecosystem#narrow-what-kagent-tool-server-serves" >}}).
 
@@ -70,10 +70,10 @@ Every field is required. For the complete schema, see the [API reference]({{< li
 | `subAgent.description` | The text that tells the parent agent when to route work here. |
 | `subAgent.templateRef.name` | The AgentTemplate to bind, in the same namespace. |
 
-kagent compiles the bound template into the parent agent's own configuration, and both agents then run in the same place. A bound template is not an MCP server and has no endpoint of its own. A bound template also does not need an {{< gloss "Agent" >}}Agent{{< /gloss >}} resource because the parent's Agent runs it.
+kagent compiles the bound template into the parent agent's own configuration and runs it inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}, so the two agents share one sandbox. A bound template is not an MCP server and has no endpoint of its own. A bound template also does not need an {{< gloss "Agent" >}}Agent{{< /gloss >}} resource because the parent's Agent runs it.
 
 > [!NOTE]
-> Dedicated subagents, which would give a bound agent its own Harness, Session, and {{< gloss "Actor" >}}Actor{{< /gloss >}}, are not part of the served API. The `subAgent.agentRef` field that would select one is unavailable, so `templateRef` is the only binding that you can write today.
+> Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor, are not part of the served API. The `subAgent.agentRef` field that would select one is unavailable, so `templateRef` is the only binding that you can write today.
 
 ### Subagent tree rules
 
@@ -84,11 +84,11 @@ A bound agent runs inside its parent, so kagent constrains the shape of the resu
 - **No reuse within one tree.** The same AgentTemplate cannot appear twice in the same tree.
 - **Unique binding names.** Two bindings on one AgentTemplate cannot share a `name`.
 
-When kagent rejects a tree, the Agent's `Compatible` condition becomes `False`. The condition reports the reason `UnsupportedConfiguration`, and its message identifies the rule that failed. Read both in the output of the following command.
+When kagent rejects a tree, the Agent's `Compatible` condition becomes `False`. The condition reports the reason `UnsupportedConfiguration`, and its message identifies the rule that failed. A binding that names an AgentTemplate that does not exist fails before any rule is checked, so the Agent's `ResolvedRefs` condition reports `ReferenceResolutionFailed` instead. Read the conditions in the output of the following command.
 
 ```sh
 kubectl get agent <name> -n <namespace> \
-  -o jsonpath='{range .status.conditions[?(@.type=="Compatible")]}{.reason}{": "}{.message}{"\n"}{end}'
+  -o jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{" "}{.reason}{": "}{.message}{"\n"}{end}'
 ```
 
 The Claude and Codex harnesses apply further restrictions by not allowing a bound agent to have tools, skills, or plugins of its own. The bound agent must also use the same model provider and authentication as its parent. A tree that compiles on the kagent harness can therefore fail after you move it to a Harness that runs Claude or Codex.
