@@ -260,6 +260,14 @@ jobs:
           go-version: 'stable'
           cache: false
 
+      # The CLI and env doc generators import PyYAML. Pin the interpreter so
+      # every python3 step in this job uses it, instead of the runner image's
+      # system Python (which an ubuntu-latest bump can change or lock down).
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
       - name: Set kagent commit SHA
         run: echo "KAGENT_COMMIT=$(cd kagent && git rev-parse --short HEAD)" >> $GITHUB_ENV
 
@@ -1122,7 +1130,7 @@ jobs:
             head -50 "$HELM_PAGE"
 
       - name: Install Python deps for CLI doc generation
-        run: pip3 install --user pyyaml
+        run: pip install pyyaml
 
       - name: Build kagent CLI binary
         run: |
