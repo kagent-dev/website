@@ -13,16 +13,16 @@ Audit the prompts (inputs) and replies (outputs) that pass between your agents a
 
 The `kagent` runtime does not write prompts or replies to log records, so a logging backend on its own cannot hold a prompt audit trail. Capture is off by default, because the content can include sensitive user and model data.
 
-### What each runtime records
+### Content capture by harness
 
-Each runtime records the content on its own instrumentation, so where the content lands differs by runtime. The settings in the last column are the fields in the `config.runtimeDefaults.telemetry` Helm block. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}).
+Each harness records the content on its own instrumentation, so where the content lands differs by harness. The settings in the last column are the fields in the `config.runtimeDefaults.telemetry` Helm block. For the available harnesses, see [Choose a harness]({{< link path="agents/agent-harness#choose-a-harness" >}}).
 
-| Runtime | Where the content goes | Settings |
+| Harness | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |
 | `kagent` | The `generate_content` span of each model call, in three attributes. See [What a record holds](#what-a-record-holds). | `captureContent` |
 | `codex` | The runtime's own spans. | `captureContent` |
 | `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `captureRawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `captureContent`, `captureRawApiBodies` |
-| `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in this runtime, but an image that does not read the variable records nothing. | `captureContent` |
+| `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` on this harness, but an image that does not read the variable records nothing. | `captureContent` |
 
 For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
 
@@ -185,5 +185,5 @@ Turn off content capture, then create a new Session so that the change takes eff
 
 {{< cards >}}
   {{< card link=`{{< link path="observability/tracing" >}}` title="Tracing" subtitle="Read the spans and attributes of an agent request." >}}
-  {{< card link=`{{< link path="agents/agent-harness#telemetry-content-settings" >}}` title="Telemetry content settings" subtitle="Review how each content setting applies to each runtime." >}}
+  {{< card link=`{{< link path="agents/agent-harness#telemetry-content-settings" >}}` title="Telemetry content settings" subtitle="Review how each content setting applies to each harness." >}}
 {{< /cards >}}

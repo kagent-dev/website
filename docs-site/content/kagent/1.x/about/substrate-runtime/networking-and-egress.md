@@ -73,7 +73,7 @@ The host set is fixed when kagent compiles the policy, so an agent reaches only 
 
 <!-- REVIEW (egress API owner): confirm current and planned support for allowing a destination that the AgentTemplate does not name. The reviewer expects an explicit allowlist, because a generated set cannot predict every action an agent takes. Mark any future API as planned until it ships, and revisit the source-of-truth guidance under "Diagnose a denied request" when it does. -->
 
-An agent also needs a route to the OpenTelemetry collector, or its traces never leave the sandbox and the kagent UI shows nothing for this Session. kagent adds the collector host for agents on every runtime, `byo` included. A `byo` image that exports to a telemetry backend of its own, through a Harness `spec.env` entry, has no route to that backend, because the AgentTemplate never named it. For more information, see [Runtime coverage]({{< link path="observability/tracing#runtime-coverage" >}}).
+An agent also needs a route to the OpenTelemetry collector, or its traces never leave the sandbox and the kagent UI shows nothing for this Session. kagent adds the collector host for agents on every harness, `byo` included. A `byo` image that exports to a telemetry backend of its own, through a Harness `spec.env` entry, has no route to that backend, because the AgentTemplate never named it. For more information, see [Harness coverage]({{< link path="observability/tracing#harness-coverage" >}}).
 
 ## Policy changes
 

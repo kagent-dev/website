@@ -1,11 +1,11 @@
 ---
 title: System prompts
-description: Set an agent's system prompt inline or from a ConfigMap, and template it with values that kagent resolves at compile time.
+description: Set an agent's system prompt inline or from a ConfigMap, and template it with values that kagent resolves when it builds a revision.
 weight: 30
 author: kagent.dev
 ---
 
-An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s system prompt defines the agent's role and how it should behave. {{< reuse "kagent-docs/snippets/name-product.md" >}} resolves the prompt when it compiles a {{< gloss "Revision" >}}revision{{< /gloss >}}, so the text that an agent runs with is fixed for the life of a {{< gloss "Session" >}}Session{{< /gloss >}}. Editing the prompt affects sessions created after the edit compiles, but not ones that are already running.
+An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s system prompt defines the agent's role and how it should behave. {{< reuse "kagent-docs/snippets/name-product.md" >}} resolves the prompt when it builds a {{< gloss "Revision" >}}revision{{< /gloss >}}, so the text that an agent runs with is fixed for the life of a {{< gloss "Session" >}}Session{{< /gloss >}}. Editing the prompt affects sessions created after the edit, but not ones that are already running.
 
 ## Write an effective prompt
 
@@ -61,7 +61,7 @@ Use `systemPromptFrom` to keep the prompt outside the AgentTemplate. Several Age
        key: kubernetes-assistant
    ```
 
-   `systemPrompt` and `systemPromptFrom` are mutually exclusive, and an AgentTemplate that sets both is rejected. If you omit both fields, the revision compiles with no system prompt at all, and the agent runs on its harness's default behavior.
+   `systemPrompt` and `systemPromptFrom` are mutually exclusive, and an AgentTemplate that sets both is rejected. If you omit both fields, kagent builds the revision without a system prompt, and the agent runs on its harness's default behavior.
 
    | Field | Description |
    | ----- | ----------- |
@@ -98,7 +98,7 @@ The following values are available to a template.
 | `.Description` | The AgentTemplate's `spec.description`. |
 | `.ToolNames` | The tool names selected from every {{< gloss "MCP" >}}MCP{{< /gloss >}} server the AgentTemplate binds. Agents bound as tools are not included. Prefer this value over listing tools by hand, because it cannot drift from the bindings that the AgentTemplate declares. |
 
-Additionally, the `include` function pulls in one key from a ConfigMap that `dataSources` lists. The argument is formatted `"<source>/<key>"`, where the source is the ConfigMap's name. Every key in every listed ConfigMap becomes available, so two sources that share a key name collide. kagent rejects that at compile time rather than picking one.
+Additionally, the `include` function pulls in one key from a ConfigMap that `dataSources` lists. The argument is formatted `"<source>/<key>"`, where the source is the ConfigMap's name. Every key in every listed ConfigMap becomes available, so two sources that share a key name collide. kagent rejects the collision when it builds the revision.
 
 | Field | Description |
 | ----- | ----------- |
@@ -125,7 +125,7 @@ spec:
 
 ## Troubleshooting
 
-Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. No new revision compiles. An {{< gloss "Agent" >}}Agent{{< /gloss >}} that has never been ready cannot start a Session, and one that was ready before keeps starting new Sessions from its last ready revision.
+Prompt problems surface on the `ResolvedRefs` condition, because they are reference failures rather than runtime errors. kagent does not build a new revision. An {{< gloss "Agent" >}}Agent{{< /gloss >}} that has never been ready cannot start a Session, and one that was ready before keeps starting new Sessions from its last ready revision.
 
 An AgentTemplate does not report status of its own, so read the conditions from the Agent that names it.
 

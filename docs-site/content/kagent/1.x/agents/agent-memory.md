@@ -1,7 +1,7 @@
 ---
 title: Agent memory
 description: Give agents long-term memory that persists across conversations, backed by vector similarity search.
-weight: 40
+weight: 45
 author: kagent.dev
 ---
 
@@ -25,16 +25,24 @@ Memories are scoped to the agent and to the user who created them, and carry the
 
 ## Before you begin
 
-> [!IMPORTANT]
-> Memory requires an **external** PostgreSQL database with the [pgvector](https://github.com/pgvector/pgvector) extension installed. The development database that `kagent install` creates uses the stock `postgres` image, which does not ship pgvector, so the database cannot store memories. Point kagent at your own database first.
+Agent memory requires your own PostgreSQL database with the [pgvector](https://github.com/pgvector/pgvector) extension installed. The default database that `kagent install` deploys runs the stock `postgres` image, which omits pgvector, so that database cannot store memories.
 
-1. Store the connection string for your database in a Kubernetes Secret, in the same namespace as the kagent controller.
+1. Install the pgvector extension in your database, in the schema that kagent reads it from. The `config.database.vectorSchema` value names this schema and defaults to `extensions`. Grant `USAGE` on the schema to the role that kagent assumes after it connects, which the `config.database.role` value names. When you leave `config.database.role` empty, grant `USAGE` to the login user.
+   ```sql
+   CREATE SCHEMA IF NOT EXISTS extensions;
+   CREATE EXTENSION IF NOT EXISTS vector SCHEMA extensions;
+   GRANT USAGE ON SCHEMA extensions TO <kagent-user-or-role>;
+   ```
+
+   The kagent migrations create the memory tables, and they never create the extension. Be sure to install it yourself before you enable memory.
+
+2. Store the connection string for your database in a Kubernetes Secret in the same namespace as the kagent controller.
    ```bash
    kubectl create secret generic my-postgres-url-secret -n kagent \
      --from-literal=connectionString='postgres://<username>:<password>@<host>:5432/<database>?sslmode=require'
    ```
 
-2. Save the following values, which point kagent at your database and run the migration that creates the pgvector extension.
+3. Save the following Helm values to point kagent at your database and run the migration that creates the memory tables.
    ```yaml
    cat > kagent-memory-values.yaml <<EOF
    database:
@@ -47,12 +55,14 @@ Memories are scoped to the agent and to the user who created them, and carry the
      database:
        # Use the login user directly. To assume a role instead, create the role in PostgreSQL and set its name here.
        role: ""
-       # Runs the vector migration, which creates the pgvector extension and the memory tables
+       # Schema that contains the pgvector extension, which you installed in the first step.
+       vectorSchema: extensions
+       # Runs the vector migration, which creates the memory tables.
        vectorEnabled: true
    EOF
    ```
 
-3. Upgrade your kagent installation with the values file. The `--reuse-values` flag keeps every value that you installed kagent with, such as the Agent Substrate settings, and adds only the values in this file.
+4. Upgrade your kagent installation with the values file. The `--reuse-values` flag keeps every value that you installed kagent with, such as the Agent Substrate settings, and adds only the values in this file.
    ```bash
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
@@ -61,14 +71,14 @@ Memories are scoped to the agent and to the user who created them, and carry the
      -f kagent-memory-values.yaml
    ```
 
-4. Wait for the controller to roll out with the new configuration.
+5. Wait for the controller to roll out with the new configuration.
    ```bash
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
 
 ## Choose an embedding model
 
-Any provider that the `kagent` runtime supports can serve the embedding model, so the choice typically depends on whichever provider already holds your credentials. The embedding ModelConfig is resolved in the same way that a chat ModelConfig is, which means that the same [provider limitations]({{< link path="setup/model-providers/about-model-providers" >}}) apply to it.
+Any provider that the `kagent` harness supports can serve the embedding model, so the choice typically depends on whichever provider already holds your credentials. The embedding ModelConfig is resolved in the same way that a chat ModelConfig is, which means that the same [provider limitations]({{< link path="setup/model-providers/about-model-providers" >}}) apply to it.
 
 kagent stores every memory as a **768-dimensional** vector. Models that produce wider vectors are truncated and re-normalized to that width, so no dimension setting is needed and models of different widths can coexist.
 
@@ -120,7 +130,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
    | `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model, in the Harness's namespace. Required when `memory` is set. |
    | `memory.ttlDays` | How many days a stored memory stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
 
-3. Create a new Session against an {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses this Harness. Editing the Harness compiles a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing Session keeps running the revision it was created from. An agent that was already running does not gain memory until you start a new Session.
+3. Create a new Session against an {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses this Harness. Editing the Harness builds a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing Session keeps running the revision it was created from. An agent that was already running does not gain memory until you start a new Session.
    ```bash
    kagent agent session create --agent my-first-agent
    ```
@@ -135,7 +145,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
    ```
 
 > [!NOTE]
-> Only the `kagent` runtime supports memory. The `memory` block exists only under `spec.kagent`, so a Harness that selects `codex`, `claude`, or `byo` has no settings to configure memory.
+> Only the `kagent` harness supports memory. The `memory` block exists only under `spec.kagent`, so a Harness that selects `codex`, `claude`, or `byo` does not take memory settings.
 
 ## Verify that memory works
 
@@ -196,7 +206,7 @@ Each memory is one row in the `memory` table, which the vector migration created
 
 The SQL query only reads the table. To list or clear memories, call the `MemoryService` that the kagent controller serves over gRPC.
 
-No CLI command wraps the service yet, so these examples call it with [grpcurl](https://github.com/fullstorydev/grpcurl), and both calls take the `agent_name` exactly as the memory table stores it. Be sure to copy the value out of the table rather than assembling it by hand, because an incorrect name fails silently.
+No CLI command manages memories, so these examples call the service with [grpcurl](https://github.com/fullstorydev/grpcurl). Both calls take the `agent_name` exactly as the memory table stores it. Be sure to copy the value out of the table rather than assembling it by hand, because an incorrect name fails silently.
 
 1. Port-forward the controller's gRPC port, and confirm that your kagent installation sets `config.server.grpcReflection=true`.
    ```bash
@@ -227,7 +237,7 @@ The memory service also exposes `Search`, `AddSession`, and `AddSessionBatch`. E
 
 A memory expires `ttlDays` after it is written, which defaults to 15 days. Expiry is per memory rather than per session, so an old preference ages out while a recent one survives.
 
-Changing `ttlDays` on the Harness applies to memories written by Sessions created after the change, because the value is compiled into the revision.
+Changing `ttlDays` on the Harness applies to memories written by Sessions created after the change, because the value is built into the revision.
 
 ## Known limitations
 
@@ -238,6 +248,6 @@ Changing `ttlDays` on the Harness applies to memories written by Sessions create
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Configure the rest of the Harness that memory is enabled on." >}}
+  {{< card link=`{{< link path="agents/declarative-agents" >}}` title="Declarative agents" subtitle="Configure the rest of the kagent harness that memory is enabled on." >}}
   {{< card link=`{{< link path="setup/model-providers/about-model-providers" >}}` title="About model providers" subtitle="Understand how a ModelConfig reaches a running agent." >}}
 {{< /cards >}}

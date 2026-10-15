@@ -69,7 +69,7 @@ AgentTemplate:
   link: "/docs/kagent/1.x/about/core-concepts/#agenttemplate"
 
 Harness:
-  short: "A Kubernetes custom resource defining how an agent is allowed to run: its runtime, workload image, and WorkerPool and snapshot storage. An Agent pairs it with the AgentTemplate it runs."
+  short: "A Kubernetes custom resource defining how an agent is allowed to run: which harness executes the agent, its workload image, and its WorkerPool and snapshot storage. An Agent pairs it with the AgentTemplate that it runs."
   link: "/docs/kagent/1.x/about/core-concepts/#harness"
 
 Worker:
@@ -137,3 +137,7 @@ A2A:
 gVisor:
   short: "A user-space kernel that isolates a workload from the host kernel by intercepting its system calls. A default kagent installation compiles ActorTemplates to the gvisor sandbox class."
   link: "/docs/kagent/1.x/about/substrate-runtime/sandboxing/#sandbox-classes"
+
+Declarative agent:
+  short: "An agent built from an AgentTemplate rather than from code. The kagent harness reads that configuration and runs the agentic loop from it. Changing the agent's behavior means editing Kubernetes resources."
+  link: "/docs/kagent/1.x/agents/declarative-agents/"

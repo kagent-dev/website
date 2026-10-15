@@ -58,7 +58,7 @@ Your Kubernetes resources do carry forward, so export them before anything repla
 
 ## Install kagent 1.0
 
-Install 1.0 the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure installs Agent Substrate, kagent, and the identity material that they need.
+Install 1.0 in the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure installs Agent Substrate, kagent, and the identity material that they need.
 
 1. Store the connection string for the empty database in a Secret in the new cluster.
    ```bash
@@ -136,19 +136,19 @@ Four resource kinds are removed rather than replaced, so plan for each one befor
 
 ## Verify the new installation
 
-Confirm that the resources resolved before you retire anything, because a Harness that is missing a dependency reports the reason on itself.
+Confirm that the resources resolved before you retire anything. Harness and AgentTemplate resources do not report their own statuses, so check for issues in the Agent that references them both.
 
-1. Check that each Harness is ready. A Harness that is not ready most often names a WorkerPool that does not exist.
-   ```bash
-   kubectl get harness -n kagent
-   ```
-
-2. Check that each Agent compiled. An AgentTemplate does not report status, so the Agent that pairs it with a Harness is where readiness is reported.
+1. Check that each Agent is ready.
    ```bash
    kagent agent list
    ```
 
-3. Create a Session against a migrated Agent and send it a message. A reply confirms the whole path, from the compiled revision to the model credentials.
+2. Read the conditions on any Agent that is not ready. `ResolvedRefs` reports a missing reference, and a Harness that names a WorkerPool that does not exist is the most common cause.
+   ```bash
+   kubectl describe agent <agent-name> -n kagent
+   ```
+
+3. Create a Session against a migrated Agent and send it a message. A reply confirms the whole path, from the revision to the model credentials.
    ```bash
    kagent agent session create --agent <agent-name>
    ```

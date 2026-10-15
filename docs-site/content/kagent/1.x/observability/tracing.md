@@ -45,11 +45,11 @@ Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing ba
 - **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
 - **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. This is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
 
-### Runtime coverage
+### Harness coverage
 
-The controller passes its tracing configuration to every runtime and adds the collector to the Actor's egress allowlist, but the spans that each runtime sends depend on its own instrumentation. For the available runtimes, see [Choose a runtime]({{< link path="agents/agent-harness#choose-a-runtime" >}}). For how the allowlist is built, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
+The controller passes its tracing configuration to every harness and adds the collector to the Actor's egress allowlist, but the spans that each one sends depend on its own instrumentation. For the available harnesses, see [Choose a harness]({{< link path="agents/agent-harness#choose-a-harness" >}}). For how the allowlist is built, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
 
-| Runtime | What the trace shows |
+| Harness | What the trace shows |
 | ------- | -------------------- |
 | `kagent` | The runtime's spans. The span names on this page describe this runtime. |
 | `codex` and `claude` | The runtime's spans, from their own instrumentation. The span names differ from the ones on this page. |
@@ -247,7 +247,7 @@ Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, 
 
 Agent Substrate {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} an Actor as soon as the response body closes, which is sooner than a batching span exporter normally sends its buffer. Spans still in the buffer at that moment freeze inside the {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} and reach the backend only when the session next resumes, or never at all for a conversation's last message.
 
-To avoid losing them, the `kagent`, `codex`, and `claude` runtimes flush their span buffer after each A2A handler returns, before the response completes. The flush is unconditional and waits up to three seconds, and no setting changes either. An agent on the `byo` runtime flushes only if its own image does, so a conversation's last turn can lose its spans there.
+To avoid losing them, the `kagent`, `codex`, and `claude` runtimes flush their span buffer after each A2A handler returns, before the response completes. The flush is unconditional and waits up to three seconds, and no setting changes either. An agent on the `byo` harness flushes only if its own image does, so a conversation's last turn can lose its spans there.
 
 The flush lets a kagent trace arrive promptly rather than on the exporter's own schedule. To understand what suspension does to an Actor, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 

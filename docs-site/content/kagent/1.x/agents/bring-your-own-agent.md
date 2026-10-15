@@ -1,62 +1,66 @@
 ---
 title: Bring your own agent
-description: Run a container image of your own as a kagent agent by implementing the A2A service that the byo runtime expects.
+description: Run a container image of your own as a kagent agent by exposing the A2A service that the byo harness expects.
 weight: 20
 author: kagent.dev
 ---
 
-The `byo` runtime runs a container image that you build, and treats what is inside it as opaque. {{< reuse "kagent-docs/snippets/name-product.md" >}} still compiles the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} into a {{< gloss "Revision" >}}revision{{< /gloss >}}, schedules that revision onto {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}}, and routes conversations to it. What the image does with a message is yours to decide. Choose this runtime when you have an agent framework that kagent does not adapt, and you would rather bring the image than the integration.
+The `byo` harness runs a container image that you build, and treats what is inside it as opaque. {{< reuse "kagent-docs/snippets/name-product.md" >}} still builds a {{< gloss "Revision" >}}revision{{< /gloss >}} from the {{< gloss "Harness" >}}Harness{{< /gloss >}} and the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, schedules that revision onto {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}}, and routes conversations to it. What the image does with a message is yours to decide. Choose this harness when you already have an agent that is built with an agent framework, and you want to run that agent in kagent.
 
-## What kagent runs and what your image runs
+## Responsibilities on each side of the A2A boundary
 
-The `byo` runtime divides the work at the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) boundary. Everything on kagent's side of that boundary behaves in the same way as for the built-in runtimes, so a BYO agent is sandboxed, snapshotted, and addressed identically to one that kagent executes itself.
+{{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) is the contract between kagent and a BYO agent.
 
-kagent owns the lifecycle, the isolation, and the routing:
+Your image owns one side of the A2A contract by:
 
-- Compiles an {{< gloss "Agent" >}}Agent{{< /gloss >}} into an immutable revision, and creates a {{< gloss "Session" >}}Session{{< /gloss >}} from it.
-- Wraps the {{< gloss "Actor" >}}Actor{{< /gloss >}} that the image runs in with a [gVisor sandbox]({{< link path="about/substrate-runtime/sandboxing#sandbox-classes" >}}).
-- [Suspends and resumes]({{< link path="about/substrate-runtime/suspend-and-resume#suspension-between-turns" >}}) the Actor between turns, including its in-memory state.
-- Routes every conversation through the A2A gateway, so callers address the Agent rather than the Actor behind it.
-- Delivers the compiled agent configuration and agent card to the container, which the kagent helpers write to `/config/config.json` and `/config/agent-card.json` at startup.
+- Exposing an A2A service that accepts a message and returns a reply.
+- Exposing a readiness endpoint that reports when the service can take traffic.
+- Deciding what the agent actually does, including model calls, tool calls, and conversation state.
 
-Your image owns the agent's behavior and the two endpoints that expose it:
+kagent runs a BYO agent exactly as it runs one on a managed harness, and owns the other side of the A2A contract by:
 
-- An A2A service that accepts a message and returns a reply.
-- A readiness endpoint that reports when the service can take traffic.
-- Whatever the agent actually does: model calls, tool calls, and conversation state.
+- Building an immutable revision from the {{< gloss "Harness" >}}Harness{{< /gloss >}} and the AgentTemplate, and creating a {{< gloss "Session" >}}Session{{< /gloss >}} from it.
+- Running the {{< gloss "Actor" >}}Actor{{< /gloss >}} that hosts your image inside a sandbox. The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that the Harness references sets the class: `gvisor`, which every installation provides, or `microvm`, which needs its own Agent Substrate provisioning. For more information, see [Sandbox classes]({{< link path="about/substrate-runtime/sandboxing#sandbox-classes" >}}).
+- [Suspending and resuming]({{< link path="about/substrate-runtime/suspend-and-resume#suspension-between-turns" >}}) the Actor between turns, including its in-memory state.
+- Routing every conversation through the A2A gateway, so callers address the {{< gloss "Agent" >}}Agent{{< /gloss >}} rather than the Actor behind it.
+- Delivering the agent configuration and agent card to the container, which the kagent helpers write to `/config/config.json` and `/config/agent-card.json` at startup.
 
 Because Agent Substrate snapshots the whole Actor, an image that keeps conversation state in memory keeps it across a suspend. Your image does not need to persist anything to survive the gap between turns.
 
 ## The A2A contract
 
-A `byo` image must meet four requirements to run as an agent. kagent enforces only `spec.workload.command` at apply time, and the rest surface as a failed invoke rather than as a validation error. The steps in the [Configure a byo Harness](#configure-a-byo-harness) and [Build the image](#build-the-image) sections later in this page show how to satisfy each requirement.
+Both the Harness and the image must meet the following requirements, and kagent enforces them at different moments. Nothing checks the A2A service until a caller invokes the agent, so a misconfigured image reaches a healthy-looking state first. For examples of how to satisfy each requirement, see the steps in [Configure a BYO Harness](#configure-a-byo-harness) and [Build the image](#build-the-image).
 
-| Requirement | Detail |
-| ----------- | ------ |
-| `spec.workload.command` is set on the Harness | A `byo` Harness must override the image entrypoint, because kagent does not infer it. |
-| The container serves gRPC on port 80 | kagent builds the agent card with a single interface, `http://127.0.0.1:80` bound to gRPC, and that address is not configurable. The service is `lf.a2a.v1.A2AService`. |
-| The container answers `GET /readyz` on port 8081 | Agent Substrate probes this path to decide when the Actor is ready, with a 30-second timeout. The probe is on a different port from the A2A service on purpose, so serve it independently. |
-| The A2A service speaks gRPC, not JSON-RPC | The agent card fixes the protocol binding to gRPC. An image that serves A2A over JSON-RPC alone is never reached, regardless of the port it listens on. |
+| Requirement | Checked | Detail |
+| ----------- | ------- | ------ |
+| `spec.workload.command` is set on the Harness | When you apply the Harness | You must set the entrypoint override on a `byo` Harness. A manifest that omits it is rejected with `BYO harnesses must specify workload.command`. |
+| `spec.workload.image` is pinned by digest | When you apply the Harness | A `byo` Harness must name an image, and every Harness must pin it by `sha256` digest. A manifest that omits the image is rejected with `BYO harnesses must specify workload.image`, and a tag alone fails the field's pattern. |
+| The container serves gRPC on port 80 | When a caller invokes the agent | kagent builds the agent card with a single interface, `http://127.0.0.1:80` bound to gRPC, and that address is not configurable. The service is `lf.a2a.v1.A2AService`. |
+| The container answers `GET /readyz` on port 8081 | When Agent Substrate starts the Actor | Agent Substrate probes this path to decide when the Actor is ready, with a 30-second timeout. The probe is on a different port from the A2A service on purpose, so serve it independently. |
+| The A2A service speaks gRPC, not JSON-RPC | When a caller invokes the agent | The agent card fixes the protocol binding to gRPC. An image that serves A2A over only JSON-RPC is never reached, regardless of the port it listens on. |
 
 > [!WARNING]
-> **An image that listens on another port still reports `READY`.** Readiness is probed on port 8081, which succeeds no matter what the A2A service does, so nothing surfaces the mismatch until an invoke fails with `Connect: tunnel failed`. The compiled configuration sets port `80` in its `runtime.port` field, so an image that reads the configuration binds the right port. An image that ignores the configuration must pin port 80 itself. This gap is tracked as [kagent#2758](https://github.com/kagent-dev/kagent/issues/2758).
+> **An image that serves A2A on another port still reports `READY`.** Agent Substrate probes readiness on port 8081. That probe succeeds whether or not the A2A service on port 80 works, so the mismatch stays hidden until the first invoke. The invoke then fails in the gateway with `Connect: tunnel failed`. That message reports only that the gateway could not open a connection to the agent. It does not name a port. To bind the right port, read the `runtime.port` field of the configuration that kagent delivers. An image that ignores the configuration must bind port 80 itself.
 
-## Opaque and configured agents
+## Compare BYO and declarative agents
 
-kagent compiles an AgentTemplate for a `byo` Harness in the same way as for the `kagent` runtime, then hands the result to the container. The two ways of using this runtime differ only in whether the image reads it.
+kagent resolves the AgentTemplate in the same way for a BYO agent as for a [declarative agent]({{< link path="agents/declarative-agents" >}}), then delivers the result to the container as a JSON document in an environment variable. Both harnesses resolve a ModelConfig through the same code, so the same model providers work and the same ones are rejected. For the provider matrix, see [Model provider support]({{< link path="agents/agent-harness#model-provider-support" >}}).
 
-- **An opaque agent ignores the compiled configuration.** The AgentTemplate exists to give the agent an identity and a description, and the image decides everything else, including which model to call and which tools to offer. Every field on an opaque AgentTemplate is optional, `modelConfig` included.
-- **A configured agent reads the compiled configuration.** The image honors the AgentTemplate's system prompt, ModelConfig, tool bindings, skills, and plugins, so an operator changes the agent's behavior by editing the AgentTemplate rather than by rebuilding the image.
+The kagent harness reads that document and assembles the agent from it. A BYO image decides whether to read it:
 
-The `kagent` and `byo` runtimes compile through the same path, so a configured BYO agent accepts the same model providers and the same AgentTemplate features as the built-in runtime. For the provider matrix, see [Model provider support]({{< link path="agents/agent-harness#model-provider-support" >}}). For what an AgentTemplate can bind, see [Tool and skill support]({{< link path="agents/agent-harness#tool-and-skill-support" >}}).
+- **An opaque agent ignores the document.** The AgentTemplate exists to give the agent an identity and a description, and the image decides everything else, including which model to call and which tools to offer. Every field on an opaque AgentTemplate is optional, `modelConfig` included.
+- **A configured agent reads the document.** The image applies the AgentTemplate's system prompt, ModelConfig, tool bindings, skills, and plugins itself. Editing the AgentTemplate changes what the agent does without a rebuild.
 
-Both kinds of agent receive the same inputs. Agent Substrate delivers the two JSON payloads as private environment variables, and the kagent helpers write them to files before the agent starts. An image in another language either reads the files that `MaterializeFromEnv` writes or parses the variables itself.
+Two AgentTemplate features continue to apply regardless of this choice. First, a `byo` Harness rejects structured output, with `Harness runtime "byo" does not support structured output`. Second, the agent card that kagent advertises for a `byo` Agent leaves out the AgentTemplate's skills and declares no extension, so a client cannot discover human-in-the-loop support the way it can for a declarative agent.
 
-| Input | Contents |
-| ----- | -------- |
-| `KAGENT_CONFIG_JSON`, which the helpers write to `/config/config.json` | The compiled agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
+Both kinds of BYO agent receive the same environment variables. Agent Substrate delivers the two JSON payloads as private variables, and the kagent helpers write them to files before the agent starts. An image in another language either reads the files that `MaterializeFromEnv` writes or parses the variables itself.
+
+| Environment variable | Contents |
+| -------------------- | -------- |
+| `KAGENT_CONFIG_JSON`, which the helpers write to `/config/config.json` | The agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
 | `KAGENT_AGENT_CARD_JSON`, which the helpers write to `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
-| Anything in `spec.env` | Literal values and `credentialRef` lookups from the Harness, resolved before the Actor starts. Agent Substrate accepts at most 32 environment variables on an Actor, and the compiled configuration counts toward that limit. A revision that exceeds it fails to compile rather than starting and misbehaving. |
+| Anything in `spec.env` | The literal values that the Harness sets. |
+| Certificate-authority variables and `SSL_CERT_DIR` | The egress gateway's trust bundle, which every Actor receives. For the list and the limit on how many variables an Actor takes, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}). |
 
 The `runtime` object is the root of the configuration document, and subagents inherit it. The object includes the settings that a process needs before it serves a request.
 
@@ -79,16 +83,13 @@ The `runtime` object is the root of the configuration document, and subagents in
 | `control_plane_url` | The kagent API that the agent reports task state to. Required by the Go and Python helpers. |
 | `gateway_url` | The A2A gateway that the agent reaches other agents and MCP servers through. |
 | `name` and `namespace` | The Agent's name and the AgentTemplate's namespace, which kagent's helpers use to scope sessions. |
-| `port` | The port to serve A2A on. The controller sets `80` for every runtime, and the agent card advertises that same port. |
+| `port` | The port to serve A2A on. The controller sets `80` for every harness, and the agent card advertises that same port. |
 | `log_level` | `debug`, `info`, `warn`, or `error`, from the `config.runtimeDefaults.logging.level` Helm value. |
 | `max_content_length` | The largest A2A request body to accept, in bytes. Zero means unlimited, and an absent field keeps the helper's own default. |
 
-> [!IMPORTANT]
-> The process settings moved into the configuration document in {{< reuse "kagent-docs/versions/kagent.md" >}}. An image that reads `KAGENT_PORT`, `KAGENT_NAME`, `KAGENT_NAMESPACE`, `KAGENT_API_URL`, or `KAGENT_A2A_GRPC_ADDRESS` reads them as unset, and naming one of these variables in `spec.env` sets a variable that nothing reads. Read the `runtime` object instead.
-
 ## Configure a BYO Harness
 
-A `byo` Harness takes the same fields as any other, minus the runtime settings block. `spec.byo` is an empty object, because the runtime has nothing to configure. The image holds the behavior.
+A `byo` Harness takes the same fields as any other Harness. Its own block, `spec.byo`, is an empty object, because the image defines the behavior that the other harnesses take settings for.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -114,12 +115,12 @@ EOF
 
 | Field | Required | Description |
 | ----- | -------- | ----------- |
-| `byo` | Yes | Selects this runtime. The object is always empty, and naming a second runtime alongside it is rejected. |
+| `byo` | Yes | Selects this harness. The object is always empty, and naming a second harness alongside it is rejected. |
 | `workload.image` | Yes | Your image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
-| `workload.command` | Yes | The entrypoint to run, up to 32 entries. Required for `byo` and optional for every other runtime. |
-| `env` | No | Provider credentials and any setting that your image reads. Each entry takes a literal `value` or a `credentialRef`. |
+| `workload.command` | Yes | The entrypoint to run, up to 32 entries. Required for `byo` and optional for every other harness. |
+| `env` | No | Any setting that your image reads. Each entry takes a literal `value` only. Put credentials in a ModelConfig or a RemoteMCPServer instead. |
 
-An opaque agent's AgentTemplate carries only a description for the agent card. An Agent then pairs it with the Harness.
+An opaque agent's AgentTemplate sets only a description for the agent card. An Agent then pairs it with the Harness.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -149,7 +150,7 @@ To configure the agent from Kubernetes instead, add the fields that any AgentTem
 
 ## Build the image
 
-The A2A contract is a gRPC service and a readiness endpoint, so any language with a gRPC server can satisfy it. kagent ships helpers for two of them. To build and run a minimal image end to end before writing your own, see [Run your own agent image]({{< link path="examples/a2a-byo" >}}).
+The A2A contract is a gRPC service and a readiness endpoint, so any language with a gRPC server can satisfy it. kagent ships helpers for Go and Python. To build and run a minimal image end to end before writing your own, see [Run your own agent image]({{< link path="examples/a2a-byo" >}}).
 
 > [!TIP]
 > The Go helper produces smaller images, faster startup, and lower memory use than the Python one. Where both suit the agent that you are building, prefer Go.
@@ -159,6 +160,20 @@ The A2A contract is a gRPC service and a readiness endpoint, so any language wit
 `github.com/kagent-dev/kagent/go/adk/pkg/app` serves the A2A gRPC service, the readiness endpoint on 8081, and the agent card, given any type that implements `a2asrv.AgentExecutor`. The helper is framework-agnostic, so the executor is the only part that you write. `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`, and `config.LoadAgentConfig` reads the document back.
 
 ```go
+import (
+    "cmp"
+    "context"
+    "fmt"
+    "iter"
+    "os"
+
+    a2atype "github.com/a2aproject/a2a-go/v2/a2a"
+    "github.com/a2aproject/a2a-go/v2/a2asrv"
+    "github.com/kagent-dev/kagent/go/adk/pkg/app"
+    "github.com/kagent-dev/kagent/go/adk/pkg/config"
+    "github.com/kagent-dev/kagent/go/pkg/logging"
+)
+
 if err := config.MaterializeFromEnv("/config"); err != nil {
     return err
 }
@@ -186,12 +201,16 @@ if err != nil {
 return application.Run()
 ```
 
-Because the helper reports task state to the kagent API, you must set either `ControlPlaneURL` or your own `ControllerClient` in `app.AppConfig`. When `runtime.port` is omitted or unset, `cmp.Or` supplies `80`. Without that fallback, the helper listens on its own `8080` by default, which kagent never dials.
+`app.New` takes an application configuration and an executor, and returns an application that serves the A2A gRPC service and the agent card on the port that the configuration names. These settings in `app.AppConfig` decide whether kagent can reach the result:
+
+- `Port` is the port the A2A listener binds. `app.AppConfig` defaults it to `8080`, which kagent never dials. Pass `cmp.Or(runtime.Port, "80")` instead to take the port from the configuration and fall back to `80` when the configuration omits it.
+- `ControlPlaneURL`, or a `ControllerClient` of your own, is required because the helper reports task state to the kagent API.
+- `AppName` scopes sessions. The `runtime.Name` value is the Agent's name.
 
 For a complete executor, see [`go/core/test/byoa2a/main.go`](https://github.com/kagent-dev/kagent/blob/main/go/core/test/byoa2a/main.go) in the kagent repository.
 {{% /tab %}}
 {{% tab name="Python" %}}
-The `kagent-adk` package serves A2A over gRPC and its readiness endpoint on 8081. `KAgentConfig.from_file` materializes the payloads that Agent Substrate delivers and reads the `runtime` object back. The listener defaults to `[::]:80`, which matches what kagent dials.
+The `kagent-adk` package provides helpers for agents that are built with the Google Agent Development Kit (ADK). `KAgentApp` wraps an ADK agent rather than an arbitrary framework, serves A2A over gRPC, and answers the readiness endpoint on 8081. `KAgentConfig.from_file` materializes the payloads that Agent Substrate delivers and reads the `runtime` object back. The listener defaults to `[::]:80`, which matches what kagent dials.
 
 ```python
 from kagent.adk import KAgentApp
@@ -207,7 +226,7 @@ app = KAgentApp(
 ).build()
 ```
 
-`from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`, so a standalone process that runs outside Agent Substrate must supply its own `/config/config.json`. `KAgentApp` wraps a Google Agent Development Kit (ADK) agent rather than an arbitrary framework.
+`from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`, so a standalone process that runs outside Agent Substrate must supply its own `/config/config.json`.
 
 To bind the address that the configuration names rather than the default, pass the parsed document as the `agent_config` argument. The `a2a_grpc_address` argument overrides both.
 {{% /tab %}}
@@ -216,7 +235,7 @@ Implement the contract directly:
 
 1. Serve `lf.a2a.v1.A2AService` over gRPC on port 80. Generate the stubs from the [A2A protocol](https://a2a-protocol.org) definitions.
 2. Serve `GET /readyz` over HTTP on port 8081, returning `200`.
-3. To honor the AgentTemplate, read the compiled configuration from the `KAGENT_CONFIG_JSON` environment variable. An agent that ignores the variable runs as an opaque agent.
+3. To honor the AgentTemplate, read the agent configuration from the `KAGENT_CONFIG_JSON` environment variable. An agent that ignores the variable runs as an opaque agent.
 
 The kagent helpers read `KAGENT_CONFIG_JSON` and materialize its contents into `/config/config.json`. An image without those helpers parses the variable directly.
 {{% /tab %}}
@@ -224,16 +243,16 @@ The kagent helpers read `KAGENT_CONFIG_JSON` and materialize its contents into `
 
 ## Known limitations
 
-- **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` does not take a field that changes the address, the port, or the protocol. An image that serves A2A over HTTP JSON-RPC alone cannot run on this runtime.
-- **The `kagent-langgraph` and `kagent-crewai` adapters do not qualify yet.** Both build a FastAPI application with A2A JSON-RPC routes and no gRPC server, so neither satisfies the contract as shipped. Running LangGraph or CrewAI under `byo` currently means serving A2A over gRPC yourself.
-- **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory` and wired only by the `kagent` runtime's compiler. A `byo` Harness has no equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
-- **A broken port mapping presents as a healthy agent.** For the failure and what avoids it, see [The A2A contract](#the-a2a-contract).
+- **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` does not take a field that changes the address, the port, or the protocol. An image that serves A2A over only HTTP JSON-RPC cannot run on this harness.
+- **The LangGraph, CrewAI, and OpenAI adapters do not satisfy the contract.** The `kagent-langgraph`, `kagent-crewai`, and `kagent-openai` packages each build a FastAPI application with A2A JSON-RPC routes, without a gRPC server. Running LangGraph, CrewAI, or the OpenAI Agents SDK under `byo` means serving A2A over gRPC yourself, as the **Any other language** tab in [Build the image](#build-the-image) describes.
+- **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory`, and only the `kagent` harness wires it up. A `byo` Harness does not take an equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
+- **A broken port mapping looks like a healthy agent.** For the failure and what avoids it, see [The A2A contract](#the-a2a-contract).
 
 ## Next steps
 
 {{< cards >}}
   {{< card link=`{{< link path="examples/a2a-byo" >}}` title="Run your own agent image" subtitle="Build the minimal BYO agent, run it on a byo Harness, and invoke it." >}}
-  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the byo runtime against the three that kagent executes itself." >}}
+  {{< card link=`{{< link path="agents/agent-harness" >}}` title="Agent harness" subtitle="Compare the byo harness against the ones that kagent executes itself." >}}
   {{< card link=`{{< link path="examples/a2a-agents" >}}` title="Call an agent over A2A" subtitle="Send messages to an Agent with the same protocol that a BYO image serves." >}}
   {{< card link=`{{< link path="about/substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand what Agent Substrate snapshots while your image is idle." >}}
 {{< /cards >}}

@@ -213,7 +213,7 @@ application, err := app.New(app.AppConfig{
 
 `ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
 
-This agent ignores the rest of the compiled configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what it holds, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#opaque-and-configured-agents" >}}).
+This agent ignores the rest of the configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what the document contains, see [Compare BYO and declarative agents]({{< link path="agents/bring-your-own-agent#compare-byo-and-declarative-agents" >}}).
 
 ## Build and run your own agent
 
