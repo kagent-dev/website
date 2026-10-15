@@ -8,4 +8,4 @@ A skill or a plugin changes what an agent does, so kagent only accepts artifact 
 
 If a source sets more than one kind, or none of them, the API server rejects the AgentTemplate with the error `exactly one of the fields in [oci git bucket] must be set`.
 
-Keep in mind that publishing a new version means updating the AgentTemplate to reference the new digest, commit, or object version, which produces a new revision. However, agents that are already running keep the content that they started with.
+Publishing a new version means updating the AgentTemplate to reference the new digest, commit, or object version. The update produces a new revision. Agents that are already running keep the content that they started with.

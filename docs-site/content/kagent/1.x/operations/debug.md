@@ -95,7 +95,7 @@ kubectl get agent <name> -n kagent -o jsonpath='{.status.warnings}'
 
 ## A new AgentTemplate never runs
 
-When you create an AgentTemplate directly, it never becomes ready. An AgentTemplate is not runnable by itself, and nothing prepares a template until an Agent references it. The template also has no status for a failure to appear on, so the problem surfaces only when you try to start a conversation.
+When you create an AgentTemplate directly, nothing prepares it until an Agent references it. The template also has no status for a failure to appear on, so the problem surfaces only when you try to start a conversation.
 
 ```console
 ERROR:

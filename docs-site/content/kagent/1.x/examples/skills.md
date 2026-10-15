@@ -332,7 +332,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
 
 1. Check the Agent's `Ready` condition. A skill that cannot be fetched leaves the Agent waiting, because the Actor that builds the golden snapshot is the Actor that fetches the skill.
    ```bash
-   kubectl get agent <agent-name> -n kagent \
+   kubectl get agent release-writer -n kagent \
      -o jsonpath='{range .status.conditions[?(@.type=="Ready")]}{.status} {.reason} {.message}{end}'
    ```
 

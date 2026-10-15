@@ -119,7 +119,7 @@ Plugin:
   link: "/docs/kagent/1.x/skills-and-mcp/plugins/"
 
 Tool binding:
-  short: "One entry in an AgentTemplate's spec.tools list. Each binding connects the agent to one source: tools from a Model Context Protocol server, or another agent that takes work from it."
+  short: "One entry in an AgentTemplate's spec.tools list. Each binding connects the agent to one source: tools from a Model Context Protocol server, or another AgentTemplate that takes work from it."
   link: "/docs/kagent/1.x/skills-and-mcp/about-tools/"
 
 Model Context Protocol:
