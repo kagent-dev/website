@@ -20,7 +20,7 @@ The MCP server is part of the controller's HTTP port rather than a separate depl
 - **Extensions**: The server advertises the `io.modelcontextprotocol/tasks` extension, which changes how invocations behave. For more information, see [Invoke without waiting](#invoke-without-waiting).
 
 > [!WARNING]
-> A default installation sets `config.server.auth.mode` to `insecure`. In this mode the endpoint accepts every request and reads the caller's identity from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. The endpoint can invoke agents, create checkpoints, and create Sessions. Do not expose port `8083` outside the cluster while the controller runs this way. To take the caller's identity from a claim that a fronting proxy sets instead, set `config.server.auth.mode` to `trusted-proxy` and name the claim in `config.server.auth.userIdClaim`. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
+> A default installation sets `config.server.auth.mode` to `insecure`. In this mode the endpoint accepts every request and reads the caller's identity from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. The endpoint can invoke agents, create checkpoints, and create Sessions. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 
 ## Before you begin
 
@@ -486,7 +486,7 @@ The checkpoint tools pin a Session's state. These tools do not need the tasks ex
    }
    ```
 
-For what a checkpoint captures, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+For what a checkpoint captures, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
 You can now safely [clean up these resources](#clean-up).
 
@@ -513,7 +513,7 @@ The server exposes five Session tools. Two cover discovery and conversation. Thr
 | `invoke_session` | `session_id`, `message` | Sends a message and returns the agent's reply. Takes `message_id` for idempotency. |
 | `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the conversation at a turn boundary. The call fails if the conversation has advanced past that task. Takes `request_id` for idempotency. |
 | `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
-| `fork_session` | `checkpoint_id` | Temporarily rejects checkpoints with `FAILED_PRECONDITION` while suspended snapshots include process memory. Takes `request_id` for idempotency. |
+| `fork_session` | `checkpoint_id` | Starts a second Session from a checkpoint. Currently rejects every checkpoint with `FAILED_PRECONDITION`, for the reason given in [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}). Takes `request_id` for idempotency. |
 
 ## Next steps
 

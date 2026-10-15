@@ -29,11 +29,11 @@ Both forms replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagen
 A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
 > [!WARNING]
-> A default installation sets `config.server.auth.mode` to `insecure`. In this mode any caller that can reach the port can invoke any Agent. Do not expose port `8083` outside the cluster while the controller runs this way. To take the caller's identity from a claim that a fronting proxy sets instead, set `config.server.auth.mode` to `trusted-proxy` and name the claim in `config.server.auth.userIdClaim`. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
+> A default installation sets `config.server.auth.mode` to `insecure`. In this mode any caller that can reach the port can invoke any Agent. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 
 ### A2A methods
 
-The following table covers the methods that this example uses. The kagent CLI wraps the three `TaskPushNotificationConfig` calls, which manage a task's callbacks. For the further methods that `lf.a2a.v1.A2AService` defines, see the [A2A protocol](https://a2a-protocol.org) specification.
+The following table covers the methods that this example uses. The `TaskPushNotificationConfig` calls manage a task's callbacks, and this example reaches them through the kagent CLI. For the further methods that `lf.a2a.v1.A2AService` defines, see the [A2A protocol specification](https://a2a-protocol.org/latest/specification/#31-core-operations).
 
 | Method | What it does |
 | ------ | ------------ |

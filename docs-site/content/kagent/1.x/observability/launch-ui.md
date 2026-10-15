@@ -100,7 +100,7 @@ To take a checkpoint, select the save icon beside the message box. kagent pins t
 
 A checkpoint appears in the transcript as a mark carrying the snapshot name and three controls. Select the mark to open the record behind it. The record holds the checkpoint's ID, turn, state, and age.
 
-- **Fork** is temporarily unavailable in the current release. The API rejects checkpoint forks with `FAILED_PRECONDITION` while suspended Actor snapshots include process memory. For more information, see [Forking is temporarily unavailable]({{< link path="examples/agent-substrate#forking-is-temporarily-unavailable" >}}).
+- **Fork** starts a second Session from the checkpoint. Currently, the API rejects every fork with `FAILED_PRECONDITION`, for the reason given in [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
 - **Rename** replaces the snapshot name that kagent generates on creation from the Session ID and the turn the checkpoint pins. Clearing the name restores that generated default.
 - **Delete** removes the checkpoint and releases the snapshot it pinned. Agent Substrate is then free to collect that snapshot.
 
