@@ -105,7 +105,7 @@ Tag:
 
 Fork:
   short: "A second Session created from a checkpoint, continuing the conversation from the point that the checkpoint pinned. A fork inherits the checkpoint's revision, so later edits to the Agent do not change what it runs, and new turns append only to the fork, leaving the original's history untouched."
-  link: "/docs/kagent/1.x/examples/agent-substrate/#fork-the-conversation-into-a-second-agent"
+  link: "/docs/kagent/1.x/examples/agent-substrate/#fork-the-checkpoint-into-a-second-session"
 
 Transcript:
   short: "The record of a Session's conversation, held server-side and append-only. It survives the Actor suspending between turns, and a resumed runtime cannot shrink it."

@@ -486,7 +486,7 @@ The checkpoint tools pin a Session's state. These tools do not need the tasks ex
    }
    ```
 
-For what a checkpoint captures, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+To start a second Session from a checkpoint, call `fork_session` with the checkpoint ID. For what a fork replays and where it diverges, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
 You can now safely [clean up these resources](#clean-up).
 
@@ -513,7 +513,7 @@ The server exposes five Session tools. Two cover discovery and conversation. Thr
 | `invoke_session` | `session_id`, `message` | Sends a message and returns the agent's reply. Takes `message_id` for idempotency. |
 | `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the conversation at a turn boundary. The call fails if the conversation has advanced past that task. Takes `request_id` for idempotency. |
 | `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
-| `fork_session` | `checkpoint_id` | Starts a second Session from a checkpoint. Currently rejects every checkpoint with `FAILED_PRECONDITION`, for the reason given in [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}). Takes `request_id` for idempotency. |
+| `fork_session` | `checkpoint_id` | Starts a second Session from a checkpoint, replaying the conversation through the pinned turn. Takes `request_id` for idempotency. |
 
 ## Next steps
 

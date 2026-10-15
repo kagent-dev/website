@@ -250,7 +250,7 @@ This value governs every Session in the installation. kagent does not provide a 
 
 Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset it. A Session that is only ever listed still expires.
 
-<!-- REVIEW (docs): forking a checkpoint is unavailable at kagent v1.0.0-alpha11, so the fork expiry behavior is removed from here rather than described as something a reader can reach. Restore it when ForkSession stops rejecting: a fork keeps its source's event timestamps, and its own creation time gives it a full lifetime rather than an almost-expired one. -->
+A fork is the case where the creation time decides. A fork replays its source Session's events and keeps their original timestamps, so its most recently stored event is older than the fork itself. Idle time therefore runs from the fork's own creation, which gives it a full interval rather than an almost expired one.
 
 Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 

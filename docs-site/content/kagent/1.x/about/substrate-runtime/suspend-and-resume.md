@@ -85,7 +85,7 @@ Because kagent suspends at every turn boundary, every message to a Session pays 
 
 ## Checkpoints
 
-A **checkpoint** marks one point in a conversation and keeps it. You can create a checkpoint when a Session reaches a state worth returning to, such as a long investigation that is only partway through. Starting a second Session from that point, which is known as a {{< gloss "Fork" >}}fork{{< /gloss >}}, is unavailable in this release. kagent captures process memory in every snapshot, so `ForkSession` rejects a checkpoint with `FAILED_PRECONDITION` rather than restore an Actor that still holds the source Session's identifiers. To create and inspect a checkpoint, follow the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+A **checkpoint** marks one point in a conversation and keeps it. You can create a checkpoint when a Session reaches a state worth returning to, such as a long investigation that is only partway through. Starting a second Session from that point is known as a {{< gloss "Fork" >}}fork{{< /gloss >}}. The fork replays the conversation through the pinned turn and then continues on its own, with its own conversation ID and its own task IDs. A fork needs the pinned snapshot to keep durable data without process memory. Agent Substrate writes that kind of snapshot on every suspend, so any checkpoint that reaches `CHECKPOINT_STATE_READY` can be forked. To create a checkpoint and fork it, follow the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
 
 Create a checkpoint only after a turn finishes. The request names the task that the turn ended on, and it fails when a newer turn has already started or while that turn's snapshot is still being written.
 

@@ -1,6 +1,6 @@
 ---
 title: Agent Substrate
-description: Watch an agent's Actor suspend between turns and pin its state with a checkpoint.
+description: Watch an agent's Actor suspend between turns, pin its state with a checkpoint, and fork that checkpoint into a second Session.
 weight: 10
 author: kagent.dev
 ---
@@ -139,9 +139,64 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
 
 Underneath, the checkpoint attaches a {{< gloss "Tag" >}}Tag{{< /gloss >}} named `checkpoint-<checkpoint-id>` to the snapshot, and Agent Substrate does not collect a snapshot while a tag names it. You can see the tag by running `kubectl ate get tags --atespace kagent`.
 
+## Fork the checkpoint into a second Session
+
+A fork starts a new Session from a checkpoint. The new Session replays the conversation through the pinned turn and then continues on its own. You can therefore take a conversation in a second direction without disturbing the first.
+
+1. Fork the checkpoint. `requestId` is an idempotency key of 1 to 128 characters. Repeating a `requestId` returns the Session that the earlier call created rather than forking a second one.
+   ```bash
+   grpcurl -plaintext \
+     -d '{"checkpointId":"'"$CHECKPOINT_ID"'","requestId":"'"$(uuidgen)"'"}' \
+     localhost:8083 kagent.api.v1alpha1.CheckpointService/ForkSession
+   ```
+
+   The fork takes the checkpoint's name, and runs the revision that the source Session was created on. Example output:
+   ```json
+   {
+     "session": {
+       "id": "0198c3f1-2d7a-7c48-9e03-4b1f6a8d2c95",
+       "creator": "admin@kagent.dev",
+       "agent": {
+         "namespace": "kagent",
+         "name": "my-first-agent"
+       },
+       "state": "RUNTIME_STATE_READY",
+       "createdAt": "2026-08-31T15:19:02Z",
+       "name": "my-first-agent turn 4",
+       "contextId": "0198c3f1-2d7a-7c48-9e03-4b1f6a8d2c95"
+     }
+   }
+   ```
+
+   > [!NOTE]
+   > The fork receives its own conversation ID and its own task IDs, so `contextId` is the fork's own ID rather than the source Session's. The replayed turns keep the timestamps they had on the source Session. Agent Substrate measures the fork's idle lifetime from its creation time instead, so a fork of an old conversation is not collected as idle.
+
+2. Save the forked Session's ID.
+   ```bash
+   export FORK_SESSION_ID=<your-forked-session-id>
+   ```
+
+3. Ask the fork about the replayed conversation. The agent answers from the turns that the checkpoint pinned, which is what makes the fork a continuation rather than a new conversation.
+   ```bash
+   kagent agent invoke --session $FORK_SESSION_ID --task "What did I ask you first?"
+   ```
+
+4. Confirm that the two Sessions are now independent. Send the source Session a message, and note that the fork's transcript does not change.
+   ```bash
+   kagent agent invoke --session $SESSION_ID --task "Remember the number 7."
+   kagent agent invoke --session $FORK_SESSION_ID --task "What number did I ask you to remember?"
+   ```
+
+   The fork does not know the number, because the two conversations diverged at the checkpoint.
+
 ## Clean up
 
-1. Delete the checkpoint. Deleting removes the Tag and releases the pin, and Agent Substrate can collect the snapshot whenever no tag names it.
+1. Delete the forked Session.
+   ```bash
+   kagent agent session delete $FORK_SESSION_ID
+   ```
+
+2. Delete the checkpoint. Deleting removes the Tag and releases the pin, and Agent Substrate can collect the snapshot whenever no tag names it.
    ```bash
    grpcurl -plaintext \
      -d '{"checkpointId":"'"$CHECKPOINT_ID"'"}' \

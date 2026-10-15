@@ -78,7 +78,7 @@ A **WorkerPool** keeps **Workers** running and ready, and a Worker hosts the **A
 The diagram forks at this snapshot, because a snapshot serves two purposes.
 
 - **Resume** restores the same Actor onto **any Worker in the pool with room**, which is not necessarily the Worker that it ran on before. Because the snapshot captures the Actor's full state, the conversation continues from where it left off. Every idle agent takes this path.
-- A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins this snapshot so that Agent Substrate does not collect it. Seeding a **New Actor** from a tag is unavailable in this release. Resuming an existing Actor never goes through a tag.
+- A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins this snapshot so that Agent Substrate does not collect it. To fork a Session from a checkpoint, kagent seeds a **New Actor** from that tag. Resuming an existing Actor never goes through a tag.
 
 A tag gives a snapshot a stable name, so callers do not track Agent Substrate's internal snapshot identity. The tag names one snapshot permanently, and only its visibility scope can change afterward. A tag is also a retention pin, so Agent Substrate does not delete a snapshot while a tag still names it.
 
