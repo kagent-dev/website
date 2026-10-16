@@ -18,7 +18,15 @@ Agent Substrate reports telemetry from its own components, separately from the t
 | Traces | Over OTLP, when an OTLP endpoint is set | Scheduling, resume, and suspend work. These traces are separate from the agent request trace. See [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}). |
 | Metrics | Over OTLP, when an OTLP endpoint is set | Worker capacity, scheduling, and snapshot timing. See [Agent Substrate metrics]({{< link path="observability/metrics#agent-substrate-metrics" >}}). |
 
-The Agent Substrate Helm chart sets one OTLP endpoint for traces, metrics, and logs through `otel.endpoint`, and samples traces at a ratio of `0.01` by default through `otel.traces.samplingRatio`. The [OTel stack]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}) and [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) guides set both.
+The Agent Substrate Helm chart sets one OTLP endpoint for traces, metrics, and logs through `otel.endpoint`, and samples traces at a ratio of `0.01` by default through `otel.traces.samplingRatio`.
+
+{{% upstream %}}
+The [OTel stack]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}) and [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) guides set both.
+{{% /upstream %}}
+
+{{% downstream %}}
+[Send Agent Substrate telemetry]({{< link path="observability/telemetry-pipeline#send-agent-substrate-telemetry" >}}) sets both.
+{{% /downstream %}}
 
 The router access log and the Actor state change records are the two sources of Agent Substrate logs over OTLP, and the `otel.logs` settings control both together. To send them to a different backend than traces and metrics, set `otel.logs.endpoint`. To stop exporting them, set `otel.logs.enabled` to `false`. The chart has no setting for the access log alone.
 
@@ -95,7 +103,7 @@ An Actor writes to the stdout of whichever Worker pod runs it, and a suspended A
 
    The filter returns the Actor's lines from every Worker that currently runs in the pool, including the lines from before the Actor last suspended.
 
-`kubectl logs` reads only the Worker pods that exist now. When a Worker pod is replaced, the output that it held is gone. To keep an Actor's history across Worker replacements, collect the stdout of the Worker pods with a log agent that stores structured JSON, and query it by the same labels. Neither the OTel stack guide nor the Lightweight OTel stack guide collects pod stdout, because both configure the Collector with the OTLP receiver only.
+`kubectl logs` reads only the Worker pods that exist now. When a Worker pod is replaced, the output that it held is gone. To keep an Actor's history across Worker replacements, collect the stdout of the Worker pods with a log agent that stores structured JSON, and query it by the same labels. No collector in this documentation collects pod stdout: each is configured with the OTLP receiver alone, so it receives only what a component pushes to it.
 
 Agent Substrate can also stream a single Actor's output directly, without the pool-wide filter.
 

@@ -9,7 +9,7 @@ A trace records one agent request as a tree of timed spans, so you can see where
 
 ## About trace coverage
 
-A trace follows a W3C Trace Context header that the controller passes along with each request. The following diagram traces one request from the caller to the agent runtime.
+A trace follows a W3C Trace Context header that the controller passes along with each request. The following diagram shows the path of one request, from the caller to the agent runtime.
 </br></br>
 
 ```mermaid
@@ -39,15 +39,15 @@ flowchart LR
 
 A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) connection to the Session's Actor and injects a `traceparent` header into that call. The Agent Substrate router forwards the call to the Worker that runs the Actor, and adds its own spans to the trace. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
 
-Each hop reports itself as a separate OpenTelemetry (OTel) service. A tracing backend uses these service names to group the spans.
+Each hop sends its spans under a separate OpenTelemetry (OTel) service name. A tracing backend groups the spans by those names.
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
 - **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
-- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. This is a change from kagent 0.x, where every agent reported under one `kagent` service. A backend that you filter by service now shows one entry for each Agent, and adding an Agent adds a service.
+- **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. In kagent 0.x, every agent reported under a single `kagent` service. A backend that you filter by service now lists one entry for each Agent, so the list grows as you add Agents.
 
 ### Harness coverage
 
-The controller passes its tracing configuration to every harness and adds the collector to the Actor's egress allowlist, but the spans that each one sends depend on its own instrumentation. For the available harnesses, see [Choose a harness]({{< link path="agents/agent-harness#choose-a-harness" >}}). For how the allowlist is built, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
+The controller passes its tracing configuration to every harness, and adds the collector to the Actor's egress allowlist. Which spans a harness then sends depends on its own instrumentation. For the available harnesses, see [Choose a harness]({{< link path="agents/agent-harness#choose-a-harness" >}}). For how the allowlist is built, see [Egress control]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}).
 
 | Harness | What the trace shows |
 | ------- | -------------------- |
@@ -57,7 +57,7 @@ The controller passes its tracing configuration to every harness and adds the co
 
 ### Spans
 
-The `kagent` runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following spans appear in nesting order, from the span that accepts the request down to the model and tool calls that serve it.
+The `kagent` runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following table lists the spans in nesting order, starting with the span that accepts the request.
 
 | Span | When it is created |
 | ---- | ------------------ |
@@ -81,7 +81,7 @@ Use attributes, not span names, to identify a request in a trace. The runtime co
 | `gen_ai.main_agent.id` | Resource | The main Agent that the runtime process was compiled for, as `<namespace>/<name>`. This resource attribute replaces the resource-level `gen_ai.agent.id` name. |
 | `kagent.runtime` | Resource | The runtime that served the request, such as `adk-go`. |
 
-The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. Unlike the correlation attributes, these tags stay on the `a2a.request` span alone, so a search on one returns that span instead of the whole subtree.
+The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. These tags stay on the `a2a.request` span alone, unlike the correlation attributes. A search on one therefore returns that span rather than the whole subtree.
 
 > [!WARNING]
 > When the `config.runtimeDefaults.telemetry.captureContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three.
@@ -92,11 +92,23 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send a request to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
-3. Set up a tracing backend. The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you, so you can skip to [Review a trace](#review-a-trace).
+3. Set up a tracing backend.
+
+   {{% upstream %}}
+   The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you, so you can skip to [Review a trace](#review-a-trace).
+   {{% /upstream %}}
+
+   {{% downstream %}}
+   [Turn on the telemetry pipeline]({{< link path="observability/telemetry-pipeline" >}}), which turns on tracing and stores the traces where the UI reads them.
+   {{% /downstream %}}
 
 ## Enable tracing
 
-Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
+Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to a collector over OTLP. To send traces to another OTLP backend, change the endpoint.
+
+{{% upstream %}}
+The endpoint in these steps is the collector that both stack guides install.
+{{% /upstream %}}
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -197,7 +209,10 @@ Send a request to a new Session, then find its trace in the backend that you set
       ```bash
       kubectl port-forward -n telemetry svc/kube-prometheus-stack-grafana 3000:80
       ```
-   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in. For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
+   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in.
+      {{% upstream %}}
+      For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
+      {{% /upstream %}}
    3. Open **Explore**, select the **Tempo** data source, and select the **Search** query type.
    4. From the **Service Name** list, select `my-first-agent`, and run the query. Selecting `kagent-controller` instead returns the same traces from the controller's side.
    5. Click a trace to open it.
@@ -241,7 +256,15 @@ Agent Substrate records traces for its own work, such as scheduling an Actor ont
 | `ateom-gvisor` | Work inside the sandbox that runs the Actor. |
 | `atecontroller` | Reconciliation of Agent Substrate resources, such as WorkerPools. |
 
-Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, and it keeps 1% of its traces by default. To keep more, raise `otel.traces.samplingRatio`, as the stack guides do. For the steps, see [Send Agent Substrate telemetry to the collector]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}).
+Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, and it keeps 1% of its traces by default. To keep more, raise `otel.traces.samplingRatio`.
+
+{{% upstream %}}
+For the steps, see [Send Agent Substrate telemetry to the collector]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}).
+{{% /upstream %}}
+
+{{% downstream %}}
+For the steps, see [Send Agent Substrate telemetry]({{< link path="observability/telemetry-pipeline#send-agent-substrate-telemetry" >}}).
+{{% /downstream %}}
 
 ## Traces from a suspended Actor
 
@@ -267,7 +290,9 @@ Turn off the trace exporter, then create a new Session so that the change takes 
 
 2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
 
+{{% upstream %}}
 3. To remove the tracing backend, follow the cleanup steps in the [OTel stack]({{< link path="observability/otel-stack#clean-up" >}}) or [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#clean-up" >}}) guide.
+{{% /upstream %}}
 
 ## Next steps
 
