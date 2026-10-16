@@ -46,7 +46,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `template` _[AgentTemplateSource](#agenttemplatesource)_ | Template selects the portable behavior this Agent exposes. |  | **Required** <br /> |
+| `template` _[AgentTemplateSource](#agenttemplatesource)_ | Template selects the portable behavior this Agent exposes. |  | ExactlyOneOf: [inline ref] <br />**Required** <br /> |
 | `harnessRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | HarnessRef selects the platform-managed runtime configuration that executes<br />the behavior. |  | **Required** <br /> |
 
 #### AgentStatus
@@ -61,6 +61,7 @@ _Appears in:_
 | `observedGeneration` _integer_ |  |  |  |
 | `desiredRevision` _string_ |  |  | MinLength: 1 <br /> |
 | `latestSuccessfulRevision` _string_ |  |  | MinLength: 1 <br /> |
+| `workloadImage` _string_ | WorkloadImage is the digest-pinned image selected for the desired revision.<br />Existing Sessions may still use an older revision and image. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br /> |
 | `warnings` _string array_ | Warnings reports non-blocking compatibility decisions made while compiling<br />this Agent. |  | MaxItems: 100 <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
 
@@ -75,7 +76,7 @@ AgentTemplate defines portable agent behavior.
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  | **Required** <br /> |
+| `spec` _[AgentTemplateSpec](#agenttemplatespec)_ |  |  | AtMostOneOf: [outputSchema outputSchemaFrom] <br />**Required** <br /> |
 
 #### AgentTemplatePromptSource
 
@@ -110,23 +111,29 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `source` _[ArtifactSource](#artifactsource)_ |  |  | **Required** <br /> |
+| `source` _[ArtifactSource](#artifactsource)_ |  |  | ExactlyOneOf: [oci git bucket] <br />**Required** <br /> |
 
 #### AgentTemplateSource
 
 AgentTemplateSource selects portable behavior inline or by local reference.
+
+_Validation:_
+- ExactlyOneOf: [inline ref]
 
 _Appears in:_
 - [AgentSpec](#agentspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `inline` _[AgentTemplateSpec](#agenttemplatespec)_ | Inline defines the Agent's portable behavior directly. It cannot be set<br />together with Ref. |  |  |
+| `inline` _[AgentTemplateSpec](#agenttemplatespec)_ | Inline defines the Agent's portable behavior directly. It cannot be set<br />together with Ref. |  | AtMostOneOf: [outputSchema outputSchemaFrom] <br /> |
 | `ref` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | Ref names an AgentTemplate in the Agent's namespace. It cannot be set<br />together with Inline. |  |  |
 
 #### AgentTemplateSpec
 
 AgentTemplateSpec defines portable agent behavior.
+
+_Validation:_
+- AtMostOneOf: [outputSchema outputSchemaFrom]
 
 _Appears in:_
 - [AgentTemplate](#agenttemplate)
@@ -141,7 +148,7 @@ _Appears in:_
 | `outputSchema` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | OutputSchema constrains successful terminal output when this template is<br />compiled as the root agent. |  | Type: object <br /> |
 | `outputSchemaFrom` _[ConfigMapKeyReference](#configmapkeyreference)_ | OutputSchemaFrom references a JSON Schema stored as JSON in a<br />same-namespace ConfigMap key. |  |  |
 | `promptTemplate` _[AgentTemplatePromptTemplateSpec](#agenttemplateprompttemplatespec)_ |  |  |  |
-| `tools` _[ToolBinding](#toolbinding) array_ |  |  | MaxItems: 50 <br /> |
+| `tools` _[ToolBinding](#toolbinding) array_ |  |  | ExactlyOneOf: [mcp subAgent] <br />MaxItems: 50 <br /> |
 | `skills` _[AgentTemplateSkill](#agenttemplateskill) array_ |  |  | MaxItems: 50 <br /> |
 | `plugins` _[PluginBundle](#pluginbundle) array_ |  |  | MaxItems: 20 <br /> |
 
@@ -197,6 +204,9 @@ _Appears in:_
 
 ArtifactSource selects exactly one immutable artifact.
 
+_Validation:_
+- ExactlyOneOf: [oci git bucket]
+
 _Appears in:_
 - [AgentTemplateSkill](#agenttemplateskill)
 - [PluginBundle](#pluginbundle)
@@ -222,7 +232,7 @@ _Appears in:_
 | `azureDeployment` _string_ | Deployment name for the Azure OpenAI API |  |  |
 | `azureAdToken` _string_ | Azure AD token for authentication |  |  |
 | `temperature` _string_ | Temperature for sampling |  |  |
-| `maxTokens` _integer_ | Maximum tokens to generate |  |  |
+| `maxTokens` _integer_ | Maximum tokens to generate |  | Minimum: 1 <br /> |
 | `topP` _string_ | Top-p sampling parameter |  |  |
 | `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects chatCompletions (default, the dated deployments path) or<br />responses (the /openai/v1 surface, which needs no apiVersion and reads files by link). | chatCompletions | Enum: [chatCompletions responses] <br /> |
 
@@ -258,7 +268,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `region` _string_ | AWS region where the Bedrock model is available (e.g., us-east-1, us-west-2) |  | **Required** <br /> |
-| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  |  |
+| `additionalModelRequestFields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | AdditionalModelRequestFields passes model-specific parameters to Bedrock's<br />additionalModelRequestFields in the Converse API. Use this for provider-specific<br />options that are not part of the standard InferenceConfiguration block, such as<br />Claude extended thinking or top_k. Values are forwarded as-is to the API.<br />Example: \{"top_k": 5, "thinking": \{"type": "enabled", "budget_tokens": 16000\}\} |  | Type: object <br /> |
 | `promptCaching` _boolean_ | PromptCaching enables Bedrock prompt caching by appending a CachePoint<br />block at the end of the Converse request's `system` content array and<br />the end of the `toolConfig.tools` array. Bedrock will cache the prefix up to and<br />including those cache points across requests in the same region for<br />roughly 5 minutes after first use, billing the cached portion at a<br />reduced rate on cache hits.<br />Recommended for tool-using agents that make many Converse calls per<br />task with a stable system prompt and tool set — the per-call input<br />token count can drop by 70-90% on hit. Has no effect on models that<br />don't support caching; the marker is ignored by Bedrock for those.<br />See https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html<br />for the current list of supported models and minimum prefix sizes. | false |  |
 | `cacheTTL` _string_ | CacheTTL controls how long Bedrock retains a cached prefix when<br />PromptCaching is enabled. Only meaningful when PromptCaching is true.<br />  - "5m" (default): Bedrock's standard 5-minute sliding cache. Each cache<br />    hit refreshes the window. Supported by all prompt-caching models.<br />  - "1h": extended-TTL caching, useful for tasks whose Converse calls are<br />    spaced more than 5 minutes apart.<br />NOTE: "1h" is NOT strictly better than "5m". Extended-TTL cache writes are<br />billed at a higher per-token rate than 5-minute writes, and 1h is supported<br />on a narrower set of models. Only choose "1h" when calls are spaced far<br />enough apart that a 5-minute cache would expire between them; otherwise the<br />higher write cost is wasted. See the AWS prompt-caching docs above. | 5m | Enum: [5m 1h] <br /> |
 | `guardrail` _[BedrockGuardrailConfig](#bedrockguardrailconfig)_ |  |  |  |
@@ -421,7 +431,7 @@ Harness defines a reusable agent runtime and infrastructure policy.
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[HarnessSpec](#harnessspec)_ |  |  | **Required** <br /> |
+| `spec` _[HarnessSpec](#harnessspec)_ |  |  | ExactlyOneOf: [kagent codex claude byo] <br />**Required** <br /> |
 | `status` _[HarnessStatus](#harnessstatus)_ |  |  |  |
 
 #### HarnessCapabilities
@@ -453,6 +463,9 @@ _Appears in:_
 
 HarnessSpec defines a reusable runtime and its infrastructure policy.
 
+_Validation:_
+- ExactlyOneOf: [kagent codex claude byo]
+
 _Appears in:_
 - [Harness](#harness)
 
@@ -462,7 +475,7 @@ _Appears in:_
 | `codex` _[CodexHarness](#codexharness)_ |  |  |  |
 | `claude` _[ClaudeHarness](#claudeharness)_ |  |  |  |
 | `byo` _[BYOHarness](#byoharness)_ |  |  |  |
-| `workload` _[HarnessWorkload](#harnessworkload)_ |  |  | **Required** <br /> |
+| `workload` _[HarnessWorkload](#harnessworkload)_ | Workload overrides the built-in runtime image and its command. BYO requires it. |  |  |
 | `env` _[RuntimeEnvVar](#runtimeenvvar) array_ |  |  | MaxItems: 100 <br /> |
 | `substrate` _[RuntimeSubstratePolicy](#runtimesubstratepolicy)_ |  |  | **Required** <br /> |
 
@@ -488,7 +501,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `image` _string_ | Image is an OCI image reference pinned by sha256 digest. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br />**Required** <br /> |
+| `image` _string_ | Image overrides the release's built-in runtime image. BYO requires an image.<br />When set, it must be an OCI image reference pinned by sha256 digest. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br /> |
 | `command` _string array_ | Command overrides the image entrypoint when set. |  | MaxItems: 32 <br /> |
 | `args` _string array_ | Args overrides the image command arguments when set. |  | MaxItems: 64 <br /> |
 
@@ -502,7 +515,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `memory` _[KagentHarnessMemory](#kagentharnessmemory)_ | Memory enables long-term memory for agents using this Harness. |  |  |
-| `compaction` _[KagentHarnessCompaction](#kagentharnesscompaction)_ | Compaction summarizes older session events so the prompt stays small as<br />a conversation grows. Omitted leaves the history uncompacted. |  |  |
+| `compaction` _[KagentHarnessCompaction](#kagentharnesscompaction)_ | Compaction summarizes older session events so the prompt stays small as<br />a conversation grows. Omitted leaves the history uncompacted. |  | AtLeastOneOf: [compactionInterval tokenThreshold] <br /> |
 
 #### KagentHarnessCompaction
 
@@ -512,6 +525,9 @@ summarizes each group of completed invocations; tail retention
 (tokenThreshold, eventRetentionSize) bounds the prompt by summarizing
 everything but the most recent events once the prompt grows past a token
 count. At least one strategy must be configured.
+
+_Validation:_
+- AtLeastOneOf: [compactionInterval tokenThreshold]
 
 _Appears in:_
 - [KagentHarness](#kagentharness)
@@ -618,7 +634,7 @@ _Appears in:_
 | `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
 | `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral] <br /> |
-| `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  |  |
+| `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  | AtMostOneOf: [maxTokens maxCompletionTokens] <br /> |
 | `anthropic` _[AnthropicConfig](#anthropicconfig)_ | Anthropic-specific configuration |  |  |
 | `azureOpenAI` _[AzureOpenAIConfig](#azureopenaiconfig)_ | Azure OpenAI-specific configuration |  |  |
 | `ollama` _[OllamaConfig](#ollamaconfig)_ | Ollama-specific configuration |  |  |
@@ -749,6 +765,9 @@ _Appears in:_
 
 OpenAIConfig contains OpenAI-specific configuration options
 
+_Validation:_
+- AtMostOneOf: [maxTokens maxCompletionTokens]
+
 _Appears in:_
 - [ModelConfigSpec](#modelconfigspec)
 
@@ -763,8 +782,8 @@ _Appears in:_
 | `frequencyPenalty` _string_ | Frequency penalty |  |  |
 | `presencePenalty` _string_ | Presence penalty |  |  |
 | `seed` _integer_ | Seed value |  |  |
-| `n` _integer_ | N value |  |  |
-| `timeout` _integer_ | Timeout |  |  |
+| `n` _integer_ | N value |  | Minimum: 1 <br /> |
+| `timeout` _integer_ | Timeout |  | Maximum: 9.223372036e+09 <br />Minimum: 1 <br /> |
 | `reasoningEffort` _[OpenAIReasoningEffort](#openaireasoningeffort)_ | Reasoning effort |  | Enum: [none minimal low medium high xhigh] <br /> |
 | `apiFormat` _[OpenAIAPIFormat](#openaiapiformat)_ | APIFormat selects which OpenAI HTTP API the runtime uses for this model.<br />chatCompletions (default) posts to /v1/chat/completions.<br />responses posts to /v1/responses. Use responses for OpenAI-compatible<br />gateways or models that require the Responses API. | chatCompletions | Enum: [chatCompletions responses] <br /> |
 
@@ -791,7 +810,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `source` _[ArtifactSource](#artifactsource)_ |  |  | **Required** <br /> |
+| `source` _[ArtifactSource](#artifactsource)_ |  |  | ExactlyOneOf: [oci git bucket] <br />**Required** <br /> |
 | `skills` _string array_ | An empty selection enables nothing. |  | MaxItems: 50 <br />items:MinLength: 1 <br /> |
 
 #### RemoteMCPServer
@@ -835,7 +854,7 @@ _Appears in:_
 | `description` _string_ |  |  | **Required** <br /> |
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
 | `url` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `headersFrom` _[ValueRef](#valueref) array_ |  |  |  |
+| `headersFrom` _[ValueRef](#valueref) array_ |  |  | ExactlyOneOf: [value valueFrom] <br /> |
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  | 30s |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
@@ -1008,6 +1027,9 @@ _Appears in:_
 
 ToolBinding selects exactly one MCP or subagent tool source.
 
+_Validation:_
+- ExactlyOneOf: [mcp subAgent]
+
 _Appears in:_
 - [AgentTemplateSpec](#agenttemplatespec)
 
@@ -1019,6 +1041,9 @@ _Appears in:_
 #### ValueRef
 
 ValueRef represents a configuration value
+
+_Validation:_
+- ExactlyOneOf: [value valueFrom]
 
 _Appears in:_
 - [RemoteMCPServerSpec](#remotemcpserverspec)

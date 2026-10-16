@@ -5,7 +5,8 @@ weight: 310
 ---
 
 Apply, roll back, and inspect database migrations.
-Connection settings come from the CLI configuration or explicit database flags.
+Migrations run as the owner login. Connection settings come from database.owner in
+the CLI configuration or explicit database flags.
 
 ```bash
 kagent db migrate [command]
@@ -19,9 +20,9 @@ kagent db migrate [command]
 - [`kagent db migrate version`]({{< link path="reference/cli/kagent-db-migrate-version" >}}) - Show the applied migration version
 
 **Flags:**
-- `--db-role string` - Stable PostgreSQL role to assume after authentication
-- `--db-url string` - PostgreSQL connection URL
-- `--db-url-file string` - File containing the PostgreSQL connection URL
+- `--db-role string` - Owner role to assume after authentication (required)
+- `--db-url string` - PostgreSQL connection URL for the owner login
+- `--db-url-file string` - File containing the owner login's PostgreSQL connection URL
 - `-h, --help` - help for migrate
 - `--source string` - Migration source for down, goto, or version
 

@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox upload
 description: Stream a local file into a sandbox (replaces the remote file).
-weight: 630
+weight: 500
 ---
 
 Stream a local file into a sandbox (replaces the remote file)

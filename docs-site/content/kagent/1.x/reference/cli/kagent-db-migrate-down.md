@@ -16,9 +16,9 @@ kagent db migrate down N [flags]
 **Global Flags:**
 - `--ca-file string` - CA certificate file for KAgent endpoints
 - `--config string` - Configuration file (default: user config directory/kagent/config.yaml)
-- `--db-role string` - Stable PostgreSQL role to assume after authentication
-- `--db-url string` - PostgreSQL connection URL
-- `--db-url-file string` - File containing the PostgreSQL connection URL
+- `--db-role string` - Owner role to assume after authentication (required)
+- `--db-url string` - PostgreSQL connection URL for the owner login
+- `--db-url-file string` - File containing the owner login's PostgreSQL connection URL
 - `--log-level string` - Log level: debug, info, warn, error (default "info")
 - `--server-name string` - TLS server name for KAgent endpoints
 - `--source string` - Migration source for down, goto, or version

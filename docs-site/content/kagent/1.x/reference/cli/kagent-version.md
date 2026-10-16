@@ -1,7 +1,7 @@
 ---
 title: kagent version
 description: Print the kagent version.
-weight: 660
+weight: 530
 ---
 
 Print the kagent version
