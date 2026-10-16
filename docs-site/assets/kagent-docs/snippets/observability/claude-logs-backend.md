@@ -1,0 +1,1 @@
+Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}) is one such backend.

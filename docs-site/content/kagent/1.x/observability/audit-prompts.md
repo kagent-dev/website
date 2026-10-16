@@ -58,15 +58,7 @@ Agent Substrate suspends an Actor as soon as a response completes. The controlle
 1. [Install kagent]({{< link path="setup/installation" >}}).
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send requests to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
 3. Install [`jq`](https://jqlang.org/download/), to read the Session ID and revision out of the CLI's JSON output.
-4. Set up a tracing backend, and turn on tracing.
-
-   {{% upstream %}}
-   The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you.
-   {{% /upstream %}}
-
-   {{% downstream %}}
-   [Turn on the telemetry pipeline]({{< link path="observability/telemetry-pipeline" >}}), which turns on tracing and stores the traces for you.
-   {{% /downstream %}}
+4. Set up a tracing backend, and turn on tracing. {{< reuse "kagent-docs/snippets/observability/tracing-backend.md" >}}
 
 ## Turn on content capture
 
@@ -94,11 +86,7 @@ Turn on content capture in the kagent Helm release, then create a Session that p
      --set config.runtimeDefaults.telemetry.captureContent=true
    ```
 
-   For an agent on the `claude` runtime, also set `config.runtimeDefaults.telemetry.logs.endpoint` to the address of your collector, and send the logs to a backend that stores them. Without log export, the replies of a `claude` agent are not recorded.
-
-   {{% upstream %}}
-   Loki in the [OTel stack]({{< link path="observability/otel-stack" >}}) is one such backend.
-   {{% /upstream %}}
+   For an agent on the `claude` runtime, also set `config.runtimeDefaults.telemetry.logs.endpoint` to the address of your collector, and send the logs to a backend that stores them. Without log export, the replies of a `claude` agent are not recorded. {{< reuse "kagent-docs/snippets/observability/claude-logs-backend.md" >}}
 
 3. Wait for the controller to roll out.
    ```bash
@@ -150,10 +138,7 @@ Send a request that contains a distinctive phrase, then find that phrase in the 
       ```bash
       kubectl port-forward -n telemetry svc/kube-prometheus-stack-grafana 3000:80
       ```
-   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in.
-      {{% upstream %}}
-      For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
-      {{% /upstream %}}
+   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in. {{< reuse "kagent-docs/snippets/observability/grafana-password.md" >}}
    3. Open **Explore**, select the **Tempo** data source, and select the **TraceQL** query type.
    4. Run the following query, which returns the model calls whose request contains the phrase.
       ```text

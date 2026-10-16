@@ -1,0 +1,1 @@
+In your logging backend, select the records with the body `Actor state changed`, and filter them by the `ate.actor.name` attribute.

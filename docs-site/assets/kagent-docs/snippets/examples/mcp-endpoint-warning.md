@@ -1,0 +1,2 @@
+> [!WARNING]
+> A default installation sets `config.server.auth.mode` to `insecure`. In this mode the endpoint accepts every request and reads the caller's identity from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. The endpoint can invoke agents, create checkpoints, and create Sessions. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).

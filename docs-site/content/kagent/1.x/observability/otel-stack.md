@@ -504,7 +504,7 @@ Log in to Grafana, and query each backend from the **Explore** view.
    {{% tab name="Traces" %}}
    Select the **Tempo** data source, then select the **Search** query type. From the **Service Name** list, select `my-first-agent`, the service that the Agent reports as, and run the query. Open a trace to see the controller, proxy, and agent runtime spans of one request.
 
-   To see Agent Substrate's own work, select one of its services from the **Service Name** list instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
+   To see Agent Substrate's own work, select one of its services from the **Service Name** list instead: `ateapi`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
    {{% /tab %}}
    {{% tab name="Logs" %}}
    Select the **Loki** data source, and run the following query to show the state changes of your agent's Actor. Agent Substrate names the Actor `session-` followed by the Session ID, so replace `<session-id>` with the value of `$SESSION_ID` from the previous section.

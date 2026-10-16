@@ -338,7 +338,7 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
       kubectl port-forward -n telemetry svc/jaeger 16686:16686
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
-   3. From the **Service** list, select `my-first-agent`, and click **Find Traces**. To see Agent Substrate's own work, select one of its services instead: `ateapi`, `atenet-router`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
+   3. From the **Service** list, select `my-first-agent`, and click **Find Traces**. To see Agent Substrate's own work, select one of its services instead: `ateapi`, `atelet`, `atecontroller`, or `ateom-gvisor`. For what each service reports, see [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}).
 
 2. Review the metrics in Prometheus.
    1. Forward the Prometheus port, and leave the command running.

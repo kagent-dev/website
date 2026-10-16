@@ -42,7 +42,7 @@ A caller reaches the gRPC API on the kagent controller, which starts the trace. 
 Each hop sends its spans under a separate OpenTelemetry (OTel) service name. A tracing backend groups the spans by those names.
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
-- **The Agent Substrate router** reports as two services, because its pod runs two containers. The router's own spans, such as its lookup of the Actor for a request, report as `atenet-router`. The spans of the agentgateway proxy that forwards the request to the Worker report as `agentgateway`. Only the `agentgateway` spans join the agent request trace. The `atenet-router` spans form separate [Agent Substrate traces](#agent-substrate-traces).
+- **The Agent Substrate router** runs the agentgateway proxy, and reports as `agentgateway`. Its spans join the agent request trace.
 - **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. In kagent 0.x, every agent reported under a single `kagent` service. A backend that you filter by service now lists one entry for each Agent, so the list grows as you add Agents.
 
 ### Harness coverage
@@ -94,21 +94,13 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send a request to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
 3. Set up a tracing backend.
 
-   {{% upstream %}}
-   The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing for you, so you can skip to [Review a trace](#review-a-trace).
-   {{% /upstream %}}
-
-   {{% downstream %}}
-   [Turn on the telemetry pipeline]({{< link path="observability/telemetry-pipeline" >}}), which turns on tracing and stores the traces where the UI reads them.
-   {{% /downstream %}}
+   The [OTel stack]({{< link path="observability/otel-stack" >}}) sends traces to Tempo, and the [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) sends traces to Jaeger. Both guides turn on tracing, so you can skip to [Review a trace](#review-a-trace).
 
 ## Enable tracing
 
 Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to a collector over OTLP. To send traces to another OTLP backend, change the endpoint.
 
-{{% upstream %}}
 The endpoint in these steps is the collector that both stack guides install.
-{{% /upstream %}}
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -210,9 +202,7 @@ Send a request to a new Session, then find its trace in the backend that you set
       kubectl port-forward -n telemetry svc/kube-prometheus-stack-grafana 3000:80
       ```
    2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in.
-      {{% upstream %}}
       For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
-      {{% /upstream %}}
    3. Open **Explore**, select the **Tempo** data source, and select the **Search** query type.
    4. From the **Service Name** list, select `my-first-agent`, and run the query. Selecting `kagent-controller` instead returns the same traces from the controller's side.
    5. Click a trace to open it.
@@ -246,11 +236,10 @@ Send a request to a new Session, then find its trace in the backend that you set
 
 ## Agent Substrate traces
 
-Agent Substrate records traces for its own work, such as scheduling an Actor onto a Worker and restoring it from a snapshot. These traces are separate from the agent request trace. Agent Substrate traces do not share the request trace's ID, so a request trace does not show how long the Actor took to resume. To investigate a slow start, look up the Agent Substrate traces from the same time window, or read the Actor's [suspend and resume records]({{< link path="observability/substrate-telemetry#suspend-and-resume-records" >}}), which carry the trace ID of each operation.
+Agent Substrate records traces for its own work, such as scheduling an Actor onto a Worker and restoring it from a snapshot. These traces are separate from the agent request trace, and do not share its ID. The router's `agentgateway` spans are the exception, and join the request trace. The `POST /*` span covers the whole request at the router, including any wait for the Actor to resume, but does not show which step of the resume took the time. To investigate a slow start, look up the Agent Substrate traces from the same time window, or read the Actor's [suspend and resume records]({{< link path="observability/substrate-telemetry#suspend-and-resume-records" >}}), which carry the trace ID of each operation.
 
 | Service | Reports |
 | ------- | ------- |
-| `atenet-router` | Requests that the router receives, and its calls to `ateapi` to find or resume the Actor for each request. |
 | `ateapi` | Actor lifecycle operations, such as create, resume, and suspend, and the scheduling of Actors onto Workers. |
 | `atelet` | Work on a Worker's node, such as restoring an Actor from a snapshot. |
 | `ateom-gvisor` | Work inside the sandbox that runs the Actor. |
@@ -258,13 +247,7 @@ Agent Substrate records traces for its own work, such as scheduling an Actor ont
 
 Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, and it keeps 1% of its traces by default. To keep more, raise `otel.traces.samplingRatio`.
 
-{{% upstream %}}
 For the steps, see [Send Agent Substrate telemetry to the collector]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}).
-{{% /upstream %}}
-
-{{% downstream %}}
-For the steps, see [Send Agent Substrate telemetry]({{< link path="observability/telemetry-pipeline#send-agent-substrate-telemetry" >}}).
-{{% /downstream %}}
 
 ## Traces from a suspended Actor
 
@@ -290,9 +273,7 @@ Turn off the trace exporter, then create a new Session so that the change takes 
 
 2. Create a new Session to pick up the change, because an existing Actor keeps the configuration it started with.
 
-{{% upstream %}}
 3. To remove the tracing backend, follow the cleanup steps in the [OTel stack]({{< link path="observability/otel-stack#clean-up" >}}) or [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#clean-up" >}}) guide.
-{{% /upstream %}}
 
 ## Next steps
 
