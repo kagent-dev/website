@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox templates
 description: List SandboxTemplates in the selected namespace.
-weight: 620
+weight: 490
 ---
 
 List SandboxTemplates in the selected namespace

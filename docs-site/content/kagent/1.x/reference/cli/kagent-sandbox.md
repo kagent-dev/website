@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox
 description: Run commands and transfer files in standalone sandboxes.
-weight: 510
+weight: 380
 ---
 
 Run commands and transfer files in standalone sandboxes

@@ -1,7 +1,7 @@
 ---
 title: kagent uninstall
 description: Uninstall kagent.
-weight: 650
+weight: 520
 ---
 
 Uninstall kagent

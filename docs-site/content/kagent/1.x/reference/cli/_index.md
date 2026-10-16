@@ -14,7 +14,6 @@ Review the kagent CLI commands and learn how to use them effectively.
 - [`kagent dashboard`]({{< link path="reference/cli/kagent-dashboard" >}}) - Open the kagent dashboard
 - [`kagent db`]({{< link path="reference/cli/kagent-db" >}}) - Database operations (migrations, inspection)
 - [`kagent install`]({{< link path="reference/cli/kagent-install" >}}) - Install kagent
-- [`kagent mcp`]({{< link path="reference/cli/kagent-mcp" >}}) - MCP (Model Context Protocol) server management
 - [`kagent sandbox`]({{< link path="reference/cli/kagent-sandbox" >}}) - Run commands and transfer files in standalone sandboxes
 - [`kagent uninstall`]({{< link path="reference/cli/kagent-uninstall" >}}) - Uninstall kagent
 - [`kagent version`]({{< link path="reference/cli/kagent-version" >}}) - Print the kagent version

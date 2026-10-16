@@ -11,9 +11,8 @@ A Helm chart for kagent, built with Google ADK
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha13 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha14 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
-| oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
 
 ## Values
@@ -21,18 +20,24 @@ A Helm chart for kagent, built with Google ADK
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
-| config.database.role | string | `"kagent_owner"` |  |
+| config.database.owner.role | string | `"kagent_owner"` |  |
+| config.database.readWrite.role | string | `"kagent_readwrite"` |  |
 | config.database.schema | string | `"kagent"` |  |
 | config.database.skipMigrations | bool | `false` |  |
 | config.database.vectorEnabled | bool | `false` |  |
 | config.database.vectorSchema | string | `"extensions"` |  |
-| config.gateway.push.allowHttp | bool | `false` |  |
-| config.gateway.push.allowPrivateNetworks | bool | `false` |  |
+| config.harnessImages | object | `{}` |  |
 | config.kubernetes | object | `{}` |  |
 | config.logging.level | string | `"info"` |  |
 | config.metrics.bindAddress | string | `":8443"` |  |
 | config.metrics.secure | bool | `true` |  |
+| config.push.allowHttp | bool | `false` |  |
+| config.push.allowPrivateNetworks | bool | `false` |  |
+| config.push.recoveryInterval | string | `"60s"` |  |
 | config.runtimeDefaults.logging.level | string | `"info"` |  |
+| config.runtimeDefaults.skillTools.bashVenvPath | string | `""` |  |
+| config.runtimeDefaults.skillTools.disableBash | bool | `false` |  |
+| config.runtimeDefaults.skillTools.fileSearchTools | bool | `false` |  |
 | config.runtimeDefaults.telemetry | object | `{}` |  |
 | config.sandboxes.cpu | string | `"1"` |  |
 | config.sandboxes.defaultTtl | string | `"3600s"` |  |
@@ -101,13 +106,14 @@ A Helm chart for kagent, built with Google ADK
 | controller.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the controller pod. |
 | controller.volumeMounts | list | `[]` |  |
 | controller.volumes | list | `[]` |  |
-| database.postgres.clientCertificate | object | `{"enabled":false}` | Project the bundled PostgreSQL client certificate. The connection string must reference the files under /run/postgres.podcert.ate.dev. |
-| database.postgres.connectionStringSecretRef | object | `{"key":"connectionString","name":"kagent-postgres"}` | Source the PostgreSQL connection string from a pre-created Secret. Secret changes require restarting the controller. |
+| database.postgres.clientCertificate | object | `{"enabled":false}` | Project the bundled PostgreSQL client certificates for kagent_readwrite_user and, unless config.database.skipMigrations is true, kagent_owner_user. The connection strings must reference the files under /run/postgres.podcert.ate.dev. |
+| database.postgres.ownerConnectionStringSecretRef | object | `{"key":"ownerConnectionString","name":"kagent-postgres-owner"}` | Secret holding the owner login's connection string. The owner creates the schema and runs migrations; it is not used when config.database.skipMigrations is true. Secret changes require restarting the controller. |
+| database.postgres.readWriteConnectionStringSecretRef | object | `{"key":"readWriteConnectionString","name":"kagent-postgres-readwrite"}` | Secret holding the read/write login's connection string, used for every runtime query. Required. Secret changes require restarting the controller. |
 | extraObjects | list | [] | Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.:   extraObjects:     - apiVersion: external-secrets.io/v1       kind: ExternalSecret       metadata:         name: '`{{ include "kagent.fullname" . }}`-openai'         namespace: '`{{ .Release.Namespace }}`'       spec:         secretStoreRef:           name: aws-secretsmanager           kind: ClusterSecretStore         target:           name: kagent-openai         data:           - secretKey: OPENAI_API_KEY             remoteRef:               key: prod/kagent/openai               property: api_key |
 | fullnameOverride | string | `""` |  |
 | global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
 | global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
-| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, grafana-mcp, and substrateWorkerPool.workerImage. The vendored subcharts (kagent-tools, kmcp) adopt it when their pinned versions bump. |
+| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, grafana-mcp, substrateWorkerPool.workerImage, and built-in Harness images (both packaged defaults and config.harnessImages overrides). The vendored subcharts kagent-tools adopts it when its pinned version bumps. |
 | global.watchNamespaces | list | `[]` | Namespace scope for the whole install. A non-empty list replaces ClusterRoles with Roles and scopes the controller's watch. Both derive from this one value, so they cannot disagree. Prefer this value over the per-surface keys. rbac.namespaces overrides it when the key is present. An explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in config.kubernetes.watchNamespaces is validated: the watch must stay inside the RBAC scope. A watched namespace without a Role is a permanent Forbidden loop at runtime. |
 | grafana-mcp.enabled | bool | `true` |  |
 | grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
@@ -135,10 +141,6 @@ A Helm chart for kagent, built with Google ADK
 | kagent-tools.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
 | kagent-tools.tools.metrics.port | int | `8085` |  |
-| kmcp.enabled | bool | `true` |  |
-| kmcp.fullnameOverride | string | `""` |  |
-| kmcp.nameOverride | string | `"kmcp"` |  |
-| kmcp.namespaceOverride | string | `""` |  |
 | labels | object | `{}` | Additional labels to add to all Kubernetes resources |
 | nameOverride | string | `""` |  |
 | namespaceOverride | string | `.Release.Namespace` | Override the namespace |
