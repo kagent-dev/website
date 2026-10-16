@@ -18,7 +18,6 @@ kagent agent invoke [flags]
 - `--session string` - Session ID
 - `-S, --stream` - Stream the response
 - `-t, --task string` - Task text
-- `--token string` - Model API key passed through as an A2A Bearer token
 
 **Global Flags:**
 - `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")

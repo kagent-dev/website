@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox download
 description: Download a file, replacing the local destination only after success.
-weight: 540
+weight: 410
 ---
 
 Download a file, replacing the local destination only after success

@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox kill
 description: Terminate a process and its children.
-weight: 570
+weight: 440
 ---
 
 Terminate a process and its children

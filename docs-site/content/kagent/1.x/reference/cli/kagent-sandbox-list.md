@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox list
 description: List your sandboxes.
-weight: 580
+weight: 450
 ---
 
 List your sandboxes

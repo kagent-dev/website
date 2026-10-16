@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox exec
 description: Start a command once and wait for its result.
-weight: 550
+weight: 420
 ---
 
 Start a process once. By default, stream available output while waiting. A timeout stops waiting, not the remote process. Retain its process ID and use sandbox wait to reconnect. An uncertain start is never retried. JSON output is a stream of started/output/finished/interrupted records.

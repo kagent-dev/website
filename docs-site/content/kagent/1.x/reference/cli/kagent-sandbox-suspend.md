@@ -1,7 +1,7 @@
 ---
 title: kagent sandbox suspend
 description: suspend a sandbox.
-weight: 610
+weight: 480
 ---
 
 Inspect or change sandbox lifecycle. Mutations make one attempt; retry the same mutation on transient errors. Get only observes. Suspend can interrupt work; delete removes files.
