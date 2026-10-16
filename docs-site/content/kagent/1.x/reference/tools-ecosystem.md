@@ -48,8 +48,6 @@ The label changes three things about the server:
 - `status.discoveredTools` stays empty, so the command in [Read the tools that a server serves](#read-the-tools-that-a-server-serves) returns nothing for this server. The server's own documentation becomes the only list of what it offers.
 - The catalog keeps the server but records it as disconnected, with no tools.
 
-You can also use this label on a kmcp `MCPServer` when agentgateway fronts the server. Agents bind a RemoteMCPServer that points at the gateway rather than binding the `MCPServer` itself, so discovery against the `MCPServer` is unnecessary and the label turns it off.
-
 > [!NOTE]
 > Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server with discovery off, but nothing validates those names at admission, so a typo surfaces as a failed tool call at runtime instead of a rejected binding.
 

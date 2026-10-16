@@ -11,11 +11,13 @@ For the fields that attach a skill and the rules that govern their names, see [S
 
 ## About skills at run time
 
-kagent does not fetch a skill when you apply an AgentTemplate. The compiled revision records where each skill comes from, and the {{< gloss "Actor" >}}Actor{{< /gloss >}} fetches it when the agent starts. Every artifact is unpacked under `/plugins`, whether it contains a single skill or a plugin, and each enabled skill is then copied to `/skills/<skill-name>`. The agent reads skills only from `/skills`.
+kagent does not fetch a skill when you apply an AgentTemplate. The compiled revision records the source of each skill, and the skill arrives when the agent starts. For an `oci` source, Agent Substrate pulls the image from the Worker and mounts it as read-only into the {{< gloss "Actor" >}}Actor{{< /gloss >}} before the runtime starts. For a `git` or `bucket` source, the Actor fetches the files itself. The runtime then copies each enabled skill into the directory that its harness reads, which is `/skills/<skill-name>` on a `kagent` Harness.
 
 Because kagent fetches a skill this late, review the following considerations.
 
 * **A wrong source still compiles.** kagent validates skill names before it accepts an AgentTemplate, but it never checks that the artifact exists or that it holds a `SKILL.md` file. A bad digest produces a revision that reports `Ready`, and the agent then fails to start.
+* **A private registry needs Worker credentials.** Agent Substrate pulls an `oci` source with the registry credentials that the Worker uses for workload images. Kubernetes `imagePullSecrets` on a pod do not configure that pull.
+* **Each Actor mounts up to 29 distinct skill images.** Images shared by several skills or plugins count once. A revision that needs more fails when kagent builds its ActorTemplate.
 * **Scripts run in the runtime image.** A skill's scripts get whatever the Harness image provides. The kagent runtime image is Alpine Linux with `bash`, `git`, and the standard Alpine utilities, and it does **not** include Python.
 
 ### Skill tools
@@ -32,8 +34,20 @@ On a `kagent` Harness, attaching a skill adds seven tools to the agent, whether 
 | `edit_file` | Replaces an exact string in a file that the agent has already read. |
 | `bash` | Runs a shell command in the session directory `/tmp/kagent/<session-id>/`. Commands time out after 30 seconds. |
 
-Two further tools are available but off by default. Set the `config.runtimeDefaults.fileSearchTools` Helm value to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. The setting applies to every agent in the installation, because a Harness has no per-agent equivalent. `list_files` and `grep_file` reach only the skills and session roots that `read_file` reads. They stay opt-in because they give an agent broad visibility of the filesystem, and they are how an agent keeps that visibility when a deployment disables `bash`.
+The `config.runtimeDefaults.skillTools` Helm values change this tool set for every agent in the installation, because a Harness has no per-agent equivalent.
 
+```yaml
+config:
+  runtimeDefaults:
+    skillTools:
+      fileSearchTools: true
+      disableBash: true
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `fileSearchTools` | Set to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. Both tools reach only the skills and session roots that `read_file` reads. These settings are off by default because they give an agent broad visibility of the filesystem. When `bash` is disabled, these tools keep that visibility available to the agent. |
+| `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent still loads skills and keeps the file tools. Defaults to `false`. |
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
 > [!IMPORTANT]
@@ -53,7 +67,7 @@ Attaching a skill also changes what the agent is told. The runtime appends the n
    ```
 
    > [!WARNING]
-   > kagent pulls a skill image over HTTPS with certificate verification, and v1alpha3 has no option to disable it. kagent 0.x accepted an `insecureSkipVerify` flag for a local registry, but that field does not exist in 1.x. A plain HTTP registry, and a `localhost` registry that only the host can reach, both fail at agent startup.
+   > Agent Substrate pulls a skill image on the Worker. API version v1alpha3 does not have an option to skip certificate verification. kagent 0.x accepted an `insecureSkipVerify` flag for a local registry, but that field does not exist in 1.x. A `localhost` registry that only the host can reach fails at agent startup.
 
 ## Build the skill
 
@@ -140,7 +154,7 @@ A skill is a directory whose root holds a `SKILL.md` file. Everything else in th
 
 ## Publish the skill as an OCI image
 
-kagent pulls an `oci` source as a container image and unpacks its flattened filesystem, so the image holds the skill directory and nothing else. Build it from `scratch`, which produces an image whose root **is** the skill root.
+Agent Substrate mounts an `oci` source as a container image. The image must hold the skill directory and nothing else. Build it from `scratch`, which produces an image whose root **is** the skill root.
 
 1. Create the Dockerfile.
    ```bash
@@ -345,6 +359,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
    > This condition does not name the skill, and reports the same reason for any Actor that has not yet produced a snapshot. An agent that is merely still starting looks identical to one whose skill cannot be fetched.
 
 2. Find the WorkerPool that the Harness runs on, and read its Workers' logs. The Actor writes the failure there rather than to the Agent.
+
    ```bash
    export WORKER_POOL=$(kubectl get harness my-first-harness -n kagent \
      -o jsonpath='{.spec.substrate.workerPoolRef.name}')
