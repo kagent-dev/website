@@ -42,7 +42,7 @@ A caller reaches the gRPC API on the kagent controller, which starts the trace. 
 Each hop sends its spans under a separate OpenTelemetry (OTel) service name. A tracing backend groups the spans by those names.
 
 - **The controller** reports as `kagent-controller` in the `kagent` service namespace. Its spans also carry the pod, node, and namespace that the controller runs on.
-- **The Agent Substrate router** runs the agentgateway proxy, and reports as `agentgateway`. Its spans join the agent request trace.
+- **The Agent Substrate router** runs the agentgateway proxy, and reports as `agentgateway`.
 - **Each agent runtime** reports as its own service, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} it was compiled from. The `my-first-agent` Agent reports as `my-first-agent`. In kagent 0.x, every agent reported under a single `kagent` service. A backend that you filter by service now lists one entry for each Agent, so the list grows as you add Agents.
 
 ### Harness coverage
@@ -98,9 +98,7 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 
 ## Enable tracing
 
-Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces to a collector over OTLP. To send traces to another OTLP backend, change the endpoint.
-
-The endpoint in these steps is the collector that both stack guides install.
+Tracing is off by default. Turning it on is a Helm change, because the controller reads its tracing configuration from the environment and passes that configuration to the agent runtimes that the controller starts. The following steps send traces over OTLP to the collector that both stack guides install. To send traces to another OTLP backend, change the endpoint.
 
 1. Save the current revision of your Agent. A later step uses it to tell when kagent recompiles the Agent with the new settings. The command first waits for any recompile that is still in progress, such as one from an earlier Helm upgrade, so that it saves a finished revision.
    ```bash
@@ -201,8 +199,7 @@ Send a request to a new Session, then find its trace in the backend that you set
       ```bash
       kubectl port-forward -n telemetry svc/kube-prometheus-stack-grafana 3000:80
       ```
-   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in.
-      For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
+   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in. For the password, see [Explore the telemetry in Grafana]({{< link path="observability/otel-stack#explore-the-telemetry-in-grafana" >}}).
    3. Open **Explore**, select the **Tempo** data source, and select the **Search** query type.
    4. From the **Service Name** list, select `my-first-agent`, and run the query. Selecting `kagent-controller` instead returns the same traces from the controller's side.
    5. Click a trace to open it.

@@ -86,7 +86,7 @@ Turn on content capture in the kagent Helm release, then create a Session that p
      --set config.runtimeDefaults.telemetry.captureContent=true
    ```
 
-   For an agent on the `claude` runtime, also set `config.runtimeDefaults.telemetry.logs.endpoint` to the address of your collector, and send the logs to a backend that stores them. Without log export, the replies of a `claude` agent are not recorded. {{< reuse "kagent-docs/snippets/observability/claude-logs-backend.md" >}}
+   For an agent on the `claude` runtime, also set `config.runtimeDefaults.telemetry.logs.endpoint` to the address of your collector, and send the logs to a backend that stores them. {{< reuse "kagent-docs/snippets/observability/claude-logs-backend.md" >}} Without log export, the replies of a `claude` agent are not recorded.
 
 3. Wait for the controller to roll out.
    ```bash

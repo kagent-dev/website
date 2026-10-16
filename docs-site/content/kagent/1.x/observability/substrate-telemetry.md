@@ -14,7 +14,7 @@ Agent Substrate reports telemetry from its own components, separately from the t
 | Signal | Where it goes | Details |
 | ------ | ------------- | ------- |
 | Actor logs | The stdout of the Worker pod that runs the Actor | The Actor's own output, and records for each suspend and resume. See [Read an Actor's logs](#read-an-actors-logs). |
-| Actor events | Over OTLP when an OTLP endpoint is set, and the stdout of the component that records them otherwise | A record of every Actor state change, and samples of each Actor's CPU and memory use. See [Actor state changes](#actor-state-changes). |
+| Actor events | Over OTLP when an OTLP endpoint is set. Otherwise, the stdout of the component that records them. | An event for every Actor state change, and samples of each Actor's CPU and memory use. See [Actor state changes](#actor-state-changes) and [Actor usage samples](#actor-usage-samples). |
 | Component logs | The stdout of each component | Logs from the Agent Substrate components, including an access log entry for every request that the router receives. The router also exports its access log over OTLP when an OTLP endpoint is set. |
 | Traces | Over OTLP, when an OTLP endpoint is set | Scheduling, resume, and suspend work, in traces that are separate from the agent request trace. The router's `agentgateway` spans are the exception, and join the agent request trace. See [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}). |
 | Metrics | Over OTLP, when an OTLP endpoint is set | Worker capacity, scheduling, and snapshot timing. See [Agent Substrate metrics]({{< link path="observability/metrics#agent-substrate-metrics" >}}). |
@@ -23,7 +23,7 @@ The Agent Substrate Helm chart sets one OTLP endpoint for traces, metrics, and l
 
 The router access log and the Actor events are the Agent Substrate logs over OTLP, and the `otel.logs` settings control them together. To send them to a different backend than traces and metrics, set `otel.logs.endpoint`. To stop exporting them, set `otel.logs.enabled` to `false`. The chart has no setting for the access log alone.
 
-An exported Actor event leaves stdout. Once the release sets an OTLP endpoint, the component that records an event exports it and writes no stdout record, so read the events from your logging backend.
+When the Agent Substrate release sets an OTLP endpoint, the component that records an Actor event exports the event and does not write it to stdout. Read the events from your logging backend.
 
 ## Actor identity
 
@@ -98,7 +98,7 @@ An Actor writes to the stdout of whichever Worker pod runs it, and a suspended A
 
    The filter returns the Actor's lines from every Worker that currently runs in the pool, including the lines from before the Actor last suspended.
 
-`kubectl logs` reads only the Worker pods that exist now. When a Worker pod is replaced, the output that it held is gone. To keep an Actor's history across Worker replacements, collect the stdout of the Worker pods with a log agent that stores structured JSON, and query it by the same labels. No collector in this documentation collects pod stdout: each is configured with the OTLP receiver alone, so it receives only what a component pushes to it.
+`kubectl logs` reads only the Worker pods that exist now. When a Worker pod is replaced, the output that it held is gone. To keep an Actor's history across Worker replacements, collect the stdout of the Worker pods with a log agent that stores structured JSON, and query it by the same labels. The OTel stack and Lightweight OTel stack guides configure their collectors with only the OTLP receiver. Neither collector reads pod stdout.
 
 Agent Substrate can also stream a single Actor's output directly, without the pool-wide filter.
 
@@ -149,7 +149,7 @@ Each record also carries `trace_id`, `span_id`, and `trace_flags`, which join th
 
 ## Actor state changes
 
-The Agent Substrate API server, `ateapi`, writes an `Actor state changed` record each time an Actor moves to a new state. The record carries the Actor identity labels, the operation that caused the change in `ate.actor.operation.name`, and the new state in `ate.actor.state`. The last record for an Actor tells you its state, and when the Actor entered it.
+The Agent Substrate API server, `ateapi`, writes an `Actor state changed` event each time an Actor moves to a new state. The event includes the Actor identity labels, the operation that caused the change in `ate.actor.operation.name`, and the new state in `ate.actor.state`. The last event for an Actor tells you its state, and when the Actor entered it.
 
 | `ate.actor.state` | Meaning |
 | ----------------- | ------- |
@@ -157,13 +157,13 @@ The Agent Substrate API server, `ateapi`, writes an `Actor state changed` record
 | `running` | The Actor is on a Worker and can serve the turn. |
 | `suspending` | The turn ended, and the Actor is writing its snapshot. |
 | `suspended` | The snapshot is written, and the Actor does not hold a Worker. |
-| `deleting`, `deleted` | The Session was deleted. `deleted` is the last record that an Actor gets. |
+| `deleting`, `deleted` | The Session was deleted. `deleted` is the last event that an Actor gets. |
 
-Where the records go depends on whether the Agent Substrate release sets an OTLP endpoint. With an endpoint set, `ateapi` exports each record as an OTLP log with the same attributes and writes no stdout record, so a logging backend receives the state changes of every Actor without reading pod output. Do not sample this stream. A dropped record leaves the last known state wrong, with nothing to show that a record is missing. {{< reuse "kagent-docs/snippets/observability/actor-state-records.md" >}}
+Where the events go depends on whether the Agent Substrate release sets an OTLP endpoint. When the release sets an endpoint, `ateapi` exports each event as an OTLP log with the same attributes. A logging backend then receives the state changes of every Actor without reading pod output. Do not sample this stream. A dropped event leaves the last known state wrong, with nothing to show that an event is missing. {{< reuse "kagent-docs/snippets/observability/actor-state-records.md" >}}
 
 ### Read state changes from stdout
 
-When the Agent Substrate release sets no OTLP endpoint, `ateapi` writes each record to stdout. `ateapi` runs more than one replica, and each replica writes only the changes that it handles. Read the logs of every replica.
+When the Agent Substrate release does not set an OTLP endpoint, `ateapi` writes each event to stdout. `ateapi` runs more than one replica, and each replica writes only the changes that it handles. Read the logs of every replica.
 ```bash
 for pod in $(kubectl get pods -n ate-system -o name | grep ate-api-server); do
   kubectl logs -n ate-system "$pod"
@@ -176,9 +176,9 @@ Example output:
 {"time":"2026-09-24T17:00:43.194765137Z","level":"INFO","msg":"Actor state changed","ate.atespace":"kagent","ate.actor.name":"session-01a0d45b-c729-7d67-85c6-daa053202bff","ate.actor.uid":"831c62c5-b5ac-411f-b15e-7addfef97d73","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-699a5ed2f709","ate.actor.operation.name":"resume","ate.actor.state":"running","trace_id":"402701838ffd50932dc0aec8e43a1604","span_id":"f92aecd47d89ad68","trace_flags":"00"}
 ```
 
-### Actor usage samples
+## Actor usage samples
 
-The Worker also records an `Actor usage sampled` event each time an Actor starts running and again when it stops. Each event carries the Actor identity labels, the WorkerPool, the Actor's CPU time, and its memory use, peak memory, and working set. The `ate.stats.kind` attribute is `initial` for the first sample of a run and `final` for the last. The samples follow the same OTLP and stdout rule as the state changes.
+The Worker records an `Actor usage sampled` event each time an Actor starts running and again when it stops. Each event includes the Actor identity labels, the WorkerPool, the Actor's CPU time, and its memory use, peak memory, and working set. The `ate.stats.kind` attribute is `initial` for the first sample of a run and `final` for the last.
 
 ## Learn more
 
