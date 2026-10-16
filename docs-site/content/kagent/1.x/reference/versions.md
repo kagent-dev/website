@@ -41,9 +41,6 @@ kagent 1.0 is a deliberate clean break from the 0.10.x line, and the compatibili
 
 Moving from 0.10.x therefore means standing up a new installation and recreating your resources on it, rather than running `helm upgrade`. For the procedure, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}). For the resources that 1.0 replaces or removes, see [Release notes]({{< link path="reference/release-notes/1.0#removed-and-replaced-resources" >}}).
 
-<!--TODO
-The agent-substrate, kmcp, kagent-tools, and max-kube conrefs are overwritten
-nightly by the update-version-conrefs job in .github/workflows/update-ref-docs.yaml.
-Correct a wrong value in that job, not in the conref, or the next run reverts it.
-kagent.md is the exception and is hand-maintained.
+<!--
+The kagent, agent-substrate, max-kube, kmcp, kmcp-latest, kagent-tools, and runtime-image conrefs are written by .github/workflows/update-ref-docs.yaml from the kagent release tag each time a docs release is published. Correct a wrong value in that workflow, not in the conref, or the next run reverts it. The other conrefs in versions/ are hand-maintained.
 -->
