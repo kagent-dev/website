@@ -14,13 +14,16 @@ Agent Substrate reports telemetry from its own components, separately from the t
 | Signal | Where it goes | Details |
 | ------ | ------------- | ------- |
 | Actor logs | The stdout of the Worker pod that runs the Actor | The Actor's own output, and records for each suspend and resume. See [Read an Actor's logs](#read-an-actors-logs). |
-| Component logs | The stdout of each component, and over OTLP when an OTLP endpoint is set | Logs from the Agent Substrate components, including a record of every Actor state change and an access log entry for every request that the router receives. See [Actor state changes](#actor-state-changes). |
-| Traces | Over OTLP, when an OTLP endpoint is set | Scheduling, resume, and suspend work. These traces are separate from the agent request trace. See [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}). |
+| Actor events | Over OTLP when an OTLP endpoint is set. Otherwise, the stdout of the component that records them. | An event for every Actor state change, and samples of each Actor's CPU and memory use. See [Actor state changes](#actor-state-changes) and [Actor usage samples](#actor-usage-samples). |
+| Component logs | The stdout of each component | Logs from the Agent Substrate components, including an access log entry for every request that the router receives. The router also exports its access log over OTLP when an OTLP endpoint is set. |
+| Traces | Over OTLP, when an OTLP endpoint is set | Scheduling, resume, and suspend work, in traces that are separate from the agent request trace. The router's `agentgateway` spans are the exception, and join the agent request trace. See [Agent Substrate traces]({{< link path="observability/tracing#agent-substrate-traces" >}}). |
 | Metrics | Over OTLP, when an OTLP endpoint is set | Worker capacity, scheduling, and snapshot timing. See [Agent Substrate metrics]({{< link path="observability/metrics#agent-substrate-metrics" >}}). |
 
-The Agent Substrate Helm chart sets one OTLP endpoint for traces, metrics, and logs through `otel.endpoint`, and samples traces at a ratio of `0.01` by default through `otel.traces.samplingRatio`. The [OTel stack]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}) and [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) guides set both.
+The Agent Substrate Helm chart sets one OTLP endpoint for traces, metrics, and logs through `otel.endpoint`, and samples traces at a ratio of `0.01` by default through `otel.traces.samplingRatio`. {{< reuse "kagent-docs/snippets/observability/substrate-otel-setup.md" >}}
 
-The router access log and the Actor state change records are the two sources of Agent Substrate logs over OTLP, and the `otel.logs` settings control both together. To send them to a different backend than traces and metrics, set `otel.logs.endpoint`. To stop exporting them, set `otel.logs.enabled` to `false`. The chart has no setting for the access log alone.
+The router access log and the Actor events are the Agent Substrate logs over OTLP, and the `otel.logs` settings control them together. To send them to a different backend than traces and metrics, set `otel.logs.endpoint`. To stop exporting them, set `otel.logs.enabled` to `false`. The chart has no setting for the access log alone.
+
+When the Agent Substrate release sets an OTLP endpoint, the component that records an Actor event exports the event and does not write it to stdout. Read the events from your logging backend.
 
 ## Actor identity
 
@@ -62,7 +65,7 @@ An Actor writes to the stdout of whichever Worker pod runs it, and a suspended A
 
    Example output:
    ```console
-   ATESPACE   NAME                                      TEMPLATE                                              STATE                   WORKER POD   WORKER IP   VERSION   AGE
+   ATESPACE   NAME                                      TEMPLATE                                              STATE                   WORKER POD   WORKER IPS   VERSION   AGE
    kagent     session-01a0d409-d249-728e-865c-ee58b55dff04   kagent/my-first-agent-a995d20d30a7   ACTOR_STATE_SUSPENDED   <none>                   5         32m
    ```
 
@@ -95,12 +98,12 @@ An Actor writes to the stdout of whichever Worker pod runs it, and a suspended A
 
    The filter returns the Actor's lines from every Worker that currently runs in the pool, including the lines from before the Actor last suspended.
 
-`kubectl logs` reads only the Worker pods that exist now. When a Worker pod is replaced, the output that it held is gone. To keep an Actor's history across Worker replacements, collect the stdout of the Worker pods with a log agent that stores structured JSON, and query it by the same labels. Neither the OTel stack guide nor the Lightweight OTel stack guide collects pod stdout, because both configure the Collector with the OTLP receiver only.
+`kubectl logs` reads only the Worker pods that exist now. When a Worker pod is replaced, the output that it held is gone. To keep an Actor's history across Worker replacements, collect the stdout of the Worker pods with a log agent that stores structured JSON, and query it by the same labels. The OTel stack and Lightweight OTel stack guides configure their collectors with only the OTLP receiver. Neither collector reads pod stdout.
 
 Agent Substrate can also stream a single Actor's output directly, without the pool-wide filter.
 
 ```bash
-kubectl ate logs actors session-$SESSION_ID --atespace kagent
+kubectl ate logs actor session-$SESSION_ID --atespace kagent
 ```
 
 The command reads the Worker that the Actor runs on, so it works only while the Actor is running. A kagent agent runs only during a turn, and the command returns an error the rest of the time.
@@ -142,11 +145,11 @@ Each turn produces one cycle of the four records. The time between `Actor restor
 
 The Actor that builds a pair's first snapshot, in the `ate-golden` atespace, writes `Actor starting` and `Actor started` instead of the restore records, because it has no snapshot to restore from.
 
-Each record also carries `trace_id`, `span_id`, and `trace_flags`, which join the record to the Agent Substrate trace for the same operation. A `trace_flags` value of `01` means that the trace was sampled and is in your tracing backend. A value of `00` means that the trace was not sampled, which is the case for most requests at the default ratio of `0.01`.
+Each record also carries `trace_id`, `span_id`, and `trace_flags`, which join the record to the Agent Substrate trace for the same operation. A `trace_flags` value of `01` means that Agent Substrate sampled the trace and exported it. A value of `00` means that the trace was not sampled, which is the case for most requests at the default ratio of `0.01`. A sampled trace reaches your tracing backend only if your collector keeps the Agent Substrate spans. {{< reuse "kagent-docs/snippets/observability/substrate-span-filter.md" >}}
 
 ## Actor state changes
 
-The Agent Substrate API server, `ateapi`, writes an `Actor state changed` record each time an Actor moves to a new state. The record carries the Actor identity labels, the operation that caused the change in `ate.actor.operation.name`, and the new state in `ate.actor.state`. The last record for an Actor tells you its state, and when the Actor entered it.
+The Agent Substrate API server, `ateapi`, writes an `Actor state changed` event each time an Actor moves to a new state. The event includes the Actor identity labels, the operation that caused the change in `ate.actor.operation.name`, and the new state in `ate.actor.state`. The last event for an Actor tells you its state, and when the Actor entered it.
 
 | `ate.actor.state` | Meaning |
 | ----------------- | ------- |
@@ -154,9 +157,13 @@ The Agent Substrate API server, `ateapi`, writes an `Actor state changed` record
 | `running` | The Actor is on a Worker and can serve the turn. |
 | `suspending` | The turn ended, and the Actor is writing its snapshot. |
 | `suspended` | The snapshot is written, and the Actor does not hold a Worker. |
-| `deleting`, `deleted` | The Session was deleted. `deleted` is the last record that an Actor gets. |
+| `deleting`, `deleted` | The Session was deleted. `deleted` is the last event that an Actor gets. |
 
-`ateapi` runs more than one replica, and each replica writes only the changes that it handles. Read the logs of every replica.
+Where the events go depends on whether the Agent Substrate release sets an OTLP endpoint. When the release sets an endpoint, `ateapi` exports each event as an OTLP log with the same attributes. A logging backend then receives the state changes of every Actor without reading pod output. Do not sample this stream. A dropped event leaves the last known state wrong, with nothing to show that an event is missing. {{< reuse "kagent-docs/snippets/observability/actor-state-records.md" >}}
+
+### Read state changes from stdout
+
+When the Agent Substrate release does not set an OTLP endpoint, `ateapi` writes each event to stdout. `ateapi` runs more than one replica, and each replica writes only the changes that it handles. Read the logs of every replica.
 ```bash
 for pod in $(kubectl get pods -n ate-system -o name | grep ate-api-server); do
   kubectl logs -n ate-system "$pod"
@@ -169,11 +176,13 @@ Example output:
 {"time":"2026-09-24T17:00:43.194765137Z","level":"INFO","msg":"Actor state changed","ate.atespace":"kagent","ate.actor.name":"session-01a0d45b-c729-7d67-85c6-daa053202bff","ate.actor.uid":"831c62c5-b5ac-411f-b15e-7addfef97d73","ate.template.atespace":"kagent","ate.template.name":"my-first-agent-699a5ed2f709","ate.actor.operation.name":"resume","ate.actor.state":"running","trace_id":"402701838ffd50932dc0aec8e43a1604","span_id":"f92aecd47d89ad68","trace_flags":"00"}
 ```
 
-When the Agent Substrate release sets an OTLP endpoint, `ateapi` also exports each record as an OTLP log with the same attributes, so a logging backend receives the state changes of every Actor without reading pod output. Do not sample this stream. A dropped record leaves the last known state wrong, with nothing to show that a record is missing.
+## Actor usage samples
+
+The Worker records an `Actor usage sampled` event each time an Actor starts running and again when it stops. Each event includes the Actor identity labels, the WorkerPool, the Actor's CPU time, and its memory use, peak memory, and working set. The `ate.stats.kind` attribute is `initial` for the first sample of a run and `final` for the last.
 
 ## Learn more
 
-The Agent Substrate project documents its telemetry in full, including the complete metric registry, in [Actor observability](https://github.com/agent-substrate/substrate/blob/main/docs/observability.md). That page describes the newest Agent Substrate, which can be ahead of version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} that this guide uses. Records that it describes might not exist in your version, such as per-Actor usage samples and the restore timing breakdown.
+The Agent Substrate project documents its telemetry in full, including the complete metric registry, in [Actor observability](https://github.com/agent-substrate/substrate/blob/main/docs/observability.md). That page describes the newest Agent Substrate, which can be ahead of version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} that this guide uses. Records that it describes might not exist in your version.
 
 You can also check out the following resources in this documentation set.
 

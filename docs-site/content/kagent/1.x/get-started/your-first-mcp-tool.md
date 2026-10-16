@@ -85,8 +85,7 @@ kagent records what it discovered on the server's status, so the tool names come
 
    When the two values differ, kagent is still compiling, or compilation failed. A binding that names a RemoteMCPServer that does not exist in the namespace fails at the `ResolvedRefs` condition with the reason `ReferenceResolutionFailed`.
 
-   > [!WARNING]
-   > kagent resolves the server, but it does not check the tool names against the tools that the server actually serves. A misspelled tool name compiles into a ready revision, and the only symptom is an agent that never calls the tool that you expected. If a bound tool appears to be missing, check the spelling against the server's catalog.
+   kagent resolves the server, but it does not check the tool names against the tools that the server actually serves. A misspelled tool name compiles into a ready revision, and the only symptom is an agent that never calls the tool that you expected. If a bound tool appears to be missing, check the spelling against the server's catalog.
 
 ## Create a Session that has the tool
 

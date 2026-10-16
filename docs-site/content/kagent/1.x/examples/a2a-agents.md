@@ -28,8 +28,7 @@ Both forms replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagen
 
 A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
-> [!WARNING]
-> A default installation sets `config.server.auth.mode` to `insecure`. In this mode any caller that can reach the port can invoke any Agent. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
+{{< reuse "kagent-docs/snippets/examples/a2a-port-warning.md" >}}
 
 ### A2A methods
 

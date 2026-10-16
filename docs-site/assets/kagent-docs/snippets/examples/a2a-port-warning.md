@@ -1,0 +1,2 @@
+> [!WARNING]
+> A default installation sets `config.server.auth.mode` to `insecure`. In this mode any caller that can reach the port can invoke any Agent. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).

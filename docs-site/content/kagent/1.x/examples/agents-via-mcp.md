@@ -19,8 +19,7 @@ The MCP server is part of the controller's HTTP port rather than a separate depl
 - **Sessions**: The handler is stateless, so each request stands alone and a client does not need to establish a session first.
 - **Extensions**: The server advertises the `io.modelcontextprotocol/tasks` extension, which changes how invocations behave. For more information, see [Invoke without waiting](#invoke-without-waiting).
 
-> [!WARNING]
-> A default installation sets `config.server.auth.mode` to `insecure`. In this mode the endpoint accepts every request and reads the caller's identity from an `X-User-Id` header that the caller sets itself, defaulting to `admin@kagent.dev`. The endpoint can invoke agents, create checkpoints, and create Sessions. Do not expose port `8083` outside the cluster. For the wider identity model, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
+{{< reuse "kagent-docs/snippets/examples/mcp-endpoint-warning.md" >}}
 
 ## Before you begin
 

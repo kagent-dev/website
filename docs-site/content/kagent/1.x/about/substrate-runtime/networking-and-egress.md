@@ -114,7 +114,6 @@ kagent sets this up from two resources. Every ModelConfig that holds an `apiKeyS
 
 A credential is declared on a rule as a `replace_headers` entry. The entry names the header to replace, an optional prefix such as `Bearer `, and either a reference that a registered credential provider resolves or a JWT that Agent Substrate issues to assert the Actor's identity. The gateway replaces the header only when the request already sends it. A request that omits the placeholder header is forwarded unchanged, without the credential, rather than being denied.
 
-> [!NOTE]
-> Replacement happens only on a connection that the gateway terminates, and only when a credential provider is configured for the reference. If either is missing, the request reaches the destination without the credential. The request fails closed when replacement is attempted and fails. `403` is returned when the provider does not hold the credential or refuses to release it, and `503` is returned when the provider is unreachable.
+Replacement happens only on a connection that the gateway terminates, and only when a credential provider is configured for the reference. If either is missing, the request reaches the destination without the credential. The request fails closed when replacement is attempted and fails. `403` is returned when the provider does not hold the credential or refuses to release it, and `503` is returned when the provider is unreachable.
 
 Replacement also works on a cleartext `http` rule, where the gateway does not originate TLS to the destination. The credential is then readable by anything on the path between the gateway and the destination unless something outside the gateway encrypts that segment. Prefer an `https` destination for any host that takes a credential.

@@ -1,0 +1,1 @@
+The [OTel stack]({{< link path="observability/otel-stack#send-agent-substrate-telemetry-to-the-collector" >}}) and [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack" >}}) guides set both.
