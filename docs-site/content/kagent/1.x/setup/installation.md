@@ -102,8 +102,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    kagent-controller-56c67b6cd7-hqj5z                1/1     Running   3          2m
    kagent-default-774d4496bd-sfx4b                   1/1     Running   0          2m
    kagent-grafana-mcp-7c67f5697c-4mf78               1/1     Running   0          2m
-   kagent-kmcp-controller-manager-6676b45958-zcvrp   1/1     Running   0          2m
-   kagent-postgresql-856b475f59-n258n                1/1     Running   0          2m
+   kagent-postgresql-856b475f59-n258n                2/2     Running   0          2m
    kagent-tools-54959b659c-lfkrz                     1/1     Running   0          2m
    kagent-ui-5fdb6fd85c-vzb2z                        1/1     Running   0          2m
    ```

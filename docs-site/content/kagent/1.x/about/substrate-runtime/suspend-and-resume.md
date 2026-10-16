@@ -34,7 +34,9 @@ An {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}'s snapshot configura
 - **`Full`**: Captures process memory, the root filesystem changes layered on top of the container image, and any attached durable volumes. A `Full` snapshot holds everything that is needed to resume the Actor hot, with its in-memory state intact.
 - **`Data`**: Captures only the contents of attached durable volumes. Process memory and the rest of the root filesystem are discarded, which makes the snapshot much cheaper to write and store.
 
-kagent sets the scope automatically on every ActorTemplate that it generates, and it sets `Full` so that process memory survives both a pause and a suspend. Each Actor also gets a single durable volume named `data`. The one snapshot setting that you author is the storage location, which you set on the {{< gloss "Harness" >}}Harness{{< /gloss >}}.
+kagent sets the scope automatically on every ActorTemplate that it generates, for agents and standalone Sandboxes alike, and it always sets `Data`. Each Actor gets a single durable volume named `data`, mounted at `/data`. The one snapshot setting that you author is the storage location, which you set on the {{< gloss "Harness" >}}Harness{{< /gloss >}}.
+
+A suspend keeps the durable volume and discards process memory. A resume therefore starts new containers from the image and restores the saved durable directories. The agent runtimes store what a turn needs in the durable volume, including a pending approval or question, and continue the conversation after the restart.
 
 One scope governs both operations. The ActorTemplate's `onCommit` setting selects what a suspend uploads to snapshot storage, and a pause captures this same scope on the node.
 
@@ -46,8 +48,8 @@ A **DurableDir volume** is the per-Actor application data surface. Its contents 
 
 Two kinds of snapshot serve different purposes, and both appear in a normal installation.
 
-- The **golden snapshot** is shared by every Actor of one ActorTemplate. Agent Substrate captures it once by booting the workload temporarily when the template is created. Every new Actor of this template starts from this snapshot rather than from a cold start. kagent waits for the golden snapshot before an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} becomes ready, and the controller reports `waiting for the ActorTemplate golden snapshot` while the capture runs.
-- The **last snapshot** belongs to one Actor. Agent Substrate writes it on every suspend and restores this same Actor from it on the next resume. It keeps the files and memory that this one Session built up, so the Session continues from where it stopped.
+- The **golden snapshot** is shared by every Actor of one ActorTemplate. Agent Substrate captures it once by booting the workload temporarily when the template is created. Every new Actor of this template starts from this snapshot. kagent waits for the golden snapshot before an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} becomes ready, and the controller reports `waiting for the ActorTemplate golden snapshot` while the capture runs.
+- The **last snapshot** belongs to one Actor. Agent Substrate writes it on every suspend and restores this same Actor from it on the next resume. It keeps the durable files that this one Session built up, so the Session continues from where it stopped.
 
 Agent Substrate writes every snapshot to object storage, so Actor state is durable and portable across the cluster. The supported backends are Google Cloud Storage and Amazon Simple Storage Service (S3), and the S3 client also reaches S3-compatible stores that accept a custom endpoint and path-style addressing. For the settings that select and configure each client, see [Configure snapshot storage]({{< link path="operations/tune-agent-substrate#configure-snapshot-storage" >}}). A {{< gloss "Harness" >}}Harness{{< /gloss >}} names the location for its Actors' snapshots in its `substrate.snapshotPolicy` section.
 

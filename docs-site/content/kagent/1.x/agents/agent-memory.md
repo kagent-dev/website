@@ -27,35 +27,40 @@ Memories are scoped to the agent and to the user who created them, and carry the
 
 Agent memory requires your own PostgreSQL database with the [pgvector](https://github.com/pgvector/pgvector) extension installed. The default database that `kagent install` deploys runs the stock `postgres` image, which omits pgvector, so that database cannot store memories.
 
-1. Install the pgvector extension in your database, in the schema that kagent reads it from. The `config.database.vectorSchema` value names this schema and defaults to `extensions`. Grant `USAGE` on the schema to the role that kagent assumes after it connects, which the `config.database.role` value names. When you leave `config.database.role` empty, grant `USAGE` to the login user.
+1. Prepare the database for kagent and create its two connection Secrets. Follow steps 1 to 3 of [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}), which create the `kagent_owner` and `kagent_readwrite` roles and the `my-postgres-owner` and `my-postgres-readwrite` Secrets.
+
+2. Install the pgvector extension in the schema that kagent reads it from. The `config.database.vectorSchema` value names this schema and defaults to `extensions`. Migrations and runtime queries both use the extension, so grant `USAGE` on the schema to both kagent roles.
    ```sql
    CREATE SCHEMA IF NOT EXISTS extensions;
    CREATE EXTENSION IF NOT EXISTS vector SCHEMA extensions;
-   GRANT USAGE ON SCHEMA extensions TO <kagent-user-or-role>;
+   GRANT USAGE ON SCHEMA extensions TO kagent_owner, kagent_readwrite;
    ```
 
    The kagent migrations create the memory tables, and they never create the extension. Be sure to install it yourself before you enable memory.
-
-2. Store the connection string for your database in a Kubernetes Secret in the same namespace as the kagent controller.
-   ```bash
-   kubectl create secret generic my-postgres-url-secret -n kagent \
-     --from-literal=connectionString='postgres://<username>:<password>@<host>:5432/<database>?sslmode=require'
-   ```
 
 3. Save the following Helm values to point kagent at your database and run the migration that creates the memory tables.
    ```yaml
    cat > kagent-memory-values.yaml <<EOF
    database:
      postgres:
-       # Secret holding the connection string.
-       connectionStringSecretRef:
-         name: my-postgres-url-secret
-         key: connectionString
+       # Secrets holding the two connection strings.
+       ownerConnectionStringSecretRef:
+         name: my-postgres-owner
+         key: ownerConnectionString
+       readWriteConnectionStringSecretRef:
+         name: my-postgres-readwrite
+         key: readWriteConnectionString
+       # Your database authenticates with passwords, not Pod Certificates.
+       clientCertificate:
+         enabled: false
    config:
      database:
-       # Use the login user directly. To assume a role instead, create the role in PostgreSQL and set its name here.
-       role: ""
-       # Schema that contains the pgvector extension, which you installed in the first step.
+       # Roles that the setup script created.
+       owner:
+         role: kagent_owner
+       readWrite:
+         role: kagent_readwrite
+       # Schema that contains the pgvector extension, which you installed in the preceding step.
        vectorSchema: extensions
        # Runs the vector migration, which creates the memory tables.
        vectorEnabled: true
@@ -218,7 +223,7 @@ No CLI command manages memories, so these examples call the service with [grpcur
    grpcurl -plaintext -d '{
      "agent_name": "kagent__NS__my_first_agent_my_first_harness",
      "user_id": "admin@kagent.dev"
-   }' localhost:8083 kagent.api.v1alpha1.MemoryService/List
+   }' localhost:8083 kagent.runtime.v1.MemoryService/List
    ```
 
    Each entry returns the `id`, `content`, `access_count`, `created_at`, and `expires_at` fields. Results are ranked by how often retrieval has returned them, so the most-used memories appear first.
@@ -228,7 +233,7 @@ No CLI command manages memories, so these examples call the service with [grpcur
    grpcurl -plaintext -d '{
      "agent_name": "kagent__NS__my_first_agent_my_first_harness",
      "user_id": "admin@kagent.dev"
-   }' localhost:8083 kagent.api.v1alpha1.MemoryService/Delete
+   }' localhost:8083 kagent.runtime.v1.MemoryService/Delete
    ```
 
 The memory service also exposes `Search`, `AddSession`, and `AddSessionBatch`. Each method takes a 768-dimensional vector rather than text, because kagent does not embed on the caller's behalf. Call them from a program that already has an embedding model, rather than by hand.

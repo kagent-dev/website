@@ -209,6 +209,8 @@ A task that is still running reports `TASK_STATE_WORKING` and has no artifacts y
 
 A task callback lets a webhook learn when a task needs input or reaches a final state. The callback receives a status update for future `INPUT_REQUIRED`, `AUTH_REQUIRED`, `COMPLETED`, `FAILED`, `CANCELED`, and `REJECTED` states. After the callback arrives, the receiver calls authenticated `GetTask` to read the current state and artifacts.
 
+kagent keeps one pending delivery for each callback. A newer state replaces a delivery that has not yet succeeded. A task that resumes discards the pending delivery for the state that it left. A receiver therefore does not see every state.
+
 The kagent CLI wraps the three push notification configuration methods, so the steps that follow use the CLI rather than building each request by hand. The CLI defaults to port 8083, which the prerequisites already forward.
 
 1. To register a callback before a new task is dispatched, add `--push-url` to the kagent CLI invocation. The command returns immediately with the task ID and callback ID.
@@ -266,15 +268,15 @@ kagent does not generate its own signing key, so you are responsible for creatin
      --from-file=private-key.pem=private-key.pem
    ```
 
-3. Name the Secret in `controller.push.signing.secretName`, and set `config.gateway.push.issuer` to a URL that reaches the controller. Use the Helm release name and version that you installed kagent with.
+3. Name the Secret in `controller.push.signing.secretName`, and set `config.push.issuer` to a URL that reaches the controller. Use the Helm release name and version that you installed kagent with.
    ```bash
    helm upgrade kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent \
      --namespace kagent --reuse-values \
      --set controller.push.signing.secretName=kagent-push-signing \
-     --set config.gateway.push.issuer=https://kagent.example
+     --set config.push.issuer=https://kagent.example
    ```
 
-   The issuer that a receiver trusts must match the host that it fetches the JWKS from. When you omit `config.gateway.push.issuer`, Helm derives it from `ui.externalUrl` and then from the in-cluster A2A gateway URL. Either fallback can name a host that does not serve the JWKS.
+   The issuer that a receiver trusts must match the host that it fetches the JWKS from. When you omit `config.push.issuer`, Helm derives it from `ui.externalUrl` and then from the in-cluster A2A gateway URL. Either fallback can name a host that does not serve the JWKS.
 
 4. Confirm that the controller publishes a verification key. Before you set the Secret, this path returns `404`.
    ```bash
@@ -290,7 +292,7 @@ Receivers verify a signed delivery against the JSON Web Key Set (JWKS). The cont
 
 Receivers must not send a token or credential when they register a callback. kagent signs each delivery attempt with a fresh five-minute JWT whose audience is the exact callback URL, including the query string. Before you acknowledge the request with a 2xx response, verify the JWT signature, issuer, audience, expiry, and `taskId` claim. The `taskId` claim repeats the `statusUpdate.taskId` value in the body, so a receiver that compares them rejects a token replayed against a different task.
 
-By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. To reach a test receiver inside the cluster, set `config.gateway.push.allowHttp=true` or `config.gateway.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
+By default, callback URLs must use HTTPS. Callback URLs must not resolve to private, loopback, link-local, unspecified, or multicast addresses. To reach a test receiver inside the cluster, set `config.push.allowHttp=true` or `config.push.allowPrivateNetworks=true`. kagent does not follow redirects, and failed attempts are retried from the database-backed queue.
 
 ## When an agent needs a person
 

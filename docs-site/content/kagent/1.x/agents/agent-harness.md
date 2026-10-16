@@ -11,7 +11,7 @@ This page covers the Harness schema, the four harnesses, and what each one suppo
 
 ## Configure a Harness
 
-The following configuration shows a complete Harness resource. Only `workload`, `substrate`, and one harness block are required.
+The following configuration shows a complete Harness resource. Only `substrate` and one harness block are required. The `byo` harness also requires `workload.image` and `workload.command`.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -41,7 +41,7 @@ EOF
 | Field | Required | Description |
 | ----- | -------- | ----------- |
 | One of `kagent`, `codex`, `claude`, `byo` | Yes | The harness that executes the agent. Naming none, or more than one, is rejected. To compare the four harnesses, see [Choose a harness](#choose-a-harness). |
-| `workload.image` | Yes | The container image to run, pinned by `sha256` digest. A tag with no digest is rejected, because a revision must be reproducible. |
+| `workload.image` | For `byo` | The container image to run, pinned by `sha256` digest. A tag with no digest is rejected, because a revision must be reproducible. Omit it on a `kagent`, `codex`, or `claude` Harness to run the built-in image of the installed release. For more information, see [Built-in runtime images](#built-in-runtime-images). |
 | `workload.command` | For `byo` | Overrides the image entrypoint, up to 32 entries. Required for the `byo` harness, optional otherwise. Every harness honors an explicit value, the `kagent` harness included, regardless of the language its image is written in. |
 | `workload.args` | No | Overrides the image arguments, up to 64 entries. An override that you omit stays unset rather than taking a default. |
 | `env` | No | Environment variables for the agent process. Each entry sets a literal `value`, which is required and can be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. Put credentials in a ModelConfig or a RemoteMCPServer instead. For more information, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}). Limits and reserved names both apply. For more information, see [Environment variables on an Actor](#environment-variables-on-an-actor). |
@@ -51,6 +51,30 @@ EOF
 A Harness and an AgentTemplate do not reference each other. An {{< gloss "Agent" >}}Agent{{< /gloss >}} references both, through `spec.harnessRef` and `spec.template.ref`, so whoever writes the Agent decides which template runs on which Harness. Both fields take a reference only. The Harness must therefore exist before an Agent can name it. For more information about the pairing, see [Core concepts]({{< link path="about/core-concepts#agent" >}}).
 
 The image, command, arguments, environment, and resolved AgentTemplate together form a {{< gloss "Revision" >}}revision{{< /gloss >}}, which kagent identifies by a digest of that content. Editing any of them produces a new revision at the next reconcile. A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was created from until that Session ends, so only Sessions that start after the edit use the new revision.
+
+### Built-in runtime images
+
+Each kagent release ships a runtime image for the `kagent`, `codex`, and `claude` harnesses, pinned by digest. A Harness of one of these types that omits `workload.image` runs the image of the installed release. An explicit `workload.image` overrides the release image. After the Agent compiles, `status.workloadImage` reports the image that the Agent's desired revision runs. Existing Sessions keep the revision, and the image, that they were created from. To read the image that an Agent runs, check its status.
+
+```bash
+kubectl get agent my-agent -n kagent -o jsonpath='{.status.workloadImage}'
+```
+
+To replace the release defaults for the whole installation, set `config.harnessImages` in your Helm values. Your values merge over the image catalog that the chart packages. `global.imageRegistry` rewrites both the packaged defaults and your overrides, so a mirrored registry needs no further setting.
+
+```yaml
+config:
+  harnessImages:
+    kagent: registry.example.com/kagent/golang-adk@sha256:<digest>
+    codex: registry.example.com/kagent/codex-harness@sha256:<digest>
+    claude: registry.example.com/kagent/claude-harness@sha256:<digest>
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `kagent`, `codex`, `claude` | The digest-pinned default image for that harness. Omit a key to keep the release default for that harness. An empty string disables the default. A Harness of that type must then set `workload.image`. Otherwise, the Agent fails to compile with `no default image configured`. |
+
+The chart also sets `config.harnessImages.release` to the release that the packaged images belong to. When that value does not match the controller's release, the controller fails at startup.
 
 ## Choose a harness
 

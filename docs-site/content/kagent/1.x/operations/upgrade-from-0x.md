@@ -17,7 +17,7 @@ Three independent changes each rule out `helm upgrade`, so working around any on
 | The custom resources moved to a new API group | 1.0 serves its resources under `api.kagent.dev`, where 0.10.x serves them under `kagent.dev`. The groups share no conversion, so nothing stored under the old group is visible through the new CRDs. |
 | The resource model is replaced | 0.10.x's `Agent` is gone. What it described is now split between an AgentTemplate and a {{< gloss "Harness" >}}Harness{{< /gloss >}}, paired by a new {{< gloss "Agent" >}}Agent{{< /gloss >}} resource in the `api.kagent.dev` group, and a conversation is a {{< gloss "Session" >}}Session{{< /gloss >}} created against that Agent. The two `Agent` kinds share a name and nothing else. For the model itself, see [Core concepts]({{< link path="about/core-concepts" >}}). |
 
-The two releases also cannot run side by side on one cluster. The group rename separates most of the custom resources. Both releases bundle kmcp, though, and each one ships its own version of the `mcpservers.kagent.dev` CRD. A CRD is cluster-scoped, so installing 1.0's CRDs replaces the version that 0.10.x installed. A second cluster keeps the old installation intact while you work.
+The two releases also cannot run side by side on one cluster. The group rename separates the custom resources, but both charts name their cluster-scoped ClusterRoles after the release, such as `kagent-getter-role`. When both releases use the default `kagent` release name, the 1.0 install collides with the ClusterRoles that 0.10.x owns. A second cluster keeps the old installation intact while you work.
 
 > [!WARNING]
 > Downgrading from 1.0 back to 0.10.x is unsupported. Treat the cutover as one-way, and keep the 0.10.x installation running until you have verified the new one.
@@ -58,28 +58,97 @@ Your Kubernetes resources do carry forward, so export them before anything repla
 
 ## Install kagent 1.0
 
-Install 1.0 in the same way as a first-time installation, with one addition: point it at the empty database that you provisioned. The full procedure installs Agent Substrate, kagent, and the identity material that they need.
+Install 1.0 against the empty database that you provisioned. kagent and Agent Substrate both store their state in that database, each with an owner login that applies migrations and a read/write login that serves runtime queries. `kagent install` normally creates a development database for both. The `--skip-database-setup` flag skips that database. The releases then read the connection Secrets that you create in this section.
 
-1. Store the connection string for the empty database in a Secret in the new cluster.
+Before you start, complete the [Before you begin]({{< link path="setup/installation#before-you-begin" >}}) steps of the installation guide. Those steps prepare the kagent CLI, your provider API key, and a cluster at Kubernetes 1.37 or later.
+
+1. Create the namespaces that hold the connection Secrets. `kagent install` uses the namespaces when they already exist.
    ```bash
-   kubectl create secret generic kagent-upgrade-postgres -n kagent \
-     --from-literal=connectionString='postgres://<user>:<password>@<host>:5432/<dbname>?sslmode=require'
+   kubectl create namespace kagent
+   kubectl create namespace ate-system
    ```
 
-2. Follow all steps in the [1.0 installation guide]({{< link path="setup/installation" >}}). Set the following Helm values on the kagent install, rather than changing them afterward.
+2. Prepare the database for kagent. Follow steps 1 to 3 of [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}), which create the `kagent_owner` and `kagent_readwrite` roles and the `my-postgres-owner` and `my-postgres-readwrite` Secrets.
+
+3. Prepare the same database for Agent Substrate. Agent Substrate ships its own setup script, which creates the `substrate_owner` and `substrate_readwrite` roles and the `substrate` schema. Run it in the same way as the kagent script.
+   ```bash
+   curl -sSLo substrate-setup.sql https://raw.githubusercontent.com/kagent-dev/substrate/refs/tags/v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}/pkg/postgressetup/setup.sql
+   export SUBSTRATE_OWNER_PASSWORD=<substrate-owner-password> SUBSTRATE_READWRITE_PASSWORD=<substrate-readwrite-password>
+   psql "$ADMIN_CONNECTION_STRING" --no-psqlrc --set=ON_ERROR_STOP=1 --single-transaction \
+     --set=substrate_schema=substrate \
+     --set=substrate_owner_role=substrate_owner \
+     --set=substrate_owner_user=substrate_owner_user \
+     --set=substrate_readwrite_role=substrate_readwrite \
+     --set=substrate_readwrite_user=substrate_readwrite_user \
+     --command='\getenv substrate_owner_password SUBSTRATE_OWNER_PASSWORD' \
+     --command='\getenv substrate_readwrite_password SUBSTRATE_READWRITE_PASSWORD' \
+     --file=substrate-setup.sql
+   ```
+
+4. Create the Agent Substrate connection Secrets. The Agent Substrate chart reads these names and keys by default, so its release needs no extra values.
+   ```bash
+   kubectl create secret generic substrate-postgres-owner \
+     --namespace ate-system \
+     --from-literal=ownerConnectionString="postgresql://substrate_owner_user:<substrate-owner-password>@<host>:5432/<dbname>?sslmode=verify-full"
+   kubectl create secret generic substrate-postgres-readwrite \
+     --namespace ate-system \
+     --from-literal=readWriteConnectionString="postgresql://substrate_readwrite_user:<substrate-readwrite-password>@<host>:5432/<dbname>?sslmode=verify-full"
+   ```
+
+5. Save the kagent Helm values that configure kagent to use your Secrets and roles.
+   ```bash
+   cat > kagent-values.yaml <<EOF
+   database:
+     postgres:
+       ownerConnectionStringSecretRef:
+         name: my-postgres-owner
+       readWriteConnectionStringSecretRef:
+         name: my-postgres-readwrite
+   config:
+     server:
+       grpcReflection: true
+     database:
+       owner:
+         role: kagent_owner
+       readWrite:
+         role: kagent_readwrite
+       vectorEnabled: true
+   EOF
+   ```
 
    | Value | Why |
    | ----- | --- |
-   | `database.postgres.connectionStringSecretRef.name=kagent-upgrade-postgres` | Reads the connection string from the Secret that you created. |
-   | `database.postgres.connectionStringSecretRef.key=connectionString` | Names the key in the Secret that holds the connection string. |
-   | `config.database.role=""` | Uses the database login user directly. If you created a separate role such as `kagent_owner`, set that role name instead. |
-   | `config.database.vectorEnabled=true` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. Your database must have the pgvector extension installed. |
+   | `database.postgres.ownerConnectionStringSecretRef.name` and `database.postgres.readWriteConnectionStringSecretRef.name` | Read the two connection strings from the Secrets that you created. The keys default to `ownerConnectionString` and `readWriteConnectionString`. |
+   | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the kagent setup script created. If you passed other role names to the script, set those names instead. |
+   | `config.database.vectorEnabled` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. If your database does not have the pgvector extension installed, omit the value. |
+   | `config.server.grpcReflection` | Lets the guides that use `grpcurl` discover the controller API, as in the installation guide. |
 
-   The controller applies migrations at startup. To apply them from a pipeline instead, set `config.database.skipMigrations=true` and run `kagent db migrate up` yourself. The controller then verifies the schema and fails if it is not already current. For sizing and connection guidance on the database itself, see [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}).
+   The controller applies migrations at startup. To apply them from a pipeline instead, set `config.database.skipMigrations=true` and run `kagent db migrate up` with the owner login yourself. The controller then verifies the schema and fails if it is not already current.
 
-3. Verify the schema before continuing.
+6. Save a CLI configuration file that references those values.
    ```bash
-   kagent db migrate status --db-url "postgres://<user>:<password>@<host>:5432/<dbname>"
+   cat > kagent-config.yaml <<EOF
+   install:
+     kagent:
+       valuesFiles: [kagent-values.yaml]
+   EOF
+   ```
+
+7. Install kagent without the development database.
+   ```bash
+   kagent --config kagent-config.yaml install --namespace kagent --skip-database-setup
+   ```
+
+8. Verify the schema before continuing. The `kagent db` commands connect as the owner login and assume the owner role.
+   ```bash
+   kagent db migrate status \
+     --db-url "postgresql://kagent_owner_user:<owner-password>@<host>:5432/<dbname>?sslmode=verify-full" \
+     --db-role kagent_owner
+   ```
+
+   Example output:
+   ```console
+   1 migration(s) applied (at v1), 0 pending
    ```
 
 ## Recreate your resources

@@ -61,21 +61,27 @@ Each `config.runtimeDefaults` setting is the installation's default. A Harness c
 
 ## Choose a database
 
-kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart does not deploy a database of its own. It reads a connection string from a Kubernetes Secret, and `database.postgres.connectionStringSecretRef` names that Secret and the key inside it.
+kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart does not deploy a database of its own. kagent connects to the database with two logins, and reads the connection string for each login from a Kubernetes Secret.
+
+* The **owner** login creates the schema and applies migrations at startup. `database.postgres.ownerConnectionStringSecretRef` references the Secret and key that hold its connection string.
+* The **read/write** login serves every runtime query. It can read and write rows, but it cannot change the schema. `database.postgres.readWriteConnectionStringSecretRef` references the Secret and key that hold its connection string.
 
 ```yaml
 database:
   postgres:
-    connectionStringSecretRef:
-      name: kagent-postgres
-      key: connectionString
+    ownerConnectionStringSecretRef:
+      name: kagent-postgres-owner
+      key: ownerConnectionString
+    readWriteConnectionStringSecretRef:
+      name: kagent-postgres-readwrite
+      key: readWriteConnectionString
 ```
 
 `kagent install` creates a development database in the cluster, so an installation does not need an external database to start. Run your own PostgreSQL instance for production, so that the data outlives the cluster that kagent runs on.
 
 ### The development database
 
-`kagent install` creates a database for you unless you pass `--skip-database-setup`. It deploys a single-replica `kagent-postgresql` Deployment backed by a 500Mi PersistentVolumeClaim, creates the roles that kagent and Agent Substrate connect as, and writes the connection Secrets for both: `kagent-postgres` in the kagent namespace, and `substrate-postgres-readwrite` and `substrate-postgres-owner` in `ate-system`.
+`kagent install` creates a development database unless you pass `--skip-database-setup`. It deploys a single-replica `kagent-postgresql` Deployment backed by a 500Mi PersistentVolumeClaim, creates the roles that kagent and Agent Substrate connect as, and writes the connection Secrets for both: `kagent-postgres-owner` and `kagent-postgres-readwrite` in the kagent namespace, and `substrate-postgres-owner` and `substrate-postgres-readwrite` in `ate-system`.
 
 Connections to this database do not use a password. When `database.postgres.clientCertificate.enabled` is set to `true`, which `kagent install` does, each client authenticates with a Pod Certificate projected into its pod under `/run/postgres.podcert.ate.dev`. The connection string points its `sslcert` and `sslkey` parameters at those files.
 
@@ -84,29 +90,63 @@ Connections to this database do not use a password. When `database.postgres.clie
 
 ### Use an external PostgreSQL instance
 
-For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data.
+For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data. kagent requires a new, empty database. The roles and the schema must exist before the controller starts. kagent ships a `psql` script that creates them.
 
-1. Create a Secret that holds the connection string.
+Agent Substrate connects to the same database with logins of its own. The Agent Substrate chart reads their connection strings from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. Agent Substrate ships a setup script of its own. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install-kagent-10" >}}).
+
+1. Download the setup script for your kagent version.
 
    ```bash
-   kubectl create secret generic my-postgres \
-     --namespace kagent \
-     --from-literal=connectionString="postgresql://user:password@postgres.example.com:5432/kagent?sslmode=verify-full"
+   curl -sSLo setup.sql https://raw.githubusercontent.com/kagent-dev/kagent/refs/tags/v{{< reuse "kagent-docs/versions/kagent.md" >}}/go/core/pkg/postgressetup/setup.sql
    ```
 
-2. Point the chart at your Secret in your Helm values file.
+2. Run the script as a database administrator, with `psql` version 15 or later. The script reads the passwords from environment variables, which earlier `psql` versions cannot do. The script creates a `NOLOGIN` owner role that owns the schema, a `NOLOGIN` read/write role, a login user for each role, and the schema. It also revokes `CREATE` on the `public` schema from `PUBLIC`. Every variable is required. The script must run in one transaction.
+
+   ```bash
+   export KAGENT_OWNER_PASSWORD=<owner-password> KAGENT_READWRITE_PASSWORD=<readwrite-password>
+   psql "$ADMIN_CONNECTION_STRING" --no-psqlrc --set=ON_ERROR_STOP=1 --single-transaction \
+     --set=kagent_schema=kagent \
+     --set=kagent_owner_role=kagent_owner \
+     --set=kagent_owner_user=kagent_owner_user \
+     --set=kagent_readwrite_role=kagent_readwrite \
+     --set=kagent_readwrite_user=kagent_readwrite_user \
+     --command='\getenv kagent_owner_password KAGENT_OWNER_PASSWORD' \
+     --command='\getenv kagent_readwrite_password KAGENT_READWRITE_PASSWORD' \
+     --file=setup.sql
+   ```
+
+   The script is safe to run again. Each run sets each login's password to the value of its variable, and an empty value removes the password. To keep the existing passwords, pass them again on every run. The passwords reach the server as statement text. A server that logs every statement therefore records them. To keep a plain password out of the server log, pass a SCRAM-SHA-256 verifier, which PostgreSQL stores as given.
+
+3. Create a Secret for each login. Leave role settings out of the connection strings, because kagent assumes each role after it connects. These names do not collide with the `kagent-postgres-owner` and `kagent-postgres-readwrite` Secrets that `kagent install` creates for the development database.
+
+   ```bash
+   kubectl create secret generic my-postgres-owner \
+     --namespace kagent \
+     --from-literal=ownerConnectionString="postgresql://kagent_owner_user:<owner-password>@postgres.example.com:5432/kagent?sslmode=verify-full"
+   kubectl create secret generic my-postgres-readwrite \
+     --namespace kagent \
+     --from-literal=readWriteConnectionString="postgresql://kagent_readwrite_user:<readwrite-password>@postgres.example.com:5432/kagent?sslmode=verify-full"
+   ```
+
+4. In your Helm values file, configure the chart to reference your Secrets and roles.
 
    ```yaml
    database:
      postgres:
-       connectionStringSecretRef:
-         name: my-postgres
-         key: connectionString
+       ownerConnectionStringSecretRef:
+         name: my-postgres-owner
+         key: ownerConnectionString
+       readWriteConnectionStringSecretRef:
+         name: my-postgres-readwrite
+         key: readWriteConnectionString
        clientCertificate:
          enabled: false
    config:
      database:
-       role: kagent_owner
+       owner:
+         role: kagent_owner
+       readWrite:
+         role: kagent_readwrite
        schema: kagent
        vectorEnabled: true
        skipMigrations: false
@@ -117,25 +157,27 @@ For production, run PostgreSQL outside the cluster's lifecycle so that a kagent 
      replicas: 3
    ```
 
-   `database.postgres` configures the Kubernetes packaging, including the Secret reference and the client certificate. `config.database` sets what the controller reads from its configuration file. For more information about these settings, see [Controller configuration](#controller-configuration).
+   `database.postgres` configures the Kubernetes packaging, including the Secret references and the client certificate. `config.database` sets what the controller reads from its configuration file. For more information about these settings, see [Controller configuration](#controller-configuration).
 
    | Setting | Description |
    | ------- | ----------- |
-   | `database.postgres.connectionStringSecretRef` | The Secret and key that hold the connection string. Keeping the string in a Secret keeps the credentials out of Helm values. The controller restarts to pick up a changed Secret. |
-   | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. The connection string must then point its `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in the preceding example, leaves `enabled` at `false`. |
-   | `config.database.role` | The role that kagent assumes on each connection. Give each installation that shares one database a distinct role. |
-   | `config.database.schema` | The schema that holds kagent's tables. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and kagent needs `USAGE` on it. |
-   | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
+   | `database.postgres.ownerConnectionStringSecretRef` | The Secret and key that hold the owner login's connection string. When `config.database.skipMigrations` is set to `true`, the controller does not read this Secret. |
+   | `database.postgres.readWriteConnectionStringSecretRef` | The Secret and key that hold the read/write login's connection string. Required. The controller reads both Secrets only at startup. After a Secret changes, restart the controller. |
+   | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. Both connection strings must then point their `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in the preceding example, leaves `enabled` at `false`. |
+   | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the two logins assume after they connect. Match the role names that you passed to the setup script. Give each installation that shares one database distinct roles. |
+   | `config.database.schema` | The schema that holds kagent's tables. Match the `kagent_schema` value that you passed to the setup script. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and both kagent roles need `USAGE` on it. |
+   | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed in `config.database.vectorSchema`. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
    | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. Omit the fields to keep the pgx library defaults. |
-   | `config.database.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies that the database is already migrated and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. |
+   | `config.database.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies through the read/write login that the database is already migrated, and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. The controller then does not need the owner Secret or role. |
 
-3. Apply the values to the kagent Helm release.
+5. Apply the values to the kagent Helm release. The `--reuse-values` flag keeps the values that an existing release was installed with, such as the provider key and the Agent Substrate settings that `kagent install` sets. On a first installation, the flag has no effect.
 
    ```bash
    helm upgrade --install kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
      --namespace kagent \
+     --reuse-values \
      --values kagent.yaml
    ```
 
@@ -178,15 +220,14 @@ controller:
     signing:
       secretName: kagent-push-signing
 config:
-  gateway:
-    push:
-      issuer: https://kagent.example.com
+  push:
+    issuer: https://kagent.example.com
 ```
 
 | Setting | Description |
 | ------- | ----------- |
-| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the chart mounts the key and sets `config.gateway.push.signingPrivateKeyFile` to `/etc/kagent/secrets/push-private-key.pem`. |
-| `config.gateway.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
+| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the chart mounts the key and sets `config.push.signingPrivateKeyFile` to `/etc/kagent/secrets/push-private-key.pem`. |
+| `config.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
 
 With a signing key configured, each callback attempt carries a fresh five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
 
@@ -255,7 +296,7 @@ A fork is the case where the creation time decides. A fork replays its source Se
 Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 
 > [!IMPORTANT]
-> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt, so `GetSession` returns not-found afterward. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
+> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. `GetSession` then returns not-found. An A2A message that continues the expired Session by its `contextId` fails with `TaskNotFound` (`-32001`, or gRPC `NOT_FOUND`). The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
 
 <!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page, so it is parked here until a Sessions reference page exists. The behaviour: an expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone, so the same caller can reuse that request ID to start a fresh Session. -->
 
