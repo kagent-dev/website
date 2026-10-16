@@ -54,13 +54,15 @@ The image, command, arguments, environment, and resolved AgentTemplate together 
 
 ### Built-in runtime images
 
-Each kagent release ships a runtime image for the `kagent`, `codex`, and `claude` harnesses, pinned by digest. A Harness of one of these types that omits `workload.image` runs the image of the installed release. An explicit `workload.image` overrides the release image. After the Agent compiles, `status.workloadImage` reports the image that the Agent's desired revision runs. Existing Sessions keep the revision, and the image, that they were created from. To read the image that an Agent runs, check its status.
+Each kagent release ships a runtime image for the `kagent`, `codex`, and `claude` harnesses, pinned by digest. If a Harness of one of these types omits `workload.image`, it runs the image of the installed release. If the Harness explicitly sets `workload.image`, this image overrides the release image. After the Agent compiles, `status.workloadImage` reports the image that the Agent's desired revision runs. Existing Sessions keep both the revision and the image that they were created from.
+
+To read the image that an Agent runs, check its status.
 
 ```bash
 kubectl get agent my-agent -n kagent -o jsonpath='{.status.workloadImage}'
 ```
 
-To replace the release defaults for the whole installation, set `config.harnessImages` in your Helm values. Your values merge over the image catalog that the chart packages. `global.imageRegistry` rewrites both the packaged defaults and your overrides, so a mirrored registry needs no further setting.
+To replace the release defaults for the whole installation, set `config.harnessImages` in your Helm values, such as in the following example. Your values merge over the image catalog that the chart packages. `global.imageRegistry` rewrites both the packaged defaults and your overrides, so a mirrored registry needs no further configuration.
 
 ```yaml
 config:
@@ -70,9 +72,7 @@ config:
     claude: registry.example.com/kagent/claude-harness@sha256:<digest>
 ```
 
-| Setting | Description |
-| ------- | ----------- |
-| `kagent`, `codex`, `claude` | The digest-pinned default image for that harness. Omit a key to keep the release default for that harness. An empty string disables the default. A Harness of that type must then set `workload.image`. Otherwise, the Agent fails to compile with `no default image configured`. |
+The `kagent`, `codex`, and `claude` fields set the digest-pinned default image for each harness. Omit a key to keep the release default for that harness. An empty string disables the default, and a Harness of that type must then set `workload.image`.
 
 The chart also sets `config.harnessImages.release` to the release that the packaged images belong to. When that value does not match the controller's release, the controller fails at startup.
 

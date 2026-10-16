@@ -90,9 +90,9 @@ Connections to this database do not use a password. When `database.postgres.clie
 
 ### Use an external PostgreSQL instance
 
-For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data. kagent requires a new, empty database. The roles and the schema must exist before the controller starts. kagent ships a `psql` script that creates them.
+For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data. kagent requires a new, empty database, and the roles and the schema must exist before the controller starts. kagent ships a `psql` script that creates them.
 
-Agent Substrate connects to the same database with logins of its own. The Agent Substrate chart reads their connection strings from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. Agent Substrate ships a setup script of its own. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install-kagent-10" >}}).
+Agent Substrate connects to the same database with its own owner and read/write logins, which its own setup script creates. The Agent Substrate chart reads the connection strings for those logins from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install-kagent-10" >}}).
 
 1. Download the setup script for your kagent version.
 

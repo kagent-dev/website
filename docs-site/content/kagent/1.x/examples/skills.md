@@ -11,7 +11,7 @@ For the fields that attach a skill and the rules that govern their names, see [S
 
 ## About skills at run time
 
-kagent does not fetch a skill when you apply an AgentTemplate. The compiled revision records the source of each skill, and the skill arrives when the agent starts. For an `oci` source, Agent Substrate pulls the image on the Worker and mounts it read-only into the {{< gloss "Actor" >}}Actor{{< /gloss >}} before the runtime starts. For a `git` or `bucket` source, the Actor fetches the files itself. The runtime then copies each enabled skill into the directory that its harness reads, which is `/skills/<skill-name>` on a `kagent` Harness.
+kagent does not fetch a skill when you apply an AgentTemplate. The compiled revision records the source of each skill, and the skill arrives when the agent starts. For an `oci` source, Agent Substrate pulls the image from the Worker and mounts it as read-only into the {{< gloss "Actor" >}}Actor{{< /gloss >}} before the runtime starts. For a `git` or `bucket` source, the Actor fetches the files itself. The runtime then copies each enabled skill into the directory that its harness reads, which is `/skills/<skill-name>` on a `kagent` Harness.
 
 Because kagent fetches a skill this late, review the following considerations.
 
@@ -46,7 +46,7 @@ config:
 
 | Setting | Description |
 | ------- | ----------- |
-| `fileSearchTools` | Set to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. Both tools reach only the skills and session roots that `read_file` reads. They are off by default because they give an agent broad visibility of the filesystem. When `bash` is disabled, these tools keep that visibility available to the agent. |
+| `fileSearchTools` | Set to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. Both tools reach only the skills and session roots that `read_file` reads. These settings are off by default because they give an agent broad visibility of the filesystem. When `bash` is disabled, these tools keep that visibility available to the agent. |
 | `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent still loads skills and keeps the file tools. Defaults to `false`. |
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
@@ -67,7 +67,7 @@ Attaching a skill also changes what the agent is told. The runtime appends the n
    ```
 
    > [!WARNING]
-   > Agent Substrate pulls a skill image on the Worker. v1alpha3 does not have an option to skip certificate verification. kagent 0.x accepted an `insecureSkipVerify` flag for a local registry, but that field does not exist in 1.x. A `localhost` registry that only the host can reach fails at agent startup.
+   > Agent Substrate pulls a skill image on the Worker. API version v1alpha3 does not have an option to skip certificate verification. kagent 0.x accepted an `insecureSkipVerify` flag for a local registry, but that field does not exist in 1.x. A `localhost` registry that only the host can reach fails at agent startup.
 
 ## Build the skill
 
@@ -360,7 +360,6 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
 
 2. Find the WorkerPool that the Harness runs on, and read its Workers' logs. The Actor writes the failure there rather than to the Agent.
 
-   <!-- REVIEW (alpha14, kagent#3203): an oci source is now pulled by Agent Substrate as an image volume, not by the runtime's materializer. The example output and the pull rows in the following table show the alpha13 in-runtime pull. Capture the Worker-side pull failure on a live alpha14 cluster and replace them. The materializer still validates SKILL.md, symlinks, and the size limits, so those rows should survive. -->
    ```bash
    export WORKER_POOL=$(kubectl get harness my-first-harness -n kagent \
      -o jsonpath='{.spec.substrate.workerPoolRef.name}')

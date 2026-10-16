@@ -209,7 +209,7 @@ A task that is still running reports `TASK_STATE_WORKING` and has no artifacts y
 
 A task callback lets a webhook learn when a task needs input or reaches a final state. The callback receives a status update for future `INPUT_REQUIRED`, `AUTH_REQUIRED`, `COMPLETED`, `FAILED`, `CANCELED`, and `REJECTED` states. After the callback arrives, the receiver calls authenticated `GetTask` to read the current state and artifacts.
 
-kagent keeps one pending delivery for each callback. A newer state replaces a delivery that has not yet succeeded. A task that resumes discards the pending delivery for the state that it left. A receiver therefore does not see every state.
+kagent keeps one pending delivery for each callback, and a newer state replaces a delivery that has not yet succeeded. When a task resumes, kagent discards the pending delivery for the state that the task left, so a receiver does not see every state.
 
 The kagent CLI wraps the three push notification configuration methods, so the steps that follow use the CLI rather than building each request by hand. The CLI defaults to port 8083, which the prerequisites already forward.
 

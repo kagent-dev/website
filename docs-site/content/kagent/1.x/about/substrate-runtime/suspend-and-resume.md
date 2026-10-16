@@ -34,7 +34,7 @@ An {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}}'s snapshot configura
 - **`Full`**: Captures process memory, the root filesystem changes layered on top of the container image, and any attached durable volumes. A `Full` snapshot holds everything that is needed to resume the Actor hot, with its in-memory state intact.
 - **`Data`**: Captures only the contents of attached durable volumes. Process memory and the rest of the root filesystem are discarded, which makes the snapshot much cheaper to write and store.
 
-kagent sets the scope automatically on every ActorTemplate that it generates, for agents and standalone Sandboxes alike, and it always sets `Data`. Each Actor gets a single durable volume named `data`, mounted at `/data`. The one snapshot setting that you author is the storage location, which you set on the {{< gloss "Harness" >}}Harness{{< /gloss >}}.
+kagent sets the `Data` scope on every ActorTemplate that it generates, for both agents and standalone Sandboxes. Each Actor gets one durable volume named `data`, mounted at `/data`. The only snapshot setting that you configure is the storage location, in the `substrate.snapshotPolicy` section of the {{< gloss "Harness" >}}Harness{{< /gloss >}}.
 
 A suspend keeps the durable volume and discards process memory. A resume therefore starts new containers from the image and restores the saved durable directories. The agent runtimes store what a turn needs in the durable volume, including a pending approval or question, and continue the conversation after the restart.
 
