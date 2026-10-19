@@ -100,7 +100,7 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
    ```bash
    grpcurl -plaintext \
      -d '{"sessionId":"'"$SESSION_ID"'","expectedHeadTaskId":"'"$TASK_ID"'","requestId":"'"$(uuidgen)"'"}' \
-     localhost:8083 kagent.api.v1alpha1.CheckpointService/CreateCheckpoint
+     localhost:8083 kagent.api.v1.CheckpointService/CreateCheckpoint
    ```
 
    Example output:
@@ -134,7 +134,7 @@ Each suspend writes a {{< gloss "Snapshot" >}}snapshot{{< /gloss >}}, and Agent 
    ```bash
    grpcurl -plaintext \
      -d '{"sessionId":"'"$SESSION_ID"'","page":{"limit":50}}' \
-     localhost:8083 kagent.api.v1alpha1.CheckpointService/ListCheckpoints
+     localhost:8083 kagent.api.v1.CheckpointService/ListCheckpoints
    ```
 
 Underneath, the checkpoint attaches a {{< gloss "Tag" >}}Tag{{< /gloss >}} named `checkpoint-<checkpoint-id>` to the snapshot, and Agent Substrate does not collect a snapshot while a tag names it. You can see the tag by running `kubectl ate get tags --atespace kagent`.
@@ -147,7 +147,7 @@ A fork starts a new Session from a checkpoint. The new Session replays the conve
    ```bash
    grpcurl -plaintext \
      -d '{"checkpointId":"'"$CHECKPOINT_ID"'","requestId":"'"$(uuidgen)"'"}' \
-     localhost:8083 kagent.api.v1alpha1.CheckpointService/ForkSession
+     localhost:8083 kagent.api.v1.CheckpointService/ForkSession
    ```
 
    The fork takes the checkpoint's name, and runs the revision that the source Session was created on. Example output:
@@ -200,7 +200,7 @@ A fork starts a new Session from a checkpoint. The new Session replays the conve
    ```bash
    grpcurl -plaintext \
      -d '{"checkpointId":"'"$CHECKPOINT_ID"'"}' \
-     localhost:8083 kagent.api.v1alpha1.CheckpointService/DeleteCheckpoint
+     localhost:8083 kagent.api.v1.CheckpointService/DeleteCheckpoint
    ```
 
 ## Next steps

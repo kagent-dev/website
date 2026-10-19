@@ -40,7 +40,7 @@ Read the current state of the runtime before you change it. The rest of this gui
 3. Call `GetSubstrateStatus`, which joins the WorkerPools, {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}}, {{< gloss "Actor" >}}Actors{{< /gloss >}}, and Workers that kagent knows about into one response.
    ```bash
    grpcurl -plaintext -d '{"namespace":"kagent"}' \
-     localhost:8083 kagent.api.v1alpha1.SystemService/GetSubstrateStatus
+     localhost:8083 kagent.api.v1.SystemService/GetSubstrateStatus
    ```
    Example output, abbreviated to one Worker and one Actor:
    ```json

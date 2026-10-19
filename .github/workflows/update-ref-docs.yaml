@@ -426,7 +426,16 @@ jobs:
 
           echo "Extracted from kagent ${KAGENT_COMMIT}:"
           check SUBSTRATE_VERSION    "$SUBSTRATE_VERSION"    "$SEMVER"
-          check KMCP_VERSION         "$KMCP_VERSION"         "$SEMVER"
+          # kagent stopped bundling kmcp at 1.0.0-alpha14 (kagent#3223), so its
+          # go.mod no longer requires it. An absent require is a real answer,
+          # not a parse failure: KMCP_VERSION stays empty and versions/kmcp.md
+          # is left alone. A require that IS present must still parse.
+          if grep -q 'github\.com/kagent-dev/kmcp' "$GOMOD"; then
+            check KMCP_VERSION       "$KMCP_VERSION"         "$SEMVER"
+          else
+            KMCP_VERSION=""
+            echo "  KMCP_VERSION = (not bundled; go.mod does not require kmcp)"
+          fi
           check KAGENT_TOOLS_VERSION "$KAGENT_TOOLS_VERSION" "$SEMVER"
           check MAX_KUBE             "$MAX_KUBE"             '^[0-9]+\.[0-9]+$'
 
@@ -562,11 +571,14 @@ jobs:
 
           echo "KMCP_LATEST=$KMCP_LATEST" >> $GITHUB_ENV
 
-          # A divergence is now expected and handled, so it is reported rather
-          # than warned about. It is still worth saying out loud: it means the
-          # kagent support matrix and the kmcp guides name different versions on
-          # purpose, which looks like a bug to anyone who has not read this.
-          if [ "$KMCP_LATEST" != "$KMCP_VERSION" ]; then
+          # A divergence is expected, so it is reported rather than warned about.
+          # Since alpha14 the 1.x support matrix has no kmcp row, and nothing in
+          # docs-site reads kmcp.md. Only the kmcp guides read a kmcp conref,
+          # kmcp-latest.md.
+          if [ -z "$KMCP_VERSION" ]; then
+            echo "kmcp: kagent no longer bundles kmcp; kmcp's latest release is $KMCP_LATEST."
+            echo "KMCP_MISMATCH=" >> $GITHUB_ENV
+          elif [ "$KMCP_LATEST" != "$KMCP_VERSION" ]; then
             echo "kmcp split: kagent pins $KMCP_VERSION, kmcp's latest release is $KMCP_LATEST. Writing both."
             echo "KMCP_MISMATCH=\`versions/kmcp.md\` is \`$KMCP_VERSION\` (what kagent bundles) and \`versions/kmcp-latest.md\` is \`$KMCP_LATEST\` (kmcp's newest release). The two naming different versions is expected -- the kagent support matrix and the standalone kmcp guides are answering different questions." >> $GITHUB_ENV
           else
@@ -682,7 +694,12 @@ jobs:
             }
 
             echo "Flat conrefs:"
-            write_conref "$VERSIONS_DIR/kmcp.md"         "$KMCP_VERSION"
+            # Empty when kagent no longer bundles kmcp; see the extraction step.
+            if [ -n "$KMCP_VERSION" ]; then
+              write_conref "$VERSIONS_DIR/kmcp.md"       "$KMCP_VERSION"
+            else
+              echo "  kmcp.md: SKIPPED, kagent does not bundle kmcp. Left at $(cat "$VERSIONS_DIR/kmcp.md")"
+            fi
             # Only when it resolved; see the cross-check step above.
             if [ -n "${KMCP_LATEST:-}" ]; then
               write_conref "$VERSIONS_DIR/kmcp-latest.md" "$KMCP_LATEST"
@@ -728,7 +745,7 @@ jobs:
               echo "KMCP_SOURCE_LINE=- **kmcp**: [\`${KMCP_TAG}\`](https://github.com/${{ github.repository_owner }}/kmcp/releases/tag/${KMCP_TAG}) (\`${KMCP_COMMIT}\`)"
               echo "LINE_SCOPE_NOTE="
               echo "FLAT_CONREF_ROWS<<ROWS_EOF"
-              echo "| \`kmcp\` | \`${KMCP_VERSION}\` | \`go/go.mod\` require (what kagent bundles) |"
+              echo "| \`kmcp\` | \`${KMCP_VERSION:-not bundled}\` | \`go/go.mod\` require (what kagent bundles) |"
               echo "| \`kmcp-latest\` | \`${KMCP_LATEST:-unresolved}\` | kmcp's latest release (what the kmcp guides show) |"
               echo "| \`kagent-tools\` | \`${KAGENT_TOOLS_VERSION}\` | \`helm/kagent/Chart-template.yaml\` |"
               echo "| \`runtime-image\` | \`${RUNTIME_IMAGE:-unresolved}\` | GHCR, at \`${KAGENT_TAG}\` |"

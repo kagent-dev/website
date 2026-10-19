@@ -17,6 +17,7 @@ Helm leaves behind:
 - The development PostgreSQL Deployment, Service, Secret, and PersistentVolumeClaim that `kagent install` created in the kagent namespace
 - The actor identity pools and the `ate-api-authentication` ConfigMap that the install created in `ate-system`
 - The service DNS, pod identity, and PostgreSQL certificate authority pools that the install created in `podcertificate-controller-system`
+- The cluster-scoped ClusterTrustBundles that publish those certificate authorities
 - The `kagent`, `ate-system`, and `podcertificate-controller-system` namespaces
 
 This guide includes both Helm steps to uninstall its owned components, and manual steps to remove separate material that can block a later reinstallation.
@@ -86,13 +87,23 @@ Error: while uploading pool state to secret: secrets "actor-id-jwt-pool" already
      service-dns-ca-pool pod-identity-ca-pool postgres-ca-pool
    ```
 
-3. Delete the development PostgreSQL resources that `kagent install` created.
+3. Delete the cluster-scoped trust bundles that publish the Agent Substrate certificate authorities. Deleting a namespace does not remove a ClusterTrustBundle. A later install that finds a stale bundle might start Agent Substrate components that trust the old authority. Every agent turn then fails with `invalid peer certificate: UnknownIssuer`.
+   ```bash
+   kubectl delete clustertrustbundle \
+     egress-mitm.ate.dev:mitm:primary-bundle \
+     podidentity.podcert.ate.dev:identity:primary-bundle \
+     postgres.podcert.ate.dev:identity:primary-bundle \
+     servicedns.podcert.ate.dev:identity:primary-bundle
+   ```
+
+4. Delete the development PostgreSQL resources that `kagent install` created.
    ```bash
    kubectl delete -n kagent \
      deployment/kagent-postgresql \
      service/kagent-postgresql \
      configmap/kagent-postgresql \
-     secret/kagent-postgres \
+     secret/kagent-postgres-owner \
+     secret/kagent-postgres-readwrite \
      pvc/kagent-postgresql \
      --ignore-not-found
    ```

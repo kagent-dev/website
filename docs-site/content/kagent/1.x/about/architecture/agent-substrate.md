@@ -73,11 +73,11 @@ The following diagram traces an Actor through one suspend-and-resume cycle, and 
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
 
-A **WorkerPool** keeps **Workers** running and ready, and a Worker hosts the **Actor** alongside other Actors while its Session is active. Suspending this Actor writes its full state to an immutable **ActorSnapshot** and releases the capacity that it held on its Worker.
+A **WorkerPool** keeps **Workers** running and ready, and a Worker hosts the **Actor** alongside other Actors while its Session is active. Suspending this Actor writes its durable data to an immutable **ActorSnapshot** and releases the capacity that it held on its Worker.
 
 The diagram forks at this snapshot, because a snapshot serves two purposes.
 
-- **Resume** restores the same Actor onto **any Worker in the pool with room**, which is not necessarily the Worker that it ran on before. Because the snapshot captures the Actor's full state, the conversation continues from where it left off. Every idle agent takes this path.
+- **Resume** restores the same Actor onto **any Worker in the pool with room**, which is not necessarily the Worker that it ran on before. Agent Substrate starts new containers for the Actor and restores the durable data from the snapshot. The conversation continues from where it left off. Every idle agent takes this path.
 - A **{{< gloss "Tag" >}}Tag{{< /gloss >}}** pins this snapshot so that Agent Substrate does not collect it. To fork a Session from a checkpoint, kagent seeds a **New Actor** from that tag. Resuming an existing Actor never goes through a tag.
 
 A tag gives a snapshot a stable name, so callers do not track Agent Substrate's internal snapshot identity. The tag names one snapshot permanently, and only its visibility scope can change afterward. A tag is also a retention pin, so Agent Substrate does not delete a snapshot while a tag still names it.

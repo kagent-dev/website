@@ -66,10 +66,7 @@ Listing behaves the same way. A list returns the caller's own Sessions by defaul
 
 A share lets a Session's owner give another account access to that one conversation. Creating a share produces a token, and a caller presenting that token reaches the shared Session without becoming its creator.
 
-A share carries one of two permissions.
-
-- **`READ_ONLY`**: The holder can read the conversation. kagent refuses any call that is not a read before the request reaches the service.
-- **`READ_WRITE`**: The holder can also send messages to the Session.
+Every share is read-only. The holder can read the conversation, but cannot send a message, answer an approval, cancel a task, or retry a turn. kagent enforces the restriction in its services and transports. A shared conversation in the UI does not show controls for those actions.
 
 A client that creates a share can set `CreateSessionShareRequest.ttl` to a positive lifetime, which starts when the share is created. Once that lifetime ends, the token does not grant access, and a token lookup returns not found. The owner still sees the expired share in `ListSessionShares` and can revoke it.
 
