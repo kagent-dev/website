@@ -324,9 +324,9 @@ Each setting reaches a different set of harnesses, and `maxCaptureBytes` bounds 
 
 | Setting | What it includes | Applies to |
 | ------- | ---------------- | ---------- |
-| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, regardless of this setting. On the `claude` runtime, tool results require tracing, and assistant replies require log export through `config.runtimeDefaults.telemetry.logs`. | `kagent`, `codex`, `claude` |
+| `config.runtimeDefaults.telemetry.captureContent` | Prompts and assistant replies. On the `kagent` runtime, the content appears in the span for each model call. That runtime records a tool call's arguments and reply on the span for the tool call instead, regardless of this setting. On the `codex` and `claude` runtimes, prompts and replies appear on the `invoke_agent` span, and tool arguments and successful results appear on the `execute_tool` span. | `kagent`, `codex`, `claude` |
 | `config.runtimeDefaults.telemetry.captureRawApiBodies` | The complete provider API request and response bodies. This setting returns more than `captureContent` does, and it takes effect only when you set the logs endpoint. | `claude` |
-| `config.runtimeDefaults.telemetry.maxCaptureBytes` | The budget for each captured prompt or reply, in bytes. Defaults to `16384`, with a maximum of `65536`. | `codex`, `claude` |
+| `config.runtimeDefaults.telemetry.maxCaptureBytes` | The budget for each captured prompt, reply, tool argument, or tool result, in bytes. Defaults to `16384`, with a maximum of `65536`. | `codex`, `claude` |
 
 These settings are the installation's default. To change the capture decision for one Harness, set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` in that Harness's `spec.env` field. The `kagent`, `codex`, and `claude` harnesses all read the variable and apply it in place of the installation default. Set `SPAN_ONLY` to put prompts and replies on spans, or `NO_CONTENT` to turn capture off.
 
