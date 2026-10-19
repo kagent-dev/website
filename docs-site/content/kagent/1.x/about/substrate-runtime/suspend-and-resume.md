@@ -13,15 +13,15 @@ An agent spends most of its life waiting. It waits on a person to reply, and it 
 
 {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} provides two lifecycle operations that kagent uses. Each operation moves an Actor between states that you can observe on the Actor record.
 
-- **Suspend**: Writes the Actor's durable data to an external snapshot in snapshot storage, then releases the capacity that the Actor held on its Worker.
-- **Resume**: Starts fresh containers from the image, restores the durable data from the Actor's latest snapshot, and runs the Actor on a Worker with available capacity.
+- **Suspend**: Writes the Actor's durable data to a snapshot in snapshot storage, then releases the capacity that the Actor held on its Worker.
+- **Resume**: Restores a suspended Actor onto a Worker from its latest snapshot.
 
 The following diagram traces an Actor through those operations, and shows what happens once a snapshot is [pinned by a tag](#checkpoints).
 </br></br>
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
 
-An Actor reports its position in this cycle through its state. In the normal kagent Session flow, an Actor alternates between `RUNNING` and `SUSPENDED`. Transition states appear while suspend and resume operations complete. Only a suspended Actor can be deleted.
+An Actor reports its position in this cycle through its state, which is one of `RESUMING`, `RUNNING`, `SUSPENDING`, `SUSPENDED`, `CRASHED`, or `DELETING`. Over the life of a Session, its Actor alternates between `RUNNING` and `SUSPENDED`. Only a suspended Actor can be deleted.
 
 > [!NOTE]
 > Resume restores an Actor onto whichever Worker in the pool has room, which is not necessarily the Worker that the Actor ran on before. Because a suspended Actor occupies no Worker, a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} can serve far more Sessions than it could if every Actor stayed resident.
@@ -68,8 +68,6 @@ spec:
 kagent does not wait for an Actor to go idle for a long stretch before suspending it. It suspends the Actor at every turn boundary, as soon as nothing in the Session is running.
 
 A turn reaches such a boundary when its task enters a terminal state, or when the task stops to wait on a person, which is the `INPUT_REQUIRED` and `AUTH_REQUIRED` case. At that point kagent suspends the Actor durably and records the exact snapshot that the suspend produced.
-
-For human-in-the-loop turns, the Claude and Codex harnesses save the pending approval or question before they return `INPUT_REQUIRED` or `AUTH_REQUIRED`. After resume, the harness recovers the pending input from durable state and continues the same task after the user answers. Only one pending input is durable at a time, so parallel approval batches are not supported. A failed deferred execution or Claude cancellation cleanup can require a new Session because remote effects cannot be rolled back.
 
 The {{< gloss "Session" >}}Session{{< /gloss >}}'s own state does not change while this happens. It stays `READY` throughout, because suspension is a property of the runtime underneath the Session rather than of the Session itself. A caller that lists Sessions sees a ready Session whether or not an Actor is running for it.
 

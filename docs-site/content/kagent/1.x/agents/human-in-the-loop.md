@@ -199,6 +199,8 @@ While the task waits, kagent suspends the {{< gloss "Actor" >}}Actor{{< /gloss >
 
 The `claude` harness resumes its deferred tool call. The `codex` harness runs the approved MCP call itself and continues with the result. The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a conversation that sits at `INPUT_REQUIRED` does not consume pool capacity. The wait also survives the loss of the node. For more information, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
+On the `codex` and `claude` harnesses, only one pending request survives the suspension. The `codex` harness cancels any other request along with the interrupted turn. The `claude` harness denies a protected call that arrives in a parallel batch, but a single remaining call can still pause for approval. If an approved call fails after it starts, the harness cannot resume the task. To continue the conversation, start a new Session.
+
 Because the {{< gloss "Transcript" >}}transcript{{< /gloss >}} only grows, the question and the answer both stay in the task history, so a later reader can see what was asked and what a person decided.
 
 ## Task states
