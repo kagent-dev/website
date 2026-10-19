@@ -495,7 +495,7 @@ You can now safely [clean up these resources](#clean-up).
    ```bash
    grpcurl -plaintext \
      -d '{"checkpointId":"<checkpoint-id>"}' \
-     localhost:8083 kagent.api.v1alpha1.CheckpointService/DeleteCheckpoint
+     localhost:8083 kagent.api.v1.CheckpointService/DeleteCheckpoint
    ```
 
 2. Remove the server entry from your client. In Claude Code, run `claude mcp remove kagent`. In Cursor, delete the `kagent` entry from your MCP settings.
