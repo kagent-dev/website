@@ -271,7 +271,7 @@ A provider reclaims spot and preemptible nodes on its own schedule, and each rec
 
 When you scale a serving WorkerPool down, it removes pods without suspending the Actors on them. This strands Sessions in the same way that a reclaimed node does. For pool sizing and the rest of the Substrate runtime settings, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
 
-## Expire idle Sessions {#expire-idle-sessions}
+## Expire idle Sessions
 
 Every {{< gloss "Session" >}}Session{{< /gloss >}} holds database records and pins a runtime revision for as long as it exists, including a Session that is never opened again. The kagent controller deletes idle Sessions on a timer. Deleting idle sessions bounds the records that a kagent installation stores as well as the revisions that it holds open.
 
@@ -296,7 +296,9 @@ A fork is the case where the creation time decides. A fork replays its source Se
 Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 
 > [!IMPORTANT]
-> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. `GetSession` then returns not-found. An A2A message that continues the expired Session by its `contextId` or `taskId` fails with `TaskNotFound` (`-32001`, or gRPC `NOT_FOUND`). To start a new conversation after `TaskNotFound`, send a message without a `contextId` or `taskId`. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
+> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
+
+After expiry, `GetSession` returns `NOT_FOUND` for the Session. An A2A message that continues the expired Session by its `contextId` or `taskId` fails with `TaskNotFound` (JSON-RPC code `-32001`, or gRPC `NOT_FOUND`). To start a new conversation, send a new message without a `contextId` or a `taskId`.
 
 <!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page, so it is parked here until a Sessions reference page exists. The behaviour: an expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone, so the same caller can reuse that request ID to start a fresh Session. -->
 

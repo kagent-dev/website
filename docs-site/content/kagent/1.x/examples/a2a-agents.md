@@ -28,6 +28,8 @@ Both forms replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagen
 
 A caller addresses the Agent rather than one conversation. The message's `contextId` selects the conversation. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
+If the Agent, the Session, or the task does not exist, an A2A call fails with `TaskNotFound` (JSON-RPC code `-32001`, or gRPC `NOT_FOUND`). Over HTTP, a request for the card of an Agent that does not exist returns `404`. To learn when kagent deletes a Session, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
+
 {{< reuse "kagent-docs/snippets/examples/a2a-port-warning.md" >}}
 
 ### A2A methods
