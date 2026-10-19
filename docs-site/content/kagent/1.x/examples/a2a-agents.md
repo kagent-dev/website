@@ -45,6 +45,8 @@ The following table covers the methods that this example uses. The `TaskPushNoti
 | `ListTaskPushNotificationConfigs` | Lists the active callbacks for one task. |
 | `DeleteTaskPushNotificationConfig` | Removes a task callback. |
 
+If an `AuthProvider` implementation authorizes these upstream calls, call `auth.UpstreamMethodFrom(r.Context())` in `UpstreamAuth` to read the outgoing method. The value is the a2a-go method name that kagent sends, such as `SendMessage`, `SendStreamingMessage`, `SubscribeToTask`, `GetTask`, or `CancelTask`. Outside an A2A call, the helper returns `false`. The `AuthProvider` interface stays the same. A retried streaming send that was already accepted goes out as `SubscribeToTask`. Group methods in the provider when several A2A operations should use the same policy.
+
 ## Before you begin
 
 {{< reuse "kagent-docs/snippets/grpcurl-prerequisites.md" >}}
