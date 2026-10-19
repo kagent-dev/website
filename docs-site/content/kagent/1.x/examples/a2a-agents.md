@@ -108,10 +108,10 @@ An A2A client typically starts by reading the agent card, which tells it what th
 
 `SendMessage` blocks until the agent finishes the turn, or pauses to ask a person, and then returns the whole task. A message needs its own ID, a role, and at least one part.
 
-A message part can also carry a file. Put the file's bytes in the part's `raw` field, which JSON encodes as base64, and set `filename` and `mediaType` on the same part.
+A message part can also carry a file. Put the file's bytes in the part's `raw` field, which JSON encodes as base64, and set `filename` and `mediaType` on the same part. To send a link to a file, set the part's `url` field in place of `raw`.
 
 > [!NOTE]
-> Unlike the UI, which checks each file as you stage it, this path accepts any media type. A PDF, `.docx`, `.xlsx`, or `.pptx` file reaches a model whose ModelConfig sets `openAI.apiFormat: responses` as a file. Any other file whose media type is not text-like reaches the model as the note `[Uploaded file "report.pdf" (application/pdf) could not be read as text.]` instead of contents. A part that sets `url` in place of `raw` sends a link. A `responses` model or a Gemini model fetches the file, and every other model receives the URL as text. The controller's gRPC server rejects any message over 16 MiB, framing included. For how files reach the model, and the file types and sizes that the UI accepts, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+> Unlike the UI, which checks each file as you stage it, this path accepts any media type. When the ModelConfig sets `apiFormat: responses`, a PDF, `.docx`, `.xlsx`, or `.pptx` file reaches the model as a file. Any other file whose media type is not text-like reaches the model as the note `[Uploaded file "report.pdf" (application/pdf) could not be read as text.]` instead of contents. A `responses` model or a Gemini model fetches a linked file itself. Every other model receives the URL as text. The controller's gRPC server rejects any message over 16 MiB, framing included. For how files reach the model, and the file types and sizes that the UI accepts, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
 
 1. Send a message to the Agent. Omitting a `contextId` starts a new Session.
    ```bash

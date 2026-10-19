@@ -94,19 +94,19 @@ spec:
 
 ## Send a file to the model
 
-The `responses` format attaches a file to a prompt as a link, or as inline bytes when the file is an image, a PDF, or an Office document. Azure fetches a link only on the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
+The `responses` format sends a file to Azure as a link or as inline bytes. Azure fetches a link only on the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
 
-A link reaches Azure regardless of its media type. Inline bytes reach Azure only for an image, a PDF, or a `.docx`, `.xlsx`, or `.pptx` file. Azure documents file input for PDF files only, so an Office file can fail on Azure even though the runtime sends it.
+A link reaches Azure regardless of its media type. Inline bytes reach Azure as a file only for an image, a PDF, or a `.docx`, `.xlsx`, or `.pptx` file. Azure documents file input only for PDF files. A `.docx`, `.xlsx`, or `.pptx` file might fail on Azure, although the runtime sends it.
 
 | What the message includes | What the runtime sends |
 | ------------------------ | ---------------------- |
 | An `http://` or `https://` link with an `image/` media type | An `input_image` part with the link. |
 | An `http://` or `https://` link with any other media type, such as a PDF | An `input_file` part with the link. |
 | Inline image bytes | An `input_image` part with the bytes as a `data:` URL. |
-| Inline bytes of a PDF, `.docx`, `.xlsx`, or `.pptx` file | An `input_file` part with the bytes as a `data:` URL. The bytes must match the media type. A file that does not, such as a text file labeled `application/pdf`, reaches the model as a note that it could not be read. When the files in the conversation total more than 50 MB, the newest files are sent, and a note replaces each older file. |
+| Inline bytes of a PDF, `.docx`, `.xlsx`, or `.pptx` file | An `input_file` part with the bytes as a `data:` URL. The bytes must match the media type. A file that does not, such as a text file labeled `application/pdf`, reaches the model as a note that it could not be read. When the files in the conversation total more than 50 MB, the runtime sends the newest files, and a note replaces each older file. |
 | Inline bytes of any other type | The file's text, or a note when the file cannot be read as text. |
 
-The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. When an older message in the replayed conversation includes one, the runtime replaces the link with the bare URL as text, so a model with a fetch tool can still retrieve the file.
+The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. A link in an older message does not fail the turn, because the runtime sends the links from older messages as bare URLs. A model with a fetch tool can still retrieve the file.
 
 A link attachment with a display name gets an extra text part that reads `File: <name>` that is placed immediately before the file part. Azure rejects a filename beside a file URL, so the name reaches the model as ordinary text.
 

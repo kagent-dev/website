@@ -161,15 +161,20 @@ The export splits into three groups: resources that need only an `apiVersion` ch
 
 ### Resources that carry forward
 
-ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets except one. The ModelConfig field `apiKeyPassthrough` is renamed to `tokenPassthrough` in `v1alpha3`, and its behavior is unchanged. `v1alpha3` also adds fields that 0.10.x did not serve, so an exported resource needs no other change.
+ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets except one. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`, and the field's behavior does not change. `v1alpha3` also adds fields that 0.10.x did not serve, so an exported resource needs no other change.
 
 1. Recreate the Secrets that your ModelConfigs name before you apply them, or the ModelConfigs resolve to nothing.
 
-2. Change the `apiVersion`, rename `apiKeyPassthrough`, and apply the resources.
+2. Convert the export to `v1alpha3`. The command changes each `apiVersion` and renames the `apiKeyPassthrough` field.
    ```bash
    sed -e 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: api.kagent.dev/v1alpha3|' \
      -e 's|^\( *\)apiKeyPassthrough:|\1tokenPassthrough:|' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
+   ```
+
+3. Apply the converted resources.
+   ```bash
+   kubectl apply -f kagent-1.0-resources.yaml
    ```
 
 ### Agents become an AgentTemplate, a Harness, and an Agent
