@@ -18,7 +18,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
 3. Install [`jq`](https://jqlang.org/download/), to read the Session ID out of the CLI's JSON output.
 
 > [!NOTE]
-> The CLI reaches the kagent controller at `localhost:8083`. When nothing serves that port, the CLI runs `kubectl port-forward` against the `kagent-controller` service for you, and closes the forward when the command exits. Keep `kubectl` on your path, and keep your kubeconfig pointed at the cluster that runs kagent.
+> The CLI reaches the kagent controller at `localhost:8083`. When nothing serves that port, the CLI runs `kubectl port-forward` against the `kagent-controller` service, and closes the forward when the command exits. Keep `kubectl` on your path, and keep your kubeconfig pointed at the cluster that runs kagent. To reach a controller at another address, pass the `--api-url` flag. The CLI then needs a kubeconfig only for `kagent install`, `kagent uninstall`, `kagent dashboard`, and `kagent bug-report`.
 
 ## Create a Harness, an AgentTemplate, and an Agent
 
