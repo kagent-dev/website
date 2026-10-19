@@ -125,12 +125,14 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
 
    The controller applies migrations at startup. To apply them from a pipeline instead, set `config.database.skipMigrations=true` and run `kagent db migrate up` with the owner login yourself. The controller then verifies the schema and fails if it is not already current.
 
-6. Save a CLI configuration file that references those values.
+6. Save a CLI configuration file that references those values. The `kagent db` commands read `database.vectorEnabled` from this file, not from the Helm values. Set it to match `config.database.vectorEnabled`, or omit it when you omit that value.
    ```bash
    cat > kagent-config.yaml <<EOF
    install:
      kagent:
        valuesFiles: [kagent-values.yaml]
+   database:
+     vectorEnabled: true
    EOF
    ```
 
@@ -141,14 +143,16 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
 
 8. Verify the schema before continuing. The `kagent db` commands connect as the owner login and assume the owner role.
    ```bash
-   kagent db migrate status \
+   kagent --config kagent-config.yaml db migrate status \
      --db-url "postgresql://kagent_owner_user:<owner-password>@<host>:5432/<dbname>?sslmode=verify-full" \
      --db-role kagent_owner
    ```
 
    Example output:
    ```console
-   1 migration(s) applied (at v1), 0 pending
+   2 migration(s) applied, 0 pending
+     core: 1 applied (at v1), 0 pending
+     vector: 1 applied (at v1), 0 pending
    ```
 
 ## Recreate your resources

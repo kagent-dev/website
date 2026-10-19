@@ -48,6 +48,7 @@ config:
 | ------- | ----------- |
 | `fileSearchTools` | Set to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. Both tools reach only the skills and session roots that `read_file` reads. These settings are off by default because they give an agent broad visibility of the filesystem. When `bash` is disabled, these tools keep that visibility available to the agent. |
 | `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent still loads skills and keeps the file tools. Defaults to `false`. |
+
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
 > [!IMPORTANT]

@@ -228,7 +228,23 @@ app = KAgentApp(
 
 `from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`, so a standalone process that runs outside Agent Substrate must supply its own `/config/config.json`.
 
-To bind the address that the configuration names, parse `/config/config.json` with `kagent.adk.types.parse_config` and pass the result as the `config` argument. The `a2a_grpc_address` argument overrides both the default and the configured address.
+The page uses two configuration objects. `KAgentConfig` holds only the `runtime` object, which supplies the API URL and the app name. `kagent.adk.types.parse_config` parses the whole document into a `Config`, and `KAgentApp` reads the listener address from that `Config`. To bind the address that the configuration names, pass a parsed `Config` as the `config` argument. `parse_config` takes JSON text or a dict rather than a path, so read the file first. Call `from_file` before `parse_config`, because `from_file` materializes the file.
+
+```python
+from pathlib import Path
+
+from kagent.adk.types import parse_config
+
+app = KAgentApp(
+    root_agent_factory=build_agent,
+    agent_card=card,
+    kagent_api_url=config.api_url,
+    app_name=config.app_name,
+    config=parse_config(Path("/config/config.json").read_text()),
+).build()
+```
+
+The `a2a_grpc_address` argument overrides both the default and the configured address.
 {{% /tab %}}
 {{% tab name="Any other language" %}}
 Implement the contract directly:

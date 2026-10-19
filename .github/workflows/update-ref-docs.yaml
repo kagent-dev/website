@@ -571,10 +571,10 @@ jobs:
 
           echo "KMCP_LATEST=$KMCP_LATEST" >> $GITHUB_ENV
 
-          # A divergence is now expected and handled, so it is reported rather
-          # than warned about. It is still worth saying out loud: it means the
-          # kagent support matrix and the kmcp guides name different versions on
-          # purpose, which looks like a bug to anyone who has not read this.
+          # A divergence is expected, so it is reported rather than warned about.
+          # Since alpha14 the 1.x support matrix has no kmcp row, and nothing in
+          # docs-site reads kmcp.md. Only the kmcp guides read a kmcp conref,
+          # kmcp-latest.md.
           if [ -z "$KMCP_VERSION" ]; then
             echo "kmcp: kagent no longer bundles kmcp; kmcp's latest release is $KMCP_LATEST."
             echo "KMCP_MISMATCH=" >> $GITHUB_ENV

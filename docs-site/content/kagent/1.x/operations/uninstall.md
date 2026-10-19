@@ -87,7 +87,7 @@ Error: while uploading pool state to secret: secrets "actor-id-jwt-pool" already
      service-dns-ca-pool pod-identity-ca-pool postgres-ca-pool
    ```
 
-3. Delete the cluster-scoped trust bundles that publish those pools' certificate authorities. Deleting a namespace does not remove a ClusterTrustBundle. A later install that finds a stale bundle might start Agent Substrate components that trust the old authority. Every agent turn then fails with `invalid peer certificate: UnknownIssuer`.
+3. Delete the cluster-scoped trust bundles that publish the Agent Substrate certificate authorities. Deleting a namespace does not remove a ClusterTrustBundle. A later install that finds a stale bundle might start Agent Substrate components that trust the old authority. Every agent turn then fails with `invalid peer certificate: UnknownIssuer`.
    ```bash
    kubectl delete clustertrustbundle \
      egress-mitm.ate.dev:mitm:primary-bundle \
