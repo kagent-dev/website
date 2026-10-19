@@ -196,16 +196,16 @@ func (executor) Cancel(context.Context, *a2asrv.ExecutorContext) iter.Seq2[a2aty
 
 Two events make a complete turn. `NewSubmittedTask` acknowledges the message and opens the task, and a `TaskStateCompleted` status update carrying an agent message ends it. Between them, a real agent yields whatever its work produces.
 
-`main` sets the rest up. `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`, `config.LoadAgentConfig` reads the document back, and `ProcessConfig` returns its `runtime` object. `app.New` then serves the A2A gRPC service and the readiness endpoint on your behalf.
+`main` sets the rest up. First, `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`. Then `config.LoadAgentConfig` reads the document back, and `adk.ProcessConfig` returns its `runtime` object. `app.New` serves the A2A gRPC service and the readiness endpoint on your behalf.
 
 ```go
 compiled, err := config.LoadAgentConfig("/config/config.json")
-runtime := compiled.ProcessConfig()
+runtime := adk.ProcessConfig(compiled)
 
 application, err := app.New(app.AppConfig{
-	ControlPlaneURL: runtime.ControlPlaneURL,
+	ControlPlaneURL: runtime.ControlPlaneUrl,
 	AgentCard:       a2atype.AgentCard{Name: "opaque-byo", Version: "v1", Capabilities: a2atype.AgentCapabilities{Streaming: true}},
-	Port:            cmp.Or(runtime.Port, "80"),
+	Port:            fmt.Sprint(cmp.Or(runtime.GetPort(), 80)),
 	AppName:         cmp.Or(runtime.Name, "opaque-byo"),
 	Logger:          logger,
 }, executor{})
