@@ -86,6 +86,10 @@ An A2A client typically starts by reading the agent card, which tells it what th
          {
            "uri": "https://kagent.dev/extensions/hitl/v1",
            "description": "Human in the loop for tool approval, ask user, and nested subagents"
+         },
+         {
+           "uri": "https://kagent.dev/extensions/usage/v1",
+           "description": "Task-lifetime token usage"
          }
        ],
        "extendedAgentCard": true
@@ -99,7 +103,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
    * Both `name` and `description` come from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. `name` replaces hyphens with underscores, and `description` is `spec.description` verbatim, so a caller sees the description you wrote.
    * Each `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The JSON-RPC URL identifies the Agent in its path. The gRPC entry sets the `tenant` value instead.
    * The `capabilities.pushNotifications` value advertises task callbacks. Each callback belongs to one task, not to the whole Session.
-   * The `capabilities.extensions` list advertises human-in-the-loop support, which a client opts into per call.
+   * The `capabilities.extensions` list advertises optional extension URIs. The human-in-the-loop URI lets a client answer pauses. The usage URI reports task token usage on status metadata.
 
 > [!NOTE]
 > The card carries no `skills`. kagent 0.x let you declare agent card skills in an `a2aConfig` block. However, v1alpha3 has no such field, so kagent generates the card from the AgentTemplate's name and description alone. An AgentTemplate's `spec.skills` field is a different feature: those are [Agent Skills]({{< link path="skills-and-mcp/skills" >}}) that the agent can use, not advertisements to a caller.
@@ -144,7 +148,7 @@ A message part can also carry a file. Put the file's bytes in the part's `raw` f
    * The `id` identifies one turn, and every message returns a new one.
    * The `contextId` identifies the conversation, and is the Session's own ID. A second message that repeats this `contextId` therefore continues the conversation rather than starting a new one.
 
-   Task metadata uses the `kagent.dev/a2a/` namespace. An artifact carries `kagent.dev/a2a/timeline-position`, an RFC 3339 timestamp that orders task history, and the task itself carries `kagent.dev/a2a/task-created-at`. A runtime that reports model usage publishes it as `kagent.dev/a2a/usage` on a task event rather than on the artifact.
+   Task metadata uses the `kagent.dev/a2a/` namespace. An artifact carries `kagent.dev/a2a/timeline-position`, an RFC 3339 timestamp that orders task history, and the task itself carries `kagent.dev/a2a/task-created-at`. A runtime that reports per-event model usage publishes it as `kagent.dev/a2a/usage` on a task event rather than on the artifact. For task-lifetime usage, see [Read token usage](#read-token-usage).
 
 2. Save the task's `id` and the conversation's `contextId`, so that later steps can read the task and continue the same Session.
    ```bash
@@ -204,6 +208,57 @@ A task outlives the call that created it, so a caller that lost its connection c
    ```
    
 A task that is still running reports `TASK_STATE_WORKING` and has no artifacts yet. To stop a task that is still running, call `CancelTask` with the same `id`.
+
+## Read token usage {#read-token-usage}
+
+The kagent ADK runtimes for Go and Python report task-lifetime model token counts through the optional usage extension, `https://kagent.dev/extensions/usage/v1`. The `codex` and `claude` runtimes do not emit this payload. A client can request the extension with the `A2A-Extensions` header. When a runtime has usage to report, terminal status metadata includes the version 1 payload even when the request omits that header.
+
+1. Read a task whose turn has ended, paused for input, failed, or was canceled.
+   ```bash
+   grpcurl -plaintext \
+     -d '{"tenant":"'"$AGENT"'","id":"'"$TASK_ID"'"}' \
+     localhost:8083 lf.a2a.v1.A2AService/GetTask
+   ```
+
+2. Check the task metadata entry keyed by the usage extension URI. Example payload:
+   ```json
+   {
+     "inputTokens": 1300,
+     "outputTokens": 210,
+     "reasoningTokens": 40,
+     "cachedInputTokens": 800,
+     "totalTokens": 1550,
+     "models": [
+       {
+         "model": "gpt-4o-2024-11-20",
+         "inputTokens": 1000,
+         "outputTokens": 150,
+         "reasoningTokens": 40,
+         "cachedInputTokens": 800,
+         "totalTokens": 1190
+       },
+       {
+         "model": "claude-sonnet-4",
+         "inputTokens": 300,
+         "outputTokens": 60,
+         "reasoningTokens": 0,
+         "cachedInputTokens": 0,
+         "totalTokens": 360
+       }
+     ]
+   }
+   ```
+
+   | Field | Meaning |
+   | ----- | ------- |
+   | `inputTokens` | Prompt tokens sent to the model. |
+   | `outputTokens` | Generated tokens, excluding reasoning tokens. |
+   | `reasoningTokens` | Reasoning tokens, when the provider reports them. |
+   | `cachedInputTokens` | Input tokens served from the provider's cache. This value is a subset of `inputTokens`. |
+   | `totalTokens` | The provider-reported total, or `inputTokens + outputTokens + reasoningTokens` when a call reports no total. |
+   | `models` | The same counts per model, ordered by model name. Calls that do not name a model are included only in the top-level totals. |
+
+   The usage payload covers the whole task lifetime, not only the latest execution. If a task pauses and later resumes, replace the previous usage payload with the latest usage payload. Do not sum values across status updates. A canceled task includes the calls that completed before the cancellation. A call that is cut off before the provider reports a final response is not counted, and the key is omitted when no call reports usage.
 
 ## Register task callbacks {#task-callbacks}
 
