@@ -15,7 +15,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 
 | Field | Description |
 | ----- | ----------- |
-| `provider` | The provider to use.<ul><li>Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`.</li><li>Defaults to `OpenAI`.</li><li>`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` are rejected on every harness.</li></ul>For more information, see [Credentials that kagent rejects](#credentials-that-do-not-compile). |
+| `provider` | The provider to use.<ul><li>Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`.</li><li>Defaults to `OpenAI`.</li><li>`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` are rejected on every harness.</li></ul>For more information, see [Credentials that do not compile](#credentials-that-do-not-compile). |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
@@ -74,7 +74,7 @@ When a request is made to a provider, the gateway puts the credential in the hea
 
 Substrate matches a destination on the exact DNS hostname, without path, port, or scheme. Two credentials that target the same hostname and header are rejected, including a conflict between an agent's model, a memory embedding model, and an MCP server. Give such origins distinct DNS names. A destination given as an IP address cannot carry an injected credential at all.
 
-### Credentials that kagent rejects {#credentials-that-do-not-compile}
+### Credentials that do not compile {#credentials-that-do-not-compile}
 
 Header injection accepts one shape of credential, a static string. A credential that requires a local signature, a token exchange, or a file mounted into the agent cannot be injected, so kagent rejects the configuration instead of passing the credential to the runtime. The Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`, and `Ready` as `False`. kagent does not build a new revision, and the Agent keeps its last successful revision, so a Session that is already running is unaffected.
 
@@ -99,7 +99,7 @@ The harness that a {{< gloss "Harness" >}}Harness{{< /gloss >}} resource selects
 - The **`codex`** harness integrates only `OpenAI` and `Bedrock`.
 - The **`claude`** harness integrates only `Anthropic` and `Bedrock`.
 
-A provider is available only when the harness integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` harnesses integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent rejects a ModelConfig that names any of the three on every harness. For the alternatives, see [Credentials that kagent rejects](#credentials-that-do-not-compile).
+A provider is available only when the harness integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` harnesses integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent rejects a ModelConfig that names any of the three on every harness. For the alternatives, see [Credentials that do not compile](#credentials-that-do-not-compile).
 
 Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings that it takes. When a ModelConfig names a provider that its harness does not integrate, the Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
 

@@ -221,7 +221,7 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 2. Supply the credentials that your backend needs. Setting `rustfs.enabled` to `false` stops the chart from setting the `AWS_*` variables, so neither component receives an endpoint or a key from Helm. Each storage client reads its credentials from the pod's own environment instead.
 
-   - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through [Workload Identity Federation for GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart does not render a Helm value for Google credentials. Set nothing further.
+   - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through [Workload Identity Federation for GKE](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart does not render a Helm value for Google credentials. Set nothing further.
    - For Amazon S3, the client reads the standard AWS environment and uses a role that the pod assumes. No static key is needed.
    - For an S3-compatible store, pass two variables and the static credentials through `atelet.extraEnv`. `AWS_ENDPOINT_URL` names the store's API endpoint, which the client otherwise resolves to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname, which most S3-compatible stores require.
 
