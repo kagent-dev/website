@@ -379,6 +379,7 @@ When `baggage` is listed, the `kagent` harness adds the request's identity to th
 | `gen_ai.agent.name` | Yes | Yes |
 | `gen_ai.conversation.id` | Yes | Yes |
 | `a2a.task.id` | Yes | Yes |
+| `gen_ai.tool.name` | No | Yes |
 | `gen_ai.tool.call.id` | No | Yes |
 
 These members serve as identifiers only, and the runtime can replace a caller's member of the same name.
@@ -387,7 +388,7 @@ These members serve as identifiers only, and the runtime can replace a caller's 
 > **Enabling baggage sends the caller's own members to your model provider.** A caller baggage member that kagent does not replace is forwarded unchanged in the `baggage` header of each model API request and each MCP request. This means that a caller controls what reaches those external services in the header. Enable baggage only where you trust what your callers attach.
 
 Review and plan for the following considerations.
-* The `claude` and `codex` harnesses receive `OTEL_PROPAGATORS`, but kagent does not add identity to their model and tool calls. The four members reach only the `kagent` harness.
+* The `claude` and `codex` harnesses receive `OTEL_PROPAGATORS`, but kagent does not add identity to their model and tool calls. These identity members reach only the `kagent` harness.
 * kagent never copies a baggage member onto a span. To make these values searchable, add a baggage-to-attributes span processor to the service that receives the request or to its OpenTelemetry Collector.
 
 When an agent requires an MCP server, the first tool listing or tool call opens a session with the MCP server, and every later request to that server shares it. The session makes three requests: the event stream, the replies to server requests, and the close. These requests do not carry trace context or baggage, because these name a request that has already ended.
