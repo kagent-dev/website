@@ -161,13 +161,14 @@ The export splits into three groups: resources that need only an `apiVersion` ch
 
 ### Resources that carry forward
 
-ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets. `v1alpha3` adds fields that 0.10.x did not serve, so an exported resource applies unchanged apart from its `apiVersion`.
+ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets except one. The ModelConfig field `apiKeyPassthrough` is renamed to `tokenPassthrough` in `v1alpha3`, and its behavior is unchanged. `v1alpha3` also adds fields that 0.10.x did not serve, so an exported resource needs no other change.
 
 1. Recreate the Secrets that your ModelConfigs name before you apply them, or the ModelConfigs resolve to nothing.
 
-2. Change the `apiVersion` and apply the resources unchanged.
+2. Change the `apiVersion`, rename `apiKeyPassthrough`, and apply the resources.
    ```bash
-   sed 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: api.kagent.dev/v1alpha3|' \
+   sed -e 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: api.kagent.dev/v1alpha3|' \
+     -e 's|^\( *\)apiKeyPassthrough:|\1tokenPassthrough:|' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
 

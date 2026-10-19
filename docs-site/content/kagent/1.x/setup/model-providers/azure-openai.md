@@ -115,7 +115,7 @@ A link attachment with a display name gets an extra text part that reads `File: 
 | ------------- | ---------- |
 | `apiKeySecret` is set | The API key from the referenced Secret. |
 | `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |
-| `apiKeyPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
+| `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
 
 > [!WARNING]
 > **Azure Workload Identity is not currently supported.** In earlier versions of kagent, omitting the credential fields fell back to Azure Workload Identity, which depended on an annotated ServiceAccount on the agent's pod. An agent now runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to federate an Azure identity onto. Supply a credential with one of the configurations in the preceding table.
