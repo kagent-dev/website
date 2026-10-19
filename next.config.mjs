@@ -31,9 +31,21 @@ const nextConfig = {
       // exempts paths that already carry a version segment: without it
       // /docs/kagent/0.x/... would match and redirect onto itself forever.
       // /docs/kagent does not match and stays the version picker.
+      //
+      // `+` on both sides is required for paths deeper than one segment. With a
+      // plain `:path`, `next dev` redirects them fine, but OpenNext (the
+      // Cloudflare runtime) compiles the destination with path-to-regexp's
+      // per-segment validation and throws on the slash in
+      // "supported-providers/byo-openai", so the page returns a 500.
       {
-        source: '/docs/kagent/:path((?!0\\.x|1\\.x).*)',
-        destination: '/docs/kagent/0.x/:path',
+        source: '/docs/kagent/:path((?!0\\.x(?:/|$)|1\\.x(?:/|$)).+)+',
+        destination: '/docs/kagent/0.x/:path+',
+        permanent: true,
+      },
+      // The kmcp CLI reference pages moved from reference/ into reference/cli/.
+      {
+        source: '/docs/kmcp/reference/:cmd(kmcp-[^/]+)',
+        destination: '/docs/kmcp/reference/cli/:cmd',
         permanent: true,
       },
     ];
