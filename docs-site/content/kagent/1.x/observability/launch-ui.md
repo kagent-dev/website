@@ -119,13 +119,21 @@ Stage files in any of the following ways.
 - Drop files anywhere on the chat page.
 - Paste a file or an image from your clipboard. A clipboard that also holds plain text pastes the text instead, so that a copy from a word processor keeps its text rather than its image rendering.
 
-Sent files stay in the transcript as download chips, and reloading the page redraws them. Every non-image file reaches the model as text, regardless of the provider that the agent uses. An empty file, or one that holds only whitespace, reaches the model as the note `[Uploaded file "notes.txt" (text/plain) contained no extractable text.]` instead of contents, so the agent reports the gap rather than answering from nothing. Images reach the providers that accept them. Amazon Bedrock, Ollama, and SAP AI Core receive a note in place of the image.
+Sent files stay in the transcript as download chips, and reloading the page redraws them. How a file reaches the model depends on its type and on the agent's model provider.
+
+- **Text files**, such as Markdown, CSV, JSON, YAML, and HTML, reach the model as text, regardless of the provider.
+- **PDF, Word (`.docx`), Excel (`.xlsx`), and PowerPoint (`.pptx`) files** reach the model as files when the ModelConfig sets `openAI.apiFormat: responses`, as an OpenAI or Azure OpenAI model can. The model reads the document itself. Every other model receives the note `[Uploaded file "report.pdf" (application/pdf) could not be read as text.]` instead of the contents. When the files in a Session total more than 50 MB, a `responses` model receives the newest files, and a note replaces each older file.
+- **Images** reach the providers that accept them. Amazon Bedrock, Ollama, and SAP AI Core receive a note in place of the image.
+
+A link in the message text to a file of an accepted type other than HTML, such as `https://example.com/q3-report.pdf`, is also sent as a file link. A model with the `responses` format, or a Gemini model, fetches the file itself, so the link must be reachable from the provider. The UI does not send a link to an IP address or to a local hostname, such as one ending in `.svc` or `.local`, because the provider cannot reach this host. Every other model receives the link as text, which an agent with a fetch tool can read. Only the message that sends a link passes it as a file. In later turns, the model receives the bare URL as text.
+
+An empty file, or one that holds only whitespace, reaches the model as the note `[Uploaded file "notes.txt" (text/plain) contained no extractable text.]` instead of contents, so the agent reports the gap rather than answering from nothing.
 
 The following limits apply to attachments:
 
 | Limit | Value | Enforced by |
 | ----- | ----- | ----------- |
-| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. |
+| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, and HTML files, PDF, Word (`.docx`), Excel (`.xlsx`), and PowerPoint (`.pptx`) files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. |
 | Total size of the files in one message | 10 MB | The UI, as you stage each file. |
 | Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
 | gRPC message that the kagent API accepts | 16 MiB | The controller's gRPC server, and every kagent gRPC client. The limit is a compiled-in constant that no Helm value changes. |
