@@ -42,6 +42,12 @@ const nextConfig = {
         destination: '/docs/kagent/0.x/:path+',
         permanent: true,
       },
+      // The kmcp CLI reference pages moved from reference/ into reference/cli/.
+      {
+        source: '/docs/kmcp/reference/:cmd(kmcp-[^/]+)',
+        destination: '/docs/kmcp/reference/cli/:cmd',
+        permanent: true,
+      },
     ];
   },
   webpack: (config) => {
