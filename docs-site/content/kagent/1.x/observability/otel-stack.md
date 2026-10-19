@@ -258,6 +258,14 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
      processors:
        batch: {}
        delta_to_cumulative: {}
+       transform/harness_native_genai:
+         error_mode: ignore
+         trace_statements:
+           - context: span
+             conditions:
+               - resource.attributes["kagent.genai.producer"] == "runtime" and not span.attributes["llm_request.context"] == "standalone"
+             statements:
+               - delete_matching_keys(span.attributes, "^gen_ai\\.(operation\\.name|system|request\\.model|response\\.finish_reasons|usage\\..*)$")
      connectors:
        signal_to_metrics:
          spans:
@@ -301,7 +309,7 @@ Install a collector that receives OTLP on ports `4317` for gRPC and `4318` for H
        pipelines:
          traces:
            receivers: [otlp]
-           processors: [batch]
+           processors: [transform/harness_native_genai, batch]
            exporters: [signal_to_metrics, otlp_grpc/tempo]
          logs:
            receivers: [otlp]

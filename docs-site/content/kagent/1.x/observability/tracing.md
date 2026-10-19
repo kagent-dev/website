@@ -52,21 +52,22 @@ The controller passes its tracing configuration to every harness, and adds the c
 | Harness | What the trace shows |
 | ------- | -------------------- |
 | `kagent` | The runtime's spans. The span names on this page describe this runtime. |
-| `codex` and `claude` | The runtime's spans, from their own instrumentation. The span names differ from the ones on this page. |
+| `codex` and `claude` | The request span, plus the `chat` spans for model calls and the `execute_tool` spans for tool calls that kagent writes. The native Claude Code or Codex process also emits its own spans. kagent marks that process with `kagent.genai.producer=runtime`, so that a collector can remove the duplicate GenAI model and usage attributes from the native spans. |
 | `byo` | Spans only if the image implements OTel and reads the standard exporter variables. An image without OTel instrumentation leaves its half of the trace missing. A Harness `spec.env` entry overrides the controller's value for a variable of the same name, but an endpoint that you set this way is not added to the egress allowlist, so the image cannot reach it. |
 
 ### Spans
 
-The `kagent` runtime creates the same spans for every agent, and most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name carries the name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following table lists the spans in nesting order, starting with the span that accepts the request.
+Each runtime creates spans for the request, the agent invocation, the model calls, and the tool calls. Most span names describe the operation rather than the agent. The `invoke_agent` span is the exception, because its name includes the name of the agent that ran. To narrow a search to one agent, filter by service name rather than by span name. The following table lists the spans in nesting order, starting with the span that accepts the request.
 
-| Span | When it is created |
-| ---- | ------------------ |
-| `lf.a2a.v1.A2AService/SendMessage` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. The controller reports spans of the same name for its own side of the call. |
-| `a2a.request` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
-| `invoke_agent <agent>` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, with each hyphen replaced by an underscore. The Agent `my-first-agent` produces `invoke_agent my_first_agent`, while its service name keeps the hyphens, so the two spellings differ. |
-| `generate_content <model>` | Once per model call, named for the model that was called. |
-| `execute_tool <tool>` | Once per tool call, named for the tool that was called. Records the call's arguments and the tool's reply in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. |
-| `execute_tool (merged)` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool does not create a merged span. |
+| Span | Runtime | When it is created |
+| ---- | ------- | ------------------ |
+| `lf.a2a.v1.A2AService/SendMessage` | `kagent`, `codex`, `claude` | Once per request, as the root of the runtime's half of the trace. The runtime creates it when it accepts the A2A call from the controller. The controller reports spans of the same name for its own side of the call. |
+| `a2a.request` | `kagent` | Once per request. Records the A2A method and the final state of the task in the `a2a.method` and `a2a.task.state` attributes. |
+| `invoke_agent <agent>` | `kagent`, `codex`, `claude` | Once per request, named for the {{< gloss "Agent" >}}Agent{{< /gloss >}} that serves it, with each hyphen replaced by an underscore. The Agent `my-first-agent` produces `invoke_agent my_first_agent`, while its service name keeps the hyphens, so the two spellings differ. On the `codex` and `claude` runtimes, this span is the request span, in place of `a2a.request`. |
+| `generate_content <model>` | `kagent` | Once per model call, named for the model that was called. |
+| `chat <model>` | `codex`, `claude` | Once per model call, named for the model that was called. One span covers a call and its automatic retries. For a retried call, the span includes `kagent.inference.retry.count`. For a call that ends without final usage, the span includes `kagent.inference.usage_partial=true`, so its output tokens are a lower bound. |
+| `execute_tool <tool>` | `kagent`, `codex`, `claude` | Once per tool call, named for the tool that was called. On the `kagent` runtime, the span records the call's arguments and reply in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. On the `codex` and `claude` runtimes, content capture adds tool arguments and successful results in the `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result` attributes. |
+| `execute_tool (merged)` | `kagent` | Once per model turn that calls more than one tool, as the parent of that turn's `execute_tool` spans. A turn that calls a single tool does not create a merged span. |
 
 ### Correlation attributes
 
@@ -80,13 +81,14 @@ Use attributes, not span names, to identify a request in a trace. The runtime co
 | `enduser.id` | Span | The authenticated caller, such as `admin@kagent.dev`. |
 | `gen_ai.main_agent.id` | Resource | The main Agent that the runtime process was compiled for, as `<namespace>/<name>`. This resource attribute replaces the resource-level `gen_ai.agent.id` name. |
 | `kagent.runtime` | Resource | The runtime that served the request, such as `adk-go`. |
+| `kagent.genai.producer` | Resource | `runtime` on a native `codex` or `claude` process. The value shows that kagent writes the GenAI model and tool spans for that process. A collector can use the value to avoid counting the native spans as duplicate model calls. |
 
 The runtime also adds each scalar value in the A2A message's metadata as an `a2a.message.metadata.<key>` attribute, so a client can tag a request and search for it later. These tags stay on the `a2a.request` span alone, unlike the correlation attributes. A search on one therefore returns that span rather than the whole subtree.
 
 > [!WARNING]
 > When the `config.runtimeDefaults.telemetry.captureContent` Helm setting is `true`, prompts and replies reach your tracing backend. On the `kagent` runtime, the `generate_content` span of each model call then carries the conversation as the `gen_ai.input.messages` and `gen_ai.output.messages` attributes, and the Agent's system prompt as `gen_ai.system_instructions`. The setting defaults to `false`, which omits all three.
 >
-> The setting does not govern tool content. An `execute_tool` span carries the call's arguments and the tool's reply in `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` whether the setting is `true` or `false`, so a tool that returns sensitive data sends it to your tracing backend on the default settings. Turn tracing off for an agent whose tools return data that must not leave the cluster. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
+> On the `kagent` runtime, the setting does not govern tool content. An `execute_tool` span records the call's arguments and the tool's reply in `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` whether the setting is `true` or `false`. A tool that returns sensitive data sends it to your tracing backend on the default settings. On the `codex` and `claude` runtimes, content capture controls tool arguments and successful results. Turn tracing off for an agent whose tools return data that must not leave the cluster. For how to use this content as an audit record, see [Audit prompts]({{< link path="observability/audit-prompts" >}}).
 
 ## Before you begin
 

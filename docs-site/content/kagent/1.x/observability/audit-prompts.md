@@ -9,7 +9,7 @@ Audit the prompts (inputs) and replies (outputs) that pass between your agents a
 
 ## About prompt auditing
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} records prompts and replies in traces. When you turn on content capture, the spans for each model call carry the request that the agent sent and the reply that it received. You then find the records in your tracing backend, by agent, by conversation, or by the text that they contain.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} records prompts and replies in traces. When you turn on content capture, the runtime records the agent's request and the model's reply on its spans. You then find the records in your tracing backend, by agent, by conversation, or by the text that they contain.
 
 The `kagent` runtime does not write prompts or replies to log records, so a logging backend on its own cannot hold a prompt audit trail. Capture is off by default, because the content can include sensitive user and model data.
 
@@ -20,8 +20,8 @@ Each harness records the content on its own instrumentation, so where the conten
 | Harness | Where the content goes | Settings |
 | ------- | ---------------------- | -------- |
 | `kagent` | The `generate_content` span of each model call, in three attributes. See [What a record holds](#what-a-record-holds). | `captureContent` |
-| `codex` | The runtime's own spans. | `captureContent` |
-| `claude` | Prompts and tool details on spans, and assistant replies in the runtime's own log records. With `captureRawApiBodies`, the log records also carry the complete provider request and response bodies, which is a fuller record than the spans give you. | `captureContent`, `captureRawApiBodies` |
+| `codex` | The `invoke_agent` span for prompts and replies, and the `execute_tool` span for tool arguments and successful results. Codex also records prompts in its own telemetry. | `captureContent` |
+| `claude` | The `invoke_agent` span for prompts and replies, and the `execute_tool` span for tool arguments and successful results. Claude Code also records prompts and tool details on its own spans, and assistant replies in its own log records. With `captureRawApiBodies`, the log records also include the complete provider request and response bodies. These bodies are a fuller record than the spans. | `captureContent`, `captureRawApiBodies` |
 | `byo` | Wherever the image's own instrumentation records it. The controller sets `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` on this harness, but an image that does not read the variable records nothing. | `captureContent` |
 
 For each setting, see the agent harness [telemetry content settings]({{< link path="agents/agent-harness#telemetry-content-settings" >}}).
@@ -42,13 +42,15 @@ The system instruction holds the instructions that the runtime appends as well a
 
 A tool's own arguments and reply are recorded separately, on the `execute_tool` span of each tool call, in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. `config.runtimeDefaults.telemetry.captureContent` does not govern those two attributes. The runtime records them whenever tracing is on. Treat them as part of the audit record, and as a disclosure to account for on an agent whose tools return sensitive data.
 
-Each model call carries the full history again, so a long conversation repeats its earlier messages in every span. Account for that volume when you set a retention period.
+On the `codex` and `claude` runtimes, the `invoke_agent` span holds only the current turn's prompt and the reply to that prompt. The `chat` spans hold no content. The `execute_tool` span holds tool arguments and successful results in the `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result` attributes.
 
-The `kagent` runtime does not shorten these attributes. The `claude` and `codex` runtimes bound each captured prompt and reply to the `config.runtimeDefaults.telemetry.maxCaptureBytes` budget, which defaults to 16384 bytes, and report a shortened capture with the `kagent.capture.input_truncated` and `kagent.capture.output_truncated` attributes. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
+On the `kagent` runtime, the span of each model call holds the full conversation history. A long conversation therefore repeats its earlier messages in every span. Account for that volume when you set a retention period.
+
+The `kagent` runtime does not shorten these attributes. The `claude` and `codex` runtimes bound each captured prompt, reply, tool argument, and tool result to the `config.runtimeDefaults.telemetry.maxCaptureBytes` budget, which defaults to 16384 bytes. A shortened capture sets the `kagent.capture.input_truncated` or `kagent.capture.output_truncated` attribute. Your tracing backend might also limit the size of an attribute, so check its limits before you rely on it for long conversations.
 
 ### Delivery
 
-Agent Substrate suspends an Actor as soon as a response completes. The controller therefore sets the `kagent` and `codex` runtimes to flush their spans before each response completes, so that the records of a turn reach your backend before the Actor suspends. The `claude` runtime does not perform that flush, so the records of a conversation's last turn can be lost. For more information, see [Traces from a suspended Actor]({{< link path="observability/tracing#traces-from-a-suspended-actor" >}}).
+Agent Substrate suspends an Actor as soon as a response completes. The controller therefore sets the `kagent` and `codex` runtimes to flush their spans before each response completes, so that the records of a turn reach your backend before the Actor suspends. On the `claude` runtime, kagent flushes the spans that it writes in the same way, but not the spans of Claude Code itself. Claude Code's records of a conversation's last turn can therefore be lost. For more information, see [Traces from a suspended Actor]({{< link path="observability/tracing#traces-from-a-suspended-actor" >}}).
 
 > [!IMPORTANT]
 > Traces are a best-effort record. An exporter drops spans without an error when the collector is unreachable or its queue is full, and nothing in the trace shows that a record is missing. Treat captured spans as a review aid, not as a complete or tamper-proof compliance log.
