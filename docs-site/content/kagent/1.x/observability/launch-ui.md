@@ -87,8 +87,6 @@ Start at the **Agents** page to review your agents and the resources behind them
 
 The **Agents** tab authors the Agent custom resource directly. Create one to pair a template with a Harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it named. For CLI steps, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
 
-For Agent and AgentTemplate read commands, the kagent CLI reads the same controller API. If a controller endpoint is already reachable, pass `--api-url` to `kagent agent list` or `kagent agent get`. You can use the same flag with `kagent agent template list` and `kagent agent template get`. These read commands do not need a kubeconfig. Commands that install kagent, open the dashboard, or use Kubernetes port-forwarding still need Kubernetes access.
-
 ## Read a conversation
 
 Opening an agent and sending a message creates a {{< gloss "Session" >}}Session{{< /gloss >}}, which is one conversation scheduled onto an Agent Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the checkpoint controls for the conversation.
