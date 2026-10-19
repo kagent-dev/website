@@ -117,7 +117,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    kagent-default   1         1          1       2m
    ```
 
-3. Get the address to reach the kagent gRPC API, which serves the Session lifecycle and conversation calls. The guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) assumes port-forwarding.
+3. Get the address to reach the kagent gRPC API, which serves Agent, AgentTemplate, Session, and conversation calls. The guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) assumes port-forwarding.
    {{< tabs >}}
    {{% tab name="Port-forward for local testing" %}}
    Forward the controller port and leave the command running. The API is then available at `localhost:8083`.
@@ -130,6 +130,11 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    ```bash
    kubectl get svc -n kagent kagent-controller \
      -o jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}"
+   ```
+
+   To use this address with the kagent CLI, pass it in the `--api-url` flag.
+   ```bash
+   kagent agent list --api-url http://<address>:8083
    ```
    {{% /tab %}}
    {{< /tabs >}}
