@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { getAuthorById } from '../authors'
 
 // Image metadata
 export const size = {
@@ -8,12 +9,17 @@ export const size = {
 
 export const contentType = 'image/png'
 
-export default async function Image() {
+export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  // Import the post module instead of reading the file: Cloudflare Workers have no filesystem at runtime.
+  const { metadata } = await import(`@/blogContent/${slug}.mdx`)
+  const authorNames = ((metadata.authorIds ?? []) as string[])
+    .map((id) => getAuthorById(id)?.name)
+    .filter(Boolean)
   const post = {
-    title: 'AI Reliability Engineering For More Dependable Humans',
-    author: 'Christian Posta',
+    title: metadata.title as string,
+    author: authorNames.length > 0 ? authorNames.join(', ') : (metadata.author as string),
   }
-
 
   return new ImageResponse(
     <div
