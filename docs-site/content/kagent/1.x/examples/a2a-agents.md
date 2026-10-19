@@ -103,7 +103,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
    * Both `name` and `description` come from the {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. `name` replaces hyphens with underscores, and `description` is `spec.description` verbatim, so a caller sees the description you wrote.
    * Each `supportedInterfaces` URL is the controller's in-cluster address rather than the Actor's, because a caller reaches the agent through the controller. The card advertises JSON-RPC first, then gRPC. The JSON-RPC URL identifies the Agent in its path. The gRPC entry sets the `tenant` value instead.
    * The `capabilities.pushNotifications` value advertises task callbacks. Each callback belongs to one task, not to the whole Session.
-   * The `capabilities.extensions` list advertises optional extension URIs. The human-in-the-loop URI lets a client answer pauses. The usage URI reports task token usage on status metadata.
+   * The `capabilities.extensions` list names the optional extensions that the agent supports. A client opts into the human-in-the-loop extension per call to answer pauses. With the usage extension, the agent reports the tokens that a task uses. For the payload, see [Read token usage](#read-token-usage).
 
 > [!NOTE]
 > The card carries no `skills`. kagent 0.x let you declare agent card skills in an `a2aConfig` block. However, v1alpha3 has no such field, so kagent generates the card from the AgentTemplate's name and description alone. An AgentTemplate's `spec.skills` field is a different feature: those are [Agent Skills]({{< link path="skills-and-mcp/skills" >}}) that the agent can use, not advertisements to a caller.
@@ -211,43 +211,34 @@ A task that is still running reports `TASK_STATE_WORKING` and has no artifacts y
 
 ## Read token usage {#read-token-usage}
 
-The kagent ADK runtimes for Go and Python report task-lifetime model token counts through the optional usage extension, `https://kagent.dev/extensions/usage/v1`. The `codex` and `claude` runtimes do not emit this payload. A client can request the extension with the `A2A-Extensions` header. When a runtime has usage to report, terminal status metadata includes the version 1 payload even when the request omits that header.
+The `kagent` harness reports the model tokens that a task uses through the optional usage extension, `https://kagent.dev/extensions/usage/v1`. The agent card of an Agent on this harness advertises the extension. A `byo` image that is built with the Go or Python helper also reports usage, but the agent card does not advertise the extension. The `codex` and `claude` harnesses do not report usage.
 
-1. Read a task whose turn has ended, paused for input, failed, or was canceled.
-   ```bash
-   grpcurl -plaintext \
-     -d '{"tenant":"'"$AGENT"'","id":"'"$TASK_ID"'"}' \
-     localhost:8083 lf.a2a.v1.A2AService/GetTask
-   ```
+1. Read a task that completed, paused for input, failed, or was canceled. Use the `GetTask` call from [Read a task later](#read-a-task-later).
 
-2. Check the task metadata entry keyed by the usage extension URI. Example payload:
+2. In the task's `metadata` field, find the entry that is keyed by the usage extension URI.
    ```json
-   {
-     "inputTokens": 1300,
-     "outputTokens": 210,
-     "reasoningTokens": 40,
-     "cachedInputTokens": 800,
-     "totalTokens": 1550,
-     "models": [
-       {
-         "model": "gpt-4o-2024-11-20",
-         "inputTokens": 1000,
-         "outputTokens": 150,
-         "reasoningTokens": 40,
-         "cachedInputTokens": 800,
-         "totalTokens": 1190
-       },
-       {
-         "model": "claude-sonnet-4",
-         "inputTokens": 300,
-         "outputTokens": 60,
-         "reasoningTokens": 0,
-         "cachedInputTokens": 0,
-         "totalTokens": 360
-       }
-     ]
+   "metadata": {
+     "https://kagent.dev/extensions/usage/v1": {
+       "inputTokens": 1000,
+       "outputTokens": 150,
+       "reasoningTokens": 40,
+       "cachedInputTokens": 800,
+       "totalTokens": 1190,
+       "models": [
+         {
+           "model": "gpt-4o-2024-11-20",
+           "inputTokens": 1000,
+           "outputTokens": 150,
+           "reasoningTokens": 40,
+           "cachedInputTokens": 800,
+           "totalTokens": 1190
+         }
+       ]
+     }
    }
    ```
+
+   Each count covers every model call in the task, not only the calls of the latest execution.
 
    | Field | Meaning |
    | ----- | ------- |
@@ -255,10 +246,12 @@ The kagent ADK runtimes for Go and Python report task-lifetime model token count
    | `outputTokens` | Generated tokens, excluding reasoning tokens. |
    | `reasoningTokens` | Reasoning tokens, when the provider reports them. |
    | `cachedInputTokens` | Input tokens served from the provider's cache. This value is a subset of `inputTokens`. |
-   | `totalTokens` | The provider-reported total, or `inputTokens + outputTokens + reasoningTokens` when a call reports no total. |
-   | `models` | The same counts per model, ordered by model name. Calls that do not name a model are included only in the top-level totals. |
+   | `totalTokens` | The provider-reported total, or `inputTokens + outputTokens + reasoningTokens` when a call does not return a total. |
+   | `models` | The same counts per model, ordered by model name. The top-level totals also count calls that do not name a model, but `models` does not list those calls. |
 
-   The usage payload covers the whole task lifetime, not only the latest execution. If a task pauses and later resumes, replace the previous usage payload with the latest usage payload. Do not sum values across status updates. A canceled task includes the calls that completed before the cancellation. A call that is cut off before the provider reports a final response is not counted, and the key is omitted when no call reports usage.
+   When a task pauses and resumes, use the latest payload instead of adding it to an earlier one. For a canceled task, the payload includes the model calls that completed before the cancellation. The runtime does not count a call that the cancellation cuts off before the provider sends its final response.
+
+   If no model call returns token counts, the task metadata does not include the usage entry.
 
 ## Register task callbacks {#task-callbacks}
 
