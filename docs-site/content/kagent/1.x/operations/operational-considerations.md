@@ -30,7 +30,10 @@ config:
 
 The controller enforces the following rules when it reads the settings at start time.
 * Durations are in seconds. A duration takes protobuf JSON notation. The value is a number with an `s` suffix, as in `604800s` or `0.5s`. A Go duration string such as `168h` fails validation.
-* The document is strict. The controller rejects an unknown field, a duplicate key, a null value, a YAML alias or merge, and a file with more than one document.
+* The document is strict. The controller rejects an unknown field, a duplicate key, a quoted boolean such as `"true"`, and a field that is set under both its camelCase and its snake_case name.
+* The controller reads only the first YAML document in the file, and ignores any later document without an error.
+* The controller converts the YAML to JSON before it validates the file, and the conversion follows YAML 1.1 rules. Unquoted `yes`, `no`, `on`, and `off` become booleans. To keep one of these values as a string, quote it. Numeric forms such as `0x10` become numbers. The conversion expands anchors, aliases, and merge keys first, so a key that overrides a merged key counts as a duplicate.
+* Setting a field to `null` is the same as omitting it, so `null` does not turn a setting off. The controller rejects a `null` element in a list.
 * Settings load once. The controller validates the whole file at startup, passes the result to its owners, and reads nothing from the environment afterward. A change therefore needs a restart. The chart triggers that restart by checksumming the ConfigMap into the pod.
 
 To check your settings before you apply them, render the document that the chart builds from your Helm values.
@@ -167,7 +170,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
    | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the two logins assume after they connect. Match the role names that you passed to the setup script. Give each installation that shares one database distinct roles. |
    | `config.database.schema` | The schema that holds kagent's tables. Match the `kagent_schema` value that you passed to the setup script. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and both kagent roles need `USAGE` on it. |
    | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed in `config.database.vectorSchema`. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
-   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. Omit the fields to keep the pgx library defaults. |
+   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. If you omit `minConns` or set it to `0`, the pool keeps no minimum number of connections open. Each of `maxConns`, `maxConnIdleTime`, and `maxConnLifetime` that you omit keeps its pgx library default. |
    | `config.database.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies through the read/write login that the database is already migrated, and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. The controller then does not need the owner Secret or role. |
 
 5. Apply the values to the kagent Helm release. The `--reuse-values` flag keeps the values that an existing release was installed with, such as the provider key and the Agent Substrate settings that `kagent install` sets. On a first installation, the flag has no effect.
@@ -238,7 +241,7 @@ Every controller replica must load the same key. After you rotate the key, resta
 A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so every node event reaches the {{< gloss "Actor" >}}Actors{{< /gloss >}} that this Worker hosts. What the event costs depends on what each Actor was doing when the node went away.
 
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
-* An awake Actor is lost. The Session's in-flight state lives in the memory of its sandbox on the Worker, and Agent Substrate writes nothing to snapshot storage until this Actor suspends.
+* An Actor that is still running a turn is lost. The Session's in-flight execution state lives in the Actor's sandbox memory on the Worker, and Agent Substrate writes nothing new to snapshot storage until this Actor suspends.
 
 A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. Through kagent, deleting the Actor and starting a new {{< gloss "Session" >}}Session{{< /gloss >}} is the only available option, so the Session ends with the node.
 
@@ -296,7 +299,9 @@ A fork is the case where the creation time decides. A fork replays its source Se
 Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
 
 > [!IMPORTANT]
-> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. `GetSession` then returns not-found. An A2A message that continues the expired Session by its `contextId` fails with `TaskNotFound` (`-32001`, or gRPC `NOT_FOUND`). The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
+> **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
+
+After expiry, `GetSession` returns `NOT_FOUND` for the Session. An A2A message that continues the expired Session by its `contextId` or `taskId` fails with `TaskNotFound` (JSON-RPC code `-32001`, or gRPC `NOT_FOUND`). To start a new conversation, send a new message without a `contextId` or a `taskId`.
 
 <!-- REVIEW: the creation request ID behaviour belongs with the Session API rather than on an operations page, so it is parked here until a Sessions reference page exists. The behaviour: an expired Session releases its creation request ID, unlike an explicit client deletion, which keeps a tombstone, so the same caller can reuse that request ID to start a fresh Session. -->
 

@@ -11,18 +11,17 @@ An agent spends most of its life waiting. It waits on a person to reply, and it 
 
 ## Actor lifecycle operations
 
-{{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} provides three lifecycle operations, and each one moves an Actor between states that you can observe on the Actor record.
+{{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} provides two lifecycle operations that kagent uses. Each operation moves an Actor between states that you can observe on the Actor record.
 
-- **Suspend**: Writes the Actor's state to a durable snapshot in snapshot storage, then releases the capacity that it held on its Worker. A running Actor is snapshotted on its Worker. A paused Actor's node-local snapshot is uploaded instead.
-- **Pause**: Takes a short-term snapshot whose files stay on the node. Pausing pins the Actor to that node, because the following resume is prioritized onto the node that holds the snapshot files.
-- **Resume**: Restores a suspended or paused Actor onto a Worker, from its latest snapshot. The common path restores from a snapshot rather than cold-booting the workload.
+- **Suspend**: Writes the Actor's durable data to a snapshot in snapshot storage, then releases the capacity that the Actor held on its Worker.
+- **Resume**: Restores a suspended Actor onto a Worker from its latest snapshot.
 
 The following diagram traces an Actor through those operations, and shows what happens once a snapshot is [pinned by a tag](#checkpoints).
 </br></br>
 
 {{< reuse "kagent-docs/snippets/snapshot-cycle-diagram.md" >}}
 
-An Actor reports its position in this cycle through its state, which is one of `RESUMING`, `RUNNING`, `SUSPENDING`, `SUSPENDED`, `PAUSING`, `PAUSED`, `CRASHED`, or `DELETING`. Only a suspended Actor can be deleted.
+An Actor reports its position in this cycle through its state, which is one of `RESUMING`, `RUNNING`, `SUSPENDING`, `SUSPENDED`, `CRASHED`, or `DELETING`. Over the life of a Session, its Actor alternates between `RUNNING` and `SUSPENDED`. Only a suspended Actor can be deleted.
 
 > [!NOTE]
 > Resume restores an Actor onto whichever Worker in the pool has room, which is not necessarily the Worker that the Actor ran on before. Because a suspended Actor occupies no Worker, a {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} can serve far more Sessions than it could if every Actor stayed resident.
@@ -38,7 +37,7 @@ kagent sets the `Data` scope on every ActorTemplate that it generates, for both 
 
 A suspend keeps the durable volume and discards process memory. A resume therefore starts new containers from the image and restores the saved durable directories. The agent runtimes store what a turn needs in the durable volume, including a pending approval or question, and continue the conversation after the restart.
 
-One scope governs both operations. The ActorTemplate's `onCommit` setting selects what a suspend uploads to snapshot storage, and a pause captures this same scope on the node.
+The ActorTemplate's `onCommit` setting selects what a suspend uploads to snapshot storage.
 
 ### Durable volumes and resume
 
