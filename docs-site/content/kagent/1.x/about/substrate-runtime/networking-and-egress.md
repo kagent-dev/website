@@ -7,7 +7,7 @@ aliases:
   - /kagent/1.x/substrate-runtime/networking-and-egress/
 ---
 
-An agent reaches the network only through Agent Substrate's egress gateway, and the gateway authorizes every connection against a policy attached to that {{< gloss "Actor" >}}Actor{{< /gloss >}}. The policy is default-deny. An Actor can attempt any request, and the gateway denies the ones that no rule allows. kagent derives the policy from the AgentTemplate, so a documented agent works without any egress configuration of its own.
+An agent reaches the network only through Agent Substrate's egress gateway, and the gateway authorizes every connection against a policy attached to that {{< gloss "Actor" >}}Actor{{< /gloss >}}. The policy is default-deny. An Actor can attempt any request, and the gateway denies the ones that no rule allows. kagent derives the policy from the AgentTemplate, so a documented agent works without any egress configuration of its own. To grant destinations that the AgentTemplate does not name, an Agent selects EgressPolicy resources. For more information, see [Egress policies]({{< link path="agents/egress-policies" >}}).
 
 > [!NOTE]
 > The gateway terminates TLS, so hostname rules constrain encrypted traffic as well as cleartext. An HTTPS request is decrypted at the gateway, matched against the policy's hostnames, and re-originated to the destination. A TLS passthrough rule is the exception, because the gateway forwards this connection without decrypting it. For details, see [Traffic types](#traffic-types).
@@ -20,7 +20,7 @@ All outbound traffic leaves a Worker through the egress gateway, which gives Age
 
 1. The gateway identifies the Actor. It reads the Actor's SPIFFE ID from the client certificate on the connection from the Actor, and it verifies this certificate rather than trusting anything in the request.
 
-2. The gateway fetches the `EgressPolicy` for this Actor. Each Actor has at most one `EgressPolicy` named `default`, and Agent Substrate addresses the policy by the Actor rather than by this name. The gateway denies every request from an Actor that has no policy, because only a policy allows access to a destination.
+2. The gateway fetches the policy for this Actor. Each Actor has at most one Agent Substrate policy named `default`, and Agent Substrate addresses the policy by the Actor rather than by this name. This Agent Substrate policy is not the kagent `EgressPolicy` resource. kagent compiles the Actor's policy from the inferred destinations and from every kagent `EgressPolicy` that the Agent selects. The gateway denies every request from an Actor that has no policy, because only a policy allows access to a destination.
 
 3. The gateway picks which rule applies to the request. Rules are an unordered set rather than a list, and exactly one rule applies to a given destination name and port regardless of its protocol. When more than one rule matches, the gateway applies two criteria in order, moving to the second only when the first ties.
 
@@ -69,9 +69,9 @@ kagent derives the allowlist from the AgentTemplate rather than taking it as con
 
 kagent compiles this host set into the Actor's policy when it creates the Actor. Each destination becomes one rule that covers one hostname on one port, and the scheme decides the rule type. For example, an `https` destination becomes an `https` rule, and a cleartext destination becomes an `http` rule. Keeping exactly one rule per host and port is deliberate. An overlapping rule could otherwise decide a request and skip the credential that the narrower rule attaches. A destination that uses both HTTP and HTTPS on the same host and port is rejected rather than compiled.
 
-The host set is fixed when kagent compiles the policy, so an agent reaches only the hosts that its AgentTemplate declares. The gateway denies every other destination, including a web page that a model decides to fetch partway through a Session.
+The inferred host set is fixed when kagent compiles the revision. An agent also reaches the destinations of every EgressPolicy that its Agent selects, in its `spec.egressPolicyRefs` field. The gateway denies every other destination, including a web page that a model decides to fetch partway through a Session.
 
-<!-- REVIEW (egress API owner): confirm current and planned support for allowing a destination that the AgentTemplate does not name. The reviewer expects an explicit allowlist, because a generated set cannot predict every action an agent takes. Mark any future API as planned until it ships, and revisit the source-of-truth guidance under "Diagnose a denied request" when it does. -->
+kagent merges the two sources when it applies the policy to an Actor. The inferred destinations always apply. A policy can only add destinations, and an inferred credential takes precedence over a credential from a policy for the same origin and header. For how to grant a destination, see [Egress policies]({{< link path="agents/egress-policies" >}}).
 
 An agent also needs a route to the OpenTelemetry collector, or its traces never leave the sandbox and the kagent UI shows nothing for this Session. kagent adds the collector host for agents on every harness, `byo` included. A `byo` image that exports to a telemetry backend of its own, through a Harness `spec.env` entry, has no route to that backend, because the AgentTemplate never named it. For more information, see [Harness coverage]({{< link path="observability/tracing#harness-coverage" >}}).
 
@@ -80,7 +80,7 @@ An agent also needs a route to the OpenTelemetry collector, or its traces never 
 The gateway caches each Actor's policy rather than fetching it per request, so policy changes are eventually consistent. The cache holds an entry for 10 seconds by default, so a policy that is created, updated, or deleted reaches new requests within that window. Deleting a policy produces denials rather than an absence of enforcement, because the gateway caches the absence too.
 
 > [!IMPORTANT]
-> A Session pins the revision it was created from, so editing an AgentTemplate does not move an existing Session onto a new allowlist. A Session keeps the destinations that it started with for however long it runs. To pick up a changed set of destinations, create a new Session.
+> A Session pins the revision it was created from, so editing an AgentTemplate does not move an existing Session onto a new set of inferred destinations. To pick up a changed model or tool destination, create a new Session. EgressPolicy grants are the exception. kagent applies a change to an Agent's `egressPolicyRefs`, or to a selected EgressPolicy, to the running and suspended Actors of existing Sessions as well.
 
 ## Diagnose a denied request
 
@@ -104,13 +104,13 @@ A `503` means that the gateway could not reach the control plane or a credential
 
 An allowed request is logged the same way, with its status, the `http.host` and `http.path` it matched on, and the `substrate.connect.authority` address the Actor originally dialed. The log is therefore the quickest way to see what an agent actually reaches.
 
-The compiled policy is not readable through `kubectl` or `kagent`, so treat the AgentTemplate as the source of truth for what an agent is meant to reach. A destination that is missing from the log is missing from the AgentTemplate.
+The compiled policy is not readable through `kubectl` or `kagent`, so treat the AgentTemplate and the Agent's selected EgressPolicy resources as the source of truth for what an agent is meant to reach. A destination that is missing from the log is missing from both. To check whether kagent admitted the Agent's EgressPolicy grants, read the Agent's `EgressPoliciesApplied` condition. For the reasons that this condition reports, see [Troubleshoot a grant]({{< link path="agents/egress-policies#troubleshoot-a-grant" >}}).
 
 ## Credential injection
 
 A model provider or an MCP server usually requires an API key or token. The agent sends a placeholder header in place of the real value, and the gateway replaces this header with the credential as the request passes through. The key never enters the agent's environment or its filesystem.
 
-kagent sets this up from two resources. Every ModelConfig that holds an `apiKeySecret` becomes a credential on the rule for that model's host, and every RemoteMCPServer whose `headersFrom` reads a Secret becomes a credential on the rule for its host. kagent attaches the credential to the destination's own rule rather than adding a rule for it, and it refuses to compile a credential whose host is not already an allowed destination.
+kagent sets this up from three resources. Every ModelConfig that holds an `apiKeySecret` becomes a credential on the rule for that model's host, and every RemoteMCPServer whose `headersFrom` reads a Secret becomes a credential on the rule for its host. Every EgressPolicy destination with an `authentication` block becomes a credential on the rule for its origin. kagent attaches the credential to the destination's own rule rather than adding a rule for it, and it refuses to compile a credential whose host is not already an allowed destination.
 
 A credential is declared on a rule as a `replace_headers` entry. The entry names the header to replace, an optional prefix such as `Bearer `, and either a reference that a registered credential provider resolves or a JWT that Agent Substrate issues to assert the Actor's identity. The gateway replaces the header only when the request already sends it. A request that omits the placeholder header is forwarded unchanged, without the credential, rather than being denied.
 
