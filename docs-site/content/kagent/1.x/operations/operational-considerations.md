@@ -30,7 +30,9 @@ config:
 
 The controller enforces the following rules when it reads the settings at start time.
 * Durations are in seconds. A duration takes protobuf JSON notation. The value is a number with an `s` suffix, as in `604800s` or `0.5s`. A Go duration string such as `168h` fails validation.
-* The document is strict. The controller rejects an unknown field, a duplicate key, a null value, a YAML alias or merge, and a file with more than one document.
+* The document is strict. The controller rejects an unknown field, a duplicate key, a quoted boolean, and both the camelCase and snake_case names for the same protobuf field. The controller reads only the first YAML document.
+* YAML follows the parser's conversion rules before the controller validates the file. Anchors, aliases, and merge keys are resolved. Strict mode then rejects duplicate keys after that resolution. YAML 1.1 scalars such as unquoted `yes`, `no`, `on`, and `off` become booleans. Numeric forms such as `0x10` become numbers.
+* A field set to `null` means unset. Null does not disable a setting, and a null list element is rejected. Ordinary scalar fields use their protobuf zero value. For example, omitting `config.database.pool.minConns` or setting it to `0` both mean zero minimum connections.
 * Settings load once. The controller validates the whole file at startup, passes the result to its owners, and reads nothing from the environment afterward. A change therefore needs a restart. The chart triggers that restart by checksumming the ConfigMap into the pod.
 
 To check your settings before you apply them, render the document that the chart builds from your Helm values.
@@ -167,7 +169,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
    | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the two logins assume after they connect. Match the role names that you passed to the setup script. Give each installation that shares one database distinct roles. |
    | `config.database.schema` | The schema that holds kagent's tables. Match the `kagent_schema` value that you passed to the setup script. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and both kagent roles need `USAGE` on it. |
    | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed in `config.database.vectorSchema`. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
-   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. Omit the fields to keep the pgx library defaults. |
+   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. If you omit `minConns` or set it to `0`, the pool uses no minimum connections. If you omit `maxConns`, `maxConnIdleTime`, and `maxConnLifetime`, the pgx library defaults apply. |
    | `config.database.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies through the read/write login that the database is already migrated, and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. The controller then does not need the owner Secret or role. |
 
 5. Apply the values to the kagent Helm release. The `--reuse-values` flag keeps the values that an existing release was installed with, such as the provider key and the Agent Substrate settings that `kagent install` sets. On a first installation, the flag has no effect.
