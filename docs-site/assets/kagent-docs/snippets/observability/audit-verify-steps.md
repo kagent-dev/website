@@ -17,7 +17,7 @@
       ```text
       { span.gen_ai.input.messages =~ ".*Audit check.*" }
       ```
-   5. Open a trace, and select its `generate_content` span. The **Span Attributes** section shows the three attributes that [What a record holds](#what-a-record-holds) describes.
+   5. Open a trace, and select its `generate_content` span. The **Span Attributes** section shows the three attributes described in [What a record holds](#what-a-record-holds).
    {{% /tab %}}
    {{% tab name="Jaeger" %}}
    1. Forward the Jaeger query port, and leave the command running.
@@ -26,7 +26,7 @@
       ```
    2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
    3. From the **Service** list, select `my-first-agent`. From the **Operation** list, select the `generate_content` operation for your model, such as `generate_content gpt-4.1-mini`, and click **Find Traces**.
-   4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the three attributes that [What a record holds](#what-a-record-holds) describes.
+   4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the three attributes described in [What a record holds](#what-a-record-holds).
    {{% /tab %}}
    {{< /tabs >}}
 
