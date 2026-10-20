@@ -7,31 +7,21 @@ author: kagent.dev
 
 An {{< gloss "Agent" >}}Agent{{< /gloss >}} reaches only the destinations that its AgentTemplate needs, such as its model provider, its Model Context Protocol (MCP) servers, and its skill sources. {{< reuse "kagent-docs/snippets/name-product.md" >}} infers these destinations and compiles them into the agent's [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}). The egress gateway denies every other destination.
 
-An EgressPolicy resource grants access to more destinations. An Agent or a SandboxTemplate selects one or more policies by name in its `spec.egressPolicyRefs` field. A policy can also reference a credential in a Kubernetes Secret. The gateway adds the credential to each request, so the value never enters the agent's sandbox. Typical uses include a package registry that a skill installs from, or an internal API that a tool script calls.
+To grant an Agent or SandboxTemplate access to destinations beyond the inferred set, you can create an EgressPolicy resource. The Agent or SandboxTemplate selects one or more policies by name in its `spec.egressPolicyRefs` field. An EgressPolicy only adds access, and cannot remove a destination that kagent inferred from the model or the tools.
 
-A grant only adds access. A policy cannot remove a destination that kagent inferred from the model or the tools.
+A policy can also reference a credential in a Kubernetes Secret. The gateway adds the credential to each request, so the value never enters the agent's sandbox. Typical uses include a package registry that a skill installs from, or an internal API that a tool script calls.
 
 ## Before you begin
 
-1. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-agent` Agent in the `kagent` namespace.
-
-2. Optional: To grant access to a standalone sandbox, create the `scratch` SandboxTemplate, as described in [Create a SandboxTemplate]({{< link path="about/substrate-runtime/standalone-sandboxes#create-a-sandboxtemplate" >}}).
-
-3. Check your kagent CLI version. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI.
-   ```bash
-   kagent version
-   ```
-
-   If `kagent_version` in the output is not {{< reuse "kagent-docs/versions/kagent.md" >}}, install that version.
-   ```bash
-   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
-   ```
+Create the resource that you want to grant access to. The examples on this page use the `kagent` namespace.
+* **Agent**: [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-agent` Agent. Use commands in the "Agent" tabs in the following steps.
+* **Standalone sandbox**: Create the `scratch` SandboxTemplate, as described in [Create a SandboxTemplate]({{< link path="about/substrate-runtime/standalone-sandboxes#create-a-sandboxtemplate" >}}). Use commands in the "Standalone sandbox" tabs in the following steps.
 
 ## Grant access to a destination
 
-Create an EgressPolicy that lists the destinations, and then select the policy on the Agent. This example grants access to the npm registry and the Node.js download site.
+Create an EgressPolicy that lists the destinations that you want to grant access to, and then select the policy on the Agent or SandboxTemplate.
 
-1. Create the EgressPolicy in the namespace of the Agent. An Agent can select only policies in its own namespace.
+1. Create the EgressPolicy in the namespace of the Agent or SandboxTemplate. A resource can select only the policies in its own namespace. This example grants access to the npm registry and the Node.js download site.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -51,27 +41,49 @@ Create an EgressPolicy that lists the destinations, and then select the policy o
    | Field | Description |
    | ----- | ----------- |
    | `destinations` | The destinations to grant, from 1 to 64 entries. |
-   | `destinations[].origin` | A scheme, a Domain Name System (DNS) hostname, and an optional port, such as `https://registry.npmjs.org` or `https://search.example.com:8443`. For the accepted forms, see [Origin format](#origin-format). |
+   | `destinations[].origin` | A scheme, a DNS hostname, and an optional port, such as `https://registry.npmjs.org` or `https://search.example.com:8443`. For the accepted forms, see [Origin format](#origin-format). |
    | `destinations[].authentication` | Optional. A credential for the gateway to add to each request. For more information, see [Inject a credential](#inject-a-credential). |
 
-2. Select the policy on the Agent. Only an Agent or a SandboxTemplate can select a policy. The AgentTemplate and the Harness cannot, so two Agents that share an AgentTemplate can have different access. The grant applies to the whole {{< gloss "Actor" >}}Actor{{< /gloss >}}, including the subagents that run in it.
+2. Select the policy in the `spec.egressPolicyRefs` field.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
+   The AgentTemplate and the Harness cannot select a policy, so two Agents that share an AgentTemplate can have different access. The grant applies to the whole {{< gloss "Actor" >}}Actor{{< /gloss >}}, including the subagents that run in it.
    ```bash
    kubectl patch agent my-first-agent -n kagent --type merge \
      -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"}]}}'
    ```
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
+   Every Sandbox that is created from the template receives the grant.
+   ```bash
+   kubectl patch sandboxtemplate scratch -n kagent --type merge \
+     -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"}]}}'
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
 
 3. Check that kagent admitted the grant. When kagent admits every selected policy, the `EgressPoliciesApplied` condition reports `True` with the reason `Applied`.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
    ```bash
    kubectl get agent my-first-agent -n kagent \
      -o jsonpath='{range .status.conditions[?(@.type=="EgressPoliciesApplied")]}{.status} {.reason} {.message}{end}'
    ```
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
+   ```bash
+   kubectl get sandboxtemplate scratch -n kagent \
+     -o jsonpath='{range .status.conditions[?(@.type=="EgressPoliciesApplied")]}{.status} {.reason} {.message}{end}'
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
 
    Example output:
    ```console
    True Applied All requested egress grants are admitted
    ```
 
-The grant reaches existing {{< gloss "Session" >}}Sessions{{< /gloss >}} as well as new ones. kagent updates the policy of every running and suspended Actor that the Agent owns, without restarting the Actor. The update is asynchronous. A request that the agent sends immediately after the change might still use the previous policy.
+The grant reaches existing workloads as well as new ones. kagent updates the policy of every running and suspended Actor without restarting it. For an Agent, this update covers every {{< gloss "Session" >}}Session{{< /gloss >}}. For a SandboxTemplate, the update covers every Sandbox that was created from the template. The update is asynchronous, so a request that is sent immediately after the change might still use the previous policy.
 
 ## Origin format
 
@@ -129,40 +141,29 @@ The gateway can add a credential from a Kubernetes Secret to each request for an
    | `authentication.prefix` | Optional. Text that the gateway puts before the Secret value. The prefix is literal. Include the trailing space, as in `"Bearer "`. When the prefix is omitted or empty, the header contains only the Secret value. |
    | `authentication.secretKeyRef` | The Secret and key that store the credential. Both `name` and `key` are required, and the reference cannot be optional. |
 
-3. Select the policy on the Agent. A merge patch replaces the whole `egressPolicyRefs` list. Include every policy that the Agent needs.
+3. Select the policy. A merge patch replaces the whole `egressPolicyRefs` list, so the command also keeps `node-dependencies`. Include every policy that the resource needs.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
    ```bash
    kubectl patch agent my-first-agent -n kagent --type merge \
      -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"},{"name":"ticket-api"}]}}'
    ```
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
+   ```bash
+   kubectl patch sandboxtemplate scratch -n kagent --type merge \
+     -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"},{"name":"ticket-api"}]}}'
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
 
-4. In the script or software development kit (SDK) that the agent uses, send the header with a placeholder value. The gateway replaces a header that the request already sends, and it does not add a header that is missing. Selecting a policy does not configure a tool or set an environment variable. The client must also trust the egress gateway's certificate authority, which kagent provides to every Actor. For the variables that carry the trust bundle, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
+4. In the script or software development kit (SDK) that sends the request, send the header with a placeholder value. The gateway replaces a header that the request already sends, and it does not add a header that is missing. Selecting a policy does not configure a tool or set an environment variable. The client must also trust the egress gateway's certificate authority, which kagent provides to every Actor. For the variables that carry the trust bundle, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
    ```bash
    curl -H 'Authorization: Bearer kagent-credential-injected' \
      https://tickets.example.com/tickets
    ```
 
 To rotate the credential, update the Secret. The gateway reads the value from the Secret, so the agent's revision does not change.
-
-## Grant access to a standalone sandbox
-
-A standalone Sandbox has no outbound access by default. To grant access, select the policy on the SandboxTemplate that the Sandbox is created from. Existing Sandboxes from this template receive the change without a restart.
-
-1. Add the policy to the SandboxTemplate's `spec.egressPolicyRefs` field.
-   ```bash
-   kubectl patch sandboxtemplate scratch -n kagent --type merge \
-     -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"}]}}'
-   ```
-
-2. Check that kagent admitted the grant.
-   ```bash
-   kubectl get sandboxtemplate scratch -n kagent \
-     -o jsonpath='{range .status.conditions[?(@.type=="EgressPoliciesApplied")]}{.status} {.reason} {.message}{end}'
-   ```
-
-   Example output:
-   ```console
-   True Applied All requested egress grants are admitted
-   ```
 
 ## Troubleshoot a grant
 
@@ -190,7 +191,7 @@ In a standalone Sandbox, a destination that no grant allows does not resolve. A 
 
 ## Access control
 
-An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in this namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference.
+An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in this namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
 
 To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller needs only read access to EgressPolicy resources.
 
@@ -198,19 +199,23 @@ The gateway keeps a credential out of the sandbox, but it cannot stop an allowed
 
 ## Clean up
 
-1. Remove the policies from the Agent.
+1. Remove the policies from the resource.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
    ```bash
    kubectl patch agent my-first-agent -n kagent --type json \
      -p '[{"op":"remove","path":"/spec/egressPolicyRefs"}]'
    ```
-
-2. If you granted access to the `scratch` SandboxTemplate, remove the policy from the template.
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
    ```bash
    kubectl patch sandboxtemplate scratch -n kagent --type json \
      -p '[{"op":"remove","path":"/spec/egressPolicyRefs"}]'
    ```
+   {{% /tab %}}
+   {{< /tabs >}}
 
-3. Delete the EgressPolicy resources and the Secret.
+2. Delete the EgressPolicy resources and the Secret.
    ```bash
    kubectl delete egresspolicy node-dependencies ticket-api -n kagent
    kubectl delete secret ticket-auth -n kagent

@@ -98,7 +98,7 @@ Editing a template prepares a new revision. A Sandbox that already exists keeps 
 ## Run a command
 
 > [!WARNING]
-> **By default, the gateway denies every outbound connection from a Sandbox.** When the template does not select an EgressPolicy resource, kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) for the Sandbox. A command that fetches a package, clones a repository, or calls an API then fails. To allow a destination, select an EgressPolicy in the SandboxTemplate's `spec.egressPolicyRefs` field, as described in [Grant access to a standalone sandbox]({{< link path="agents/egress-policies#grant-access-to-a-standalone-sandbox" >}}). Otherwise, move what a command needs into the Sandbox with `kagent sandbox upload`.
+> **By default, the gateway denies every outbound connection from a Sandbox.** When the template does not select an EgressPolicy resource, kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) for the Sandbox. A command that fetches a package, clones a repository, or calls an API then fails. To allow a destination, select an EgressPolicy in the SandboxTemplate's `spec.egressPolicyRefs` field, as described in [Grant access to a destination]({{< link path="agents/egress-policies#grant-access-to-a-destination" >}}). Otherwise, move what a command needs into the Sandbox with `kagent sandbox upload`.
 
 Each `kagent sandbox` command makes one lifecycle attempt rather than retrying for you, so `create` takes a stable `--request-id` that you reuse to retry the same creation.
 
