@@ -211,27 +211,28 @@ jobs:
           sudo install -m 0755 /tmp/kind /usr/local/bin/kind
           kind --version
 
-      - name: Install kubectl-ate
+      - name: Install the kagent CLI
         working-directory: website/docs-site
         run: |
-          # The same version the install guide tells a reader to download, read from the
-          # same conref, so the tooling matches the charts the provisioner installs.
-          version="$(python3 - assets/kagent-docs/versions/agent-substrate.md <<'PY'
+          # `kagent install` installs the charts of its own release, so the CLI version IS
+          # the chart version. Read it from the same conref the install guide renders; the
+          # provisioner refuses to run if the two disagree.
+          version="$(python3 - assets/kagent-docs/versions/kagent.md <<'PY'
           import re, sys
           txt = open(sys.argv[1]).read()
           m = re.search(r'include-if="[^"]*\b1\.x\b[^"]*"[^>]*>}}([^<{]+)', txt)
           print((m.group(1) if m else txt).strip())
           PY
           )"
-          curl -fsSL -o kubectl-ate \
-            "https://github.com/kagent-dev/substrate/releases/download/v${version}/kubectl-ate-linux-amd64"
-          chmod +x kubectl-ate && sudo mv kubectl-ate /usr/local/bin/
+          curl -fsSL https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent \
+            | bash -s -- --version "v${version}"
+          kagent version
 
       - name: Stand up the cluster at the docs-pinned versions
         working-directory: website/${{ env.PW_DIR }}
         env:
-          # The provisioner only tests that this is non-empty before writing it into a
-          # ModelProviderConfig, and these captures (dashboard, agents list, substrate
+          # `kagent install` only tests that this is non-empty before writing it into the
+          # provider Secret, and these captures (dashboard, agents list, substrate
           # page on a fresh install) invoke no model. So a placeholder is correct here,
           # not a workaround -- and it keeps a missing or rotated secret from failing a
           # run that never needed one. (kagent's `make check-api-key` tests the same
