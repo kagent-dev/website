@@ -30,6 +30,6 @@
    {{% /tab %}}
    {{< /tabs >}}
 
-   If both attributes read `{}`, the Session started without content capture. Check that the previous section printed `Current`, and create a new Session if it did not.
+   If `gen_ai.input.messages` and `gen_ai.output.messages` read `{}`, the Session started without content capture. Check that the previous section printed `Current`, and create a new Session if it did not.
 
 3. To collect every model call of one conversation, search by its conversation ID. Every span of the conversation carries the ID in the `gen_ai.conversation.id` attribute. For the other attributes that you can search by, see [Correlation attributes]({{< link path="observability/tracing#correlation-attributes" >}}).

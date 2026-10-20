@@ -9,7 +9,7 @@ Audit the prompts (inputs) and replies (outputs) that pass between your agents a
 
 ## About prompt auditing
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} records prompts and replies in traces. When you turn on content capture, the runtime records the agent's request and the model's reply on its spans. You then find the records in your tracing backend, by agent, by conversation, or by the text that they contain.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} records prompts and replies in traces. When you turn on content capture, the runtime records the agent's request and the model's reply on its spans. You then find the records in your tracing backend.
 
 The `kagent` runtime does not write prompts or replies to log records, so a logging backend on its own cannot hold a prompt audit trail. Capture is off by default, because the content can include sensitive user and model data.
 
