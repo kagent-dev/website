@@ -40,9 +40,9 @@ Agent Substrate checks two things before it places an Actor on a Worker:
 * Whether the Worker has a free Actor slot. This check always runs.
 * Whether the Worker has enough spare CPU and memory. This check runs only when the ActorTemplate states how much CPU and memory one Actor needs.
 
-An ActorTemplate that the kagent controller compiles does not state per-Actor CPU or memory, so the free Actor slot check is the only one that decides where a Session's Actor lands. [Worker resource limits]({{< link path="operations/tune-agent-substrate#set-resource-requests-on-workers" >}}) still matter, because a Worker with no limits reports its whole node as its own capacity.
+Every ActorTemplate that the kagent controller compiles states a CPU and memory limit for one Actor, so both checks run for a Session's Actor. The `config.runtimeDefaults.cpu` and `config.runtimeDefaults.memory` Helm values set this limit for every agent, and default to `1` CPU and `1Gi` of memory.
 
-<!-- REVIEW (runtime reviewer): on a default installation neither side declares resources, so a Worker keeps accepting Actors up to its build capacity no matter how loaded its node is, and node pressure surfaces as eviction rather than as a placement failure. Confirm that this is intended for GA before this section describes it as the expected operating mode. -->
+The CPU and memory check compares that limit against the capacity that the Worker reports. A WorkerPool sets no resource limits on its Workers by default, and a Worker with no limits reports its whole node as its own capacity. The check then ignores every other pod on the node, so node pressure surfaces as eviction rather than as a placement failure. To make the check reflect the Worker, [set resource limits on Workers]({{< link path="operations/tune-agent-substrate#set-resource-requests-on-workers" >}}).
 
 Agent Substrate first narrows the pool to the Workers that can take the Actor. It then picks two of those Workers at random and places the Actor on the less loaded of the two. A Worker's load is the higher of two shares: the share of its Actor slots that are filled, and the share of its CPU and memory that is committed. Sampling two Workers keeps the decision cheap, and it avoids the pile-up that follows when every placement aims at the Worker that looks emptiest.
 
