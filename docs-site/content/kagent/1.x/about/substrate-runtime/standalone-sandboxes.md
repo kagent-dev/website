@@ -83,6 +83,7 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepar
    | `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and may be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
    | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
    | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
+   | `egressPolicyRefs` | No | Up to 16 EgressPolicy resources in the template's namespace that grant the Sandbox outbound access. When this field is omitted, the Sandbox has no outbound access. For more information, see [Egress policies]({{< link path="agents/egress-policies" >}}). |
 
    A SandboxTemplate does not take a startup command or a guest toggle. kagent supplies the guest entrypoint from the image that `config.sandboxes.guestImage` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
 
@@ -97,7 +98,7 @@ Editing a template prepares a new revision. A Sandbox that already exists keeps 
 ## Run a command
 
 > [!WARNING]
-> **The gateway denies every outbound connection from a Sandbox.** kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) as it creates a Sandbox, and the gateway rejects any destination that the policy does not name, so a command that fetches a package, clones a repository, or calls an API fails. The SandboxTemplate schema does not define a destination field, so no configuration opens one. Move what a command needs into the Sandbox with `kagent sandbox upload`.
+> **By default, the gateway denies every outbound connection from a Sandbox.** When the template does not select an EgressPolicy resource, kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) for the Sandbox. A command that fetches a package, clones a repository, or calls an API then fails. To allow a destination, select an EgressPolicy in the SandboxTemplate's `spec.egressPolicyRefs` field, as described in [Grant access to a destination]({{< link path="agents/egress-policies#grant-access-to-a-destination" >}}). Otherwise, move what a command needs into the Sandbox with `kagent sandbox upload`.
 
 Each `kagent sandbox` command makes one lifecycle attempt rather than retrying for you, so `create` takes a stable `--request-id` that you reuse to retry the same creation.
 

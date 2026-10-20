@@ -24,12 +24,9 @@ Credentials come from a Kubernetes Secret in the same namespace as the ModelConf
 
 ### Forward the caller's token
 
-Set `apiKeyPassthrough: true` to send the bearer token from the incoming agent-to-agent (A2A) request to the provider as the API key, rather than reading a key from a Secret. A ModelConfig cannot set both `apiKeyPassthrough` and `apiKeySecret`. The setting is not available for the `Gemini`, `GeminiVertexAI`, or `AnthropicVertexAI` providers, or on a `codex` or `claude` Harness.
+Set `tokenPassthrough: true` to send the bearer token from the incoming agent-to-agent (A2A) request to the provider as the API key, rather than reading a key from a Secret. A ModelConfig cannot set both `tokenPassthrough` and `apiKeySecret`. The setting is not available for the `Gemini`, `GeminiVertexAI`, or `AnthropicVertexAI` providers, or on a `codex` or `claude` Harness.
 
-<!-- REVIEW: the ADK runtime reads the caller's token with models.PassthroughToken and uses it as the
-provider key. What is unconfirmed is how that interacts with the egress gateway, which injects a static
-header from a Secret. If the gateway overwrites or strips the auth header, passthrough does not work at
-all. Needs someone who has run it. -->
+The egress gateway injects no credential for the provider's host, so the caller's token reaches the provider unchanged. kagent also refuses to attach a static credential to that host.
 
 ### Turn off model streaming
 
@@ -101,7 +98,7 @@ The harness that a {{< gloss "Harness" >}}Harness{{< /gloss >}} resource selects
 
 A provider is available only when the harness integrates it and the egress gateway can inject its credential as a header. The `kagent` and `byo` harnesses integrate `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`, but the gateway cannot inject a Google service account key or a set of OAuth2 client credentials, so kagent rejects a ModelConfig that names any of the three on every harness. For the alternatives, see [Credentials that kagent rejects](#credentials-that-kagent-rejects).
 
-Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `apiKeyPassthrough`, and each narrows the provider settings that it takes. When a ModelConfig names a provider that its harness does not integrate, the Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
+Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `tokenPassthrough`, and each narrows the provider settings that it takes. When a ModelConfig names a provider that its harness does not integrate, the Agent reports the `Compatible` condition as `False` with the reason `UnsupportedConfiguration`.
 
 For the full matrix, including the per-combination restrictions, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 

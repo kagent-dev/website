@@ -223,10 +223,10 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
    - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts through [Workload Identity Federation for GKE](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart does not render a Helm value for Google credentials. Set nothing further.
    - For Amazon S3, the client reads the standard AWS environment and uses a role that the pod assumes. No static key is needed.
-   - For an S3-compatible store, pass two variables and the static credentials through `atelet.extraEnv`. `AWS_ENDPOINT_URL` names the store's API endpoint, which the client otherwise resolves to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname, which most S3-compatible stores require.
+   - For an S3-compatible store, pass two variables and the static credentials through `objectStorePlugin.extraEnv`. `AWS_ENDPOINT_URL` names the store's API endpoint, which the client otherwise resolves to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname, which most S3-compatible stores require. The chart applies this list to the storage client in both the `atelet` and `ate-api-server` pods.
 
    ```yaml
-   atelet:
+   objectStorePlugin:
      extraEnv:
        - name: AWS_ENDPOINT_URL
          value: https://objects.example.com
@@ -234,7 +234,7 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
          value: "true"
    ```
 
-   <!-- REVIEW (storage and chart owners): with rustfs.enabled=false the chart renders no AWS_* variables for ate-api-server, and the Deployment has no extraEnv value to supply them, unlike atelet. An S3-compatible store that needs AWS_ENDPOINT_URL therefore has no documented Helm path for the API server half. Confirm the supported configuration before this procedure recommends one. -->
+   Do not set these variables through `atelet.extraEnv`. That list reaches the `atelet` container, which no longer reads storage settings.
 
 3. Point each Harness at the new bucket.
 
@@ -251,9 +251,9 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 ### How the chart reaches the components
 
-The `atelet` DaemonSet writes a snapshot, and the `ate-api-server` Deployment manages the snapshot. The chart renders `atelet.storageBackend` as the `ATE_STORAGE_BACKEND` variable on the DaemonSet and the Deployment alike, so one Helm value keeps the two in agreement.
+The `atelet` DaemonSet writes a snapshot, and the `ate-api-server` Deployment manages the snapshot. Each pod reaches the bucket through an `objectstore-plugin` sidecar container, and only that container reads the storage variables. The chart renders `atelet.storageBackend` as the `ATE_STORAGE_BACKEND` variable on both sidecars, so one Helm value keeps the two in agreement. The `atelet` and `ate-api-server` containers fail to start when `ATE_STORAGE_BACKEND` is set on them directly.
 
-Reading these variables off a running pod helps when a snapshot fails to write. Edit the Helm values rather than the pod environment because the next Helm upgrade overwrites a direct edit.
+Reading these variables off the `objectstore-plugin` container helps when a snapshot fails to write. Edit the Helm values rather than the pod environment because the next Helm upgrade overwrites a direct edit.
 
 | Variable | Purpose |
 | -------- | ------- |

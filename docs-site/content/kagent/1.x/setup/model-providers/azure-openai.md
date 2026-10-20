@@ -94,18 +94,19 @@ spec:
 
 ## Send a file to the model
 
-The `responses` format attaches a file to a prompt as a link, or as inline bytes when the file is an image. Azure fetches a link both on the turn that sends it and on every turn that replays the conversation, so a file link must be reachable from Azure for as long as the conversation lives.
+The `responses` format sends a file to Azure as a link or as inline bytes. Azure fetches a link only on the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
 
-A link reaches Azure regardless of its media type. Inline bytes reach Azure only for an image.
+A link reaches Azure regardless of its media type. Inline bytes reach Azure as a file only for an image, a PDF, or a `.docx`, `.xlsx`, or `.pptx` file. Azure documents file input only for PDF files. A `.docx`, `.xlsx`, or `.pptx` file might fail on Azure, although the runtime sends it.
 
 | What the message includes | What the runtime sends |
 | ------------------------ | ---------------------- |
 | An `http://` or `https://` link with an `image/` media type | An `input_image` part with the link. |
 | An `http://` or `https://` link with any other media type, such as a PDF | An `input_file` part with the link. |
 | Inline image bytes | An `input_image` part with the bytes as a `data:` URL. |
-| Inline bytes of any other type, such as a PDF or an Office document | Nothing. Azure OpenAI does not take inline bytes outside an image. |
+| Inline bytes of a PDF, `.docx`, `.xlsx`, or `.pptx` file | An `input_file` part with the bytes as a `data:` URL. The bytes must match the media type. A file that does not, such as a text file labeled `application/pdf`, reaches the model as a note that it could not be read. When the files in the conversation total more than 50 MB, the runtime sends the newest files, and a note replaces each older file. |
+| Inline bytes of any other type | The file's text, or a note when the file cannot be read as text. |
 
-The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. When an older message in the replayed conversation includes one, the runtime replaces the link with a text note that keeps the URL, so a model with a fetch tool can still retrieve the file.
+The runtime refuses a link on any other scheme. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. A link in an older message does not fail the turn, because the runtime sends the links from older messages as bare URLs. A model with a fetch tool can still retrieve the file.
 
 A link attachment with a display name gets an extra text part that reads `File: <name>` that is placed immediately before the file part. Azure rejects a filename beside a file URL, so the name reaches the model as ordinary text.
 
@@ -115,7 +116,7 @@ A link attachment with a display name gets an extra text part that reads `File: 
 | ------------- | ---------- |
 | `apiKeySecret` is set | The API key from the referenced Secret. |
 | `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |
-| `apiKeyPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
+| `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
 
 > [!WARNING]
 > **Azure Workload Identity is not currently supported.** In earlier versions of kagent, omitting the credential fields fell back to Azure Workload Identity, which depended on an annotated ServiceAccount on the agent's pod. An agent now runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to federate an Azure identity onto. Supply a credential with one of the configurations in the preceding table.

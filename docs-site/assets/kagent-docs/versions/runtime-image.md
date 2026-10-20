@@ -1,1 +1,1 @@
-ghcr.io/kagent-dev/kagent/golang-adk@sha256:eb1b0c7f635f31d464cff7cf212275f2642057a629ed20b39661e9f644f71f21
+ghcr.io/kagent-dev/kagent/golang-adk@sha256:2240ef5d46b71b4850d072d40f34a5f778e9342cc97df34a635b594540ec62af

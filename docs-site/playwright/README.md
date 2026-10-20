@@ -66,20 +66,17 @@ Two constraints on the mock path:
 - **Node ≥24.13.0** additionally for the mock path — that is the kagent UI's own engine floor
   (`ui/package.json`), and its build tooling fails on Node 18 with a `styleText` import error
   from `node:util` that does not name the cause.
-- For live-cluster captures: `kind`, `helm`, `kubectl`, `kubectl-ate`, `jq`, `openssl`, and a
-  model provider API key. The provisioner checks for all of these before it touches the cluster
-  and names whichever is missing, so you find out up front rather than half way through an
-  install.
-- **`kubectl-ate` is not on most machines and must match the Agent Substrate version** the
-  capture installs, because it writes that version's identity material. It is published per
-  release rather than through a package manager:
+- For live-cluster captures: `kind`, `kubectl`, `jq`, the kagent CLI, and a model provider API
+  key. The provisioner checks for all of these before it touches the cluster and names whichever
+  is missing, so you find out up front rather than half way through an install.
+- **The kagent CLI must match the kagent version the docs pin.** The provisioner runs
+  `kagent install`, which installs the charts of the CLI's own release, so it refuses to run
+  when `kagent version` disagrees with `assets/kagent-docs/versions/kagent.md`. Install the
+  matching CLI the same way the install guide does:
   ```sh
-  curl -sSL -o kubectl-ate \
-    "https://github.com/kagent-dev/substrate/releases/download/v<SUBSTRATE_VERSION>/kubectl-ate-$(uname -s | tr '[:upper:]' '[:lower:]')-amd64"
-  chmod +x kubectl-ate && mv kubectl-ate /usr/local/bin/   # or anywhere on PATH
+  curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent \
+    | bash -s -- --version v<KAGENT_VERSION>
   ```
-  Read `<SUBSTRATE_VERSION>` from `assets/kagent-docs/versions/agent-substrate.md`, which is the
-  same conref the provisioner reads.
 - One-time setup:
   ```sh
   cd docs-site/playwright
@@ -161,9 +158,10 @@ more thing to get working before a screenshot exists.
 
 ## Task: refresh for a new kagent version
 
-1. **Nothing here pins a version.** The provisioner reads both chart versions from the same
-   conrefs the install guide renders (`assets/kagent-docs/versions/{kagent,agent-substrate}.md`,
-   the `1.x` entry), so bumping the docs is what moves the capture. Do not hardcode a version
+1. **Nothing here pins a version.** The provisioner reads the kagent version from the same
+   conref the install guide renders (`assets/kagent-docs/versions/kagent.md`, the `1.x` entry),
+   and `kagent install` brings the Agent Substrate release that version bundles, so bumping the
+   docs is what moves the capture. Do not hardcode a version
    to "get the new UI" — that decouples the screenshot from what a reader installs.
 2. **Re-capture and review the diffs visually.** A diff means the live UI no longer matches the
    committed screenshots, which may mean the *prose* is now wrong too, not just the image. That
@@ -341,7 +339,7 @@ the job falls back to a placeholder, which is correct rather than a workaround: 
 | `tests/chat.spec.ts` | Mock-backed capture: the seeded conversation |
 | `docs-image-map.json` | Baseline name → `{ light, dark }` destinations under `assets/img`, with a `$note` per image |
 | `scripts/sync-docs-images.mjs` | Copies baselines into `assets/img` |
-| `provisioners/kagent-kind.sh` | kind cluster + Agent Substrate + kagent at docs-pinned versions |
+| `provisioners/kagent-kind.sh` | kind cluster + `kagent install` at the docs-pinned version |
 | `__screenshots__/` | Committed baselines (light + dark per capture) |
 
 ## npm scripts
@@ -360,5 +358,4 @@ the job falls back to a placeholder, which is correct rather than a workaround: 
 | `UI_BASE_URL` | `http://localhost:8082` | The running UI to attach to |
 | `OPENAI_API_KEY` | — | Required by the provisioner (the kagent chart needs a model provider key) |
 | `CLUSTER_NAME` | `kagent-shots` | kind cluster name |
-| `KAGENT_VERSION` | docs conref | Override the kagent chart version for a one-off run |
-| `SUBSTRATE_VERSION` | docs conref | Override the Agent Substrate chart version for a one-off run |
+| `KAGENT_VERSION` | docs conref | Override the kagent version for a one-off run; the CLI on `PATH` must match it |

@@ -27,10 +27,10 @@ Memories are scoped to the agent and to the user who created them, and carry the
 
 Agent memory requires your own PostgreSQL database with the [pgvector](https://github.com/pgvector/pgvector) extension installed. The default database that `kagent install` deploys runs the stock `postgres` image, which omits pgvector, so that database cannot store memories.
 
-> [!WARNING]
-> kagent requires a new, empty database. When you move an existing installation to a pgvector database, its existing Sessions do not carry over.
+If your installation already uses your own PostgreSQL database, skip step 1 and install pgvector in that database. The vector migration adds only the memory tables, so existing Sessions are kept.
 
-<!-- REVIEW (database reviewers): enabling memory on an existing installation means moving it to a new, empty pgvector database, because the default database omits pgvector and kagent requires an empty database. Existing Sessions are therefore lost. Confirm that this is intended for GA, or name a supported way to carry Sessions over, before this warning stands as the documented behavior. -->
+> [!WARNING]
+> On the default database, step 1 moves kagent to a new, empty database. Existing Sessions do not carry over.
 
 1. Prepare the database for kagent and create its two connection Secrets. Follow steps 1 to 3 of [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}) to create the `kagent_owner` and `kagent_readwrite` roles and the `my-postgres-owner` and `my-postgres-readwrite` Secrets.
 

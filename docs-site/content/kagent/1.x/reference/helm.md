@@ -11,7 +11,7 @@ A Helm chart for kagent, built with Google ADK
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha14 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha16 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
 
@@ -34,7 +34,9 @@ A Helm chart for kagent, built with Google ADK
 | config.push.allowHttp | bool | `false` |  |
 | config.push.allowPrivateNetworks | bool | `false` |  |
 | config.push.recoveryInterval | string | `"60s"` |  |
+| config.runtimeDefaults.cpu | string | `"1"` |  |
 | config.runtimeDefaults.logging.level | string | `"info"` |  |
+| config.runtimeDefaults.memory | string | `"1Gi"` |  |
 | config.runtimeDefaults.skillTools.bashVenvPath | string | `""` |  |
 | config.runtimeDefaults.skillTools.disableBash | bool | `false` |  |
 | config.runtimeDefaults.skillTools.fileSearchTools | bool | `false` |  |
@@ -111,6 +113,7 @@ A Helm chart for kagent, built with Google ADK
 | database.postgres.readWriteConnectionStringSecretRef | object | `{"key":"readWriteConnectionString","name":"kagent-postgres-readwrite"}` | Secret holding the read/write login's connection string, used for every runtime query. Required. Secret changes require restarting the controller. |
 | extraObjects | list | [] | Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.:   extraObjects:     - apiVersion: external-secrets.io/v1       kind: ExternalSecret       metadata:         name: '`{{ include "kagent.fullname" . }}`-openai'         namespace: '`{{ .Release.Namespace }}`'       spec:         secretStoreRef:           name: aws-secretsmanager           kind: ClusterSecretStore         target:           name: kagent-openai         data:           - secretKey: OPENAI_API_KEY             remoteRef:               key: prod/kagent/openai               property: api_key |
 | fullnameOverride | string | `""` |  |
+| global.clusterDomain | string | `"cluster.local"` | Kubernetes DNS domain used in runtime-facing service URLs. |
 | global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
 | global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
 | global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, grafana-mcp, substrateWorkerPool.workerImage, and built-in Harness images (both packaged defaults and config.harnessImages overrides). The vendored subcharts kagent-tools adopts it when its pinned version bumps. |

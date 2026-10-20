@@ -15,6 +15,7 @@ Package v1alpha3 contains API Schema definitions for the api.kagent.dev v1alpha3
 ### Resource Types
 - [Agent](#agent)
 - [AgentTemplate](#agenttemplate)
+- [EgressPolicy](#egresspolicy)
 - [Harness](#harness)
 - [ModelConfig](#modelconfig)
 - [ModelProviderConfig](#modelproviderconfig)
@@ -48,6 +49,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `template` _[AgentTemplateSource](#agenttemplatesource)_ | Template selects the portable behavior this Agent exposes. |  | ExactlyOneOf: [inline ref] <br />**Required** <br /> |
 | `harnessRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | HarnessRef selects the platform-managed runtime configuration that executes<br />the behavior. |  | **Required** <br /> |
+| `egressPolicyRefs` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core) array_ | EgressPolicyRefs grants additional access to the whole runtime, including<br />shared subagents. Policies resolve in this Agent's namespace. Integration<br />access inferred from models and tools is always included. Changes update<br />existing Sessions without a new invocation or runtime restart. |  | MaxItems: 16 <br /> |
 
 #### AgentStatus
 
@@ -63,7 +65,7 @@ _Appears in:_
 | `latestSuccessfulRevision` _string_ |  |  | MinLength: 1 <br /> |
 | `workloadImage` _string_ | WorkloadImage is the digest-pinned image selected for the desired revision.<br />Existing Sessions may still use an older revision and image. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br /> |
 | `warnings` _string array_ | Warnings reports non-blocking compatibility decisions made while compiling<br />this Agent. |  | MaxItems: 100 <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ |  |  | MaxItems: 4 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions report runtime readiness and independent egress grant admission.<br />EgressPoliciesApplied is False for EgressPolicyNotFound, InvalidEgressPolicy,<br />or EgressGrantConflict; Applied means all grants are admitted. Grant issues<br />do not affect Ready. |  | MaxItems: 5 <br /> |
 
 #### AgentTemplate
 
@@ -322,6 +324,56 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
+
+#### EgressAuthentication
+
+EgressAuthentication replaces a request header with a prefix and Secret value.
+
+_Appears in:_
+- [EgressDestination](#egressdestination)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `header` _string_ | Header is the request header carrying the credential, for example<br />Authorization or X-API-Key. |  | MaxLength: 256 <br />Pattern: `^[!#$%&'*+.^_\|~0-9A-Za-z-]+$` <br />**Required** <br /> |
+| `prefix` _string_ | Prefix is prepended verbatim to the Secret value, for example "Bearer ".<br />Include any separating space. Omitted or empty means no prefix. |  | MaxLength: 256 <br />Pattern: `^[^\x00-\x08\x0a-\x1f\x7f]*$` <br /> |
+| `secretKeyRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | SecretKeyRef selects a required key in the EgressPolicy's namespace. |  | **Required** <br /> |
+
+#### EgressDestination
+
+EgressDestination grants access to one HTTP(S) origin, including all its paths.
+
+_Appears in:_
+- [EgressPolicySpec](#egresspolicyspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `origin` _string_ | Origin is a scheme, DNS hostname, and optional port. A wildcard replaces<br />exactly one leftmost DNS label, for example https://*.example.com. |  | MaxLength: 270 <br />Pattern: `^https?://(\*\.([a-z0-9]([-a-z0-9]\{0,61\}[a-z0-9])?\.)+\|([a-z0-9]([-a-z0-9]\{0,61\}[a-z0-9])?\.)*)[a-z]([-a-z0-9]\{0,61\}[a-z0-9])?(:([1-9][0-9]\{0,3\}\|[1-5][0-9]\{4\}\|6[0-4][0-9]\{3\}\|65[0-4][0-9]\{2\}\|655[0-2][0-9]\|6553[0-5]))?$` <br />**Required** <br /> |
+| `authentication` _[EgressAuthentication](#egressauthentication)_ | Authentication replaces a placeholder header at the gateway. Requests<br />must send the header; its credential value is never supplied to the runtime. |  |  |
+
+#### EgressPolicy
+
+EgressPolicy is a reusable grant of additional network access. Workloads in its
+namespace select it explicitly; changes update their existing runtime Actors.
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `api.kagent.dev/v1alpha3` | | |
+| `kind` _string_ | `EgressPolicy` | | |
+| `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
+| `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[EgressPolicySpec](#egresspolicyspec)_ |  |  | **Required** <br /> |
+
+#### EgressPolicySpec
+
+EgressPolicySpec grants additional HTTP(S) access to workloads in its namespace.
+
+_Appears in:_
+- [EgressPolicy](#egresspolicy)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `destinations` _[EgressDestination](#egressdestination) array_ | Destinations are additional origins the workload may reach. |  | MaxItems: 64 <br />MinItems: 1 <br />**Required** <br /> |
 
 #### FoundryAPIFormat
 
@@ -631,7 +683,7 @@ _Appears in:_
 | `stream` _boolean_ | Stream controls LLM response streaming for the kagent harness. Set to false<br />for model endpoints that do not support streaming. Defaults to true. | true |  |
 | `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig.<br />For the SAPAICore provider, the secret must contain two keys: "client_id" and "client_secret"<br />(the OAuth2 client credentials for SAP AI Core). The apiKeySecretKey field is not used for SAPAICore. |  |  |
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
-| `apiKeyPassthrough` _boolean_ | APIKeyPassthrough enables forwarding the Bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
+| `tokenPassthrough` _boolean_ | TokenPassthrough enables forwarding the bearer token from incoming A2A requests<br />directly to the LLM provider as the API key. This is useful for organizations<br />with federated identity that want to avoid separate secret management.<br />Mutually exclusive with apiKeySecret. |  |  |
 | `defaultHeaders` _object (keys:string, values:string)_ |  |  |  |
 | `provider` _[ModelProvider](#modelprovider)_ | The provider of the model | OpenAI | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral] <br /> |
 | `openAI` _[OpenAIConfig](#openaiconfig)_ | OpenAI-specific configuration |  | AtMostOneOf: [maxTokens maxCompletionTokens] <br /> |
@@ -854,7 +906,8 @@ _Appears in:_
 | `description` _string_ |  |  | **Required** <br /> |
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
 | `url` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
-| `headersFrom` _[ValueRef](#valueref) array_ |  |  | ExactlyOneOf: [value valueFrom] <br /> |
+| `headersFrom` _[ValueRef](#valueref) array_ | HeadersFrom supplies request headers. Secret-backed headers are injected by<br />the egress gateway and cannot use routing, framing, hop-by-hop,<br />proxy-authentication, or Cookie headers. At most 64 headers may be supplied. |  | ExactlyOneOf: [value valueFrom] <br />MaxItems: 64 <br />items:XValidation: \{!has(self.valueFrom) \|\| self.valueFrom.type != 'Secret' \|\| !(self.name.lowerAscii() in ['host', 'connection', 'content-length', 'transfer-encoding', 'te', 'trailer', 'upgrade', 'keep-alive', 'proxy-authorization', 'proxy-authenticate', 'cookie']) this header cannot carry an egress credential   .name &lt;nil&gt;\} <br /> |
+| `tokenPassthrough` _boolean_ | TokenPassthrough forwards the bearer token from the incoming A2A request<br />to this server as its Authorization header. Requests without a caller<br />token fail. Controller tool discovery has no caller token, so servers that<br />require one should disable discovery with the kagent.dev/discovery label. |  |  |
 | `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  | 30s |  |
 | `sseReadTimeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#duration-v1-meta)_ |  |  |  |
 | `terminateOnClose` _boolean_ |  | true |  |
@@ -960,6 +1013,7 @@ _Appears in:_
 | `workload` _[SandboxTemplateWorkload](#sandboxtemplateworkload)_ | Workload selects the immutable runtime image. |  | **Required** <br /> |
 | `env` _[RuntimeEnvVar](#runtimeenvvar) array_ | Env supplies runtime environment defaults.<br />Credential references do not grant permission to read the referenced Secret. |  | MaxItems: 100 <br /> |
 | `substrate` _[RuntimeSubstratePolicy](#runtimesubstratepolicy)_ | Substrate configures compute placement and snapshot storage. References are<br />resolved in this template's namespace. |  | **Required** <br /> |
+| `egressPolicyRefs` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core) array_ | EgressPolicyRefs grants additional access in this template's namespace.<br />Changes update the access of existing sandboxes without restarting them. |  | MaxItems: 16 <br /> |
 
 #### SandboxTemplateStatus
 
@@ -971,7 +1025,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | ObservedGeneration is the generation considered by preparation. |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions describe whether a prepared revision is available. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions report runtime readiness and independent egress grant admission.<br />EgressPoliciesApplied is False for EgressPolicyNotFound, InvalidEgressPolicy,<br />or EgressGrantConflict; Applied means all grants are admitted. Grant issues<br />do not affect Ready. |  |  |
 
 #### SandboxTemplateWorkload
 
@@ -1050,7 +1104,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `name` _string_ |  |  | **Required** <br /> |
+| `name` _string_ |  |  | MaxLength: 256 <br />**Required** <br /> |
 | `value` _string_ |  |  |  |
 | `valueFrom` _[ValueSource](#valuesource)_ |  |  |  |
 

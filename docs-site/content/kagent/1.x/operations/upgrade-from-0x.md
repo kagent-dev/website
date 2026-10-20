@@ -40,6 +40,8 @@ The two releases also cannot run side by side on one cluster. The group rename s
      --file=kagent-0.10-backup.dump
    ```
 
+5. Install [`yq`](https://github.com/mikefarah/yq#install) version 4 or later. The steps in [Resources that carry forward](#resources-that-carry-forward) use `yq` to convert the exported resources.
+
 ## Export your 0.10.x resources
 
 Your Kubernetes resources do carry forward, so export them before anything replaces the CRDs. Conversation history does not carry forward.
@@ -157,18 +159,26 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
 
 ## Recreate your resources
 
-The export splits into three groups: resources that need only an `apiVersion` change, agents that need rewriting, and resources with no 1.0 equivalent. Work through them in that order, because an AgentTemplate refers to the ModelConfigs and RemoteMCPServers that the first group creates.
+The export splits into three groups: resources that carry forward with small changes, agents that need rewriting, and resources with no 1.0 equivalent. Work through them in that order, because an AgentTemplate refers to the ModelConfigs and RemoteMCPServers that the first group creates.
 
 ### Resources that carry forward
 
-ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets. `v1alpha3` adds fields that 0.10.x did not serve, so an exported resource applies unchanged apart from its `apiVersion`.
+ModelConfig, ModelProviderConfig, and RemoteMCPServer keep every field that `v1alpha2` sets except one. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`. The field's behavior does not change. `v1alpha3` also adds fields that 0.10.x did not serve, so these resources need no other change to their `spec`.
 
 1. Recreate the Secrets that your ModelConfigs name before you apply them, or the ModelConfigs resolve to nothing.
 
-2. Change the `apiVersion` and apply the resources unchanged.
+2. Convert these resources to `v1alpha3`. The export also holds Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set.
    ```bash
-   sed 's|^apiVersion: kagent.dev/v1alpha2$|apiVersion: api.kagent.dev/v1alpha3|' \
+   yq '.items |= map(select(.kind == "ModelConfig" or .kind == "ModelProviderConfig" or .kind == "RemoteMCPServer"))
+     | .items[].apiVersion = "api.kagent.dev/v1alpha3"
+     | del(.items[].status, .items[].metadata.resourceVersion, .items[].metadata.uid, .items[].metadata.creationTimestamp, .items[].metadata.generation, .items[].metadata.managedFields, .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"])
+     | (.items[] | select(.kind == "ModelConfig" and has("spec") and (.spec | has("apiKeyPassthrough"))) | .spec) |= (.tokenPassthrough = .apiKeyPassthrough | del(.apiKeyPassthrough))' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
+   ```
+
+3. Apply the converted resources.
+   ```bash
+   kubectl apply -f kagent-1.0-resources.yaml
    ```
 
 ### Agents become an AgentTemplate, a Harness, and an Agent

@@ -7,9 +7,9 @@
 #   content/kagent/1.x/setup/installation.md
 # so the screenshots always match what a reader who follows the docs would see.
 #
-# Chart versions are read from the SAME conrefs that guide renders
-# (assets/kagent-docs/versions/{kagent,agent-substrate}.md, 1.x entry), not from
-# "latest published". That is the invariant to preserve: a capture must show what a
+# The kagent version is read from the SAME conref that guide renders
+# (assets/kagent-docs/versions/kagent.md, 1.x entry), not from "latest published".
+# `kagent install` then installs the Agent Substrate release that kagent version bundles. That is the invariant to preserve: a capture must show what a
 # reader gets, so when the docs bump a version the next capture follows automatically
 # and nothing here needs editing.
 #
@@ -22,31 +22,23 @@
 #   ./kagent-kind.sh --delete
 #
 # Flags:
-#   --dry-run     Print every kind/helm/kubectl command without running it.
+#   --dry-run     Print every kind/kagent/kubectl command without running it.
 #   --no-cluster  Skip `kind create` and install into the current kube-context.
 #   --delete      Delete the kind cluster and exit.
 #
 # Env (all have sane defaults):
 #   CLUSTER_NAME      kind cluster name                     (default: kagent-shots)
 #   NAMESPACE         kagent install namespace              (default: kagent)
-#   ATE_NAMESPACE     Agent Substrate namespace             (default: ate-system)
-#   KAGENT_VERSION    kagent chart version                  (default: read from docs conref)
-#   SUBSTRATE_VERSION Agent Substrate chart version         (default: read from docs conref)
+#   KAGENT_VERSION    kagent release; must match the CLI    (default: read from docs conref)
 #   NODE_IMAGE        kind node image                       (default: kindest/node:v1.37.0)
 #   OPENAI_API_KEY    model provider key (required unless --dry-run)
 set -euo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:-kagent-shots}"
 NAMESPACE="${NAMESPACE:-kagent}"
-ATE_NAMESPACE="${ATE_NAMESPACE:-ate-system}"
 # Kubernetes 1.37+, per the install guide: Agent Substrate depends on the
-# certificates.k8s.io/v1beta1 API, which is enabled through runtimeConfig below.
+# PodCertificateRequest and ClusterTrustBundle APIs, which are GA and on by default there.
 NODE_IMAGE="${NODE_IMAGE:-kindest/node:v1.37.0}"
-
-SUBSTRATE_CRDS_CHART="oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds"
-SUBSTRATE_CHART="oci://ghcr.io/kagent-dev/substrate/helm/substrate"
-KAGENT_CRDS_CHART="oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds"
-KAGENT_CHART="oci://ghcr.io/kagent-dev/kagent/helm/kagent"
 
 DRY_RUN=false
 NO_CLUSTER=false
@@ -90,18 +82,10 @@ PY
 }
 
 KAGENT_VERSION="$(resolve_version kagent.md "${KAGENT_VERSION:-}")"
-SUBSTRATE_VERSION="$(resolve_version agent-substrate.md "${SUBSTRATE_VERSION:-}")"
 
 run() {
   echo "+ $*"
   $DRY_RUN || "$@"
-}
-
-# For commands that need a shell (heredocs, pipelines). Printed with the key redacted.
-run_sh() {
-  local printable="$1" script="$2"
-  echo "+ ${printable}"
-  $DRY_RUN || bash -c "$script"
 }
 
 if $DELETE; then
@@ -110,16 +94,12 @@ if $DELETE; then
 fi
 
 # Fail on a missing tool up front, naming it. Without this the first absent tool
-# surfaces mid-run as its own unhelpful error -- a missing kubectl-ate reads as
-# `unknown command "ate" for "kubectl"` -- and by then Agent Substrate is installed,
-# so the cluster is half-built. kubectl-ate must match SUBSTRATE_VERSION; it is
-# published at https://github.com/kagent-dev/substrate/releases.
+# surfaces mid-run as its own unhelpful error, after the kind cluster already exists.
 if ! $DRY_RUN; then
   missing=()
-  for tool in kind helm kubectl jq openssl; do
+  for tool in kind kubectl kagent jq; do
     command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
   done
-  kubectl ate --help >/dev/null 2>&1 || missing+=("kubectl-ate")
   if (( ${#missing[@]} )); then
     echo "Missing required tool(s): ${missing[*]}" >&2
     echo "See the Prerequisites section of docs-site/playwright/README.md." >&2
@@ -133,14 +113,12 @@ if ! $DRY_RUN && [[ -z "${OPENAI_API_KEY:-}" ]]; then
   exit 1
 fi
 
-echo "kagent chart:          ${KAGENT_VERSION}"
-echo "Agent Substrate chart: ${SUBSTRATE_VERSION}"
+echo "kagent release: ${KAGENT_VERSION}"
 echo
 
 # --- Cluster -----------------------------------------------------------------------
 # Skip creation when the cluster is already there, so a re-run after a failed install
-# picks up where it left off instead of dying on `kind create`. Every step below is a
-# `helm upgrade --install` or a `kubectl create` for the same reason.
+# picks up where it left off instead of dying on `kind create`.
 #
 # Reuse it only when it also ANSWERS. `kind get clusters` lists a cluster whose node
 # container is stopped -- which is what Docker Desktop leaves behind when it restarts --
@@ -157,144 +135,51 @@ if ! $NO_CLUSTER && ! $DRY_RUN && kind get clusters 2>/dev/null | grep -qx "$CLU
 fi
 
 if ! $NO_CLUSTER; then
-  run_sh "kind create cluster --image ${NODE_IMAGE} --config=- (name ${CLUSTER_NAME})" "
-kind create cluster --image ${NODE_IMAGE} --config=- <<EOF
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-name: ${CLUSTER_NAME}
-runtimeConfig:
-  \"certificates.k8s.io/v1beta1\": \"true\"
-EOF
-"
+  run kind create cluster --name "$CLUSTER_NAME" --image "$NODE_IMAGE"
 fi
 
-# --- Agent Substrate ----------------------------------------------------------------
-run helm upgrade --install substrate-crds "$SUBSTRATE_CRDS_CHART" \
-  --version "$SUBSTRATE_VERSION" --namespace "$ATE_NAMESPACE" --create-namespace
-
-# Deliberately no --wait: the pods cannot become ready until the identity material
-# below exists, so waiting here would always time out.
+# --- kagent + Agent Substrate --------------------------------------------------------
+# One `kagent install`, exactly as the install guide runs it. It installs the CRDs,
+# Agent Substrate, the substrate-podcert controller, a development PostgreSQL and kagent
+# in order, and creates the identity material and database Secrets they need.
 #
-# credentialProvider.namespacePolicies is the grant that lets the egress gateway read
-# the model provider key out of a Secret and add it to each model request. Agent
-# Substrate denies every agent access to every Secret by default, and the failure is
-# silent in the worst way: every pod reports healthy and every model call returns 403.
-# The install guide sets this in the same step, so it belongs here too.
-run_sh "helm upgrade --install substrate ${SUBSTRATE_CHART} --version ${SUBSTRATE_VERSION} -f - (credentialProvider grant)" "
-helm upgrade --install substrate ${SUBSTRATE_CHART} \
-  --version ${SUBSTRATE_VERSION} --namespace ${ATE_NAMESPACE} -f - <<'VALUES'
-credentialProvider:
-  namespacePolicies:
-  - atespace: ${NAMESPACE}
-    allowedNamespaces: [${NAMESPACE}]
-VALUES
-"
-
-# CA and JWT pools that sign service DNS, pod identity, actor identity and egress
-# certificates. No Helm chart creates these; Agent Substrate authenticates its
-# components with mTLS and the material comes from the kubectl-ate plugin.
+# This script used to install the substrate charts by hand and bootstrap the CA pools
+# with kubectl-ate. Agent Substrate 0.5.0 broke that: the pod-certificate controller
+# moved into its own substrate-podcert chart, so `podcertificate-controller-system` no
+# longer existed when the pools were written, and substrate began reading pre-created
+# PostgreSQL credentials that no chart creates. Every cluster run from 2026-10-13 on
+# died at the first pool. The CLI owns that sequence now; do not reproduce it here.
 #
-# `make-ca-pool` and `make-jwt-pool` are NOT idempotent -- they exit nonzero with
-# `secrets "<name>" already exists` rather than no-opping. That breaks the re-run the
-# cluster-reuse branch above promises, and it breaks it at the FIRST pool, so a
-# re-run after any later failure never reaches the step that failed. Create only what
-# is missing; rotating a pool means deleting its secret and re-running.
-ensure_pool() {
-  local kind="$1" name="$2" ns="$3"
-  shift 3
-  if ! $DRY_RUN && kubectl get secret "$name" -n "$ns" >/dev/null 2>&1; then
-    echo "+ pool ${ns}/${name} already exists; skipping."
-    return
+# The CLI installs the charts of its own release, so KAGENT_VERSION pins the charts only
+# because the CLI on PATH is that release. Refuse a mismatch rather than capture the
+# wrong UI.
+if ! $DRY_RUN; then
+  cli_version="$(kagent version | jq -r .kagent_version)"
+  if [[ "$cli_version" != "$KAGENT_VERSION" ]]; then
+    echo "kagent CLI is ${cli_version}, but the docs pin ${KAGENT_VERSION}." >&2
+    echo "Install the matching CLI; see the Prerequisites section of docs-site/playwright/README.md." >&2
+    exit 1
   fi
-  if [[ "$kind" == jwt ]]; then
-    run kubectl ate admin make-jwt-pool --key-id=1 --name="$name" --secret-namespace="$ns" "$@"
-  else
-    run kubectl ate admin make-ca-pool --ca-id=1 --name="$name" --secret-namespace="$ns" "$@"
-  fi
-}
+fi
 
-# The pod-certificate-controller deployment hardcodes its namespace, so these two do
-# NOT follow the release namespace.
-ensure_pool ca  service-dns-ca-pool  podcertificate-controller-system
-ensure_pool ca  pod-identity-ca-pool podcertificate-controller-system
-
-# Actor identity pools.
-ensure_pool jwt actor-id-jwt-pool    "$ATE_NAMESPACE"
-ensure_pool ca  actor-id-ca-pool     "$ATE_NAMESPACE"
-
-# The egress gateway terminates HTTPS from actors and re-signs it with this pool, which
-# Agent Substrate mounts as a REQUIRED volume from the 0.2.x line on. Omitting it does
-# not fail loudly: atenet-egress sits in ContainerCreating on `secret
-# "egress-mitm-ca-pool" not found`, the --wait below burns its full 10m timeout, and the
-# run dies before installing kagent at all. ECDSA P-256 is what substrate's own cluster
-# setup uses here, and the key type is not negotiable -- the gateway reads tls.crt and
-# tls.key straight out of this secret.
-ensure_pool ca  egress-mitm-ca-pool  "$ATE_NAMESPACE" --key-type=ECDSAP256
-
-run_sh "kubectl create secret generic actor-id-ca-certs (from the actor-id-ca-pool root)" "
-set -euo pipefail
-actor_id_ca_root=\"\$(kubectl get secret actor-id-ca-pool -n ${ATE_NAMESPACE} \
-  -o jsonpath='{.data.pool}' | base64 --decode \
-  | jq -r '.CAs[0].RootCertificateDER' | base64 --decode \
-  | openssl x509 -inform der -outform pem)\"
-kubectl create secret generic actor-id-ca-certs -n ${ATE_NAMESPACE} \
-  --from-literal=ca.crt=\"\${actor_id_ca_root}\" \
-  --dry-run=client -o yaml | kubectl apply -f -
-"
-
-run_sh "kubectl create configmap ate-api-authentication" "
-set -euo pipefail
-# Ask the cluster for its issuer rather than assuming one: kind 1.37 advertises
-# https://kubernetes.default.svc.cluster.local, and a mismatch is accepted at install
-# time, surfacing later as \`token issuer ... not trusted\` on every kubectl-ate and
-# ateapi call. kagent's own setup-cluster.sh and the install guide both derive it
-# (kagent#2763, fixed in #2770).
-k8s_issuer=\"\$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)\"
-kubectl create configmap ate-api-authentication -n ${ATE_NAMESPACE} \
-  --from-literal=authentication.yaml='actorIdentityJWTProvider: kubernetes
-jwtProviders:
-- name: kubernetes
-  issuer: '\"\${k8s_issuer}\"'
-  audiences: [api.${ATE_NAMESPACE}.svc]
-  certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-  discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-' --dry-run=client -o yaml | kubectl apply -f -
-"
-
-# Roll out again so the pods mount the identity material, and wait this time.
-run helm upgrade substrate "$SUBSTRATE_CHART" \
-  --version "$SUBSTRATE_VERSION" --namespace "$ATE_NAMESPACE" \
-  --reuse-values --wait --timeout 10m
-
-# --- kagent --------------------------------------------------------------------------
-run_sh "helm upgrade --install kagent-crds ${KAGENT_CRDS_CHART} --version ${KAGENT_VERSION}" "
-helm upgrade --install kagent-crds ${KAGENT_CRDS_CHART} --version ${KAGENT_VERSION} \
-  --namespace ${NAMESPACE} --create-namespace --wait
-"
-
-# The key is interpolated inside the heredoc, so the printed form is the redacted one.
-run_sh "helm upgrade --install kagent ${KAGENT_CHART} --version ${KAGENT_VERSION} -f - (apiKey redacted)" "
-helm upgrade --install kagent ${KAGENT_CHART} \
-  --version ${KAGENT_VERSION} \
-  --namespace ${NAMESPACE} --create-namespace --timeout 10m \
-  -f - <<EOF
-providers:
-  default: openAI
-  openAI:
-    apiKey: \${OPENAI_API_KEY}
-controller:
-  grpc:
-    reflection: true
-  substrate:
-    enabled: true
-    ateApiEndpoint: dns:///api.${ATE_NAMESPACE}.svc:443
-    atenetRouterURL: http://atenet-router.${ATE_NAMESPACE}.svc:80
-substrateWorkerPool:
-  create: true
-  replicas: 1
-  workerImage: \"ghcr.io/kagent-dev/substrate/ateom-gvisor:v${SUBSTRATE_VERSION}\"
+# `kagent install` takes no Helm flags; chart values reach it through a CLI config file,
+# and a relative valuesFiles path resolves against that file's directory. gRPC reflection
+# is the one value the install guide sets.
+CONFIG_DIR="$(mktemp -d)"
+trap 'rm -rf "$CONFIG_DIR"' EXIT
+cat > "${CONFIG_DIR}/kagent-values.yaml" <<EOF
+config:
+  server:
+    grpcReflection: true
 EOF
-"
+cat > "${CONFIG_DIR}/kagent-config.yaml" <<EOF
+install:
+  kagent:
+    valuesFiles: [kagent-values.yaml]
+EOF
+
+# Reads OPENAI_API_KEY from the environment.
+run kagent --config "${CONFIG_DIR}/kagent-config.yaml" install --namespace "$NAMESPACE" --timeout 15m
 
 run kubectl rollout status deployment/kagent-controller -n "$NAMESPACE" --timeout=300s
 # The UI is a separate Deployment, and it is the one the capture actually needs.
