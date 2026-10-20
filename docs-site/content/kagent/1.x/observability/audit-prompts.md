@@ -40,7 +40,7 @@ The record holds more than the prompts that your team wrote.
 
 The system instruction holds the instructions that the runtime appends as well as the prompt your team wrote, and the message history holds the person's messages, the agent's earlier turns, and the model's tool calls.
 
-A tool's own arguments and reply are recorded separately, on the `execute_tool` span of each tool call, in the `gcp.vertex.agent.tool_call_args` and `gcp.vertex.agent.tool_response` attributes. `config.runtimeDefaults.telemetry.captureContent` does not govern those two attributes. The runtime records them whenever tracing is on. Treat them as part of the audit record, and as a disclosure to account for on an agent whose tools return sensitive data.
+{{< reuse "kagent-docs/snippets/observability/audit-tool-attributes.md" >}}
 
 On the `codex` and `claude` runtimes, the `invoke_agent` span holds only the current turn's prompt and the reply to that prompt. The `chat` spans hold no content. The `execute_tool` span holds tool arguments and successful results in the `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result` attributes.
 
@@ -127,41 +127,7 @@ Turn on content capture in the kagent Helm release, then create a Session that p
 
 Send a request that contains a distinctive phrase, then find that phrase in the captured request.
 
-1. Send a request to the new Session.
-   ```bash
-   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
-   kagent agent invoke --session $SESSION_ID --task "Audit check: what is 2+2?"
-   ```
-
-2. Find the captured request in your tracing backend.
-   {{< tabs >}}
-   {{% tab name="Grafana with Tempo" %}}
-   1. Forward the Grafana port, and leave the command running.
-      ```bash
-      kubectl port-forward -n telemetry svc/kube-prometheus-stack-grafana 3000:80
-      ```
-   2. In your browser, open Grafana at [http://localhost:3000](http://localhost:3000), and log in. {{< reuse "kagent-docs/snippets/observability/grafana-password.md" >}}
-   3. Open **Explore**, select the **Tempo** data source, and select the **TraceQL** query type.
-   4. Run the following query, which returns the model calls whose request contains the phrase.
-      ```text
-      { span.gen_ai.input.messages =~ ".*Audit check.*" }
-      ```
-   5. Open a trace, and select its `generate_content` span. The **Span Attributes** section shows the three attributes that [What a record holds](#what-a-record-holds) describes.
-   {{% /tab %}}
-   {{% tab name="Jaeger" %}}
-   1. Forward the Jaeger query port, and leave the command running.
-      ```bash
-      kubectl port-forward -n telemetry svc/jaeger 16686:16686
-      ```
-   2. In your browser, open Jaeger at [http://localhost:16686](http://localhost:16686).
-   3. From the **Service** list, select `my-first-agent`. From the **Operation** list, select the `generate_content` operation for your model, such as `generate_content gpt-4.1-mini`, and click **Find Traces**.
-   4. Open the most recent trace, and expand the `generate_content` span. The **Tags** section shows the three attributes that [What a record holds](#what-a-record-holds) describes.
-   {{% /tab %}}
-   {{< /tabs >}}
-
-   If both attributes read `{}`, the Session started without content capture. Check that the previous section printed `Current`, and create a new Session if it did not.
-
-3. To collect every model call of one conversation, search by its conversation ID. Every span of the conversation carries the ID in the `gen_ai.conversation.id` attribute. For the other attributes that you can search by, see [Correlation attributes]({{< link path="observability/tracing#correlation-attributes" >}}).
+{{< reuse "kagent-docs/snippets/observability/audit-verify-steps.md" >}}
 
 > [!CAUTION]
 > Anyone who can read your tracing or logging backend can now read the prompts and replies of every agent. Restrict access to the backend, and set a retention period that meets your compliance requirements.
