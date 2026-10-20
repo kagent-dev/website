@@ -26,7 +26,7 @@ Vertex AI serves two model families, and a provider that authenticates with an A
 | Claude models | `Anthropic`, or `Bedrock` on a `claude` Harness | [Anthropic]({{< link path="setup/model-providers/anthropic" >}}), [Amazon Bedrock]({{< link path="setup/model-providers/amazon-bedrock" >}}) |
 | Gemini models | `Gemini`, which serves the same family through the Google AI Studio API | [Gemini]({{< link path="setup/model-providers/gemini" >}}) |
 
-For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
 
 ## Next steps
 

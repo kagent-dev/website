@@ -25,7 +25,7 @@ The SAP AI Core Orchestration Service serves models from several families, and k
 | GPT models | `OpenAI`, or `AzureOpenAI` for an Azure deployment | [OpenAI]({{< link path="setup/model-providers/openai" >}}), [Azure OpenAI]({{< link path="setup/model-providers/azure-openai" >}}) |
 | Gemini models | `Gemini` | [Gemini]({{< link path="setup/model-providers/gemini" >}}) |
 
-For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-do-not-compile" >}}).
+For every credential that the gateway cannot inject, and the alternative for each, see [About model providers]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
 
 ## Next steps
 
