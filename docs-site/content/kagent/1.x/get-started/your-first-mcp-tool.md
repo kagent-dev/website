@@ -39,7 +39,9 @@ kagent records what it discovered on the server's status, so the tool names come
    > [!NOTE]
    > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command does not return any resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
 
-2. Re-apply the `my-first-template` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
+2. Apply the complete tool configuration. This updates the AgentTemplate with
+   the MCP tool binding, grants the Agent runtime access to the tool server, and
+   attaches that grant to the Agent.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -63,6 +65,29 @@ kagent records what it discovered on the server's status, so the tool names come
            tools:
              - k8s_get_resources
              - k8s_get_pod_logs
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: my-first-agent
+     namespace: kagent
+   spec:
+     template:
+       ref:
+         name: my-first-template
+     harnessRef:
+       name: my-first-harness
+     egressPolicyRefs:
+       - name: kagent-tools
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: EgressPolicy
+   metadata:
+     name: kagent-tools
+     namespace: kagent
+   spec:
+     destinations:
+       - origin: http://kagent-tools.kagent:8084
    EOF
    ```
 
@@ -120,9 +145,11 @@ A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was cre
 
 ## Bind your own MCP server
 
-A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether it runs in the cluster or outside it. Create one, then bind it in the same way that you bound the built-in server.
+A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether it runs in the cluster or outside it.
+An `EgressPolicy` allows an agent to reach a hostname.
+Create one, then bind it in the same way that you bound the built-in server.
 
-1. Apply a `RemoteMCPServer` for your own server.
+1. Apply a `RemoteMCPServer` and an `EgressPolicy` for your own server.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -135,6 +162,15 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
      url: http://my-mcp-server.my-namespace:3000/mcp
      protocol: STREAMABLE_HTTP
      timeout: 30s
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: EgressPolicy
+   metadata:
+     name: my-mcp-server
+     namespace: kagent
+   spec:
+     destinations:
+       - origin: http://my-mcp-server.my-namespace:3000
    EOF
    ```
 
@@ -166,16 +202,29 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
            - my_tool
    ```
 
-3. Create another Session to run the revision that includes the new binding.
+3. Grant the Agent access to the new server.
+   ```bash
+   kubectl patch agent my-first-agent -n kagent --type=merge --patch '{
+     "spec": {
+       "egressPolicyRefs": [
+         { "name": "kagent-tools" },
+         { "name": "my-mcp-server" }
+       ]
+     }
+   }'
+   ```
+
+4. Create another Session to run the revision that includes the new binding.
 
 ## Clean up
 
 > [!IMPORTANT]
 > Leave the Harness, AgentTemplate, Agent, and Sessions in place. Other guides build on them, and [Your first agent]({{< link path="get-started/your-first-agent#optional-clean-up" >}}) covers removing them when you are finished with the kagent guides. Leave `kagent-tool-server` in place as well, because the kagent installation owns it.
 
-If you created a RemoteMCPServer of your own in [Bind your own MCP server](#bind-your-own-mcp-server), delete it.
+If you created an `EgressPolicy` and `RemoteMCPServer` of your own in [Bind your own MCP server](#bind-your-own-mcp-server), delete them.
 
 ```bash
+kubectl delete egresspolicy my-mcp-server -n kagent
 kubectl delete remotemcpserver my-mcp-server -n kagent
 ```
 
