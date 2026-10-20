@@ -55,9 +55,7 @@ An operator applies the three custom resources directly. The kagent controller w
 
 ## Harness
 
-<!-- REVIEW (docs): the reviewer asked for an established industry definition of "agent harness" with a source. The definition below is drawn from what the linked harnesses do rather than from a published definition. Replace it with an approved citation, or confirm that the examples are sufficient sourcing. -->
-
-An agent harness is the application layer that executes an agent and adds capabilities around its model. It typically assembles context, invokes the model, executes tool calls, loads skills, feeds results back into the agent loop, and manages session state. A harness can also provide memory, subagents, permissions, approvals, sandboxing, and event streaming.
+An agent harness is the software around a model that turns the model into an agent. LangChain defines a harness as "every piece of code, configuration, and execution logic that isn't the model itself," in [The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness). A harness typically assembles context, invokes the model, executes tool calls, loads skills, feeds results back into the agent loop, and manages session state. A harness can also provide memory, subagents, permissions, approvals, sandboxing, and event streaming.
 
 Examples include [Claude Code](https://code.claude.com/docs/en/how-claude-code-works), [Codex CLI](https://learn.chatgpt.com/docs/codex/cli), [Gemini CLI](https://geminicli.com/docs/), [OpenClaw](https://docs.openclaw.ai/concepts/agent-runtimes), and custom in-house applications. Each of those runs on a local machine with your own shell and files.
 
@@ -161,8 +159,6 @@ This identity also keeps API keys out of the agent. An agent sends a placeholder
 ### Isolation
 
 Each Actor runs in its own sandbox, with its own filesystem and its own durable volume for application data. Two Sessions on the same Agent share no files and cannot see any of each other's state, even when they run on the same Worker. The sandbox also isolates the workload's system calls from the node's kernel, which matters because an agent runs commands that a model chose. For what each sandbox class separates, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
-
-<!-- REVIEW (docs): the reviewer asked for this page to be reorganized around compute, identity, and sandboxing, and to cover MCP servers, CLIs, file systems, skills, prompts, plugins, and the lifecycle operations. This section adds the three axes and links to the runtime pages that own each mechanism, rather than restating them here. Confirm whether the reviewer wants the kagent resource model reordered under these three headings instead. -->
 
 ## Subagent tools
 

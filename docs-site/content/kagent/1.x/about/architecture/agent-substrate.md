@@ -28,7 +28,7 @@ An operator never creates a Worker directly. Agent Substrate manages them and ke
 A WorkerPool exposes a Kubernetes scale subresource, so a HorizontalPodAutoscaler can size a pool from a metric instead of a fixed replica count. Agent Substrate publishes how many Workers in each pool have no free Actor slot. An autoscaler that watches this number adds Workers before the pool fills, instead of after placements fail.
 
 <!-- REVIEW (runtime reviewer): queue-depth scaling is still unconfirmed and is deliberately not described here. Confirm whether it is supported before adding it. -->
-<!-- REVIEW (runtime reviewer): the external metric that drives the autoscaler is named per deployment, so this paragraph describes the signal rather than naming the series. Confirm the supported name before documenting a worked HPA example. -->
+<!-- REVIEW (runtime reviewer): ate-api-server publishes this signal as ate_workerpool_workers{state="at_capacity"}. Only the Kind-only demos/autoscaled-workerpool demo wires it into an HPA, through prometheus-adapter, and the chart ships no HPA. Confirm that this series is the supported autoscaling signal before documenting a worked HPA example. -->
 
 ### Worker capacity
 
