@@ -146,6 +146,25 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
 
    To serve the UI behind a reverse proxy under a prefix such as `/ui` (configurable with `ui.basePath`), see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy" >}}).
 
+## Restrict kagent to specific namespaces
+
+By default the controller watches every namespace, and the chart creates cluster-scoped RBAC (ClusterRoles and ClusterRoleBindings). To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
+
+```yaml
+global:
+  watchNamespaces: [prod-agents, staging-agents]
+```
+
+Prefer `global.watchNamespaces` over the per-surface keys. The chart derives both surfaces from this one value, so they cannot disagree: it replaces the cluster-scoped getter and writer ClusterRoles with a Role and RoleBinding in each listed namespace, and it limits the controller's watch to the same list. The chart appends the install namespace to the list automatically, so the release's own objects remain managed.
+
+The per-surface keys still exist for installs that scope the surfaces independently, and the validation rules bind them:
+
+- `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace or the render fails.
+- `config.kubernetes.watchNamespaces` narrows the watch below the RBAC scope. A watch entry that names a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime.
+- The `kagent-tool-server` RemoteMCPServer that the chart creates admits references from its own namespace only. An Agent in another watched namespace that binds it does not become ready until you set `allowedNamespaces` on that server. See [Reach kagent-tool-server from another namespace]({{< link path="reference/tools-ecosystem#reach-kagent-tool-server-from-another-namespace" >}}).
+
+Verify a namespaced install the same way as the default one, plus the negative case: create an Agent in each watched namespace and in one unwatched namespace, and confirm that the controller reconciles only the watched two while the Agent in the unwatched namespace stays unmanaged.
+
 ## Next steps
 
 {{< cards >}}
