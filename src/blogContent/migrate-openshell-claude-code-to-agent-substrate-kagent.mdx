@@ -1,0 +1,539 @@
+export const metadata = {
+  title: "Running Claude Code on Agent Substrate: What Changes from OpenShell",
+  publishDate: "2026-10-07T00:00:00Z",
+  description:
+    "Running Claude Code in an OpenShell sandbox? Move it to kagent 1.x and Agent Substrate with no image to build: the Claude runtime is built in, and idle agents stop holding compute.",
+  author: "Hugo Guerrero",
+  authorIds: ["hugoguerrero"],
+};
+
+# Running Claude Code on Agent Substrate: What Changes from OpenShell
+
+![Four actor tiles in a box: two running, two suspended, with a chip reading claude: {} beside it.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/00-hero.png)
+
+*What it takes to rebuild the Claude Code setup from the NVIDIA OpenShell GitHub push tutorial on Agent Substrate with kagent 1.x. Most of the setup is configuration. Policy, GitHub access, and file handling change shape.*
+
+If you run Claude Code in an agent sandbox today, you probably started with a command like `openshell sandbox create -- claude`. It does what you want. Claude gets a place to run commands and edit files, your API key stays out of reach, and a policy decides where the sandbox can connect. NVIDIA's [GitHub Push Access](https://docs.nvidia.com/openshell/tutorials/github-push-access) tutorial is a good example: Claude Code, an Anthropic provider, a GitHub provider, a push that gets denied, and a policy you edit until the push is allowed.
+
+The part I kept coming back to is the time between commands. A coding agent spends most of its day waiting: for you to read the diff, for CI to finish, for you to get back from a meeting. The sandbox stays allocated that whole time, and so does the compute behind it. Agent Substrate avoids that. Each agent runs as an *actor* on a shared pool of *workers*. When the agent goes idle, its state is snapshotted to object storage and the worker goes back to the pool. The next message resumes the actor from the snapshot.
+
+In this post we take the OpenShell Claude Code setup and run it on kagent 1.x and Agent Substrate. Each step maps to something you already did in the tutorial, but you do not need to have followed it.
+
+Two notes before we start. First, kagent 1.x is in alpha at the time of writing, and the versions below are the ones I tested. Check the [kagent 1.x docs](https://kagent.dev/docs/kagent/1.x/) for current ones. Second, Claude Code is the easy case. kagent has a built-in runtime for it, so there is no image to build. An agent without a built-in runtime needs more work.
+
+## Why move: agents spend their lives waiting
+
+Before the steps, here is the case for doing this at all, because it is the reason the rest of the post exists.
+
+**The wait is the workload.** One Claude turn takes seconds to a few minutes. The gaps around it are much longer: you read the diff, a reviewer answers on Slack, CI runs, an approval sits in someone's queue overnight. If each agent is a long-lived sandbox, you pay for the gaps. In the OpenShell tutorial, the sandbox exists until you run `openshell sandbox delete`, and I did not find a suspend step in it. Capacity then follows the number of agents that are *open*, not the number that are *working*. That is fine for one developer. It gets expensive when every developer, every long task, and every agent waiting for a human adds one more environment that is mostly idle.
+
+**What Agent Substrate changes.** It splits the agent from the machine it runs on, with three pieces:
+
+1. An **actor** is one agent conversation: its processes, its filesystem changes, and its durable `/data` volume.
+2. A **worker** is a pod that is already running. A **worker pool** is a set of them that every actor shares. Substrate schedules an actor onto an existing worker instead of starting a new pod per session.
+3. A **snapshot** is the actor's saved state. kagent suspends an actor at every turn boundary, as soon as nothing is running, which includes a task that finished and one that is waiting for a person (`INPUT_REQUIRED`). The snapshot holds process memory, filesystem changes, and the durable volume, and it goes to object storage. The worker is freed. On the next message, the actor is restored onto *any* free worker, not necessarily the one it ran on before.
+
+A suspended actor costs storage, not compute. Agent Substrate's own target for the suspend and resume cycle is 100 milliseconds at the 95th percentile. I did not measure that, so treat it as the project's goal, not a result. kagent's docs state the consequence directly: a worker pool can carry far more actors than it has workers at any one moment.
+
+![One agent's afternoon shown twice. On a long-lived sandbox the allocation is held through every review, CI run, and approval wait. On an Agent Substrate actor, a worker is used only during the three turns, and the waits are snapshots in object storage.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/01-idle-agent.png)
+
+*The same agent and the same work. Schematic with illustrative timings, not measured data.*
+
+**Where the gain comes from, and where it stops.** The saving scales with idle time. An agent that is busy all day gets little from suspending. A fleet of agents that mostly wait gets a lot. Two limits are worth knowing. A session with no task activity for seven days is deleted by default (`controller.sessionIdleTTL` in the Helm chart changes it, and `0` turns it off), although a task that is running or waiting for approval never expires. And all of this is alpha software.
+
+## What maps, and what changes
+
+kagent 1.x runs agents as *sessions* with an actor each, and talks to them over the A2A protocol. It has built-in runtimes for its own engine, for Codex, and for Claude Code. Claude Code is the easy case. kagent ships a container image with Claude Code and a small program that speaks A2A on its behalf, so there is nothing for you to build or write. The setup is configuration:
+
+| In the OpenShell tutorial | On kagent 1.x + Agent Substrate |
+| :---- | :---- |
+| An OCI image that has Claude Code, `git`, and `gh` | The `claude-harness` image that kagent publishes, referenced **by digest** |
+| `openshell profile import` and `provider create --type claude-code` | A `Secret` and a `ModelConfig` for Anthropic |
+| `openshell provider create --type github` | A `RemoteMCPServer` for GitHub, with the token in a `Secret` |
+| `openshell sandbox create --provider ... -- claude` | A `Harness` (the image and where it runs), an `AgentTemplate` (what it does), an `Agent` that pairs them, and a session per conversation |
+| `openshell logs` | The egress gateway logs |
+| A `network_policies` block for the push | Default-deny egress, plus an approval gate on each GitHub call |
+| A sandbox that lives until you delete it | Actors that suspend when idle and resume on the next request |
+
+![Mapping ("What maps, and what changes") from each piece of the OpenShell GitHub push tutorial to its kagent 1.x counterpart, with the claude-harness image row highlighted as nothing to build.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/02-migration-map.png)
+
+*Each row points to the step in this post that covers it.*
+
+Three differences are worth knowing now, because they explain the rest of the post.
+
+1. **The sandbox no longer lives in a pod you own.** It runs in an isolated actor (gVisor by default) on a worker pod from a shared pool.
+2. **Outbound network access is default-deny, and you do not write the policy.** kagent derives the allow-list from what the `AgentTemplate` names: the model endpoint and the MCP servers. There is no field for adding an arbitrary host.
+3. **There is no `gh` and no `git push` to GitHub.** The OpenShell tutorial pushes with `git` and `gh` from inside the sandbox, with policy rules for `git-receive-pack`. Here, GitHub is a tool server that Claude calls, and you approve each call. Step 6 shows how that works and where it differs from a path-based policy.
+
+## Step 1: Install Agent Substrate and kagent
+
+Agent Substrate is the runtime, and kagent is the control plane you talk to. The kagent 1.x [installation guide](https://kagent.dev/docs/kagent/1.x/setup/installation/) is the source of truth for this step. Here is the shape of it, so you know what you are signing up for.
+
+1. Check the prerequisites. You need Helm 3, `kubectl`, `jq`, `openssl`, and the `kubectl-ate` plugin. The cluster must run Kubernetes 1.37 or later with the `certificates.k8s.io/v1beta1` API enabled.
+
+2. Install the Substrate CRDs and runtime into the `ate-system` namespace:
+
+   ```bash
+   helm upgrade --install substrate-crds \
+     oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds \
+     --version 0.3.0-alpha3 \
+     --namespace ate-system --create-namespace
+
+   helm upgrade --install substrate \
+     oci://ghcr.io/kagent-dev/substrate/helm/substrate \
+     --version 0.3.0-alpha3 \
+     --namespace ate-system \
+     -f - <<EOF
+   credentialProvider:
+     namespacePolicies:
+     - atespace: kagent
+       allowedNamespaces: [kagent]
+   EOF
+   ```
+
+3. Create the identity material (the CA and JWT pools) with the `kubectl ate admin` commands, extract the root certificate, and roll Substrate out again with `--reuse-values`. Follow the installation guide for these steps; they are where most first-run problems come from. Add one more pool for this guide: the gateway CA that lets the egress gateway inject credentials into HTTPS requests (Step 3). Create it before you wait for the rollout, next to the other pools:
+
+   ```bash
+   kubectl ate admin make-ca-pool --ca-id=1 --name=egress-mitm-ca-pool \
+     --secret-namespace=ate-system --key-type=ECDSAP256
+   ```
+
+4. Confirm the Substrate pods are running:
+
+   ```bash
+   kubectl get pods -n ate-system
+   ```
+
+5. Install kagent with the Substrate integration enabled and a worker pool created for you. Because this guide uses Anthropic, make it the default provider, so the chart also creates the Secret you need in Step 2:
+
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+
+   helm upgrade --install kagent-crds \
+     oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+     --version 1.0.0-alpha7 \
+     --namespace kagent --create-namespace --wait
+
+   helm upgrade --install kagent \
+     oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+     --version 1.0.0-alpha7 \
+     --namespace kagent --create-namespace --timeout 10m \
+     -f - <<EOF
+   providers:
+     default: anthropic
+     anthropic:
+       apiKey: ${ANTHROPIC_API_KEY}
+   controller:
+     grpc:
+       reflection: true
+     substrate:
+       enabled: true
+       ateApiEndpoint: dns:///api.ate-system.svc:443
+       atenetRouterURL: http://atenet-router.ate-system.svc:80
+   substrateWorkerPool:
+     create: true
+     replicas: 3
+     workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.3.0-alpha3"
+   EOF
+   ```
+
+6. Verify, and install the kagent CLI at the same version as the controller:
+
+   ```bash
+   kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
+   kubectl get workerpools -n kagent
+
+   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v1.0.0-alpha7
+   ```
+
+   You should see a worker pool named `kagent-default`. This is the shared capacity every actor will be scheduled onto. Suspended actors hold no worker. Three is enough for the experiments here, and you can change it later with `helm upgrade kagent ... --reuse-values --set substrateWorkerPool.replicas=<n>`. Scale through Helm, not `kubectl scale`: Helm owns the replica count, and a later `helm upgrade` fails with a field conflict if you changed it behind its back.
+
+## Step 2: Tell kagent which model to use
+
+In the OpenShell tutorial, the Claude Code provider profile held your Anthropic key and named the endpoint. In kagent, the key lives in a `Secret` and the model lives in a `ModelConfig`.
+
+1. Check for the secret. If you installed with Anthropic as the default provider in Step 1, the chart already created `kagent-anthropic`:
+
+   ```bash
+   kubectl get secret kagent-anthropic -n kagent
+   ```
+
+   If it is not there, create it:
+
+   ```bash
+   kubectl create secret generic kagent-anthropic -n kagent \
+     --from-literal ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+   ```
+
+2. Save this as `modelconfig-anthropic.yaml`:
+
+   ```yaml
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: ModelConfig
+   metadata:
+     name: anthropic-model-config
+     namespace: kagent
+   spec:
+     apiKeySecret: kagent-anthropic
+     apiKeySecretKey: ANTHROPIC_API_KEY
+     model: claude-sonnet-5-5
+     provider: Anthropic
+     anthropic: {}
+   ```
+
+   Pick any Claude model your key can use. Keep `anthropic: {}` empty. The Claude runtime accepts no Anthropic settings beyond `baseUrl`, and it rejects `promptCaching: true`, because Claude Code does its own caching. If you share a cluster with kagent-engine agents that want prompt caching, give them a separate `ModelConfig`.
+
+3. Apply it:
+
+   ```bash
+   kubectl apply -f modelconfig-anthropic.yaml
+   ```
+
+## Step 3: Understand egress before you hit a 403
+
+This is the step where the two models differ most, so slow down for it.
+
+In OpenShell, the policy said which hosts and paths the sandbox could reach, and you edited it from the outside while the agent ran. Agent Substrate starts from the opposite default. The gateway denies outbound traffic unless a rule allows it, and an actor with no policy gets no outbound connection at all. kagent builds the policy from the `AgentTemplate`: the model provider endpoint, remote MCP servers, HTTP tools, and skill sources that the template names become the allow-list. As the docs put it, a destination becomes reachable by being named in the template.
+
+![Claude Code sends placeholder credentials to the egress gateway, which checks the allow-list from the AgentTemplate, terminates TLS, and swaps in the real key before calling api.anthropic.com and api.githubcopilot.com. A git clone to github.com and an unrequested call to a Datadog log intake are denied with a 403.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/04-egress-credential-injection.png)
+
+*Default-deny egress in action. Set `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` to remove the unrequested call.*
+
+The credential works differently from the tutorial too:
+
+1. **The key never enters the actor.** kagent turns the `ModelConfig` secret into a binding on the gateway: for requests to `api.anthropic.com`, replace the `x-api-key` header with the current value of the Secret. The gateway can do that because it terminates the TLS connection, which is why you created the gateway CA in Step 1.
+2. **The agent sees a placeholder.** Claude Code insists on having an API key, so it gets an inert value, `kagent-credential-injected`. I checked from inside a running actor: `ANTHROPIC_API_KEY` starts with `kagent-crede`, not with your key.
+3. **The actor trusts the gateway's CA automatically.** Substrate mounts the CA bundle and sets the standard CA environment variables. Claude Code runs on Node, so it picks up `NODE_EXTRA_CA_CERTS`. Do not set those variables yourself: the harness rejects overrides.
+4. **Denials are visible.** A blocked request returns a `403`, and the gateway logs `actor egress policy denied` with the actor and host. This is the counterpart of `openshell logs`:
+
+   ```bash
+   kubectl logs -n ate-system deploy/atenet-egress -c agentgateway -f
+   ```
+
+Rotation is the gateway's job. If you change the Secret, the gateway picks up the new value without restarting the agent, and its credential cache can take up to five minutes to refresh.
+
+You should expect one denial you did not ask for. In my first session, the gateway denied a call to Datadog's log intake (`http-intake.logs.us5.datadoghq.com`) from the actor. I did not trace who made it. Claude Code documents `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` as turning off nonessential traffic such as telemetry, auto-updates, and error reporting, and with it set the denial was gone. Step 4 sets it. As a side effect, Claude Code also stops its calls to Anthropic's `/api/event_logging` and metrics endpoints, which the gateway had been allowing.
+
+## Step 4: Describe Claude Code as a Harness, an AgentTemplate, and an Agent
+
+In OpenShell, the sandbox is defined by flags on a command. In kagent 1.x it is three Kubernetes resources, which means it can live in Git and go through review. The split is deliberate: the **Harness** says *how the agent runs* (image, worker pool, snapshot storage), the **AgentTemplate** says *what it does* (model, prompt, tools), and the **Agent** pairs one with the other.
+
+![Resource relationships in kagent 1.x: Secret, ModelConfig, AgentTemplate and Harness feed an Agent; each Session gets an Actor that runs on a worker from the WorkerPool and snapshots to object storage. A GitHub Secret and RemoteMCPServer, drawn dashed, feed the AgentTemplate.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/05-kagent-resources.png)
+
+*Config resources are applied once. Sessions and actors are created per conversation.*
+
+1. Find the image. kagent publishes the Claude runtime as `ghcr.io/kagent-dev/kagent/claude-harness`, tagged with the kagent version. Substrate pins images by digest, not by tag, so look up the digest of the tag that matches your install:
+
+   ```bash
+   docker buildx imagetools inspect ghcr.io/kagent-dev/kagent/claude-harness:1.0.0-alpha7
+   ```
+
+   The first line to read is `Digest:`. For `1.0.0-alpha7` it is `sha256:1bce31de2ffe651c23f1fc64d57d6625d937ad4e8e46836f4f2208128f2c2bb0`, and it covers both `linux/amd64` and `linux/arm64`. Note that the tag has no `v` in front, unlike the Git tag. It is the digest of the multi-platform index, which is the one to use.
+
+2. Save this as `claude.yaml`:
+
+   ```yaml
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Harness
+   metadata:
+     name: claude-harness
+     namespace: kagent
+   spec:
+     claude: {}
+     env:
+       - name: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+         value: "1"   # skip Claude Code's own telemetry calls, which default-deny egress blocks
+     workload:
+       image: ghcr.io/kagent-dev/kagent/claude-harness@sha256:1bce31de2ffe651c23f1fc64d57d6625d937ad4e8e46836f4f2208128f2c2bb0
+     substrate:
+       workerPoolRef:
+         name: kagent-default
+       snapshotPolicy:
+         location: s3://ate-snapshots/kagent/
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: AgentTemplate
+   metadata:
+     name: claude-template
+     namespace: kagent
+   spec:
+     description: Claude Code, running on Agent Substrate.
+     modelConfig:
+       name: anthropic-model-config
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: claude
+     namespace: kagent
+   spec:
+     templateRef:
+       name: claude-template
+     harnessRef:
+       name: claude-harness
+   ```
+
+3. Apply it:
+
+   ```bash
+   kubectl apply -f claude.yaml
+   ```
+
+4. Compare it to the tutorial. `claude: {}` selects the built-in Claude runtime, and it is always empty. There is no `workload.command`, because the image already knows what to run. `workload.image` replaces `--from`, and there is no Dockerfile on your side. The `env` entry is the only setting I changed from the defaults. There is also no credential in the Harness. Its `env` accepts literal values only, so the Anthropic key lives in the `ModelConfig` and reaches Claude through the gateway. `workerPoolRef` says which shared capacity the agent runs on, and `snapshotPolicy.location` is where state goes when the actor suspends, which OpenShell did not give you.
+
+A note on what is in the image. It is Alpine with Claude Code (version 2.1.260 in this release), `git`, `ripgrep`, and `bash`. There is no `gh`, no Python, and no Node. If your OpenShell image had your own toolchain, this is the one place where the move is not free. I did not try to build on top of the harness image.
+
+![Inside an actor, the kagent gateway talks A2A over gRPC to kagent-claude, which drives claude -p with JSON; both use the durable /data volume (workspace and claude directories), and model calls leave through the egress gateway to api.anthropic.com.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/03-inside-the-actor.png)
+
+*The runtime ships in the image. You write a Harness, not a Dockerfile.*
+
+## Step 5: Run it and watch it sleep
+
+1. Check that the agent is ready. The first time, kagent takes a minute or two to take the golden snapshot for your image:
+
+   ```bash
+   kagent agent get claude
+   ```
+
+   You should see `READY` as `True`. If it is not, the conditions say why:
+
+   ```bash
+   kubectl get agent claude -n kagent -o jsonpath='{.status.conditions}' | jq
+   ```
+
+2. Expose the controller to the CLI, and create a session. In kagent 1.x a session is one running conversation with an agent, and it is the unit that gets its own actor:
+
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-controller 8083:8083 &
+   export SESSION_ID=$(kagent agent session create --agent claude -o json | jq -r '.session.id')
+   echo $SESSION_ID
+   ```
+
+3. Send Claude a task:
+
+   ```bash
+   kagent agent invoke --session $SESSION_ID --task "Create hello.txt with a one-line greeting, then show me its contents. Also tell me your working directory."
+   ```
+
+   You should see an answer like the one below. Claude's working directory is `/data/workspace`, which is on the durable volume:
+
+   ```text
+   I created `hello.txt` and its contents are:
+
+   Hello, world! Hope you're having a great day.
+
+   My working directory is `/data/workspace`.
+   ```
+
+4. Now the point of the exercise. Suspension happens at turn boundaries: as soon as nothing is running, because a task finished or the agent stopped to wait for a person. The actor's state is written to a snapshot in object storage, and its worker is freed for someone else. List the actors right after a turn:
+
+   ```bash
+   kubectl ate get actors --atespace kagent
+   ```
+
+   You should see `ACTOR_STATE_RUNNING` on a worker pod, and a few seconds later `ACTOR_STATE_SUSPENDED` with no worker (`<none>`):
+
+   ```text
+   session-01a116f0-...   kagent/claude-...   ACTOR_STATE_RUNNING     kagent/kagent-default-b459b898b-4gzgp
+   session-01a116f0-...   kagent/claude-...   ACTOR_STATE_SUSPENDED   <none>
+   ```
+
+5. Send a follow-up in the same session. The actor is restored onto whichever worker is free, and Claude Code resumes its own session, so it knows what you asked before:
+
+   ```bash
+   kagent agent invoke --session $SESSION_ID --task "What did I just ask you to create, and what does the file say now? Use cat to check."
+   ```
+
+   Claude answers from the earlier turn, and `cat` shows the same file. kagent keeps Claude Code's session between turns, so there is no code for you to write to carry the conversation across a suspend.
+
+![A session's lifecycle: a turn runs, settles, the actor suspends, then restores on any free worker and Claude Code resumes its session. Files, Claude's conversation, and a pending approval survive; which worker you land on does not.](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/06-suspend-resume-lifecycle.png)
+
+*What you can count on across a suspend.*
+
+6. Now test the policy. Ask Claude to do the thing the default-deny rule is there to stop:
+
+   ```bash
+   kagent agent invoke --session $SESSION_ID --task "Run: git clone https://github.com/kagent-dev/kagent.git /data/workspace/k  and tell me exactly what happened, including the error text."
+   ```
+
+   Claude reports a failure with the gateway's message, and the gateway log shows the same denial:
+
+   ```text
+   remote: actor egress policy denied TLS destination
+   fatal: unable to access 'https://github.com/kagent-dev/kagent.git/': The requested URL returned error: 403
+   ```
+
+   This is the denial you would have fixed in OpenShell by editing `network_policies`. Here there is no policy to edit, and that is intentional. Step 6 shows how to give Claude GitHub access in the way kagent supports.
+
+7. You can also open the kagent UI to see sessions:
+
+   ```bash
+   kubectl port-forward -n kagent svc/kagent-ui 8082:8080
+   ```
+
+   Then browse to `http://localhost:8082`.
+
+8. When you are done, delete the session:
+
+   ```bash
+   kagent agent session delete $SESSION_ID
+   ```
+
+## Step 6: Replace the push policy with an approval gate
+
+The OpenShell tutorial gives Claude a GitHub token through a provider, lets the policy deny the push, and then adds rules for `git-receive-pack` on one repository. Nothing in this step is a one-to-one port: the path rules have no counterpart on kagent, so this is the part of the setup that changes the most. On kagent, the same outcome has a different shape. GitHub becomes a tool server, the token reaches it through the gateway, and you decide per call instead of per path.
+
+1. Create a token. The tutorial uses a fine-grained personal access token with read and write access to one test repository, and you should do the same. Use a repository you can throw away. Then store it. The Secret holds the full header value, including `Bearer `, because the gateway replaces the whole header:
+
+   ```bash
+   export GITHUB_TOKEN=<your fine-grained token>
+   kubectl create secret generic github-mcp-auth -n kagent \
+     --from-literal Authorization="Bearer $GITHUB_TOKEN"
+   ```
+
+2. Save this as `github-push.yaml`. It defines the GitHub MCP server and updates the template you applied in Step 4 (the name is the same):
+
+   ```yaml
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: RemoteMCPServer
+   metadata:
+     name: github-mcp
+     namespace: kagent
+   spec:
+     description: GitHub's remote MCP server, limited to a few repository tools.
+     url: https://api.githubcopilot.com/mcp/
+     protocol: STREAMABLE_HTTP
+     headersFrom:
+       - name: Authorization            # the Secret holds the full value, "Bearer <token>"
+         valueFrom:
+           type: Secret
+           name: github-mcp-auth
+           key: Authorization
+       - name: X-MCP-Tools              # GitHub filters the tool list on the server side
+         value: get_file_contents,create_branch,create_or_update_file,push_files
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: AgentTemplate
+   metadata:
+     name: claude-template
+     namespace: kagent
+   spec:
+     description: Claude Code, running on Agent Substrate.
+     modelConfig:
+       name: anthropic-model-config
+     tools:
+       - mcp:
+           server:
+             kind: RemoteMCPServer
+             name: github-mcp
+           requireApproval: true        # pause before every GitHub tool call
+   ```
+
+3. Apply it and check that kagent discovered the tools:
+
+   ```bash
+   kubectl apply -f github-push.yaml
+   kubectl get remotemcpserver github-mcp -n kagent -o jsonpath='{.status.discoveredTools[*].name}'
+   ```
+
+   You should see exactly four tools: `create_branch create_or_update_file get_file_contents push_files`. The Claude runtime does not support picking individual tools from an MCP server, because it binds the whole server. The `X-MCP-Tools` header gets you the same result a different way: GitHub's remote server returns only the tools you list. That is your counterpart to the tutorial's repository-scoped rules, and it works at the tool level, not at the path level.
+
+   Applying the file did two things at once. The template now names `api.githubcopilot.com`, so the gateway allows it. And the `Authorization` header is a binding on the gateway, so Claude never holds the token. I checked inside a running actor: the MCP credential variable starts with `kagent-crede`, like the Anthropic key.
+
+4. Ask for the push. Create a new session and send a task. `requireApproval: true` makes Claude pause before each call:
+
+   ```bash
+   export SESSION_ID=$(kagent agent session create --agent claude -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID --task "In <owner>/<repo>, create a branch called claude-hello, then add hello_world.py (a one-line Python hello world) to it using the GitHub tools. Do not ask me for a token."
+   ```
+
+   The CLI stops at the first gate:
+
+   ```text
+   Claude requires approval before calling mcp__github-mcp__create_branch.
+   Input required to continue this Session.
+   ```
+
+   While it waits, the actor is `ACTOR_STATE_PAUSED` with no worker, so a pending approval does not hold compute. This is the answer to the OpenShell tutorial's denied push, with a difference: nothing was denied. Claude asked, and the request carries the tool name and its arguments, so you can see the repository, the branch, and the file path before you decide.
+
+5. Answer the request. The kagent UI shows pending approvals for a session. The CLI has no approve command, so the examples repo (linked at the end) has a small script that sends the same A2A message the UI does (it needs the port-forward from Step 5). First, look at what is pending:
+
+   ```bash
+   ./scripts/approve.sh $SESSION_ID pending
+   ```
+
+   ```text
+   pending on task 01a116f2-abdf-7039-98fd-364bb12ec667:
+     mcp__github-mcp__create_branch {"branch":"claude-hello","owner":"<owner>","repo":"<repo>"}
+   ```
+
+   Approve it, and wait for the next gate, which is the file write:
+
+   ```bash
+   ./scripts/approve.sh $SESSION_ID
+   ./scripts/approve.sh $SESSION_ID pending
+   ```
+
+6. This is the iteration loop from the tutorial. Say the file name is wrong. Reject the write with a reason:
+
+   ```bash
+   ./scripts/approve.sh $SESSION_ID reject "Name the file hello.py, not hello_world.py"
+   ```
+
+   Nothing is pushed. Claude receives the rejection, and the task ends. Send a follow-up in the same session, and approve the retry:
+
+   ```bash
+   kagent agent invoke --session $SESSION_ID --task "Go ahead and push it again, using the file name from my rejection reason."
+   ./scripts/approve.sh $SESSION_ID
+   ```
+
+   The retry asks for `hello.py`, and after you approve it the file is on the branch. Check it:
+
+   ```bash
+   gh api "repos/<owner>/<repo>/contents?ref=claude-hello" --jq '.[].name'
+   ```
+
+   ```text
+   README.md
+   hello.py
+   ```
+
+   `scripts/push-test.sh <owner>/<repo>` runs this whole flow for you and checks the result.
+
+![Six steps of a GitHub push with approval: ask, pause, approve create_branch, reject a file write with a reason, retry, approve; below it, the same loop in OpenShell (denied push, logs, policy edit, policy set, retry) next to the kagent loop (Claude asks, you see the tool and arguments, approve or reject, retry).](/images/blog/migrate-openshell-claude-code-to-agent-substrate-kagent/07-approval-loop.png)
+
+*GitHub is a tool server. The repository boundary is your token's scope.*
+
+7. Clean up the session, the Secret, and the test repository when you are done:
+
+   ```bash
+   kagent agent session delete $SESSION_ID
+   kubectl delete secret github-mcp-auth -n kagent
+   ```
+
+Here is where this differs from the tutorial, so you can decide whether it is a trade you want. OpenShell's policy limits a sandbox to one repository's paths, enforced at the proxy. kagent's gateway scopes the credential by host and header, not by path, so the repository boundary is your token's scope. That is why a fine-grained token on one repository is not optional here, and why the approval arguments matter: they are what you review before a call goes out. What you get in return is a human decision on every write, tied to the exact call, that survives a suspend.
+
+## What you gain, and what you take on
+
+Moving off a dedicated sandbox has a price, so here is the ledger.
+
+**What you gain.** The main gain is for agents that wait, which is most of them.
+
+1. **Density.** Capacity follows active work instead of open sessions. A suspended actor costs storage and holds no worker, and kagent's docs say a pool can carry far more actors than it has workers at any one moment.
+2. **Long-running work that survives the wait.** An agent can sit on a pending approval, hold no worker while it waits, and pick up with its memory, files, and Claude Code session when you answer. The docs say a task waiting for input never expires. I answered my approvals within seconds, so I did not test a wait of hours.
+3. **Nothing to build for Claude Code.** The runtime is built in, so there is no image to patch.
+4. **Isolation without one pod per agent.** Each actor runs in its own gVisor sandbox with its own filesystem view and a private network.
+5. **Default-deny egress and credentials outside the agent.** The allow-list comes from what the template declares, and the keys stay on the gateway.
+6. **Approval gates that cost nothing while they wait.** The agent pauses and frees its worker until you decide.
+7. **An agent definition in Git.** It is a set of Kubernetes resources you can review and version.
+
+**What you take on.** A Kubernetes cluster at 1.37 or later, a worker pool to operate, and an object store for snapshots. Digest-pinned images and a registry-aware workflow. An alpha release line. And a different mental model: you declare what an agent may reach instead of writing path rules, and GitHub access goes through a tool server and not through `git push`. The image is fixed, so a custom toolchain needs more work than it did in OpenShell. And local files do not travel with `--upload`. I found no CLI command that copies a directory into an agent's actor, so code gets in through the GitHub tools or through the prompt.
+
+If you run a few short-lived sandboxes on a laptop, OpenShell is a fine tool and you may not need any of this. The move starts to pay for itself when the number of agents that are open but idle is what drives your bill: a team where many people keep a coding agent open all day, long tasks that wait on review or CI, or approval flows where a human answers hours later. If your agents are busy most of the time, the saving is smaller, and the other reasons (built-in runtime, egress policy, credential injection) have to carry the case.
+
+## Where to go next
+
+1. Run the whole thing from the [kagent-examples](https://github.com/hguerrero/kagent-examples) repo, in the `claude-code-from-openshell` folder, which has the manifests, the scripts, and a troubleshooting guide.
+2. Read the [Agent Substrate architecture](https://kagent.dev/docs/kagent/1.x/about/architecture/agent-substrate/) and [Agent Harness](https://kagent.dev/docs/kagent/1.x/agents/agent-harness) pages.
+3. Not every agent has a built-in runtime. For one that does not, you can bring it to Agent Substrate with a small A2A adapter that speaks the protocol on its behalf.
+4. Join the [kagent community](https://kagent.dev/community) and tell us which agents you want to see supported next.

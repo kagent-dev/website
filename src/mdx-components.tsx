@@ -173,7 +173,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       ),
       img: ({ ...props }) => (
         <figure>
-          <Image src={props.src} alt={props.title} width="0" height="0" sizes="100vw" className="w-full h-auto" />
+          <Image src={props.src} alt={props.alt ?? props.title ?? ""} width="0" height="0" sizes="100vw" className="w-full h-auto" />
           {props.title && <figcaption className="text-xs text-center italic">{props.title}</figcaption>}
         </figure>
       ),
