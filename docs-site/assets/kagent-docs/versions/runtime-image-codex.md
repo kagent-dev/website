@@ -1,1 +1,1 @@
-ghcr.io/kagent-dev/kagent/codex-harness@sha256:852fd192f5e2f2e76f17d018de0a1c1eeaeecac72c69b132fbdfb98516ae85cd
+ghcr.io/kagent-dev/kagent/codex-harness@sha256:1c8565efce78c420b6726c68eaf010363fafd4eeec0c1afcd317d9e517434c22
