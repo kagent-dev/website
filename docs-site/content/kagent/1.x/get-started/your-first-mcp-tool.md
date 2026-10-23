@@ -39,6 +39,14 @@ kagent records what it discovered on the server's status, so the tool names come
    > [!NOTE]
    > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command does not return any resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
 
+   > [!WARNING]
+   > At v1.0.0-alpha17, an agent's sandbox cannot resolve the short Service name in the built-in server's URL. Every tool call then fails with a `no such host` error. For more information, see [kagent#3315](https://github.com/kagent-dev/kagent/issues/3315). Until a fix ships, run the following command to point the server at the fully qualified Service name. The kagent Helm chart owns the `kagent-tool-server` resource, and a `helm upgrade` reverts the patch, so run the command again after each upgrade.
+
+   ```bash
+   kubectl patch remotemcpserver kagent-tool-server -n kagent --type=merge \
+     -p '{"spec":{"url":"http://kagent-tools.kagent.svc.cluster.local:8084/mcp"}}'
+   ```
+
 2. Re-apply the `my-first-template` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
    ```yaml
    kubectl apply -f - <<EOF
@@ -132,7 +140,7 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
      namespace: kagent
    spec:
      description: An MCP server of my own.
-     url: http://my-mcp-server.my-namespace:3000/mcp
+     url: http://my-mcp-server.my-namespace.svc.cluster.local:3000/mcp
      protocol: STREAMABLE_HTTP
      timeout: 30s
    EOF
@@ -141,7 +149,7 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
    | Field | Description |
    | ----- | ----------- |
    | `description` | A short description of the server. This field is required. |
-   | `url` | The address of the server's MCP endpoint. |
+   | `url` | The address of the server's MCP endpoint. The agent sandbox cannot resolve a short Service name, such as `my-mcp-server.my-namespace`. For a server in the cluster, use the fully qualified Service name, such as `my-mcp-server.my-namespace.svc.cluster.local`. |
    | `protocol` | The transport to use, either `STREAMABLE_HTTP` or `SSE`. Defaults to `STREAMABLE_HTTP`. |
    | `timeout` | How long to wait on a request to the server. Defaults to `30s`. |
    | `headersFrom` | Headers to send with each request, sourced from a Secret or ConfigMap. Use this field for a server that requires an API key. |

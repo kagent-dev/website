@@ -206,7 +206,7 @@ Each memory is one row in the `memory` table, which the vector migration created
    | Column | What it holds |
    | ------ | ------------- |
    | `content` | The text that the agent saved. Retrieval returns it to a later conversation. |
-   | `agent_name` | The agent that owns the memory, written as `<namespace>__NS__<agent>` with every hyphen replaced by an underscore. The name identifies one {{< gloss "Agent" >}}Agent{{< /gloss >}}, so the same AgentTemplate paired into two Agents owns two separate sets of memories. |
+   | `agent_name` | The agent that owns the memory, written as `<namespace>/<agent>`, such as `kagent/my-first-agent`. The name identifies one {{< gloss "Agent" >}}Agent{{< /gloss >}}, so the same AgentTemplate paired into two Agents owns two separate sets of memories. A memory that an earlier release saved keeps its original key, such as `kagent__NS__my_first_agent`, and kagent does not migrate it. The agent no longer retrieves that memory. To list or delete it, pass the original key. |
    | `user_id` | The user that the memory belongs to. |
    | `embedding` | The 768-dimensional vector that similarity search compares a query against. |
    | `created_at` and `expires_at` | When kagent wrote the memory, and `ttlDays` after that. |
@@ -216,28 +216,28 @@ Each memory is one row in the `memory` table, which the vector migration created
 
 The SQL query only reads the table. To list or clear memories, call the `MemoryService` that the kagent controller serves over gRPC.
 
-No CLI command manages memories, so these examples call the service with [grpcurl](https://github.com/fullstorydev/grpcurl). Both calls take the `agent_name` exactly as the memory table stores it. Be sure to copy the value out of the table rather than assembling it by hand, because an incorrect name fails silently.
+No CLI command manages memories, so these examples call the service with [grpcurl](https://github.com/fullstorydev/grpcurl). Each call acts on the memories of the user that the call authenticates as, and does not take a user ID. For how the controller resolves that user, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}). In the default `insecure` mode, a call without an identity runs as `admin@kagent.dev`. In that case, the call returns an empty list for memories that belong to any other user, and a Delete call succeeds without deleting anything. To act on another user's memories in `insecure` mode, add `-H 'X-User-Id: <user_id>'` to each grpcurl call, with the value from the `user_id` column.
+
+Each call also takes the `agent_name` exactly as the memory table stores it. An incorrect name fails silently, so copy the value from the table instead of typing it by hand.
 
 1. Port-forward the controller's gRPC port, and confirm that your kagent installation sets `config.server.grpcReflection=true`.
    ```bash
    kubectl port-forward -n kagent svc/kagent-controller 8083:8083
    ```
 
-2. List the memories that an agent stores for one user.
+2. List the memories that an agent stores.
    ```bash
    grpcurl -plaintext -d '{
-     "agent_name": "kagent__NS__my_first_agent_my_first_harness",
-     "user_id": "admin@kagent.dev"
+     "agent_name": "kagent/my-first-agent"
    }' localhost:8083 kagent.runtime.v1.MemoryService/List
    ```
 
    Each entry returns the `id`, `content`, `access_count`, `created_at`, and `expires_at` fields. Results are ranked by how often retrieval has returned them, so the most-used memories appear first.
 
-3. Delete the memories for an agent and user.
+3. Delete the memories that an agent stores.
    ```bash
    grpcurl -plaintext -d '{
-     "agent_name": "kagent__NS__my_first_agent_my_first_harness",
-     "user_id": "admin@kagent.dev"
+     "agent_name": "kagent/my-first-agent"
    }' localhost:8083 kagent.runtime.v1.MemoryService/Delete
    ```
 
