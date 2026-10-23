@@ -20,39 +20,44 @@ Because kagent fetches a skill this late, review the following considerations.
 * **Each Actor mounts up to 29 distinct skill images.** Images shared by several skills or plugins count once. A revision that needs more fails when kagent builds its ActorTemplate.
 * **Scripts run in the runtime image.** A skill's scripts get whatever the Harness image provides. The kagent runtime image is Alpine Linux with `bash`, `git`, and the standard Alpine utilities, and it does **not** include Python.
 
-### Skill tools
+### Skill tools and built-in tools
 
-On a `kagent` Harness, attaching a skill adds seven tools to the agent, whether or not the skill ships a script. The first three read skills, and the rest let the agent act on their files. The `claude` and `codex` Harness runtimes take the same skills and expose them through their own coding agent's tools instead.
+On a `kagent` Harness, every agent has kagent's built-in tools, even without a skill. A skill runs its scripts with the built-in `bash` tool. Attaching a skill also adds the skill tools, which read skills. The `claude` and `codex` Harness runtimes also take skills. They expose the skills through their own coding agent's tools.
 
-| Tool | What it does |
-| ---- | ------------ |
-| `list_skills` | Lists the attached skills with their names and descriptions. |
-| `load_skill` | Reads a skill's full `SKILL.md` instructions. |
-| `load_skill_resource` | Reads one file inside a skill directory, such as a reference document. |
-| `read_file` | Reads a file from the skills directory or the session directory. |
-| `write_file` | Writes a file to the session directory. |
-| `edit_file` | Replaces an exact string in a file that the agent has already read. |
-| `bash` | Runs a shell command in the session directory `/tmp/kagent/<session-id>/`. Commands time out after 30 seconds. |
+| Tool | Availability | What it does |
+| ---- | ------------ | ------------ |
+| `list_skills` | With a skill | Lists the attached skills with their names and descriptions. |
+| `load_skill` | With a skill | Reads a skill's full `SKILL.md` instructions. |
+| `load_skill_resource` | With a skill | Reads one file inside a skill directory, such as a reference document. |
+| `read_file` | Built-in | Reads a file, with line numbers. |
+| `write_file` | Built-in | Writes a file, and creates its parent directories. |
+| `edit_file` | Built-in | Replaces an exact string in a file that the agent has already read. The edit fails when the string occurs more than once, unless the agent asks to replace every occurrence. |
+| `list_files` | Built-in | Lists the contents of a directory. |
+| `grep_file` | Built-in | Searches a file, or a directory recursively, for a regular expression. |
+| `bash` | Built-in | Runs a command in a new shell. A command stops after 60 seconds by default. The agent can raise that limit to 600 seconds for one call. The tool combines standard output and standard error, and truncates the result at 64 KiB. When the call returns, the tool stops every process that the command started. |
 
-The `config.runtimeDefaults.skillTools` Helm values change this tool set for every agent in the installation, because a Harness has no per-agent equivalent.
+The built-in tools accept an absolute path or a path relative to the workspace, `/data/workspace`. The root agent and its subagents share the workspace. The workspace starts empty, and its files survive when the Actor is [suspended and resumed]({{< link path="about/substrate-runtime/suspend-and-resume#what-a-snapshot-captures" >}}). A command that is still running does not survive.
+
+A Harness does not have a per-agent setting for the built-in tools. The `config.runtimeDefaults.builtinTools` Helm values change the built-in tools for every agent in the installation.
 
 ```yaml
 config:
   runtimeDefaults:
-    skillTools:
-      fileSearchTools: true
+    builtinTools:
+      disableFileSearch: true
       disableBash: true
 ```
 
 | Setting | Description |
 | ------- | ----------- |
-| `fileSearchTools` | Set to `true` to add `list_files`, which lists the contents of a directory, and `grep_file`, which searches file contents for a pattern and can recurse. Both tools reach only the skills and session roots that `read_file` reads. These settings are off by default because they give an agent broad visibility of the filesystem. When `bash` is disabled, these tools keep that visibility available to the agent. |
-| `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent still loads skills and keeps the file tools. Defaults to `false`. |
+| `disableFileSearch` | Set to `true` to remove `list_files` and `grep_file` from the root agent and from every subagent. Defaults to `false`. This value replaces `skillTools.fileSearchTools` from earlier releases, with the opposite meaning. |
+| `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent keeps the file tools, and still loads skills. Defaults to `false`. |
+| `bashVenvPath` | The path to a Python virtual environment in the Harness image. The `bash` tool adds the environment's `bin` directory to the start of `PATH`, and sets `VIRTUAL_ENV`. The kagent runtime image does not include Python. To use this setting, build a Harness image that includes the environment. Defaults to empty. |
 
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
 > [!IMPORTANT]
-> The `bash` tool gives the agent shell access inside its own Actor sandbox, and the sandbox is the boundary that contains it. Review a skill before you attach it, and treat the [egress]({{< link path="about/substrate-runtime/sandboxing" >}}) that the Actor is granted as the reach that the skill has. Writes are confined to the session directory, so a skill cannot modify `/skills` or another skill's files.
+> The `bash` tool gives the agent shell access inside its own Actor sandbox, and the sandbox is the boundary that contains the agent. The file tools are not limited to the workspace. They read and write anywhere in the sandbox, including `/skills`, so one skill's instructions can change another skill's files. Review a skill before you attach it, and treat the [egress]({{< link path="about/substrate-runtime/sandboxing" >}}) that you grant the Actor as the reach that the skill has.
 
 ## Before you begin
 

@@ -39,6 +39,8 @@ kagent records what it discovered on the server's status, so the tool names come
    > [!NOTE]
    > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command does not return any resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
 
+   <!-- REVIEW (docs): at v1.0.0-alpha17 this guide fails at the first tool call with "lookup kagent-tools.kagent ... no such host". The chart registers kagent-tool-server with a short Service name that Substrate 0.6 sandboxes cannot resolve (kagent-dev/kagent#3315, fix in #3323). Re-run the guide once the fix ships, and update the example output in step 1 to the fully qualified URL. -->
+
 2. Re-apply the `my-first-template` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
    ```yaml
    kubectl apply -f - <<EOF
@@ -132,7 +134,7 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
      namespace: kagent
    spec:
      description: An MCP server of my own.
-     url: http://my-mcp-server.my-namespace:3000/mcp
+     url: http://my-mcp-server.my-namespace.svc.cluster.local:3000/mcp
      protocol: STREAMABLE_HTTP
      timeout: 30s
    EOF
@@ -141,7 +143,7 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
    | Field | Description |
    | ----- | ----------- |
    | `description` | A short description of the server. This field is required. |
-   | `url` | The address of the server's MCP endpoint. |
+   | `url` | The address of the server's MCP endpoint. The agent sandbox cannot resolve a short Service name, such as `my-mcp-server.my-namespace`. For a server in the cluster, use the fully qualified Service name, such as `my-mcp-server.my-namespace.svc.cluster.local`. |
    | `protocol` | The transport to use, either `STREAMABLE_HTTP` or `SSE`. Defaults to `STREAMABLE_HTTP`. |
    | `timeout` | How long to wait on a request to the server. Defaults to `30s`. |
    | `headersFrom` | Headers to send with each request, sourced from a Secret or ConfigMap. Use this field for a server that requires an API key. |

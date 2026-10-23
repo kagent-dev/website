@@ -28,6 +28,8 @@ Set `tokenPassthrough: true` to send the bearer token from the incoming agent-to
 
 The egress gateway injects no credential for the provider's host, so the caller's token reaches the provider unchanged. kagent also refuses to attach a static credential to that host.
 
+Every model and MCP server that an agent reaches at the provider's origin must also forward the caller's token. Otherwise, the Agent reports the `Compatible` condition as `False`, with a message such as `destination "https://api.openai.com:443" mixes tokenPassthrough with clients that do not use it`. The condition is also `False` when a model or MCP server at that origin sets its own value for the header that the token replaces.
+
 ### Turn off model streaming
 
 The `kagent` harness streams its calls to the model by default, including OpenAI Chat Completions and Responses. An endpoint that rejects a streaming request fails every turn, so set `stream: false` on the ModelConfig to call it without streaming.
