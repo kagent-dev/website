@@ -20,7 +20,7 @@ The command keeps the `kagent` namespace and anything else in it. A database tha
 ## Before you begin
 
 1. Confirm that you have administrative access to the cluster.
-2. Confirm that your kubeconfig points at the cluster that you want to uninstall from. The command prints the name of the current context.
+2. Confirm that your kubeconfig points at the cluster that you want to uninstall from. The `kagent uninstall` command does not ask for confirmation, and it acts on the current context.
    ```bash
    kubectl config current-context
    ```
@@ -32,7 +32,7 @@ The command keeps the `kagent` namespace and anything else in it. A database tha
 
 ## Uninstall kagent
 
-Uninstall kagent with the kagent CLI, and then remove the namespace that the command keeps. The command waits for each Helm release to finish its removal, so the uninstall takes about a minute.
+Uninstall kagent with the kagent CLI. The command waits for each Helm release to finish its removal before it continues.
 
 1. Uninstall kagent. When kagent runs in a namespace other than `kagent`, add the `--namespace` flag with that namespace. If the namespace does not match, the command stops before it deletes anything, and prints the namespace to use.
    ```bash
@@ -49,7 +49,7 @@ Uninstall kagent with the kagent CLI, and then remove the namespace that the com
 
    When a step fails, the command exits with a non-zero status. Run the command again to finish the uninstall. Each step skips what is already gone, and prints a warning for a release that no longer exists.
 
-2. Optional: Delete the `kagent` namespace and everything that remains in it, such as Secrets that you created for your agents.
+2. Optional: Delete the namespace that kagent ran in, such as `kagent`, and everything that remains in it, such as Secrets that you created for your agents.
    ```bash
    kubectl delete namespace kagent
    ```

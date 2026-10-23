@@ -77,7 +77,7 @@ A share widens what the holder can reach to what the owner can see, and the unde
 
 ### Agent runtime calls
 
-An agent's runtime calls the controller to store task state and memories, and to read its own Agent and Session. These calls arrive on the same port as user calls, `8083`. However, the controller authenticates agent runtime calls separately from the user authentication mode. Even in `insecure` mode, a runtime call needs a valid token.
+An agent's runtime calls the controller to store task state and memories, and to read its own Agent and Session. These calls arrive on the same port as user calls, `8083`. However, the controller authenticates agent runtime calls separately from the user authentication mode. The task state and memory calls that only an agent makes always need a valid token, even in `insecure` mode. The controller treats a call that sends no `Authorization` header as a user call, and applies the user authentication mode to it.
 
 The runtime, the Agent Substrate egress gateway, and the controller each take one step to authenticate a call.
 
@@ -85,9 +85,11 @@ The runtime, the Agent Substrate egress gateway, and the controller each take on
 2. The Agent Substrate egress gateway replaces the placeholder with a JSON Web Token (JWT) that identifies the {{< gloss "Actor" >}}Actor{{< /gloss >}}. The token is valid for five minutes, and its audience is `kagent-runtime`. The gateway adds the token only to calls to the controller. Actor snapshots do not store the token.
 3. The controller verifies the token's signature, issuer, audience, and lifetime, and allows 30 seconds of clock skew. The controller then binds the token to the Actor's current Session. The controller rejects a token that fails verification, and does not fall back to user authentication.
 
-An authenticated Actor can read its own Agent and use its own task state and memories. The Actor can also read its own Session and send messages to that Session. The Actor cannot create or delete a Session, use a share, reach any other Session, or act with its owner's permissions. That restriction includes other Sessions of the same agent and the same owner.
+An authenticated Actor can read its own Agent and use its own task state and memories. The Actor can also read, update, and send messages to its own Session. The Actor cannot create or delete a Session, use a share, reach any other Session, or act with its owner's permissions. That restriction includes other Sessions of the same agent and the same owner.
 
 The controller trusts the issuer in the `config.substrate.actorJwtIssuer` Helm value, which must match the `ateApi.actorJWTIssuer` value of the Agent Substrate chart. Both values default to `https://idp.ate-system.svc`, so change them only together. The controller fetches the issuer's signing keys at startup, and a controller that cannot reach the issuer does not start.
+
+Upgrade the controller and the runtime images together. An Actor snapshot from an earlier runtime image still sends an identity header that the controller no longer accepts, so you must recreate that snapshot after an upgrade.
 
 ## The Agent Substrate plane
 

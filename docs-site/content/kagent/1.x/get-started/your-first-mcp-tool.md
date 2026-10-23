@@ -39,7 +39,13 @@ kagent records what it discovered on the server's status, so the tool names come
    > [!NOTE]
    > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command does not return any resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
 
-   <!-- REVIEW (docs): at v1.0.0-alpha17 this guide fails at the first tool call with "lookup kagent-tools.kagent ... no such host". The chart registers kagent-tool-server with a short Service name that Substrate 0.6 sandboxes cannot resolve (kagent-dev/kagent#3315, fix in #3323). Re-run the guide once the fix ships, and update the example output in step 1 to the fully qualified URL. -->
+   > [!WARNING]
+   > At v1.0.0-alpha17, an agent's sandbox cannot resolve the short Service name in the built-in server's URL. Every tool call then fails with a `no such host` error. For more information, see [kagent#3315](https://github.com/kagent-dev/kagent/issues/3315). Until a fix ships, run the following command to point the server at the fully qualified Service name. The kagent Helm chart owns the `kagent-tool-server` resource, and a `helm upgrade` reverts the patch, so run the command again after each upgrade.
+
+   ```bash
+   kubectl patch remotemcpserver kagent-tool-server -n kagent --type=merge \
+     -p '{"spec":{"url":"http://kagent-tools.kagent.svc.cluster.local:8084/mcp"}}'
+   ```
 
 2. Re-apply the `my-first-template` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
    ```yaml

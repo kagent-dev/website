@@ -31,7 +31,7 @@ On a `kagent` Harness, every agent has kagent's built-in tools, even without a s
 | `load_skill_resource` | With a skill | Reads one file inside a skill directory, such as a reference document. |
 | `read_file` | Built-in | Reads a file, with line numbers. |
 | `write_file` | Built-in | Writes a file, and creates its parent directories. |
-| `edit_file` | Built-in | Replaces an exact string in a file that the agent has already read. The edit fails when the string occurs more than once, unless the agent asks to replace every occurrence. |
+| `edit_file` | Built-in | Replaces an exact string in a file. The edit fails when the string occurs more than once, unless the agent asks to replace every occurrence. |
 | `list_files` | Built-in | Lists the contents of a directory. |
 | `grep_file` | Built-in | Searches a file, or a directory recursively, for a regular expression. |
 | `bash` | Built-in | Runs a command in a new shell. A command stops after 60 seconds by default. The agent can raise that limit to 600 seconds for one call. The tool combines standard output and standard error, and truncates the result at 64 KiB. When the call returns, the tool stops every process that the command started. |
