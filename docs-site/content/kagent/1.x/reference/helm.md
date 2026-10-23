@@ -11,7 +11,7 @@ A Helm chart for kagent, built with Google ADK
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha16 |
+| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha17 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
 
@@ -34,12 +34,12 @@ A Helm chart for kagent, built with Google ADK
 | config.push.allowHttp | bool | `false` |  |
 | config.push.allowPrivateNetworks | bool | `false` |  |
 | config.push.recoveryInterval | string | `"60s"` |  |
+| config.runtimeDefaults.builtinTools.bashVenvPath | string | `""` |  |
+| config.runtimeDefaults.builtinTools.disableBash | bool | `false` |  |
+| config.runtimeDefaults.builtinTools.disableFileSearch | bool | `false` |  |
 | config.runtimeDefaults.cpu | string | `"1"` |  |
 | config.runtimeDefaults.logging.level | string | `"info"` |  |
 | config.runtimeDefaults.memory | string | `"1Gi"` |  |
-| config.runtimeDefaults.skillTools.bashVenvPath | string | `""` |  |
-| config.runtimeDefaults.skillTools.disableBash | bool | `false` |  |
-| config.runtimeDefaults.skillTools.fileSearchTools | bool | `false` |  |
 | config.runtimeDefaults.telemetry | object | `{}` |  |
 | config.sandboxes.cpu | string | `"1"` |  |
 | config.sandboxes.defaultTtl | string | `"3600s"` |  |
@@ -50,6 +50,7 @@ A Helm chart for kagent, built with Google ADK
 | config.server.grpcReflection | bool | `false` |  |
 | config.sessions.idleTtl | string | `"604800s"` |  |
 | config.sessions.shareMaxTtl | string | `"0s"` |  |
+| config.substrate.actorJwtIssuer | string | `"https://idp.ate-system.svc"` |  |
 | config.substrate.apiEndpoint | string | `"dns:///api.ate-system.svc:443"` |  |
 | config.substrate.routerUrl | string | `"http://atenet-router.ate-system.svc:80"` |  |
 | config.telemetry | object | `{}` |  |
