@@ -146,6 +146,57 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
 
    To serve the UI behind a reverse proxy under a prefix such as `/ui` (configurable with `ui.basePath`), see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy" >}}).
 
+## Restrict kagent to specific namespaces
+
+By default the controller watches every namespace, and the chart creates cluster-scoped RBAC (ClusterRoles and ClusterRoleBindings). To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
+
+```yaml
+global:
+  watchNamespaces: [prod-agents, staging-agents]
+```
+
+Prefer `global.watchNamespaces` over the per-surface keys. The chart derives both surfaces from this one value, so they cannot disagree: it replaces every kagent ClusterRole with a Role and RoleBinding in each listed namespace, and it limits the controller's watch to the same list. The chart appends the install namespace to the list automatically, so the release's own objects remain managed.
+
+The per-surface keys still exist for installs that scope the surfaces independently, and the validation rules bind them:
+
+- `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace or the render fails.
+- `config.kubernetes.watchNamespaces` is an explicit watch override. Under `rbac.namespaces`, a watch entry that names a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. Under `global.watchNamespaces`, the chart folds the entries into the watch scope instead of failing. In both cases the watch list replaces the default, so the install namespace is not added back once `config.kubernetes.watchNamespaces` is set — list it explicitly if the controller should keep watching it.
+- The `kagent-tool-server` RemoteMCPServer that the chart creates admits references from its own namespace only. An Agent in another watched namespace that binds it does not become ready until you set `allowedNamespaces` on that server. See [Reach kagent-tool-server from another namespace]({{< link path="reference/tools-ecosystem#reach-kagent-tool-server-from-another-namespace" >}}).
+
+Verify a namespaced install the same way as the default one, plus the negative case. The [create your first agent]({{< link path="get-started/your-first-agent" >}}) guide's `kubectl get agents` and conditions checks apply to each namespace; the difference is that an Agent the controller does not watch stays `UNKNOWN` forever.
+
+1. Create one Agent in each watched namespace.
+   ```bash
+   kubectl apply -n prod-agents -f my-agent.yaml
+   kubectl apply -n staging-agents -f my-agent.yaml
+   ```
+2. Create one Agent in a namespace the list does not cover.
+   ```bash
+   kubectl apply -n dev-agents -f my-agent.yaml
+   ```
+3. Confirm that the controller reconciles the watched Agents.
+   ```bash
+   kubectl get agents -n prod-agents
+   kubectl get agents -n staging-agents
+   ```
+   Example output:
+   ```console
+   NAME           AGE   READY
+   my-agent       30s   True
+   my-agent       30s   True
+   ```
+4. Confirm that the Agent in the unwatched namespace stays unmanaged: its `READY` value stays `UNKNOWN`, and its conditions stay empty, because the controller has no watch entry for that namespace.
+   ```bash
+   kubectl get agents -n dev-agents
+   kubectl get agent my-agent -n dev-agents -o jsonpath='{.status.conditions}'
+   ```
+   Example output:
+   ```console
+   NAME           AGE   READY
+   my-agent       30s   UNKNOWN
+   null
+   ```
+
 ## Next steps
 
 {{< cards >}}
