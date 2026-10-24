@@ -68,7 +68,8 @@ When a request is made to a provider, the gateway puts the credential in the hea
 | `Foundry` API key in Anthropic format | `x-api-key: <key>` |
 | `Gemini` API key | `x-goog-api-key: <key>` |
 | `Bedrock` bearer token | `authorization: Bearer <token>` |
-| `Ollama` API key, for an Ollama Cloud model | `authorization: Bearer <key>` |
+| `Ollama` API key, for an Ollama Cloud model | `authorization: Bearer *** |
+| `Mistral` API key | `authorization: Bearer *** |
 | A Secret-backed `RemoteMCPServer` header | The header that the server names |
 
 Substrate matches a destination on the exact DNS hostname, without path, port, or scheme. Two credentials that target the same hostname and header are rejected, including a conflict between an agent's model, a memory embedding model, and an MCP server. Give such origins distinct DNS names. A destination given as an IP address cannot carry an injected credential at all.
