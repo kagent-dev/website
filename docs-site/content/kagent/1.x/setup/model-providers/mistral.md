@@ -45,9 +45,7 @@ The `Mistral` provider calls the Mistral API directly. Mistral speaks the OpenAI
    | `apiKeySecretKey` | The key within that Secret that holds the API key. |
    | `model` | The model to use. For the available models, see the [Mistral model docs](https://docs.mistral.ai/models). |
    | `provider` | The provider to use, `Mistral`. |
-   | `mistral` | Settings that only the Mistral provider takes. An empty block is valid. |
-
-A CEL rule rejects a `mistral` block on any other provider: `provider.mistral must be nil if the provider is not Mistral`.
+   | `mistral` | Settings that only the Mistral provider takes. An empty block is valid. A CEL rule rejects a `mistral` block on any other provider. |
 
 ## Mistral provider settings
 
@@ -62,12 +60,6 @@ The `mistral` block takes the following optional settings. For every field, incl
 | `timeout` | How long to wait on a request to the provider, in seconds. Minimum 1. |
 
 Mistral embeddings (`mistral-embed`) are out of scope for this page.
-
-## How the credential reaches Mistral
-
-The credential never enters the agent. kagent binds the `apiKeySecret` Secret to one destination and one header, `authorization: Bearer *** scoped to `baseUrl` or `https://api.mistral.ai`, and the Agent Substrate egress gateway injects it into each request. For the full credential model, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
-
-A `MISTRAL_API_KEY` environment variable on the runtime is a fallback for an image that reads its own key; it is not the ModelConfig path.
 
 ## Use the ModelConfig
 
