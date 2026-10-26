@@ -70,6 +70,22 @@ The `openAI` block takes the following optional settings. For every field, inclu
 > [!WARNING]
 > The `openAI` block also accepts `tokenExchange`, which acquires a bearer token from a mounted service account file. That configuration mounts a credential file into the agent, which a Harness does not accept. For the full list of configurations that this affects, see [About model providers]({{< link path="setup/model-providers/about-model-providers" >}}).
 
+## Send a file to the model {#send-a-file-to-the-model}
+
+When `apiFormat` is `responses`, supported files go through the Responses API instead of first being extracted as text. The provider fetches a link only in the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
+
+| What the message includes | What the runtime sends |
+| ------------------------- | ---------------------- |
+| An `http://` or `https://` link with an `image/` media type | An `input_image` part with the link. |
+| An `http://` or `https://` link with any other media type, such as a PDF | An `input_file` part with the link. |
+| Inline image bytes | An `input_image` part with the bytes as a `data:` URL. |
+| Inline bytes of a PDF, `.docx`, `.xlsx`, or `.pptx` file | An `input_file` part with the bytes as a `data:` URL. The bytes must match the media type. A file that does not, such as a text file labeled `application/pdf`, reaches the model as a note that it could not be read. When the files in the conversation total more than 50 MB, the runtime sends the newest files and replaces each older file with a note. |
+| Inline bytes of any other type | The file's text, or a note when the file cannot be read as text. |
+
+The runtime refuses a link that uses any other scheme. When the newest user message includes an unsupported link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. A link in an older message does not fail the turn, because the runtime sends links from older messages as bare URLs. A model with a fetch tool can still retrieve the file.
+
+For an attachment with a display name, the runtime adds an extra text part that reads `File: <name>` immediately before the file part. For file links, the name reaches the model as ordinary text.
+
 ## Use the ModelConfig
 
 Reference the ModelConfig by name from an AgentTemplate in the same namespace.
