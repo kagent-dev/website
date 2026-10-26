@@ -26,7 +26,7 @@ Credentials come from a Kubernetes Secret in the same namespace as the ModelConf
 
 Set `tokenPassthrough: true` to send the bearer token from the incoming agent-to-agent (A2A) request to the provider as the API key, rather than reading a key from a Secret. A ModelConfig cannot set both `tokenPassthrough` and `apiKeySecret`. The setting is not available for the `Gemini`, `GeminiVertexAI`, or `AnthropicVertexAI` providers, or on a `codex` or `claude` Harness.
 
-The egress gateway injects no credential for the provider's host, so the caller's token reaches the provider unchanged. kagent also refuses to attach a static credential to that host.
+In a default kagent controller, the egress gateway injects no credential for the provider's host. The caller's token reaches the provider unchanged. An embedding controller can register egress policy compilers that bind the caller token at the gateway. kagent refuses to attach a static credential to the provider's host in either setup.
 
 Every model and MCP server that an agent reaches at the provider's origin must also forward the caller's token. Otherwise, the Agent reports the `Compatible` condition as `False`, with a message such as `destination "https://api.openai.com:443" mixes tokenPassthrough with clients that do not use it`. The condition is also `False` when a model or MCP server at that origin sets its own value for the header that the token replaces.
 

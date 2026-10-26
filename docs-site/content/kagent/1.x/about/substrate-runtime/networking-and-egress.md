@@ -123,3 +123,11 @@ A credential is declared on a rule as a `replace_headers` entry. The entry names
 Replacement happens only on a connection that the gateway terminates, and only when a credential provider is configured for the reference. If either is missing, the request reaches the destination without the credential. The request fails closed when replacement is attempted and fails. `403` is returned when the provider does not hold the credential or refuses to release it, and `503` is returned when the provider is unreachable.
 
 Replacement also works on a cleartext `http` rule, where the gateway does not originate TLS to the destination. The credential is then readable by anything on the path between the gateway and the destination unless something outside the gateway encrypts that segment. Prefer an `https` destination for any host that takes a credential.
+
+### Caller-token passthrough through the gateway {#caller-token-passthrough-through-the-gateway}
+
+A ModelConfig or RemoteMCPServer can set `tokenPassthrough: true`. The revision then records each passthrough client as a target with an exact origin, header, and prefix. In a default kagent controller, the runtime sends the caller token in that target header. The gateway does not replace the token.
+
+An embedding controller can register `app.Options.EgressPolicyCompilers` and keep the caller token out of the runtime. In this deployment model, the controller's authenticator gives the runtime the placeholder `kagent-credential-injected`. The egress policy compilers bind each target header to the caller token at the gateway. The compilers run after kagent builds the normal allowlist. They can change the compiled policy before kagent validates the policy.
+
+When any egress policy compiler is registered, every passthrough target must have a credential header on its origin. If a compiler fails or validation fails, kagent applies a deny-all egress policy to the Actor until a retry succeeds. A passthrough target also reserves its origin against Secret-backed credentials. The reservation also applies to clients at the same origin that do not opt in to `tokenPassthrough`.
