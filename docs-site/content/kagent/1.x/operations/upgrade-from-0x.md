@@ -173,7 +173,7 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
 
 1. Recreate the Secrets that your ModelConfigs name before you apply them, or the ModelConfigs resolve to nothing.
 
-2. Convert these resources to `v1alpha3`. The export also holds Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. The command does not delete the ModelConfig fields that `v1alpha3` removed, so delete them from the converted file before you apply it. Otherwise, the apply fails.
+2. Convert these resources to `v1alpha3`. The export also holds Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. The command does not delete the ModelConfig fields that `v1alpha3` removed, so delete them from the converted file before you apply it. Otherwise, the apply fails. If the converted file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it too, because 1.0 does not deploy the Grafana MCP server behind it.
    ```bash
    yq '.items |= map(select(.kind == "ModelConfig" or .kind == "ModelProviderConfig" or .kind == "RemoteMCPServer"))
      | .items[].apiVersion = "api.kagent.dev/v1alpha3"

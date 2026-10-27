@@ -55,7 +55,7 @@ For the rest of the settings that the `openAI` block accepts, see [OpenAI]({{< l
 
 ### Enable tool calling in vLLM
 
-kagent sends a `tools` array with `tool_choice: "auto"` on every request. kagent's runtime registers a built-in `ask_user` tool on every agent, so that array is sent even when you bind no tools yourself. Launch vLLM with automatic tool choice enabled, or every agent turn fails.
+kagent sends a `tools` array with `tool_choice: "auto"` on every request. By default, kagent's runtime registers a built-in `ask_user` tool on every agent, so that array is sent even when you do not bind any tools yourself. Launch vLLM with automatic tool choice enabled, or every agent turn fails.
 
 ```bash
 vllm serve Qwen/Qwen2.5-7B-Instruct \

@@ -58,6 +58,19 @@ The `kagent` harness composes this text from the pending calls. The wording depe
 
 The `codex` and `claude` harnesses compose the text differently. Both pass through the hint that Codex or Claude Code supplied with the request, so the wording comes from the coding agent rather than from kagent.
 
+### Disable questions
+
+When an agent runs unattended, nobody answers its question, so the task waits at `INPUT_REQUIRED`. To stop agents on the `kagent` harness from asking questions, set the `config.runtimeDefaults.builtinTools.disableAskUser` Helm value to `true`. The value removes the `ask_user` tool from every agent in the installation and from each subagent, and an AgentTemplate cannot override it. The value defaults to `false`.
+
+```yaml
+config:
+  runtimeDefaults:
+    builtinTools:
+      disableAskUser: true
+```
+
+The value removes only the question tool. A binding that sets `requireApproval` still pauses the agent for approval, and a remote A2A agent that the agent calls can still pause the turn with its own question. The `codex` and `claude` harnesses do not read the value, because the coding agent supplies its own tools. A `byo` image decides whether to read it.
+
 ## Require approval for a tool
 
 Approval is a property of a tool binding. For example, if you set `requireApproval` on an `mcp` tool binding in the AgentTemplate, the agent stops before each call to a tool that the binding exposes.

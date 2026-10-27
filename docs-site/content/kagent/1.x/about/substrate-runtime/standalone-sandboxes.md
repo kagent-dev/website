@@ -132,6 +132,8 @@ Each `kagent sandbox` command makes one lifecycle attempt rather than retrying f
 
    A timeout stops the command from waiting rather than stopping the remote process. To reconnect to a process that outlived its `exec`, pass its process ID to `kagent sandbox wait`.
 
+   `kagent sandbox kill` sends `SIGKILL` to a process and returns when the guest delivers the signal. The command does not wait for the process to exit, so its output reports the process state and omits the exit code. To read the exit code, pass the process ID to `kagent sandbox wait`.
+
 4. Move a file in, run against it, and read the result back out.
    ```bash
    kagent sandbox upload $SANDBOX_ID ./script.py /data/workspace/script.py
@@ -169,6 +171,8 @@ tools:
 An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token does not grant access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. Set `config.runtimeDefaults.tokenPropagation.enabled` to `true`, and the kagent runtime passes the caller's credentials and identity to the MCP servers that you trust.
 
 The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. `write_sandbox_file` and `read_sandbox_outputs` are bounded at 1 MiB and use base64. Output reads return continuation byte offsets.
+
+An agent that starts a process with `start_sandbox_process` polls `get_sandbox_process` to learn when the process finishes. The `state` field reads `PROCESS_STATE_RUNNING` until the process exits, then `PROCESS_STATE_EXITED`. The `exit_code` field appears only in the exited state, and reads `0` for a successful exit. `kill_sandbox_process` sends `SIGKILL` in the same way as `kagent sandbox kill`, so the agent must poll `get_sandbox_process` for the exit code.
 
 When an agent must inspect a result file, use `read_sandbox_file`. The tool returns content that the model reads directly rather than `data_base64`, in one of three shapes.
 

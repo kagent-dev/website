@@ -346,7 +346,7 @@ By default, callback URLs must use HTTPS. Callback URLs must not resolve to priv
 
 ## When an agent needs a person
 
-An agent can stop mid-task to ask a question or to request approval for a tool call. The task then reports `TASK_STATE_INPUT_REQUIRED` and waits until a caller answers it. Every kagent agent can raise the question kind, because the runtime gives each one a built-in `ask_user` tool, so a system prompt that tells an agent to ask before it answers is enough to see a pause.
+An agent can stop mid-task to ask a question or to request approval for a tool call. The task then reports `TASK_STATE_INPUT_REQUIRED` and waits until a caller answers it. By default, every agent on the `kagent` harness can raise the question kind, because the runtime gives each one a built-in `ask_user` tool. A system prompt that tells an agent to ask before it answers is therefore enough to see a pause.
 
 Answering a pause needs the human-in-the-loop extension, which a caller requests per call. The extension is a versioned URI, and a request names it in two places: the `A2A-Extensions` header, and the message's own `extensions` list.
 

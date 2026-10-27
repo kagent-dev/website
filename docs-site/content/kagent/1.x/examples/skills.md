@@ -54,6 +54,8 @@ config:
 | `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent keeps the file tools, and still loads skills. Defaults to `false`. |
 | `bashVenvPath` | The path to a Python virtual environment in the Harness image. The `bash` tool adds the environment's `bin` directory to the start of `PATH`, and sets `VIRTUAL_ENV`. The kagent runtime image does not include Python. To use this setting, build a Harness image that includes the environment. Defaults to empty. |
 
+The `builtinTools` Helm values also include `disableAskUser`, which removes the question tool. For more information, see [Disable questions]({{< link path="agents/human-in-the-loop#disable-questions" >}}).
+
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.
 
 > [!IMPORTANT]

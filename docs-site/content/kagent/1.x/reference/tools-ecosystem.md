@@ -1,20 +1,15 @@
 ---
 title: Tools ecosystem
-description: Look up the MCP servers that a kagent installation ships with, the tools that each one serves, and the community servers that you can add.
+description: Look up the MCP server that a kagent installation ships with, the tools that it serves, and the community servers that you can add.
 weight: 40
 author: kagent.dev
 ---
 
-A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with two {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers already registered, and you can register more of your own. This page is the catalog: what is installed, what each server serves, and how to narrow the set. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with one {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server already registered, and you can register more of your own. This page lists what is installed, what the installed server serves, and how to narrow the set. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
 
-## Servers that a kagent installation registers
+## Server that a kagent installation registers
 
-Both servers arrive as subcharts of the kagent chart, and each one creates its own {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. Neither is bound to an agent for you, so an agent reaches a server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
-
-| RemoteMCPServer | Helm value | Serves |
-| --------------- | ---------- | ------ |
-| [`kagent-tool-server`](#kagent-tool-server) | `kagent-tools.enabled` | 126 tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. |
-| [`kagent-grafana-mcp`](#kagent-grafana-mcp) | `grafana-mcp.enabled` | Grafana's own MCP server, for dashboards, data sources, alerts, Loki logs, and incidents. |
+The kagent chart installs the tool server as a subchart, which the `kagent-tools.enabled` Helm value turns on. The subchart creates the [`kagent-tool-server`](#kagent-tool-server) {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace, which serves 126 tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. kagent does not bind the server to an agent, so an agent reaches the server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
 
 The kagent release pins the `kagent-tool-server` version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
 
@@ -302,34 +297,6 @@ kubectl label namespace my-agents kagent-tools=allowed
 > [!NOTE]
 > Admitting a namespace grants every agent in that namespace the server's full cluster authority, because all of the server's callers share one ServiceAccount. Narrow the server with `rbac.readOnly` before you widen `allowedNamespaces`.
 
-## kagent-grafana-mcp
-
-The `kagent-grafana-mcp` server runs [mcp-grafana](https://github.com/grafana/mcp-grafana), Grafana's own MCP server. The kagent chart packages it as a subchart. Its tools fall into four groups:
-
-- Grafana dashboards, data sources, and alert rules.
-- PromQL queries against Grafana's Prometheus data sources.
-- LogQL queries against Loki.
-- Grafana incidents and on-call schedules.
-
-Set the Grafana instance that the server queries, along with its credentials, at install time.
-
-```yaml
-grafana-mcp:
-  enabled: true
-  grafana:
-    url: "grafana.kagent:3000/api"
-    serviceAccountToken: "<token>"
-```
-
-| Field | Description |
-| ----- | ----------- |
-| `grafana.url` | The Grafana API endpoint that the server queries. Defaults to `grafana.kagent:3000/api`, which matches the Grafana instance in `contrib/addons/grafana.yaml`. |
-| `grafana.serviceAccountToken` | A Grafana service account token. Empty by default, so the server starts and answers discovery while every tool call fails until you supply a token. |
-| `grafana.secretRef` | The name of an existing Secret that holds `GRAFANA_SERVICE_ACCOUNT_TOKEN`. Use this instead of `serviceAccountToken` to keep the token out of your Helm values. |
-
-> [!NOTE]
-> Upstream does not publish a tag other than `latest`, so this subchart tracks the `mcp/grafana:latest` image on Docker Hub. A kagent release therefore does not pin which tools this server serves, and the set can change without a kagent upgrade. Read `status.discoveredTools` on `kagent-grafana-mcp` for the tools that your installation has, rather than relying on a published list.
-
 ## Community and contributed servers
 
 kagent's repository carries example servers in [contrib/tools](https://github.com/kagent-dev/kagent/tree/main/contrib/tools). Each one is a starting point rather than a supported component, and their manifests were written against different kagent API versions, so check the `apiVersion` before you apply one.
@@ -339,10 +306,10 @@ kagent's repository carries example servers in [contrib/tools](https://github.co
 | [k8sgpt](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/k8sgpt-mcp-server) | Yes | K8sGPT integration, for diagnosing cluster problems. Declares `RemoteMCPServer` on `api.kagent.dev/v1alpha3`. |
 | [server-everything](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/server-everything) | Yes | The MCP reference server, useful for testing a binding end to end. Declares `RemoteMCPServer` on `api.kagent.dev/v1alpha3`. |
 | [GitHub MCP Server](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/github-mcp-server) | No | Tools for issues, pull requests, repositories, and actions. Its chart still declares the removed `ToolServer` kind. |
-| [mcp-grafana](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/mcp-grafana) | No | Superseded by the `grafana-mcp` subchart that a kagent installation already registers. Its chart still declares the removed `ToolServer` kind. |
+| [mcp-grafana](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/mcp-grafana) | No | Tools for Grafana dashboards, data sources, alerts, and Loki logs. Its chart still declares the removed `ToolServer` kind. |
 | [context7](https://github.com/kagent-dev/kagent/blob/main/contrib/tools/context7.mcp.yaml) | No | Documentation lookup over stdio. Both the `ToolServer` kind and the stdio transport were removed. |
 
-To register any other MCP server, write a RemoteMCPServer that points at its URL. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-your-own-mcp-server" >}}) works through a complete example.
+To register any other MCP server, write a RemoteMCPServer that points at its URL. For a complete example, see [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-your-own-mcp-server" >}}). To give agents Grafana tools, run Grafana's own server from the upstream [mcp-grafana](https://github.com/grafana/mcp-grafana) project, and register it in the same way.
 
 > [!NOTE]
 > A RemoteMCPServer takes a URL, so kagent connects only to servers that speak streamable HTTP or Server-Sent Events (SSE). To reach a server that runs over stdio, wrap it in a deployment that exposes an HTTP endpoint. [kmcp](https://kagent.dev/docs/kmcp/) builds and runs such servers.

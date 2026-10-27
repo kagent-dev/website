@@ -14,6 +14,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 | `outputSchema` | The schema, written inline in the AgentTemplate. |
 | `outputSchemaFrom.name` | The ConfigMap holding the schema as JSON, in the AgentTemplate's namespace. |
 | `outputSchemaFrom.key` | The key within that ConfigMap. |
+| `outputSchemaStrict` | Whether the model provider constrains generation to the schema. Defaults to `false`. For the providers that honor it, see [Strict mode](#strict-mode). |
 
 ## Before you begin
 
@@ -175,14 +176,20 @@ Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that sev
 
 The root of the schema must declare `type: object`. kagent accepts the following subset of JSON Schema, which its error messages call the portable output profile.
 
-- `type`, with a single value: `object`, `array`, `string`, `number`, `integer`, `boolean`, or `null`
+- `type`, with one value or a list of values such as `["string", "null"]`. Each value is `object`, `array`, `string`, `number`, `integer`, `boolean`, or `null`.
 - `properties`, `required`, `additionalProperties`, and `items`
 - `enum`, `const`, and `anyOf`
 - `title` and `description`
 - `$defs`, and references to it in the form `#/$defs/<name>`, which cannot be recursive
 - `$schema` and `$id`
+- `pattern`, in RE2 syntax, on a schema whose `type` includes `string`
+- `format`, on a schema whose `type` includes `string`, with one of the values `date`, `date-time`, `duration`, `email`, `hostname`, `ipv4`, `ipv6`, `time`, or `uuid`
 
-Anything else is rejected, including `oneOf` and `allOf`, conditional schemas such as `if` and `then`, tuple arrays, references outside `$defs`, and validation keywords such as `pattern`, `format`, `minimum`, and `minLength`. To allow `null` alongside another type, use `anyOf`, because `type` takes one value.
+Anything else is rejected, including `oneOf` and `allOf`, conditional schemas such as `if` and `then`, tuple arrays, references outside `$defs`, and validation keywords such as `minimum` and `minLength`. Claude structured outputs do not support word boundaries, so kagent also rejects a `pattern` that uses `\b` or `\B`.
+
+JSON Schema treats `format` as an annotation. kagent forwards `format` to the model provider, but the runtime does not check it on the answer.
+
+A Gemini model calls Go ADK's `set_model_response` tool to answer, and that tool checks each property against one type. For a model whose name starts with `gemini-`, kagent therefore rejects a property that uses `anyOf`, `type: null`, or a type list with more than one non-null type. kagent also rejects an array property that does not set `items`. To allow `null` in such a property, use a type list such as `["string", "null"]`. The check skips models on the `GeminiVertexAI` provider.
 
 kagent also enforces the following limits when it builds the revision. A schema that exceeds a limit is rejected, before any agent runs with it.
 
@@ -193,6 +200,48 @@ kagent also enforces the following limits when it builds the revision. A schema 
 | Schema nodes | 1,000 |
 
 kagent counts depth and nodes through `properties`, `items`, and `anyOf`, and counts a `$defs` entry again each time that it is referenced. The size limit applies before kagent normalizes the schema, so whitespace in a ConfigMap value counts toward it.
+
+## Strict mode
+
+OpenAI models follow `format` and `pattern` during generation only in strict mode. To constrain generation to the schema, set `outputSchemaStrict` to `true` in the AgentTemplate.
+
+```yaml
+spec:
+  outputSchemaStrict: true
+  outputSchema:
+    type: object
+    properties:
+      ticket:
+        type: string
+        pattern: "^OPS-[0-9]+$"
+      due:
+        type: [string, "null"]
+        format: date
+    required:
+      - ticket
+      - due
+    additionalProperties: false
+```
+
+The example schema meets every strict mode rule in this section.
+
+| Field | Description |
+| ----- | ----------- |
+| `outputSchemaStrict` | Sends the schema in strict mode to the OpenAI, Azure OpenAI, and Azure AI Foundry providers. Foundry receives it only with the `OpenAI` API format. Other providers ignore the field. |
+| `outputSchema.properties.ticket.pattern` | Requires a ticket ID such as `OPS-123`. |
+| `outputSchema.properties.due.type` | Allows `null`, which makes `due` optional. |
+| `outputSchema.properties.due.format` | Asks for a date such as `2026-11-03`. |
+
+An AgentTemplate that sets `outputSchemaStrict` to `true` without a schema is rejected when you apply it, with the message `outputSchemaStrict requires outputSchema or outputSchemaFrom`. The runtime validates every answer against the schema in both modes.
+
+Strict mode accepts fewer schemas. kagent checks the following rules for every provider, so a schema stays valid when you change the provider of the ModelConfig.
+
+- The root does not use `anyOf`.
+- Every node sets `type`, `anyOf`, `enum`, or `$ref`.
+- A node that sets `$ref` does not set any other keyword. To add `null`, wrap the reference in `anyOf`, such as `anyOf: [{$ref: "#/$defs/item"}, {type: "null"}]`.
+- Every object sets `additionalProperties` to `false` and lists all of its properties in `required`. A map with free-form keys cannot meet this rule.
+
+To make a property optional in strict mode, list it in `required` and add `null` to its type list.
 
 ## Read the answer
 
@@ -291,6 +340,9 @@ For example, if the `shared-schemas` ConfigMap no longer has the `arithmetic-ans
 | `invalid output schema: schema must contain one JSON value` | `Compatible`, `UnsupportedConfiguration` | The value holds more than one JSON value, such as two objects in a row. |
 | `invalid output schema: schema does not match the portable output profile: ...` | `Compatible`, `UnsupportedConfiguration` | The schema uses a keyword or form outside the [portable output profile](#supported-schemas), or its root is not an object. |
 | `invalid output schema: resolve schema: ...` | `Compatible`, `UnsupportedConfiguration` | kagent cannot resolve the schema, for example because a `$ref` names a `$defs` entry that does not exist. |
+| `invalid output schema: pattern ...` | `Compatible`, `UnsupportedConfiguration` | A `pattern` is not valid RE2, uses a word boundary, or the schema's patterns compile to more than 100,000 regexp instructions. |
+| `output schema for Gemini: ...` | `Compatible`, `UnsupportedConfiguration` | A property breaks the [Gemini rule](#supported-schemas) for a single type, or an array property does not set `items`. |
+| `outputSchemaStrict: ...` | `Compatible`, `UnsupportedConfiguration` | The schema breaks a [strict mode](#strict-mode) rule. |
 | `output schema is incompatible with Go ADK: ...` | `Compatible`, `UnsupportedConfiguration` | The schema has a recursive reference, or exceeds the depth or node limit. |
 | `Harness runtime "x" does not support structured output` | `Compatible`, `UnsupportedConfiguration` | The Harness does not use the `kagent` harness. |
 
