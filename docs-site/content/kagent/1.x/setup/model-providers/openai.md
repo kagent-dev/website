@@ -67,11 +67,11 @@ The `openAI` block takes the following optional settings. For every field, inclu
 | `n` | How many completions to request. |
 | `timeout` | How long to wait on a request to the provider. |
 
-The `openAI` block in `v1alpha3` does not include the `tokenExchange` field that 0.x accepted. The API server rejects a ModelConfig that sets it as an unknown field.
+The `openAI` block in `v1alpha3` does not include the `tokenExchange` field that 0.x accepted. When a ModelConfig sets `tokenExchange`, the API server rejects the ModelConfig and reports the field as unknown.
 
 ## Send a file to the model
 
-On the `kagent` runtime, when `apiFormat` is `responses`, the runtime sends supported files through the Responses API without first extracting them as text. The provider fetches a link only in the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
+When `apiFormat` is `responses`, the `kagent` runtime sends supported files through the Responses API without first extracting them as text. The provider fetches a link only in the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
 
 {{< reuse "kagent-docs/snippets/setup/responses-api-files.md" >}}
 

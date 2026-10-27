@@ -163,7 +163,7 @@ The export splits into three groups: resources that carry forward with small cha
 
 ### Resources that carry forward
 
-ModelConfig, ModelProviderConfig, and RemoteMCPServer keep most of the fields that `v1alpha2` sets. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`, and the field's behavior does not change. `v1alpha3` removes the following ModelConfig fields, and the API server rejects a resource that sets any of them as an unknown field.
+ModelConfig, ModelProviderConfig, and RemoteMCPServer keep most of the fields that `v1alpha2` sets. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`, and the field's behavior does not change. `v1alpha3` removes the following ModelConfig fields. When a resource sets any of them, the API server rejects the resource and reports the field as unknown.
 
 - `spec.openAI.tokenExchange`
 - `spec.tls.caCertSecretRef` and `spec.tls.caCertSecretKey`
@@ -173,7 +173,7 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
 
 1. Recreate the Secrets that your ModelConfigs name before you apply them, or the ModelConfigs resolve to nothing.
 
-2. Convert these resources to `v1alpha3`. The export also holds Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. The command keeps the removed ModelConfig fields, so the apply fails until you delete them from the converted file.
+2. Convert these resources to `v1alpha3`. The export also holds Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. The command does not delete the ModelConfig fields that `v1alpha3` removed, so delete them from the converted file before you apply it. Otherwise, the apply fails.
    ```bash
    yq '.items |= map(select(.kind == "ModelConfig" or .kind == "ModelProviderConfig" or .kind == "RemoteMCPServer"))
      | .items[].apiVersion = "api.kagent.dev/v1alpha3"

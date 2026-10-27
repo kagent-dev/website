@@ -94,7 +94,7 @@ spec:
 
 ## Send a file to the model
 
-On the `kagent` runtime, the `responses` format sends a file to Azure as a link or as inline bytes. Azure fetches a link only on the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
+In the `responses` format, the `kagent` runtime sends a file to Azure as a link or as inline bytes. Azure fetches a link only in the turn that sends it. In later turns, the runtime replaces the link with the bare URL as text.
 
 A link reaches Azure regardless of its media type. Inline bytes reach Azure as a file only for an image, a PDF, or a `.docx`, `.xlsx`, or `.pptx` file. Azure documents file input only for PDF files. A `.docx`, `.xlsx`, or `.pptx` file might fail on Azure, although the runtime sends it.
 
