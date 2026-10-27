@@ -39,7 +39,7 @@ tools:
 
 ### Tool selection on the Claude harness
 
-Claude's MCP configuration has no per-tool allowlist. On the Claude harness, the `tools` list does not narrow a server, and the agent reaches every tool that the server serves. kagent admits the {{< gloss "Revision" >}}revision{{< /gloss >}} either way. Unless the list exactly matches the tools that kagent currently discovers on the server, kagent also records a warning on the Agent.
+Claude's MCP configuration does not have a per-tool allowlist. On the Claude harness, the `tools` list does not narrow a server, and the agent reaches every tool that the server serves. kagent admits the {{< gloss "Revision" >}}revision{{< /gloss >}} either way. Unless the list exactly matches the tools that kagent currently discovers on the server, kagent also records a warning on the Agent.
 
 ```sh
 kubectl get agent <name> -n <namespace> -o jsonpath='{.status.warnings}'
@@ -48,6 +48,32 @@ kubectl get agent <name> -n <namespace> -o jsonpath='{.status.warnings}'
 To keep an agent on the Claude harness away from a tool, limit what the server exposes rather than what the binding selects. Give the agent its own RemoteMCPServer that serves only the tools that you intend. Where you do not control what the server serves, put the MCP server behind agentgateway and apply [tool access](https://agentgateway.dev/docs/kubernetes/latest/documentation/mcp/tool-access/) rules to the route. Those rules filter a disallowed tool out of the `tools/list` response, so the agent never sees it. Then point the RemoteMCPServer at that route. To put more than one MCP server behind one route, see [Virtual MCP](https://agentgateway.dev/docs/kubernetes/latest/documentation/mcp/virtual/).
 
 For the bundled tool server, see the installation-level settings that drop providers and write tools in [Tools ecosystem]({{< link path="reference/tools-ecosystem#narrow-what-kagent-tool-server-serves" >}}).
+
+### Caller token passthrough
+
+An MCP server that authorizes each user individually needs the caller's token. For the authorizing server, set `tokenPassthrough: true` on its RemoteMCPServer resource. The agent sends the bearer token from the incoming agent-to-agent (A2A) request to the server as its `Authorization` header. When the incoming request does not present a bearer token, the MCP request fails.
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata:
+  name: user-mcp-server
+  namespace: kagent
+  labels:
+    kagent.dev/discovery: disabled
+spec:
+  description: An MCP server that authenticates each caller.
+  url: https://mcp.example.com/mcp
+  protocol: STREAMABLE_HTTP
+  tokenPassthrough: true
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `kagent.dev/discovery` label | The controller does not have a caller token, so controller-side tool discovery against this server fails. Set the label to `disabled` to turn discovery off. For more information, see [Turn tool discovery off for a server]({{< link path="reference/tools-ecosystem#turn-tool-discovery-off-for-a-server" >}}). |
+| `tokenPassthrough` | Sends the caller's bearer token as `Authorization: Bearer <token>`. The RemoteMCPServer cannot also set an `Authorization` header in `headersFrom`. The `codex` and `claude` harnesses reject a RemoteMCPServer that sets this field. For more information, see [Tool and skill support]({{< link path="agents/agent-harness#tool-and-skill-support" >}}). |
+
+Every model and MCP server that an agent reaches at the server's origin must also forward the caller's token. Otherwise, the Agent reports the `Compatible` condition as `False`. For more information, see [Forward the caller's token]({{< link path="setup/model-providers/about-model-providers#forward-the-callers-token" >}}).
 
 ## Subagents as tools
 
@@ -70,7 +96,7 @@ Every field is required. For the complete schema, see the [API reference]({{< li
 | `subAgent.description` | The text that tells the parent agent when to route work here. |
 | `subAgent.templateRef.name` | The AgentTemplate to bind, in the same namespace. |
 
-kagent compiles the bound template into the parent agent's own configuration and runs it inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}, so the two agents share one sandbox. A bound template is not an MCP server and has no endpoint of its own. A bound template also does not need an {{< gloss "Agent" >}}Agent{{< /gloss >}} resource because the parent's Agent runs it.
+kagent compiles the bound template into the parent agent's own configuration and runs it inside the parent's {{< gloss "Actor" >}}Actor{{< /gloss >}}, so the two agents share one sandbox. A bound template is not an MCP server and does not have an endpoint of its own. A bound template also does not need an {{< gloss "Agent" >}}Agent{{< /gloss >}} resource because the parent's Agent runs it.
 
 > [!NOTE]
 > Dedicated subagents, which would give a bound agent its own Harness, Session, and Actor, are not part of the served API. The `subAgent.agentRef` field that would select one is unavailable, so `templateRef` is the only binding that you can write today.

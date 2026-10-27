@@ -176,34 +176,6 @@ A `RemoteMCPServer` points at any MCP server that the cluster can reach, whether
 
 3. Create another Session to run the revision that includes the new binding.
 
-### Use the caller token for MCP server authentication {#use-the-caller-token-for-mcp-server-authentication}
-
-If your MCP server authorizes each user with the caller's bearer token, create a separate RemoteMCPServer with `tokenPassthrough: true`. With token passthrough, the server receives the token as its `Authorization` header. The MCP request fails when the agent invocation has no caller token.
-
-```yaml
-kubectl apply -f - <<EOF
-apiVersion: api.kagent.dev/v1alpha3
-kind: RemoteMCPServer
-metadata:
-  name: user-mcp-server
-  namespace: kagent
-  labels:
-    kagent.dev/discovery: disabled
-spec:
-  description: An MCP server that authenticates each caller.
-  url: https://mcp.example.com/mcp
-  protocol: STREAMABLE_HTTP
-  tokenPassthrough: true
-EOF
-```
-
-| Field | Description |
-| ----- | ----------- |
-| `metadata.labels.kagent.dev/discovery` | Set to `disabled` when the server requires a caller token to list tools. Controller discovery runs before a user request exists. |
-| `tokenPassthrough` | Sends the caller's bearer token as `Authorization: Bearer <token>`. A RemoteMCPServer that sets `tokenPassthrough` cannot also set an `Authorization` header in `headersFrom`. |
-
-The `codex` and `claude` harnesses reject a RemoteMCPServer that sets `tokenPassthrough`.
-
 ## Clean up
 
 > [!IMPORTANT]
@@ -213,7 +185,6 @@ If you created a RemoteMCPServer of your own in [Bind your own MCP server](#bind
 
 ```bash
 kubectl delete remotemcpserver my-mcp-server -n kagent
-kubectl delete remotemcpserver user-mcp-server -n kagent
 ```
 
 ## Next steps
