@@ -303,6 +303,7 @@ The `kagent` harness accepts every AgentTemplate feature. Codex and Claude run a
 | A subagent binding cannot itself carry tools, skills, plugins, or nested agents, and must use the same provider and credentials as the agent that binds it. | `codex`, `claude` |
 | The agent sees every tool that an {{< gloss "MCP" >}}MCP{{< /gloss >}} server offers, because Claude does not support partial tool selection. A binding that names a subset of tools binds the whole server instead. The Agent still reconciles, and reports the decision in `status.warnings` as `Claude RemoteMCPServer "<name>" does not support partial tool selection`. | `claude` |
 | A RemoteMCPServer must use the `STREAMABLE_HTTP` protocol. `SSE` is rejected. | `codex` |
+| A RemoteMCPServer that sets `tokenPassthrough` is rejected. | `codex`, `claude` |
 | Structured output is rejected, with `Harness runtime "<name>" does not support structured output`. | `codex`, `claude`, `byo` |
 
 For more information about what an AgentTemplate can bind, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
