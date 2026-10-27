@@ -5,10 +5,10 @@ weight: 10
 author: kagent.dev
 ---
 
-{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on, and kagent provides the Harness, AgentTemplate, and Agent API that you author against. The `kagent install` command installs kagent, Agent Substrate, and the development PostgreSQL database together.
+{{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on. kagent provides the Harness, AgentTemplate, and Agent API that you author against.
 
 > [!NOTE]
-> These steps install kagent 1.0 fresh. kagent 1.0 has no in-place upgrade from the 0.10.x version line, and installing its custom resource definitions replaces the ones that a 0.10.x installation uses. To move an existing installation, start with [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}).
+> These steps install kagent 1.0 fresh. kagent 1.0 does not support an in-place upgrade from the 0.10.x version line, and installing its custom resource definitions (CRDs) replaces the ones that a 0.10.x installation uses. To move an existing installation, start with [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x#in-place-upgrade-blockers" >}}).
 
 ## Before you begin
 
@@ -30,14 +30,14 @@ author: kagent.dev
 
    {{< tabs >}}
    {{% tab name="Local kind cluster" %}}
-   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. No extra API configuration is needed.
+   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. The cluster does not need extra API configuration.
    ```bash
    kind create cluster --name kagent --image kindest/node:v1.37.0
    ```
    {{% /tab %}}
 
    {{% tab name="Existing 1.37+ cluster" %}}
-   Kubernetes 1.37 and later serve the required APIs at `certificates.k8s.io/v1` by default, so you do not need to change the API server configuration.
+   You do not need to change the API server configuration.
 
    Confirm that the cluster serves the required APIs.
    ```bash
@@ -56,7 +56,7 @@ author: kagent.dev
 
 ## Install kagent
 
-The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertificate controller, a development PostgreSQL database, and kagent in the correct order. It also creates the Substrate identity material and database connection Secrets that the releases need.
+The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertificate controller, a development PostgreSQL database, and kagent in the correct order. The CLI also creates the Agent Substrate identity material and database connection Secrets that the releases need.
 
 1. Save a Helm values file that enables gRPC server reflection, so that guides that use `grpcurl` can discover the controller API.
    ```bash
@@ -81,7 +81,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    kagent --config kagent-config.yaml install --namespace kagent
    ```
 
-   The command reads your provider API key, installs Agent Substrate into `ate-system`, and deploys PostgreSQL as `kagent-postgresql` in the kagent namespace. It then connects kagent and Agent Substrate to that database with Pod Certificates. The development database runs the stock `postgres` image, which omits the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs.
+   The command reads your provider API key, installs Agent Substrate into `ate-system`, and deploys PostgreSQL as `kagent-postgresql` in the kagent namespace. It then connects kagent and Agent Substrate to that database with Pod Certificates. The development database runs the stock `postgres` image. That image does not include the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs.
 
 4. Wait for the controller to roll out.
    ```bash
@@ -91,6 +91,8 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    For production database requirements and direct Helm installation, see [Operational considerations]({{< link path="operations/operational-considerations#choose-a-database" >}}).
 
 ## Verify the installation
+
+Before you create an agent, confirm that kagent and Agent Substrate are running, and find the address that clients use to reach the kagent API.
 
 1. Confirm that the kagent pods are running.
    ```bash
@@ -138,7 +140,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    {{% /tab %}}
    {{< /tabs >}}
 
-4. Optional: Open the kagent UI. The UI is a separate `{{< reuse "kagent-docs/snippets/name-ui.md" >}}` service, so it needs its own port-forward in a second terminal. The dashboard is then available at [http://localhost:8082](http://localhost:8082). For the `kagent dashboard` shortcut and a tour of the UI, see [Launch the UI]({{< link path="observability/launch-ui" >}}).
+4. Optional: Open the kagent UI. The UI is a separate `{{< reuse "kagent-docs/snippets/name-ui.md" >}}` service, so it needs its own port-forward in a second terminal. The UI is then available at [http://localhost:8082](http://localhost:8082). For the `kagent dashboard` shortcut and a tour of the UI, see [Launch the UI]({{< link path="observability/launch-ui" >}}).
    ```bash
    kubectl port-forward -n kagent svc/{{< reuse "kagent-docs/snippets/name-ui.md" >}} 8082:8080
    ```
@@ -147,29 +149,29 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
 
 ## Restrict kagent to specific namespaces
 
-By default the controller watches every namespace, and the chart creates cluster-scoped RBAC (ClusterRoles and ClusterRoleBindings). To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
+By default the controller watches every namespace, and the chart creates cluster-scoped role-based access control (RBAC) resources, which are ClusterRoles and ClusterRoleBindings. To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
 
 ```yaml
 global:
   watchNamespaces: [prod-agents, staging-agents]
 ```
 
-Prefer `global.watchNamespaces` over the per-surface keys. The chart derives both surfaces from this one value, so they cannot disagree: it replaces every kagent ClusterRole with a Role and RoleBinding in each listed namespace, and it limits the controller's watch to the same list. The chart appends the install namespace to the list automatically, so the release's own objects remain managed.
+The chart derives both surfaces from `global.watchNamespaces`, so the surfaces cannot disagree. For that reason, use `global.watchNamespaces` in preference to the per-surface keys. The chart replaces every kagent ClusterRole with a Role and RoleBinding in each listed namespace. The chart also limits the controller's watch to the same list. The chart appends the install namespace to the list automatically, so the release's own resources remain managed.
 
-The per-surface keys still exist for installs that scope the surfaces independently, and the validation rules bind them:
+The per-surface keys still exist for installations that scope the surfaces independently, and the validation rules bind them:
 
-- `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace or the render fails.
-- `config.kubernetes.watchNamespaces` is an explicit watch override. Under `rbac.namespaces`, a watch entry that names a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. Under `global.watchNamespaces`, the chart folds the entries into the watch scope instead of failing. In both cases the watch list replaces the default, so the install namespace is not added back once `config.kubernetes.watchNamespaces` is set — list it explicitly if the controller should keep watching it.
+- `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace, or the render fails.
+- `config.kubernetes.watchNamespaces` is an explicit watch override. When `rbac.namespaces` is set, a watch entry that references a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. When `global.watchNamespaces` is set, the chart folds the entries into the watch scope and does not fail the render. In both cases, the watch list replaces the default. When `config.kubernetes.watchNamespaces` is set, the chart does not add the install namespace back. For the controller to keep watching the install namespace, list it explicitly.
 - The `kagent-tool-server` RemoteMCPServer that the chart creates admits references from its own namespace only. An Agent in another watched namespace that binds it does not become ready until you set `allowedNamespaces` on that server. See [Reach kagent-tool-server from another namespace]({{< link path="reference/tools-ecosystem#reach-kagent-tool-server-from-another-namespace" >}}).
 
-Verify a namespaced install the same way as the default one, plus the negative case. The [create your first agent]({{< link path="get-started/your-first-agent" >}}) guide's `kubectl get agents` and conditions checks apply to each namespace; the difference is that an Agent the controller does not watch stays `UNKNOWN` forever.
+Verify a namespaced installation in the same way as the default one, and also check that an unwatched namespace stays unmanaged. The `kubectl get agents` and conditions checks from the guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) apply to each watched namespace.
 
 1. Create one Agent in each watched namespace.
    ```bash
    kubectl apply -n prod-agents -f my-agent.yaml
    kubectl apply -n staging-agents -f my-agent.yaml
    ```
-2. Create one Agent in a namespace the list does not cover.
+2. Create one Agent in a namespace that the list does not cover.
    ```bash
    kubectl apply -n dev-agents -f my-agent.yaml
    ```
@@ -184,7 +186,7 @@ Verify a namespaced install the same way as the default one, plus the negative c
    my-agent       30s   True
    my-agent       30s   True
    ```
-4. Confirm that the Agent in the unwatched namespace stays unmanaged: its `READY` value stays `UNKNOWN`, and its conditions stay empty, because the controller has no watch entry for that namespace.
+4. Confirm that the Agent in the unwatched namespace stays unmanaged. The Agent's `READY` value stays `UNKNOWN` and its conditions stay empty, because the controller does not have a watch entry for that namespace.
    ```bash
    kubectl get agents -n dev-agents
    kubectl get agent my-agent -n dev-agents -o jsonpath='{.status.conditions}'

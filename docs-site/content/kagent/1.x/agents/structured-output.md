@@ -12,7 +12,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
 | Field | Description |
 | ----- | ----------- |
 | `outputSchema` | The schema, written inline in the AgentTemplate. |
-| `outputSchemaFrom.name` | The ConfigMap holding the schema as JSON, in the AgentTemplate's namespace. |
+| `outputSchemaFrom.name` | The ConfigMap that stores the schema as JSON, in the AgentTemplate's namespace. |
 | `outputSchemaFrom.key` | The key within that ConfigMap. |
 | `outputSchemaStrict` | Whether the model provider constrains generation to the schema. Defaults to `false`. For the providers that honor it, see [Strict mode](#strict-mode). |
 
@@ -114,7 +114,7 @@ Set `spec.outputSchema` to keep the schema in the AgentTemplate, so that the sch
 
 Use `outputSchemaFrom` to keep the schema outside the AgentTemplate, so that several AgentTemplates can share one schema. The value in the ConfigMap must be JSON, even though the ConfigMap itself is written in YAML.
 
-1. Create a ConfigMap holding the schema.
+1. Create a ConfigMap that stores the schema.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: v1
@@ -189,7 +189,7 @@ Anything else is rejected, including `oneOf` and `allOf`, conditional schemas su
 
 JSON Schema treats `format` as an annotation. kagent forwards `format` to the model provider, but the runtime does not check it on the answer.
 
-A Gemini model calls Go ADK's `set_model_response` tool to answer, and that tool checks each property against one type. For a model whose name starts with `gemini-`, kagent therefore rejects a property that uses `anyOf`, `type: null`, or a type list with more than one non-null type. kagent also rejects an array property that does not set `items`. To allow `null` in such a property, use a type list such as `["string", "null"]`. The check skips models on the `GeminiVertexAI` provider.
+A Gemini model answers by calling the `set_model_response` tool of the Go Agent Development Kit (ADK), and that tool checks each property against one type. For a model whose name starts with `gemini-`, kagent therefore rejects a property that uses `anyOf`, `type: null`, or a type list with more than one non-null type. kagent also rejects an array property that does not set `items`. To allow `null` in such a property, use a type list such as `["string", "null"]`. The check skips models on the `GeminiVertexAI` provider.
 
 kagent also enforces the following limits when it builds the revision. A schema that exceeds a limit is rejected, before any agent runs with it.
 
@@ -227,7 +227,7 @@ The example schema meets every strict mode rule in this section.
 
 | Field | Description |
 | ----- | ----------- |
-| `outputSchemaStrict` | Sends the schema in strict mode to the OpenAI, Azure OpenAI, and Azure AI Foundry providers. Foundry receives it only with the `OpenAI` API format. Other providers ignore the field. |
+| `outputSchemaStrict` | Sends the schema in strict mode to the OpenAI, Azure OpenAI, and Azure AI Foundry providers. Azure AI Foundry receives it only with the `OpenAI` API format. Other providers ignore the field. |
 | `outputSchema.properties.ticket.pattern` | Requires a ticket ID such as `OPS-123`. |
 | `outputSchema.properties.due.type` | Allows `null`, which makes `due` optional. |
 | `outputSchema.properties.due.format` | Asks for a date such as `2026-11-03`. |
@@ -245,7 +245,7 @@ To make a property optional in strict mode, list it in `required` and add `null`
 
 ## Read the answer
 
-A successful answer is published as one {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) `DataPart` with the media type `application/json`. The part's metadata carries the SHA-256 digest of the schema that the answer was validated against, under the key `kagent.dev/a2a/output-schema-sha256`. kagent computes the digest after it normalizes the schema, so two schemas that differ only in formatting or key order have the same digest. The Agent's card lists `application/json` as its default output mode, instead of `text`.
+A successful answer is published as one {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) `DataPart` with the media type `application/json`. The part's metadata includes the SHA-256 digest of the schema that the answer was validated against, under the key `kagent.dev/a2a/output-schema-sha256`. kagent computes the digest after it normalizes the schema, so two schemas that differ only in formatting or key order have the same digest. The Agent's card lists `application/json` as its default output mode, instead of `text`.
 
 To see the part and its metadata, print the task as JSON.
 
@@ -270,31 +270,33 @@ Example output:
 ]
 ```
 
-The runtime holds back the agent's partial output while the agent writes its answer, and publishes only the complete answer. Progress updates, tool calls, approval requests, and input-required messages keep their usual form, and the agent can call tools before it answers. A streaming client that needs only the answer reads the last artifact with content before the task reaches `TASK_STATE_COMPLETED`. That artifact's part carries the `kagent.dev/a2a/output-schema-sha256` metadata key.
+The runtime holds back the agent's partial output while the agent writes its answer, and publishes only the complete answer. Progress updates, tool calls, approval requests, and input-required messages keep their usual form, and the agent can call tools before it answers. A streaming client that needs only the answer reads the last artifact with content before the task reaches `TASK_STATE_COMPLETED`. That artifact's part includes the `kagent.dev/a2a/output-schema-sha256` metadata key.
 
 ## Agents as tools
 
 The schema applies only to the root agent, which is the agent of the AgentTemplate that the Agent names. An AgentTemplate [bound to it as a subagent]({{< link path="skills-and-mcp/about-tools#subagents-as-tools" >}}) does not inherit the schema. If the bound AgentTemplate has a schema of its own, that schema applies only to Agents that name it directly.
 
-With a `Shared` binding, the root agent can hand the conversation to the bound agent, which then answers in its place, in that turn and in the turns that follow. Those tasks fail with `output_validation_failed: root agent produced no result artifact`, because the answers do not come from the root agent. The bound agent's answers still reach the caller as text. Give a schema only to an AgentTemplate whose own agent writes the final answer.
+If the subagent uses a `Shared` binding, the root agent can hand the conversation to the bound agent, which then answers in its place, in that turn and in the turns that follow. Those tasks fail with `output_validation_failed: root agent produced no result artifact`, because the answers do not come from the root agent. The bound agent's answers still reach the caller as text. Give a schema only to an AgentTemplate whose own agent writes the final answer.
 
 ## Answers that fail validation
 
-Structured output has no fallback to text. If the model refuses, stops early, or returns an answer that is not JSON or does not match the schema, the task fails. kagent does not publish the invalid answer or include it in the failure message, because it can contain sensitive data. With a Gemini model on the `Gemini` provider, however, the agent is told to give its answer as the arguments of a `set_model_response` tool call. kagent publishes that call like any other tool call, before it validates the answer, so an answer given that way reaches the caller even when it fails validation.
+Structured output does not have a fallback to text. If the model refuses, stops early, or returns an answer that is not JSON or does not match the schema, the task fails. kagent does not publish the invalid answer or include it in the failure message, because it can contain sensitive data. When the agent uses a Gemini model on the `Gemini` provider, however, the agent is told to give its answer as the arguments of a `set_model_response` tool call. kagent publishes that call like any other tool call, before it validates the answer, so an answer given that way reaches the caller even when it fails validation.
 
-For example, an answer that does not match the schema fails the `kagent invoke` command with output like the following. The `output_validation_failed:` message names the cause.
+For example, an answer that does not match the schema fails the `kagent agent invoke` command with output like the following. The `output_validation_failed:` message states the cause.
 
 ```console
 processor failed: output_validation_failed: root agent output does not conform to its schema
 Error: Session task 01a0ec27-157f-7034-bb89-09855f485b2a ended in TASK_STATE_FAILED
 ```
 
+Each message follows the `processor failed:` prefix.
+
 | Message | Cause |
 | ------- | ----- |
 | `output_validation_failed: root agent output does not conform to its schema` | The answer is JSON, but it does not match the schema. |
 | `output_validation_failed: root agent output is not valid JSON` | The answer is not JSON. |
 | `output_validation_failed: root agent did not complete structured output` | The model stopped for a reason other than finishing normally, such as reaching its token limit. |
-| `output_validation_failed: root agent produced no structured value` | The model returned no answer text. |
+| `output_validation_failed: root agent produced no structured value` | The model did not return any answer text. |
 | `output_validation_failed: root agent produced no result artifact` | The task ended without a structured answer from the root agent, for example because the root agent handed the conversation to an [agent bound as a tool](#agents-as-tools). |
 
 ## Troubleshooting
@@ -329,15 +331,17 @@ For example, if the `shared-schemas` ConfigMap no longer has the `arithmetic-ans
 ]
 ```
 
+The `message` field of the failing condition identifies the cause.
+
 | Message | Condition and reason | Cause |
 | ------- | -------------------- | ----- |
 | `resolve output schema ConfigMap "x": not found` | `ResolvedRefs`, `ReferenceResolutionFailed` | The ConfigMap does not exist in the AgentTemplate's namespace. |
-| `resolve output schema ConfigMap "x": key "y" not found` | `ResolvedRefs`, `ReferenceResolutionFailed` | The ConfigMap has no such key under `data`. |
-| `invalid output schema: schema is empty` | `Compatible`, `UnsupportedConfiguration` | The key holds an empty value. |
+| `resolve output schema ConfigMap "x": key "y" not found` | `ResolvedRefs`, `ReferenceResolutionFailed` | The ConfigMap does not have that key under `data`. |
+| `invalid output schema: schema is empty` | `Compatible`, `UnsupportedConfiguration` | The key's value is empty. |
 | `invalid output schema: schema exceeds 65536 bytes` | `Compatible`, `UnsupportedConfiguration` | The schema is larger than 64 KiB. |
 | `invalid output schema: decode JSON: ...` | `Compatible`, `UnsupportedConfiguration` | The value is not valid JSON. |
 | `invalid output schema: decode trailing JSON: ...` | `Compatible`, `UnsupportedConfiguration` | Text that is not JSON follows the JSON value. |
-| `invalid output schema: schema must contain one JSON value` | `Compatible`, `UnsupportedConfiguration` | The value holds more than one JSON value, such as two objects in a row. |
+| `invalid output schema: schema must contain one JSON value` | `Compatible`, `UnsupportedConfiguration` | The value contains more than one JSON value, such as two objects in a row. |
 | `invalid output schema: schema does not match the portable output profile: ...` | `Compatible`, `UnsupportedConfiguration` | The schema uses a keyword or form outside the [portable output profile](#supported-schemas), or its root is not an object. |
 | `invalid output schema: resolve schema: ...` | `Compatible`, `UnsupportedConfiguration` | kagent cannot resolve the schema, for example because a `$ref` names a `$defs` entry that does not exist. |
 | `invalid output schema: pattern ...` | `Compatible`, `UnsupportedConfiguration` | A `pattern` is not valid RE2, uses a word boundary, or the schema's patterns compile to more than 100,000 regexp instructions. |
