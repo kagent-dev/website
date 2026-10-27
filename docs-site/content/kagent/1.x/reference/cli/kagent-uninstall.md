@@ -4,7 +4,13 @@ description: Uninstall kagent.
 weight: 520
 ---
 
-Uninstall kagent
+Uninstall kagent: the kagent and Substrate Helm releases, their CRDs, the
+bundled PostgreSQL and its data, and the ate-system and
+podcertificate-controller-system namespaces. Removing the CRDs deletes every
+resource created from them, such as agents and model configs.
+
+A database that kagent install did not deploy, such as one used with
+--skip-database-setup, stays. The kagent namespace stays.
 
 ```bash
 kagent uninstall [flags]
