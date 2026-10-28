@@ -59,7 +59,6 @@ The `mistral` block takes the following optional settings. For every field, incl
 | `maxTokens` | A cap on the tokens generated in one response. Minimum 1. |
 | `timeout` | How long to wait on a request to the provider, in seconds. Minimum 1. |
 
-Mistral embeddings (`mistral-embed`) are out of scope for this page.
 
 ## Use the ModelConfig
 
