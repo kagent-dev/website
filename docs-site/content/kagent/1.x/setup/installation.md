@@ -76,6 +76,11 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    EOF
    ```
 
+   | Field | Description |
+   | --- | --- |
+   | `install.kagent.valuesFiles` | The Helm values files that the installer passes to the kagent chart, in order. The last file wins. |
+   | `install.bundledPostgresImage` | Optional. The image of the development PostgreSQL database that the installer deploys, for both the database container and its TLS reloader. Defaults to `postgres:18-alpine`, pinned by digest. To pull the image from a mirror, such as in an air-gapped cluster, set the full image reference, such as `mirror.example.com/library/postgres:18-alpine`. |
+
 3. Install kagent.
    ```bash
    kagent --config kagent-config.yaml install --namespace kagent
