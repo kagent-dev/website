@@ -9,7 +9,7 @@ function AuthorComponent({ authors }: { authors: Author[] }) {
                 <Image src={author.photo} alt={author.name} width={128} height={128} className="w-32 h-32 rounded-full mb-4 shadow-lg border-[#942DE7] border-2 object-cover" />
                 <div className="text-xl font-semibold text-card-foreground">{author.name}</div>
                 <div className="text-sm text-muted-foreground italic">{author.title}</div>
-                <div className="text-sm text-muted-foreground mt-10">{author.bio}</div>
+                <div className="text-sm text-muted-foreground mt-10 whitespace-pre-line text-left">{author.bio}</div>
             </div>
         ))}
     </div>
