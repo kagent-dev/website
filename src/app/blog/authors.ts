@@ -19,7 +19,7 @@ export const authors: Author[] = [
     name: 'Christian Posta',
     title: 'VP, Global Field CTO',
     photo: '/images/authors/christian-posta.png',
-    bio: 'Christian Posta (@christianposta) is Global Field CTO at Solo.io supporting customers and end users in their adoption of cloud-native technologies. He is an author for Manning and O’Reilly publications, open source contributor, blogger and sought after speaker on Envoy Proxy and Kubernetes technologies. Prior to Solo.io, Chrisitan was a Chief Architect at Red Hat, FuseSource and held engineering positions at organizations like Wells Fargo, Apollo Group, Intel.',
+    bio: 'Christian Posta is Global Field CTO at Solo.io, where he helps enterprises build secure, resilient infrastructure for AI agents, LLMs, and cloud-native applications. He is the author of Agent Substrate: From Pods to Sandboxes, AI Agents in Kubernetes, Istio in Action, and other books on cloud-native architecture. He works with customers on agent identity, authorization, and delegation, using technologies such as AAuth, SPIFFE, Microsoft Entra Agent ID, OAuth, and MCP.\n\nConnect with him on LinkedIn at linkedin.com/in/ceposta.',
   },
   {
     id: 'linsun',
