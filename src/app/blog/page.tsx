@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'agent-sandboxes-four-axes',
+        publishDate: '2026-10-27',
+        title: 'Not All Agent Sandboxes Are Created Equally',
+        description: 'Discobox, OpenShell, E2B, SPACE, Agent Substrate, and other agent sandboxes make very different assumptions. This post introduces four axes for comparing them: boundary and access controls, environment, lifecycle, and interface and experience.',
+        authorId: 'christianposta',
+    },
+    {
         slug: 'kagent-agent-substrate-sandboxes',
         publishDate: '2026-09-21',
         title: 'Kagent and Agent Substrate: Running AI Agent Sandboxes on Kubernetes',
