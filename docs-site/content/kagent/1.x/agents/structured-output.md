@@ -27,10 +27,9 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
    kagent version
    ```
 
-   If `kagent_version` in the output is not {{< reuse "kagent-docs/versions/kagent.md" >}}, install that version.
-   ```bash
-   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
-   ```
+   If `kagent_version` in the output is not {{< reuse "kagent-docs/versions/kagent.md" >}}, install the CLI for this release.
+
+   {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
 ## Set the schema inline
 

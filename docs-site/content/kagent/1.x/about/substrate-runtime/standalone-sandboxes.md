@@ -41,10 +41,7 @@ An agent can create a Sandbox of its own through the kagent Model Context Protoc
    | `config.sandboxes.defaultTtl` | `3600s` | Lifetime applied when `kagent sandbox create` omits `--ttl`. Durations in the `config` block take protobuf seconds notation, so `3600s` rather than `1h`. |
    | `config.sandboxes.maxTtl` | `86400s` | Upper bound on any requested lifetime, which the controller caps at `86400s`. A Sandbox expires the configured interval after it is created, regardless of how recently a command ran in it. |
 
-2. Download the kagent CLI. The `--version` flag matches the CLI to the release that these docs cover.
-   ```bash
-   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
-   ```
+2. {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
 3. To read the Sandbox ID from the CLI's JSON output, install [`jq`](https://jqlang.org/download/).
 
