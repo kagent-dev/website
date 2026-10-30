@@ -2,161 +2,161 @@
     
     <url>
         <loc>https://kagent.dev/agents</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/blog</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/community</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/enterprise</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/page.tsx</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/argo-rollouts-conversion-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/cilium-crd-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/helm-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/istio-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/k8s-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/kgateway-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/observability-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/agents/promql-agent</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/istio</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/kubernetes</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/prometheus</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/documentation</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/helm</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/argo</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/grafana</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/other</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     
     <url>
         <loc>https://kagent.dev/tools/cilium</loc>
-        <lastmod>2026-09-05</lastmod>
+        <lastmod>2026-10-30</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
