@@ -149,19 +149,19 @@ Before you create an agent, confirm that kagent and Agent Substrate are running,
 
 ## Restrict kagent to specific namespaces
 
-By default the controller watches every namespace, and the chart creates cluster-scoped role-based access control (RBAC) resources, which are ClusterRoles and ClusterRoleBindings. To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
+By default the controller watches every namespace, and the chart creates ClusterRoles and ClusterRoleBindings for cluster-scoped role-based access control (RBAC). To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
 
 ```yaml
 global:
   watchNamespaces: [prod-agents, staging-agents]
 ```
 
-The chart derives both surfaces from `global.watchNamespaces`, so the surfaces cannot disagree. For that reason, use `global.watchNamespaces` in preference to the per-surface keys. The chart replaces every kagent ClusterRole with a Role and RoleBinding in each listed namespace. The chart also limits the controller's watch to the same list. The chart appends the install namespace to the list automatically, so the release's own resources remain managed.
+Use `global.watchNamespaces` in preference to the per-surface keys. The chart derives both the RBAC scope and the controller's watch scope from this one value, so the two scopes cannot disagree. For each listed namespace, the chart replaces every kagent ClusterRole with a Role and RoleBinding and adds the namespace to the watch. The chart also appends the install namespace, so the release's own resources remain managed.
 
 The per-surface keys still exist for installations that scope the surfaces independently, and the validation rules bind them:
 
 - `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace, or the render fails.
-- `config.kubernetes.watchNamespaces` is an explicit watch override. When `rbac.namespaces` is set, a watch entry that references a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. When `global.watchNamespaces` is set, the chart folds the entries into the watch scope and does not fail the render. In both cases, the watch list replaces the default. When `config.kubernetes.watchNamespaces` is set, the chart does not add the install namespace back. For the controller to keep watching the install namespace, list it explicitly.
+- `config.kubernetes.watchNamespaces` is an explicit watch override. When `rbac.namespaces` is set, a watch entry that references a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. When `global.watchNamespaces` is set, the chart folds the entries into the watch scope and does not fail the render. In both cases, the watch list replaces the default list, so the chart does not add the install namespace. To keep watching the install namespace, list it explicitly.
 - The `kagent-tool-server` RemoteMCPServer that the chart creates admits references from its own namespace only. An Agent in another watched namespace that binds it does not become ready until you set `allowedNamespaces` on that server. See [Reach kagent-tool-server from another namespace]({{< link path="reference/tools-ecosystem#reach-kagent-tool-server-from-another-namespace" >}}).
 
 Verify a namespaced installation in the same way as the default one, and also check that an unwatched namespace stays unmanaged. The `kubectl get agents` and conditions checks from the guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) apply to each watched namespace.

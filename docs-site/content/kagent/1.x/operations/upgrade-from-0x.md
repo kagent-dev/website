@@ -14,7 +14,7 @@ Each of the following independent changes rules out `helm upgrade`, so working a
 | Change | Consequence |
 | ------ | ----------- |
 | The database schema is a clean baseline | 1.0 replaces golang-migrate with goose and starts from a single baseline migration. An existing 0.10.x database does not have a migration path to that baseline, and 1.0 refuses to run against a 0.10.x database. |
-| The custom resources moved to a new API group | 1.0 serves its resources under `api.kagent.dev`, where 0.10.x serves them under `kagent.dev`. The groups do not share a conversion, so resources stored under the old group are not visible through the new custom resource definitions (CRDs). |
+| The custom resources moved to a new API group | 1.0 serves its resources under `api.kagent.dev`, where 0.10.x serves them under `kagent.dev`. kagent does not convert resources between the groups, so resources stored under the old group are not visible through the new custom resource definitions (CRDs). |
 | The resource model is replaced | 0.10.x's `Agent` is gone. What the 0.10.x `Agent` described is now split between an AgentTemplate and a {{< gloss "Harness" >}}Harness{{< /gloss >}}. A new {{< gloss "Agent" >}}Agent{{< /gloss >}} resource in the `api.kagent.dev` group pairs the two. A conversation is a {{< gloss "Session" >}}Session{{< /gloss >}} that is created against that Agent. The two `Agent` kinds share a name and nothing else. For the model itself, see [Core concepts]({{< link path="about/core-concepts" >}}). |
 
 The two releases also cannot run side by side on one cluster. The group rename separates the custom resources, but both charts name their cluster-scoped ClusterRoles after the release, such as `kagent-getter-role`. When both releases use the default `kagent` release name, the 1.0 install collides with the ClusterRoles that 0.10.x owns.
@@ -33,7 +33,7 @@ The two releases also cannot run side by side on one cluster. The group rename s
    source core uses an unsupported migration table. Use a new PostgreSQL database
    ```
 
-4. Back up your 0.10.x database. The backup is a restore point for the old installation only. A procedure that loads the backup into 1.0 does not exist.
+4. Back up your 0.10.x database. The backup is a restore point for the old installation only. kagent 1.0 cannot load the backup.
    ```bash
    pg_dump "postgres://<user>:<password>@<host>:5432/<dbname>" \
      --format=custom \
@@ -52,7 +52,7 @@ Your Kubernetes resources do carry forward, so export them before anything repla
      -n kagent -o yaml > kagent-0.10-resources.yaml
    ```
 
-2. Note the Secrets that your ModelConfigs reference. Secrets are ordinary Kubernetes resources that kagent does not own, so recreate them on the new cluster by whatever means you created them originally.
+2. Note the Secrets that your ModelConfigs reference. Secrets are ordinary Kubernetes resources that kagent does not own, so recreate them on the new cluster by the same method that you used originally.
    ```bash
    kubectl get modelconfigs -n kagent \
      -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.apiKeySecret}{"\n"}{end}'
@@ -173,7 +173,7 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
 
 1. Before you apply the ModelConfigs, recreate the Secrets that they reference. Otherwise, the ModelConfigs cannot resolve their Secrets.
 
-2. Convert these resources to `v1alpha3`. The export also contains Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. The command does not delete the ModelConfig fields that `v1alpha3` removed, so delete them from the converted file before you apply it. Otherwise, the apply fails. If the converted file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it too, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
+2. Convert these resources to `v1alpha3`. The export also contains Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. 
    ```bash
    yq '.items |= map(select(.kind == "ModelConfig" or .kind == "ModelProviderConfig" or .kind == "RemoteMCPServer"))
      | .items[].apiVersion = "api.kagent.dev/v1alpha3"
@@ -182,7 +182,9 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
 
-3. Apply the converted resources.
+3. Delete the ModelConfig fields that `v1alpha3` removed from the converted file. The conversion command does not delete them, and the apply fails while they remain. If the file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it too, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
+
+4. Apply the converted resources.
    ```bash
    kubectl apply -f kagent-1.0-resources.yaml
    ```
@@ -208,9 +210,9 @@ A 0.10.x `Agent` described both what the agent does and how it runs. In 1.0, an 
 | `spec.declarative.stream`, `executeCodeBlocks`, `shareTools`, `context` | Nothing. `v1alpha3` does not have an equivalent field. |
 
 > [!NOTE]
-> Tool bindings changed shape. A 0.10.x tool set `type: McpServer` or `type: Agent` alongside a matching block. A 1.0 `ToolBinding` sets an `mcp` or `subAgent` block and does not set a discriminator, so the block that you set determines the binding's kind. For what each binding does, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
+> Tool bindings changed shape. A 0.10.x tool set `type: McpServer` or `type: Agent` alongside a matching block. A 1.0 `ToolBinding` contains either an `mcp` block or a `subAgent` block and has no `type` field, so the block that you set determines the binding's kind. For what each binding does, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
 
-Write one Harness for each distinct runtime and infrastructure combination that your agents need. Then write one Agent for each 0.10.x Agent, that references the AgentTemplate and the Harness that it pairs. Neither reusable resource references the other, so the Agent makes a template runnable. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked example, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
+Write one Harness for each distinct runtime and infrastructure combination that your agents need. Then write one Agent for each 0.10.x Agent. Each Agent references the AgentTemplate and the Harness that it pairs. Neither reusable resource references the other, so the Agent makes a template runnable. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked example, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
 
 ### Resources with no 1.0 equivalent
 

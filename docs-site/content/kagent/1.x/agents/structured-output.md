@@ -27,7 +27,7 @@ The schema goes in one of two AgentTemplate fields, `spec.outputSchema` or `spec
    kagent version
    ```
 
-   If `kagent_version` in the output is not {{< reuse "kagent-docs/versions/kagent.md" >}}, install the CLI for this release.
+   When `kagent_version` in the output differs from {{< reuse "kagent-docs/versions/kagent.md" >}}, replace the CLI.
 
    {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
@@ -204,6 +204,15 @@ kagent counts depth and nodes through `properties`, `items`, and `anyOf`, and co
 
 OpenAI models follow `format` and `pattern` during generation only in strict mode. To constrain generation to the schema, set `outputSchemaStrict` to `true` in the AgentTemplate.
 
+Strict mode accepts fewer schemas. kagent checks the following rules for every provider, so a schema stays valid when you change the provider of the ModelConfig.
+
+- The root does not use `anyOf`.
+- Every node sets `type`, `anyOf`, `enum`, or `$ref`.
+- A node that sets `$ref` does not set any other keyword. To add `null`, wrap the reference in `anyOf`, such as `anyOf: [{$ref: "#/$defs/item"}, {type: "null"}]`.
+- Every object sets `additionalProperties` to `false` and lists all of its properties in `required`. A map with free-form keys cannot meet this rule.
+
+To make a property optional in strict mode, list it in `required` and add `null` to its type list.
+
 ```yaml
 spec:
   outputSchemaStrict: true
@@ -222,7 +231,7 @@ spec:
     additionalProperties: false
 ```
 
-The example schema meets every strict mode rule in this section.
+The following fields turn on strict mode, make `due` optional, and constrain both values.
 
 | Field | Description |
 | ----- | ----------- |
@@ -232,15 +241,6 @@ The example schema meets every strict mode rule in this section.
 | `outputSchema.properties.due.format` | Asks for a date such as `2026-11-03`. |
 
 An AgentTemplate that sets `outputSchemaStrict` to `true` without a schema is rejected when you apply it, with the message `outputSchemaStrict requires outputSchema or outputSchemaFrom`. The runtime validates every answer against the schema in both modes.
-
-Strict mode accepts fewer schemas. kagent checks the following rules for every provider, so a schema stays valid when you change the provider of the ModelConfig.
-
-- The root does not use `anyOf`.
-- Every node sets `type`, `anyOf`, `enum`, or `$ref`.
-- A node that sets `$ref` does not set any other keyword. To add `null`, wrap the reference in `anyOf`, such as `anyOf: [{$ref: "#/$defs/item"}, {type: "null"}]`.
-- Every object sets `additionalProperties` to `false` and lists all of its properties in `required`. A map with free-form keys cannot meet this rule.
-
-To make a property optional in strict mode, list it in `required` and add `null` to its type list.
 
 ## Read the answer
 
@@ -288,7 +288,7 @@ processor failed: output_validation_failed: root agent output does not conform t
 Error: Session task 01a0ec27-157f-7034-bb89-09855f485b2a ended in TASK_STATE_FAILED
 ```
 
-Each message follows the `processor failed:` prefix.
+In the CLI output, each of the following messages follows the `processor failed:` prefix.
 
 | Message | Cause |
 | ------- | ----- |

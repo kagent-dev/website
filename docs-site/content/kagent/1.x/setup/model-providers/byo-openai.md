@@ -85,9 +85,9 @@ When every agent message fails with a generic `provider API error (status 400)`,
 
 ## TLS
 
-A provider on your own network might present a certificate that the agent does not already trust. The `tls` block defines one field, `disableVerify`, which turns off certificate verification entirely when you set it to `true`. The field defaults to `false`.
+A provider on your own network might present a Transport Layer Security (TLS) certificate that the agent does not already trust. To skip verification of that certificate, set `tls.disableVerify` to `true`. The field defaults to `false`.
 
-> [!WARNING]
+> [!NOTE]
 > **The `tls` block does not accept a certificate authority (CA) bundle.** An agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files, so the API server rejects `caCertSecretRef`, `caCertSecretKey`, and `disableSystemCAs` as unknown fields. Use a certificate that chains to a public authority, or terminate Transport Layer Security (TLS) at a gateway that the agent can trust.
 
 The following ModelConfig turns off verification for a provider on an internal network.
@@ -109,7 +109,7 @@ spec:
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate in the same namespace. To use the ModelConfig from another namespace, see [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}).
 
 ```yaml
 spec:

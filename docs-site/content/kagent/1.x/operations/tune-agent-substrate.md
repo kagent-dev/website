@@ -313,7 +313,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
    | `sandboxClass` | The sandbox runtime family for this pool's Workers, and for every ActorTemplate that kagent generates for the pool. Omitting the field selects `gvisor`. |
    | `workerImage` | The Worker build that provides the runtime. `ateom-gvisor` serves the `gvisor` class and `ateom-microvm` serves `microvm`. A build that does not match its pool's class never registers a Worker. |
 
-2. Confirm that the cluster has a SandboxConfig for this class. The chart names the configuration in the pool's `configRef` rather than relying on the class default, so a `gvisor` pool needs a config named `gvisor-default` and a `microvm` pool needs a config named `microvm`. To use a SandboxConfig with another name, set `substrateWorkerPool.sandboxConfigRef`.
+2. Confirm that the cluster has a SandboxConfig for this class. The chart sets the pool's `configRef` to a fixed SandboxConfig name for each class, `gvisor-default` for a `gvisor` pool and `microvm` for a `microvm` pool. To use another SandboxConfig, set `substrateWorkerPool.sandboxConfigRef`.
 
    ```bash
    kubectl get sandboxconfigs
@@ -339,7 +339,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
 Each of the three settings fails differently when it disagrees with the others.
 
 - A Worker whose pool class does not match an ActorTemplate's class reports `RevisionInvalid` with `unsupported sandbox class "<value>"`, and placement of this Actor fails with `WorkerPoolNotFound`.
-- A missing SandboxConfig leaves the pool's class unresolved. The `Resolved` condition under the WorkerPool's `status.sandboxClasses` is `False`, with the reason `SandboxConfigNotFound` for a missing `configRef` or `DefaultConfigNotFound` when no class default exists.
+- A missing SandboxConfig leaves the pool's class unresolved. The `Resolved` condition under the WorkerPool's `status.sandboxClasses` is `False`. The reason is `SandboxConfigNotFound` when the SandboxConfig that `configRef` references does not exist, or `DefaultConfigNotFound` when the pool sets no `configRef` and the class has no default.
 - A Worker image built for another class never registers, so the pool reports fewer ready Workers than its replica count.
 
 ### Considerations before changing a running pool

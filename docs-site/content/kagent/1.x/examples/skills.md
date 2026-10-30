@@ -52,11 +52,10 @@ config:
 | ----- | ----------- |
 | `disableFileSearch` | Set to `true` to remove `list_files` and `grep_file` from the root agent and from every subagent. Defaults to `false`. This value replaces `skillTools.fileSearchTools` from earlier releases, with the opposite meaning. |
 | `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent keeps the file tools, and still loads skills. Defaults to `false`. |
+| `disableAskUser` | Set to `true` to remove the `ask_user` tool. Defaults to `false`. For more information, see [Disable questions]({{< link path="agents/human-in-the-loop#disable-questions" >}}). |
 | `bashVenvPath` | The path to a Python virtual environment in the Harness image. The `bash` tool adds the environment's `bin` directory to the start of `PATH`, and sets `VIRTUAL_ENV`. The kagent runtime image does not include Python. To use this value, build a Harness image that includes the environment. Defaults to empty. |
 
-The `builtinTools` Helm values also include `disableAskUser`, which removes the question tool. For more information, see [Disable questions]({{< link path="agents/human-in-the-loop#disable-questions" >}}).
-
-Attaching a skill also changes the model request. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before the agent acts on a skill. The model therefore sees each skill before the agent calls any tool.
+When you attach a skill, the runtime appends the name and description of each attached skill to the model request, together with an instruction to call `load_skill` before the agent acts on a skill. The model therefore sees each skill before the agent calls any tool.
 
 > [!IMPORTANT]
 > The `bash` tool gives the agent shell access inside its own Actor sandbox, and the sandbox is the boundary that contains the agent. The file tools are not limited to the workspace. They read and write anywhere in the sandbox, including `/skills`, so one skill's instructions can change another skill's files. Review a skill before you attach it, and treat the [egress]({{< link path="about/substrate-runtime/sandboxing" >}}) that you grant the Actor as the reach that the skill has.
@@ -112,7 +111,7 @@ A skill is a directory whose root holds a `SKILL.md` file. Everything else in th
    EOF
    ```
 
-   The model reads the `description` to decide whether to load the skill, in the same way that it chooses any other tool. In the `description`, state plainly when the skill applies. The agent reads the instructions in the body only after it calls `load_skill`.
+   The model reads the `description` to decide whether to load the skill, in the same way as the model decides whether to call a tool. In the `description`, state plainly when the skill applies. The agent reads the instructions in the body only after it calls `load_skill`.
 
 3. Add the script that the instructions call. The script runs in the agent's runtime image, so it uses `bash` rather than Python.
    ```bash
@@ -142,7 +141,7 @@ A skill is a directory whose root holds a `SKILL.md` file. Everything else in th
    chmod +x scripts/group.sh
    ```
 
-4. Before you publish the script, confirm that it works. The `bash` tool returns a failed command's error to the model, not to you. A broken script therefore produces an unreliable answer, not a failed resource.
+4. Before you publish the skill, confirm that the script works. The `bash` tool returns a failed command's error to the model, not to you. A broken script therefore produces an unreliable answer, not a failed resource.
    ```bash
    printf 'feat: add checkpoint API\nfix: correct revision digest\ndocs: update install guide\n' > /tmp/commits.txt
    bash scripts/group.sh /tmp/commits.txt
@@ -248,7 +247,7 @@ To give an agent the skill, reference the skill image from the AgentTemplate tha
 
 ## Ask the agent to use the skill
 
-Send requests in the Session that you created, and check that the agent runs the skill's script.
+Send requests to the Session that you created, and check that the agent runs the skill's script.
 
 1. Send the agent a request that matches the skill's description.
    ```bash
@@ -277,7 +276,7 @@ Send requests in the Session that you created, and check that the agent runs the
 
 ## Publish a new version of the skill
 
-A source is immutable. To change a skill, publish new content, and then point the AgentTemplate at the new digest.
+A source is immutable. To change a skill, publish new content under a new digest.
 
 1. Edit the skill.
 

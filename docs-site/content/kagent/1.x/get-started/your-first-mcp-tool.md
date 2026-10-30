@@ -69,7 +69,7 @@ kagent records what it discovered on the server's status, so the tool names come
    | Field | Description |
    | ----- | ----------- |
    | `mcp.server.kind` | The kind of server resource. `RemoteMCPServer` is the only accepted value. |
-   | `mcp.server.name` | The server's name. Because the binding omits `namespace`, kagent looks up the server in the AgentTemplate's namespace. |
+   | `mcp.server.name` | The server's name. kagent looks up the server in the AgentTemplate's namespace. To bind a server in another namespace, see [MCP tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}). |
    | `mcp.tools` | Optional. The names of the tools to bind, up to 50. An omitted or empty list exposes every tool on the server. An AgentTemplate takes at most 50 bindings in total. |
 
 3. Confirm that kagent compiled a new {{< gloss "Revision" >}}revision{{< /gloss >}} for the Agent that uses the edited template. Every edit produces a new desired revision, and the Agent is current when the latest successful revision matches it.

@@ -9,7 +9,7 @@ A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with o
 
 ## Server that a kagent installation registers
 
-The kagent chart installs the tool server as a subchart, which the `kagent-tools.enabled` Helm value turns on. The subchart creates the [`kagent-tool-server`](#kagent-tool-server) {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. The server serves tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. kagent does not bind the server to an agent, so an agent reaches the server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
+The kagent chart installs the tool server as a subchart. The `kagent-tools.enabled` Helm value turns the subchart on. The subchart creates the [`kagent-tool-server`](#kagent-tool-server) {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. The server serves tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. kagent does not bind the server to an agent, so an agent reaches the server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
 
 The kagent release pins the `kagent-tool-server` version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
 
@@ -22,14 +22,14 @@ kubectl get remotemcpserver kagent-tool-server -n kagent \
   -o jsonpath='{range .status.discoveredTools[*]}{.name}{"\t"}{.description}{"\n"}{end}'
 ```
 
-For the same command as the first step of binding one of these tools to an agent, see [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-the-tool-to-your-agenttemplate" >}}).
+To see this command used as the first step of binding a tool to an agent, see [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-the-tool-to-your-agenttemplate" >}}).
 
 > [!NOTE]
-> `status.discoveredTools` stays empty until the controller completes a discovery pass. `status.observedGeneration` tells you whether the recorded set matches the current spec. A server whose `Accepted` condition is not `True` has not been reached at all. A server that opts out of discovery is the exception, because it is `Accepted` and its tool list stays empty permanently. To tell the two apart, read the `Accepted` condition's reason, as described in [Turn tool discovery off for a server](#turn-tool-discovery-off-for-a-server).
+> `status.discoveredTools` stays empty until the controller completes a discovery pass. `status.observedGeneration` tells you whether the recorded set matches the current spec. A server whose `Accepted` condition is not `True` has not been reached at all. A server that opts out of discovery is the exception, because it is `Accepted` and its tool list stays empty permanently. To tell a server that opted out of discovery from one that has not completed discovery, read the `Accepted` condition's reason, as described in [Turn tool discovery off for a server](#turn-tool-discovery-off-for-a-server).
 
 ### Turn tool discovery off for a server
 
-The controller lists a server's tools with the controller's own credentials. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, does not accept any credential that the controller can present. Discovery against that server fails. Because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely, even though agents can reach the server at runtime.
+The controller lists a server's tools with the controller's own credentials. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, does not accept any credential that the controller can present. Discovery against that server fails. Because the listing never succeeds, the RemoteMCPServer never reports the `Accepted` condition as `True`, even though agents can reach the server at runtime.
 
 To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at runtime with their own credentials.
 
@@ -271,7 +271,7 @@ The kagent and Codex harnesses both honor this tool list. On the Claude {{< glos
 
 ## Reach kagent-tool-server from another namespace
 
-The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references only from its own namespace by default. An AgentTemplate in another namespace binds the server by setting `mcp.server.namespace` to the release namespace. Until the server admits that namespace, the controller cannot resolve the binding, and the Agent that runs that template does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
+The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references only from its own namespace by default. An AgentTemplate in another namespace binds the server by setting `mcp.server.namespace` to the release namespace. Until the server admits the AgentTemplate's namespace, the controller cannot resolve the binding, and the Agent that runs that template does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
 
 ```yaml
 kagent-tools:

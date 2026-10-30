@@ -106,7 +106,7 @@ spec:
 
 Add memory to a Harness that already exists. The examples in these steps use `my-first-harness` in the `kagent` namespace, which you create in [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
-1. Create a `ModelConfig` for the embedding model in the same namespace as your Harness. To use a ModelConfig from another namespace instead, set `modelConfigRef.namespace`, as described in [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}). The model is an embedding model rather than a chat model.
+1. Create a `ModelConfig` for the embedding model in the same namespace as your Harness. The model is an embedding model rather than a chat model.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -137,7 +137,7 @@ Add memory to a Harness that already exists. The examples in these steps use `my
    {{< reuse "kagent-docs/snippets/review-table.md" >}} To review other available Harness fields, see [Agent harness]({{< link path="agents/agent-harness" >}}).
    | Field | Description |
    | ----- | ----------- |
-   | `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model. Required when `memory` is set. Because the reference omits `namespace`, kagent looks up the ModelConfig in the Harness's namespace. |
+   | `memory.modelConfigRef.name` | The ModelConfig supplying the embedding model. Required when `memory` is set. The namespace defaults to the Harness's namespace. To use a ModelConfig in another namespace, set `memory.modelConfigRef.namespace`. That ModelConfig must admit the Harness's namespace, as described in [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}). |
    | `memory.ttlDays` | How many days a stored memory stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
 
 3. Create a new Session against an {{< gloss "Agent" >}}Agent{{< /gloss >}} that uses this Harness. Editing the Harness builds a new {{< gloss "Revision" >}}revision{{< /gloss >}}, and an existing Session keeps running the revision it was created from. An agent that was already running does not gain memory until you start a new Session.

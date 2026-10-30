@@ -16,7 +16,7 @@ A Sandbox and a {{< gloss "Session" >}}Session{{< /gloss >}} are separate runtim
 | An {{< gloss "Agent" >}}Agent{{< /gloss >}} that pairs an AgentTemplate with a Harness | A Session | A2A interactions and tasks |
 | A SandboxTemplate that defines a tools environment | A Sandbox | Guest process and file operations |
 
-An agent can create a Sandbox of its own through the kagent Model Context Protocol ({{< gloss "MCP" >}}MCP{{< /gloss >}}) server, using the same service that a person calls. The Sandbox's lifetime stays independent of the agent's Session.
+An agent can create a Sandbox of its own through the kagent Model Context Protocol ({{< gloss "MCP" >}}MCP{{< /gloss >}}) server, by using the same service that a person calls. The Sandbox's lifetime stays independent of the agent's Session.
 
 ## Before you begin
 
@@ -175,7 +175,7 @@ When an agent must inspect a result file, use `read_sandbox_file`. The tool retu
 
 Text returns as numbered lines. `offset` sets the first line to read, counting from 1. `limit` sets the number of lines, and defaults to 2000. A page also stops at 32 KiB, whichever bound it reaches first. A line longer than 2000 bytes is truncated to 2000 bytes and marked `[line cut]`. A page that stops before the end of the file reports the offset to continue from.
 
-A PNG, JPEG, or GIF file of at most 10 MiB returns as an image. The `claude` and `codex` Harness runtimes resize those images for their models. A larger image returns a message asking the agent to write a smaller copy in the Sandbox. Every other file type returns a description of the file, not its bytes.
+A PNG, JPEG, or GIF file of at most 10 MiB returns as an image. The `claude` and `codex` harnesses resize those images for their models. A larger image returns a message asking the agent to write a smaller copy in the Sandbox. Every other file type returns a description of the file, not its bytes.
 
 ## Next steps
 

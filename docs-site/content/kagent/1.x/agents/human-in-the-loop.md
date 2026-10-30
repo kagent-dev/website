@@ -45,7 +45,7 @@ An agent pauses either to get permission before it acts or to ask a question. A 
 | `tool_approval_request` | The agent wants to call a tool from a binding that sets `requireApproval`. | `tool_approval_response` |
 | `ask_user_request` | The agent calls the built-in `ask_user` tool because it needs information that only a person has. | `ask_user_response` |
 
-Every pause also adds a plain text part to its status message that states why the agent stopped. A client that never activated the extension receives that text and nothing else. The client can show a person why the agent stopped. The client does not have an `id` to answer with, so the task stays at `INPUT_REQUIRED`. Treat the text as a diagnostic rather than as a fallback, and send the turn again from a client that requests the extension. The `hint` field of an activated payload contains the same string.
+Every pause also adds a plain text part to its status message that states why the agent stopped. A client that never activated the extension receives that text and nothing else. The client can show a person why the agent stopped. The client does not have an `id` to answer with, so the task stays at `INPUT_REQUIRED`. Treat the text as a diagnostic, and send the turn again from a client that requests the extension. The `hint` field of an activated payload contains the same string.
 
 The `kagent` harness composes this text from the pending calls. The wording depends on what the agent stopped for.
 
@@ -60,7 +60,7 @@ The `codex` and `claude` harnesses compose the text differently. Both pass throu
 
 ### Disable questions
 
-When an agent runs unattended, nobody answers its question, so the task waits at `INPUT_REQUIRED`. To stop agents on the `kagent` harness from asking questions, set the `config.runtimeDefaults.builtinTools.disableAskUser` Helm value to `true`. The value removes the `ask_user` tool from every agent in the installation and from each subagent. An AgentTemplate cannot override the value. The value defaults to `false`.
+When an agent runs unattended, nobody answers its question, so the task waits at `INPUT_REQUIRED`. To stop agents on the `kagent` harness from asking questions, set the `config.runtimeDefaults.builtinTools.disableAskUser` Helm value to `true`. The value removes the `ask_user` tool from every agent and subagent in the installation, and an AgentTemplate cannot override it. The value defaults to `false`.
 
 ```yaml
 config:
@@ -122,7 +122,7 @@ Approval belongs to the binding rather than to the tool name, so one server can 
 > [!NOTE]
 > kagent 0.x named the tools that needed approval in a `requireApproval` list on the `Agent` resource, which matched tool names across every server. In 1.x, approval is a property of one binding, so the same tool name can pause for one server and run freely for another.
 
-A tool that no binding covers with `requireApproval` runs without a pause. Such tools include every built-in tool, such as file access, shell, and web search, and every Model Context Protocol (MCP) tool on a binding that omits the field. The sandbox contains those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
+A tool that no binding covers with `requireApproval` runs without a pause. These tools include every built-in tool, for example file access, shell, and web search, and every Model Context Protocol (MCP) tool on a binding that omits the field. The sandbox contains those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Implement a client that supports human approval
 
@@ -185,7 +185,7 @@ A `tool_approval_request` lists the pending calls, each with an `id`, the tool `
 }
 ```
 
-A rejection reason is optional. The agent receives the reason and can adapt to it rather than fail.
+A rejection reason is optional. The agent receives the reason and can adjust its next action.
 
 ### Answer a question
 

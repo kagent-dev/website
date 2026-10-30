@@ -61,14 +61,14 @@ The UI service is a `ClusterIP` by default, so it is reachable only from inside 
 {{% /tab %}}
 {{< /tabs >}}
 
-The dashboard opens on a summary of what the controller has loaded. On a fresh installation, the dashboard counts zero agents and zero conversations. The dashboard already counts the model configuration and the {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that the chart installed.
+The dashboard opens on a summary of what the controller has loaded. On a fresh installation, the dashboard counts zero agents and zero conversations. The dashboard also counts the model configuration and the {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that the chart installed.
 
 {{< reuse-image-light src="img/kagent-ui-dashboard.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-dashboard-dark.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 
 ## Explore the UI
 
-The left menu groups the console by the resource that each page reads, so the page that you want follows from the resource that you are asking about.
+The left menu groups the console pages by the resource that each page reads.
 
 | Page | Shows |
 | ---- | ----- |
@@ -98,11 +98,13 @@ The UI labels a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} **Snapshot**.
 
 To take a checkpoint, select the save icon beside the message box. kagent pins the snapshot that the Session most recently suspended to, and records how far the transcript advanced. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
 
-A checkpoint appears in the transcript as a mark that shows the snapshot name and the following controls. Select the mark to open the record behind it. The record shows the checkpoint's ID, turn, state, and age.
+A checkpoint appears in the transcript as a mark that shows the snapshot name and the following controls.
 
 - **Fork** starts a new Session from the checkpoint. The new Session replays the conversation through the pinned turn and then continues on its own. For what a fork keeps from its source, see [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
-- **Rename** replaces the snapshot name that kagent generates on creation from the Session ID and the turn that the checkpoint pins. Clearing the name restores that generated default.
+- **Rename** replaces the default snapshot name, which kagent generates from the Session ID and the pinned turn when it creates the checkpoint. Clearing the name restores that generated default.
 - **Delete** removes the checkpoint and releases the snapshot that it pinned. Agent Substrate is then free to collect that snapshot.
+
+Select the mark to open the record behind it. The record shows the checkpoint's ID, turn, state, and age.
 
 > [!NOTE]
 > A checkpoint is always taken at the latest turn boundary, so the UI offers checkpoint controls on your own most recent message and not on earlier ones.
@@ -156,16 +158,16 @@ Read the page from the top tiles down.
 | ---- | ----- |
 | **Worker pools** | {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}} that an operator has provisioned. A Harness cannot run an agent until at least one WorkerPool exists. |
 | **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated. |
-| **Actors running** | Live Actors, each one a Session. |
+| **Actors running** | Live Actors. Each Actor runs one Session. |
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
 | **Requested filters** | The filters this page asked for, not what the API returned. Reads `none` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`, with `any` in place of a filter that you leave empty. |
 
 On a fresh installation, the page reports one WorkerPool, zero ActorTemplates, and zero Actors, because an agent does not exist yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors on this page.`
 
+When you [restrict kagent to specific namespaces]({{< link path="setup/installation#restrict-kagent-to-specific-namespaces" >}}), several kagent installations can share one Agent Substrate. The Substrate page then reads only the watched namespaces and the atespaces whose names kagent derives from those namespaces. Empty filters cover every watched namespace. A filter that specifies any other namespace or atespace fails with a `PermissionDenied` error. An installation that watches every namespace reads the entire Agent Substrate.
+
 > [!NOTE]
 > When the Substrate page cannot reach the Agent Substrate API, it reports the failure rather than an empty result. A warning above the tables shows the error, and the Actors table reads `This read could not reach ate-api, so there may be actors it did not see.` On a cluster that does have agents, `No actors on this page.` means that the read succeeded and matched nothing, so check the **Kubernetes namespace** and **ATE atespace** filters.
-
-When you [restrict kagent to specific namespaces]({{< link path="setup/installation#restrict-kagent-to-specific-namespaces" >}}), several kagent installations can share one Agent Substrate. The Substrate page then reads only the watched namespaces and the atespaces that kagent names after them. Empty filters cover every watched namespace. A filter that specifies any other namespace or atespace fails with a `PermissionDenied` error. An installation that watches every namespace reads the entire Agent Substrate.
 
 ## Expose the UI outside the cluster
 

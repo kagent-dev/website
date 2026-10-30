@@ -26,7 +26,7 @@ An HTTP request that also sets the `tenant` field must set a value that matches 
 
 Both forms replace the `/api/a2a/<namespace>/<agent-name>/` URL paths that kagent 0.x served over HTTP.
 
-A caller addresses the Agent rather than one conversation. The message's `contextId` selects the Session. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
+A caller addresses the Agent rather than one Session. The message's `contextId` selects the Session. Omitting both a `contextId` and a task ID starts a new {{< gloss "Session" >}}Session{{< /gloss >}}, and repeating a `contextId` continues that Session.
 
 If the Agent, the Session, or the task does not exist, an A2A call fails with `TaskNotFound` (JSON-RPC code `-32001`, or gRPC `NOT_FOUND`). Over HTTP, a request for the card of an Agent that does not exist returns `404`. To learn when kagent deletes a Session, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
@@ -261,7 +261,7 @@ A task callback lets a webhook learn when a task needs input or reaches a final 
 
 kagent keeps one pending delivery for each callback, and a newer state replaces a delivery that has not yet succeeded. When a task resumes, kagent discards the pending delivery for the state that the task left, so a receiver does not see every state.
 
-The kagent CLI wraps the push notification configuration methods, so the steps that follow use the CLI. The CLI defaults to port 8083, which the prerequisites already forward.
+The kagent CLI wraps the push notification configuration methods, so this section uses the CLI. The CLI defaults to port 8083, which the prerequisites already forward.
 
 1. To register a callback before a new task is dispatched, add `--push-url` to the kagent CLI invocation. The command returns immediately with the task ID and callback ID.
    ```bash
@@ -409,9 +409,9 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
    ```
 
 > [!IMPORTANT]
-> A caller that does not request the extension is still interrupted. The task still stops at `TASK_STATE_INPUT_REQUIRED`, and the question arrives as ordinary text on the status message. However, the metadata does not include a request `id`. Without that `id`, the caller cannot answer the pause, so the task waits until something cancels it. Request the extension on any call to an agent that can pause.
+> A caller that does not request the extension is still interrupted. The task stops at `TASK_STATE_INPUT_REQUIRED`, and the question arrives as ordinary text on the status message. However, the metadata does not include a request `id`. Without that `id`, the caller cannot answer the pause, so the task waits until the task is canceled. Request the extension on any call to an agent that can pause.
 
-A tool approval works in the same way, with a different payload, `tool_approval_request` answered by `tool_approval_response`. For the pause kinds, the approval model, and what a nested agent's pause looks like, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
+A tool approval works in the same way, but the agent sends `tool_approval_request`, and the caller answers with `tool_approval_response`. For the pause kinds, the approval model, and what a nested agent's pause looks like, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
 ## Clean up
 
