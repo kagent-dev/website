@@ -7,9 +7,9 @@ author: kagent.dev
 
 An {{< gloss "Agent" >}}Agent{{< /gloss >}} reaches only the destinations that its AgentTemplate needs, such as its model provider, its Model Context Protocol (MCP) servers, and its skill sources. {{< reuse "kagent-docs/snippets/name-product.md" >}} infers these destinations and compiles them into the agent's [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}). The egress gateway denies every other destination.
 
-To grant an Agent or SandboxTemplate access to destinations beyond the inferred set, you can create an EgressPolicy resource. The Agent or SandboxTemplate selects one or more policies by name in its `spec.egressPolicyRefs` field. An EgressPolicy only adds access, and cannot remove a destination that kagent inferred from the model or the tools.
+To grant an Agent or SandboxTemplate access to destinations beyond the inferred set, create an EgressPolicy resource. The Agent or SandboxTemplate selects one or more policies by name in its `spec.egressPolicyRefs` field. An EgressPolicy only adds access, and cannot remove a destination that kagent inferred from the model or the tools.
 
-A policy can also reference a credential in a Kubernetes Secret. The gateway adds the credential to each request, so the value never enters the agent's sandbox. Typical uses include a package registry that a skill installs from, or an internal API that a tool script calls.
+A policy can also have the gateway add a credential to each request, either a value from a Kubernetes Secret or a token that identifies the calling agent. The credential never enters the agent's sandbox. Typical uses include a package registry that a skill installs from, or an internal API that a tool script calls.
 
 ## Before you begin
 
@@ -93,7 +93,7 @@ A wildcard can replace the leftmost label of the hostname. For example, `https:/
 
 A redirect to another origin needs its own grant. For example, a package registry often serves downloads from a separate host. An install fails at that host until the policy grants it as well.
 
-The API server rejects a policy or an `egressPolicyRefs` list that exceeds the first two of the following limits. The compiled policy limit also counts the destinations that kagent inferred, so an Agent with many tools reaches it sooner.
+The API server rejects an `egressPolicyRefs` list that selects more than 16 policies and a policy that lists more than 64 destinations. The compiled policy limit also counts the destinations that kagent inferred, so an Agent with many tools reaches it sooner.
 
 | Limit | Value |
 | ----- | ----- |
@@ -104,9 +104,9 @@ The API server rejects a policy or an `egressPolicyRefs` list that exceeds the f
 
 ## Inject a credential
 
-The gateway can add a credential from a Kubernetes Secret to each request for an origin. The agent sends the header with a placeholder value, and the gateway replaces this value as the request passes through. The Secret value is not stored in the agent's revision and never reaches the sandbox.
+The gateway can add a credential to each request for an origin. The agent sends the header with a placeholder value, and the gateway replaces this value as the request passes through. The credential is not stored in the agent's revision and never reaches the sandbox. The following steps inject a value from a Kubernetes Secret. To inject a token that identifies the calling agent, see [Inject the Actor's token](#inject-the-actors-token).
 
-1. Create the Secret in the namespace of the EgressPolicy.
+1. Create the Secret in the namespace of the EgressPolicy. To rotate the credential later, update the Secret. The gateway reads the value from the Secret, so the agent's revision does not change.
    ```bash
    kubectl create secret generic ticket-auth -n kagent \
      --from-literal=token=<your-api-token>
@@ -139,7 +139,7 @@ The gateway can add a credential from a Kubernetes Secret to each request for an
    | `origin` | The destination. An origin with a credential must be exact, so the API server rejects a wildcard origin. On a cleartext `http` origin, the credential is readable on the path between the gateway and the destination. Use an `http` origin with a credential only for an in-cluster service whose traffic a service mesh encrypts. |
    | `authentication.header` | The request header that carries the credential, such as `Authorization` or `X-API-Key`. The API server rejects the headers that control routing and framing, such as `Host` and `Content-Length`, and the `Proxy-Authorization`, `Proxy-Authenticate`, and `Cookie` headers. |
    | `authentication.prefix` | Optional. Text that the gateway puts before the Secret value. The prefix is literal. Include the trailing space, as in `"Bearer "`. When the prefix is omitted or empty, the header contains only the Secret value. |
-   | `authentication.secretKeyRef` | The Secret and key that store the credential. Both `name` and `key` are required, and the reference cannot be optional. |
+   | `authentication.secretKeyRef` | The Secret and key that store the credential. Both `name` and `key` are required, and the reference cannot be optional. A destination sets exactly one of `secretKeyRef` and `actorJwt`. For the token alternative, see [Inject the Actor's token](#inject-the-actors-token). |
 
 3. Select the policy. A merge patch replaces the whole `egressPolicyRefs` list, so the command also keeps `node-dependencies`. Include every policy that the resource needs.
    {{< tabs >}}
@@ -157,13 +157,66 @@ The gateway can add a credential from a Kubernetes Secret to each request for an
    {{% /tab %}}
    {{< /tabs >}}
 
-4. In the script or software development kit (SDK) that sends the request, send the header with a placeholder value. The gateway replaces a header that the request already sends, and it does not add a header that is missing. Selecting a policy does not configure a tool or set an environment variable. The client must also trust the egress gateway's certificate authority, which kagent provides to every Actor. For the variables that carry the trust bundle, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
+4. In the script or SDK that sends the request, send the header with a placeholder value. The gateway replaces a header that the request already sends, and it does not add a header that is missing. Selecting a policy does not configure a tool or set an environment variable. The client must also trust the egress gateway's certificate authority. kagent provides this certificate authority to every Actor. For the variables that carry the trust bundle, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
    ```bash
    curl -H 'Authorization: Bearer kagent-credential-injected' \
      https://tickets.example.com/tickets
    ```
 
-To rotate the credential, update the Secret. The gateway reads the value from the Secret, so the agent's revision does not change.
+### Inject the Actor's token
+
+A Secret-backed credential is the same for every agent that selects the policy, so the destination cannot tell the agents apart. When an internal API must authorize or audit each agent, inject a token that identifies the calling {{< gloss "Actor" >}}Actor{{< /gloss >}} instead. This method covers the requests that an agent's own code sends, such as a `curl` command or a script that a skill runs. For model and MCP server calls, set `actorJwt` on the ModelConfig or the RemoteMCPServer, as described in [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).
+
+The gateway mints, injects, and refreshes the token, so the policy needs no Secret, and you have no credential to rotate.
+
+1. Create an EgressPolicy whose `authentication` block sets `actorJwt`. The gateway replaces the header with the prefix followed by a newly issued Actor token.
+   ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: EgressPolicy
+   metadata:
+     name: ticket-api
+     namespace: kagent
+   spec:
+     destinations:
+       - origin: https://tickets.example.com
+         authentication:
+           header: Authorization
+           prefix: "Bearer "
+           actorJwt:
+             audiences: [ticket-api]
+             expirationSeconds: 900
+   EOF
+   ```
+
+   {{< reuse "kagent-docs/snippets/review-table.md" >}} For the token's claims and how the destination validates it, see [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).
+
+   | Field | Description |
+   | ----- | ----------- |
+   | `authentication.actorJwt.audiences` | The services that can accept the token, between 1 and 16 values. The destination checks that its own audience is in the list. `kagent-runtime` is reserved and rejected. |
+   | `authentication.actorJwt.expirationSeconds` | Optional. The token lifetime, between 300 and 3600 seconds. Defaults to 900. |
+
+2. Select the policy. A merge patch replaces the whole `egressPolicyRefs` list, so include every policy that the resource needs.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
+   ```bash
+   kubectl patch agent my-first-agent -n kagent --type merge \
+     -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"},{"name":"ticket-api"}]}}'
+   ```
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
+   ```bash
+   kubectl patch sandboxtemplate scratch -n kagent --type merge \
+     -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"},{"name":"ticket-api"}]}}'
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
+
+3. In the client that sends the request, send the header with a placeholder value.
+   ```bash
+   curl -H 'Authorization: Bearer kagent-credential-injected' \
+     https://tickets.example.com/tickets
+   ```
 
 ## Troubleshoot a grant
 
@@ -191,7 +244,7 @@ In a standalone Sandbox, a destination that no grant allows does not resolve. A 
 
 ## Access control
 
-An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in this namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
+An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in that namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
 
 To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller needs only read access to EgressPolicy resources.
 

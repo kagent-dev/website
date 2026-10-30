@@ -271,7 +271,15 @@ The kagent and Codex harnesses both honor this tool list. On the Claude {{< glos
 
 ## Reach kagent-tool-server from another namespace
 
-The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references only from its own namespace by default. An AgentTemplate in another namespace binds the server by setting `mcp.server.namespace` to the release namespace. Until the server admits the AgentTemplate's namespace, the controller cannot resolve the binding, and the Agent that runs that template does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
+The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references only from its own namespace by default. An AgentTemplate in another namespace can bind the server only when every one of the following conditions is met:
+
+- The binding's `mcp.server.namespace` field names the release namespace.
+- The server's `allowedNamespaces` field admits the AgentTemplate's namespace. Until the server admits the namespace, the controller cannot resolve the binding, and the Agent that runs that template does not become ready.
+- The controller watches both namespaces.
+
+The server sends no Secret-backed header, so an Agent in another namespace does not need an Agent Substrate Secret grant to reach it. For a RemoteMCPServer that does send one, see [Share an MCP server across namespaces]({{< link path="skills-and-mcp/about-tools#share-an-mcp-server-across-namespaces" >}}).
+
+To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
 
 ```yaml
 kagent-tools:

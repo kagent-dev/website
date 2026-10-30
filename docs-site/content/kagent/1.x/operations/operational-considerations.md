@@ -9,9 +9,11 @@ A default {{< reuse "kagent-docs/snippets/name-product.md" >}} installation runs
 
 ## Controller configuration
 
-Controller configuration fields are set in the `config` section of the {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm chart values. The chart renders these settings into a configuration file at `/etc/kagent/controller.yaml`, which the kagent controller reads.
+Controller configuration fields are set in the `config` section of the {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm chart values. The chart renders these settings into a configuration file at `/etc/kagent/controller.yaml`. The kagent controller reads this file at startup.
 
 Settings that describe how Kubernetes runs the controller stay in the Helm values outside of `config`. These include images, probes, volumes, Services, and Secret references. A Secret reference belongs to both groups. The chart projects the Secret into the controller pod, then writes the path of the projected file into the configuration file.
+
+The following `config` section sets the controller's log level, server options, and Session lifetime, and the log level of the agent runtimes.
 
 ```yaml
 config:
@@ -54,13 +56,17 @@ Then run `kagent config validate` against the rendered document.
 kagent config validate --component controller --config controller.yaml
 ```
 
-After you change these values, you can verify their validity by checking the controller's logs, as an invalid field prevents the controller from starting. 
+An invalid field stops the controller from starting. After you apply a change, check the controller's logs to confirm that the controller started.
+
+```bash
+kubectl logs -n kagent deployment/kagent-controller
+```
 
 ### Runtime defaults
 
-The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that setting in both `config` and `config.runtimeDefaults`.
+The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. For a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, configure that setting in both `config` and `config.runtimeDefaults`.
 
-Each `config.runtimeDefaults` setting is the installation's default. A Harness can replace most of these settings for the agents that run on it by naming the equivalent variable in its `spec.env` field. A small set of names is reserved instead, such as the certificate trust variables that let a runtime reach the egress gateway. For the reserved names and the per-harness differences, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
+Each `config.runtimeDefaults` setting is the installation's default. A Harness can replace most of these settings for the agents that run on it by naming the equivalent variable in its `spec.env` field. Some names are reserved, such as the certificate trust variables that let a runtime reach the egress gateway. For the reserved names and the per-harness differences, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
 
 ## Choose a database
 
@@ -86,16 +92,16 @@ database:
 
 `kagent install` creates a development database unless you pass `--skip-database-setup`. It deploys a single-replica `kagent-postgresql` Deployment backed by a 500Mi PersistentVolumeClaim, creates the roles that kagent and Agent Substrate connect as, and writes the connection Secrets for both: `kagent-postgres-owner` and `kagent-postgres-readwrite` in the kagent namespace, and `substrate-postgres-owner` and `substrate-postgres-readwrite` in `ate-system`.
 
-Connections to this database do not use a password. When `database.postgres.clientCertificate.enabled` is set to `true`, which `kagent install` does, each client authenticates with a Pod Certificate projected into its pod under `/run/postgres.podcert.ate.dev`. The connection string points its `sslcert` and `sslkey` parameters at those files.
+Connections to this database do not use a password. `kagent install` sets `database.postgres.clientCertificate.enabled` to `true`, so each client authenticates with a Pod Certificate that is projected into its pod under `/run/postgres.podcert.ate.dev`. The connection string points its `sslcert` and `sslkey` parameters at those files.
 
 > [!IMPORTANT]
-> The development database is a single pod backed by one PersistentVolumeClaim, and `kagent install` sizes that claim at 500Mi. Losing the pod's volume loses every Session and every compiled revision, so move a production installation to a PostgreSQL instance that you manage.
+> Losing the development database's volume loses every Session and every compiled revision, so move a production installation to a PostgreSQL instance that you manage.
 
 ### Use an external PostgreSQL instance
 
 For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data. kagent requires a new, empty database, and the roles and the schema must exist before the controller starts. kagent ships a `psql` script that creates them.
 
-Agent Substrate connects to the same database with its own owner and read/write logins, which its own setup script creates. The Agent Substrate chart reads the connection strings for those logins from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install-kagent-10" >}}).
+Agent Substrate connects to the same database with its own owner and read/write logins. The Agent Substrate setup script creates these logins. The Agent Substrate chart reads the connection strings for those logins from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install-kagent-10" >}}).
 
 1. Download the setup script for your kagent version.
 
@@ -103,7 +109,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
    curl -sSLo setup.sql https://raw.githubusercontent.com/kagent-dev/kagent/refs/tags/v{{< reuse "kagent-docs/versions/kagent.md" >}}/go/core/pkg/postgressetup/setup.sql
    ```
 
-2. Run the script as a database administrator, with `psql` version 15 or later. The script reads the passwords from environment variables, which earlier `psql` versions cannot do. The script creates a `NOLOGIN` owner role that owns the schema, a `NOLOGIN` read/write role, a login user for each role, and the schema. It also revokes `CREATE` on the `public` schema from `PUBLIC`. Every variable is required. The script must run in one transaction.
+2. Run the script as a database administrator, with `psql` version 15 or later. The script reads the passwords from environment variables. Earlier `psql` versions cannot read environment variables. The script creates a `NOLOGIN` owner role that owns the schema, a `NOLOGIN` read/write role, a login user for each role, and the schema. It also revokes `CREATE` on the `public` schema from `PUBLIC`. Every variable is required. The script must run in one transaction.
 
    ```bash
    export KAGENT_OWNER_PASSWORD=<owner-password> KAGENT_READWRITE_PASSWORD=<readwrite-password>
@@ -118,7 +124,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
      --file=setup.sql
    ```
 
-   The script is safe to run again. Each run sets each login's password to the value of its variable, and an empty value removes the password. To keep the existing passwords, pass them again on every run. The passwords reach the server as statement text. A server that logs every statement therefore records them. To keep a plain password out of the server log, pass a SCRAM-SHA-256 verifier, which PostgreSQL stores as given.
+   The script is safe to run again. Each run sets each login's password to the value of its variable, and an empty value removes the password. To keep the existing passwords, pass them again on every run. The passwords reach the server as statement text. A server that logs every statement therefore records them. To keep a plain password out of the server log, pass a SCRAM-SHA-256 verifier. PostgreSQL stores the verifier as given.
 
 3. Create a Secret for each login. Leave role settings out of the connection strings, because kagent assumes each role after it connects. These names do not collide with the `kagent-postgres-owner` and `kagent-postgres-readwrite` Secrets that `kagent install` creates for the development database.
 
@@ -166,7 +172,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
    | ------- | ----------- |
    | `database.postgres.ownerConnectionStringSecretRef` | The Secret and key that hold the owner login's connection string. When `config.database.skipMigrations` is set to `true`, the controller does not read this Secret. |
    | `database.postgres.readWriteConnectionStringSecretRef` | The Secret and key that hold the read/write login's connection string. Required. The controller reads both Secrets only at startup. After a Secret changes, restart the controller. |
-   | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. Both connection strings must then point their `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in the preceding example, leaves `enabled` at `false`. |
+   | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. Both connection strings must then point their `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in this procedure, leaves `enabled` at `false`. |
    | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the two logins assume after they connect. Match the role names that you passed to the setup script. Give each installation that shares one database distinct roles. |
    | `config.database.schema` | The schema that holds kagent's tables. Match the `kagent_schema` value that you passed to the setup script. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and both kagent roles need `USAGE` on it. |
    | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed in `config.database.vectorSchema`. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
@@ -215,26 +221,56 @@ To sign callbacks, generate one unencrypted PKCS#8 Ed25519 key and store it in a
      --from-file=private-key.pem
    ```
 
-Then name that Secret in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
+3. Name the Secret in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values, and apply the values to the kagent release.
+   ```yaml
+   controller:
+     push:
+       signing:
+         secretName: kagent-push-signing
+   config:
+     push:
+       issuer: https://kagent.example.com
+   ```
 
-```yaml
-controller:
-  push:
-    signing:
-      secretName: kagent-push-signing
-config:
-  push:
-    issuer: https://kagent.example.com
-```
+   `controller.push.signing` configures the Kubernetes packaging of the key, and `config.push` configures the controller.
 
-| Setting | Description |
-| ------- | ----------- |
-| `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the chart mounts the key and sets `config.push.signingPrivateKeyFile` to `/etc/kagent/secrets/push-private-key.pem`. |
-| `config.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
+   | Setting | Description |
+   | ------- | ----------- |
+   | `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the chart mounts the key and sets `config.push.signingPrivateKeyFile` to `/etc/kagent/secrets/push-private-key.pem`. |
+   | `config.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
 
-With a signing key configured, each callback attempt carries a fresh five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
+   ```bash
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent \
+     --reuse-values \
+     --values kagent.yaml
+   ```
+
+When a signing key is configured, each callback attempt carries a newly issued five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
 
 Every controller replica must load the same key. After you rotate the key, restart all controller pods together, because replicas that run on different keys publish different JSON Web Key Sets.
+
+## Tune push notification delivery
+
+Each controller replica delivers A2A push notification callbacks concurrently, so one slow receiver does not delay the callbacks to other receivers. When many receivers respond slowly, raise the concurrency limit or shorten the timeout in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
+
+```yaml
+config:
+  push:
+    maxConcurrency: 25
+    sendTimeout: 3s
+    recoveryInterval: 60s
+```
+
+Each value applies per controller replica, so installation-wide delivery capacity grows with the replica count.
+
+| Setting | Default | Description |
+| ------- | ------- | ----------- |
+| `config.push.maxConcurrency` | `10` | The maximum number of callbacks that one controller replica delivers at the same time. |
+| `config.push.sendTimeout` | `5s` | How long each callback attempt waits for the receiver before the attempt fails. Specify seconds, such as `5s`. A Go duration such as `5000ms` is not accepted. |
+| `config.push.recoveryInterval` | `60s` | How often each replica scans for callbacks that it missed and cleans up callback registrations that are no longer bound to a task. Specify seconds, such as `60s`. |
 
 ## Node operations
 
@@ -255,10 +291,7 @@ Deleting a Worker pod is safe. Kubernetes forwards `SIGTERM` into the Actor's co
 
 ### Node auto-upgrade
 
-A reclaimed node is not a graceful deletion, and node auto-upgrade is the most likely way to hit one. Google Kubernetes Engine (GKE) enables auto-upgrade by default and runs it on Google's maintenance schedule, not yours.
-
-> [!IMPORTANT]
-> Turn node auto-upgrade off on every node pool that runs Workers.
+A reclaimed node is not a graceful deletion, and node auto-upgrade is the most likely way to hit one. Google Kubernetes Engine (GKE) enables auto-upgrade by default and runs it on Google's maintenance schedule. Turn node auto-upgrade off on every node pool that runs Workers.
 
 ```bash
 gcloud container node-pools update "${NODE_POOL}" \
@@ -268,17 +301,17 @@ gcloud container node-pools update "${NODE_POOL}" \
 
 ### Spot and preemptible nodes
 
-A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for Sessions that end without warning. Use these nodes only where the agents on this pool can afford to lose a turn.
+A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for Sessions that end without warning. Use these nodes only where a lost turn is acceptable for the agents on the pool.
 
 ### WorkerPool scale-down
 
-When you scale a serving WorkerPool down, it removes pods without suspending the Actors on them. This strands Sessions in the same way that a reclaimed node does. For pool sizing and the rest of the Substrate runtime settings, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
+When you scale a serving WorkerPool down, it removes pods without suspending the Actors on them. The scale-down strands Sessions in the same way that a reclaimed node does. For pool sizing and the rest of the Substrate runtime settings, see [Tune Agent Substrate]({{< link path="operations/tune-agent-substrate" >}}).
 
 ## Expire idle Sessions
 
-Every {{< gloss "Session" >}}Session{{< /gloss >}} holds database records and pins a runtime revision for as long as it exists, including a Session that is never opened again. The kagent controller deletes idle Sessions on a timer. Deleting idle sessions bounds the records that a kagent installation stores as well as the revisions that it holds open.
+Every {{< gloss "Session" >}}Session{{< /gloss >}} holds database records and pins a runtime revision for as long as it exists, including a Session that is never opened again. The kagent controller deletes idle Sessions on a timer. Deleting idle Sessions bounds the records that a kagent installation stores as well as the revisions that it holds open.
 
-A leader-only worker sweeps Sessions once a minute and deletes every Session that has been idle past the limit, using the same deletion workflow that a client delete uses. To change this sweep interval, you can configure `config.sessions.expirationInterval`.
+A leader-only worker sweeps Sessions once a minute and deletes every Session that has been idle past the limit, by using the same deletion workflow that a client delete uses. To change the sweep interval, set `config.sessions.expirationInterval`.
 
 To choose how long a Session can be idle before the worker deletes it, set `config.sessions.idleTtl` in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values. The value is a duration in seconds with an `s` suffix, and it defaults to `604800s`, or seven days. Setting it to `0s` turns the worker off, retries included, and a negative value is rejected.
 
@@ -288,15 +321,13 @@ config:
     idleTtl: 2592000s
 ```
 
-Durations in the `config` block follow protobuf JSON notation. Seconds are the only supported unit, and a Go duration string such as `720h` fails validation and stops the controller from starting.
-
 This value governs every Session in the installation. kagent does not provide a per-agent override, and it does not cap the value.
 
 Idle time runs from whichever is later: the Session's creation, or its most recently stored A2A event. Reads, renames, lifecycle calls, and retried writes do not reset it. A Session that is only ever listed still expires.
 
-A fork is the case where the creation time decides. A fork replays its source Session's events and keeps their original timestamps, so its most recently stored event is older than the fork itself. Idle time therefore runs from the fork's own creation, which gives it a full interval rather than an almost expired one.
+A fork is the case where the creation time decides. A fork replays its source Session's events and keeps their original timestamps, so its most recently stored event is older than the fork itself. Idle time therefore runs from the fork's own creation. The fork gets a full interval rather than an almost expired one.
 
-Work in progress is never deleted. A Session with a running task survives past the interval, and so does one with a turn waiting at `INPUT_REQUIRED` or `AUTH_REQUIRED`. A pending lifecycle operation or a checkpoint being captured also holds a Session open.
+Active work is never deleted. A Session with a submitted or running task survives past the interval. A pending lifecycle operation or a checkpoint being captured also holds a Session open. A turn that waits at `INPUT_REQUIRED` or `AUTH_REQUIRED` does not hold the Session open. When the request for input or sign-in is not answered within the interval, the Session expires like an idle one. Expiry does not resume the agent or end the waiting task with a timeout.
 
 > [!IMPORTANT]
 > **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
@@ -313,21 +344,21 @@ config:
     shareMaxTtl: 86400s
 ```
 
-To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sessions that it removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
+To watch the sweep, scrape `kagent_session_expired_total`. The metric counts the Sessions that the sweep removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
 
-## How configuration changes reach agents
+## Configuration changes and running agents {#how-configuration-changes-reach-agents}
 
 kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} reference, such as the API keys and TLS certificates in a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}}. An edit to one of them recompiles the pair into a new revision.
 
 A new revision does not reach the Sessions that are already running. A Session is pinned to the revision that it was created from and keeps that revision for life. To move an existing conversation onto new configuration, create a new Session.
 
-The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so a rotated key reaches running Sessions after you restart the egress gateway. See [Rotate the model provider API key](#rotate-the-model-provider-api-key).
+The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so a rotated key reaches running Sessions after you restart the egress gateway. For the procedure, see [Rotate the model provider API key](#rotate-the-model-provider-api-key).
 
 This behavior differs from kagent 0.x, where an agent ran as a Deployment and a secret change restarted its pods.
 
 ### Rotate the model provider API key
 
-To rotate the model provider API key, update the Secret that holds the key. Then you can restart the Agent Substrate egress gateway so that running Sessions use the new value.
+To rotate the model provider API key, update the Secret that holds the key. Then restart the Agent Substrate egress gateway so that running Sessions use the new value.
 
 Manage the Secret yourself in a production installation. You then rotate the key at its source, and kagent reads the current value.
 
@@ -358,7 +389,7 @@ Manage the Secret yourself in a production installation. You then rotate the key
 
 ## Route agent traffic through a proxy
 
-A proxy puts agent-to-agent and agent-to-MCP calls on the same egress path as the rest of your cluster. Your existing inspection, logging, and policy then cover them too. When agents and MCP servers sit behind an API gateway or proxy, point kagent at the proxy endpoint.
+A proxy puts agent-to-agent and agent-to-MCP calls on the same egress path as the rest of your cluster. Your existing inspection, logging, and policy then cover them too. When agents and MCP servers are behind an API gateway or proxy, set `proxy.url` to the proxy endpoint.
 
 ```yaml
 proxy:
