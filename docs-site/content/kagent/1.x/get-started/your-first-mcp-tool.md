@@ -26,8 +26,8 @@ kagent records what it discovered on the server's status, so the tool names come
 
    Example output: The `ACCEPTED` column reports whether kagent reached the server and read its catalog. No tool can be bound from a server that is not `True`.
    ```console
-   NAME                 PROTOCOL          URL                                   ACCEPTED   AGE
-   kagent-tool-server   STREAMABLE_HTTP   http://kagent-tools.kagent:8084/mcp   True       14m
+   NAME                 PROTOCOL          URL                                                     ACCEPTED
+   kagent-tool-server   STREAMABLE_HTTP   http://kagent-tools.kagent.svc.cluster.local:8084/mcp   True
    ```
 
    To see the tools that the server offers, read the discovered set from its status.
@@ -38,14 +38,6 @@ kagent records what it discovered on the server's status, so the tool names come
 
    > [!NOTE]
    > The built-in server is installed only when the `kagent-tools.enabled` Helm value is `true`, which is the default. If the command does not return any resources, either re-install with that value enabled, or use your own server as described in [Bind your own MCP server](#bind-your-own-mcp-server).
-
-   > [!WARNING]
-   > At v1.0.0-alpha17, an agent's sandbox cannot resolve the short Service name in the built-in server's URL. Every tool call then fails with a `no such host` error. For more information, see [kagent#3315](https://github.com/kagent-dev/kagent/issues/3315). Until a fix ships, run the following command to point the server at the fully qualified Service name. The kagent Helm chart owns the `kagent-tool-server` resource, and a `helm upgrade` reverts the patch, so run the command again after each upgrade.
-
-   ```bash
-   kubectl patch remotemcpserver kagent-tool-server -n kagent --type=merge \
-     -p '{"spec":{"url":"http://kagent-tools.kagent.svc.cluster.local:8084/mcp"}}'
-   ```
 
 2. Re-apply the `my-first-template` AgentTemplate with a `spec.tools` list and a system prompt that tells the model what the tools are for.
    ```yaml
@@ -77,7 +69,7 @@ kagent records what it discovered on the server's status, so the tool names come
    | Field | Description |
    | ----- | ----------- |
    | `mcp.server.kind` | The kind of server resource. `RemoteMCPServer` is the only accepted value. |
-   | `mcp.server.name` | The server's name. A binding resolves in the AgentTemplate's own namespace, so it cannot reach a server in another namespace. |
+   | `mcp.server.name` | The server's name. Because the binding omits `namespace`, kagent looks up the server in the AgentTemplate's namespace. |
    | `mcp.tools` | Optional. The names of the tools to bind, up to 50. An omitted or empty list exposes every tool on the server. An AgentTemplate takes at most 50 bindings in total. |
 
 3. Confirm that kagent compiled a new {{< gloss "Revision" >}}revision{{< /gloss >}} for the Agent that uses the edited template. Every edit produces a new desired revision, and the Agent is current when the latest successful revision matches it.

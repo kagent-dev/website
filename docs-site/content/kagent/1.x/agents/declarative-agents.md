@@ -43,7 +43,7 @@ Compaction offers two strategies. Tail retention summarizes the older history on
 
 | Field | Description |
 | ----- | ----------- |
-| `memory.modelConfigRef.name` | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that supplies the embedding model, in the Harness's namespace. Required when `memory` is set. Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}). |
+| `memory.modelConfigRef.name` | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that supplies the embedding model. Required when `memory` is set. To use a ModelConfig outside the Harness's namespace, also set `memory.modelConfigRef.namespace`, as described in [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}). Setting `memory` gives every agent on this Harness memory that persists across conversations. For how agents store and retrieve it, see [Agent memory]({{< link path="agents/agent-memory" >}}). |
 | `memory.ttlDays` | How many days a stored memory entry stays valid. Minimum 1. When omitted, the server applies a default of 15 days. |
 | `compaction.tokenThreshold` | Tail retention. The prompt token count that triggers a summary. Once the prompt passes this count, kagent summarizes the older history before the next model call. Requires `compaction.eventRetentionSize`. |
 | `compaction.eventRetentionSize` | Tail retention. The number of most recent events that kagent leaves out of that summary, so the latest exchanges reach the model in full. Requires `compaction.tokenThreshold`. |
