@@ -165,9 +165,50 @@ The receiving service gets a token that is signed with ES256 and contains the fo
 }
 ```
 
-The `actor.ate.dev` claim names the Actor's {{< gloss "Atespace" >}}atespace{{< /gloss >}}, name, and UID. The atespace is the namespace of the Agent or SandboxTemplate. The token also contains the standard `exp`, `nbf`, `iat`, and `jti` claims. Each Session runs as its own Actor, so the Actor's name and UID change with every Session. To authorize a team or an environment, base the decision on the atespace.
+The `actor.ate.dev` claim names the Actor's {{< gloss "Atespace" >}}atespace{{< /gloss >}}, name, and UID. The atespace is the namespace of the Agent or SandboxTemplate. The token also contains the standard `exp`, `nbf`, `iat`, and `jti` claims. Each Session runs as its own Actor, so the Actor's name and UID change with every Session. To authorize a team or an environment from the token alone, base the decision on the atespace. To authorize by Agent, use the [Agent lookup](#agent-lookup).
 
 The receiving service must check the issuer, the signature, its own audience, and the time claims. The issuer is the `ateApi.actorJWTIssuer` value of the Agent Substrate chart. The issuer publishes its OpenID Connect discovery document at `/.well-known/openid-configuration` and its signing keys at `/openid/v1/jwks`. When `ateApi.actorJWTIssuer` is set to its default, the service reaches both over TLS inside the cluster, so it must also trust the certificate that the issuer serves.
+
+#### Agent lookup
+
+The token names the Actor and its atespace, but not the Agent. A receiving service that authorizes or audits by Agent can send the token to the controller's `kagent.api.v1.AgentIdentityService/ResolveAgentIdentity` method on port `8083`. The controller accepts only a token whose audiences include `kagent-agent-info`. Add that audience next to the service's own audience in the `actorJwt` field of the ModelConfig, RemoteMCPServer, or EgressPolicy that injects the token.
+
+```yaml
+actorJwt:
+  audiences: [ticket-api, kagent-agent-info]
+```
+
+The service sends the token that it received as a bearer token, with an empty request. In the following command, `$ACTOR_TOKEN` holds that token. The `grpcurl` command relies on gRPC reflection, so your installation must set `config.server.grpcReflection=true`. The `-rpc-header` flag keeps the token off the reflection requests.
+
+```bash
+grpcurl -plaintext -rpc-header "Authorization: Bearer $ACTOR_TOKEN" -d '{}' \
+  kagent-controller.kagent.svc.cluster.local:8083 \
+  kagent.api.v1.AgentIdentityService/ResolveAgentIdentity
+```
+
+Example output:
+
+```console
+{
+  "agent": {
+    "namespace": "kagent",
+    "name": "ticket-assistant",
+    "uid": "606e209e-e4a5-4520-929e-5a7f6f3d1926",
+    "labels": {
+      "team": "support"
+    },
+    "annotations": {
+      "description": "Ticket triage"
+    }
+  },
+  "sessionId": "01a18efc-83f3-7b12-a30a-73906fe617b0",
+  "runtimeRevision": "577c2a575fac1bf237a1fcac7674bc843feb1158b438f1c26d71bf73b735dc54"
+}
+```
+
+The response contains the Agent's namespace, name, UID, labels, and annotations, and the ID of the Session and the revision that the Actor runs. The labels and annotations are the Agent's current values, returned unchanged. They include `kubectl.kubernetes.io/last-applied-configuration` when you applied the Agent with `kubectl apply`, so the service can read the Agent's full manifest. Do not put values in an Agent's labels or annotations that the receiving service must not see. The Session ID does not give the service access to the Session.
+
+A token without the `kagent-agent-info` audience fails with `Invalid Agent identity credential`. A token from a deleted Session, or from an Agent that was deleted and recreated, also does not resolve.
 
 ## The Agent Substrate plane
 

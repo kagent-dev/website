@@ -70,7 +70,7 @@ Follow the **Kubernetes plane** first. An operator applies a Harness, an AgentTe
 
 The **kagent control plane** starts once that ActorTemplate exists. A caller, who might be the same person as the operator, calls `CreateSession` through kagent's gRPC API. This call is governed by kagent's own authentication and authorization, not by Kubernetes RBAC. kagent creates the Session from the Agent's latest successful revision. That Session runs on an {{< gloss "Actor" >}}Actor{{< /gloss >}}.
 
-From there, the caller holds a conversation over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol. A caller addresses the Agent, and names the conversation with the Session's ID as the A2A `contextId`. The A2A gateway routes each request to the Actor running behind that Session. This means that the caller only ever needs to know the Agent's name and the Session's ID, never which Actor or {{< gloss "Worker" >}}Worker{{< /gloss >}} is behind it.
+From there, the caller holds a conversation over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) protocol. A caller addresses the Agent, and names the conversation with the Session's ID as the A2A `contextId`. The A2A gateway routes each request to the Actor running behind that Session. This means that the caller only ever needs to know the Agent's name and the Session's ID, never which Actor or {{< gloss "Worker" >}}Worker{{< /gloss >}} is behind it.
 
 ## Why two planes
 

@@ -118,7 +118,7 @@ A Session is one running conversation with an Agent. Creating it starts an Actor
 
 ## Talk to your agent
 
-1. Send a message to the Session. The CLI holds the conversation over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol.
+1. Send a message to the Session. The CLI holds the conversation over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) protocol.
    ```bash
    kagent agent invoke --session $SESSION_ID --task "What is 2+2?"
    ```

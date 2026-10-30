@@ -244,7 +244,7 @@ An AgentTemplate that sets `outputSchemaStrict` to `true` without a schema is re
 
 ## Read the answer
 
-A successful answer is published as one {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) `DataPart` with the media type `application/json`. The part's metadata includes the SHA-256 digest of the schema that the answer was validated against, under the key `kagent.dev/a2a/output-schema-sha256`. kagent computes the digest after it normalizes the schema, so two schemas that differ only in formatting or key order have the same digest. The Agent's card lists `application/json` as its default output mode, instead of `text`.
+A successful answer is published as one {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) `DataPart` with the media type `application/json`. The part's metadata includes the SHA-256 digest of the schema that the answer was validated against, under the key `kagent.dev/a2a/output-schema-sha256`. kagent computes the digest after it normalizes the schema, so two schemas that differ only in formatting or key order have the same digest. The Agent's card lists `application/json` as its default output mode, instead of `text`.
 
 To see the part and its metadata, print the task as JSON.
 

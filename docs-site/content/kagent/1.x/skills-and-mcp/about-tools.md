@@ -50,7 +50,7 @@ For the bundled tool server, see the installation-level settings that drop provi
 
 ### Caller token passthrough
 
-An MCP server that authorizes each user individually needs the caller's token. For the authorizing server, set `tokenPassthrough: true` on its RemoteMCPServer resource. The agent sends the bearer token from the incoming agent-to-agent (A2A) request to the server as its `Authorization` header. When the incoming request does not present a bearer token, the MCP request fails.
+An MCP server that authorizes each user individually needs the caller's token. For the authorizing server, set `tokenPassthrough: true` on its RemoteMCPServer resource. The agent sends the bearer token from the incoming Agent2Agent (A2A) request to the server as its `Authorization` header. When the incoming request does not present a bearer token, the MCP request fails.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3

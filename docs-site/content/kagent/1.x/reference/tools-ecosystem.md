@@ -5,13 +5,11 @@ weight: 40
 author: kagent.dev
 ---
 
-A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with one {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server already registered, and you can register more of your own. This page lists what is installed, what the installed server serves, and how to narrow the set. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with one {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server already registered, the [`kagent-tool-server`](#kagent-tool-server) {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. The kagent chart installs the server as a subchart. The subchart is on by default, and the `kagent-tools.enabled` Helm value turns it off. The server serves tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. The kagent release pins the server version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
 
-## Server that a kagent installation registers
+kagent does not bind the server to an agent. An agent reaches the server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
 
-The kagent chart installs the tool server as a subchart. The `kagent-tools.enabled` Helm value turns the subchart on. The subchart creates the [`kagent-tool-server`](#kagent-tool-server) {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. The server serves tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. kagent does not bind the server to an agent, so an agent reaches the server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
-
-The kagent release pins the `kagent-tool-server` version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
+This page lists the tools that the installed server serves, how to narrow that set, and the community servers that you can register alongside it.
 
 ## Read the tools that a server serves
 

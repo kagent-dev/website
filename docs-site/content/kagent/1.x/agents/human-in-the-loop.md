@@ -7,7 +7,7 @@ author: kagent.dev
 
 Some agents only answer questions, and those can run unattended. Others call tools that change a cluster, spend money, or read sensitive information. An agent that takes actions like those should get a person's approval first. The human in the loop (HITL) mechanism lets an agent stop mid-turn, return a question or a pending tool call to a person, and continue once that person answers.
 
-A working HITL setup needs support from both the agent and the client. The agent must pause, which you configure by setting `requireApproval` on a tool binding in an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The client must support the Agent-to-Agent (A2A) human-in-the-loop extension, so that the client can present the request to a person and return the decision to the agent. A client without the extension still sees the agent stop, but cannot answer. Confirm that the client you plan to use supports the extension before you configure an agent to pause. For the clients that support the extension, see [Client support](#client-support).
+A working HITL setup needs support from both the agent and the client. The agent must pause, which you configure by setting `requireApproval` on a tool binding in an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The client must support the Agent2Agent (A2A) human-in-the-loop extension, so that the client can present the request to a person and return the decision to the agent. A client without the extension still sees the agent stop, but cannot answer. Confirm that the client you plan to use supports the extension before you configure an agent to pause. For the clients that support the extension, see [Client support](#client-support).
 
 ## Pause lifecycle
 

@@ -5,11 +5,11 @@ weight: 45
 author: kagent.dev
 ---
 
-The kagent CLI install path can help you quickly get an installation up and running for evaluation purposes. However, you later might want to manage the installation with Helm, such as to review changes in a pull request and apply them from a continuous integration and continuous delivery (CI/CD) pipeline.
+The kagent CLI installs kagent quickly for an evaluation. To manage the installation with Helm afterward, such as to review changes in a pull request and apply them from a continuous integration and continuous delivery (CI/CD) pipeline, export the installation.
 
 The `kagent install` command installs several Helm releases. The command computes the values for each release from your CLI configuration file, its own flags, and the settings that it generates. The `--dry-run` flag writes those Helm commands and values to a directory and leaves the cluster unchanged. You commit that directory to a repository, and the directory becomes the record of the installation.
 
-The move is one way. After you apply the export, do not run `kagent install` against the cluster again, because it overwrites the changes that you make in the exported values files.
+After you apply the export, manage the installation only with Helm. `kagent install` applies the values from your CLI configuration file, so running it against the cluster again overwrites the changes that you make in the exported values files.
 
 The export contains only the Helm releases. `kagent install` also creates the Agent Substrate identity pools, the development PostgreSQL database, and the database connection Secrets. The export does not include these resources, so this guide applies the export to a cluster where `kagent install` already created them.
 
@@ -25,7 +25,7 @@ The export contains only the Helm releases. `kagent install` also creates the Ag
 
 ## Export the installation
 
-The export must reproduce the installation that runs in your cluster. Run `kagent install` with the same configuration file and flags that you installed with, and add the `--dry-run` flag.
+The export must reproduce the installation that runs in your cluster, so run the export with the same configuration file and flags that you installed with.
 
 1. Export the installation to the `kagent-install` directory. The directory must not already exist. The command does not read your model provider API key, so the key does not need to be set. If you installed with the `--skip-database-setup` flag, add the flag to this command too. Otherwise, the exported values connect kagent and Agent Substrate to the development database.
    ```bash

@@ -206,7 +206,7 @@ Leader election keeps the replicas from conflicting. One replica takes a Kuberne
 
 ## Sign push notification callbacks
 
-Agent-to-Agent (A2A) push notifications are unsigned by default. A callback carries no `Authorization` header unless you supply an Ed25519 signing key, and the JSON Web Key Set (JWKS) endpoint returns `404`. Push notifications still work without a key, so sign them only where a receiver must verify that a callback came from your installation.
+Agent2Agent (A2A) push notifications are unsigned by default. A callback carries no `Authorization` header unless you supply an Ed25519 signing key, and the JSON Web Key Set (JWKS) endpoint returns `404`. Push notifications still work without a key, so sign them only where a receiver must verify that a callback came from your installation.
 
 To sign callbacks, generate one unencrypted PKCS#8 Ed25519 key and store it in a Secret in the kagent namespace.
 

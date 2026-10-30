@@ -26,7 +26,7 @@ A ModelConfig sets at most one of `apiKeySecret`, `tokenPassthrough`, and `actor
 
 ### Forward the caller's token
 
-Set `tokenPassthrough: true` to send the bearer token from the incoming agent-to-agent (A2A) request to the provider as the API key. The setting is not available for the `Gemini`, `GeminiVertexAI`, or `AnthropicVertexAI` providers, or on a `codex` or `claude` Harness.
+Set `tokenPassthrough: true` to send the bearer token from the incoming Agent2Agent (A2A) request to the provider as the API key. The setting is not available for the `Gemini`, `GeminiVertexAI`, or `AnthropicVertexAI` providers, or on a `codex` or `claude` Harness.
 
 The egress gateway injects no credential for the provider's host, so the caller's token reaches the provider unchanged. kagent also refuses to attach a static credential to that host.
 

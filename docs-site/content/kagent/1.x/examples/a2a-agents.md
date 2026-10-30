@@ -5,7 +5,7 @@ weight: 30
 author: kagent.dev
 ---
 
-Every {{< gloss "Agent" >}}Agent{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) protocol through the kagent controller. This example calls that service directly to read an Agent's card, send it a message, stream a reply, and answer the agent when it pauses for a person.
+Every {{< gloss "Agent" >}}Agent{{< /gloss >}} is reachable over the {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) protocol through the kagent controller. This example calls that service directly to read an Agent's card, send it a message, stream a reply, and answer the agent when it pauses for a person.
 
 In {{< reuse "kagent-docs/snippets/name-product.md" >}}, agent traffic runs over A2A. The CLI and the [Model Context Protocol (MCP) server]({{< link path="examples/agents-via-mcp" >}}) reach an Agent through the same service.
 
