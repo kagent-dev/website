@@ -16,7 +16,7 @@ The following example uses [Cohere](https://cohere.com/), which serves an OpenAI
    export PROVIDER_API_KEY=<your_api_key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create the Secret in the same namespace as the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-my-provider -n kagent --from-literal PROVIDER_API_KEY=$PROVIDER_API_KEY
    ```
@@ -42,7 +42,7 @@ The following example uses [Cohere](https://cohere.com/), which serves an OpenAI
    | Field | Description |
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that stores the API key, in the same namespace as this ModelConfig. |
-   | `apiKeySecretKey` | The key within that Secret that holds the API key. |
+   | `apiKeySecretKey` | The key within that Secret that stores the API key. |
    | `model` | The model identifier that your provider routes on. Consult your provider's documentation. |
    | `provider` | The provider to use, `OpenAI`. |
    | `openAI.baseUrl` | Your provider's OpenAI-compatible endpoint. Providers often serve this at a dedicated path, such as `/compatibility/v1`. |
@@ -55,7 +55,7 @@ For the rest of the settings that the `openAI` block accepts, see [OpenAI]({{< l
 
 ### Enable tool calling in vLLM
 
-kagent sends a `tools` array with `tool_choice: "auto"` on every request. kagent's runtime registers a built-in `ask_user` tool on every agent, so that array is sent even when you bind no tools yourself. Launch vLLM with automatic tool choice enabled, or every agent turn fails.
+kagent sends a `tools` array with `tool_choice: "auto"` on every request. By default, kagent's runtime registers a built-in `ask_user` tool on every agent, so kagent sends that array even when you do not bind any tools yourself. To prevent every agent turn from failing, launch vLLM with automatic tool choice enabled.
 
 ```bash
 vllm serve Qwen/Qwen2.5-7B-Instruct \
@@ -63,11 +63,11 @@ vllm serve Qwen/Qwen2.5-7B-Instruct \
   --tool-call-parser hermes
 ```
 
-The correct `--tool-call-parser` depends on your model family. Qwen2.5 uses `hermes` and Llama 3.1 uses `llama3_json`. Parser names change across vLLM releases, so check the [vLLM tool calling docs](https://docs.vllm.ai/en/latest/features/tool_calling.html) for the current name for your model.
+The correct `--tool-call-parser` depends on your model family. Qwen2.5 uses `hermes`. Llama 3.1 uses `llama3_json`. Parser names change across vLLM releases, so check the [vLLM tool calling docs](https://docs.vllm.ai/en/latest/features/tool_calling.html) for the current name for your model.
 
 ### Use the gateway's model identifier
 
-Set `model` to the identifier that your gateway routes on, which is often provider-prefixed and can differ from the bare model name that vLLM serves internally. Point `openAI.baseUrl` at the gateway. LiteLLM defaults to port `4000`, and Bifrost to `8080`.
+Set `model` to the identifier that your gateway routes on, which is often provider-prefixed and can differ from the bare model name that vLLM serves internally. Point `openAI.baseUrl` at the gateway. LiteLLM defaults to port `4000`. Bifrost defaults to port `8080`.
 
 ```yaml
 spec:
@@ -81,23 +81,16 @@ spec:
 
 ### Troubleshooting a 400 from the provider
 
-When every agent message fails with a generic `provider API error (status 400)`, the most common cause is a vLLM server started without `--enable-auto-tool-choice` and a matching `--tool-call-parser`. Because kagent always sends `tool_choice: "auto"`, vLLM rejects the request until automatic tool choice is enabled. Restart vLLM with both flags and try again.
+When every agent message fails with a generic `provider API error (status 400)`, the most common cause is a vLLM server started without `--enable-auto-tool-choice` and a matching `--tool-call-parser`. Restart vLLM with both flags and try again.
 
 ## TLS
 
-A provider on your own network may present a certificate that the agent does not already trust. The `tls` block adjusts how the agent verifies it.
+A provider on your own network might present a Transport Layer Security (TLS) certificate that the agent does not already trust. To skip verification of that certificate, set `tls.disableVerify` to `true`. The field defaults to `false`.
 
-| Field | Description |
-| ----- | ----------- |
-| `disableVerify` | Turns off certificate verification entirely. Defaults to `false`. |
-| `disableSystemCAs` | Trusts only the named CA bundle rather than the system trust store. Defaults to `false`. |
-| `caCertSecretRef` | The name of a Secret holding a PEM certificate authority bundle. |
-| `caCertSecretKey` | The key within that Secret that holds the bundle. |
+> [!NOTE]
+> **The `tls` block does not accept a certificate authority (CA) bundle.** An agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files, so the API server rejects `caCertSecretRef`, `caCertSecretKey`, and `disableSystemCAs` as unknown fields. Use a certificate that chains to a public authority, or terminate Transport Layer Security (TLS) at a gateway that the agent can trust.
 
-> [!WARNING]
-> **Pinning a certificate authority is not currently supported.** The `tls` block defines no field for a CA bundle, because an agent running on {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} cannot mount files. The API server rejects `caCertSecretRef` and `caCertSecretKey` as unknown fields. Use a certificate that chains to a public authority, or terminate TLS at a gateway that the agent can trust.
-
-Turning verification off does not mount anything, so it does compile.
+The following ModelConfig turns off verification for a provider on an internal network.
 
 ```yaml
 spec:
@@ -112,11 +105,11 @@ spec:
 ```
 
 > [!WARNING]
-> Disabling verification removes the guarantee that the agent is talking to the server that it thinks it is. Use it for local testing, never in production.
+> Disabling verification removes the guarantee that the agent connects to the intended server. Disable verification only for local testing, never in production.
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate in the same namespace. To use the ModelConfig from another namespace, see [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}).
 
 ```yaml
 spec:

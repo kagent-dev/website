@@ -395,7 +395,7 @@ When an agent requires an MCP server, the first tool listing or tool call opens 
 
 ## Check that an agent can run
 
-To check the status of a Harness, AgentTemplate, or Agent, check the status of only the Agent. It reports for all three resources, because neither a Harness nor an AgentTemplate reports a status of its own. For example, the `READY` column in `kubectl get harness` output is always empty.
+To check the status of a Harness, AgentTemplate, or Agent, check the status of only the Agent. The Agent's status reports for all three resources, because neither a Harness nor an AgentTemplate reports a status of its own.
 
 An Agent that is not `Ready` states the reason in its conditions.
 

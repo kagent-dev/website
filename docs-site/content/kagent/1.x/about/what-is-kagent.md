@@ -38,7 +38,7 @@ kagent 1.0 separates an agent's capabilities from its runtime, then runs the two
 {{< feature-card title="Agent tools" desc="Bind another AgentTemplate as a tool, so an agent can hand work to a specialist. A Shared binding nests that agent inside its parent's Actor, one level deep." >}}
 {{< feature-card title="Long-term memory" desc="Persistent, vector-backed memory across sessions. Agents remember context, not just the last prompt." >}}
 {{< feature-card title="Human-in-the-loop" desc="Tool approval gates and agent-initiated questions keep a person in control of consequential actions." >}}
-{{< feature-card title="Agent-to-Agent (A2A)" desc="Agents talk to callers, and to each other, over the A2A protocol." >}}
+{{< feature-card title="Agent2Agent (A2A)" desc="Agents talk to callers, and to each other, over the A2A protocol." >}}
 {{< feature-card title="Skills and plugins" desc="Load skills and plugins from an Open Container Initiative (OCI) registry, Git, or S3 at startup." >}}
 {{< feature-card title="Prompt templates" desc="Reusable prompt fragments stored as ConfigMaps. Keep system prompts consistent across agents." >}}
 {{< feature-card title="Observability" desc="OpenTelemetry tracing, structured logs, and an optional Prometheus metrics endpoint, with control plane traces carrying the Actor that they belong to." >}}

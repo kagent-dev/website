@@ -131,7 +131,7 @@ MCP:
   link: "/docs/kagent/1.x/skills-and-mcp/about-tools/#mcp-tools"
 
 A2A:
-  short: "The Agent-to-Agent protocol, which callers and other agents use to talk to an Agent. The conversation's context identifier is the Session ID, so a second message on the same ID continues the same conversation."
+  short: "The Agent2Agent protocol, which callers and other agents use to talk to an Agent. The conversation's context identifier is the Session ID, so a second message on the same ID continues the same conversation."
   link: "/docs/kagent/1.x/examples/a2a-agents/#about-the-kagent-a2a-service"
 
 gVisor:

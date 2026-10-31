@@ -1,65 +1,58 @@
 ---
 title: Tools ecosystem
-description: Look up the MCP servers that a kagent installation ships with, the tools that each one serves, and the community servers that you can add.
+description: Look up the MCP server that a kagent installation ships with, the tools that it serves, and the community servers that you can add.
 weight: 40
 author: kagent.dev
 ---
 
-A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with two {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers already registered, and you can register more of your own. This page is the catalog: what is installed, what each server serves, and how to narrow the set. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
+A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation ships with one {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server already registered, the [`kagent-tool-server`](#kagent-tool-server) {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. The kagent chart installs the server as a subchart. The subchart is on by default, and the `kagent-tools.enabled` Helm value turns it off. The server serves tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. The kagent release pins the server version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
 
-## Servers that a kagent installation registers
+kagent does not bind the server to an agent. An agent reaches the server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. For the schema that binds a server to an agent, see [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
 
-Both servers arrive as subcharts of the kagent chart, and each one creates its own {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} in the kagent namespace. Neither is bound to an agent for you, so an agent reaches a server's tools only through a {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} that you add to its {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}.
-
-| RemoteMCPServer | Helm value | Serves |
-| --------------- | ---------- | ------ |
-| [`kagent-tool-server`](#kagent-tool-server) | `kagent-tools.enabled` | 126 tools for Kubernetes, Helm, Istio, Cilium, Argo Rollouts, Prometheus, and Kubescape. |
-| [`kagent-grafana-mcp`](#kagent-grafana-mcp) | `grafana-mcp.enabled` | Grafana's own MCP server, for dashboards, data sources, alerts, Loki logs, and incidents. |
-
-The kagent release pins the `kagent-tool-server` version, which is currently {{< reuse "kagent-docs/versions/kagent-tools.md" >}}. For the full set of pinned component versions, see [Version support]({{< link path="reference/versions#what-a-kagent-release-includes" >}}).
+This page lists the tools that the installed server serves, how to narrow that set, and the community servers that you can register alongside it.
 
 ## Read the tools that a server serves
 
-The kagent controller connects to each RemoteMCPServer, asks it what it serves, and records the answer in `status.discoveredTools`. That status reports the server that your cluster actually runs, so it is more reliable than any list on this page.
+The kagent controller connects to each RemoteMCPServer, asks the server which tools it serves, and records the answer in `status.discoveredTools`. That status reports the tools of the server that your cluster actually runs, so the status is more reliable than any list on this page.
 
 ```sh
 kubectl get remotemcpserver kagent-tool-server -n kagent \
   -o jsonpath='{range .status.discoveredTools[*]}{.name}{"\t"}{.description}{"\n"}{end}'
 ```
 
-[Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-the-tool-to-your-agenttemplate" >}}) runs the same command as the first step of binding one of these tools to an agent.
+To see this command used as the first step of binding a tool to an agent, see [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-the-tool-to-your-agenttemplate" >}}).
 
 > [!NOTE]
-> `status.discoveredTools` stays empty until the controller completes a discovery pass, and `status.observedGeneration` tells you whether the recorded set matches the current spec. A server whose `Accepted` condition is not `True` has not been reached at all. A server that opts out of discovery is the exception, because it is `Accepted` and its tool list stays empty permanently. Read the `Accepted` condition's reason to tell the two apart, as described in the next section.
+> `status.discoveredTools` stays empty until the controller completes a discovery pass. `status.observedGeneration` tells you whether the recorded set matches the current spec. A server whose `Accepted` condition is not `True` has not been reached at all. A server that opts out of discovery is the exception, because it is `Accepted` and its tool list stays empty permanently. To tell a server that opted out of discovery from one that has not completed discovery, read the `Accepted` condition's reason, as described in [Turn tool discovery off for a server](#turn-tool-discovery-off-for-a-server).
 
 ### Turn tool discovery off for a server
 
-The controller lists a server's tools with the credentials that the controller itself holds. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, does not accept any credential that the controller can present. Discovery against that server fails, and because the listing never succeeds, the RemoteMCPServer stays un-`Accepted` indefinitely even though agents can reach it at run time.
+The controller lists a server's tools with the controller's own credentials. A server that authenticates every caller individually, such as one that expects each agent's own propagated token, does not accept any credential that the controller can present. Discovery against that server fails. Because the listing never succeeds, the RemoteMCPServer never reports the `Accepted` condition as `True`, even though agents can reach the server at runtime.
 
-To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at runtime with the credentials that they carry.
+To resolve this issue, label the server with `kagent.dev/discovery=disabled`. The controller accepts the server without listing its tools, and the agents that bind it resolve the tool list at runtime with their own credentials.
 
 ```sh
 kubectl label remotemcpserver <name> -n <namespace> kagent.dev/discovery=disabled
 ```
 
-The label changes three things about the server:
+The label has the following effects on the server:
 
 - The `Accepted` condition becomes `True` with the reason `DiscoveryDisabled`, rather than reporting a discovery failure.
-- `status.discoveredTools` stays empty, so the command in [Read the tools that a server serves](#read-the-tools-that-a-server-serves) returns nothing for this server. The server's own documentation becomes the only list of what it offers.
-- The catalog keeps the server but records it as disconnected, with no tools.
+- `status.discoveredTools` stays empty, so the command in [Read the tools that a server serves](#read-the-tools-that-a-server-serves) does not return tools for this server. The server's own documentation becomes the only list of what it offers.
+- The catalog keeps the server but records it as disconnected and without tools.
 
 > [!NOTE]
-> Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server with discovery off, but nothing validates those names at admission, so a typo surfaces as a failed tool call at runtime instead of a rejected binding.
+> Use this label only when controller-side discovery cannot succeed. Binding specific tools by name in an AgentTemplate still works against a server that has discovery turned off. However, admission does not validate those names, so a typo surfaces as a failed tool call at runtime instead of a rejected binding.
 
 ## kagent-tool-server
 
-One Go binary serves every tool in this section, grouped into eight providers. A provider's tools shell out to the matching command line tool inside the server's own container, so the Kubernetes, Helm, Istio, and Cilium providers act on your cluster with the server's ServiceAccount rather than with the caller's credentials.
+One Go binary serves every tool in this section, grouped into providers. A provider's tools shell out to the matching command line tool inside the server's own container, so the Kubernetes, Helm, Istio, and Cilium providers act on your cluster with the server's ServiceAccount rather than with the caller's credentials.
 
 Tools marked `*` perform write operations, and `--read-only` skips them at registration. The following sections list each provider's tools by the name that an agent sees.
 
 ### Kubernetes
 
-Agents use the Kubernetes provider the most, and it covers both inspection and modification of any resource that `kubectl` can reach.
+Agents use the Kubernetes provider the most. The provider covers both inspection and modification of any resource that `kubectl` can reach.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -102,7 +95,7 @@ The Helm provider manages releases and chart repositories with the Helm configur
 
 ### Istio
 
-Istio's tools wrap `istioctl`, and most of them read mesh state rather than change it. Waypoint management is the exception, as generating a waypoint resource and applying it are separate tools.
+Istio's tools wrap `istioctl`, and most of them read mesh state rather than change it. Waypoint management is the exception, because generating a waypoint resource and applying it are separate tools.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -122,7 +115,7 @@ Istio's tools wrap `istioctl`, and most of them read mesh state rather than chan
 
 ### Argo Rollouts
 
-Argo Rollouts tools cover progressive delivery. A rollout tool fails confusingly when the controller or one of its plugins is missing, so four of the eight tools verify the installation instead of acting on a rollout.
+Argo Rollouts tools cover progressive delivery. A rollout tool fails confusingly when the controller or one of its plugins is missing, so several of the tools verify the installation instead of acting on a rollout.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -137,7 +130,7 @@ Argo Rollouts tools cover progressive delivery. A rollout tool fails confusingly
 
 ### Cilium
 
-Cilium is the largest provider, with 58 tools ranging from installation to individual BPF maps. An agent that can see every tool spends its context on tool descriptions, so bind only the handful that an agent needs rather than the whole provider.
+Cilium is the largest provider, with tools ranging from installation to individual BPF maps. An agent that can see every tool spends its context on tool descriptions, so bind only the tools that an agent needs.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -202,7 +195,7 @@ Cilium is the largest provider, with 58 tools ranging from installation to indiv
 
 ### Prometheus
 
-The Prometheus provider queries a Prometheus server directly. Each tool takes the server's URL as an argument and defaults to `http://localhost:9090`, which does not resolve from inside the tool server's container, so have the agent pass the in-cluster address.
+The Prometheus provider queries a Prometheus server directly. Each tool takes the server's URL as an argument, and that argument defaults to `http://localhost:9090`. The default address does not resolve from inside the tool server's container, so have the agent pass the in-cluster address.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -214,7 +207,7 @@ The Prometheus provider queries a Prometheus server directly. Each tool takes th
 
 ### Kubescape
 
-Kubescape's tools read scan results that the Kubescape operator has already produced, so they return nothing useful until that operator is installed and has completed a scan. Start with `kubescape_check_health`, which reports whether the rest of the provider can work.
+Kubescape's tools read scan results that the Kubescape operator has already produced, so the tools do not return useful results until that operator is installed and has completed a scan. Start with `kubescape_check_health`, which reports whether the rest of the provider can work.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -231,7 +224,7 @@ Kubescape's tools read scan results that the Kubescape operator has already prod
 
 ### Utilities
 
-Three tools sit outside any product. `shell` runs an arbitrary command in the server's container with the server's ServiceAccount, so treat it as the widest permission that this server grants.
+The utility tools do not belong to any product. `shell` runs an arbitrary command in the server's container with the server's ServiceAccount, so treat it as the widest permission that this server grants.
 
 | Tool | Description |
 | ---- | ----------- |
@@ -241,7 +234,7 @@ Three tools sit outside any product. `shell` runs an arbitrary command in the se
 
 ## Narrow what kagent-tool-server serves
 
-Serving all 126 tools costs an agent context on every turn, and it grants the server broad authority over your cluster. Two independent settings narrow it, and each one acts at a different layer.
+Serving every tool costs an agent context on every turn, and the full tool set grants the server broad authority over your cluster. Independent settings narrow the server, and each one acts at a different layer.
 
 ```yaml
 kagent-tools:
@@ -268,7 +261,7 @@ kagent-tools:
 | `rbac.additionalRules` | Applies only where `rbac.readOnly` is `true`. Extra rules to append to the read-only ClusterRole, for the CRDs that the Istio, Cilium, and Argo providers read. |
 
 > [!IMPORTANT]
-> `--read-only` and `rbac.readOnly` are separate controls, and setting only one leaves a gap. `--read-only` stops the write tools from being registered, so an agent cannot call them. `rbac.readOnly` removes the cluster permissions that back them. Set only the flag, and the ServiceAccount keeps `cluster-admin`, which anything else in the container can still use. Set only the RBAC value, and the write tools stay in the catalog and fail at call time with permission errors that the agent then tries to work around.
+> `--read-only` and `rbac.readOnly` are separate controls, and setting only one leaves a gap. `--read-only` stops the write tools from being registered, so an agent cannot call them. `rbac.readOnly` removes the cluster permissions that back them. If you set only the flag, the ServiceAccount keeps `cluster-admin`, which anything else in the container can still use. If you set only the role-based access control (RBAC) value, the write tools stay in the catalog and fail at call time with permission errors that the agent then tries to work around.
 
 Because the settings are per-installation, they change what every agent sees. To give one agent a smaller set while leaving the server intact, list the tools on the tool binding instead, as described in [About tools]({{< link path="skills-and-mcp/about-tools#mcp-tools" >}}).
 
@@ -276,7 +269,15 @@ The kagent and Codex harnesses both honor this tool list. On the Claude {{< glos
 
 ## Reach kagent-tool-server from another namespace
 
-The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references from its own namespace only. Where an AgentTemplate in another namespace binds the server, the controller cannot resolve the binding, and the Agent that runs that template does not become ready. To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
+The chart creates the `kagent-tool-server` RemoteMCPServer in the release namespace, and a RemoteMCPServer admits references only from its own namespace by default. An AgentTemplate in another namespace can bind the server only when every one of the following conditions is met:
+
+- The binding's `mcp.server.namespace` field names the release namespace.
+- The server's `allowedNamespaces` field admits the AgentTemplate's namespace. Until the server admits the namespace, the controller cannot resolve the binding, and the Agent that runs that template does not become ready.
+- The controller watches both namespaces.
+
+The server sends no Secret-backed header, so an Agent in another namespace does not need an Agent Substrate Secret grant to reach it. For a RemoteMCPServer that does send one, see [Share an MCP server across namespaces]({{< link path="skills-and-mcp/about-tools#share-an-mcp-server-across-namespaces" >}}).
+
+To admit another namespace, set `allowedNamespaces` on the RemoteMCPServer that the chart creates.
 
 ```yaml
 kagent-tools:
@@ -290,7 +291,7 @@ kagent-tools:
 
 | Field | Description |
 | ----- | ----------- |
-| `allowedNamespaces.from` | Where a reference may originate, one of `All`, `Same`, or `Selector`. Defaults to `Same`. The default admits the release namespace only. |
+| `allowedNamespaces.from` | Where a reference may originate, one of `All`, `Same`, or `Selector`. Defaults to `Same`. The default admits only the release namespace. |
 | `allowedNamespaces.selector` | A label selector over namespaces. The server reads this field only where `from` is `Selector`, and the selector takes `matchLabels` and `matchExpressions`. |
 
 The selector follows the Gateway API pattern for cross-namespace attachment, so the label belongs on the Namespace rather than on the AgentTemplate that binds the server.
@@ -302,50 +303,22 @@ kubectl label namespace my-agents kagent-tools=allowed
 > [!NOTE]
 > Admitting a namespace grants every agent in that namespace the server's full cluster authority, because all of the server's callers share one ServiceAccount. Narrow the server with `rbac.readOnly` before you widen `allowedNamespaces`.
 
-## kagent-grafana-mcp
-
-The `kagent-grafana-mcp` server runs [mcp-grafana](https://github.com/grafana/mcp-grafana), Grafana's own MCP server. The kagent chart packages it as a subchart. Its tools fall into four groups:
-
-- Grafana dashboards, data sources, and alert rules.
-- PromQL queries against Grafana's Prometheus data sources.
-- LogQL queries against Loki.
-- Grafana incidents and on-call schedules.
-
-Set the Grafana instance that the server queries, along with its credentials, at install time.
-
-```yaml
-grafana-mcp:
-  enabled: true
-  grafana:
-    url: "grafana.kagent:3000/api"
-    serviceAccountToken: "<token>"
-```
-
-| Field | Description |
-| ----- | ----------- |
-| `grafana.url` | The Grafana API endpoint that the server queries. Defaults to `grafana.kagent:3000/api`, which matches the Grafana instance in `contrib/addons/grafana.yaml`. |
-| `grafana.serviceAccountToken` | A Grafana service account token. Empty by default, so the server starts and answers discovery while every tool call fails until you supply a token. |
-| `grafana.secretRef` | The name of an existing Secret that holds `GRAFANA_SERVICE_ACCOUNT_TOKEN`. Use this instead of `serviceAccountToken` to keep the token out of your Helm values. |
-
-> [!NOTE]
-> Upstream does not publish a tag other than `latest`, so this subchart tracks the `mcp/grafana:latest` image on Docker Hub. A kagent release therefore does not pin which tools this server serves, and the set can change without a kagent upgrade. Read `status.discoveredTools` on `kagent-grafana-mcp` for the tools that your installation has, rather than relying on a published list.
-
 ## Community and contributed servers
 
-kagent's repository carries example servers in [contrib/tools](https://github.com/kagent-dev/kagent/tree/main/contrib/tools). Each one is a starting point rather than a supported component, and their manifests were written against different kagent API versions, so check the `apiVersion` before you apply one.
+kagent's repository contains example servers in [contrib/tools](https://github.com/kagent-dev/kagent/tree/main/contrib/tools). Each server is an unsupported starting point. The manifests target different kagent API versions, so check the `apiVersion` before you apply one.
 
 | Server | Ready to apply | Description |
 | ------ | -------------- | ----------- |
 | [k8sgpt](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/k8sgpt-mcp-server) | Yes | K8sGPT integration, for diagnosing cluster problems. Declares `RemoteMCPServer` on `api.kagent.dev/v1alpha3`. |
 | [server-everything](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/server-everything) | Yes | The MCP reference server, useful for testing a binding end to end. Declares `RemoteMCPServer` on `api.kagent.dev/v1alpha3`. |
 | [GitHub MCP Server](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/github-mcp-server) | No | Tools for issues, pull requests, repositories, and actions. Its chart still declares the removed `ToolServer` kind. |
-| [mcp-grafana](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/mcp-grafana) | No | Superseded by the `grafana-mcp` subchart that a kagent installation already registers. Its chart still declares the removed `ToolServer` kind. |
+| [mcp-grafana](https://github.com/kagent-dev/kagent/tree/main/contrib/tools/mcp-grafana) | No | Tools for Grafana dashboards, data sources, alerts, and Loki logs. Its chart still declares the removed `ToolServer` kind. |
 | [context7](https://github.com/kagent-dev/kagent/blob/main/contrib/tools/context7.mcp.yaml) | No | Documentation lookup over stdio. Both the `ToolServer` kind and the stdio transport were removed. |
 
-To register any other MCP server, write a RemoteMCPServer that points at its URL. [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-your-own-mcp-server" >}}) works through a complete example.
+To register any other MCP server, write a RemoteMCPServer that points at its URL. For a complete example, see [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool#bind-your-own-mcp-server" >}}). To give agents Grafana tools, run Grafana's own server from the upstream [mcp-grafana](https://github.com/grafana/mcp-grafana) project, and register it in the same way.
 
 > [!NOTE]
-> A RemoteMCPServer takes a URL, so kagent connects only to servers that speak streamable HTTP or Server-Sent Events (SSE). To reach a server that runs over stdio, wrap it in a deployment that exposes an HTTP endpoint. [kmcp](https://kagent.dev/docs/kmcp/) builds and runs such servers.
+> A RemoteMCPServer takes a URL, so kagent connects only to servers that speak streamable HTTP or Server-Sent Events (SSE). To reach a server that runs over stdio, wrap it in a deployment that exposes an HTTP endpoint. To build and run such servers, use [kmcp](https://kagent.dev/docs/kmcp/).
 
 ## Next steps
 

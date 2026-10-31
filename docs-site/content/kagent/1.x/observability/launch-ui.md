@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-The {{< reuse "kagent-docs/snippets/name-product.md" >}} UI is a read-and-write console for everything the controller knows about: the agents you defined, the conversations the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
+The {{< reuse "kagent-docs/snippets/name-product.md" >}} UI is a read-and-write console for everything that the controller knows about, including the agents that you defined, the conversations that the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
 
 ## Before you begin
 
@@ -57,27 +57,27 @@ The UI service is a `ClusterIP` by default, so it is reachable only from inside 
 
 2. Open [http://localhost:8082](http://localhost:8082) in your browser.
 
-3. When you are done, press `Ctrl+C` in the terminal that holds the port-forward.
+3. When you are done, press `Ctrl+C` in the terminal that runs the port-forward.
 {{% /tab %}}
 {{< /tabs >}}
 
-The dashboard opens on a summary of what the controller has loaded. A fresh installation counts zero agents and zero conversations, and already counts the model configuration and the {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that the chart installed.
+The dashboard opens on a summary of what the controller has loaded. On a fresh installation, the dashboard counts zero agents and zero conversations. The dashboard also counts the model configuration and the {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) servers that the chart installed.
 
 {{< reuse-image-light src="img/kagent-ui-dashboard.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-dashboard-dark.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
 
 ## Explore the UI
 
-The left menu groups the console by the resource each page reads, so the page you want follows from the resource you are asking about.
+The left menu groups the console pages by the resource that each page reads.
 
 | Page | Shows |
 | ---- | ----- |
 | **Dashboard** | Counts of agents, model configurations, MCP servers, and discovered tools, plus recent conversations. |
 | **Agents** | Every {{< gloss "Agent" >}}Agent{{< /gloss >}}, {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, and {{< gloss "Harness" >}}Harness{{< /gloss >}}, and the conversations held with each Agent. |
-| **Schedules** | Agents that run automatically, each execution starting a new conversation. |
-| **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents name, and the providers behind them. |
+| **Schedules** | Agents that run automatically. Each execution starts a new conversation. |
+| **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents reference, and the providers behind them. |
 | **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each. |
-| **Prompts** | Prompt libraries, which hold reusable fragments that an AgentTemplate includes in its instructions. |
+| **Prompts** | Prompt libraries, which store reusable fragments that an AgentTemplate includes in its instructions. |
 | **Substrate** | WorkerPools, Actors, and Workers, read from both Kubernetes and the Agent Substrate API. |
 
 Start at the **Agents** page to review your agents and the resources behind them. The page lists each resource kind on its own tab: **Agents**, **Templates**, and **Harnesses**.
@@ -85,11 +85,11 @@ Start at the **Agents** page to review your agents and the resources behind them
 {{< reuse-image-light src="img/kagent-ui-agents.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-agents-dark.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 
-The **Agents** tab authors the Agent custom resource directly. Create one to pair a template with a Harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it named. For CLI steps, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
+The **Agents** tab authors the Agent custom resource directly. Create one to pair a template with a Harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it referenced. For CLI steps, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Read a conversation
 
-Opening an agent and sending a message creates a {{< gloss "Session" >}}Session{{< /gloss >}}, which is one conversation scheduled onto an Agent Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls the agent made along the way, and the checkpoint controls for the conversation.
+Opening an agent and sending a message creates a {{< gloss "Session" >}}Session{{< /gloss >}}, which is one conversation scheduled onto an Agent Substrate {{< gloss "Actor" >}}Actor{{< /gloss >}}. The conversation view shows the transcript, the tool calls that the agent made along the way, and the checkpoint controls for the conversation.
 
 {{< reuse-image-light src="img/kagent-ui-chat.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-chat-dark.png" alt="A conversation with an agent, showing a named snapshot and the controls on its mark" caption="Figure: A conversation with an agent" >}}
@@ -98,11 +98,13 @@ The UI labels a {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} **Snapshot**.
 
 To take a checkpoint, select the save icon beside the message box. kagent pins the snapshot that the Session most recently suspended to, and records how far the transcript advanced. To understand how pinning works, and why a turn must be complete first, see [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
 
-A checkpoint appears in the transcript as a mark carrying the snapshot name and three controls. Select the mark to open the record behind it. The record holds the checkpoint's ID, turn, state, and age.
+A checkpoint appears in the transcript as a mark that shows the snapshot name and the following controls.
 
-- **Fork** starts a second Session from the checkpoint. The new Session replays the conversation through the pinned turn and then continues on its own. For what a fork keeps from its source, see [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
-- **Rename** replaces the snapshot name that kagent generates on creation from the Session ID and the turn the checkpoint pins. Clearing the name restores that generated default.
-- **Delete** removes the checkpoint and releases the snapshot it pinned. Agent Substrate is then free to collect that snapshot.
+- **Fork** starts a new Session from the checkpoint. The new Session replays the conversation through the pinned turn and then continues on its own. For what a fork keeps from its source, see [Checkpoints]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
+- **Rename** replaces the default snapshot name, which kagent generates from the Session ID and the pinned turn when it creates the checkpoint. Clearing the name restores that generated default.
+- **Delete** removes the checkpoint and releases the snapshot that it pinned. Agent Substrate is then free to collect that snapshot.
+
+Select the mark to open the record behind it. The record shows the checkpoint's ID, turn, state, and age.
 
 > [!NOTE]
 > A checkpoint is always taken at the latest turn boundary, so the UI offers checkpoint controls on your own most recent message and not on earlier ones.
@@ -117,7 +119,7 @@ Stage files in any of the following ways.
 
 - Select the paperclip beside the message box, then choose the files.
 - Drop files anywhere on the chat page.
-- Paste a file or an image from your clipboard. A clipboard that also holds plain text pastes the text instead, so that a copy from a word processor keeps its text rather than its image rendering.
+- Paste a file or an image from your clipboard. A clipboard that also contains plain text pastes the text instead, so that a copy from a word processor keeps its text rather than its image rendering.
 
 Sent files stay in the transcript as download chips, and reloading the page redraws them. How a file reaches the model depends on its type and on the agent's model provider.
 
@@ -127,25 +129,25 @@ Sent files stay in the transcript as download chips, and reloading the page redr
 
 When the message text includes a link to a file of an accepted type other than HTML, such as `https://example.com/q3-report.pdf`, the UI also sends the link as a file link. When the ModelConfig sets `apiFormat: responses`, or the provider is Gemini, the model fetches the file itself. The provider must therefore be able to reach the link. The UI does not send a link to an IP address or to a local hostname, such as one that ends in `.svc` or `.local`, because the provider cannot reach such a host. Every other model receives the link as text, and an agent with a fetch tool can read the file from it. Only the message that includes a link sends it as a file. In later turns, the model receives the bare URL as text.
 
-An empty file, or one that holds only whitespace, reaches the model as the note `[Uploaded file "notes.txt" (text/plain) contained no extractable text.]` instead of contents, so the agent reports the gap rather than answering from nothing.
+An empty file, or one that contains only whitespace, reaches the model as the note `[Uploaded file "notes.txt" (text/plain) contained no extractable text.]`, so the agent reports the gap.
 
-The following limits apply to attachments:
+Different components between the browser and the model enforce the attachment limits:
 
 | Limit | Value | Enforced by |
 | ----- | ----- | ----------- |
-| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, HTML, PDF, Word (`.docx`), Excel (`.xlsx`), and PowerPoint (`.pptx`) files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. A rejected file is reported by name. |
+| Accepted file types | Plain text, Markdown, CSV, JSON, XML, YAML, HTML, PDF, Word (`.docx`), Excel (`.xlsx`), and PowerPoint (`.pptx`) files, and PNG, JPEG, GIF, and WebP images | The UI, as you stage each file. The UI reports a rejected file by name. |
 | Total size of the files in one message | 10 MB | The UI, as you stage each file. |
 | Text read from one file | 200,000 characters | The runtime, which appends `[truncated]` to a longer file. |
-| gRPC message that the kagent API accepts | 16 MiB | The controller's gRPC server, and every kagent gRPC client. The limit is a compiled-in constant that no Helm value changes. |
+| gRPC message that the kagent API accepts | 16 MiB | The controller's gRPC server, and every kagent gRPC client. The limit is a compiled-in constant that a Helm value cannot change. |
 | Request body that the UI's nginx accepts | `ui.nginx.clientMaxBodySize`, default `20m` | The UI pod's nginx. The default sits just above the 16 MiB gRPC message limit. |
 
 The UI falls back to the file extension when the browser does not report a media type for a file, or reports the wrong one. For example, browsers do not report a media type for `.md` files.
 
-If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit, and a default nginx allows only `1m`. Raise the limit as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
+If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit. A default nginx allows only `1m`. To raise the limit, see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
 
 ## Check Agent Substrate capacity
 
-The **Substrate** page shows whether there is capacity for an agent to run. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
+The **Substrate** page shows whether Agent Substrate has capacity to run an agent. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
 
 {{< reuse-image-light src="img/kagent-ui-substrate.png" alt="The Substrate page, showing one worker pool and no running actors" caption="Figure: The Substrate page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-substrate-dark.png" alt="The Substrate page, showing one worker pool and no running actors" caption="Figure: The Substrate page" >}}
@@ -154,16 +156,18 @@ Read the page from the top tiles down.
 
 | Tile | Means |
 | ---- | ----- |
-| **Worker pools** | {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}} that an operator has provisioned. No Harness can run an agent until at least one exists. |
+| **Worker pools** | {{< gloss "WorkerPool" >}}WorkerPools{{< /gloss >}} that an operator has provisioned. A Harness cannot run an agent until at least one WorkerPool exists. |
 | **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated. |
-| **Actors running** | Live Actors, each one a Session holding a conversation. |
+| **Actors running** | Live Actors. Each Actor runs one Session. |
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
-| **Scope** | The filters this page asked for, rather than what the API returned. Reads `all` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`. |
+| **Requested filters** | The filters this page asked for, not what the API returned. Reads `none` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`, with `any` in place of a filter that you leave empty. |
 
-A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors on this page.`
+On a fresh installation, the page reports one WorkerPool, zero ActorTemplates, and zero Actors, because an agent does not exist yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors on this page.`
+
+When you [restrict kagent to specific namespaces]({{< link path="operations/multiple-namespaces#restrict-kagent-to-specific-namespaces" >}}), several kagent installations can share one Agent Substrate. The Substrate page then reads only the watched namespaces and the atespaces whose names kagent derives from those namespaces. Empty filters cover every watched namespace. A filter that specifies any other namespace or atespace fails with a `PermissionDenied` error. An installation that watches every namespace reads the entire Agent Substrate.
 
 > [!NOTE]
-> When the Substrate page cannot reach the Agent Substrate API, it reports the failure rather than an empty result. A warning above the tables carries the error, and the Actors table reads `This read could not reach ate-api, so there may be actors it did not see.` On a cluster that does have agents, `No actors on this page.` means that the read succeeded and matched nothing, so check the **Kubernetes namespace** and **ATE atespace** filters.
+> When the Substrate page cannot reach the Agent Substrate API, it reports the failure rather than an empty result. A warning above the tables shows the error, and the Actors table reads `This read could not reach ate-api, so there may be actors it did not see.` On a cluster that does have agents, `No actors on this page.` means that the read succeeded and matched nothing, so check the **Kubernetes namespace** and **ATE atespace** filters.
 
 ## Expose the UI outside the cluster
 
@@ -187,9 +191,9 @@ kubectl get svc -n kagent {{< reuse "kagent-docs/snippets/name-ui.md" >}}
 
 ### OpenShift route
 
-On OpenShift clusters kagent creates an edge-terminated `Route` for the UI whenever the `route.openshift.io/v1` API is present. The route is enabled by default through `ui.route.enabled`.
+On OpenShift clusters, kagent creates an edge-terminated `Route` for the UI whenever the `route.openshift.io/v1` API is present. The route is enabled by default through `ui.route.enabled`.
 
-The default HAProxy timeout is raised to 120 minutes, because agent conversations hold long-lived streaming connections that a shorter timeout terminates mid-reply. To change it, set the annotation.
+The chart raises the default HAProxy timeout to 120 minutes, because agent conversations keep long-lived streaming connections open, and a shorter timeout terminates them mid-reply. To change the timeout, set the annotation.
 
 ```yaml
 ui:
@@ -198,7 +202,7 @@ ui:
       haproxy.router.openshift.io/timeout: 60m
 ```
 
-To front the UI with your own ingress instead, set `ui.route.enabled: false` to stop kagent creating the route.
+To front the UI with your own ingress instead, set `ui.route.enabled: false` so that kagent does not create the route.
 
 ### Gateway API HTTPRoute
 

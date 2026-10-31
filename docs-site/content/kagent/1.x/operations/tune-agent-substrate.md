@@ -15,7 +15,7 @@ This single Worker reports capacity for 1000 Actors, so a default pool serves ma
 
 2. Confirm that you have administrative access to the cluster, because this guide scales WorkerPools and reads cluster-scoped resources.
 
-3. Install [grpcurl](https://github.com/fullstorydev/grpcurl). No kubectl or kagent command covers `GetSubstrateStatus`. Calling it directly is the only way to see the full runtime state.
+3. Install [grpcurl](https://github.com/fullstorydev/grpcurl) and [jq](https://jqlang.org/download/). The kagent controller reports the runtime state through its `SystemService` methods, and no kubectl or kagent command covers them.
 
 ## Inspect the runtime
 
@@ -27,8 +27,8 @@ Read the current state of the runtime before you change it. The rest of this gui
    ```
    Example output:
    ```console
-   NAME             DESIRED   REPLICAS   READY   AGE
-   kagent-default   8         8          8       3h
+   NAME             DESIRED   REPLICAS   READY   SANDBOXCONFIG    RESOLVED   AGE
+   kagent-default   1         1          1       gvisor-default   True       3h
    ```
    `DESIRED` is the replica count that you asked for, `REPLICAS` counts the Worker pods that exist, and `READY` counts the pods that are serving. A gap between `DESIRED` and `REPLICAS` means the controller is not creating pods. A gap between `REPLICAS` and `READY` means the pods exist but are not starting. Raising the replica count helps only when all three counts agree.
 
@@ -37,44 +37,75 @@ Read the current state of the runtime before you change it. The rest of this gui
    kubectl port-forward -n kagent svc/kagent-controller 8083:8083
    ```
 
-3. Call `GetSubstrateStatus`, which joins the WorkerPools, {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}}, {{< gloss "Actor" >}}Actors{{< /gloss >}}, and Workers that kagent knows about into one response.
+3. Read the runtime summary. `GetSubstrateSummary` returns each WorkerPool in the namespace and counts the {{< gloss "Actor" >}}Actors{{< /gloss >}} by state. The `jq` filter keeps the pool's name, Worker image, and ready count from the full WorkerPool resource.
    ```bash
    grpcurl -plaintext -d '{"namespace":"kagent"}' \
-     localhost:8083 kagent.api.v1.SystemService/GetSubstrateStatus
+     localhost:8083 kagent.api.v1.SystemService/GetSubstrateSummary \
+     | jq '{workerPools: [.workerPools[].resource.value | {name: .metadata.name, workerImage: .spec.workerImage, readyReplicas: .status.readyReplicas}], actorCount, workerCount, actorStatusCounts}'
    ```
-   Example output, abbreviated to one Worker and one Actor:
+   Example output:
    ```json
    {
-     "enabled": true,
      "workerPools": [
        {
-         "namespace": "kagent",
          "name": "kagent-default",
-         "replicas": 8,
-         "ateomImage": "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+         "workerImage": "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}",
+         "readyReplicas": 1
        }
      ],
-     "actors": [
+     "actorCount": "3",
+     "workerCount": "1",
+     "actorStatusCounts": [
        {
-         "actorId": "792f8f90-72a9-49e8-b720-cb3b96fd9a8b",
-         "atespace": "ate-golden",
-         "status": "Suspended",
-         "actorTemplateName": "assistant-kagent-2a786e2db23a",
-         "latestSnapshot": "s3://ate-snapshots/kagent/atespaces/ate-golden/actors/2d921676-80ad-48d3-8c2a-4059ef74da33/snapshots/503a07e3-ec49-433c-abdf-b2bb3cb36d5d"
-       }
-     ],
-     "workers": [
+         "count": "1",
+         "state": "ACTOR_STATE_RUNNING"
+       },
        {
-         "workerNamespace": "kagent",
-         "workerPool": "kagent-default",
-         "workerPod": "kagent-default-787547df77-4kvqf",
-         "ip": "10.244.0.104"
+         "count": "2",
+         "state": "ACTOR_STATE_SUSPENDED"
        }
      ]
    }
    ```
+   An Actor in `ACTOR_STATE_RUNNING` is running a turn on a Worker. A suspended Actor occupies no Worker.
 
-A Worker entry gains an `actorId` only while an Actor occupies it, so the Workers list also shows which capacity is busy.
+4. List the Actors in an {{< gloss "Atespace" >}}atespace{{< /gloss >}} with their latest snapshot. The atespace is the namespace of the Agent. Each Actor runs one {{< gloss "Session" >}}Session{{< /gloss >}} and is named after it.
+   ```bash
+   grpcurl -plaintext -d '{"atespace":"kagent"}' \
+     localhost:8083 kagent.api.v1.SystemService/ListSubstrateActors \
+     | jq '.actors[] | {name: .metadata.name, uid: .metadata.uid, state: .status.state, snapshotUri: .status.snapshots[-1].durableSnapshot.object.snapshotUri}'
+   ```
+   Example output:
+   ```json
+   {
+     "name": "session-01a18f1f-7d3a-7816-8f67-4eb5d6e0ed03",
+     "uid": "496dbbad-a91d-43af-b963-725efab6556a",
+     "state": "ACTOR_STATE_SUSPENDED",
+     "snapshotUri": "s3://ate-snapshots/kagent/atespaces/kagent/actors/496dbbad-a91d-43af-b963-725efab6556a/snapshots/dc751a3f-b563-45e0-b244-e89523821d95"
+   }
+   ```
+
+5. List the Workers and their capacity. A Worker hosts many Actors at once, and `capacity.actors` is the most that one Worker accepts.
+   ```bash
+   grpcurl -plaintext -d '{"namespace":"kagent"}' \
+     localhost:8083 kagent.api.v1.SystemService/ListSubstrateWorkers \
+     | jq '.workers[] | {workerPod, nodeName, state: .status.state, capacity: .status.capacity}'
+   ```
+   Example output:
+   ```json
+   {
+     "workerPod": "kagent-default-5f4c588464-f7f9l",
+     "nodeName": "worker-node-1",
+     "state": "WORKER_STATE_ACTIVE",
+     "capacity": {
+       "cpuMillicores": "10000",
+       "memoryBytes": "12470472704",
+       "actors": 1000
+     }
+   }
+   ```
+
+`ListSubstrateActors` and `ListSubstrateWorkers` return results in pages of up to 100 entries. When a response contains a `page.nextPageToken` value, pass it as `page.pageToken` in the next request, such as `{"atespace":"kagent","page":{"pageToken":"<token>"}}`.
 
 ## Size a WorkerPool
 
@@ -173,7 +204,7 @@ substrateWorkerPool:
 kagent does not label a pool that you manage outside the chart. Set both keys yourself, and match each value to the pool's name and namespace.
 
 ```yaml
-apiVersion: ate.dev/v1alpha1
+apiVersion: ate.dev/v1
 kind: WorkerPool
 metadata:
   name: external-pool
@@ -183,7 +214,9 @@ metadata:
     kagent.dev/worker-pool-namespace: team-a
 spec:
   replicas: 2
-  workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+  sandboxClasses:
+    - name: gvisor
+  workerImage: "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
 ```
 
 Earlier releases placed Actors with a single `kagent.dev/worker-pool` label, and the chart no longer sets it. A Session or Sandbox that is pinned to a revision from one of those releases still selects that key. Keep the old label on the pool until you recreate them.
@@ -247,7 +280,7 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
          location: s3://ate-snapshots/kagent/
    ```
 
-4. Run a turn on an agent, suspend its Actor, and compare the `latestSnapshot` path [in the response](#inspect-the-runtime) against the `location` that you set. Because the backend and the location are configured separately, a mismatch between them breaks resuming an Actor from its snapshot later.
+4. Run a turn on an agent, suspend its Actor, and compare the Actor's `snapshotUri` path from [`ListSubstrateActors`](#inspect-the-runtime) against the `location` that you set. Because the backend and the location are configured separately, a mismatch between them breaks resuming an Actor from its snapshot later.
 
 ### How the chart reaches the components
 
@@ -265,7 +298,7 @@ Reading these variables off the `objectstore-plugin` container helps when a snap
 
 ### Snapshot layout in the bucket
 
-Agent Substrate builds a path per Actor under the Harness prefix, so one bucket serves many Harnesses without collision. The `<actor-uid>` segment is the Actor's `metadata.uid`, not the `actorId` that `GetSubstrateStatus` reports. Both values are UUIDs. Read `latestSnapshot` off the Actor rather than matching a path to an Actor by eye.
+Agent Substrate builds a path per Actor under the Harness prefix, so one bucket serves many Harnesses without collision. The `<actor-uid>` segment is the Actor's `metadata.uid`, not the Session ID in the Actor's name. Read the `snapshotUri` value off the Actor rather than matching a path to an Actor by eye.
 
 ```console
 s3://ate-snapshots/kagent/atespaces/<atespace>/actors/<actor-uid>/snapshots/<snapshot-uid>
@@ -294,14 +327,14 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
    ```yaml
    substrateWorkerPool:
      sandboxClass: gvisor
-     workerImage: "ghcr.io/kagent-dev/substrate/ateom-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+     workerImage: "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
    ```
    {{% /tab %}}
    {{% tab name="microvm" %}}
    ```yaml
    substrateWorkerPool:
      sandboxClass: microvm
-     workerImage: "ghcr.io/kagent-dev/substrate/ateom-microvm:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+     workerImage: "ghcr.io/kagent-dev/substrate/ateworker-microvm:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
    ```
    {{% /tab %}}
    {{< /tabs >}}
@@ -309,9 +342,9 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
    | Field | Description |
    | ----- | ----------- |
    | `sandboxClass` | The sandbox runtime family for this pool's Workers, and for every ActorTemplate that kagent generates for the pool. Omitting the field selects `gvisor`. |
-   | `workerImage` | The Worker build that provides the runtime. `ateom-gvisor` serves the `gvisor` class and `ateom-microvm` serves `microvm`. A build that does not match its pool's class never registers a Worker. |
+   | `workerImage` | The Worker build that provides the runtime. `ateworker-gvisor` serves the `gvisor` class and `ateworker-microvm` serves `microvm`. A build that does not match its pool's class never registers a Worker. |
 
-2. Confirm that the cluster has a SandboxConfig for this class. kagent names the configuration directly rather than resolving a default, so a `gvisor` pool needs a config named `gvisor-default` and a `microvm` pool needs a config named `microvm`.
+2. Confirm that the cluster has a SandboxConfig for this class. The chart sets the pool's `configRef` to a fixed SandboxConfig name for each class, `gvisor-default` for a `gvisor` pool and `microvm` for a `microvm` pool. To use another SandboxConfig, set `substrateWorkerPool.sandboxConfigRef`.
 
    ```bash
    kubectl get sandboxconfigs
@@ -326,7 +359,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
 
    A default installation creates only the `gvisor` class, because the Agent Substrate chart applies `sandboxconfig-gvisor.yaml` and kagent installs nothing for `microvm`. The `microvm` configuration and its runtime assets are staged out of band by the Agent Substrate installer, such as through `hack/install-microvm-deps.sh --install`.
 
-3. Verify that the pool's Workers came up on the build that you set. The `ateomImage` field in the [runtime response](#inspect-the-runtime) reports the image that each Worker is running, which the WorkerPool resource calls `workerImage`. Compare the two, and confirm in the output that the pool reports its full replica count as ready.
+3. Verify that the pool's Workers came up on the build that you set. The `workerImage` value in the [runtime summary](#inspect-the-runtime) reports the image that the pool runs. Confirm that it matches the build that you set, and that the pool reports its full replica count as ready.
 
    ```bash
    kubectl get workerpools -n kagent
@@ -337,7 +370,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
 Each of the three settings fails differently when it disagrees with the others.
 
 - A Worker whose pool class does not match an ActorTemplate's class reports `RevisionInvalid` with `unsupported sandbox class "<value>"`, and placement of this Actor fails with `WorkerPoolNotFound`.
-- A missing SandboxConfig fails template preparation with `SandboxConfig "<name>" not found`.
+- A missing SandboxConfig leaves the pool's class unresolved. The `Resolved` condition under the WorkerPool's `status.sandboxClasses` is `False`. The reason is `SandboxConfigNotFound` when the SandboxConfig that `configRef` references does not exist, or `DefaultConfigNotFound` when the pool sets no `configRef` and the class has no default.
 - A Worker image built for another class never registers, so the pool reports fewer ready Workers than its replica count.
 
 ### Considerations before changing a running pool
