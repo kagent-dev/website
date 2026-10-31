@@ -148,7 +148,7 @@ ERROR:
 
 3. **Check the {{< gloss "Actor" >}}Actor{{< /gloss >}} state.** An Actor that is stuck in `RESUMING`, or that is in `CRASHED`, never answers.
    * To review the list of states, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#actor-lifecycle-operations" >}}).
-   * To get the current state for every actor, [call `GetSubstrateStatus`]({{< link path="operations/tune-agent-substrate#inspect-the-runtime" >}}).
+   * To get the current state for every actor, [call `ListSubstrateActors`]({{< link path="operations/tune-agent-substrate#inspect-the-runtime" >}}).
 
 ## An edit to an AgentTemplate has no effect
 

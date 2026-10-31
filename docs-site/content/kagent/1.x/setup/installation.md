@@ -147,57 +147,6 @@ Before you create an agent, confirm that kagent and Agent Substrate are running,
 
    To serve the UI behind a reverse proxy under a prefix such as `/ui` (configurable with `ui.basePath`), see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy" >}}).
 
-## Restrict kagent to specific namespaces
-
-By default the controller watches every namespace, and the chart creates ClusterRoles and ClusterRoleBindings for cluster-scoped role-based access control (RBAC). To restrict kagent to a set of namespaces, set `global.watchNamespaces` in your Helm values:
-
-```yaml
-global:
-  watchNamespaces: [prod-agents, staging-agents]
-```
-
-Use `global.watchNamespaces` in preference to the per-surface keys. The chart derives both the RBAC scope and the controller's watch scope from this one value, so the two scopes cannot disagree. For each listed namespace, the chart replaces every kagent ClusterRole with a Role and RoleBinding and adds the namespace to the watch. The chart also appends the install namespace, so the release's own resources remain managed.
-
-The per-surface keys still exist for installations that scope the surfaces independently, and the validation rules bind them:
-
-- `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace, or the render fails.
-- `config.kubernetes.watchNamespaces` is an explicit watch override. When `rbac.namespaces` is set, a watch entry that references a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. When `global.watchNamespaces` is set, the chart folds the entries into the watch scope and does not fail the render. In both cases, the watch list replaces the default list, so the chart does not add the install namespace. To keep watching the install namespace, list it explicitly.
-- The `kagent-tool-server` RemoteMCPServer that the chart creates admits references from its own namespace only. An Agent in another watched namespace that binds it does not become ready until you set `allowedNamespaces` on that server. See [Reach kagent-tool-server from another namespace]({{< link path="reference/tools-ecosystem#reach-kagent-tool-server-from-another-namespace" >}}).
-
-Verify a namespaced installation in the same way as the default one, and also check that an unwatched namespace stays unmanaged. The `kubectl get agents` and conditions checks from the guide to [create your first agent]({{< link path="get-started/your-first-agent" >}}) apply to each watched namespace.
-
-1. Create one Agent in each watched namespace.
-   ```bash
-   kubectl apply -n prod-agents -f my-agent.yaml
-   kubectl apply -n staging-agents -f my-agent.yaml
-   ```
-2. Create one Agent in a namespace that the list does not cover.
-   ```bash
-   kubectl apply -n dev-agents -f my-agent.yaml
-   ```
-3. Confirm that the controller reconciles the watched Agents.
-   ```bash
-   kubectl get agents -n prod-agents
-   kubectl get agents -n staging-agents
-   ```
-   Example output:
-   ```console
-   NAME           AGE   READY
-   my-agent       30s   True
-   my-agent       30s   True
-   ```
-4. Confirm that the Agent in the unwatched namespace stays unmanaged. The Agent's `READY` value stays `UNKNOWN` and its conditions stay empty, because the controller does not have a watch entry for that namespace.
-   ```bash
-   kubectl get agents -n dev-agents
-   kubectl get agent my-agent -n dev-agents -o jsonpath='{.status.conditions}'
-   ```
-   Example output:
-   ```console
-   NAME           AGE   READY
-   my-agent       30s   UNKNOWN
-   null
-   ```
-
 ## Next steps
 
 {{< cards >}}
@@ -205,5 +154,6 @@ Verify a namespaced installation in the same way as the default one, and also ch
   {{< card link=`{{< link path="setup/model-providers" >}}` title="Configure model providers" subtitle="Point kagent at OpenAI, Anthropic, Gemini, or a provider of your own." >}}
   {{< card link=`{{< link path="operations/operational-considerations" >}}` title="Operational considerations" subtitle="Replace the evaluation defaults for the database, controller replicas, and Worker node pools." >}}
   {{< card link=`{{< link path="operations/operational-considerations#rotate-the-model-provider-api-key" >}}` title="Rotate the model provider API key" subtitle="Change the API key in the kagent-openai Secret, which Helm owns, without breaking running agents." >}}
+  {{< card link=`{{< link path="operations/multiple-namespaces" >}}` title="Run agents in multiple namespaces" subtitle="Prepare more namespaces to run agents, and restrict the controller to the namespaces that you choose." >}}
   {{< card link=`{{< link path="operations/export-to-helm" >}}` title="Export the installation to Helm" subtitle="Write the Helm commands and values that kagent install applies, and manage the installation with Helm." >}}
 {{< /cards >}}

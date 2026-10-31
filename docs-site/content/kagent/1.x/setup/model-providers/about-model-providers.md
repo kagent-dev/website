@@ -238,20 +238,27 @@ The following steps set up each condition.
    ```
 
 6. Let the Agent's namespace read Secrets in the shared namespace. Agent Substrate's credential provider controls which Secret namespaces each namespace's Agents can read, separately from `allowedNamespaces`. kagent does not widen this grant automatically.
-   1. Read the current namespace policies. The `credentialProvider.namespacePolicies` list that you set replaces the existing list, so you must include the entries that your installation already has.
+   1. Save the current values of the Agent Substrate release. The `credentialProvider.namespacePolicies` list that you set replaces the existing list, so the next substep builds the new list from these values.
       ```bash
-      helm get values substrate -n ate-system --all | grep -A8 namespacePolicies
+      helm get values substrate -n ate-system --all -o yaml > substrate-current-values.yaml
       ```
-   2. Write a values file that keeps the existing entries and adds a policy for the Agent's namespace. The `atespace` value in each policy is the namespace of the Agent.
+   2. Write a values file that keeps the existing policies and adds a policy for the namespace. The command uses [yq](https://github.com/mikefarah/yq) version 4. The `atespace` value is the namespace of the Agent.
+      ```bash
+      yq '{"credentialProvider": {"namespacePolicies": ((.credentialProvider.namespacePolicies // []) + [{"atespace": "team-a", "allowedNamespaces": ["team-a", "shared-config"]}])}}' \
+        substrate-current-values.yaml > substrate-namespace-policies.yaml
+      cat substrate-namespace-policies.yaml
+      ```
+      Example output:
       ```yaml
-      cat > substrate-namespace-policies.yaml <<EOF
       credentialProvider:
         namespacePolicies:
-          - atespace: kagent
-            allowedNamespaces: [kagent]
+          - allowedNamespaces:
+              - kagent
+            atespace: kagent
           - atespace: team-a
-            allowedNamespaces: [team-a, shared-config]
-      EOF
+            allowedNamespaces:
+              - team-a
+              - shared-config
       ```
    3. Upgrade the Agent Substrate release with the values file.
       ```bash

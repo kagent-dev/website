@@ -241,7 +241,7 @@ Agent Substrate records traces for its own work, such as scheduling an Actor ont
 | ------- | ------- |
 | `ateapi` | Actor lifecycle operations, such as create, resume, and suspend, and the scheduling of Actors onto Workers. |
 | `atelet` | Work on a Worker's node, such as restoring an Actor from a snapshot. |
-| `ateom-gvisor` | Work inside the sandbox that runs the Actor. |
+| `ateworker-gvisor` | Work inside the sandbox that runs the Actor. |
 | `atecontroller` | Reconciliation of Agent Substrate resources, such as WorkerPools. |
 
 Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, and it keeps 1% of its traces by default. To keep more, raise `otel.traces.samplingRatio`.

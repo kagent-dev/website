@@ -22,7 +22,7 @@ Kubernetes role-based access control (RBAC) governs who can create, read, edit, 
 
 Because neither a Harness nor an AgentTemplate names the other, the Agent resource carries the pairing, and RBAC on Agents governs it. Whoever can write Agents in a namespace controls which template runs on which Harness, even without edit access to the Harnesses and AgentTemplates that those Agents name. For more information about the pairing, see the [Agent core concept]({{< link path="about/core-concepts#agent" >}}).
 
-kagent's gRPC API reaches these same resources by a second path that Kubernetes RBAC does not evaluate. For more information, see [Resources that the API writes](#resources-that-the-api-writes).
+kagent's gRPC API reaches these same resources by a second path that Kubernetes RBAC does not evaluate. For more information, see [Resources that the API writes](#resources-that-the-api-writes). For what a namespace separates between teams, see [Namespace isolation]({{< link path="operations/multiple-namespaces#namespace-isolation" >}}).
 
 ## The kagent control plane
 

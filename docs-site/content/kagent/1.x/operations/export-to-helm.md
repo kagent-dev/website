@@ -32,7 +32,12 @@ The export must reproduce the installation that runs in your cluster, so run the
    kagent --config kagent-config.yaml install --namespace kagent --dry-run --output-dir ./kagent-install
    ```
 
-2. Review the files in the directory. The export writes one script, one README file, and one values file for each Helm release.
+2. List the files in the directory.
+   ```bash
+   ls -R ./kagent-install
+   ```
+
+   The export writes one script, one README file, and one values file for each Helm release.
    ```text
    kagent-install/
    ├── README.md
@@ -63,7 +68,7 @@ The `install.sh` script runs `helm upgrade --install` for each release, in insta
    export OPENAI_API_KEY="your-api-key-here"
    ```
 
-3. Run the script. Helm does not expand environment variables in a values file, so `helm upgrade -f values/kagent.yaml` installs the literal text `${OPENAI_API_KEY}` as the API key. Always apply the export by using the script. The script passes the API key to Helm by using the `--set-file` flag, through a private temporary file that the script deletes when it exits.
+3. Run the script. Helm does not expand environment variables in a values file, so `helm upgrade -f values/kagent.yaml` installs the literal text `${OPENAI_API_KEY}` as the API key. Always apply the export by using the script. The script passes the API key to Helm by using the `--set-file` flag through a private temporary file that the script deletes when it exits.
    ```bash
    sh ./kagent-install/install.sh
    ```
