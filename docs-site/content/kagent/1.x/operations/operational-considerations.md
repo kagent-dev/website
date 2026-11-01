@@ -62,6 +62,31 @@ The only section of settings that the controller does not apply to itself is `co
 
 Each `config.runtimeDefaults` setting is the installation's default. A Harness can replace most of these settings for the agents that run on it by naming the equivalent variable in its `spec.env` field. A small set of names is reserved instead, such as the certificate trust variables that let a runtime reach the egress gateway. For the reserved names and the per-harness differences, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}).
 
+### Customize UI probes {#customize-ui-probes}
+
+The UI image runs nginx with a Go entrypoint in a distroless container. Because the image does not include a shell or `curl`, `exec` probes cannot run. When you override `ui.startupProbe` or `ui.readinessProbe`, use an `httpGet` or `tcpSocket` probe.
+
+```yaml
+ui:
+  startupProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 1
+    periodSeconds: 5
+    failureThreshold: 20
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 30
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `ui.startupProbe` | Omit to use the chart default. The default uses `httpGet` on `/health` at port `http`, with `initialDelaySeconds: 1` and `periodSeconds: 1`. If you override this field, use `httpGet` or `tcpSocket`. An `exec` probe cannot run because the UI image does not include a shell or `curl`. |
+| `ui.readinessProbe` | Omit to use the chart default. The default uses `httpGet` on `/health` at port `http`, with `periodSeconds: 30`. If you override this field, use `httpGet` or `tcpSocket`. An `exec` probe cannot run because the UI image does not include a shell or `curl`. |
+
 ## Choose a database
 
 kagent stores {{< gloss "Session" >}}Sessions{{< /gloss >}} and compiled {{< gloss "Revision" >}}revisions{{< /gloss >}} in PostgreSQL. The kagent chart does not deploy a database of its own. kagent connects to the database with two logins, and reads the connection string for each login from a Kubernetes Secret.
