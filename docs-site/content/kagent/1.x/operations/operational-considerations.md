@@ -236,6 +236,39 @@ With a signing key configured, each callback attempt carries a fresh five-minute
 
 Every controller replica must load the same key. After you rotate the key, restart all controller pods together, because replicas that run on different keys publish different JSON Web Key Sets.
 
+## Tune push notification delivery {#tune-push-notification-delivery}
+
+Task callbacks use a database-backed delivery queue. By default, each controller replica sends up to 10 callback attempts at a time. Each attempt times out after 5 seconds. Tune these values when slow receivers, many callback registrations, or a higher replica count change the delivery capacity that your installation needs.
+
+```yaml
+config:
+  push:
+    maxConcurrency: 20
+    sendTimeout: 10s
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `config.push.maxConcurrency` | The maximum number of callback attempts that one controller replica sends at the same time. The value must be a positive integer. Set this value to `1` for serial delivery on each replica. To calculate the installation-wide limit, multiply `maxConcurrency` by the number of controller replicas. For example, three replicas with `maxConcurrency: 20` can make up to 60 concurrent callback attempts. |
+| `config.push.sendTimeout` | The timeout for one callback attempt. The value must be a positive duration in seconds notation, such as `10s`. A timed-out attempt records a failed delivery and follows the retry schedule. |
+
+After you add the values to `kagent.yaml`, upgrade the {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm release.
+
+```bash
+helm upgrade kagent \
+  {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+  --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+  --namespace kagent \
+  --reuse-values \
+  --values kagent.yaml
+```
+
+Then wait for the controller to roll out.
+
+```bash
+kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
+```
+
 ## Node operations
 
 A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so every node event reaches the {{< gloss "Actor" >}}Actors{{< /gloss >}} that this Worker hosts. What the event costs depends on what each Actor was doing when the node went away.
