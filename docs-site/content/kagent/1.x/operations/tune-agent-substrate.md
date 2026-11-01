@@ -306,12 +306,21 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
    {{% /tab %}}
    {{< /tabs >}}
 
+   To use a SandboxConfig that has a custom resource name, set `sandboxConfigRef`. Omit this field, or leave it empty, to use the default SandboxConfig name for the selected class.
+
+   ```yaml
+   substrateWorkerPool:
+     sandboxClass: gvisor
+     sandboxConfigRef: custom-gvisor-config
+   ```
+
    | Field | Description |
    | ----- | ----------- |
    | `sandboxClass` | The sandbox runtime family for this pool's Workers, and for every ActorTemplate that kagent generates for the pool. Omitting the field selects `gvisor`. |
+   | `sandboxConfigRef` | The SandboxConfig resource that kagent writes onto ActorTemplates for this pool. Omit this field, or leave it empty, to use `gvisor-default` for `gvisor` and `microvm` for `microvm`. The resource must use the same class as `sandboxClass`. |
    | `workerImage` | The Worker build that provides the runtime. `ateom-gvisor` serves the `gvisor` class and `ateom-microvm` serves `microvm`. A build that does not match its pool's class never registers a Worker. |
 
-2. Confirm that the cluster has a SandboxConfig for this class. kagent names the configuration directly rather than resolving a default, so a `gvisor` pool needs a config named `gvisor-default` and a `microvm` pool needs a config named `microvm`.
+2. Confirm that the cluster has the SandboxConfig that the Helm values reference. If you omit `substrateWorkerPool.sandboxConfigRef`, a `gvisor` pool needs a config named `gvisor-default` and a `microvm` pool needs a config named `microvm`.
 
    ```bash
    kubectl get sandboxconfigs
