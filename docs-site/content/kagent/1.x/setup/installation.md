@@ -67,6 +67,16 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    EOF
    ```
 
+   If your cluster uses a DNS domain other than `cluster.local`, add `global.clusterDomain` to the same file. The chart uses this value for runtime-facing service URLs. For example, agents use the `kagent-tool-server` RemoteMCPServer URL for built-in tools.
+
+   ```yaml
+   global:
+     clusterDomain: corp.example
+   config:
+     server:
+       grpcReflection: true
+   ```
+
 2. Save a CLI configuration file that points the installer at those values. `kagent install` does not take Helm flags of its own, so chart values reach it through this file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
    ```bash
    cat > kagent-config.yaml <<EOF
