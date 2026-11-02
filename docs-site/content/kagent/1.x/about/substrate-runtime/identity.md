@@ -95,6 +95,8 @@ Upgrade the controller and the runtime images together. An Actor snapshot from a
 
 {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} authenticates its own components rather than authenticating end users. Its API server accepts Kubernetes ServiceAccount tokens issued for its audience, and the components that carry traffic to an Actor authenticate each other with mutual Transport Layer Security (mTLS). The [kagent installation guide]({{< link path="setup/installation" >}}) covers creating the certificate authority pools and the JSON Web Token (JWT) authority pool that these identities are issued from, which is a required step that no Helm chart performs.
 
+The kagent controller reaches the Agent Substrate router for A2A and Sandbox guest calls. When `config.substrate.routerUrl` uses `https`, the controller uses its Agent Substrate API certificate authority bundle and rotating client certificate for router traffic. The router admits the controller only when `atenetRouter.ingressAllowedSPIFFEIDs` includes the controller's SPIFFE identity. For direct Helm installation values, see [Agent Substrate actor ingress]({{< link path="operations/operational-considerations#agent-substrate-actor-ingress" >}}).
+
 Each Actor also carries an identity of its own, addressed as its {{< gloss "Atespace" >}}atespace{{< /gloss >}} and name together. [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}) covers how the router uses that identity to reach the right Worker over mTLS.
 
 > [!IMPORTANT]

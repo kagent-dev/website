@@ -56,6 +56,29 @@ kagent config validate --component controller --config controller.yaml
 
 After you change these values, you can verify their validity by checking the controller's logs, as an invalid field prevents the controller from starting. 
 
+### Agent Substrate actor ingress {#agent-substrate-actor-ingress}
+
+`kagent install` configures actor ingress for you. For a direct Helm installation, set the kagent controller to use the HTTPS Agent Substrate router endpoint and mount its client certificate.
+
+```yaml
+controller:
+  substrateClientCertificate:
+    enabled: true
+config:
+  substrate:
+    routerUrl: https://atenet-router.ate-system.svc:443
+```
+
+In the Agent Substrate chart values, allow the rendered controller ServiceAccount identity. The identity normally uses the kagent namespace and the `kagent-controller` ServiceAccount.
+
+```yaml
+atenetRouter:
+  ingressAllowedSPIFFEIDs:
+    - spiffe://cluster.local/ns/kagent/sa/kagent-controller
+```
+
+An empty `atenetRouter.ingressAllowedSPIFFEIDs` list denies actor ingress. Keep the identity aligned with the namespace, ServiceAccount, and trust domain that your controller pod certificate uses. A2A calls and Sandbox guest calls both use this router path.
+
 ### Runtime defaults
 
 The only section of settings that the controller does not apply to itself is `config.runtimeDefaults`. The controller compiles those settings into each agent runtime that it starts. If you want a setting to apply to both the controller and the agents, such as the log level, the telemetry endpoints, or the content capture decision, you must configure that setting in both `config` and `config.runtimeDefaults`.
