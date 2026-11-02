@@ -197,7 +197,7 @@ The following steps set up each condition.
    | Field | Description |
    | ----- | ----------- |
    | `allowedNamespaces.from` | The namespaces whose AgentTemplates and Harnesses can reference this ModelConfig. `Same` admits the ModelConfig's own namespace and is the default. `All` admits every namespace that the controller watches. `Selector` admits the namespaces whose labels match `selector`. A Harness can also reference a shared ModelConfig, from `spec.kagent.memory.modelConfigRef` or `spec.kagent.compaction.summarizer.modelConfigRef`, and then the Harness's namespace must be admitted. Admission lets a namespace reference the ModelConfig. It does not let users in that namespace list, read, or edit the ModelConfig. |
-   | `allowedNamespaces.selector` | A label selector over namespaces, with `matchLabels` and `matchExpressions`. Required when `from` is set to `Selector`. A namespace must match the selector even when it is the ModelConfig's own namespace. |
+   | `allowedNamespaces.selector` | A label selector over namespaces, with `matchLabels` and `matchExpressions`. Required when `from` is set to `Selector`. A namespace must match the selector even when it is the ModelConfig's own namespace. On an installation that you restrict to specific namespaces, `Selector` requires a Namespace grant for the controller. For more information, see [Grant Namespace access for selector-based sharing]({{< link path="operations/multiple-namespaces#grant-namespace-access-for-selector-based-sharing" >}}). |
 
 3. Label each namespace that you want to admit.
    ```bash
@@ -242,9 +242,9 @@ The following steps set up each condition.
       ```bash
       helm get values substrate -n ate-system --all -o yaml > substrate-current-values.yaml
       ```
-   2. Write a values file that keeps the existing policies and adds a policy for the namespace. The command uses [yq](https://github.com/mikefarah/yq) version 4. The `atespace` value is the namespace of the Agent.
+   2. Write a values file that keeps the other namespaces' policies and sets the policy for this namespace. The command replaces any existing policy for the namespace, such as one from [Run agents in multiple namespaces]({{< link path="operations/multiple-namespaces#prepare-a-namespace-to-run-agents" >}}), so list every namespace that the Agents read Secrets from. The command uses [yq](https://github.com/mikefarah/yq) version 4. The `atespace` value is the namespace of the Agent.
       ```bash
-      yq '{"credentialProvider": {"namespacePolicies": ((.credentialProvider.namespacePolicies // []) + [{"atespace": "team-a", "allowedNamespaces": ["team-a", "shared-config"]}])}}' \
+      yq '{"credentialProvider": {"namespacePolicies": ((.credentialProvider.namespacePolicies // []) | map(select(.atespace != "team-a"))) + [{"atespace": "team-a", "allowedNamespaces": ["team-a", "shared-config"]}]}}' \
         substrate-current-values.yaml > substrate-namespace-policies.yaml
       cat substrate-namespace-policies.yaml
       ```
@@ -280,6 +280,13 @@ The following steps set up each condition.
    ```console
    All runtime references resolved
    ```
+
+8. Send the Agent a message to confirm the credential grant from step 6. The `ResolvedRefs` check passes without that grant, but every model call then fails with a `403 Forbidden` error.
+   ```bash
+   export SESSION_ID=$(kagent agent session create --agent my-agent -n team-a -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID -n team-a --task "Say hi"
+   ```
+   The command prints the model's reply.
 
 > [!IMPORTANT]
 > `allowedNamespaces` gates compilation, not running agents. When you narrow the policy or remove a namespace label, the Agent reports `Ready=False`, but kagent keeps its last successful revision. New Sessions still start from that revision and use the shared ModelConfig's credential. To cut off a namespace completely, also remove its entry from `credentialProvider.namespacePolicies`.

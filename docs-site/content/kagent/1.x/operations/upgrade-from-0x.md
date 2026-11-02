@@ -173,16 +173,17 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
 
 1. Before you apply the ModelConfigs, recreate the Secrets that they reference. Otherwise, the ModelConfigs cannot resolve their Secrets.
 
-2. Convert these resources to `v1alpha3`. The export also contains Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field, and removes the metadata that the 0.10.x API server set. 
+2. Convert these resources to `v1alpha3`. The export also contains Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field to `tokenPassthrough`, deletes the `spec.openAI.tokenExchange` field that `v1alpha3` removed, and removes the metadata that the 0.10.x API server set.
    ```bash
    yq '.items |= map(select(.kind == "ModelConfig" or .kind == "ModelProviderConfig" or .kind == "RemoteMCPServer"))
      | .items[].apiVersion = "api.kagent.dev/v1alpha3"
      | del(.items[].status, .items[].metadata.resourceVersion, .items[].metadata.uid, .items[].metadata.creationTimestamp, .items[].metadata.generation, .items[].metadata.managedFields, .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"])
-     | (.items[] | select(.kind == "ModelConfig" and has("spec") and (.spec | has("apiKeyPassthrough"))) | .spec) |= (.tokenPassthrough = .apiKeyPassthrough | del(.apiKeyPassthrough))' \
+     | (.items[] | select(.kind == "ModelConfig" and has("spec") and (.spec | has("apiKeyPassthrough"))) | .spec) |= (.tokenPassthrough = .apiKeyPassthrough | del(.apiKeyPassthrough))
+     | del(.items[] | select(.kind == "ModelConfig") | .spec.openAI.tokenExchange)' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
 
-3. Delete the ModelConfig fields that `v1alpha3` removed from the converted file. The conversion command does not delete them, and the apply fails while they remain. If the file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it too, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
+3. If the converted file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
 
 4. Apply the converted resources.
    ```bash

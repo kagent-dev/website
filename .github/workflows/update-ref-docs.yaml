@@ -260,7 +260,7 @@ jobs:
           go-version: 'stable'
           cache: false
 
-      # The CLI and env doc generators import PyYAML. Pin the interpreter so
+      # The CLI doc generator imports PyYAML. Pin the interpreter so
       # every python3 step in this job uses it, instead of the runner image's
       # system Python (which an ubuntu-latest bump can change or lock down).
       - name: Set up Python
@@ -1112,6 +1112,15 @@ jobs:
             path.write_text(text)
             PY
 
+            # Carry over the existing page's `aliases:` block, so a redirect
+            # from a retired URL (such as the env-vars page) survives
+            # regeneration. Reads only the frontmatter, from `aliases:` through
+            # its indented list items.
+            HELM_ALIASES=""
+            if [ -f "$HELM_PAGE" ]; then
+              HELM_ALIASES=$(awk 'NR>1 && /^---$/ {exit} /^aliases:/ {a=1; print; next} a && /^  - / {print; next} {a=0}' "$HELM_PAGE")
+            fi
+
             # Write the Hugo page: plain YAML frontmatter + generated body.
             mkdir -p "$(dirname "$HELM_PAGE")"
             {
@@ -1121,6 +1130,7 @@ jobs:
               echo "description: $HELM_DESC"
               echo "weight: $HELM_WEIGHT"
               echo "author: kagent.dev"
+              [ -n "$HELM_ALIASES" ] && echo "$HELM_ALIASES"
               echo "---"
               echo
             } > "$HELM_PAGE"

@@ -7,17 +7,17 @@ author: kagent.dev
 
 The kagent CLI installs kagent quickly for an evaluation. To manage the installation with Helm afterward, such as to review changes in a pull request and apply them from a continuous integration and continuous delivery (CI/CD) pipeline, export the installation.
 
-The `kagent install` command installs several Helm releases. The command computes the values for each release from your CLI configuration file, its own flags, and the settings that it generates. The `--dry-run` flag writes those Helm commands and values to a directory and leaves the cluster unchanged. You commit that directory to a repository, and the directory becomes the record of the installation.
+The `kagent install` command installs several Helm releases. The command computes the values for each release from your CLI configuration file, its own flags, and the settings that it generates. The `--dry-run` flag writes those Helm commands and values to a directory and leaves the cluster unchanged. You commit that directory to a repository, and the directory becomes the record of the installation's Helm releases.
 
 After you apply the export, manage the installation only with Helm. `kagent install` applies the values from your CLI configuration file, so running it against the cluster again overwrites the changes that you make in the exported values files.
 
-The export contains only the Helm releases. `kagent install` also creates the Agent Substrate identity pools, the development PostgreSQL database, and the database connection Secrets. The export does not include these resources, so this guide applies the export to a cluster where `kagent install` already created them.
+The export contains only the Helm releases. `kagent install` also creates the Agent Substrate identity pools, the development PostgreSQL database, and the database connection Secrets. The export does not include these resources, so this guide applies the export to a cluster where `kagent install` already created them. To rebuild the installation on a new cluster, run `kagent install` first, and then apply the export.
 
 ## Before you begin
 
 1. Install kagent with the kagent CLI, as described in [Install kagent]({{< link path="setup/installation#install-kagent" >}}). Keep the CLI configuration file that passes Helm values to `kagent install`, and the values files that it references. The CLI reads the configuration file from one of the following locations:
    * The path that you passed with the `--config` flag, such as `kagent-config.yaml`.
-   * When you omit `--config`, `~/.config/kagent/config.yaml` on Linux or `~/Library/Application Support/kagent/config.yaml` on macOS.
+   * When you omit `--config`, `$XDG_CONFIG_HOME/kagent/config.yaml` on Linux, or `~/.config/kagent/config.yaml` when `XDG_CONFIG_HOME` is not set. On macOS, `~/Library/Application Support/kagent/config.yaml`.
 
    If you omitted `--config` and the default file does not exist, the installation used only default values. In that case, omit `--config` from the export command.
 
@@ -27,7 +27,7 @@ The export contains only the Helm releases. `kagent install` also creates the Ag
 
 The export must reproduce the installation that runs in your cluster, so run the export with the same configuration file and flags that you installed with.
 
-1. Export the installation to the `kagent-install` directory. The directory must not already exist. The command does not read your model provider API key, so the key does not need to be set. If you installed with the `--skip-database-setup` flag, add the flag to this command too. Otherwise, the exported values connect kagent and Agent Substrate to the development database.
+1. Export the installation to the `kagent-install` directory. The directory must not already exist. The command does not read your model provider API key, so the key does not need to be set. If you installed with the `--skip-database-setup` flag, add the flag to this command too. Otherwise, the exported values connect kagent and Agent Substrate to the development database. If you installed with the `--profile` flag, add it too, so that the export keeps the profile's values. The export requires a released CLI, because it rejects a chart whose version is empty or `dev`.
    ```bash
    kagent --config kagent-config.yaml install --namespace kagent --dry-run --output-dir ./kagent-install
    ```
@@ -80,4 +80,4 @@ The `install.sh` script runs `helm upgrade --install` for each release, in insta
 
 ## Manage the installation with Helm
 
-To change a value after you apply the export, edit the values file for that release in the exported directory, and run `install.sh` again. Commit the change to the repository so that the directory stays the record of the installation.
+To change a value after you apply the export, edit the values file for that release in the exported directory, and run `install.sh` again. Commit the change to the repository so that the directory stays the record of the Helm releases.

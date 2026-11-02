@@ -60,10 +60,13 @@ config:
 The workload sends a ServiceAccount token whose audience is `kagent-invocation` as a bearer token in the `Authorization` header. A workload usually mounts the token as a projected volume. To test from a terminal, create a token with `kubectl`, port-forward the controller's port `8083`, and call the API. The `grpcurl` command relies on gRPC reflection, so your installation must set `config.server.grpcReflection=true`.
 
 ```bash
+kubectl create namespace ci-bots
+kubectl create serviceaccount scheduler -n ci-bots
 kubectl port-forward -n kagent deployment/kagent-controller 8083:8083 &
 TOKEN=$(kubectl create token scheduler -n ci-bots --audience kagent-invocation)
 grpcurl -plaintext -H "Authorization: Bearer $TOKEN" -d '{}' \
   localhost:8083 kagent.api.v1.SystemService/GetCurrentUser
+kill %1
 ```
 
 Example output:

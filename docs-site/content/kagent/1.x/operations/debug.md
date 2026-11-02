@@ -72,7 +72,7 @@ Compatible=False  Blocked: blocked by ResolvedRefs
 Ready=False  Blocked: blocked by ResolvedRefs
 ```
 
-A failed golden snapshot is not final. When Agent Substrate fails to build the golden snapshot, kagent deletes the failed ActorTemplate and rebuilds it after 15 seconds, 1 minute, and 4 minutes, and then every 10 minutes indefinitely. While a rebuild waits, `Ready` is `False` with the reason `ActorTemplateRetrying` and a message such as `golden build failed (GoldenActorCrashed), retry 1 at <time>`. The message omits Agent Substrate's full error, because that error can quote your configuration. Read the full error in the controller log. When a configuration fault causes the failure, kagent retries until you edit the Agent or the SandboxTemplate.
+A failed golden snapshot is not final. When Agent Substrate fails to build the golden snapshot, kagent deletes the failed ActorTemplate and rebuilds it after about 15 seconds, 1 minute, and 4 minutes, and then about every 10 minutes indefinitely. While a rebuild waits, `Ready` is `False` with the reason `ActorTemplateRetrying` and a message such as `golden build failed (GoldenActorCrashed), retry 1 at <time>`. The message omits Agent Substrate's full error, because that error can quote your configuration. Read the full error in the controller log. When a configuration fault causes the failure, kagent retries until you edit the Agent or the SandboxTemplate.
 
 ```bash
 kubectl logs -n kagent deploy/kagent-controller | grep "golden build failed"

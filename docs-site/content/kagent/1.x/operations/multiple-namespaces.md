@@ -25,7 +25,8 @@ When you install the charts directly with Helm, the installation sets up the fol
 * The `ate-system` namespace holds Agent Substrate.
 * The controller watches every namespace. The chart grants the controller cluster-scoped RBAC. To narrow both scopes, see [Restrict kagent to specific namespaces](#restrict-kagent-to-specific-namespaces).
 * Agent Substrate has no credential policy, because the Agent Substrate chart sets `credentialProvider.namespacePolicies` to an empty list. Each namespace that you prepare gets a policy of its own.
-* The `kagent-tool-server` RemoteMCPServer admits references from the `kagent` namespace only. To use it from another namespace, see [Share configuration across namespaces](#share-configuration-across-namespaces).
+* Agent Substrate has no identity pools. Only `kagent install` creates the certificate authority pools and the JWT authority pool. For more information, see [The Agent Substrate plane]({{< link path="about/substrate-runtime/identity#the-agent-substrate-plane" >}}).
+* The `default-model-config` ModelConfig and the `kagent-tool-server` RemoteMCPServer admit references from the `kagent` namespace only. The chart creates `default-model-config` for the provider that `providers.default` names, which defaults to `openAI`. To use either resource from another namespace, see [Share configuration across namespaces](#share-configuration-across-namespaces).
 
 ## Before you begin
 
@@ -68,9 +69,9 @@ The following steps prepare the `team-a` namespace.
       ```bash
       helm get values substrate -n ate-system --all -o yaml > substrate-current-values.yaml
       ```
-   2. Write a values file that keeps the existing policies and adds a policy for the namespace. The `atespace` value is the namespace of the Agent. The `allowedNamespaces` value lists the namespaces whose Secrets its agents can read.
+   2. Write a values file that keeps the other namespaces' policies and sets the policy for this namespace. The command replaces any existing policy for the namespace. The `atespace` value is the namespace of the Agent. The `allowedNamespaces` value lists the namespaces whose Secrets its agents can read.
       ```bash
-      yq '{"credentialProvider": {"namespacePolicies": ((.credentialProvider.namespacePolicies // []) + [{"atespace": "team-a", "allowedNamespaces": ["team-a"]}])}}' \
+      yq '{"credentialProvider": {"namespacePolicies": ((.credentialProvider.namespacePolicies // []) | map(select(.atespace != "team-a"))) + [{"atespace": "team-a", "allowedNamespaces": ["team-a"]}]}}' \
         substrate-current-values.yaml > substrate-namespace-policies.yaml
       cat substrate-namespace-policies.yaml
       ```
@@ -105,13 +106,25 @@ The following steps prepare the `team-a` namespace.
    team-a-pool   1         1          1       gvisor-default   True       6s
    ```
 
-4. Select the pool in the `spec.substrate.workerPoolRef` field of each Harness in the namespace. Agents in `team-a` cannot use `default-model-config`, because it admits only the `kagent` namespace. Create a ModelConfig and its API key Secret in `team-a`. To use a ModelConfig from another namespace instead, see [Share configuration across namespaces](#share-configuration-across-namespaces).
+4. Create a Harness in the namespace that selects the pool. The `spec.substrate.workerPoolRef` field names the pool. For the other Harness fields, see [Agent harness]({{< link path="agents/agent-harness" >}}).
    ```yaml
+   kubectl apply -f - <<EOF
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Harness
+   metadata:
+     name: team-a-harness
+     namespace: team-a
    spec:
+     kagent: {}
      substrate:
        workerPoolRef:
          name: team-a-pool
+       snapshotPolicy:
+         location: s3://ate-snapshots/team-a/
+   EOF
    ```
+
+5. Create a ModelConfig and its API key Secret in the namespace. Agents in `team-a` cannot use `default-model-config`, because it admits only the `kagent` namespace. For the commands, see the page for your provider, such as [Create the ModelConfig]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) for OpenAI, and replace `kagent` with `team-a`. To use a ModelConfig from another namespace instead, see [Share configuration across namespaces](#share-configuration-across-namespaces).
 
 ## Restrict kagent to specific namespaces
 
@@ -119,7 +132,7 @@ By default, the controller watches every namespace. The chart creates ClusterRol
 
 ### Set the watched namespaces
 
-`global.watchNamespaces` sets two scopes from one value: the namespaces where the chart grants the controller RBAC, and the namespaces that the controller watches. For each listed namespace, the chart replaces every kagent ClusterRole with a Role and RoleBinding. The chart also adds each listed namespace to the watch. The chart appends the install namespace to the list, so the release's own resources remain managed. Because one value sets both scopes, the two scopes cannot disagree.
+`global.watchNamespaces` sets two scopes from one value: the namespaces where the chart grants the controller RBAC, and the namespaces that the controller watches. For each listed namespace, the chart replaces the controller's getter and writer ClusterRoles and the tool server's ClusterRole with a Role and RoleBinding. The ClusterRole for service account authentication and the metrics ClusterRoles stay cluster-scoped. The chart also adds each listed namespace to the watch. The chart appends the install namespace to the list, so the release's own resources remain managed. Because one value sets both scopes, the two scopes cannot disagree.
 
 Set `global.watchNamespaces` when you install kagent, or later with a `helm upgrade` of the kagent release. Create every listed namespace before upgrading, because the chart creates a Role and RoleBinding in each one.
 
@@ -140,6 +153,38 @@ The chart also has a separate key for each scope. The `rbac.namespaces` key sets
 
 * `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace. Otherwise, the render fails.
 * `config.kubernetes.watchNamespaces` is an explicit watch override. When `rbac.namespaces` is set, a watch entry that references a namespace outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime. When `global.watchNamespaces` is set, the chart adds the entries to the watch scope without failing the render. In both cases, the watch list replaces the default list. The chart does not add the install namespace. To keep watching the install namespace, list it explicitly.
+
+### Grant Namespace access for selector-based sharing
+
+A ModelConfig or RemoteMCPServer whose `allowedNamespaces.from` field is set to `Selector` admits namespaces by their labels. To read those labels, the controller must list and watch Namespaces. A restricted installation grants only namespaced Roles, so the controller cannot list Namespaces. The Agent's `ResolvedRefs` condition is then `False`, with a message that contains `requires Namespace list/watch access`.
+
+To share configuration by selector on a restricted installation, grant the controller's ServiceAccount `list` and `watch` on Namespaces.
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kagent-namespace-reader
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kagent-namespace-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kagent-namespace-reader
+subjects:
+- kind: ServiceAccount
+  name: kagent-controller
+  namespace: kagent
+EOF
+```
 
 ### Verify the restricted installation
 

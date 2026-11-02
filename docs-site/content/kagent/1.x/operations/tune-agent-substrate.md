@@ -39,7 +39,7 @@ Read the current state of the runtime before you change it. The rest of this gui
 
 3. Read the runtime summary. `GetSubstrateSummary` returns each WorkerPool in the namespace and counts the {{< gloss "Actor" >}}Actors{{< /gloss >}} by state. The `jq` filter keeps the pool's name, Worker image, and ready count from the full WorkerPool resource.
    ```bash
-   grpcurl -plaintext -d '{"namespace":"kagent"}' \
+   grpcurl -plaintext -d '{"namespace":"kagent","atespace":"kagent"}' \
      localhost:8083 kagent.api.v1.SystemService/GetSubstrateSummary \
      | jq '{workerPools: [.workerPools[].resource.value | {name: .metadata.name, workerImage: .spec.workerImage, readyReplicas: .status.readyReplicas}], actorCount, workerCount, actorStatusCounts}'
    ```
@@ -183,7 +183,7 @@ substrateWorkerPool:
 
 | Field | Description |
 | ----- | ----------- |
-| `substrateWorkerPool.serviceAccount.create` | Whether the chart creates the Worker ServiceAccount. Defaults to `true`. Set it to `false` to use an account that you manage yourself. |
+| `substrateWorkerPool.serviceAccount.create` | Whether the chart creates the Worker ServiceAccount. Defaults to `true`. An account that the chart creates gets the image pull secrets from `imagePullSecrets` and `global.imagePullSecrets`, with duplicate entries removed. Workers can then pull a `workerImage` from a private or mirrored registry. Set the field to `false` to use an account that you manage yourself. In that case, add the image pull secrets to your account, because the chart does not change an account that it does not create. |
 | `substrateWorkerPool.serviceAccount.name` | The ServiceAccount that Worker pods run as. Omit it to use the pool name. |
 
 The chart writes `serviceAccountName` into the pool's pod template. A `serviceAccountName` that you set under `substrateWorkerPool.template` is overwritten rather than merged. Set the account through `substrateWorkerPool.serviceAccount.name`.
@@ -359,7 +359,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
 
    A default installation creates only the `gvisor` class, because the Agent Substrate chart applies `sandboxconfig-gvisor.yaml` and kagent installs nothing for `microvm`. The `microvm` configuration and its runtime assets are staged out of band by the Agent Substrate installer, such as through `hack/install-microvm-deps.sh --install`.
 
-3. Verify that the pool's Workers came up on the build that you set. The `workerImage` value in the [runtime summary](#inspect-the-runtime) reports the image that the pool runs. Confirm that it matches the build that you set, and that the pool reports its full replica count as ready.
+3. Verify that the pool's Workers came up on the build that you set. A Worker built for another class never registers, so the pool's `READY` count stays below its `DESIRED` count. Confirm that the two counts match.
 
    ```bash
    kubectl get workerpools -n kagent

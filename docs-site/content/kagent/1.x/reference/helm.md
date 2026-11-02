@@ -3,6 +3,8 @@ title: Helm reference
 description: Look up the configurable values in the kagent Helm chart, including their defaults and types.
 weight: 20
 author: kagent.dev
+aliases:
+  - /kagent/1.x/reference/env-vars/
 ---
 
 A Helm chart for kagent, built with Google ADK

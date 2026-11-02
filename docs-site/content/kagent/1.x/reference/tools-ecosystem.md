@@ -292,7 +292,7 @@ kagent-tools:
 | Field | Description |
 | ----- | ----------- |
 | `allowedNamespaces.from` | Where a reference may originate, one of `All`, `Same`, or `Selector`. Defaults to `Same`. The default admits only the release namespace. |
-| `allowedNamespaces.selector` | A label selector over namespaces. The server reads this field only where `from` is `Selector`, and the selector takes `matchLabels` and `matchExpressions`. |
+| `allowedNamespaces.selector` | A label selector over namespaces. The server reads this field only where `from` is `Selector`, and the selector takes `matchLabels` and `matchExpressions`. On an installation that you restrict to specific namespaces, `Selector` requires a Namespace grant for the controller. For more information, see [Grant Namespace access for selector-based sharing]({{< link path="operations/multiple-namespaces#grant-namespace-access-for-selector-based-sharing" >}}). |
 
 The selector follows the Gateway API pattern for cross-namespace attachment, so the label belongs on the Namespace rather than on the AgentTemplate that binds the server.
 

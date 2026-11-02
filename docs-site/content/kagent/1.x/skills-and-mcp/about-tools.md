@@ -151,7 +151,7 @@ The following fields control which namespaces can bind the server.
 | Field | Description |
 | ----- | ----------- |
 | `allowedNamespaces.from` | `Same` admits the server's own namespace and is the default. `All` admits every namespace that the controller watches. `Selector` admits the namespaces whose labels match `selector`. Admission lets a namespace bind the server. It does not let users in that namespace list, read, or edit the RemoteMCPServer. |
-| `allowedNamespaces.selector` | A label selector over namespaces, with `matchLabels` and `matchExpressions`. Required when `from` is set to `Selector`. |
+| `allowedNamespaces.selector` | A label selector over namespaces, with `matchLabels` and `matchExpressions`. Required when `from` is set to `Selector`. On an installation that you restrict to specific namespaces, `Selector` requires a Namespace grant for the controller. For more information, see [Grant Namespace access for selector-based sharing]({{< link path="operations/multiple-namespaces#grant-namespace-access-for-selector-based-sharing" >}}). |
 
 For the bundled `kagent-tool-server`, see [Reach kagent-tool-server from another namespace]({{< link path="reference/tools-ecosystem#reach-kagent-tool-server-from-another-namespace" >}}).
 

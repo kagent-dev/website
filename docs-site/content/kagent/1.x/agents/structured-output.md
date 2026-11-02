@@ -188,7 +188,7 @@ Anything else is rejected, including `oneOf` and `allOf`, conditional schemas su
 
 JSON Schema treats `format` as an annotation. kagent forwards `format` to the model provider, but the runtime does not check it on the answer.
 
-A Gemini model answers by calling the `set_model_response` tool of the Go Agent Development Kit (ADK), and that tool checks each property against one type. For a model whose name starts with `gemini-`, kagent therefore rejects a property that uses `anyOf`, `type: null`, or a type list with more than one non-null type. kagent also rejects an array property that does not set `items`. To allow `null` in such a property, use a type list such as `["string", "null"]`. The check skips models on the `GeminiVertexAI` provider.
+A Gemini model answers by calling the `set_model_response` tool of the Go Agent Development Kit (ADK), and that tool checks each property against one type. The check applies to a model whose name, after its last `/`, starts with `gemini-`, on any provider. For such a model, kagent rejects a property that has no `type`, such as one that sets only `enum` or `const`. kagent also rejects a property that uses `anyOf`, `type: null`, or a type list with more than one non-null type. kagent also rejects an array property that does not set `items`. To allow `null` in such a property, use a type list such as `["string", "null"]`. The check skips models on the `GeminiVertexAI` provider.
 
 kagent also enforces the following limits when it builds the revision. A schema that exceeds a limit is rejected, before any agent runs with it.
 
