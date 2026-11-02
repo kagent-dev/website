@@ -91,6 +91,16 @@ The controller trusts the issuer in the `config.substrate.actorJwtIssuer` Helm v
 
 Upgrade the controller and the runtime images together. An Actor snapshot from an earlier runtime image still sends an identity header that the controller no longer accepts, so you must recreate that snapshot after an upgrade.
 
+### Agent identity lookup {#agent-identity-lookup}
+
+A downstream service that receives an Actor token can call `AgentIdentityService.ResolveAgentIdentity` to resolve the {{< gloss "Agent" >}}Agent{{< /gloss >}} behind that runtime. The request body is empty. The call uses one `Authorization: Bearer <token>` credential. The token must include the `kagent-agent-info` audience. A token for this lookup can also include the downstream service's own audience. The lookup rejects any token that also includes the reserved `kagent-runtime` audience.
+
+The lookup returns the current Agent namespace, name, UID, labels, and annotations. The response also includes the bound Session ID as `sessionId` and the pinned runtime revision as `runtimeRevision`. Labels and annotations are live Kubernetes metadata from the same Agent UID. Operator changes to those fields are visible without a new Session. The pinned runtime revision does not change when the Agent's current configuration changes.
+
+The lookup checks the signed Actor identity against the Session's current Actor binding and saved runtime revision. Deleted Sessions, replaced Actors, and deleted or recreated Agents cannot resolve metadata. Returning `sessionId` does not grant access to the Session API or to the conversation.
+
+Client libraries expose the same RPC with language-native naming. For example, the generated TypeScript client calls the RPC `resolveAgentIdentity`. The response keeps the `sessionId` and `runtimeRevision` JSON field names.
+
 ## The Agent Substrate plane
 
 {{< gloss "Agent Substrate" >}}Agent Substrate{{< /gloss >}} authenticates its own components rather than authenticating end users. Its API server accepts Kubernetes ServiceAccount tokens issued for its audience, and the components that carry traffic to an Actor authenticate each other with mutual Transport Layer Security (mTLS). The [kagent installation guide]({{< link path="setup/installation" >}}) covers creating the certificate authority pools and the JSON Web Token (JWT) authority pool that these identities are issued from, which is a required step that no Helm chart performs.
