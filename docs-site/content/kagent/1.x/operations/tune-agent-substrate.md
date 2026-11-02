@@ -157,6 +157,8 @@ substrateWorkerPool:
 
 The chart writes `serviceAccountName` into the pool's pod template. A `serviceAccountName` that you set under `substrateWorkerPool.template` is overwritten rather than merged. Set the account through `substrateWorkerPool.serviceAccount.name`.
 
+If the chart creates the Worker ServiceAccount, the account receives the chart's image pull secrets. Use `imagePullSecrets` for secrets that apply only to this chart, or `global.imagePullSecrets` for secrets that apply to every pod. The chart merges the two lists by Secret name. If you set `substrateWorkerPool.serviceAccount.create` to `false`, add the image pull secrets to your external ServiceAccount. The chart does not update an account that it does not create.
+
 ### Keep placement scoped to the pool's namespace {#workerpool-placement-labels}
 
 kagent selects a WorkerPool by name and namespace when it compiles an ActorTemplate, and the generated ActorTemplate matches Workers on the `kagent.dev/worker-pool-name` and `kagent.dev/worker-pool-namespace` labels. Agent Substrate matches those labels across every pool rather than checking the WorkerPool's namespace. A pool that sets only the name label can therefore be selected from another namespace.
