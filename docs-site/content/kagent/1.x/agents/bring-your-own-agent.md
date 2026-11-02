@@ -9,7 +9,7 @@ The `byo` harness runs a container image that you build, and treats what is insi
 
 ## Responsibilities on each side of the A2A boundary
 
-{{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) is the contract between kagent and a BYO agent.
+{{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) is the contract between kagent and a BYO agent.
 
 Your image owns one side of the A2A contract by:
 

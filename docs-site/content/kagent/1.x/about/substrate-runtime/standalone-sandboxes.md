@@ -1,13 +1,13 @@
 ---
 title: Standalone sandboxes
-description: Run commands and transfer files in a scratch environment that no agent conversation owns.
+description: Run commands and transfer files in a scratch environment that is independent of any agent Session.
 weight: 25
 author: kagent.dev
 aliases:
   - /kagent/1.x/substrate-runtime/standalone-sandboxes/
 ---
 
-A **Sandbox** is a scratch environment for running commands and working with files. It is scoped to the caller who created it, it expires on a timer, and no agent conversation owns it. You create one from a **SandboxTemplate**, run processes and move files in it, then delete it or let it expire.
+A **Sandbox** is a scratch environment for running commands and working with files. A Sandbox is scoped to the caller who created it, and it expires on a timer. You create one from a **SandboxTemplate**, run processes and move files in it, then delete it or let it expire.
 
 A Sandbox and a {{< gloss "Session" >}}Session{{< /gloss >}} are separate runtimes with separate configuration and separate lifetimes. Neither resource references the other.
 
@@ -16,11 +16,11 @@ A Sandbox and a {{< gloss "Session" >}}Session{{< /gloss >}} are separate runtim
 | An {{< gloss "Agent" >}}Agent{{< /gloss >}} that pairs an AgentTemplate with a Harness | A Session | A2A interactions and tasks |
 | A SandboxTemplate that defines a tools environment | A Sandbox | Guest process and file operations |
 
-An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}MCP{{< /gloss >}} server, using the same service that a person calls. The agent's conversation and the Sandbox's lifetime stay independent of each other.
+An agent can create a Sandbox of its own through the kagent Model Context Protocol ({{< gloss "MCP" >}}MCP{{< /gloss >}}) server, by using the same service that a person calls. The Sandbox's lifetime stays independent of the agent's Session.
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `config.sandboxes` values on the installation. Sandbox preparation needs a guest image, and the chart does not ship a default, so a SandboxTemplate never becomes ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
+1. [Install kagent]({{< link path="setup/installation" >}}) and set the following `config.sandboxes` values on the installation. Sandbox preparation needs a guest image. The chart does not ship a default guest image, so a SandboxTemplate does not become ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
    ```yaml
    config:
      sandboxes:
@@ -31,22 +31,19 @@ An agent can create a Sandbox of its own through the kagent {{< gloss "MCP" >}}M
        maxTtl: 86400s
    ```
 
-   A SandboxTemplate cannot override these values, so they are the installation's policy rather than a per-template choice.
+   A SandboxTemplate cannot override these values, so they apply to every Sandbox in the installation.
 
    | Value | Default | Description |
    | ----- | ------- | ----------- |
-   | `config.sandboxes.guestImage` | `""` | The digest-pinned guest image, as a complete reference. Required: preparation fails without it. The controller passes the reference to Agent Substrate unchanged and does not resolve tags, so pin a digest rather than a tag. Setting `global.imageRegistry` rewrites the registry host of this reference. |
+   | `config.sandboxes.guestImage` | `""` | The digest-pinned guest image, as a complete reference. This value is required. The controller passes the reference to Agent Substrate unchanged and does not resolve tags, so pin a digest. Setting `global.imageRegistry` rewrites the registry host of this reference. |
    | `config.sandboxes.cpu` | `1` | CPU allocated to each Sandbox. |
    | `config.sandboxes.memory` | `1Gi` | Memory allocated to each Sandbox. |
    | `config.sandboxes.defaultTtl` | `3600s` | Lifetime applied when `kagent sandbox create` omits `--ttl`. Durations in the `config` block take protobuf seconds notation, so `3600s` rather than `1h`. |
-   | `config.sandboxes.maxTtl` | `86400s` | Upper bound on any requested lifetime, which the controller caps at `86400s`. Note that activity does not extend a Sandbox's lifetime. A Sandbox expires the configured interval after it is created, however recently a command ran in it. |
+   | `config.sandboxes.maxTtl` | `86400s` | Upper bound on any requested lifetime, which the controller caps at `86400s`. A Sandbox expires the configured interval after it is created, regardless of how recently a command ran in it. |
 
-2. Download the kagent CLI. The `--version` flag matches the CLI to the release that these docs cover.
-   ```bash
-   curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
-   ```
+2. {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
-3. Install [`jq`](https://jqlang.org/download/) to read the Sandbox ID out of the CLI's JSON output.
+3. To read the Sandbox ID from the CLI's JSON output, install [`jq`](https://jqlang.org/download/).
 
 ## Create a SandboxTemplate
 
@@ -80,12 +77,12 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepar
    | Field | Required | Description |
    | ----- | -------- | ----------- |
    | `workload.image` | Yes | The tools image, pinned by `sha256` digest. A tag alone is rejected, because a prepared revision must be reproducible. |
-   | `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and may be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
+   | `env` | No | Environment defaults for the guest, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. The schema does not define a secret-backed source, so the API server rejects a `credentialRef` entry as an unknown field. |
    | `substrate.workerPoolRef.name` | Yes | The WorkerPool that this template's Actors are scheduled onto. |
    | `substrate.snapshotPolicy.location` | Yes | The object storage location for Actor {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
-   | `egressPolicyRefs` | No | Up to 16 EgressPolicy resources in the template's namespace that grant the Sandbox outbound access. When this field is omitted, the Sandbox has no outbound access. For more information, see [Egress policies]({{< link path="agents/egress-policies" >}}). |
+   | `egressPolicyRefs` | No | Up to 16 EgressPolicy resources in the template's namespace that grant the Sandbox outbound access. When this field is omitted, the Sandbox does not have outbound access. For more information, see [Egress policies]({{< link path="agents/egress-policies" >}}). |
 
-   A SandboxTemplate does not take a startup command or a guest toggle. kagent supplies the guest entrypoint from the image that `config.sandboxes.guestImage` names. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
+   A SandboxTemplate does not take a startup command or a guest toggle. kagent supplies the guest entrypoint from the image that `config.sandboxes.guestImage` references. That image replaces the tools image's own entrypoint. Your tools image contributes the installed programs and nothing else.
 
 2. Confirm that the template prepared a revision before you create a Sandbox from it.
    ```bash
@@ -93,14 +90,14 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource that prepar
      -o jsonpath='{range .status.conditions[?(@.type=="Ready")]}{.status} {.reason} {.message}{end}'
    ```
 
-Editing a template prepares a new revision. A Sandbox that already exists keeps the revision it was created from, and deleting the template retires preparation without removing the Sandboxes that pinned it.
+Editing a template prepares a new revision. A Sandbox that already exists keeps the revision that it was created from. Deleting the template retires preparation but does not remove the Sandboxes that pinned it.
 
 ## Run a command
 
+Each `kagent sandbox` command makes one lifecycle attempt. The `create` command takes a stable `--request-id` value. To retry the same creation, reuse that value.
+
 > [!WARNING]
 > **By default, the gateway denies every outbound connection from a Sandbox.** When the template does not select an EgressPolicy resource, kagent compiles an empty [egress policy]({{< link path="about/substrate-runtime/networking-and-egress#policy-generation" >}}) for the Sandbox. A command that fetches a package, clones a repository, or calls an API then fails. To allow a destination, select an EgressPolicy in the SandboxTemplate's `spec.egressPolicyRefs` field, as described in [Grant access to a destination]({{< link path="agents/egress-policies#grant-access-to-a-destination" >}}). Otherwise, move what a command needs into the Sandbox with `kagent sandbox upload`.
-
-Each `kagent sandbox` command makes one lifecycle attempt rather than retrying for you, so `create` takes a stable `--request-id` that you reuse to retry the same creation.
 
 1. List the templates that your installation prepared.
    ```bash
@@ -119,7 +116,7 @@ Each `kagent sandbox` command makes one lifecycle attempt rather than retrying f
    echo $SANDBOX_ID
    ```
 
-   Run the command without `-o json` to see the table instead. `STATE` and `OPERATION` both matter, because lifecycle work can still be pending when a call returns.
+   To see the table, run the command without `-o json`. `STATE` and `OPERATION` both matter, because lifecycle work can still be pending when a call returns.
    ```console
    ID                                    TEMPLATE        STATE                OPERATION               EXPIRES               FAILURE
    0198c3f1-2a44-7c90-b5e1-9d8f3a7b2c04  kagent/scratch  RUNTIME_STATE_READY  RUNTIME_OPERATION_NONE  2026-10-01T16:30:00Z
@@ -130,7 +127,9 @@ Each `kagent sandbox` command makes one lifecycle attempt rather than retrying f
    kagent sandbox exec $SANDBOX_ID -- python --version
    ```
 
-   A timeout stops the command from waiting rather than stopping the remote process. To reconnect to a process that outlived its `exec`, pass its process ID to `kagent sandbox wait`.
+   A timeout stops the command from waiting, but the remote process keeps running. To reconnect to a process that outlived its `exec`, pass its process ID to `kagent sandbox wait`.
+
+   `kagent sandbox kill` sends `SIGKILL` to a process and returns when the guest delivers the signal. The command does not wait for the process to exit, so its output reports the process state and omits the exit code. To read the exit code, pass the process ID to `kagent sandbox wait`.
 
 4. Move a file in, run against it, and read the result back out.
    ```bash
@@ -139,17 +138,17 @@ Each `kagent sandbox` command makes one lifecycle attempt rather than retrying f
    kagent sandbox download $SANDBOX_ID /data/workspace/out.txt ./out.txt
    ```
 
-5. Delete the Sandbox when you are finished. Deleting is not required, because the Sandbox expires on its own. Deleting it releases the compute immediately.
+5. When you are finished, delete the Sandbox to release its compute immediately. Deletion is optional, because the Sandbox expires on its own.
    ```bash
    kagent sandbox delete $SANDBOX_ID
    ```
 
 > [!IMPORTANT]
-> **Suspending a Sandbox interrupts whatever it is doing.** `kagent sandbox suspend` waits for no process, output stream, or file transfer, so a command can be cut off mid-run and a file can be left partly written. Resuming restores the durable files under `/data`, but a process handle does not survive, because the guest holds it in memory. Suspend a Sandbox only when you can repeat whatever it was running.
+> **Suspending a Sandbox interrupts whatever it is doing.** `kagent sandbox suspend` does not wait for any process, output stream, or file transfer, so a command can be cut off mid-run and a file can be left partly written. Resuming restores the durable files under `/data`, but a process handle does not survive, because the guest holds it in memory. Suspend a Sandbox only when you can repeat whatever it was running.
 
-## Reach a sandbox from an agent
+## Reach a Sandbox from an agent
 
-kagent's Helm chart installs a `RemoteMCPServer` named `kagent-api` in the controller's namespace, pointing at the controller's own `/mcp` endpoint. This server exposes the Session and checkpoint tools alongside the sandbox tools, so an AgentTemplate reaches sandboxes through an ordinary tool binding.
+kagent's Helm chart installs a `RemoteMCPServer` named `kagent-api` in the controller's namespace, pointing at the controller's own `/mcp` endpoint. This server exposes the Session and checkpoint tools alongside the sandbox tools, so an AgentTemplate reaches Sandboxes through an ordinary tool binding.
 
 ```yaml
 tools:
@@ -166,15 +165,17 @@ tools:
         - read_sandbox_outputs
 ```
 
-An agent that creates a Sandbox owns it under whatever identity the MCP connection authenticated, not under the identity of the person it is talking to. A Session share token does not grant access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation. Set `config.runtimeDefaults.tokenPropagation.enabled` to `true`, and the kagent runtime passes the caller's credentials and identity to the MCP servers that you trust.
+An agent that creates a Sandbox owns it under the identity that the MCP connection authenticated, not under the identity of the person that the agent is talking to. A Session share token does not grant access to a Sandbox. To have an agent act for the person who invoked it, configure credential propagation by setting `config.runtimeDefaults.tokenPropagation.enabled` to `true`. The kagent runtime then passes the caller's credentials and identity to the MCP servers that you trust.
 
 The MCP transfer limits are tighter than the command line's. A gRPC file transfer is bounded at 64 MiB. `write_sandbox_file` and `read_sandbox_outputs` are bounded at 1 MiB and use base64. Output reads return continuation byte offsets.
 
-When an agent must inspect a result file, use `read_sandbox_file`. The tool returns content that the model reads directly rather than `data_base64`, in one of three shapes.
+An agent that starts a process with `start_sandbox_process` polls `get_sandbox_process` to learn when the process finishes. The `state` field reads `PROCESS_STATE_RUNNING` until the process exits, then `PROCESS_STATE_EXITED`. The `exit_code` field appears only in the exited state, and reads `0` for a successful exit. `kill_sandbox_process` sends `SIGKILL` in the same way as `kagent sandbox kill`, so the agent must poll `get_sandbox_process` for the exit code.
 
-Text returns as numbered lines. `offset` takes the first line to read, counting from 1, and `limit` takes the number of lines, which defaults to 2000. A page also stops at 32 KiB, whichever bound it reaches first. A line longer than 2000 bytes is truncated to 2000 bytes and marked `[line cut]`. A page that stops before the end of the file reports the offset to continue from.
+When an agent must inspect a result file, use `read_sandbox_file`. The tool returns content that the model reads directly, not `data_base64`. The shape of the content depends on the file type.
 
-A PNG, JPEG, or GIF file of at most 10 MiB returns as an image. The Claude and Codex harnesses resize those images for their models. A larger image returns a message asking the agent to write a smaller copy in the Sandbox. Every other file type returns a description of the file rather than its bytes.
+Text returns as numbered lines. `offset` sets the first line to read, counting from 1. `limit` sets the number of lines, and defaults to 2000. A page also stops at 32 KiB, whichever bound it reaches first. A line longer than 2000 bytes is truncated to 2000 bytes and marked `[line cut]`. A page that stops before the end of the file reports the offset to continue from.
+
+A PNG, JPEG, or GIF file of at most 10 MiB returns as an image. The `claude` and `codex` harnesses resize those images for their models. A larger image returns a message asking the agent to write a smaller copy in the Sandbox. Every other file type returns a description of the file, not its bytes.
 
 ## Next steps
 

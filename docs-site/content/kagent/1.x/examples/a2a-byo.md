@@ -5,7 +5,7 @@ weight: 70
 author: kagent.dev
 ---
 
-The `byo` runtime runs a container image that you build, so long as the image implements kagent's {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) contract. This example takes the shortest path through that contract: build the minimal BYO agent that kagent tests itself against, run it on a {{< gloss "Harness" >}}Harness{{< /gloss >}}, and invoke it.
+The `byo` runtime runs a container image that you build, so long as the image implements kagent's {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) contract. This example takes the shortest path through that contract: build the minimal BYO agent that kagent tests itself against, run it on a {{< gloss "Harness" >}}Harness{{< /gloss >}}, and invoke it.
 
 The agent that you build here does not call a model or bind tools. It answers every message with a fixed string, which makes it a poor agent and a clear demonstration: everything that happens between `kagent agent invoke` and that reply is kagent's half of the contract. To review the contract and the configured agents that read their AgentTemplate instead of ignoring it, see [Bring your own agent]({{< link path="agents/bring-your-own-agent" >}}).
 
