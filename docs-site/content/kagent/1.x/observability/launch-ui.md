@@ -143,9 +143,11 @@ The UI falls back to the file extension when the browser does not report a media
 
 If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit, and a default nginx allows only `1m`. Raise the limit as shown in [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
 
-## Check Agent Substrate capacity
+## Check Agent Substrate capacity {#check-agent-substrate-capacity}
 
 The **Substrate** page shows whether there is capacity for an agent to run. It reads WorkerPools and ActorTemplates from Kubernetes, and live Actors and Worker assignments from the Agent Substrate API.
+
+When the kagent controller watches only selected namespaces, the **Substrate** page reads only those Kubernetes namespaces and Agent Substrate atespaces. Empty filters mean all watched namespaces and atespaces. A filter outside the watched set returns a `PermissionDenied` error. On a cluster-wide controller, empty filters still read every namespace and atespace.
 
 {{< reuse-image-light src="img/kagent-ui-substrate.png" alt="The Substrate page, showing one worker pool and no running actors" caption="Figure: The Substrate page" >}}
 {{< reuse-image-dark srcDark="img/kagent-ui-substrate-dark.png" alt="The Substrate page, showing one worker pool and no running actors" caption="Figure: The Substrate page" >}}
@@ -158,7 +160,7 @@ Read the page from the top tiles down.
 | **Templates ready** | {{< gloss "ActorTemplate" >}}ActorTemplates{{< /gloss >}} that have compiled and are ready to be instantiated. |
 | **Actors running** | Live Actors, each one a Session holding a conversation. |
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
-| **Scope** | The filters this page asked for, rather than what the API returned. Reads `all` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`. |
+| **Scope** | The filters this page asked for, rather than what the API returned. Reads `all` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`. For a namespace-scoped install, `all` means all watched namespaces and atespaces. |
 
 A fresh installation reports one worker pool, no actor templates, and no actors, because nothing has created an agent yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors on this page.`
 
