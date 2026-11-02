@@ -11,7 +11,6 @@ A Helm chart for kagent, built with Google ADK
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../tools/grafana-mcp | grafana-mcp | 1.0.0-alpha17 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
 
@@ -33,8 +32,11 @@ A Helm chart for kagent, built with Google ADK
 | config.metrics.secure | bool | `true` |  |
 | config.push.allowHttp | bool | `false` |  |
 | config.push.allowPrivateNetworks | bool | `false` |  |
+| config.push.maxConcurrency | int | `10` |  |
 | config.push.recoveryInterval | string | `"60s"` |  |
+| config.push.sendTimeout | string | `"5s"` |  |
 | config.runtimeDefaults.builtinTools.bashVenvPath | string | `""` |  |
+| config.runtimeDefaults.builtinTools.disableAskUser | bool | `false` |  |
 | config.runtimeDefaults.builtinTools.disableBash | bool | `false` |  |
 | config.runtimeDefaults.builtinTools.disableFileSearch | bool | `false` |  |
 | config.runtimeDefaults.cpu | string | `"1"` |  |
@@ -52,7 +54,7 @@ A Helm chart for kagent, built with Google ADK
 | config.sessions.shareMaxTtl | string | `"0s"` |  |
 | config.substrate.actorJwtIssuer | string | `"https://idp.ate-system.svc"` |  |
 | config.substrate.apiEndpoint | string | `"dns:///api.ate-system.svc:443"` |  |
-| config.substrate.routerUrl | string | `"http://atenet-router.ate-system.svc:80"` |  |
+| config.substrate.routerUrl | string | `"https://atenet-router.ate-system.svc:443"` |  |
 | config.telemetry | object | `{}` |  |
 | controller.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod. |
 | controller.annotations | object | `{}` | Additional annotations to add to the controller Deployment metadata |
@@ -117,15 +119,8 @@ A Helm chart for kagent, built with Google ADK
 | global.clusterDomain | string | `"cluster.local"` | Kubernetes DNS domain used in runtime-facing service URLs. |
 | global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
 | global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
-| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, grafana-mcp, substrateWorkerPool.workerImage, and built-in Harness images (both packaged defaults and config.harnessImages overrides). The vendored subcharts kagent-tools adopts it when its pinned version bumps. |
+| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, substrateWorkerPool.workerImage, and built-in Harness images (both packaged defaults and config.harnessImages overrides). The vendored subcharts kagent-tools adopts it when its pinned version bumps. |
 | global.watchNamespaces | list | `[]` | Namespace scope for the whole install. A non-empty list replaces ClusterRoles with Roles and scopes the controller's watch. Both derive from this one value, so they cannot disagree. Prefer this value over the per-surface keys. rbac.namespaces overrides it when the key is present. An explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in config.kubernetes.watchNamespaces is validated: the watch must stay inside the RBAC scope. A watched namespace without a Role is a permanent Forbidden loop at runtime. |
-| grafana-mcp.enabled | bool | `true` |  |
-| grafana-mcp.grafana.serviceAccountToken | string | `""` |  |
-| grafana-mcp.grafana.url | string | `"grafana.kagent:3000/api"` |  |
-| grafana-mcp.resources.limits.cpu | string | `"500m"` |  |
-| grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
-| grafana-mcp.resources.requests.cpu | string | `"100m"` |  |
-| grafana-mcp.resources.requests.memory | string | `"128Mi"` |  |
 | imagePullPolicy | string | `""` | Pull policy for all containers. Empty falls back to global.imagePullPolicy, then IfNotPresent. |
 | imagePullSecrets | list | `[]` |  |
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
@@ -222,7 +217,7 @@ A Helm chart for kagent, built with Google ADK
 | rbac | object | `{}` |  |
 | registry | string | `"ghcr.io"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
-| substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","serviceAccount":{"create":true,"name":""},"template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
+| substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","sandboxConfigRef":"","serviceAccount":{"create":true,"name":""},"template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
 | substrateWorkerPool.serviceAccount | object | `{"create":true,"name":""}` | ServiceAccount settings for the worker pods |
 | substrateWorkerPool.serviceAccount.create | bool | `true` | Create the worker ServiceAccount. Set to false to use one managed outside the chart. |
 | substrateWorkerPool.serviceAccount.name | string | `<substrateWorkerPool.name>` | Name of the worker ServiceAccount. |
@@ -233,7 +228,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
 | ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
 | ui.basePath | string | `""` | Prefix a reverse proxy strips before forwarding, e.g. `/ui`; root-relative URLs such as `publicBackendUrl` get it too. With oauth2-proxy, set `OIDC_REDIRECT_URL` under it and restart oauth2-proxy after changing it. |
-| ui.env | list | `[]` | Extra environment variables for the UI container, applied after ConfigMap defaults. Entries stay in the Deployment to support valueFrom and $(VAR_NAME) expansion. An installed app extension's settings go here, named `KAGENT_UI_EXTENSION_*`; the container's startup script copies those onto `window.environmentVariables` for the browser to read. |
+| ui.env | list | `[]` | Extra environment variables for the UI container, applied after ConfigMap defaults. Entries stay in the Deployment to support valueFrom and $(VAR_NAME) expansion. An installed app extension's settings go here, named `KAGENT_UI_EXTENSION_*`; the container's entrypoint copies those onto `window.environmentVariables` for the browser to read. |
 | ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
 | ui.httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":[],"labels":{},"parentRefs":[],"rules":[]}` | Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via `parentRefs`. Disabled by default; enable to front the UI with a Gateway API implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the OpenShift Route or bundled oauth2-proxy. |
 | ui.httpRoute.annotations | object | `{}` | Annotations to add to the `HTTPRoute`. |
@@ -262,7 +257,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.podLabels | object | `{}` | Additional labels for the UI pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
 | ui.podSecurityContext | object | (uses global podSecurityContext) | Pod-level security context for the UI pod. Overrides the global podSecurityContext. |
 | ui.publicBackendUrl | string | `"/api"` | Base URL the browser calls the controller API on. Reaches the browser at runtime as the `apiBaseUrl` key of /config.json, which the app fetches on startup — it is deliberately not baked into the bundle, so changing it here takes effect on pod restart rather than requiring an image rebuild. The default is a path on the UI's own hostname, which nginx proxies to the controller; set an absolute URL only if the browser must reach the API somewhere other than the UI origin. |
-| ui.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |
+| ui.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the UI container. Override to adjust thresholds or change the health path. The image has no shell or curl, so use httpGet or tcpSocket. |
 | ui.replicas | int | `1` |  |
 | ui.resources.limits.cpu | string | `"1000m"` |  |
 | ui.resources.limits.memory | string | `"1Gi"` |  |
@@ -276,7 +271,7 @@ A Helm chart for kagent, built with Google ADK
 | ui.service.type | string | `"ClusterIP"` |  |
 | ui.serviceAccount | object | `{"annotations":{}}` | ServiceAccount settings for the UI pod |
 | ui.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the UI ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
-| ui.startupProbe | object | httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1 | Custom startup probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path. |
+| ui.startupProbe | object | httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1 | Custom startup probe for the UI container. Override to adjust thresholds or change the health path. The image has no shell or curl, so use httpGet or tcpSocket. |
 | ui.streamTimeoutSeconds | int | `1800` | Client-side chat stream inactivity timeout (seconds). The browser aborts a streaming response if no event is received within this window. Should be >= ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m). |
 | ui.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the UI pod. |
