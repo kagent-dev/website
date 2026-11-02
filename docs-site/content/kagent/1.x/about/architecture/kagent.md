@@ -12,7 +12,7 @@ The previous page defined the [core concepts]({{< link path="about/core-concepts
 kagent 1.0 splits authorization across two planes:
 
 - The **Kubernetes plane** governs the {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} custom resources. Kubernetes Role-Based Access Control (RBAC) decides who can create, read, or edit the resources with `kubectl`, exactly as it would for any other Custom Resource Definition (CRD).
-- The **kagent control plane** governs any interactions involving {{< gloss "Session" >}}Sessions{{< /gloss >}}, such as creating, suspending, resuming, sharing, deleting, and holding a conversation with a Session. kagent's own gRPC authentication and authorization decide who can complete these interactions, independent of Kubernetes RBAC.
+- The **kagent control plane** governs any interactions involving {{< gloss "Session" >}}Sessions{{< /gloss >}}, such as creating, sharing, or deleting a Session, or holding a conversation with one. kagent's own gRPC authentication and authorization decide who can complete these interactions, independent of Kubernetes RBAC.
 
 Someone with Kubernetes RBAC access to apply an Agent and the resources it names does not automatically have access to create or talk to Sessions on it. The separation runs in one direction only. kagent's gRPC API also writes those Kubernetes resources, so a caller on the kagent control plane reaches both planes. For more information on that second path, see [Identity]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
 
@@ -74,6 +74,6 @@ From there, the caller holds a conversation over the {{< gloss "A2A" >}}A2A{{< /
 
 ## Why two planes
 
-Kubernetes RBAC is designed to authorize configuration changes: who can create a Deployment, edit a ConfigMap, or in this case, apply a Harness, an AgentTemplate, or an Agent. It is not designed to authorize a running conversation, share access to it with another user, or scope who can suspend it. kagent's gRPC plane exists to authorize exactly those actions, at the granularity of a single Session rather than a namespace or a resource kind.
+Kubernetes RBAC is designed to authorize configuration changes: who can create a Deployment, edit a ConfigMap, or in this case, apply a Harness, an AgentTemplate, or an Agent. It is not designed to authorize a running conversation, share access to it with another user, or scope who can read, rename, or delete it. kagent's gRPC plane exists to authorize exactly those actions, at the granularity of a single Session rather than a namespace or a resource kind.
 
 This split also keeps the two lifecycles independent. Editing an Agent, or either resource it names, does not affect Sessions already running against the ActorTemplate that they were created from. It only affects new Sessions, created after the edit is compiled.

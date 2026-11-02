@@ -35,12 +35,14 @@ The `config.server.auth.mode` Helm value selects which authenticator the control
 | Mode | How a principal is resolved |
 | ---- | --------------------------- |
 | `insecure` | Every request is admitted. The caller's identity is read from the `X-User-Id` header, or from a `user_id` query parameter that takes precedence over it. A caller that supplies neither is named `admin@kagent.dev`. |
-| `trusted-proxy` | The request must carry a bearer token in the `Authorization` header. The identity comes from the claim that `config.server.auth.userIdClaim` names, defaulting to `sub`. A missing custom claim falls back to `sub`, and a request with no identity is rejected. |
+| `trusted-proxy` | The request must carry a bearer token in the `Authorization` header. The identity comes from the claim that `config.server.auth.userIdClaim` names, defaulting to `sub`. A missing custom claim falls back to `sub`, and a request with no identity is rejected. The resulting `Principal.ID` is an opaque value that includes the issuer and selected subject. |
 
 Any other value fails controller startup rather than falling back to a default.
 
+Set `config.server.auth.serviceAccount.authority` to let machine callers authenticate with Kubernetes ServiceAccount tokens. The controller checks the bearer token with the local TokenReview API and the `kagent-invocation` audience. The resulting `Principal.ID` combines the configured authority and the verified ServiceAccount UID. Token rotation keeps the same identity, and recreating the ServiceAccount changes it.
+
 > [!WARNING]
-> **`trusted-proxy` decodes the token without verifying it.** The authenticator reads the bearer token's payload and checks neither its signature nor its expiry, because it assumes that an upstream boundary already validated the credential. A caller that reaches the controller directly can therefore present a token that it wrote itself. This mode is safe only where ingress validates every token before forwarding it, and network policy stops anything else from reaching port `8083`.
+> **`trusted-proxy` parses token claims without verifying the signature.** The authenticator rejects a malformed or expired `exp` claim when the token has one, but it still assumes that an upstream boundary validated the signature, issuer, audience, and other required claims. A caller that reaches the controller directly can therefore present a token that it wrote itself. This mode is safe only where ingress validates every token before forwarding it, and network policy stops anything else from reaching port `8083`.
 
 > [!WARNING]
 > **`insecure` lets a caller select its own principal.** It verifies neither the header nor the query parameter, and the same authenticator guards the controller's `/mcp` endpoint. Treat the principal on a call as a label that the caller chose, and restrict network access to both endpoints rather than relying on it.
@@ -86,6 +88,8 @@ The runtime, the Agent Substrate egress gateway, and the controller each take on
 3. The controller verifies the token's signature, issuer, audience, and lifetime, and allows 30 seconds of clock skew. The controller then binds the token to the Actor's current Session. The controller rejects a token that fails verification, and does not fall back to user authentication.
 
 An authenticated Actor can read its own Agent and use its own task state and memories. The Actor can also read, update, and send messages to its own Session. The Actor cannot create or delete a Session, use a share, reach any other Session, or act with its owner's permissions. That restriction includes other Sessions of the same agent and the same owner.
+
+A verified runtime token creates a principal with a `RuntimeBinding` to the current Session. `Principal.ID` identifies the Actor. `RuntimeBinding.CreatorID` selects the Session's data partition. The binding does not grant the creator's permissions.
 
 The controller trusts the issuer in the `config.substrate.actorJwtIssuer` Helm value, which must match the `ateApi.actorJWTIssuer` value of the Agent Substrate chart. Both values default to `https://idp.ate-system.svc`, so change them only together. The controller fetches the issuer's signing keys at startup, and a controller that cannot reach the issuer does not start.
 
