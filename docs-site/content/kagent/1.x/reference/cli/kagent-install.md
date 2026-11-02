@@ -4,14 +4,16 @@ description: Install kagent.
 weight: 370
 ---
 
-Install kagent
+Install kagent. With --dry-run, write Helm commands and merged values to a directory without changing the cluster. Complete the documented prerequisites before running the exported commands.
 
 ```bash
 kagent install [flags]
 ```
 
 **Flags:**
+- `--dry-run` - Export Helm commands and values without changing the cluster
 - `-h, --help` - help for install
+- `--output-dir string` - Directory for --dry-run output (must not exist) (default "kagent-install")
 - `--profile string` - Installation profile (minimal)
 - `--skip-database-setup` - Skip bundled PostgreSQL deployment and initialization
 

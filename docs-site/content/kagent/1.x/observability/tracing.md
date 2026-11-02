@@ -37,7 +37,7 @@ flowchart LR
     class grpc,gateway,router,runtime inner
 ```
 
-A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent-to-Agent) connection to the Session's Actor and injects a `traceparent` header into that call. The Agent Substrate router forwards the call to the Worker that runs the Actor, and adds its own spans to the trace. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
+A caller reaches the gRPC API on the kagent controller, which starts the trace. The controller hands the request to its A2A gateway, which opens an {{< gloss "A2A" >}}A2A{{< /gloss >}} (Agent2Agent) connection to the Session's Actor and injects a `traceparent` header into that call. The Agent Substrate router forwards the call to the Worker that runs the Actor, and adds its own spans to the trace. The agent runtime inside the Actor reads the header and continues the same trace, so the model and tool spans it produces hang off the controller's spans rather than starting a trace of their own.
 
 Each hop sends its spans under a separate OpenTelemetry (OTel) service name. A tracing backend groups the spans by those names.
 
@@ -241,7 +241,7 @@ Agent Substrate records traces for its own work, such as scheduling an Actor ont
 | ------- | ------- |
 | `ateapi` | Actor lifecycle operations, such as create, resume, and suspend, and the scheduling of Actors onto Workers. |
 | `atelet` | Work on a Worker's node, such as restoring an Actor from a snapshot. |
-| `ateom-gvisor` | Work inside the sandbox that runs the Actor. |
+| `ateworker-gvisor` | Work inside the sandbox that runs the Actor. |
 | `atecontroller` | Reconciliation of Agent Substrate resources, such as WorkerPools. |
 
 Agent Substrate exports traces only when its Helm release sets `otel.endpoint`, and it keeps 1% of its traces by default. To keep more, raise `otel.traces.samplingRatio`.
