@@ -46,12 +46,14 @@ config:
     builtinTools:
       disableFileSearch: true
       disableBash: true
+      disableAskUser: true
 ```
 
 | Setting | Description |
 | ------- | ----------- |
 | `disableFileSearch` | Set to `true` to remove `list_files` and `grep_file` from the root agent and from every subagent. Defaults to `false`. This value replaces `skillTools.fileSearchTools` from earlier releases, with the opposite meaning. |
 | `disableBash` | Set to `true` to remove the `bash` tool from the root agent and from every subagent. The agent keeps the file tools, and still loads skills. Defaults to `false`. |
+| `disableAskUser` | Set to `true` to remove the built-in `ask_user` question tool from Go and Python ADK agents, including Shared subagents. Tool approvals and questions from remote A2A agents can still pause a turn. Defaults to `false`. |
 | `bashVenvPath` | The path to a Python virtual environment in the Harness image. The `bash` tool adds the environment's `bin` directory to the start of `PATH`, and sets `VIRTUAL_ENV`. The kagent runtime image does not include Python. To use this setting, build a Harness image that includes the environment. Defaults to empty. |
 
 Attaching a skill also changes what the agent is told. The runtime appends the name and description of every attached skill to the model request, along with an instruction to call `load_skill` before acting on one, so a skill reaches the model even before any tool is called.

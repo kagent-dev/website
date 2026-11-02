@@ -55,7 +55,7 @@ For the rest of the settings that the `openAI` block accepts, see [OpenAI]({{< l
 
 ### Enable tool calling in vLLM
 
-kagent sends a `tools` array with `tool_choice: "auto"` on every request. kagent's runtime registers a built-in `ask_user` tool on every agent, so that array is sent even when you bind no tools yourself. Launch vLLM with automatic tool choice enabled, or every agent turn fails.
+Requests that carry tools include a `tools` array with `tool_choice: "auto"`. By default, kagent's runtime registers a built-in `ask_user` tool on every agent. In that case, the array is sent even when you bind no tools yourself. Launch vLLM with automatic tool choice enabled. Otherwise, every agent turn that carries tools fails. To remove the built-in question tool from Go and Python ADK agents, set `config.runtimeDefaults.builtinTools.disableAskUser: true`.
 
 ```bash
 vllm serve Qwen/Qwen2.5-7B-Instruct \

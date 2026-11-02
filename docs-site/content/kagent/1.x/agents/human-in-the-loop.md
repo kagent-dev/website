@@ -43,7 +43,7 @@ An agent pauses either to get permission before it acts or to ask a question. A 
 | Request | Raised when | The client answers with |
 | ------- | ----------- | ----------------------- |
 | `tool_approval_request` | The agent wants to call a tool from a binding that sets `requireApproval`. | `tool_approval_response` |
-| `ask_user_request` | The agent calls the built-in `ask_user` tool because it needs information only a person has. | `ask_user_response` |
+| `ask_user_request` | The agent calls the built-in `ask_user` tool because it needs information only a person has. The `config.runtimeDefaults.builtinTools.disableAskUser` Helm value can remove this tool from Go and Python ADK agents. | `ask_user_response` |
 
 Every pause also adds a plain text part to its status message that states why the agent stopped. A client that never activated the extension receives that text and nothing else. It can show a person why the agent stopped, but it has no `id` to answer with, so the task stays at `INPUT_REQUIRED`. Treat the text as a diagnostic rather than as a fallback, and send the turn again from a client that requests the extension. The `hint` field of an activated payload holds the same string.
 
@@ -68,7 +68,7 @@ The Harness that runs an agent decides which pauses the agent can raise, and how
 
 | Harness | Tool approval | `ask_user` question | Splitting one server across two bindings |
 | ------- | ------------- | ------------------- | ---------------------------------------- |
-| `kagent` | Supported | Supported | Supported |
+| `kagent` | Supported | Supported unless `config.runtimeDefaults.builtinTools.disableAskUser` is `true`. | Supported |
 | `codex` | Supported | Supported | Rejected, with `RemoteMCPServer "<name>" is bound more than once`. |
 | `claude` | Supported | Unsupported, because the upstream Claude Code tool that backed it was removed. A `claude` agent pauses for tool approval only. | Rejected, with `RemoteMCPServer "<name>" is bound more than once`. A binding whose tool selection kagent cannot verify against the server's discovered tools exposes the whole server and reports a warning. |
 | `byo` | Decided by your image | Decided by your image | Not applicable |
@@ -109,7 +109,7 @@ Approval belongs to the binding rather than to the tool name, so one server can 
 > [!NOTE]
 > kagent 0.x named the tools that needed approval in a `requireApproval` list on the `Agent` resource, which matched tool names across every server. In 1.x, approval is a property of one binding, so the same tool name can pause for one server and run freely for another.
 
-A tool that no binding covers with `requireApproval` runs without a pause. That includes every built-in tool, such as file access, shell, and web search, and every MCP tool on a binding that omits the field. The sandbox contains those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
+A tool that no binding covers with `requireApproval` runs without a pause. That includes every enabled built-in tool, such as file access, shell, and web search, and every MCP tool on a binding that omits the field. The sandbox contains those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Implement a client that supports human approval
 
