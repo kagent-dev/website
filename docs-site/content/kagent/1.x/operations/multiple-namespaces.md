@@ -163,21 +163,21 @@ Verify a namespaced installation by checking that an unwatched namespace stays u
    ```
    Example output:
    ```console
-   NAME           AGE   READY
-   my-agent       30s   True
-   my-agent       30s   True
+   NAME       READY   AGE
+   my-agent   True    30s
+   NAME       READY   AGE
+   my-agent   True    30s
    ```
 
-4. Confirm that the Agent in the unwatched namespace stays unmanaged. The controller does not have a watch entry for that namespace. The Agent's `READY` value therefore stays `UNKNOWN`, and its conditions stay empty.
+4. Confirm that the Agent in the unwatched namespace stays unmanaged. The controller does not have a watch entry for that namespace. The Agent's `READY` value therefore stays empty, and the conditions command prints nothing.
    ```bash
    kubectl get agents -n dev-agents
    kubectl get agent my-agent -n dev-agents -o jsonpath='{.status.conditions}'
    ```
    Example output:
    ```console
-   NAME           AGE   READY
-   my-agent       30s   UNKNOWN
-   null
+   NAME       READY   AGE
+   my-agent           30s
    ```
 
 ## Share configuration across namespaces
@@ -195,7 +195,7 @@ A namespace separates the agents of one team from another team's agents in the f
 * Kubernetes RBAC governs who can create Agents, Harnesses, AgentTemplates, and EgressPolicies in the namespace.
 * The Agent Substrate credential policy limits which namespaces' Secrets the namespace's agents can read.
 * An Agent or SandboxTemplate can select only the EgressPolicies in its own namespace. For more information, see [Access control]({{< link path="agents/egress-policies#access-control" >}}).
-* A ModelConfig or RemoteMCPServer admits references only from the namespaces in its `allowedNamespaces` field.
+* A ModelConfig or RemoteMCPServer admits references only from the namespaces that its `allowedNamespaces` field selects.
 
 A namespace does not separate the callers of the kagent API. The open source authorizer permits every API check. A caller that reaches the controller can start Sessions with an Agent in any watched namespace. The caller can also write AgentTemplates and Harnesses through the API without Kubernetes RBAC. Creator scoping keeps one caller's Sessions out of another caller's list. However, creator scoping is not a security boundary. For how kagent identifies and authorizes callers, see [Identity]({{< link path="about/substrate-runtime/identity" >}}).
 

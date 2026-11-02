@@ -343,7 +343,8 @@ The `message` field of the failing condition identifies the cause.
 | `invalid output schema: schema must contain one JSON value` | `Compatible`, `UnsupportedConfiguration` | The value contains more than one JSON value, such as two objects in a row. |
 | `invalid output schema: schema does not match the portable output profile: ...` | `Compatible`, `UnsupportedConfiguration` | The schema uses a keyword or form outside the [portable output profile](#supported-schemas), or its root is not an object. |
 | `invalid output schema: resolve schema: ...` | `Compatible`, `UnsupportedConfiguration` | kagent cannot resolve the schema, for example because a `$ref` names a `$defs` entry that does not exist. |
-| `invalid output schema: pattern ...` | `Compatible`, `UnsupportedConfiguration` | A `pattern` is not valid RE2, uses a word boundary, or the schema's patterns compile to more than 100,000 regexp instructions. |
+| `invalid output schema: pattern ...` | `Compatible`, `UnsupportedConfiguration` | A `pattern` is not valid RE2, or uses a word boundary. |
+| `invalid output schema: patterns compile to more than 100000 regexp instructions ...` | `Compatible`, `UnsupportedConfiguration` | The schema's patterns together compile to more than 100,000 regexp instructions. |
 | `output schema for Gemini: ...` | `Compatible`, `UnsupportedConfiguration` | A property breaks the [Gemini rule](#supported-schemas) for a single type, or an array property does not set `items`. |
 | `outputSchemaStrict: ...` | `Compatible`, `UnsupportedConfiguration` | The schema breaks a [strict mode](#strict-mode) rule. |
 | `output schema is incompatible with Go ADK: ...` | `Compatible`, `UnsupportedConfiguration` | The schema has a recursive reference, or exceeds the depth or node limit. |

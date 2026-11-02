@@ -87,7 +87,7 @@ Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantical
 
 ## Verify the configuration
 
-If the summarizer names a ModelConfig that does not exist, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm that the Agent is ready before relying on compaction:
+If the summarizer names a ModelConfig that does not exist, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": resolve ModelConfig "<namespace>/x": not found`. Confirm that the Agent is ready before relying on compaction:
 
 ```bash
 kagent agent get <agent-name>

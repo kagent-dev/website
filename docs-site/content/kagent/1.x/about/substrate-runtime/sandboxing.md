@@ -36,7 +36,7 @@ A **sandbox class** is the sandbox runtime family that a Worker uses. {{< gloss 
 - **`gvisor`** (default): Runs the workload against a [gVisor](https://gvisor.dev) user-space kernel. The user-space kernel keeps the workload's system calls from reaching the host kernel.
 - **`microvm`**: Runs the workload inside a lightweight virtual machine. A hypervisor boundary separates the workload from the host.
 
-A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}}'s `sandboxClasses` list sets the sandbox class for its Workers. Each entry names a class and, optionally, the SandboxConfig that serves it. The kagent Helm chart creates the default pool with one `gvisor` entry. Each class does more than name a runtime. Agent Substrate builds the pool's Worker pods to match it, mounting the virtualization devices that a micro-VM needs and placing those pods on nodes that provide them.
+A {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}}'s `sandboxClasses` list sets the sandbox class for its Workers. Each entry names a class and, optionally, the SandboxConfig that serves it. When `kagent install` creates the default pool, the pool has one `gvisor` entry. Each class does more than name a runtime. Agent Substrate builds the pool's Worker pods to match it, mounting the virtualization devices that a micro-VM needs and placing those pods on nodes that provide them.
 
 > [!NOTE]
 > kagent copies the class of a pool's first `sandboxClasses` entry onto every {{< gloss "ActorTemplate" >}}ActorTemplate{{< /gloss >}} that it generates for this pool. The pool, not the template, resolves the SandboxConfig for that class.
@@ -47,7 +47,7 @@ A **SandboxConfig** is a cluster-scoped resource that describes the runtime file
 
 A WorkerPool resolves one SandboxConfig for each entry in its `sandboxClasses` list. An entry that sets `configRef` uses the named configuration. An entry without `configRef` uses the newest SandboxConfig of its class that has the `sandboxconfig.ate.dev/is-class-default: "true"` annotation. The pool reports the result in the `Resolved` condition under `status.sandboxClasses`. Agent Substrate blocks deletion of a SandboxConfig that a pool uses.
 
-A default installation creates one SandboxConfig, named `gvisor-default`, and marks it as the `gvisor` class default. The kagent Helm chart also names it in the default pool's `configRef`. The configuration looks like the following:
+A default installation creates one SandboxConfig, named `gvisor-default`, and marks it as the `gvisor` class default. When `kagent install` creates the default pool, the pool also names it in its `configRef`. The configuration looks like the following:
 
 ```yaml
 apiVersion: ate.dev/v1

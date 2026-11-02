@@ -105,7 +105,7 @@ Read the current state of the runtime before you change it. The rest of this gui
    }
    ```
 
-`ListSubstrateActors` and `ListSubstrateWorkers` return results in pages of up to 100 entries. When a response contains a `page.nextPageToken` value, pass it as `page.pageToken` in the next request, such as `{"atespace":"kagent","page":{"pageToken":"<token>"}}`.
+`ListSubstrateActors` and `ListSubstrateWorkers` return 50 entries per page by default. To request up to 100, set `page.limit`. When a response contains a `page.nextPageToken` value, pass it as `page.pageToken` in the next request, such as `{"atespace":"kagent","page":{"pageToken":"<token>"}}`.
 
 ## Size a WorkerPool
 

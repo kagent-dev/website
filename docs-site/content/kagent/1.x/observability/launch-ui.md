@@ -162,12 +162,12 @@ Read the page from the top tiles down.
 | **Workers busy** | {{< gloss "Worker" >}}Workers{{< /gloss >}} currently assigned to an Actor, against the total provisioned. |
 | **Requested filters** | The filters this page asked for, not what the API returned. Reads `none` until you set a filter, then `K8s: <namespace>; ATE: <atespace>`, with `any` in place of a filter that you leave empty. |
 
-On a fresh installation, the page reports one WorkerPool, zero ActorTemplates, and zero Actors, because an agent does not exist yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors on this page.`
+On a fresh installation, the page reports one WorkerPool, zero ActorTemplates, and zero Actors, because an agent does not exist yet. The **Workers busy** tile reads `0/1`, and the Workers table lists the pool's single worker with the pod that backs it. That unassigned worker confirms that capacity is provisioned and waiting for the first agent. The Actors table reads `No actors visible in this scope.`
 
 When you [restrict kagent to specific namespaces]({{< link path="operations/multiple-namespaces#restrict-kagent-to-specific-namespaces" >}}), several kagent installations can share one Agent Substrate. The Substrate page then reads only the watched namespaces and the atespaces whose names kagent derives from those namespaces. Empty filters cover every watched namespace. A filter that specifies any other namespace or atespace fails with a `PermissionDenied` error. An installation that watches every namespace reads the entire Agent Substrate.
 
 > [!NOTE]
-> When the Substrate page cannot reach the Agent Substrate API, it reports the failure rather than an empty result. A warning above the tables shows the error, and the Actors table reads `This read could not reach ate-api, so there may be actors it did not see.` On a cluster that does have agents, `No actors on this page.` means that the read succeeded and matched nothing, so check the **Kubernetes namespace** and **ATE atespace** filters.
+> When the Substrate page cannot reach the Agent Substrate API, it reports the failure rather than an empty result. A warning above the tables shows the error, and the Actors table reads `This read could not reach ate-api, so there may be actors it did not see.` On a cluster that does have agents, `No actors visible in this scope.` means that the read succeeded and matched nothing, so check the **Kubernetes namespace** and **ATE atespace** filters.
 
 ## Expose the UI outside the cluster
 
