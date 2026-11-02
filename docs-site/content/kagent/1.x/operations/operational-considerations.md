@@ -319,7 +319,7 @@ To watch the sweep, scrape `kagent_session_expired_total`, which counts the Sess
 
 kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} reference, such as the API keys and TLS certificates in a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}}. An edit to one of them recompiles the pair into a new revision.
 
-A new revision does not reach the Sessions that are already running. A Session is pinned to the revision that it was created from and keeps that revision for life. To move an existing conversation onto new configuration, create a new Session.
+A new revision does not reach the Sessions that are already running. A Session is pinned to the revision that it was created from and keeps that revision for life. The Session record also stores the Agent's Kubernetes UID from creation time. If you delete the Agent and create another Agent with the same namespace and name, existing Sessions stay on the original Agent identity and revision. To move an existing conversation onto new configuration, create a new Session.
 
 The model provider API key is the exception. Agents do not hold the key. Instead, the Agent Substrate egress gateway reads the key from the Secret and adds it to each model request, so a rotated key reaches running Sessions after you restart the egress gateway. See [Rotate the model provider API key](#rotate-the-model-provider-api-key).
 
