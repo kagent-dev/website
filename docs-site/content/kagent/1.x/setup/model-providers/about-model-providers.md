@@ -61,7 +61,7 @@ The following fields set the token that the endpoint receives. For the token's c
 | `actorJwt.audiences` | The services that can accept the token, between 1 and 16 values. The endpoint checks that its own audience is in the list. `kagent-runtime` is reserved and rejected. |
 | `actorJwt.expirationSeconds` | Optional. The token lifetime, between 300 and 3600 seconds. Defaults to 900. |
 
-Use `actorJwt` only with an endpoint that you configure, because the endpoint must accept a token that Agent Substrate issues. kagent does not exchange the Actor token for a provider credential. The API server rejects `actorJwt` on the `Bedrock`, `Gemini`, `Ollama`, `GeminiVertexAI`, `AnthropicVertexAI`, and `SAPAICore` providers, because those providers require provider-issued credentials. When `actorJwt` is set, `defaultHeaders` cannot override the credential header.
+Use `actorJwt` only with an endpoint that you configure, because the endpoint must accept a token that Agent Substrate issues. kagent does not exchange the Actor token for a provider credential. The API server rejects `actorJwt` on the `Bedrock`, `Ollama`, `GeminiVertexAI`, `AnthropicVertexAI`, and `SAPAICore` providers, because those providers require provider-issued credentials. On the `Gemini` provider, the gateway sends the token as `Authorization: Bearer <token>` instead of in the `x-goog-api-key` header. When `actorJwt` is set, `defaultHeaders` cannot override the credential header.
 
 ### Turn off model streaming
 
