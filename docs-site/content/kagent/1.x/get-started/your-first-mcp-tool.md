@@ -77,7 +77,8 @@ kagent records what it discovered on the server's status, so the tool names come
    | Field | Description |
    | ----- | ----------- |
    | `mcp.server.kind` | The kind of server resource. `RemoteMCPServer` is the only accepted value. |
-   | `mcp.server.name` | The server's name. A binding resolves in the AgentTemplate's own namespace, so it cannot reach a server in another namespace. |
+   | `mcp.server.name` | The server's name. |
+   | `mcp.server.namespace` | Optional. The server's namespace. Omit this field to use the AgentTemplate namespace. A server in another namespace must set `allowedNamespaces` to permit the AgentTemplate namespace. |
    | `mcp.tools` | Optional. The names of the tools to bind, up to 50. An omitted or empty list exposes every tool on the server. An AgentTemplate takes at most 50 bindings in total. |
 
 3. Confirm that kagent compiled a new {{< gloss "Revision" >}}revision{{< /gloss >}} for the Agent that uses the edited template. Every edit produces a new desired revision, and the Agent is current when the latest successful revision matches it.
@@ -91,7 +92,7 @@ kagent records what it discovered on the server's status, so the tool names come
    7c1f9a2b4e8d3f60a5b7c9e1d2f4a6b8c0d2e4f68a9b1c3d5e7f9a1b3c5d7e9f	7c1f9a2b4e8d3f60a5b7c9e1d2f4a6b8c0d2e4f68a9b1c3d5e7f9a1b3c5d7e9f
    ```
 
-   When the two values differ, kagent is still compiling, or compilation failed. A binding that names a RemoteMCPServer that does not exist in the namespace fails at the `ResolvedRefs` condition with the reason `ReferenceResolutionFailed`.
+   When the two values differ, kagent is still compiling, or compilation failed. A binding that names a RemoteMCPServer that kagent cannot resolve, or that the server's `allowedNamespaces` does not permit the AgentTemplate namespace, fails at the `ResolvedRefs` condition with the reason `ReferenceResolutionFailed`.
 
    kagent resolves the server, but it does not check the tool names against the tools that the server actually serves. A misspelled tool name compiles into a ready revision, and the only symptom is an agent that never calls the tool that you expected. If a bound tool appears to be missing, check the spelling against the server's catalog.
 

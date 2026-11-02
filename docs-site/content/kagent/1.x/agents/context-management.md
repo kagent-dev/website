@@ -37,7 +37,7 @@ spec:
       # but keep the 10 most recent events uncompacted.
       tokenThreshold: 24000
       eventRetentionSize: 10
-      # Optional: name a ModelConfig (in this Harness's namespace) to write the
+      # Optional: name a ModelConfig to write the
       # summaries. When you omit it, the agent's own model summarizes.
       summarizer:
         modelConfigRef:
@@ -67,7 +67,7 @@ The table below lists the compaction fields and their requirements:
 | `overlapSize` | Optional | The number of already-compacted invocations pulled back into the next sliding window so consecutive summaries overlap. Requires `compactionInterval`. Minimum 0. |
 | `tokenThreshold` | Optional | The prompt token count at which tail-retention compaction summarizes the history before the next model call. Requires `eventRetentionSize`. Minimum 1. |
 | `eventRetentionSize` | Optional | The number of most recent events that tail retention keeps uncompacted. Requires `tokenThreshold`. Minimum 1. |
-| `summarizer.modelConfigRef` | Optional | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} in the Harness namespace that writes the summaries. When you omit it, the agent's own model summarizes. |
+| `summarizer.modelConfigRef` | Optional | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that writes the summaries. Omit `summarizer.modelConfigRef.namespace` to use the Harness namespace. A shared ModelConfig in another namespace must permit the Harness namespace with `allowedNamespaces`. When you omit `summarizer.modelConfigRef`, the agent's own model summarizes. |
 | `summarizer.promptTemplate` | Optional | Replaces the runtime's default summarization prompt. Must contain `{conversation_history}`, which the runtime replaces with the rendered events. |
 
 ## Admission rules
@@ -87,7 +87,7 @@ Naming an AgentTemplate's own model in `summarizer.modelConfigRef` is semantical
 
 ## Verify the configuration
 
-If the summarizer names a ModelConfig that does not exist in the Harness namespace, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm that the Agent is ready before relying on compaction:
+If the summarizer names a ModelConfig that kagent cannot resolve, or that `allowedNamespaces` does not permit the Harness namespace, the Agent is not ready. The failure surfaces on the Agent as `ResolvedRefs=False`, with a reason such as `resolve summarizer ModelConfig "x": model config "x" not found`. Confirm that the Agent is ready before relying on compaction:
 
 ```bash
 kagent agent get <agent-name>

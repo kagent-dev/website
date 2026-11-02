@@ -12,11 +12,11 @@ An {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}'s `spec.tools` list 
 
 You must set exactly one of these fields on a binding. If you set both or neither fields, the API server rejects the AgentTemplate with the error `exactly one of the fields in [mcp subAgent] must be set`.
 
-Both kinds resolve within the AgentTemplate's own namespace, so a binding cannot reach a server or a template in another namespace.
+An `mcp` binding can name a RemoteMCPServer in another namespace when that server permits the AgentTemplate namespace. A `subAgent` binding always resolves within the AgentTemplate's own namespace.
 
 ## MCP tools
 
-An `mcp` binding references an MCP server in the AgentTemplate's namespace. The optional `tools` list limits which of that server's tools the agent gets. On the kagent and Codex harnesses, a list narrows the binding to the tools that you name. To give the agent every tool that the server offers, omit the list or leave it empty.
+An `mcp` binding references a RemoteMCPServer. When the binding omits `server.namespace`, kagent resolves the server in the AgentTemplate namespace. The optional `tools` list limits which of that server's tools the agent gets. On the kagent and Codex harnesses, a list narrows the binding to the tools that you name. To give the agent every tool that the server offers, omit the list or leave it empty.
 
 ```yaml
 tools:
@@ -33,7 +33,8 @@ tools:
 | Field | Description |
 | ----- | ----------- |
 | `mcp.server.kind` | The kind of server resource. `RemoteMCPServer` is the only accepted value. |
-| `mcp.server.name` | The server's name, in the AgentTemplate's namespace. |
+| `mcp.server.name` | The server's name. |
+| `mcp.server.namespace` | Optional. The server's namespace. Omit this field to use the AgentTemplate namespace. A server in another namespace must set `allowedNamespaces` to permit the AgentTemplate namespace. |
 | `mcp.tools` | Optional. The names of the tools to bind, up to 50. Duplicates are collapsed. Omit the list, or leave it empty, to expose every tool on the server. On the Claude {{< gloss "Harness" >}}Harness{{< /gloss >}}, a list does not narrow the server. See [Tool selection on the Claude harness](#tool-selection-on-the-claude-harness). |
 | `mcp.requireApproval` | Optional. Pauses the agent for a person's approval before each call to a tool that this binding exposes. On the Claude harness, the pause covers every tool on the server, because Claude approves one server at a time rather than one tool at a time. Omit to run the bound tools without approval. For more information, see [Human in the loop]({{< link path="agents/human-in-the-loop#require-approval-for-a-tool" >}}). |
 

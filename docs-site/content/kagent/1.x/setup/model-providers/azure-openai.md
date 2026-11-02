@@ -14,7 +14,7 @@ The `AzureOpenAI` provider calls an Azure OpenAI deployment. It differs from the
    export AZURE_OPENAI_API_KEY=<your-azure-openai-api-key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create it in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic azure-openai-api-key -n kagent --from-literal api-key=$AZURE_OPENAI_API_KEY
    ```
@@ -113,7 +113,7 @@ A link reaches Azure regardless of its media type. Inline bytes reach Azure as a
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:

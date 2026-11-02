@@ -68,7 +68,7 @@ Each condition covers one stage, and a stage runs only when the stage before it 
 | Condition | Stage it covers | A failure here means |
 | --------- | --------------- | -------------------- |
 | `Accepted` | The Agent selects a template and a Harness. | Nothing. kagent writes this condition only as `True`, because an Agent references both resources explicitly. |
-| `ResolvedRefs` | Every resource that the Agent references was found, including its AgentTemplate, its Harness, its ModelConfig, and any tool servers. | A reference points at something that does not exist, or the controller cannot read it. |
+| `ResolvedRefs` | Every resource that the Agent references was found, including its AgentTemplate, its Harness, its ModelConfig, and any tool servers. | A reference points at something that does not exist, the controller cannot read it, or the referenced resource's `allowedNamespaces` denies the Agent namespace. |
 | `Compatible` | The resolved configuration is valid for the Harness. | The configuration asks for something that its Harness does not support. |
 | `Ready` | The ActorTemplate's golden {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} exists, so Sessions can start from it. | Agent Substrate has not finished capturing the golden snapshot, or capture failed. |
 
@@ -86,6 +86,8 @@ Ready=False  Blocked: blocked by ResolvedRefs
 ```
 
 The Agent's status reports two revision fields that answer a different question. `desiredRevision` is the {{< gloss "Revision" >}}revision{{< /gloss >}} that the current spec should produce, and `latestSuccessfulRevision` is the newest revision that finished preparing. A missing `latestSuccessfulRevision` means that the Agent was never ready, and two differing values mean that the newest edit is not yet prepared.
+
+When the latest edit fails because a shared ModelConfig or RemoteMCPServer no longer permits the Agent namespace, `latestSuccessfulRevision` continues to report the last prepared revision. New Sessions can still start from that revision until a replacement prepares successfully.
 
 The status also reports a `warnings` list, which shows the compatibility decisions that kagent made without blocking the revision. A warning does not stop an Agent from becoming ready, and the conditions do not report it.
 

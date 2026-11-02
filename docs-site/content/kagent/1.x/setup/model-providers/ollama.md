@@ -108,7 +108,7 @@ EOF
    export OLLAMA_API_KEY=***
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create it in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-ollama -n kagent --from-literal OLLAMA_API_KEY=$OLLAMA_API_KEY
    ```
@@ -167,7 +167,7 @@ The `ollama` block takes the following settings. For every field, including its 
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:

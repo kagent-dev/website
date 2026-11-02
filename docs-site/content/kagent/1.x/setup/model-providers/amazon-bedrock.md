@@ -30,7 +30,7 @@ The native provider authenticates with a Bedrock API key, which kagent sends as 
    export AWS_BEARER_TOKEN_BEDROCK=<your-bedrock-api-key>
    ```
 
-2. Create a Kubernetes Secret that holds the token under the key `AWS_BEARER_TOKEN_BEDROCK`. kagent looks that key up by name, so no other key works. Create the Secret in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that holds the token under the key `AWS_BEARER_TOKEN_BEDROCK`. kagent looks that key up by name, so no other key works. Create the Secret in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic bedrock-credentials -n kagent \
      --from-literal AWS_BEARER_TOKEN_BEDROCK=$AWS_BEARER_TOKEN_BEDROCK
@@ -119,7 +119,7 @@ Bedrock also serves an [OpenAI-compatible chat completions API](https://docs.aws
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:

@@ -17,7 +17,7 @@ The `OpenAI` provider calls the OpenAI API directly.
    export OPENAI_API_KEY=<your_api_key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create it in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-openai -n kagent --from-literal OPENAI_API_KEY=$OPENAI_API_KEY
    ```
@@ -77,7 +77,7 @@ When `apiFormat` is `responses`, the `kagent` runtime sends supported files thro
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:

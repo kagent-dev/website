@@ -16,7 +16,7 @@ The following example uses [Cohere](https://cohere.com/), which serves an OpenAI
    export PROVIDER_API_KEY=<your_api_key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create it in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-my-provider -n kagent --from-literal PROVIDER_API_KEY=$PROVIDER_API_KEY
    ```
@@ -116,7 +116,7 @@ spec:
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:

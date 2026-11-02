@@ -18,7 +18,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
    export GOOGLE_API_KEY=<your_api_key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create it in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-gemini -n kagent --from-literal GOOGLE_API_KEY=$GOOGLE_API_KEY
    ```
@@ -58,7 +58,7 @@ The `gemini` block takes one optional setting. For its type, default, and valida
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:

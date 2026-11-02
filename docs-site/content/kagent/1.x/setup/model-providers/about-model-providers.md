@@ -18,6 +18,7 @@ Every ModelConfig shares the same three parts, regardless of the provider that i
 | `provider` | The provider to use.<ul><li>Accepted values are `OpenAI`, `Anthropic`, `AzureOpenAI`, `Ollama`, `Gemini`, `GeminiVertexAI`, `AnthropicVertexAI`, `Bedrock`, `SAPAICore`, `Foundry`, and `Mistral`.</li><li>Defaults to `OpenAI`.</li><li>`AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore` are rejected on every harness.</li></ul>For more information, see [Credentials that kagent rejects](#credentials-that-kagent-rejects). |
 | `model` | The model name, as the provider spells it. |
 | `stream` | Whether the agent streams its model calls. Defaults to `true`. Set `false` for an endpoint that rejects streaming, which otherwise fails every turn. |
+| `allowedNamespaces` | Which namespaces can reference this ModelConfig. Defaults to the ModelConfig's own namespace. |
 | Provider block | A block named after the provider, such as `openAI` or `bedrock`, holding the settings that only that provider takes. An empty block is valid when the provider does not take extra settings. |
 
 Credentials come from a Kubernetes Secret in the same namespace as the ModelConfig. The `apiKeySecret` field names the Secret, and `apiKeySecretKey` names the key within that Secret. For every ModelConfig field, including its type, default, and validation rules, see the [API reference]({{< link path="reference/api-ref#modelconfigspec" >}}).
@@ -106,7 +107,7 @@ For the full matrix, including the per-combination restrictions, see [Agent harn
 
 ## Use a ModelConfig
 
-Reference the ModelConfig by name in an AgentTemplate. The ModelConfig must be in the same namespace as the AgentTemplate.
+Reference the ModelConfig by name in an AgentTemplate. When the ModelConfig is in the same namespace as the AgentTemplate, set only `modelConfig.name`. To reference a shared ModelConfig in another namespace, set `modelConfig.namespace` to the ModelConfig's namespace. The ModelConfig's `allowedNamespaces` must permit the AgentTemplate namespace.
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
@@ -119,5 +120,7 @@ spec:
     name: default-model-config
   systemPrompt: You are a concise, helpful assistant.
 ```
+
+Do not use `namespace/name` format. The `name` and `namespace` fields are separate, and an omitted `namespace` resolves in the AgentTemplate namespace.
 
 Editing a ModelConfig produces a new {{< gloss "Revision" >}}revision{{< /gloss >}} for every {{< gloss "Agent" >}}Agent{{< /gloss >}} whose template references it. A {{< gloss "Session" >}}Session{{< /gloss >}} keeps running the revision that it was created from, so create a new Session to pick up a changed model.

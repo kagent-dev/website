@@ -14,7 +14,7 @@ The `Foundry` provider calls a model deployment in an Azure AI Foundry resource.
    export FOUNDRY_API_KEY=<your-foundry-api-key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create it in the namespace where you create the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic foundry-api-key -n kagent --from-literal api-key=$FOUNDRY_API_KEY
    ```
@@ -95,7 +95,7 @@ kubectl describe modelconfig foundry-model-config -n kagent
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate. This example keeps the AgentTemplate in the same namespace as the ModelConfig.
 
 ```yaml
 spec:
