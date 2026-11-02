@@ -22,6 +22,21 @@ Package v1alpha3 contains API Schema definitions for the api.kagent.dev v1alpha3
 - [RemoteMCPServer](#remotemcpserver)
 - [SandboxTemplate](#sandboxtemplate)
 
+#### ActorJWT
+
+ActorJWT identifies the executing Actor independently of the invocation caller.
+The gateway injects the token; its value never enters the runtime.
+
+_Appears in:_
+- [EgressAuthentication](#egressauthentication)
+- [ModelConfigSpec](#modelconfigspec)
+- [RemoteMCPServerSpec](#remotemcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `audiences` _string array_ | Audiences names the services permitted to accept this token. The runtime<br />control-plane audience is reserved and cannot be exported downstream. |  | MaxItems: 16 <br />MinItems: 1 <br />items:MaxLength: 512 <br />items:MinLength: 1 <br />**Required** <br /> |
+| `expirationSeconds` _integer_ | ExpirationSeconds requests a token lifetime. Substrate refreshes tokens at<br />the gateway independently of the invocation caller's token lifetime. | 900 | Maximum: 3600 <br />Minimum: 300 <br /> |
+
 #### Agent
 
 Agent is a runnable definition with an explicit template and harness.
@@ -143,12 +158,13 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfig` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfig is required by managed harnesses and optional for BYO harnesses. |  |  |
+| `modelConfig` _[ObjectReference](#objectreference)_ | ModelConfig is required by managed harnesses and optional for BYO harnesses. |  |  |
 | `description` _string_ |  |  |  |
 | `systemPrompt` _string_ |  |  |  |
 | `systemPromptFrom` _[ConfigMapKeyReference](#configmapkeyreference)_ | SystemPromptFrom references prompt text in a same-namespace ConfigMap. |  |  |
 | `outputSchema` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#json-v1-apiextensions-k8s-io)_ | OutputSchema constrains successful terminal output when this template is<br />compiled as the root agent. |  | Type: object <br /> |
 | `outputSchemaFrom` _[ConfigMapKeyReference](#configmapkeyreference)_ | OutputSchemaFrom references a JSON Schema stored as JSON in a<br />same-namespace ConfigMap key. |  |  |
+| `outputSchemaStrict` _boolean_ | OutputSchemaStrict tells OpenAI, Azure OpenAI, and Foundry (openai format)<br />to limit generation to the output schema. kagent then checks the schema<br />against OpenAI's strict mode rules on every provider. |  |  |
 | `promptTemplate` _[AgentTemplatePromptTemplateSpec](#agenttemplateprompttemplatespec)_ |  |  |  |
 | `tools` _[ToolBinding](#toolbinding) array_ |  |  | ExactlyOneOf: [mcp subAgent] <br />MaxItems: 50 <br /> |
 | `skills` _[AgentTemplateSkill](#agenttemplateskill) array_ |  |  | MaxItems: 50 <br /> |
@@ -163,6 +179,7 @@ following the pattern used by Gateway API for cross-namespace route attachments.
 By default (when not specified), only references from the same namespace are allowed.
 
 _Appears in:_
+- [ModelConfigSpec](#modelconfigspec)
 - [RemoteMCPServerSpec](#remotemcpserverspec)
 
 | Field | Description | Default | Validation |
@@ -327,7 +344,10 @@ _Appears in:_
 
 #### EgressAuthentication
 
-EgressAuthentication replaces a request header with a prefix and Secret value.
+EgressAuthentication replaces a request header with a prefix and credential.
+
+_Validation:_
+- ExactlyOneOf: [secretKeyRef actorJwt]
 
 _Appears in:_
 - [EgressDestination](#egressdestination)
@@ -335,8 +355,9 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `header` _string_ | Header is the request header carrying the credential, for example<br />Authorization or X-API-Key. |  | MaxLength: 256 <br />Pattern: `^[!#$%&'*+.^_\|~0-9A-Za-z-]+$` <br />**Required** <br /> |
-| `prefix` _string_ | Prefix is prepended verbatim to the Secret value, for example "Bearer ".<br />Include any separating space. Omitted or empty means no prefix. |  | MaxLength: 256 <br />Pattern: `^[^\x00-\x08\x0a-\x1f\x7f]*$` <br /> |
-| `secretKeyRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | SecretKeyRef selects a required key in the EgressPolicy's namespace. |  | **Required** <br /> |
+| `prefix` _string_ | Prefix is prepended verbatim to the credential value, for example "Bearer ".<br />Include any separating space. Omitted or empty means no prefix. |  | MaxLength: 256 <br />Pattern: `^[^\x00-\x08\x0a-\x1f\x7f]*$` <br /> |
+| `secretKeyRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | SecretKeyRef selects a required key in the EgressPolicy's namespace. |  |  |
+| `actorJwt` _[ActorJWT](#actorjwt)_ | ActorJWT authenticates as the executing Actor. The gateway mints and injects the token. |  |  |
 
 #### EgressDestination
 
@@ -348,7 +369,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `origin` _string_ | Origin is a scheme, DNS hostname, and optional port. A wildcard replaces<br />exactly one leftmost DNS label, for example https://*.example.com. |  | MaxLength: 270 <br />Pattern: `^https?://(\*\.([a-z0-9]([-a-z0-9]\{0,61\}[a-z0-9])?\.)+\|([a-z0-9]([-a-z0-9]\{0,61\}[a-z0-9])?\.)*)[a-z]([-a-z0-9]\{0,61\}[a-z0-9])?(:([1-9][0-9]\{0,3\}\|[1-5][0-9]\{4\}\|6[0-4][0-9]\{3\}\|65[0-4][0-9]\{2\}\|655[0-2][0-9]\|6553[0-5]))?$` <br />**Required** <br /> |
-| `authentication` _[EgressAuthentication](#egressauthentication)_ | Authentication replaces a placeholder header at the gateway. Requests<br />must send the header; its credential value is never supplied to the runtime. |  |  |
+| `authentication` _[EgressAuthentication](#egressauthentication)_ | Authentication replaces a placeholder header at the gateway. Requests<br />must send the header; its credential value is never supplied to the runtime. |  | ExactlyOneOf: [secretKeyRef actorJwt] <br /> |
 
 #### EgressPolicy
 
@@ -484,32 +505,6 @@ Harness defines a reusable agent runtime and infrastructure policy.
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[HarnessSpec](#harnessspec)_ |  |  | ExactlyOneOf: [kagent codex claude byo] <br />**Required** <br /> |
-| `status` _[HarnessStatus](#harnessstatus)_ |  |  |  |
-
-#### HarnessCapabilities
-
-HarnessCapabilities records behavior proven for a pinned adapter and runtime.
-It is populated by the controller and is not user-authored configuration.
-
-_Appears in:_
-- [HarnessStatus](#harnessstatus)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `version` _string_ | Version identifies the controller capability catalog entry. |  | MinLength: 1 <br />**Required** <br /> |
-| `nativeAgentTools` _boolean_ |  |  | **Required** <br /> |
-| `maxNativeAgentDepth` _integer_ |  |  | Minimum: 0 <br />**Required** <br /> |
-| `dedicatedAgentTools` _boolean_ |  |  | **Required** <br /> |
-| `mcpInjection` _boolean_ |  |  | **Required** <br /> |
-| `streaming` _boolean_ |  |  | **Required** <br /> |
-| `interruption` _boolean_ |  |  | **Required** <br /> |
-| `inputRequired` _boolean_ |  |  | **Required** <br /> |
-| `approvals` _boolean_ |  |  | **Required** <br /> |
-| `structuredOutput` _boolean_ | StructuredOutput reports whether the pinned adapter can enforce a root<br />JSON output contract and emit it as an A2A DataPart. |  | **Required** <br /> |
-| `inputModalities` _string array_ |  |  | MaxItems: 16 <br /> |
-| `outputModalities` _string array_ |  |  | MaxItems: 16 <br /> |
-| `resume` _boolean_ |  |  | **Required** <br /> |
-| `checkpoint` _boolean_ |  |  | **Required** <br /> |
 
 #### HarnessSpec
 
@@ -530,19 +525,6 @@ _Appears in:_
 | `workload` _[HarnessWorkload](#harnessworkload)_ | Workload overrides the built-in runtime image and its command. BYO requires it. |  |  |
 | `env` _[RuntimeEnvVar](#runtimeenvvar) array_ |  |  | MaxItems: 100 <br /> |
 | `substrate` _[RuntimeSubstratePolicy](#runtimesubstratepolicy)_ |  |  | **Required** <br /> |
-
-#### HarnessStatus
-
-HarnessStatus reports controller-derived capabilities and current health.
-
-_Appears in:_
-- [Harness](#harness)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `observedGeneration` _integer_ | ObservedGeneration is the latest Harness generation observed by the controller. |  |  |
-| `capabilities` _[HarnessCapabilities](#harnesscapabilities)_ | Capabilities is the single capability record for the selected runtime. |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions report adapter and dependency health. |  | MaxItems: 8 <br /> |
 
 #### HarnessWorkload
 
@@ -601,7 +583,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfigRef references the embedding ModelConfig in the Harness namespace. |  | **Required** <br /> |
+| `modelConfigRef` _[ObjectReference](#objectreference)_ | ModelConfigRef references the embedding ModelConfig (defaulting to the Harness namespace). |  | **Required** <br /> |
 | `ttlDays` _integer_ | TTLDays controls how many days a stored memory entry remains valid. |  | Minimum: 1 <br /> |
 
 #### KagentHarnessSummarizer
@@ -613,7 +595,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `modelConfigRef` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#localobjectreference-v1-core)_ | ModelConfigRef references the ModelConfig in the Harness namespace that<br />writes the summaries. Omitted uses the agent's own model. |  |  |
+| `modelConfigRef` _[ObjectReference](#objectreference)_ | ModelConfigRef references the ModelConfig (defaulting to the Harness namespace) that<br />writes the summaries. Omitted uses the agent's own model. |  |  |
 | `promptTemplate` _string_ | PromptTemplate replaces the runtime's default summarization prompt. It<br />must contain \{conversation_history\}, which the runtime replaces with the<br />rendered events. |  | MinLength: 1 <br /> |
 
 #### MCPTool
@@ -628,14 +610,14 @@ _Appears in:_
 
 #### MCPToolBinding
 
-MCPToolBinding binds tools from a same-namespace MCP server.
+MCPToolBinding binds tools from an authorized MCP server.
 
 _Appears in:_
 - [ToolBinding](#toolbinding)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `server` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#typedlocalobjectreference-v1-core)_ |  |  | **Required** <br /> |
+| `server` _[TypedObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#typedobjectreference-v1-core)_ |  |  | **Required** <br /> |
 | `tools` _string array_ | Tools optionally limits which server tools are exposed. An omitted or empty<br />list exposes every tool. Harnesses that cannot enforce a partial selection<br />may expose the whole server and report a warning. |  | MaxItems: 50 <br />items:MinLength: 1 <br /> |
 | `requireApproval` _boolean_ | RequireApproval pauses before each invocation of a tool exposed by this<br />binding. It applies to the selected tools, or to every server tool when<br />Tools is omitted or empty. |  |  |
 
@@ -667,19 +649,24 @@ ModelConfig is the Schema for the modelconfigs API.
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[ModelConfigSpec](#modelconfigspec)_ |  |  |  |
+| `spec` _[ModelConfigSpec](#modelconfigspec)_ |  |  | AtMostOneOf: [actorJwt apiKeySecret tokenPassthrough] <br /> |
 | `status` _[ModelConfigStatus](#modelconfigstatus)_ |  |  |  |
 
 #### ModelConfigSpec
 
 ModelConfigSpec defines the desired state of ModelConfig.
 
+_Validation:_
+- AtMostOneOf: [actorJwt apiKeySecret tokenPassthrough]
+
 _Appears in:_
 - [ModelConfig](#modelconfig)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
+| `actorJwt` _[ActorJWT](#actorjwt)_ | ActorJWT authenticates as the executing Actor through the provider's credential header.<br />Substrate mints and injects the token at the egress gateway. |  |  |
 | `model` _string_ |  |  | **Required** <br /> |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces controls which namespaces may use this model and its credentials.<br />Omitted policy permits only references from the same namespace. |  |  |
 | `stream` _boolean_ | Stream controls LLM response streaming for the kagent harness. Set to false<br />for model endpoints that do not support streaming. Defaults to true. | true |  |
 | `apiKeySecret` _string_ | The name of the secret that contains the API key. Must be a reference to the name of a secret in the same namespace as the referencing ModelConfig.<br />For the SAPAICore provider, the secret must contain two keys: "client_id" and "client_secret"<br />(the OAuth2 client credentials for SAP AI Core). The apiKeySecretKey field is not used for SAPAICore. |  |  |
 | `apiKeySecretKey` _string_ | The key in the secret that contains the API key.<br />Not used for the SAPAICore provider (which always reads "client_id" and "client_secret" from the secret). |  |  |
@@ -783,6 +770,20 @@ _Appears in:_
 | `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
 | `secretHash` _string_ | SecretHash is a hash of the referenced secret data, used to detect secret changes |  |  |
 
+#### ObjectReference
+
+ObjectReference identifies a resource; an omitted namespace means the owner's namespace.
+
+_Appears in:_
+- [AgentTemplateSpec](#agenttemplatespec)
+- [KagentHarnessMemory](#kagentharnessmemory)
+- [KagentHarnessSummarizer](#kagentharnesssummarizer)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | MaxLength: 253 <br />MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br />**Required** <br /> |
+| `namespace` _string_ |  |  | MaxLength: 63 <br />Pattern: `^$\|^[a-z0-9]([-a-z0-9]*[a-z0-9])?$` <br /> |
+
 #### OllamaConfig
 
 OllamaConfig contains Ollama-specific configuration options
@@ -876,7 +877,7 @@ RemoteMCPServer is the Schema for the RemoteMCPServers API.
 | `kind` _string_ | Kind is a string value representing the REST resource this object represents.<br />Servers may infer this from the endpoint the client submits requests to.<br />Cannot be updated.<br />In CamelCase.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds |  |  |
 | `apiVersion` _string_ | APIVersion defines the versioned schema of this representation of an object.<br />Servers should convert recognized schemas to the latest internal value, and<br />may reject unrecognized values.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources |  |  |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
-| `spec` _[RemoteMCPServerSpec](#remotemcpserverspec)_ |  |  |  |
+| `spec` _[RemoteMCPServerSpec](#remotemcpserverspec)_ |  |  | AtMostOneOf: [actorJwt tokenPassthrough] <br /> |
 | `status` _[RemoteMCPServerStatus](#remotemcpserverstatus)_ |  |  |  |
 
 #### RemoteMCPServerProtocol
@@ -898,11 +899,15 @@ _Appears in:_
 
 RemoteMCPServerSpec defines the desired state of RemoteMCPServer.
 
+_Validation:_
+- AtMostOneOf: [actorJwt tokenPassthrough]
+
 _Appears in:_
 - [RemoteMCPServer](#remotemcpserver)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
+| `actorJwt` _[ActorJWT](#actorjwt)_ | ActorJWT authenticates as the executing Actor with Authorization: Bearer.<br />Substrate injects the token; tool discovery runs inside the Actor. |  |  |
 | `description` _string_ |  |  | **Required** <br /> |
 | `protocol` _[RemoteMCPServerProtocol](#remotemcpserverprotocol)_ |  | STREAMABLE_HTTP | Enum: [SSE STREAMABLE_HTTP] <br /> |
 | `url` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
