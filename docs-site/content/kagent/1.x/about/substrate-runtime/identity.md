@@ -12,6 +12,7 @@ A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies e
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
 - A caller that reaches [kagent's gRPC API](#the-kagent-control-plane) is assigned a principal by kagent, both for a {{< gloss "Session" >}}Session{{< /gloss >}} and for the resources that the API writes.
 - An agent's runtime calls the same API with a [token that Agent Substrate issues](#agent-runtime-calls).
+- A downstream service can receive a separate [Actor JWT](#downstream-actor-jwts) that identifies the executing Actor.
 - The components inside [Agent Substrate](#the-agent-substrate-plane) authenticate each other.
 
 ## The Kubernetes plane
@@ -90,6 +91,12 @@ An authenticated Actor can read its own Agent and use its own task state and mem
 The controller trusts the issuer in the `config.substrate.actorJwtIssuer` Helm value, which must match the `ateApi.actorJWTIssuer` value of the Agent Substrate chart. Both values default to `https://idp.ate-system.svc`, so change them only together. The controller fetches the issuer's signing keys at startup, and a controller that cannot reach the issuer does not start.
 
 Upgrade the controller and the runtime images together. An Actor snapshot from an earlier runtime image still sends an identity header that the controller no longer accepts, so you must recreate that snapshot after an upgrade.
+
+### Downstream Actor JWTs {#downstream-actor-jwts}
+
+The egress gateway can also mint an Actor JWT for a downstream model provider, MCP server, or EgressPolicy destination. This token identifies the executing Actor instead of the caller that invoked the agent. A downstream service can authorize the workload without trusting the user's bearer token.
+
+The ModelConfig, RemoteMCPServer, or EgressPolicy names the accepted audiences and the requested lifetime. The `kagent-runtime` audience remains reserved for controller calls and cannot be exported downstream. ModelConfig and RemoteMCPServer credentials are pinned to the revision that a Session uses. EgressPolicy credentials update running and suspended Actors in the same way as other EgressPolicy grants.
 
 ## The Agent Substrate plane
 

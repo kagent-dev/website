@@ -75,6 +75,33 @@ spec:
 
 Every model and MCP server that an agent reaches at the server's origin must also forward the caller's token. Otherwise, the Agent reports the `Compatible` condition as `False`. For more information, see [Forward the caller's token]({{< link path="setup/model-providers/about-model-providers#forward-the-callers-token" >}}).
 
+### Actor JWT authentication {#actor-jwt-authentication}
+
+An MCP server can authenticate the executing Actor instead of the caller. Set `spec.actorJwt` on the RemoteMCPServer when the server trusts the Agent Substrate issuer and authorizes requests by Actor identity.
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata:
+  name: actor-mcp-server
+  namespace: kagent
+spec:
+  description: An MCP server that authenticates the executing Actor.
+  url: https://mcp.example.com/mcp
+  protocol: STREAMABLE_HTTP
+  actorJwt:
+    audiences:
+      - mcp-api
+    expirationSeconds: 900
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `actorJwt.audiences` | Required. The audiences that the server accepts. The list must contain 1-16 unique, nonempty values. The `kagent-runtime` audience is reserved for controller calls, so the API server rejects it. |
+| `actorJwt.expirationSeconds` | Optional. The requested token lifetime, from `300` to `3600` seconds. Defaults to `900`. Agent Substrate refreshes the token at the gateway. |
+
+The agent sends the token as `Authorization: Bearer <token>`. A RemoteMCPServer cannot set both `actorJwt` and `tokenPassthrough`, and `headersFrom` cannot set its own `Authorization` header when `actorJwt` is enabled. The controller cannot authenticate as an Actor for global tool discovery. These tools do not appear in the UI tool picker. Agents discover the tools at runtime with their own identity.
+
 ## Subagents as tools
 
 A `subAgent` binding points at another AgentTemplate in the same namespace so that one agent can route work to another agent. The model reads the `description` when it decides whether to route work here. A description that states plainly what the bound agent is for therefore matters more than the detail of its configuration.

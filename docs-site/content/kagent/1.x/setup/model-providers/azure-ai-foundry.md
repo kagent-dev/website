@@ -89,6 +89,7 @@ kubectl describe modelconfig foundry-model-config -n kagent
 | ------------- | ---------- |
 | `apiKeySecret` is set | The API key from the referenced Secret. |
 | `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Foundry as the API key. Mutually exclusive with `apiKeySecret`. |
+| `actorJwt` is set | An Actor JWT minted by Agent Substrate and sent in the provider's credential header. Mutually exclusive with `apiKeySecret`, `apiKeySecretKey`, and `tokenPassthrough`. |
 
 > [!WARNING]
 > **Azure Workload Identity is not currently supported.** In earlier versions of kagent, omitting the credential fields fell back to Azure Workload Identity, which depended on an annotated ServiceAccount on the agent's pod. An agent now runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to federate an Azure identity onto. Supply an API key instead.

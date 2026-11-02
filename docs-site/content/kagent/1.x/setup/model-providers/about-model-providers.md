@@ -30,6 +30,38 @@ The egress gateway injects no credential for the provider's host, so the caller'
 
 Every model and MCP server that an agent reaches at the provider's origin must also forward the caller's token. Otherwise, the Agent reports the `Compatible` condition as `False`, with a message such as `destination "https://api.openai.com:443" mixes tokenPassthrough with clients that do not use it`. The condition is also `False` when a model or MCP server at that origin sets its own value for the header that the token replaces.
 
+### Authenticate as the executing Actor {#authenticate-as-the-executing-actor}
+
+Set `spec.actorJwt` to send an Actor JSON Web Token (JWT) to the model provider. Use this option when the provider endpoint is a gateway or service that trusts the Agent Substrate issuer. The endpoint authorizes the agent by its executing Actor instead of by the person who invoked it.
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: actor-authenticated-model
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: example-model
+  actorJwt:
+    audiences:
+      - model-api
+    expirationSeconds: 900
+  openAI:
+    baseUrl: https://models.example.com/v1
+```
+
+{{< reuse "kagent-docs/snippets/review-table.md" >}} The gateway sets the provider's credential header to the Actor JWT.
+
+| Field | Description |
+| ----- | ----------- |
+| `actorJwt.audiences` | Required. The audiences that the destination accepts. The list must contain 1-16 unique, nonempty values. The `kagent-runtime` audience is reserved for controller calls, so the API server rejects it. |
+| `actorJwt.expirationSeconds` | Optional. The requested token lifetime, from `300` to `3600` seconds. Defaults to `900`. Agent Substrate refreshes the token at the gateway. |
+
+`actorJwt` is mutually exclusive with `apiKeySecret`, `apiKeySecretKey`, and `tokenPassthrough`. Omit inactive credential fields entirely. The `tokenPassthrough: false` value still counts as setting the field. `defaultHeaders` cannot override the provider credential header that carries the Actor JWT.
+
+The option is available for `OpenAI`, `Anthropic`, `AzureOpenAI`, `Foundry`, and `Mistral`. The API server rejects `actorJwt` for `Bedrock`, `Gemini`, `Ollama`, `GeminiVertexAI`, `AnthropicVertexAI`, and `SAPAICore`. Those providers require AWS credentials, Google credentials, hosted-service credentials, or an OAuth exchange instead of a configurable credential header.
+
 ### Turn off model streaming
 
 The `kagent` harness streams its calls to the model by default, including OpenAI Chat Completions and Responses. An endpoint that rejects a streaming request fails every turn, so set `stream: false` on the ModelConfig to call it without streaming.
@@ -70,6 +102,7 @@ When a request is made to a provider, the gateway puts the credential in the hea
 | `Bedrock` bearer token | `authorization: Bearer <token>` |
 | `Ollama` API key, for an Ollama Cloud model | `authorization: Bearer *** |
 | `Mistral` API key | `authorization: Bearer *** |
+| `ModelConfig` Actor JWT | The provider's credential header |
 | A Secret-backed `RemoteMCPServer` header | The header that the server names |
 
 Substrate matches a destination on the exact DNS hostname, without path, port, or scheme. Two credentials that target the same hostname and header are rejected, including a conflict between an agent's model, a memory embedding model, and an MCP server. Give such origins distinct DNS names. A destination given as an IP address cannot carry an injected credential at all.

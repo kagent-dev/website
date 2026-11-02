@@ -293,6 +293,7 @@ Some supported combinations still carry restrictions.
 | `claude` with `Bedrock` | Does not accept any `bedrock` setting beyond `region`. |
 | `Bedrock` on any harness | The Secret must hold an `AWS_BEARER_TOKEN_BEDROCK` key. A Secret of IAM access keys is rejected with `cannot use gateway header injection`, because IAM signs each request locally. |
 | `codex` and `claude` with any provider | Neither harness accepts a ModelConfig that sets `defaultHeaders`, `tls`, or `tokenPassthrough`. |
+| `spec.actorJwt` on a ModelConfig | Available for `OpenAI`, `Anthropic`, `AzureOpenAI`, `Foundry`, and `Mistral`. Rejected for `Bedrock`, `Gemini`, `Ollama`, `AnthropicVertexAI`, `GeminiVertexAI`, and `SAPAICore`. |
 
 ## Tool and skill support
 

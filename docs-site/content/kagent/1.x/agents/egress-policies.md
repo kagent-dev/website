@@ -165,6 +165,48 @@ The gateway can add a credential from a Kubernetes Secret to each request for an
 
 To rotate the credential, update the Secret. The gateway reads the value from the Secret, so the agent's revision does not change.
 
+## Inject an Actor JWT {#inject-an-actor-jwt}
+
+Use `authentication.actorJwt` in an EgressPolicy when the destination trusts the Agent Substrate issuer and needs the executing Actor's identity. The gateway mints and refreshes the token, and replaces the placeholder header that the client sends.
+
+1. Create an EgressPolicy with an `actorJwt` authentication block for the destination.
+   ```bash
+   kubectl apply -f - <<EOF
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: EgressPolicy
+   metadata:
+     name: actor-ticket-api
+     namespace: kagent
+   spec:
+     destinations:
+       - origin: https://tickets.example.com
+         authentication:
+           header: Authorization
+           prefix: "Bearer "
+           actorJwt:
+             audiences:
+               - tickets-api
+             expirationSeconds: 900
+   EOF
+   ```
+
+   {{< reuse "kagent-docs/snippets/review-table.md" >}} The gateway sets the header to the prefix followed by the Actor JWT.
+
+   | Field | Description |
+   | ----- | ----------- |
+   | `authentication.header` | The request header that carries the credential, such as `Authorization` or `X-API-Key`. |
+   | `authentication.prefix` | Optional. Text that the gateway puts before the token. Include the trailing space, as in `"Bearer "`. |
+   | `authentication.actorJwt.audiences` | Required. The audiences that the destination accepts. The list must contain 1-16 unique, nonempty values. The `kagent-runtime` audience is reserved for controller calls, so the API server rejects it. |
+   | `authentication.actorJwt.expirationSeconds` | Optional. The requested token lifetime, from `300` to `3600` seconds. Defaults to `900`. Agent Substrate refreshes the token at the gateway. |
+
+2. Select the policy on the Agent or SandboxTemplate by using the patch command in [Inject a credential](#inject-a-credential). Include `actor-ticket-api` in `egressPolicyRefs`.
+
+3. In the script or SDK that sends the request, send the header with a placeholder value. The gateway replaces only a header that the request already sends. The gateway does not add a header that is missing.
+   ```bash
+   curl -H 'Authorization: Bearer kagent-credential-injected' \
+     https://tickets.example.com/tickets
+   ```
+
 ## Troubleshoot a grant
 
 The `EgressPoliciesApplied` condition on the Agent or SandboxTemplate reports whether kagent admitted the grants. This condition is independent of `Ready`. An Agent with a missing or invalid policy still reports `Ready`, and it still serves Sessions with its inferred destinations.
@@ -185,6 +227,7 @@ A grant conflict happens in the following cases:
 - Two policies set a different Secret or prefix for the same origin and header.
 - A grant sets a credential for an origin that already has a credential from the model or a tool. The credential from the model or the tool always takes precedence.
 - A grant sets a credential for an origin that uses token passthrough. Token passthrough and a Secret credential cannot share an origin.
+- A grant sets `secretKeyRef` and `actorJwt` in the same authentication block.
 - The compiled policy would exceed 256 rules.
 
 In a standalone Sandbox, a destination that no grant allows does not resolve. A client therefore reports a name-resolution error, not an HTTP error. For example, `curl` fails with `Could not resolve host` and exit code `6`. For how to find a denied request in the gateway's log, see [Diagnose a denied request]({{< link path="about/substrate-runtime/networking-and-egress#diagnose-a-denied-request" >}}).
@@ -217,7 +260,7 @@ The gateway keeps a credential out of the sandbox, but it cannot stop an allowed
 
 2. Delete the EgressPolicy resources and the Secret.
    ```bash
-   kubectl delete egresspolicy node-dependencies ticket-api -n kagent
+   kubectl delete egresspolicy node-dependencies ticket-api actor-ticket-api -n kagent
    kubectl delete secret ticket-auth -n kagent
    ```
 

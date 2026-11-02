@@ -112,8 +112,8 @@ A model provider or an MCP server usually requires an API key or token. The agen
 
 kagent builds these credentials from the following resources.
 
-- Every ModelConfig that sets an `apiKeySecret` becomes a credential on the rule for that model's host.
-- Every RemoteMCPServer whose `headersFrom` reads a Secret becomes a credential on the rule for its host.
+- Every ModelConfig that sets `spec.apiKeySecret` or `spec.actorJwt` becomes a credential on the rule for that model's host.
+- Every RemoteMCPServer whose `spec.headersFrom` reads a Secret, or whose `spec.actorJwt` is set, becomes a credential on the rule for its host.
 - Every EgressPolicy destination with an `authentication` block becomes a credential on the rule for its origin.
 
 kagent attaches the credential to the destination's own rule rather than adding a rule for it, and it refuses to compile a credential whose host is not already an allowed destination.

@@ -107,6 +107,7 @@ A link reaches Azure regardless of its media type. Inline bytes reach Azure as a
 | `apiKeySecret` is set | The API key from the referenced Secret. |
 | `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |
 | `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
+| `actorJwt` is set | An Actor JWT minted by Agent Substrate and sent in the `api-key` header. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`, `apiKeySecretKey`, and `tokenPassthrough`. |
 
 > [!WARNING]
 > **Azure Workload Identity is not currently supported.** In earlier versions of kagent, omitting the credential fields fell back to Azure Workload Identity, which depended on an annotated ServiceAccount on the agent's pod. An agent now runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to federate an Azure identity onto. Supply a credential with one of the configurations in the preceding table.
