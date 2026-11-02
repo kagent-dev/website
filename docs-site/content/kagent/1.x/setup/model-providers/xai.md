@@ -14,7 +14,7 @@ xAI's Grok models are served through an OpenAI-compatible API, so a {{< gloss "M
    export XAI_API_KEY=<your_api_key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create the Secret in the same namespace as the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-xai -n kagent --from-literal XAI_API_KEY=$XAI_API_KEY
    ```
@@ -49,7 +49,7 @@ For the rest of the settings that the `openAI` block accepts, see [OpenAI]({{< l
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate in the same namespace. To use the ModelConfig from another namespace, see [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}).
 
 ```yaml
 spec:

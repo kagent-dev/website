@@ -14,7 +14,7 @@ The `AzureOpenAI` provider calls an Azure OpenAI deployment. It differs from the
    export AZURE_OPENAI_API_KEY=<your-azure-openai-api-key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create the Secret in the same namespace as the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic azure-openai-api-key -n kagent --from-literal api-key=$AZURE_OPENAI_API_KEY
    ```
@@ -107,13 +107,14 @@ A link reaches Azure regardless of its media type. Inline bytes reach Azure as a
 | `apiKeySecret` is set | The API key from the referenced Secret. |
 | `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |
 | `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
+| `actorJwt` is set | A newly issued Actor token, sent in the `api-key` header. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`, `apiKeySecretKey`, and `tokenPassthrough`. For more information, see [Authenticate as the Actor]({{< link path="setup/model-providers/about-model-providers#authenticate-as-the-actor" >}}). |
 
 > [!WARNING]
 > **Azure Workload Identity is not currently supported.** In earlier versions of kagent, omitting the credential fields fell back to Azure Workload Identity, which depended on an annotated ServiceAccount on the agent's pod. An agent now runs as a Substrate Actor rather than as a pod that kagent controls, so there is no per-agent ServiceAccount to federate an Azure identity onto. Supply a credential with one of the configurations in the preceding table.
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate in the same namespace. To use the ModelConfig from another namespace, see [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}).
 
 ```yaml
 spec:

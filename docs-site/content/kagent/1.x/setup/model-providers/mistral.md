@@ -17,7 +17,7 @@ The `Mistral` provider calls the Mistral API directly. Mistral speaks the OpenAI
    export MISTRAL_API_KEY=<your_api_key>
    ```
 
-2. Create a Kubernetes Secret that stores the API key. Create it in the same namespace as the AgentTemplates that use it, such as `kagent`.
+2. Create a Kubernetes Secret that stores the API key. Create the Secret in the same namespace as the ModelConfig, such as `kagent`.
    ```bash
    kubectl create secret generic kagent-mistral -n kagent --from-literal MISTRAL_API_KEY=$MISTRAL_API_KEY
    ```
@@ -62,7 +62,7 @@ The `mistral` block takes the following optional settings. For every field, incl
 
 ## Use the ModelConfig
 
-Reference the ModelConfig by name from an AgentTemplate in the same namespace.
+Reference the ModelConfig by name from an AgentTemplate in the same namespace. To use the ModelConfig from another namespace, see [Share a ModelConfig across namespaces]({{< link path="setup/model-providers/about-model-providers#share-a-modelconfig-across-namespaces" >}}).
 
 ```yaml
 spec:

@@ -64,26 +64,21 @@ kubectl logs -n kagent deployment/kagent-controller
 
 ### Agent Substrate actor ingress {#agent-substrate-actor-ingress}
 
-`kagent install` configures actor ingress for you. For a direct Helm installation, set the kagent controller to use the HTTPS Agent Substrate router endpoint and mount its client certificate.
+The kagent controller sends A2A calls and Sandbox guest calls through the Agent Substrate router. `kagent install` sets the router values on both charts, and an [exported installation]({{< link path="operations/export-to-helm" >}}) carries them. When you write the Helm values yourself, set both charts as follows.
 
-```yaml
-controller:
-  substrateClientCertificate:
-    enabled: true
-config:
-  substrate:
-    routerUrl: https://atenet-router.ate-system.svc:443
-```
+1. In the kagent chart values, mount the controller's client certificate. The chart's default `config.substrate.routerUrl` already uses the router's HTTPS endpoint, and the controller presents this certificate on that endpoint.
+   ```yaml
+   controller:
+     substrateClientCertificate:
+       enabled: true
+   ```
 
-In the Agent Substrate chart values, allow the rendered controller ServiceAccount identity. The identity normally uses the kagent namespace and the `kagent-controller` ServiceAccount.
-
-```yaml
-atenetRouter:
-  ingressAllowedSPIFFEIDs:
-    - spiffe://cluster.local/ns/kagent/sa/kagent-controller
-```
-
-An empty `atenetRouter.ingressAllowedSPIFFEIDs` list denies actor ingress. Keep the identity aligned with the namespace, ServiceAccount, and trust domain that your controller pod certificate uses. A2A calls and Sandbox guest calls both use this router path.
+2. In the Agent Substrate chart values, admit the controller's SPIFFE identity. The identity is built from the trust domain, the kagent namespace, and the `kagent-controller` ServiceAccount. An empty list denies every call from the controller.
+   ```yaml
+   atenetRouter:
+     ingressAllowedSPIFFEIDs:
+       - spiffe://cluster.local/ns/kagent/sa/kagent-controller
+   ```
 
 ### Runtime defaults
 
@@ -294,6 +289,26 @@ Each value applies per controller replica, so installation-wide delivery capacit
 | `config.push.maxConcurrency` | `10` | The maximum number of callbacks that one controller replica delivers at the same time. |
 | `config.push.sendTimeout` | `5s` | How long each callback attempt waits for the receiver before the attempt fails. Specify seconds, such as `5s`. A Go duration such as `5000ms` is not accepted. |
 | `config.push.recoveryInterval` | `60s` | How often each replica scans for callbacks that it missed and cleans up callback registrations that are no longer bound to a task. Specify seconds, such as `60s`. |
+
+## Customize UI probes {#customize-ui-probes}
+
+The UI image runs on a distroless base that has no shell and no `curl`, so an `exec` probe cannot run in the UI container. When you override `ui.startupProbe` or `ui.readinessProbe`, use an `httpGet` or `tcpSocket` probe. An override replaces the chart's default probe entirely. The defaults call `/health` on the `http` port.
+
+```yaml
+ui:
+  startupProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 1
+    periodSeconds: 5
+    failureThreshold: 20
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 30
+```
 
 ## Node operations
 
