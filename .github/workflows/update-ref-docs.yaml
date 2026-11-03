@@ -662,6 +662,8 @@ jobs:
           echo "Version-split conrefs (writing the $LINE span):"
           write_span_conref "$VERSIONS_DIR/kagent.md"          "$LINE" "$KAGENT_VERSION"
           write_span_conref "$VERSIONS_DIR/agent-substrate.md" "$LINE" "$SUBSTRATE_VERSION"
+          # The Agent Substrate chart is published at the same version as the release.
+          write_span_conref "$VERSIONS_DIR/agent-substrate-chart.md" "$LINE" "$SUBSTRATE_VERSION"
           write_span_conref "$VERSIONS_DIR/max-kube.md"        "$LINE" "$MAX_KUBE"
 
           # Flat conrefs, read only by 1.x pages. On a 0.x run their values
@@ -1235,6 +1237,7 @@ jobs:
             | ------ | ----- | ------ |
             | `kagent` (${{ env.LINE }} span) | `${{ env.KAGENT_VERSION }}` | the release tag this run documents |
             | `agent-substrate` (${{ env.LINE }} span) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target |
+            | `agent-substrate-chart` (${{ env.LINE }} span) | `${{ env.SUBSTRATE_VERSION }}` | `go/go.mod` replace target, the same as `agent-substrate` |
             | `max-kube` (${{ env.LINE }} span) | `${{ env.MAX_KUBE }}` | `Makefile` `KIND_IMAGE_VERSION` |
             ${{ env.FLAT_CONREF_ROWS }}
 

@@ -171,7 +171,7 @@ When you [restrict kagent to specific namespaces]({{< link path="operations/mult
 
 ## Expose the UI outside the cluster
 
-Port-forwarding suits local access and stops when you close the terminal. For a deployment that a team reaches, change how the chart publishes the service. Add any of the following values to the `helm upgrade --install kagent` command from [Install kagent]({{< link path="setup/installation#install-kagent" >}}).
+Port-forwarding suits local access and stops when you close the terminal. For a deployment that a team reaches, change how the chart publishes the service. Add any of the following values to the `helm upgrade --install kagent` command from [Install kagent with Helm]({{< link path="setup/installation#install-kagent-helm" >}}).
 
 ### LoadBalancer service
 

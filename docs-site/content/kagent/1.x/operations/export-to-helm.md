@@ -15,7 +15,7 @@ The export contains only the Helm releases. `kagent install` also creates the Ag
 
 ## Before you begin
 
-1. Install kagent with the kagent CLI, as described in [Install kagent]({{< link path="setup/installation#install-kagent" >}}). Keep the CLI configuration file that passes Helm values to `kagent install`, and the values files that it references. The CLI reads the configuration file from one of the following locations:
+1. Install kagent with the kagent CLI, as described in [Install with the CLI]({{< link path="setup/installation#install-kagent" >}}). Keep the CLI configuration file that passes Helm values to `kagent install`, and the values files that it references. The CLI reads the configuration file from one of the following locations:
    * The path that you passed with the `--config` flag, such as `kagent-config.yaml`.
    * When you omit `--config`, `$XDG_CONFIG_HOME/kagent/config.yaml` on Linux, or `~/.config/kagent/config.yaml` when `XDG_CONFIG_HOME` is not set. On macOS, `~/Library/Application Support/kagent/config.yaml`.
 
@@ -80,4 +80,4 @@ The `install.sh` script runs `helm upgrade --install` for each release, in insta
 
 ## Manage the installation with Helm
 
-To change a value after you apply the export, edit the values file for that release in the exported directory, and run `install.sh` again. Commit the change to the repository so that the directory stays the record of the Helm releases.
+After you apply the export, manage each release with `helm upgrade`. The export moves the management of the releases from `kagent install` to Helm once, so do not run `install.sh` again. To upgrade to a later release, follow [Upgrade]({{< link path="operations/upgrade" >}}).
