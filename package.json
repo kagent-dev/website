@@ -48,11 +48,11 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.7.0",
     "tailwindcss-animate": "^1.0.7",
-    "unist-util-visit": "^5.0.0"
+    "unist-util-visit": "^5.2.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@opennextjs/cloudflare": "^1.20.13",
+    "@opennextjs/cloudflare": "^1.20.15",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -61,7 +61,7 @@
     "postcss": "^8.5.23",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "wrangler": "^4.152.0",
+    "wrangler": "^4.156.0",
     "yaml-loader": "^0.9.0"
   },
   "overrides": {
