@@ -43,7 +43,7 @@ Complete every step in this section before you change any release. The steps mak
    ```
    For an installation that you exported from the kagent CLI, the `kagent-values.yaml` file contains your model provider API key in plain text. Store the files securely.
 
-6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To step through an earlier release first, set the versions of that release.
+6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade incrementally through an earlier release first, set the versions of that release.
    ```bash
    export KAGENT_VERSION={{< reuse "kagent-docs/versions/kagent.md" >}}
    export SUBSTRATE_VERSION={{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}

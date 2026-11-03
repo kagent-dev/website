@@ -89,7 +89,7 @@ A Harness resource names exactly one of the following four harnesses, and that c
 
 The harnesses accept different model providers, which [Model provider support](#model-provider-support) lists, and they accept different AgentTemplate features, which [Tool and skill support](#tool-and-skill-support) lists.
 
-The agent chat in the kagent UI offers file attachments only on the `kagent` harness. An agent on a `byo`, `codex`, or `claude` Harness cannot attach files in the chat. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+The agent chat in the kagent UI offers file attachments only on the `kagent` harness. An agent on a `byo`, `codex`, or `claude` Harness cannot attach files in the chat. For the file types and size limits that the UI enforces, see [Attach files to a message]({{< link path="ui/launch-ui#attach-files-to-a-message" >}}).
 
 ### kagent harness
 

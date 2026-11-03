@@ -8,4 +8,4 @@
 
 The runtime refuses a link whose scheme is not `http` or `https`. When the newest user message includes such a link, the turn fails with `cannot send link "<uri>" with media type "<type>": this provider integration can only pass http and https links`. A link in an older message does not fail the turn, because the runtime sends links from older messages as bare URLs. A model with a fetch tool can still retrieve the file.
 
-When a link or an inline PDF or Office file has a display name, the runtime adds a text part that reads `File: <name>` immediately before the file part. An inline image does not get this text part. For the file types and sizes that the UI accepts, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+When a link or an inline PDF or Office file has a display name, the runtime adds a text part that reads `File: <name>` immediately before the file part. An inline image does not get this text part. For the file types and sizes that the UI accepts, see [Attach files to a message]({{< link path="ui/launch-ui#attach-files-to-a-message" >}}).
