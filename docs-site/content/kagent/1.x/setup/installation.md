@@ -12,21 +12,7 @@ author: kagent.dev
 
 ## Before you begin
 
-1. Install the following CLI tools.
-   * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
-   * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
-   * The kagent CLI, matched to the release that these docs cover.
-     ```bash
-     curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
-     kagent version
-     ```
-
-2. Set your model provider API key. The examples in this guide use OpenAI. For other providers, see [Configure model providers]({{< link path="setup/model-providers" >}}).
-   ```bash
-   export OPENAI_API_KEY="your-api-key-here"
-   ```
-
-3. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
+1. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
 
    {{< tabs >}}
    {{% tab name="Local kind cluster" %}}
@@ -54,13 +40,29 @@ author: kagent.dev
    {{% /tab %}}
    {{< /tabs >}}
 
-## Install with the CLI {#install-kagent}
+2. Set your model provider API key. The examples in this guide use OpenAI. For other providers, see [Configure model providers]({{< link path="setup/model-providers" >}}).
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
 
-Install kagent with the kagent CLI for an evaluation. For a production installation that Helm manages from the start, [install with Helm](#install-with-helm) instead.
+3. Choose an installation method.
+   * **CLI**: For an evaluation, use the `kagent install` command of the kagent CLI. The CLI also deploys a development PostgreSQL database. Follow the steps in [Install with the CLI](#install-kagent).
+   * **Helm**: For a production installation that Helm manages from the start, install each Helm chart yourself, against a PostgreSQL database that you provide. Follow the steps in [Install with Helm](#install-with-helm).
+
+## Install with the CLI {#install-kagent}
 
 The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertificate controller, a development PostgreSQL database, and kagent in the correct order. The CLI also creates the Agent Substrate identity material and database connection Secrets that the releases need.
 
-1. Save a Helm values file that enables gRPC server reflection, so that guides that use `grpcurl` can discover the controller API.
+1. Install the following CLI tools. The kagent CLI runs `helm` to install each chart.
+   * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
+   * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
+   * The kagent CLI, matched to the release that these docs cover.
+     ```bash
+     curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
+     kagent version
+     ```
+
+2. Save a Helm values file that enables gRPC server reflection, so that guides that use `grpcurl` can discover the controller API.
    ```bash
    cat > kagent-values.yaml <<EOF
    config:
@@ -75,7 +77,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
      clusterDomain: corp.example
    ```
 
-2. Save a CLI configuration file that points the installer at those values. `kagent install` does not take Helm flags of its own, so chart values reach it through this file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
+3. Save a CLI configuration file that points the installer at those values. `kagent install` does not take Helm flags of its own, so chart values reach it through this file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
    ```bash
    cat > kagent-config.yaml <<EOF
    install:
@@ -89,14 +91,14 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
    | `install.kagent.valuesFiles` | The Helm values files that the installer passes to the kagent chart, in order. The last file wins. |
    | `install.bundledPostgresImage` | Optional. The image of the development PostgreSQL database that the installer deploys, for both the database container and its TLS reloader. Defaults to `postgres:18-alpine`, pinned by digest. To pull the image from a mirror, such as in an air-gapped cluster, set the full image reference, such as `mirror.example.com/library/postgres:18-alpine`. |
 
-3. Install kagent.
+4. Install kagent.
    ```bash
    kagent --config kagent-config.yaml install --namespace kagent
    ```
 
    The command reads your provider API key, installs Agent Substrate into `ate-system`, and deploys PostgreSQL as `kagent-postgresql` in the kagent namespace. It then connects kagent and Agent Substrate to that database with Pod Certificates. The development database runs the stock `postgres` image. That image does not include the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs.
 
-4. Wait for the controller to roll out.
+5. Wait for the controller to roll out.
    ```bash
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
@@ -109,9 +111,11 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
 
 ## Install with Helm {#install-with-helm}
 
-Install the CRDs, the identity material, the database, Agent Substrate, and kagent in order. The sections run in order, because each section creates objects that a later section needs. A Helm installation connects to a PostgreSQL database that you provide. The charts do not deploy a database.
+Install the CRDs, the identity material, the database, Agent Substrate, and kagent. Follow these sections in that order, because each section creates objects that a later section needs. Note that as opposed to a CLI installation, a Helm installation connects to a PostgreSQL database that you provide. The charts do not deploy a database.
 
-1. Install the following CLI tools in addition to `helm` and `kubectl`. The Helm installation does not need the kagent CLI.
+1. Install the following CLI tools. The Helm installation does not need the kagent CLI.
+   * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
+   * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
    * [`jq`](https://jqlang.org/download/), to read the cluster's token issuer and the root certificate out of the generated certificate authority (CA) pool.
    * [`openssl`](https://www.openssl.org), to convert the root certificate to Privacy Enhanced Mail (PEM) format.
    * [`psql`](https://www.postgresql.org/download/) version 15 or later, to run the database setup scripts.
@@ -124,7 +128,7 @@ Install the CRDs, the identity material, the database, Agent Substrate, and kage
      kubectl ate --help
      ```
 
-2. Prepare a PostgreSQL instance at version 15 or later, and create an empty database for kagent, such as `kagent`. kagent and Agent Substrate share the database, each in its own schema. Save the connection string of a database administrator.
+2. Prepare a PostgreSQL instance at version 15 or later, and create an empty database for kagent, such as `kagent`. kagent and Agent Substrate share the database, each in its own schema. The instance must accept connections from pods in the `kagent` and `ate-system` namespaces. Save the connection string of a database administrator.
    ```bash
    export ADMIN_CONNECTION_STRING="postgresql://<admin-user>:<admin-password>@<host>:5432/kagent?sslmode=verify-full"
    ```
@@ -153,84 +157,76 @@ The kagent and Agent Substrate custom resource definitions (CRDs) install from t
 
 Agent Substrate authenticates its components with mutual Transport Layer Security (mTLS). You create the CA and JSON Web Token (JWT) pools that sign and verify those identities, and then install the controller that issues certificates from them. No Helm chart creates the pools. The `kubectl-ate` plugin writes each pool to a Kubernetes Secret, and the components that mount those Secrets stay in `ContainerCreating` until the pools exist.
 
-1. Label the `kagent` namespace so that the kagent controller can reach the Agent Substrate API server. Agent Substrate installs NetworkPolicies that admit only the namespaces that carry the `ate.dev/api-access=true` label. Without the label, the controller fails to connect at startup with `context deadline exceeded`.
-   ```bash
-   kubectl label namespace kagent ate.dev/api-access=true
-   ```
+1. Create the CA and JWT pools. Each command writes one pool Secret that Agent Substrate reads when it signs or verifies an identity. `make-ca-pool` and `make-jwt-pool` fail when the pool Secret already exists. To rotate a pool, delete its Secret and run the command again.
 
-2. Create the CA pools that sign service DNS certificates, database login certificates, and pod identity certificates. `make-ca-pool` fails when the pool Secret already exists. To rotate a pool, delete its Secret and run the command again.
-   ```bash
-   kubectl create namespace podcertificate-controller-system --dry-run=client -o yaml | kubectl apply -f -
-   for pool in service-dns-ca-pool postgres-ca-pool pod-identity-ca-pool; do
-     kubectl ate admin make-ca-pool --ca-id=1 --key-type=ED25519 \
-       --name=${pool} --secret-namespace=podcertificate-controller-system
-   done
-   ```
+   1. Create the namespace that holds the signer pools, then the CA pools that sign service DNS certificates, database login certificates, and pod identity certificates.
+      ```bash
+      kubectl create namespace podcertificate-controller-system --dry-run=client -o yaml | kubectl apply -f -
+      for pool in service-dns-ca-pool postgres-ca-pool pod-identity-ca-pool; do
+        kubectl ate admin make-ca-pool --ca-id=1 --key-type=ED25519 \
+          --name=${pool} --secret-namespace=podcertificate-controller-system
+      done
+      ```
 
-3. Create the actor identity pools, which Agent Substrate uses to issue and verify actor credentials.
-   ```bash
-   kubectl ate admin make-jwt-pool --key-id=1 \
-     --name=actor-id-jwt-pool --secret-namespace=ate-system
-   kubectl ate admin make-ca-pool --ca-id=1 --key-type=ED25519 \
-     --name=actor-id-ca-pool --secret-namespace=ate-system
-   ```
+   2. Create the actor identity pools that Agent Substrate uses to issue and verify actor credentials.
+      ```bash
+      kubectl ate admin make-jwt-pool --key-id=1 \
+        --name=actor-id-jwt-pool --secret-namespace=ate-system
+      kubectl ate admin make-ca-pool --ca-id=1 --key-type=ED25519 \
+        --name=actor-id-ca-pool --secret-namespace=ate-system
+      ```
 
-4. Create the egress CA pool. Agent Substrate terminates outbound TLS at its egress gateway to inject model provider and Model Context Protocol (MCP) credentials. Without this pool, every outbound HTTPS call from an agent fails.
-   ```bash
-   kubectl ate admin make-ca-pool --ca-id=1 --key-type=ECDSAP256 \
-     --name=egress-mitm-ca-pool --secret-namespace=ate-system
-   ```
+   3. Create the egress CA pool. Agent Substrate terminates outbound TLS at its egress gateway to inject model provider and Model Context Protocol (MCP) credentials. Without this pool, every outbound HTTPS call from an agent fails.
+      ```bash
+      kubectl ate admin make-ca-pool --ca-id=1 --key-type=ECDSAP256 \
+        --name=egress-mitm-ca-pool --secret-namespace=ate-system
+      ```
 
-5. Extract the actor identity root certificate, and store it in the Secret that the Agent Substrate API server reads.
-   ```bash
-   actor_id_ca_root="$(kubectl get secret actor-id-ca-pool -n ate-system \
-     -o jsonpath='{.data.pool}' | base64 --decode \
-     | jq -r '.CAs[0].RootCertificateDER' | base64 --decode \
-     | openssl x509 -inform der -outform pem)"
+2. Configure the authentication that the Agent Substrate API server performs. The `kubernetes` provider accepts Kubernetes ServiceAccount tokens that are issued for the Agent Substrate API server audience.
 
-   kubectl create secret generic actor-id-ca-certs -n ate-system \
-     --from-literal=ca.crt="${actor_id_ca_root}"
-   ```
+   1. Extract the actor identity root certificate, and store it in the Secret that the Agent Substrate API server reads.
+      ```bash
+      actor_id_ca_root="$(kubectl get secret actor-id-ca-pool -n ate-system \
+        -o jsonpath='{.data.pool}' | base64 --decode \
+        | jq -r '.CAs[0].RootCertificateDER' | base64 --decode \
+        | openssl x509 -inform der -outform pem)"
 
-6. Read the issuer from the cluster. Kubernetes distributions advertise different issuers, and the `ate-api-authentication` ConfigMap takes a different form for each kind of issuer. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and later surfaces as `token issuer ... not trusted` on every `kubectl ate` call.
-   ```bash
-   k8s_issuer="$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)"
-   echo "${k8s_issuer}"
-   ```
-   * An in-cluster issuer, such as `https://kubernetes.default.svc.cluster.local` on a kind cluster, does not publish a discovery document that a public client can reach.
-   * An external issuer, such as the `https://container.googleapis.com/...` issuer that a GKE cluster advertises, is reachable on the public internet.
+      kubectl create secret generic actor-id-ca-certs -n ate-system \
+        --from-literal=ca.crt="${actor_id_ca_root}"
+      ```
 
-7. Create the authentication configuration that the Agent Substrate API server reads. The `kubernetes` provider accepts Kubernetes ServiceAccount tokens that are issued for the Agent Substrate API server audience.
+   2. Read the issuer from the cluster, and note which kind it is. Kubernetes distributions advertise different issuers, and the `ate-api-authentication` ConfigMap takes a different form for each kind of issuer. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and later surfaces as `token issuer ... not trusted` on every `kubectl ate` call.
+      ```bash
+      k8s_issuer="$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)"
+      echo "${k8s_issuer}"
+      ```
+      * An in-cluster issuer, such as `https://kubernetes.default.svc.cluster.local` on a kind cluster, does not publish a discovery document that a public client can reach.
+      * An external issuer, such as the `https://container.googleapis.com/...` issuer that a GKE cluster advertises, is reachable on the public internet.
 
-   {{< tabs >}}
-   {{% tab name="In-cluster issuer" %}}
-   `certificateAuthorityFile` and `discoveryTokenFile` configure the API server to use its own projected ServiceAccount certificate authority and token.
-   ```bash
-   kubectl create configmap ate-api-authentication -n ate-system \
-     --from-literal=authentication.yaml="jwtProviders:
-   - name: kubernetes
-     issuer: ${k8s_issuer}
-     audiences: [api.ate-system.svc]
-     certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-     discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-   "
-   ```
-   {{% /tab %}}
+   3. Create the authentication configuration for your issuer.
 
-   {{% tab name="External issuer" %}}
-   Omit `certificateAuthorityFile` and `discoveryTokenFile`. `certificateAuthorityFile` replaces the client's root certificate authorities with the cluster's own, so the TLS handshake with an external issuer fails when the field is set.
-   ```bash
-   kubectl create configmap ate-api-authentication -n ate-system \
-     --from-literal=authentication.yaml="jwtProviders:
-   - name: kubernetes
-     issuer: ${k8s_issuer}
-     audiences: [api.ate-system.svc]
-   "
-   ```
-   {{% /tab %}}
-   {{< /tabs >}}
+      * For an in-cluster issuer, `certificateAuthorityFile` and `discoveryTokenFile` configure the API server to use its own projected ServiceAccount certificate authority and token.
+        ```bash
+        kubectl create configmap ate-api-authentication -n ate-system \
+          --from-literal=authentication.yaml="jwtProviders:
+        - name: kubernetes
+          issuer: ${k8s_issuer}
+          audiences: [api.ate-system.svc]
+          certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        "
+        ```
+      * For an external issuer, omit both lines. `certificateAuthorityFile` replaces the client's root certificate authorities with the cluster's own, so the TLS handshake with an external issuer fails when the field is set.
+        ```bash
+        kubectl create configmap ate-api-authentication -n ate-system \
+          --from-literal=authentication.yaml="jwtProviders:
+        - name: kubernetes
+          issuer: ${k8s_issuer}
+          audiences: [api.ate-system.svc]
+        "
+        ```
 
-8. Install the Agent Substrate PodCertificate controller, which signs the certificates that components present to each other.
+3. Install the Agent Substrate PodCertificate controller, which signs the certificates that components present to each other.
    ```bash
    helm upgrade --install substrate-podcert \
      oci://ghcr.io/kagent-dev/substrate/helm/substrate-podcert \
@@ -239,7 +235,7 @@ Agent Substrate authenticates its components with mutual Transport Layer Securit
      --wait --timeout 5m
    ```
 
-### Prepare the database {#prepare-the-database}
+### Prepare the PostgreSQL database {#prepare-postgres}
 
 kagent and Agent Substrate each connect with an owner login, which applies migrations, and a read/write login, which serves runtime queries. Each project ships a `psql` script that creates its roles, logins, and schema. Each script reads the passwords from environment variables and must run in one transaction.
 
@@ -319,9 +315,24 @@ The `substrate` release installs the Agent Substrate control plane and data plan
    EOF
    ```
 
-2. Confirm that the Agent Substrate API server connected to the database. The API server writes `PostgreSQL migrations ready` to its log.
+2. Verify that Agent Substrate is running.
    ```bash
-   kubectl logs -n ate-system deployment/ate-api-server -c ate-api-server | grep "PostgreSQL migrations ready"
+   kubectl get pods -n ate-system
+   ```
+   In the output, verify that every pod reports `Running`. The `rustfs-bucket-init` pod belongs to a Job and reports `Completed`.
+   ```console
+   NAME                                       READY   STATUS      RESTARTS   AGE
+   ate-api-server-d8c6d5b57-lzcbg             2/2     Running     0          74s
+   ate-api-server-d8c6d5b57-twzg8             2/2     Running     0          74s
+   ate-controller-64ff6c8445-mjz5x            1/1     Running     0          75s
+   ate-idp-server-66fbf4d6c5-9hgmj            1/1     Running     0          75s
+   ate-idp-server-66fbf4d6c5-vhrjl            1/1     Running     0          75s
+   atelet-m6pkj                               2/2     Running     0          75s
+   atenet-egress-787d98dc77-s92ws             1/1     Running     0          74s
+   atenet-router-556c5ff957-9f4jt             1/1     Running     0          75s
+   k8s-credential-provider-5c8b8fb5b6-5gb6f   1/1     Running     0          75s
+   rustfs-545745bdf6-kc8g6                    1/1     Running     0          75s
+   rustfs-bucket-init-v6sf4                   0/1     Completed   0          75s
    ```
 
 ### Install kagent with Helm {#install-kagent-helm}
@@ -334,7 +345,12 @@ Install the kagent control plane into the `kagent` namespace. The controller app
      --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY}"
    ```
 
-2. Install kagent. The command sets the following values.
+2. Label the `kagent` namespace so that the kagent controller can reach the Agent Substrate API server. Agent Substrate installs NetworkPolicies that deny ingress to the `ate-system` namespace by default. The policy of the API server admits only the namespaces that carry the `ate.dev/api-access=true` label. Without the label, the controller fails to connect at startup with `context deadline exceeded`.
+   ```bash
+   kubectl label namespace kagent ate.dev/api-access=true
+   ```
+
+3. Install kagent. The command sets the following values.
    * `controller.substrateClientCertificate.enabled` mounts the certificates that the controller presents to the Agent Substrate API server, and the trust bundle that verifies the server.
    * `substrateWorkerPool` creates the `kagent-default` WorkerPool. `workerImage` tags the Worker image with the Agent Substrate version, because the Agent Substrate controller starts each Worker with the flags of its own version.
    ```bash
@@ -352,7 +368,7 @@ Install the kagent control plane into the `kagent` namespace. The controller app
    EOF
    ```
 
-3. Wait for the controller to roll out.
+4. Wait for the controller to roll out.
    ```bash
    kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
    ```
