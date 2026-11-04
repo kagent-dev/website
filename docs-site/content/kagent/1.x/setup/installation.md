@@ -56,7 +56,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
 1. Install the following CLI tools. The kagent CLI runs `helm` to install each chart.
    * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
    * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
-   * The kagent CLI, matched to the release that these docs cover.
+   * `kagent`, the command line tool of the same version as the kagent release that you want to install.
      ```bash
      curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
      kagent version
@@ -195,7 +195,7 @@ Agent Substrate authenticates its components with mutual Transport Layer Securit
         --from-literal=ca.crt="${actor_id_ca_root}"
       ```
 
-   2. Read the issuer from the cluster, and note which kind it is. Kubernetes distributions advertise different issuers, and the `ate-api-authentication` ConfigMap takes a different form for each kind of issuer. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and later surfaces as `token issuer ... not trusted` on every `kubectl ate` call.
+   2. Determine whether the issuer for the cluster is an internal or external issuer. Kubernetes distributions advertise different issuers, and the `ate-api-authentication` ConfigMap takes a different form for each kind of issuer. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and later surfaces as `token issuer ... not trusted` on every `kubectl ate` call.
       ```bash
       k8s_issuer="$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)"
       echo "${k8s_issuer}"
@@ -280,6 +280,29 @@ kagent and Agent Substrate each connect with an owner login, which applies migra
    kubectl create secret generic substrate-postgres-readwrite -n ate-system \
      --from-literal=readWriteConnectionString="postgresql://substrate_readwrite_user:${SUBSTRATE_READWRITE_PASSWORD}@<host>:5432/kagent?sslmode=verify-full"
    ```
+   The `sslmode=verify-full` setting makes each component verify the server certificate of the database against a root certificate. How you provide that root certificate depends on the certificate authority (CA) that signed the server certificate.
+   * For a publicly trusted CA, add `sslrootcert=system` to each connection string. Each component then verifies the server certificate against the root certificates in its container image.
+   * For a private CA, such as the Amazon RDS CA, kagent reads the CA certificate from a file that you mount on the controller. Agent Substrate cannot mount a CA file in this release, so the Agent Substrate connection strings cannot verify a server certificate that a private CA signed.
+     <!-- REVIEW: Agent Substrate chart gap, tracked in https://github.com/kagent-dev/substrate/issues/125. Replace the preceding sentence with the procedure when the chart can mount a CA file. -->
+     1. Store the CA certificate in a Secret.
+        ```bash
+        kubectl create secret generic kagent-postgres-ca -n kagent \
+          --from-file=ca.crt=<path-to-ca-certificate>
+        ```
+     2. Add `sslrootcert=/run/postgres-ca/ca.crt` to both kagent connection strings.
+     3. When you [install kagent](#install-kagent-helm), add the following values to the command. The values mount the `kagent-postgres-ca` Secret on the controller as a read-only volume at `/run/postgres-ca`. The `sslrootcert` setting in the kagent connection strings reads the CA certificate from that path.
+        ```yaml
+        controller:
+          volumes:
+            - name: postgres-ca
+              secret:
+                secretName: kagent-postgres-ca
+          volumeMounts:
+            - name: postgres-ca
+              mountPath: /run/postgres-ca
+              readOnly: true
+        ```
+
    For the other database settings, such as the connection pool and the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs, see [Use an external PostgreSQL instance]({{< link path="operations/operational-considerations#use-an-external-postgresql-instance" >}}).
 
 ### Install Agent Substrate
