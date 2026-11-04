@@ -19,7 +19,7 @@ kagent stores schedules in its database, not as Kubernetes resources. You manage
 The kagent UI builds the cron expression from a form, so the UI is the simplest way to create a schedule.
 
 1. [Open the kagent UI]({{< link path="ui/launch-ui" >}}).
-2. In the navigation, click **Schedules**, and then click **New Schedule**. You can also open an agent and click **Create a schedule** on its **Schedules** card.
+2. In the navigation, click **Schedules**, and then click **New Schedule**. When an agent has no schedules yet, you can also open its **Agent Details** page and click **Create a schedule** on the **Schedules** card.
 3. In the **Agent** list, select the agent to run.
 4. Optional: In **Schedule Name**, enter a name of up to 200 characters.
 5. In **Time zone**, enter an IANA time zone name, such as `America/New_York`. When the field is empty, the schedule uses UTC.
@@ -32,11 +32,11 @@ The kagent UI builds the cron expression from a form, so the UI is the simplest 
 9. To create the schedule without running it, turn off **Enable Schedule**.
 10. Click **Create schedule**.
 
-The **Schedules** page lists the new schedule with its status and its next execution time, in your browser's local time zone.
+The UI opens the page for the new schedule. The **Schedules** page lists the schedule with its status and its next execution time, in your browser's local time zone.
 
 ## Manage a schedule in the UI
 
-The page for one schedule holds the controls for that schedule and its execution history. To open the page, click the schedule's name on the **Schedules** page or on the agent's **Schedules** card.
+The page for one schedule holds the controls for that schedule and its execution history. To open the page, click the schedule's name on the **Schedules** page or on the **Schedules** card of the agent's **Agent Details** page.
 
 * **Run** starts an execution immediately. A manual run does not change the next scheduled execution, and it works on a paused schedule.
 * **Pause** stops future scheduled executions. **Resume** starts them again.
