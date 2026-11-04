@@ -257,8 +257,56 @@ export default function Home() {
             </div>
           ))}
         </div>
+        {/* One resource: inline AgentTemplate + platform-owned Harness */}
+        <div className="mt-4 grid overflow-hidden rounded-2xl border border-violet-400/25 bg-gradient-to-br from-violet-500/[0.10] via-ks-card to-ks-card lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="flex flex-col justify-center p-7 md:p-9">
+            <span className="w-fit rounded-full border border-violet-400/30 bg-violet-500/10 px-2.5 py-0.5 font-geistmono text-[11px] uppercase tracking-wider text-violet-200">Or just one</span>
+            <h3 className="mt-4 text-2xl font-medium tracking-tight md:text-3xl">One Agent. Behavior inline, runtime by reference.</h3>
+            <p className="mt-3 leading-relaxed text-ks-muted">
+              Skip the separate AgentTemplate: write the model, prompt and tools straight into the Agent with <code className="rounded bg-white/[0.07] px-1.5 py-0.5 font-geistmono text-[13px] text-white">template.inline</code>. The Harness stays a reference, so developers own what the agent does while the platform team owns where and how it runs.
+            </p>
+            <ul className="mt-6 space-y-3 text-sm">
+              <li className="flex gap-3">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-violet-400" />
+                <span><b className="font-medium text-white">template.inline</b> <span className="text-ks-muted">— what: model, prompt, MCP tools, skills. Owned by the developer.</span></span>
+              </li>
+              <li className="flex gap-3">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-sm bg-emerald-400" />
+                <span><b className="font-medium text-white">harnessRef</b> <span className="text-ks-muted">— where: runtime, warm WorkerPool, snapshots, sandbox. Owned by the platform team.</span></span>
+              </li>
+            </ul>
+            <code className="mt-6 block max-w-full overflow-x-auto whitespace-nowrap rounded-lg border border-ks-line bg-ks-bg px-3 py-2 font-geistmono text-[12.5px] text-white/80 sm:w-fit">
+              <span className="text-violet-300">$</span> kubectl apply -f pr-reviewer.yaml
+            </code>
+          </div>
+          <div className="min-w-0 border-t border-ks-line bg-ks-bg/70 p-5 font-geistmono text-[12.5px] leading-6 lg:border-l lg:border-t-0 md:p-7">
+            <div className="mb-3 flex items-center justify-between text-[11px] text-white/40">
+              <span>pr-reviewer.yaml</span>
+              <span>api.kagent.dev/v1alpha3</span>
+            </div>
+            <pre className="overflow-x-auto text-white/85">
+              <span className="text-white/50">apiVersion: api.kagent.dev/v1alpha3{"\n"}kind: Agent{"\n"}metadata:{"\n"}  name: pr-reviewer{"\n"}spec:{"\n"}</span>
+              <span className="-mx-2 block rounded-md border-l-2 border-violet-400 bg-violet-500/10 px-2">{`  template:
+    inline:
+      description: Reviews pull requests
+      modelConfig:
+        name: claude-sonnet
+      systemPrompt: |
+        You review pull requests. Flag
+        blocking issues before nits.
+      tools:
+      - mcp:
+          server:
+            kind: RemoteMCPServer
+            name: github-mcp`}</span>
+              <span className="-mx-2 mt-1 block rounded-md border-l-2 border-emerald-400 bg-emerald-500/10 px-2">{`  harnessRef:
+    name: secure   # platform team: kagent-high pool, gVisor`}</span>
+            </pre>
+          </div>
+        </div>
+
         <p className="mt-6 max-w-3xl text-sm leading-relaxed text-ks-muted">
-          Apply the three resources with kubectl or GitOps. The kagent controller compiles each Agent into an immutable Substrate ActorTemplate, and from there Substrate&apos;s own control and data plane handle scheduling and suspend/resume, so the Kubernetes API stays off the request path.
+          Either way, apply it with kubectl or GitOps. The kagent controller compiles each Agent into an immutable Substrate ActorTemplate, and from there Substrate&apos;s own control and data plane handle scheduling and suspend/resume, so the Kubernetes API stays off the request path.
         </p>
       </section>
 
