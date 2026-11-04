@@ -393,8 +393,8 @@ export default function Home() {
           <BtnDark href={SUBSTRATE}>About Agent Substrate</BtnDark>
         </div>
         {/* faint kagent mark: only the top half shows, fading into the footer */}
-        <div aria-hidden className="pointer-events-none mx-auto mt-20 flex h-[min(640px,50vw+120px)] w-full justify-center overflow-hidden [mask-image:linear-gradient(to_bottom,black_35%,transparent)]">
-          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={1440} height={1440} className="-mt-[min(220px,17vw)] w-[min(1280px,100vw)] max-w-none shrink-0 opacity-[0.22]" />
+        <div aria-hidden className="pointer-events-none mx-auto mt-20 flex h-[calc(50vw+120px)] w-full justify-center overflow-hidden [mask-image:linear-gradient(to_bottom,black_35%,transparent)] md:h-[calc(75vw+80px)] lg:h-[960px]">
+          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={1920} height={1920} className="-mt-[17vw] w-[100vw] max-w-none shrink-0 opacity-[0.22] md:-mt-[25vw] md:w-[150vw] lg:-mt-[330px] lg:w-[1920px]" />
         </div>
       </section>
 

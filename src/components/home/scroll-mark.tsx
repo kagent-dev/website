@@ -57,9 +57,9 @@ export default function ScrollMark() {
         x = lerp(x, end.x, t3);
         y = lerp(y, end.y, t3);
         s = lerp(s, end.s, t3);
-        o = t3 < 0.92 ? lerp(o, FOOTER, t3 / 0.92) : FOOTER * (1 - (t3 - 0.92) / 0.08);
+        o = t3 < 0.97 ? lerp(o, FOOTER, t3 / 0.97) : FOOTER * (1 - (t3 - 0.97) / 0.03);
       }
-      footer.style.opacity = String(FOOTER * clamp((t3 - 0.92) / 0.08));
+      footer.style.opacity = String(FOOTER * clamp((t3 - 0.97) / 0.03));
       return { x, y, s, o, g: lerp(0.5, 0, t1) };
     };
 
@@ -79,7 +79,8 @@ export default function ScrollMark() {
         render();
         return;
       }
-      const k = 0.12; // easing per frame
+      // ease more tightly near the footer so the handoff lines up exactly
+      const k = clamp(1 - (footer.getBoundingClientRect().top - window.innerHeight) / window.innerHeight) > 0 ? 0.3 : 0.12;
       let moving = false;
       for (const key of ["x", "y", "s", "o", "g"] as const) {
         const d = t[key] - cur[key];
