@@ -5,6 +5,7 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
+import SiteChrome from "@/components/site-chrome";
 import { GoogleTagManager } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
@@ -34,9 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <GoogleTagManager gtmId="GTM-KNRGVQPF" />
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Navbar />
+          <SiteChrome><Navbar /></SiteChrome>
           <main className="flex-1">{children}</main>
-          <Footer />
+          <SiteChrome><Footer /></SiteChrome>
         </ThemeProvider>
       </body>
     </html>
