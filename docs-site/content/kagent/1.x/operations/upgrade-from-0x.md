@@ -20,7 +20,7 @@ Review the following changes between 0.10.x and 1.0 before you continue. Each ch
 The two releases also cannot run side by side on one cluster. The group rename separates the custom resources, but both charts name their cluster-scoped ClusterRoles after the release, such as `kagent-getter-role`. When both releases use the default `kagent` release name, the 1.0 install collides with the ClusterRoles that 0.10.x owns.
 
 > [!WARNING]
-> Downgrading from 1.0 to 0.10.x is not supported.
+> Downgrading from 1.0 to 0.10.x is not supported. Treat the cutover as one-way, and keep the 0.10.x installation running until you have verified the new one.
 
 ## Before you begin
 
@@ -41,6 +41,8 @@ The two releases also cannot run side by side on one cluster. The group rename s
    ```
 
 5. Install [`yq`](https://github.com/mikefarah/yq#install) version 4 or later. The steps in [Resources that you can convert](#resources-that-you-can-convert) use `yq` to convert the exported resources.
+
+6. Install [`jq`](https://jqlang.org/download/). The steps in [Verify the new installation](#verify-the-new-installation) use `jq` to read the Session ID.
 
 ## Export your 0.10.x resources
 
@@ -152,14 +154,12 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
      --db-role kagent_owner
    ```
 
-   Example output:
+   Example output, in which every migration is applied and none are pending:
    ```console
    2 migration(s) applied, 0 pending
      core: 1 applied (at v1), 0 pending
      vector: 1 applied (at v1), 0 pending
    ```
-
-   Every migration is applied, and none are pending.
 
 ## Recreate your resources
 
@@ -247,9 +247,17 @@ The following resource kinds do not exist in 1.0. Plan for each one before you c
 
 Confirm that the resources resolved before you retire anything. Harness and AgentTemplate resources do not report their own statuses, so check for issues in the Agent that references them both.
 
-1. Check that each Agent is ready.
+1. Check that each Agent is ready. Every migrated Agent reports `True` in the `READY` column.
    ```bash
    kagent agent list
+   ```
+   Example output:
+   ```console
+   +----------------+-------+----------------------+
+   | NAME           | READY | CREATED              |
+   +----------------+-------+----------------------+
+   | my-first-agent | True  | 2026-11-04T23:30:29Z |
+   +----------------+-------+----------------------+
    ```
 
 2. Read the conditions on any Agent that is not ready. `ResolvedRefs` reports a missing reference. The most common cause is a Harness that references a WorkerPool that does not exist.
@@ -257,9 +265,18 @@ Confirm that the resources resolved before you retire anything. Harness and Agen
    kubectl describe agent <agent-name> -n kagent
    ```
 
-3. Create a Session against a migrated Agent and send it a message. A reply confirms the whole path, from the revision to the model credentials.
+3. Create a Session against a migrated Agent, and save its ID.
    ```bash
-   kagent agent session create --agent <agent-name>
+   export SESSION_ID=$(kagent agent session create --agent <agent-name> -o json | jq -r '.session.id')
+   ```
+
+4. Send a message to the Session. A reply confirms the whole path, from the revision to the model credentials.
+   ```bash
+   kagent agent invoke --session $SESSION_ID --task "Reply with the word ready."
+   ```
+   Example output:
+   ```console
+   ready
    ```
 
 ## Retire the 0.10.x installation

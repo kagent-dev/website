@@ -192,18 +192,19 @@ Each request in this section is a blocking `tools/call`. The reply returns after
    {
      "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
      "task_id": "01a06d0d-5fcf-7b07-aae3-1f470a8ee157",
-     "context_id": "ce5a10b8-7789-4ba7-8395-e60a339de763",
+     "context_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
      "state": "TASK_STATE_COMPLETED",
      "text": "4"
    }
    ```
 
-3. Save the Session ID from the reply.
+3. Save the Session ID and the task ID from the reply. The checkpoint steps use the task ID.
    ```bash
    export SESSION_ID=<session-id>
+   export HEAD_TASK_ID=<task-id>
    ```
 
-4. Send `Multiply that by 10.` to the same Session. This time, `session_id` replaces `agent`, because the call takes exactly one of the two. The word "that" points back to the earlier answer. The model can follow the reference because the transcript belongs to the Session. In the reply, `context_id` is unchanged and `task_id` is new, so the second turn continued the same Session.
+4. Send `Multiply that by 10.` to the same Session. This time, `session_id` replaces `agent`, because the call takes exactly one of the two. The word "that" points back to the earlier answer. The model can follow the reference because the transcript belongs to the Session. In the reply, `session_id` and `context_id` are unchanged and `task_id` is new, so the second turn continued the same Session. Save the new task ID.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -226,10 +227,13 @@ Each request in this section is a blocking `tools/call`. The reply returns after
    {
      "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
      "task_id": "01a06d0d-6864-79f1-a4cb-8547f77638ba",
-     "context_id": "ce5a10b8-7789-4ba7-8395-e60a339de763",
+     "context_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
      "state": "TASK_STATE_COMPLETED",
      "text": "40"
    }
+   ```
+   ```bash
+   export HEAD_TASK_ID=<task-id>
    ```
 
 ### Invoke without waiting
@@ -260,7 +264,7 @@ Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's 
      }'
    ```
 
-   The task has an opaque ID of the form `v1.<encoded reference>` that identifies the namespace, the Session, and the A2A task. Pass the ID back verbatim. Example output:
+   The task has an opaque ID of the form `v1.<encoded reference>` that identifies the Session and the A2A task. Pass the ID back verbatim. The checkpoint tools do not accept this ID. Example output:
    ```json
    {
      "taskId": "v1.eyJuYW1lc3BhY2UiOiJrYWdlbnQiLCJpbnN0YW5jZUlkIjoi...",
@@ -298,18 +302,30 @@ Declaring the `io.modelcontextprotocol/tasks` extension changes the same tool's 
      }'
    ```
 
-4. If the `status` reports `working` or `cancelled`, send the `tasks/get` request again after the interval that `pollIntervalMs` suggests. On a `working` task, `statusMessage` contains the raw task record, because the agent has not produced text yet, so do not present it as progress text. A status of `input_required` means the agent is waiting on a person. To answer it, see [Answer an agent's question by using curl](#answer-an-agents-question-by-using-curl).
+4. If the `status` reports `working`, send the `tasks/get` request again after the interval that `pollIntervalMs` suggests. On a `working` task, `statusMessage` contains the raw task record, because the agent has not produced text yet, so do not present it as progress text. A status of `input_required` means the agent is waiting on a person. To answer it, see [Answer an agent's question by using curl](#answer-an-agents-question-by-using-curl). A status of `cancelled` means that a `tasks/cancel` call stopped the run, so stop polling.
 
-5. When the `status` reads `completed`, stop polling. Read `status`, not `resultType`, to decide that a run is over, because a paused task reports `resultType` as `complete` while its `status` is still `input_required`. The `result` field contains the same content that a blocking call would have returned as both `content` and `structuredContent`. Example output:
+5. When the `status` reads `completed`, stop polling. Read `status`, not `resultType`, to decide that a run is over, because a paused task reports `resultType` as `complete` while its `status` is still `input_required`. The `result` field contains the same `content` and `structuredContent` that a blocking call returns. A run that fails also reports `completed`, so read `structuredContent.state` to tell success from failure. Example output:
    ```json
    {
      "status": "completed",
-     "statusMessage": "1, 2, 3.",
+     "statusMessage": "1, 2, 3",
      "resultType": "complete",
      "result": {
-       "content": [{ "type": "text", "text": "1, 2, 3." }]
+       "content": [{ "type": "text", "text": "1, 2, 3" }],
+       "structuredContent": {
+         "session_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+         "task_id": "01a06d0d-6f2a-7c41-9b5e-31d0c2a7e8f4",
+         "context_id": "01a068e3-aeb6-7abc-8d6f-5ba9becd3143",
+         "state": "TASK_STATE_COMPLETED",
+         "text": "1, 2, 3"
+       }
      }
    }
+   ```
+
+6. Save the `structuredContent.task_id` value. The checkpoint steps use this task ID, not the `v1.` task ID.
+   ```bash
+   export HEAD_TASK_ID=<task-id>
    ```
 
 
@@ -404,7 +420,7 @@ For the pause kinds, the approval model, and what the agent receives, see [Human
 
 The checkpoint tools pin a Session's state. These tools do not need the tasks extension, so their requests omit `_meta`.
 
-1. Create a checkpoint of the latest finished turn. `expected_head_task_id` identifies the turn to pin. If the Session has advanced past that turn, the call fails. Use the `$TASK_ID` that an earlier invocation returned. `request_id` is an idempotency key, so a repeated call with the same value returns the existing checkpoint.
+1. Create a checkpoint of the latest finished turn. `expected_head_task_id` identifies the turn to pin. If the Session has advanced past that turn, the call fails. Use the `$HEAD_TASK_ID` from the latest turn. The `v1.` task ID that `tasks/get` uses fails with `conversation advanced beyond the expected task`. `request_id` is an idempotency key, so a repeated call with the same value returns the existing checkpoint.
    ```bash
    curl -s -X POST http://localhost:8083/mcp \
      -H 'Content-Type: application/json' \
@@ -417,7 +433,7 @@ The checkpoint tools pin a Session's state. These tools do not need the tasks ex
          "name": "create_session_checkpoint",
          "arguments": {
            "session_id": "'"$SESSION_ID"'",
-           "expected_head_task_id": "'"$TASK_ID"'",
+           "expected_head_task_id": "'"$HEAD_TASK_ID"'",
            "request_id": "my-first-checkpoint"
          }
        }
@@ -485,7 +501,35 @@ The checkpoint tools pin a Session's state. These tools do not need the tasks ex
    }
    ```
 
-To start a second Session from a checkpoint, call `fork_session` with the checkpoint ID. For what a fork replays and where it diverges, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}) and the [Agent Substrate example]({{< link path="examples/agent-substrate" >}}).
+4. Start a second Session from the checkpoint. `request_id` is an idempotency key, as in the checkpoint request. For what a fork replays and where it diverges, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#checkpoints" >}}).
+   ```bash
+   curl -s -X POST http://localhost:8083/mcp \
+     -H 'Content-Type: application/json' \
+     -H 'Accept: application/json, text/event-stream' \
+     -d '{
+       "jsonrpc": "2.0",
+       "id": 8,
+       "method": "tools/call",
+       "params": {
+         "name": "fork_session",
+         "arguments": {
+           "checkpoint_id": "'"$CHECKPOINT_ID"'",
+           "request_id": "my-first-fork"
+         }
+       }
+     }'
+   ```
+
+   The result identifies the new Session, which is ready for a message. Example output:
+   ```json
+   {
+     "session": {
+       "agent": "my-first-agent",
+       "id": "01a06d1a-2b7c-7d40-8e13-5c9f04b1a6d2",
+       "state": "RUNTIME_STATE_READY"
+     }
+   }
+   ```
 
 You can now safely [clean up these resources](#clean-up).
 

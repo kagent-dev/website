@@ -138,10 +138,11 @@ A2A-Extensions: https://kagent.dev/extensions/hitl/v1
 
 kagent activates the extension only for calls that request it. kagent then echoes the activated URI back and attaches a structured pause payload only to an activated call. A declarative agent's card declares the extension, so a client can discover HITL support before it sends anything.
 
-A gRPC call specifies the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
+A gRPC call specifies the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Every A2A call also sends the `A2A-Version: 1.0` header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
 
 ```bash
 grpcurl -plaintext \
+  -H 'A2A-Version: 1.0' \
   -H 'A2A-Extensions: https://kagent.dev/extensions/hitl/v1' \
   -d '{
     "tenant": "kagent/cluster-operator",
@@ -207,6 +208,34 @@ A paused task waits for the client to send a message that contains the response 
 
 The response message must list the extension URI in its `extensions` array as well as in its `metadata`. The `kagent` harness ignores a `metadata` payload that the array does not declare, and delivers the message as ordinary text. The task resumes and the agent replies, so the mistake is silent. The `codex` and `claude` harnesses reject the message with `tool approval response must declare https://kagent.dev/extensions/hitl/v1`.
 
+The following message answers the `ask_user_request` in [Answer a question](#answer-a-question). The `taskId` and `contextId` values come from the paused task, and the `id` in the payload comes from the request.
+
+```bash
+grpcurl -plaintext \
+  -H 'A2A-Version: 1.0' \
+  -H 'A2A-Extensions: https://kagent.dev/extensions/hitl/v1' \
+  -d '{
+    "tenant": "kagent/cluster-operator",
+    "message": {
+      "messageId": "msg-2",
+      "role": "ROLE_USER",
+      "taskId": "<task-id>",
+      "contextId": "<context-id>",
+      "extensions": ["https://kagent.dev/extensions/hitl/v1"],
+      "metadata": {
+        "https://kagent.dev/extensions/hitl/v1": {
+          "type": "ask_user_response",
+          "id": "<request-id>",
+          "answers": [{ "answer": ["us-east-1"] }]
+        }
+      },
+      "parts": [{"text": "us-east-1"}]
+    }
+  }' localhost:8083 lf.a2a.v1.A2AService/SendMessage
+```
+
+The agent continues the turn with the answer. `SendMessage` returns after the turn finishes, with the task in `TASK_STATE_COMPLETED`.
+
 While the task waits, kagent suspends the {{< gloss "Actor" >}}Actor{{< /gloss >}} to a durable {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} in the same way as at the end of a turn. The snapshot keeps the durable volume and discards the running process. Each harness records the pending request in that volume and continues the turn when the answer arrives.
 
 The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a task that waits at `INPUT_REQUIRED` does not consume pool capacity. The wait also survives the loss of the node. For more information, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
@@ -222,7 +251,7 @@ Of the states that an A2A task moves through, the following states mean that the
 | State | Meaning |
 | ----- | ------- |
 | `INPUT_REQUIRED` | The agent is waiting for a person. A tool approval or a question produces this state. |
-| `AUTH_REQUIRED` | The agent is waiting for credentials. kagent's own harnesses never set this state. The gateway accepts a resume from it, so a `byo` image that produces it works. |
+| `AUTH_REQUIRED` | The agent is waiting for credentials. kagent's own harnesses never set this state. kagent accepts a resume from `AUTH_REQUIRED`, so a `byo` image that sets this state works. |
 
 ## Agents bound as tools
 
@@ -234,7 +263,7 @@ The AgentTemplate decides that a turn pauses, and the client that raised the tur
 
 | Client | HITL |
 | ------ | ---- |
-| Your own A2A client | Full. Request the extension URI and handle every payload type. |
+| Your own A2A client | Supported. Request the extension URI and handle every payload type. |
 | An {{< gloss "MCP" >}}MCP{{< /gloss >}} client that supports tasks | Supported. The `invoke_agent` tool returns a task, and input requests surface as MCP elicitations. |
 | The kagent CLI | Not supported. `kagent agent invoke` does not request the extension, so a turn that pauses stays at `INPUT_REQUIRED` and the CLI cannot answer it. The CLI reports `Input required to continue this Session.` and stops there. |
 

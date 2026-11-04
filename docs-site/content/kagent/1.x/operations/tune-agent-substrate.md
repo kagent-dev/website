@@ -275,7 +275,19 @@ Replace the bundled store with a bucket in Google Cloud Storage, Amazon S3, or a
          location: s3://<your-bucket>/kagent/
    ```
 
-4. Run a turn on an agent, suspend its Actor, and compare the Actor's `snapshotUri` path from [`ListSubstrateActors`](#inspect-the-runtime) against the `location` that you set. Because the backend and the location are configured separately, a mismatch between them prevents the Actor from resuming from its snapshot.
+4. Confirm that a new snapshot lands under the `location` that you set. Send a message to a Session, so that kagent suspends the Session's Actor when the turn ends. Then read the Actor's latest `snapshotUri`. Because the backend and the location are configured separately, a mismatch between them prevents the Actor from resuming from its snapshot.
+   ```bash
+   grpcurl -plaintext -d '{"atespace":"kagent"}' \
+     localhost:8083 kagent.api.v1.SystemService/ListSubstrateActors \
+     | jq '.actors[] | select(.metadata.name == "session-<session-id>") | {state: .status.state, snapshotUri: .status.snapshots[-1].durableSnapshot.object.snapshotUri}'
+   ```
+   Example output, with the `snapshotUri` value under the bucket and prefix that the Harness sets:
+   ```json
+   {
+     "state": "ACTOR_STATE_SUSPENDED",
+     "snapshotUri": "s3://<your-bucket>/kagent/atespaces/kagent/actors/b0a84d88-9eab-4fb1-97f0-9c93a6fc89a4/snapshots/82d37284-bb19-4351-90fb-b84c6f26595b"
+   }
+   ```
 
 ### Storage variables on the snapshot components
 
