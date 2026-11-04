@@ -30,6 +30,7 @@ The gateway injects the token; its value never enters the runtime.
 _Appears in:_
 - [EgressAuthentication](#egressauthentication)
 - [ModelConfigSpec](#modelconfigspec)
+- [ModelInvocationAuth](#modelinvocationauth)
 - [RemoteMCPServerSpec](#remotemcpserverspec)
 
 | Field | Description | Default | Validation |
@@ -179,6 +180,7 @@ following the pattern used by Gateway API for cross-namespace route attachments.
 By default (when not specified), only references from the same namespace are allowed.
 
 _Appears in:_
+- [DiscoveredModelConfigTemplate](#discoveredmodelconfigtemplate)
 - [ModelConfigSpec](#modelconfigspec)
 - [RemoteMCPServerSpec](#remotemcpserverspec)
 
@@ -342,6 +344,18 @@ _Appears in:_
 | `name` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 | `key` _string_ |  |  | MinLength: 1 <br />**Required** <br /> |
 
+#### DiscoveredModelConfigTemplate
+
+DiscoveredModelConfigTemplate supplies shared settings for discovered ModelConfigs.
+
+_Appears in:_
+- [ModelProviderConfigSpec](#modelproviderconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `auth` _[ModelInvocationAuth](#modelinvocationauth)_ | Auth configures invocation credentials. Omit to add no explicit credentials.<br />Discovery credentials are not inherited. |  | AtMostOneOf: [actorJwt secretRef tokenPassthrough] <br /> |
+| `allowedNamespaces` _[AllowedNamespaces](#allowednamespaces)_ | AllowedNamespaces controls which namespaces may reference discovered models<br />and their invocation credentials. Omitted policy permits only the same namespace. |  |  |
+
 #### EgressAuthentication
 
 EgressAuthentication replaces a request header with a prefix and credential.
@@ -460,6 +474,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
+| `baseUrl` _string_ | BaseURL is the complete API prefix for a custom Gemini endpoint, including<br />any required version (for example, https://gateway.example.com/team/v1).<br />The client appends /models/\{model\}:generateContent or its streaming equivalent.<br />Authentication for custom endpoints uses apiKeySecret or actorJwt, when configured. |  | MinLength: 1 <br />Pattern: `^https?://[^/?#@ ]+(/[^?# ]*)?$` <br /> |
 | `maxOutputTokens` _integer_ | Maximum output tokens to generate for a single response |  | Minimum: 1 <br /> |
 
 #### GeminiVertexAIConfig
@@ -699,6 +714,34 @@ _Appears in:_
 | `observedGeneration` _integer_ |  |  |  |
 | `secretHash` _string_ | The secret hash stores a hash of any secrets required by the model config (i.e. api key, tls cert) to ensure agents referencing this model config detect changes to these secrets and restart if necessary. |  |  |
 
+#### ModelDiscoveryAuth
+
+ModelDiscoveryAuth supplies a Bearer token for discovery requests.
+
+_Appears in:_
+- [ModelProviderConfigSpec](#modelproviderconfigspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `secretRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | SecretRef selects the discovery Bearer token from a Secret in the<br />ModelProviderConfig's namespace. The selected value must be nonempty. |  | **Required** <br /> |
+
+#### ModelInvocationAuth
+
+ModelInvocationAuth selects invocation credentials using ModelConfig auth semantics.
+Secret references resolve in the ModelProviderConfig and generated ModelConfig namespace.
+
+_Validation:_
+- AtMostOneOf: [actorJwt secretRef tokenPassthrough]
+
+_Appears in:_
+- [DiscoveredModelConfigTemplate](#discoveredmodelconfigtemplate)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `actorJwt` _[ActorJWT](#actorjwt)_ | ActorJWT authenticates as the executing Actor. Substrate mints and injects the token. |  |  |
+| `secretRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#secretkeyselector-v1-core)_ | SecretRef selects the invocation API key from a Secret in the<br />ModelProviderConfig and generated ModelConfig namespace. |  |  |
+| `tokenPassthrough` _boolean_ | TokenPassthrough forwards the incoming A2A bearer token to the model provider. |  |  |
+
 #### ModelProvider
 
 _Underlying type:_ _string_
@@ -750,9 +793,10 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[ModelProvider](#modelprovider)_ | Type is the model provider type (OpenAI, Anthropic, etc.) |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral] <br />**Required** <br /> |
-| `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://.*` <br /> |
-| `secretRef` _[SecretReference](#secretreference)_ | SecretRef references the Kubernetes Secret containing the API key.<br />Optional for providers that don't require authentication (e.g., local Ollama). |  |  |
+| `type` _[ModelProvider](#modelprovider)_ | Type is the discovery protocol. OpenAI-compatible endpoints are supported. |  | Enum: [Anthropic OpenAI AzureOpenAI Ollama Gemini GeminiVertexAI AnthropicVertexAI Bedrock SAPAICore Foundry Mistral] <br />**Required** <br /> |
+| `endpoint` _string_ | Endpoint is the API endpoint URL for the provider.<br />If not specified, the default endpoint for the provider type will be used. |  | Pattern: `^https?://[^/?#@]+(/[^?#]*)?$` <br /> |
+| `discoveryAuth` _[ModelDiscoveryAuth](#modeldiscoveryauth)_ | DiscoveryAuth authenticates requests to list models. Omit for unauthenticated discovery.<br />These credentials are never used to invoke discovered models. |  |  |
+| `modelConfigTemplate` _[DiscoveredModelConfigTemplate](#discoveredmodelconfigtemplate)_ | ModelConfigTemplate configures the ModelConfigs created for discovered models<br />in this ModelProviderConfig's namespace. |  |  |
 
 #### ModelProviderConfigStatus
 
@@ -765,10 +809,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `observedGeneration` _integer_ | ObservedGeneration reflects the generation of the most recently observed ModelProviderConfig spec |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#condition-v1-meta) array_ | Conditions represent the latest available observations of the ModelProviderConfig's state |  |  |
-| `discoveredModels` _string array_ | DiscoveredModels is the cached list of model IDs available from this model provider |  |  |
 | `modelCount` _integer_ | ModelCount is the number of discovered models (for kubectl display) |  |  |
-| `lastDiscoveryTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#time-v1-meta)_ | LastDiscoveryTime is the timestamp of the last successful model discovery |  |  |
-| `secretHash` _string_ | SecretHash is a hash of the referenced secret data, used to detect secret changes |  |  |
 
 #### ObjectReference
 
@@ -1043,18 +1084,6 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `image` _string_ | Image is an OCI image reference pinned by sha256 digest. |  | Pattern: `^[^[:space:]@]+@sha256:[a-f0-9]\{64\}$` <br />**Required** <br /> |
-
-#### SecretReference
-
-SecretReference references a Kubernetes Secret that must contain exactly one data key
-holding the API key or credential.
-
-_Appears in:_
-- [ModelProviderConfigSpec](#modelproviderconfigspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `name` _string_ | Name is the name of the secret in the same namespace as the ModelProviderConfig. |  | **Required** <br /> |
 
 #### SubAgentToolBinding
 
