@@ -13,7 +13,6 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 const FAINT = 0.14; // opacity while floating in the background
-const FOOTER = 0.22; // opacity of the footer mark
 
 export default function ScrollMark() {
   const el = useRef<HTMLDivElement>(null);
@@ -57,9 +56,9 @@ export default function ScrollMark() {
         x = lerp(x, end.x, t3);
         y = lerp(y, end.y, t3);
         s = lerp(s, end.s, t3);
-        o = t3 < 0.97 ? lerp(o, FOOTER, t3 / 0.97) : FOOTER * (1 - (t3 - 0.97) / 0.03);
+        // fade out on the way down; the cropped footer mark stays put
+        o = lerp(o, 0, clamp(t3 / 0.85));
       }
-      footer.style.opacity = String(FOOTER * clamp((t3 - 0.97) / 0.03));
       return { x, y, s, o, g: lerp(0.5, 0, t1) };
     };
 
@@ -101,7 +100,6 @@ export default function ScrollMark() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
-      footer.style.opacity = "";
     };
   }, []);
 
