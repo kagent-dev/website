@@ -19,29 +19,27 @@ kagent stores schedules in its database, not as Kubernetes resources. You manage
 The kagent UI builds the cron expression from a form, so the UI is the simplest way to create a schedule.
 
 1. [Open the kagent UI]({{< link path="ui/launch-ui" >}}).
-2. In the navigation, click **Schedules**, and then click **New Schedule**.
+2. In the navigation, click **Schedules**, and then click **New Schedule**. If the agent has no schedules yet, you can also click **Create a schedule** on the **Schedules** card of the **Agent Details** page.
+   - In the **Agent** list, select the agent to run.
+   - Optional: In **Schedule Name**, enter a name of up to 200 characters.
+   - In **Time zone**, enter an Internet Assigned Numbers Authority (IANA) time zone name, such as `America/New_York`. If the field is empty, the schedule uses UTC.
+   - In **Repeat**, select how often the agent runs. Each option shows its own fields.
+     * **Every few minutes** asks for an interval of 1, 5, 10, 15, 20, or 30 minutes.
+     * **Hourly** asks for the minute past the hour.
+     * **Daily** asks for the time.
+     * **Weekly** asks for the days and the time.
+     * **Monthly** asks for the day of the month and the time.
+     * **Custom (advanced)** asks for a cron expression with five fields.
+   - In **Prompt**, enter the message that the agent receives on each execution.
+   - Optional: In **Execution timeout (seconds)**, change the limit for each execution. The default is 900 seconds.
+   - To create the schedule in a paused state, turn off **Enable Schedule**.
+3. Click **Create schedule**. The UI opens the page for the new schedule.
 
-   If the agent has no schedules yet, you can also click **Create a schedule** on the **Schedules** card of the **Agent Details** page.
-3. In the **Agent** list, select the agent to run.
-4. Optional: In **Schedule Name**, enter a name of up to 200 characters.
-5. In **Time zone**, enter an Internet Assigned Numbers Authority (IANA) time zone name, such as `America/New_York`. If the field is empty, the schedule uses UTC.
-6. In **Repeat**, select how often the agent runs. Each option shows its own fields.
-   * **Every few minutes** asks for an interval of 1, 5, 10, 15, 20, or 30 minutes.
-   * **Hourly** asks for the minute past the hour.
-   * **Daily** asks for the time.
-   * **Weekly** asks for the days and the time.
-   * **Monthly** asks for the day of the month and the time.
-   * **Custom (advanced)** asks for a cron expression with five fields.
-7. In **Prompt**, enter the message that the agent receives on each execution.
-8. Optional: In **Execution timeout (seconds)**, change the limit for each execution. The default is 900 seconds.
-9. To create the schedule in a paused state, turn off **Enable Schedule**.
-10. Click **Create schedule**. The UI opens the page for the new schedule.
-
-The **Schedules** page lists the schedule with its status and its next execution time. The page shows the time in your browser's local time zone.
+The **Schedules** page lists the schedule with its status and its next execution time, in your browser's local time zone.
 
 ## Manage a schedule in the UI
 
-The page for one schedule contains the controls for that schedule and its execution history. To open the page, click the schedule's name on the **Schedules** page or on the **Schedules** card of the agent's **Agent Details** page.
+The page for one schedule contains its controls and execution history. To open the page, click the schedule's name on the **Schedules** page or on the **Schedules** card of the agent's **Agent Details** page.
 
 * **Run** starts an execution immediately. A manual execution does not change the next scheduled execution. **Run** also works on a paused schedule.
 * **Pause** stops future scheduled executions. **Resume** starts them again.
@@ -94,14 +92,20 @@ The `ScheduledRunService` API exposes the same operations as the UI, so a script
    }
    ```
 
-   Save the `id` and the `etag` values for the next steps.
-
-3. Start an execution immediately. Replace `<id>` with the `id` value from the `CreateScheduledRun` response. A repeated call with the same `request_id` returns the same execution.
+3. Save the `id` and the `etag` values from the `CreateScheduledRun` response as environment variables. The trigger, pause, and delete calls take the `id`. The pause call also takes the `etag`.
    ```bash
-   grpcurl -plaintext -d '{
-     "scheduled_run_id": "<id>",
+   export SCHEDULE_ID=<id>
+   export ETAG=<etag>
+   ```
+
+4. Start an execution immediately. A repeated call with the same `request_id` returns the same execution.
+   ```bash
+   grpcurl -plaintext -d @ localhost:8083 kagent.api.v1.ScheduledRunService/TriggerScheduledRun <<EOF
+   {
+     "scheduled_run_id": "$SCHEDULE_ID",
      "request_id": "manual-run-1"
-   }' localhost:8083 kagent.api.v1.ScheduledRunService/TriggerScheduledRun
+   }
+   EOF
    ```
 
    Example output:
@@ -117,11 +121,18 @@ The `ScheduledRunService` API exposes the same operations as the UI, so a script
    }
    ```
 
-4. Check the execution. Replace `<execution_id>` with the `execution.id` value from the `TriggerScheduledRun` response.
+5. Save the `execution.id` value from the `TriggerScheduledRun` response as an environment variable.
    ```bash
-   grpcurl -plaintext -d '{
-     "execution_id": "<execution_id>"
-   }' localhost:8083 kagent.api.v1.ScheduledRunService/GetScheduledRunExecution
+   export EXECUTION_ID=<execution_id>
+   ```
+
+6. Check the execution.
+   ```bash
+   grpcurl -plaintext -d @ localhost:8083 kagent.api.v1.ScheduledRunService/GetScheduledRunExecution <<EOF
+   {
+     "execution_id": "$EXECUTION_ID"
+   }
+   EOF
    ```
 
    Example output:
@@ -141,11 +152,12 @@ The `ScheduledRunService` API exposes the same operations as the UI, so a script
 
    The `sessionId` is the Session that the execution created. To list every execution of a schedule, call `ListScheduledRunExecutions` with the `scheduled_run_id`.
 
-5. Pause the schedule. `UpdateScheduledRun` replaces the whole configuration. Send every field that you want to keep, not only the changed field. The `etag` must match the schedule's current `etag`. If the `etag` is stale, the call returns `Aborted`. Call `GetScheduledRun` for the current `etag`, and then retry.
+7. Pause the schedule. `UpdateScheduledRun` replaces the whole configuration. Send every field that you want to keep, not only the changed field. The `etag` must match the schedule's current `etag`. If the `etag` is stale, the call returns `Aborted`. Call `GetScheduledRun` for the current `etag`, and then retry.
    ```bash
-   grpcurl -plaintext -d '{
-     "scheduled_run_id": "<id>",
-     "etag": "<etag>",
+   grpcurl -plaintext -d @ localhost:8083 kagent.api.v1.ScheduledRunService/UpdateScheduledRun <<EOF
+   {
+     "scheduled_run_id": "$SCHEDULE_ID",
+     "etag": "$ETAG",
      "config": {
        "name": "Weekday cluster check",
        "schedule": "0 9 * * 1-5",
@@ -154,32 +166,35 @@ The `ScheduledRunService` API exposes the same operations as the UI, so a script
        "execution_timeout": "900s",
        "paused": true
      }
-   }' localhost:8083 kagent.api.v1.ScheduledRunService/UpdateScheduledRun
+   }
+   EOF
    ```
 
-   The response omits `nextExecutionTime` while the schedule is paused. To resume the schedule, send the same request with `"paused": false` and the `etag` value from the `UpdateScheduledRun` response.
+   The response omits `nextExecutionTime` while the schedule is paused. To resume the schedule, set `ETAG` to the `etag` value from the `UpdateScheduledRun` response. Then send the same request with `"paused": false`.
 
-6. Delete the schedule.
+8. Delete the schedule.
    ```bash
-   grpcurl -plaintext -d '{
-     "scheduled_run_id": "<id>"
-   }' localhost:8083 kagent.api.v1.ScheduledRunService/DeleteScheduledRun
+   grpcurl -plaintext -d @ localhost:8083 kagent.api.v1.ScheduledRunService/DeleteScheduledRun <<EOF
+   {
+     "scheduled_run_id": "$SCHEDULE_ID"
+   }
+   EOF
    ```
 
    The response sets `deletedAt`. `ListScheduledRuns` no longer returns the schedule. `GetScheduledRun` and `ListScheduledRunExecutions` still return the schedule and its history. A `TriggerScheduledRun` call with a new `request_id` returns `FailedPrecondition`.
 
 ## Schedule configuration
 
-The `ScheduledRunConfig` message contains the settings that you can change after you create a schedule. You cannot change the Agent after you create the schedule. If the Agent does not exist when you create the schedule, the call returns `FailedPrecondition`.
+The `ScheduledRunConfig` message contains the settings that you can change after you create a schedule. The UI form sets the same fields, and kagent applies the same rules to both. You cannot change the Agent after you create the schedule. If the Agent does not exist when you create the schedule, the call returns `FailedPrecondition`.
 
-| Field | Description |
-| --- | --- |
-| `name` | Optional display name, up to 200 characters. |
-| `schedule` | A cron expression with exactly five fields: minute, hour, day of month, month, and day of week. The API rejects macros such as `@daily` and `@every 1h`. |
-| `time_zone` | An IANA time zone name, such as `Europe/Berlin`. The default is UTC. The API rejects the value `Local`, because the result would depend on the controller's host. Executions follow daylight-saving changes in the time zone. |
-| `prompt` | Required. The message that each execution sends to the agent. The prompt must contain text other than whitespace, and it can be up to 32 KiB. |
-| `paused` | When set to `true`, the schedule does not create scheduled executions. A manual trigger still runs. |
-| `execution_timeout` | The time limit for each execution, as a protobuf duration such as `"1800s"`. The default is 900 seconds (15 minutes). The limit counts from the moment that kagent accepts the execution, so it includes queueing and Actor provisioning as well as the agent's work. |
+| API field | UI field | Description |
+| --- | --- | --- |
+| `name` | **Schedule Name** | Optional display name, up to 200 characters. |
+| `schedule` | **Repeat** | A cron expression with exactly five fields: minute, hour, day of month, month, and day of week. kagent rejects macros such as `@daily` and `@every 1h`. The UI builds the expression from the **Repeat** option, except for **Custom (advanced)**. |
+| `time_zone` | **Time zone** | An IANA time zone name, such as `Europe/Berlin`. The default is UTC. kagent rejects the value `Local`, because the result would depend on the controller's host. Executions follow daylight-saving changes in the time zone. |
+| `prompt` | **Prompt** | Required. The message that each execution sends to the agent. The prompt must contain text other than whitespace, and it can be up to 32 KiB. |
+| `paused` | **Enable Schedule** | When `paused` is set to `true`, the schedule does not create scheduled executions. A manual trigger still runs. The UI switch is the inverse of `paused`, so turning off **Enable Schedule** pauses the schedule. |
+| `execution_timeout` | **Execution timeout (seconds)** | The time limit for each execution. The API takes a protobuf duration such as `"1800s"`, and the UI takes a number of seconds. The default is 900 seconds (15 minutes). The limit counts from the moment that kagent accepts the execution, so it includes queueing and Actor provisioning as well as the agent's work. |
 
 ## Schedule ownership
 
@@ -190,7 +205,7 @@ The creator's identity does not select credentials for the model or for tool cal
 To create schedules from unattended automation, call the API as a Kubernetes ServiceAccount. For how the controller turns a ServiceAccount into a creator, see [Service account callers]({{< link path="about/substrate-runtime/identity#service-account-callers" >}}).
 
 > [!WARNING]
-> **`insecure` mode is not a security boundary in a default install.** `config.server.auth.mode` defaults to `insecure`, where a caller supplies its own identity in `X-User-Id`. A call without that header runs as `admin@kagent.dev`. A caller can claim any identity and reach any user's schedules. For the modes themselves, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}).
+> **Creator ownership protects a schedule only when the controller authenticates callers.** `config.server.auth.mode` defaults to `insecure`. In this mode, the caller supplies its own identity in the `X-User-Id` header, and a call without that header runs as `admin@kagent.dev`. Any caller can therefore claim to be a schedule's creator and see, change, trigger, or delete the schedule. For the modes themselves, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}).
 
 ## Execution behavior
 
