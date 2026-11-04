@@ -45,7 +45,7 @@ const Card = ({ title, body, children, className = "" }: { title: string; body: 
 );
 
 const FAQ: [string, string][] = [
-  ["What is Agent Substrate?", "An open-source, Kubernetes-native runtime for agents, originally created by Google and now a CNCF Sandbox project. It runs each agent in its own gVisor sandbox or microVM, suspends idle agents to object storage, and resumes them on any ready worker in under a second."],
+  ["What is Agent Substrate?", "An open-source, Kubernetes-native runtime for agents, originally created by Google and now a CNCF Sandbox project. It runs each agent in its own gVisor sandbox or microVM, suspends idle agents to object storage, and resumes them on any ready worker in as little as 150ms."],
   ["How do kagent and Substrate split the work?", "kagent decides what an agent does: its model, prompt, tools and skills, defined in an AgentTemplate. Substrate decides where it runs: which pre-warmed worker, when to suspend it, and where its snapshot lives, configured through a Harness."],
   ["Which models can I use?", "OpenAI, Anthropic, Gemini, Vertex AI, Azure OpenAI and AI Foundry, Amazon Bedrock, Mistral, Ollama, and any OpenAI-compatible endpoint such as xAI or Hugging Face."],
   ["Can I bring my own agent?", "Yes. A Harness can run kagent's own engine, Claude, Codex, or any container image that speaks kagent's A2A contract."],
@@ -166,7 +166,7 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-6 pt-20">
         <div className="grid overflow-hidden rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.035] to-white/[0.01] sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["<500", "ms", "to resume a suspended agent on any ready worker"],
+            ["150", "ms", "to resume a suspended agent on a ready worker, measured with a tuned config"],
             ["500+", "/s", "suspend and resume activations per second"],
             ["10", "×", "higher density than standard container runtimes"],
             ["2", "\u00a0isolation modes", "microVM and gVisor sandboxes, one lifecycle"],
@@ -393,8 +393,8 @@ export default function Home() {
           <BtnDark href={SUBSTRATE}>About Agent Substrate</BtnDark>
         </div>
         {/* faint kagent mark: only the top half shows, fading into the footer */}
-        <div aria-hidden className="pointer-events-none mx-auto mt-20 h-[320px] max-w-3xl overflow-hidden [mask-image:linear-gradient(to_bottom,black_35%,transparent)]">
-          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={720} height={720} className="mx-auto -mt-[110px] w-[640px] max-w-full opacity-[0.22]" />
+        <div aria-hidden className="pointer-events-none mx-auto mt-20 flex h-[min(640px,50vw+120px)] w-full justify-center overflow-hidden [mask-image:linear-gradient(to_bottom,black_35%,transparent)]">
+          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={1440} height={1440} className="-mt-[min(220px,17vw)] w-[min(1280px,100vw)] max-w-none shrink-0 opacity-[0.22]" />
         </div>
       </section>
 
