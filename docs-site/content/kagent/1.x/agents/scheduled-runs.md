@@ -22,7 +22,7 @@ The kagent UI builds the cron expression from a form, so the UI is the simplest 
 2. In the navigation, click **Schedules**, and then click **New Schedule**. If the agent has no schedules yet, you can also click **Create a schedule** on the **Schedules** card of the **Agent Details** page.
    - In the **Agent** list, select the agent to run.
    - Optional: In **Schedule Name**, enter a name of up to 200 characters.
-   - In **Time zone**, enter an Internet Assigned Numbers Authority (IANA) time zone name, such as `America/New_York`. If the field is empty, the schedule uses UTC.
+   - In **Time zone**, enter or select an Internet Assigned Numbers Authority (IANA) time zone name, such as `America/New_York`. The field starts as `UTC`.
    - In **Repeat**, select how often the agent runs. Each option shows its own fields.
      * **Every few minutes** asks for an interval of 1, 5, 10, 15, 20, or 30 minutes.
      * **Hourly** asks for the minute past the hour.
@@ -44,7 +44,7 @@ The page for one schedule contains its controls and execution history. To open t
 * **Run** starts an execution immediately. A manual execution does not change the next scheduled execution. **Run** also works on a paused schedule.
 * **Pause** stops future scheduled executions. **Resume** starts them again.
 * **Edit** changes the schedule's configuration.
-* **Delete schedule**, in the **Danger zone** section, stops future executions. An execution that already started continues to the end.
+* **Delete schedule**, in the **Danger zone** section, stops future executions. Executions that kagent already accepted continue to the end. The execution history and the Sessions remain.
 
 The **Execution history** table shows the trigger, state, and failure reason of each execution. To open the Session that an execution started, click **Open conversation**.
 
@@ -52,12 +52,12 @@ The **Execution history** table shows the trigger, state, and failure reason of 
 
 The `ScheduledRunService` API exposes the same operations as the UI, so a script or a continuous integration (CI) job can manage schedules. The examples in this section use [grpcurl](https://github.com/fullstorydev/grpcurl) to call the API, and they target an Agent named `my-first-agent` in the `kagent` namespace. Requests use snake_case field names, and responses use camelCase field names, such as `time_zone` and `timeZone`.
 
-1. Port-forward the controller's gRPC port.
+1. Port-forward the controller's gRPC port. The Service name assumes that your Helm release is named `kagent`.
    ```bash
    kubectl port-forward -n kagent svc/kagent-controller 8083:8083
    ```
 
-2. Create a schedule. The `request_id` field makes the call safe to retry. A second call with the same `request_id` and the same inputs returns the existing schedule.
+2. Create a schedule. The required `request_id` field, from 1 to 128 characters, makes the call safe to retry. A second call with the same `request_id` and the same inputs returns the existing schedule. A second call with the same `request_id` and different inputs returns `AlreadyExists`.
    ```bash
    grpcurl -plaintext -d '{
      "agent": {"namespace": "kagent", "name": "my-first-agent"},
@@ -150,9 +150,9 @@ The `ScheduledRunService` API exposes the same operations as the UI, so a script
    }
    ```
 
-   The `sessionId` is the Session that the execution created. To list every execution of a schedule, call `ListScheduledRunExecutions` with the `scheduled_run_id`.
+   The `sessionId` is the Session that the execution created. To list the executions of a schedule, call `ListScheduledRunExecutions` with the `scheduled_run_id`. The call returns up to 50 executions per page by default. To get the next page, pass the `page_token` from the response.
 
-7. Pause the schedule. `UpdateScheduledRun` replaces the whole configuration. Send every field that you want to keep, not only the changed field. The `etag` must match the schedule's current `etag`. If the `etag` is stale, the call returns `Aborted`. Call `GetScheduledRun` for the current `etag`, and then retry.
+7. Pause the schedule. `UpdateScheduledRun` replaces the whole configuration. Send every field that you want to keep, not only the changed field. A field that you leave out returns to its default, so a missing `time_zone` becomes UTC. The `etag` is required and must match the schedule's current `etag`. If the `etag` is stale, the call returns `Aborted`. Call `GetScheduledRun` for the current `etag`, and then retry.
    ```bash
    grpcurl -plaintext -d @ localhost:8083 kagent.api.v1.ScheduledRunService/UpdateScheduledRun <<EOF
    {
@@ -185,7 +185,7 @@ The `ScheduledRunService` API exposes the same operations as the UI, so a script
 
 ## Schedule configuration
 
-The `ScheduledRunConfig` message contains the settings that you can change after you create a schedule. The UI form sets the same fields, and kagent applies the same rules to both. You cannot change the Agent after you create the schedule. If the Agent does not exist when you create the schedule, the call returns `FailedPrecondition`.
+The `ScheduledRunConfig` message contains the settings that you can change after you create a schedule. The UI form sets the same fields, and kagent applies the same rules to both. You cannot change the Agent after you create the schedule. If the Agent does not exist when you create the schedule, the call returns `FailedPrecondition`. kagent checks the Agent only at create. For an Agent that is deleted later, see [Execution behavior](#execution-behavior).
 
 | API field | UI field | Description |
 | --- | --- | --- |
@@ -205,7 +205,7 @@ The creator's identity does not select credentials for the model or for tool cal
 To create schedules from unattended automation, call the API as a Kubernetes ServiceAccount. For how the controller turns a ServiceAccount into a creator, see [Service account callers]({{< link path="about/substrate-runtime/identity#service-account-callers" >}}).
 
 > [!WARNING]
-> **Creator ownership protects a schedule only when the controller authenticates callers.** `config.server.auth.mode` defaults to `insecure`. In this mode, the caller supplies its own identity in the `X-User-Id` header, and a call without that header runs as `admin@kagent.dev`. Any caller can therefore claim to be a schedule's creator and see, change, trigger, or delete the schedule. For the modes themselves, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}).
+> **Creator ownership protects a schedule only when every call reaches the controller through an authenticating boundary.** `config.server.auth.mode` defaults to `insecure`. In this mode, the caller supplies its own identity in the `X-User-Id` header, and a call without that header runs as `admin@kagent.dev`. Any caller can therefore claim to be a schedule's creator and see, change, trigger, or delete the schedule. In `trusted-proxy` mode, the controller does not verify the token, so a caller that reaches port `8083` directly can also claim any creator. For more information, see [Creator ownership]({{< link path="about/substrate-runtime/identity#creator-ownership" >}}). For the modes themselves, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}).
 
 ## Execution behavior
 
@@ -219,13 +219,14 @@ An execution moves through these states.
 | `RUNNING` | kagent sent the prompt to the agent. |
 | `SUCCEEDED` | The agent's task completed. |
 | `FAILED` | The agent's task ended in a state other than completed, or the Session was deleted before the task finished. The `failure_reason` field states the cause. |
-| `TIMED_OUT` | The execution timeout elapsed before the agent's task ended. kagent cancels the agent's task. A task that waits for [human approval]({{< link path="agents/human-in-the-loop" >}}) at the deadline also ends as `TIMED_OUT`. |
+| `TIMED_OUT` | The execution timeout elapsed before the agent's task ended. The `failure_reason` field is `Execution deadline elapsed`. kagent cancels a running task. A task that waits for [human approval]({{< link path="agents/human-in-the-loop" >}}) is not cancelled, and stays in the Session. A task that completes after the deadline also ends as `TIMED_OUT`. |
 
 The following rules control when an execution runs and what its record stores.
 
-* **Missed times are skipped.** When kagent cannot start an execution within 30 seconds of its scheduled time, kagent skips that time and waits for the next one. A controller outage therefore does not produce a burst of executions when the controller returns.
+* **Missed times are skipped.** When kagent cannot accept an execution within 30 seconds of its scheduled time, kagent skips that time and waits for the next one. A controller outage therefore does not produce a burst of executions when the controller returns.
 * **Configuration changes apply to future executions.** An execution uses the prompt and the timeout that were current when kagent accepted it.
-* **A prompt is sent only once.** If the agent's runtime does not accept the prompt, kagent does not resend it, because a resend could duplicate the agent's work. The execution stays in `RUNNING` until the timeout. <!-- REVIEW: at rc1 such an execution can stay RUNNING past its deadline indefinitely, because the deadline path suspends the Session first and the suspend fails on a crashed or unreachable Actor. Reproduced on rc1 2026-11-04. Restore "and then ends as TIMED_OUT" once kagent fixes this. -->
+* **A prompt is sent only once.** If the agent's runtime does not accept the prompt, kagent does not resend it, because a resend could duplicate the agent's work. <!-- REVIEW: at rc1, rc2, and main such an execution can stay RUNNING past its deadline indefinitely, because the deadline path suspends the Session first and the suspend fails on a crashed or unreachable Actor. Reproduced on rc1 2026-11-04. Once kagent fixes this, add "The execution stays in RUNNING until the timeout, and then ends as TIMED_OUT." -->
+* **An execution needs the Agent.** If the Agent is deleted after you create the schedule, or has no ready revision, each execution waits in `PENDING` until the timeout, and then ends as `TIMED_OUT`.
 * **History outlives its Sessions.** An execution keeps its `session_id` after the Session is deleted. The ID is a historical reference and does not mean that the Session still exists.
 
 ## Next steps
