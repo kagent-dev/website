@@ -8,8 +8,8 @@ import Navbar from "@/components/navbar";
 import { GoogleTagManager } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
-  title: "kagent | Bringing Agentic AI to cloud native",
-  description: "An open-source framework for DevOps and platform engineers to run AI agents in Kubernetes, automating complex operations and troubleshooting tasks.",
+  title: "kagent | Agents on Kubernetes",
+  description: "Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent runs on Agent Substrate — declare agents, MCP servers, models, and skills the same way you declare everything else on the cluster.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kagent.dev"),
 };
 

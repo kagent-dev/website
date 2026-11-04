@@ -1,25 +1,22 @@
 "use client";
 import { useTheme } from "next-themes";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function KagentLogoWithText({ className } : { className?: string }) {
   const { resolvedTheme } = useTheme();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Default fill color before mounting (likely matches server render)
-  let textFill = "#151927"; 
+  const onHome = pathname === "/";
+  let textFill = onHome ? "white" : "#151927";
 
-  // Determine the correct fill color only after mounting
-  if (mounted) {
-    if (resolvedTheme === "dark") {
-      textFill = "white";
-    } else {
-      textFill = "#151927";
-    }
+  if (mounted && !onHome) {
+    textFill = resolvedTheme === "dark" ? "white" : "#151927";
   }
 
   return (
