@@ -163,6 +163,26 @@ kubectl get agent <name> -n kagent \
 
 The other cause is deliberate. A {{< gloss "Session" >}}Session{{< /gloss >}} runs the revision that it was created from for its whole life, so editing an AgentTemplate never changes a conversation that already exists. Create a new Session to pick up the edit.
 
+## The controller restarts after an upgrade {#controller-restarts-after-upgrade}
+
+The controller applies the database migrations of the new version when it starts. When a migration fails, the controller stops and Kubernetes restarts it, so the log of the running container does not show the error.
+
+1. Read the log of the previous container. A failed migration logs an error that starts with `run database migrations`.
+   ```bash
+   kubectl logs -n kagent deployment/kagent-controller --previous | grep -i migration
+   ```
+
+2. To return to the previous version, return the database to the schema of the previous version before you roll back the kagent release. Use one of the following methods.
+   * Roll the schema back with the kagent CLI of the version that you upgraded to. Set `<version>` to the schema version that you recorded in [Prepare to upgrade]({{< link path="operations/upgrade#prepare-to-upgrade" >}}). A down migration can delete data.
+     ```bash
+     kagent db migrate goto <version> \
+       --source core \
+       --db-url "postgresql://<user>:<password>@<host>:5432/kagent" \
+       --db-role <owner-role>
+     ```
+     <!-- REVIEW: The goto command was verified only as a no-op at 1.0.0-rc1, which ships a single migration. Verify a real schema rollback when a release adds a second migration. -->
+   * Restore the database backup that you took in [Prepare to upgrade]({{< link path="operations/upgrade#prepare-to-upgrade" >}}).
+
 ## Collect logs
 
 When the conditions do not explain a failure, collect evidence from the logs. Read the controller log to locate a single failing call, or collect a bug report to give someone else the full diagnostic data at once.

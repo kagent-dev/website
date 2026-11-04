@@ -3,6 +3,8 @@ title: Launch the UI
 description: Open the kagent dashboard, then read the agents, conversations, and Agent Substrate capacity that it reports.
 weight: 10
 author: kagent.dev
+aliases:
+  - /kagent/1.x/observability/launch-ui/
 ---
 
 The {{< reuse "kagent-docs/snippets/name-product.md" >}} UI is a read-and-write console for everything that the controller knows about, including the agents that you defined, the conversations that the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
@@ -143,7 +145,7 @@ Different components between the browser and the model enforce the attachment li
 
 The UI falls back to the file extension when the browser does not report a media type for a file, or reports the wrong one. For example, browsers do not report a media type for `.md` files.
 
-If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit. A default nginx allows only `1m`. To raise the limit, see [Serve the UI under a sub-path]({{< link path="setup/reverse-proxy#proxy-shapes" >}}).
+If you host a reverse proxy in front of the UI, the proxy applies its own body-size limit. A default nginx allows only `1m`. To raise the limit, see [Serve the UI under a sub-path]({{< link path="ui/reverse-proxy#proxy-shapes" >}}).
 
 ## Check Agent Substrate capacity
 
@@ -171,7 +173,7 @@ When you [restrict kagent to specific namespaces]({{< link path="operations/mult
 
 ## Expose the UI outside the cluster
 
-Port-forwarding suits local access and stops when you close the terminal. For a deployment that a team reaches, change how the chart publishes the service. Add any of the following values to the `helm upgrade --install kagent` command from [Install kagent]({{< link path="setup/installation#install-kagent" >}}).
+Port-forwarding suits local access and stops when you close the terminal. For a deployment that a team reaches, change how the chart publishes the service. Add any of the following values to the `helm upgrade --install kagent` command from [Install kagent with Helm]({{< link path="setup/installation#install-kagent-helm" >}}).
 
 ### LoadBalancer service
 

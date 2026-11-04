@@ -1,8 +1,10 @@
 ---
 title: Serve the UI under a sub-path
 description: Serve the kagent UI behind a reverse proxy using ui.basePath, including both proxy shapes, validation, and oauth2-proxy configuration.
-weight: 15
+weight: 20
 author: kagent.dev
+aliases:
+  - /kagent/1.x/setup/reverse-proxy/
 ---
 
 The kagent UI is a static bundle served by nginx, which answers on port `8080` inside the pod. By default it serves at the root (`/`). When a reverse proxy fronts the UI and you want it reachable under a prefix such as `/ui`, set `ui.basePath` in the Helm values.
@@ -34,7 +36,7 @@ helm upgrade --install kagent \
 
 Both of the following proxy configurations work. Choose the one that matches your infrastructure. If you enable oauth2-proxy for SSO, the proxy must strip the prefix: with the prefix forwarded, oauth2-proxy cannot match its own sign-in and skip-authentication paths, and sign-in fails.
 
-Both examples set `client_max_body_size`. A default nginx allows `1m`, so a larger attachment is rejected with a `413` before it reaches the UI pod. Keep the limit above the 10 MB that one chat message can carry. For the attachment limits, see [Attach files to a message]({{< link path="observability/launch-ui#attach-files-to-a-message" >}}).
+Both examples set `client_max_body_size`. A default nginx allows `1m`, so a larger attachment is rejected with a `413` before it reaches the UI pod. Keep the limit above the 10 MB that one chat message can carry. For the attachment limits, see [Attach files to a message]({{< link path="ui/launch-ui#attach-files-to-a-message" >}}).
 
 ### Proxy strips the prefix
 

@@ -260,7 +260,7 @@ name, the pod IP, the `read N ago` line, and the macOS render.
 
 **`AgentInstance` is still the UI's word for a Session.** The API renamed it — the dev server
 proxies `SessionService/ListSessions` — but the Agents page Overview card and the chat surface
-still say `AgentInstance`. `observability/launch-ui.md` carries a note mapping the two, the
+still say `AgentInstance`. `ui/launch-ui.md` carries a note mapping the two, the
 same way it already maps the UI's `Snapshot` label onto a checkpoint. Drop that note when the
 UI catches up.
 

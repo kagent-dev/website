@@ -62,7 +62,7 @@ Your Kubernetes resources do carry forward, so export them before anything repla
 
 Install 1.0 against the empty database that you provisioned. kagent and Agent Substrate both store their state in that database, each with an owner login that applies migrations and a read/write login that serves runtime queries. `kagent install` normally creates a development database for both. The `--skip-database-setup` flag skips that database. The releases then read the connection Secrets that you create in this section.
 
-Before you start, complete the [Before you begin]({{< link path="setup/installation#before-you-begin" >}}) steps of the installation guide. Those steps prepare the kagent CLI, your provider API key, and a cluster at Kubernetes 1.37 or later.
+Before you start, complete the [Before you begin]({{< link path="setup/installation#before-you-begin" >}}) steps of the installation guide. Those steps prepare a cluster at Kubernetes 1.37 or later and your provider API key. Then install the CLI tools in step 1 of [Install with the CLI]({{< link path="setup/installation#install-kagent" >}}).
 
 1. Create the namespaces that contain the connection Secrets. `kagent install` uses the namespaces when they already exist.
    ```bash

@@ -4,22 +4,22 @@
     "kagent-ui-dashboard.png": {
       "light": "assets/img/kagent-ui-dashboard.png",
       "dark": "assets/img/kagent-ui-dashboard-dark.png",
-      "$note": "observability/launch-ui.md — the landing view after port-forwarding the UI"
+      "$note": "ui/launch-ui.md — the landing view after port-forwarding the UI"
     },
     "kagent-ui-agents.png": {
       "light": "assets/img/kagent-ui-agents.png",
       "dark": "assets/img/kagent-ui-agents-dark.png",
-      "$note": "observability/launch-ui.md — the Agents list"
+      "$note": "ui/launch-ui.md — the Agents list"
     },
     "kagent-ui-substrate.png": {
       "light": "assets/img/kagent-ui-substrate.png",
       "dark": "assets/img/kagent-ui-substrate-dark.png",
-      "$note": "observability/launch-ui.md — the Substrate page"
+      "$note": "ui/launch-ui.md — the Substrate page"
     },
     "kagent-ui-chat.png": {
       "light": "assets/img/kagent-ui-chat.png",
       "dark": "assets/img/kagent-ui-chat-dark.png",
-      "$note": "observability/launch-ui.md — a conversation with an agent. Mock-backed, see tests/chat.spec.ts"
+      "$note": "ui/launch-ui.md — a conversation with an agent. Mock-backed, see tests/chat.spec.ts"
     }
   }
 }
