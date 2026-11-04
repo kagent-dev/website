@@ -39,10 +39,13 @@ test('conversation: the seeded transcript', async ({ page }) => {
 
   await gotoUI(page, `/agents/${SEEDED_INSTANCE}/chat`);
 
-  // The composer is the last thing to mount, so it is the honest signal that the
-  // conversation has finished loading rather than that its shell has.
+  // The composer mounts alongside the loading skeletons, so it proves only that the
+  // shell has rendered. The session list and the absence of every skeleton are the
+  // signal that the conversation itself has loaded.
   await expect(page.getByTestId('chat-composer')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('chat-input')).toBeVisible();
+  await expect(page.getByTestId('chat-sessions-list')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.ant-skeleton')).toHaveCount(0, { timeout: 30_000 });
   // Guards against capturing the empty state, which renders the same chrome.
   await expect(page.getByTestId('chat-empty')).toHaveCount(0);
   await settle(page);

@@ -357,7 +357,7 @@ One rule governs the change. A pool's class, its Worker image, and the cluster's
    microvm          microvm  26h
    ```
 
-   A default installation creates only the `gvisor` class, because the Agent Substrate chart applies `sandboxconfig-gvisor.yaml` and kagent installs nothing for `microvm`. The `microvm` configuration and its runtime assets are staged out of band by the Agent Substrate installer, such as through `hack/install-microvm-deps.sh --install`.
+   A default installation creates only the `gvisor` class, because the Agent Substrate chart applies `sandboxconfig-gvisor.yaml` and kagent installs nothing for `microvm`. To add the `microvm` class, run the Agent Substrate `ate-setup` tool from a checkout of the [Agent Substrate repository](https://github.com/kagent-dev/substrate) at the release that matches your chart. The `go run ./cmd/ate-setup deploy sandboxconfig --sandbox-classes=microvm` command stages the runtime assets and applies the `microvm` SandboxConfig.
 
 3. Verify that the pool's Workers came up on the build that you set. A Worker built for another class never registers, so the pool's `READY` count stays below its `DESIRED` count. Confirm that the two counts match.
 

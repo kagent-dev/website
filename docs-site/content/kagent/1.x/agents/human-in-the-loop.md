@@ -7,11 +7,11 @@ author: kagent.dev
 
 Some agents only answer questions, and those can run unattended. Others call tools that change a cluster, spend money, or read sensitive information. An agent that takes actions like those should get a person's approval first. The human in the loop (HITL) mechanism lets an agent stop mid-turn, return a question or a pending tool call to a person, and continue once that person answers.
 
-A working HITL setup needs support from both the agent and the client. The agent must pause, which you configure by setting `requireApproval` on a tool binding in an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The client must support the Agent2Agent (A2A) human-in-the-loop extension, so that the client can present the request to a person and return the decision to the agent. A client without the extension still sees the agent stop, but cannot answer. Confirm that the client you plan to use supports the extension before you configure an agent to pause. For the clients that support the extension, see [Client support](#client-support).
+A working HITL setup needs support from both the agent and the client. To make the agent pause, set `requireApproval` on a tool binding in an {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}. The client must support the Agent2Agent (A2A) human-in-the-loop extension, so that the client can present the request to a person and return the decision to the agent. Before you configure an agent to pause, confirm that the client that you plan to use supports the extension. For the clients that support the extension, see [Client support](#client-support).
 
 ## Pause lifecycle
 
-A client opens every turn by telling the agent which optional A2A extensions it can handle. A client that requests the HITL extension on that message can answer a pause later in the turn. A client that does not request the extension still receives a reply when the turn finishes. When the agent stops for a person, that client does not receive a payload to answer.
+A client opens every turn by telling the agent which optional A2A extensions the client can handle. A client that requests the HITL extension on that message can answer a pause later in the turn. A client that does not request the extension still receives a reply when the turn finishes. When the agent stops for a person, that client does not receive a payload to answer.
 
 The following diagram traces one turn in which the agent stops.
 
@@ -21,7 +21,7 @@ flowchart TB
     working["Agent works on the turn"]
     decision{"Does the agent need<br>a person?"}
     pause["Task state becomes<br>INPUT_REQUIRED"]
-    request["Status message carries a<br>tool_approval_request<br>or ask_user_request"]
+    request["Status message contains a<br>tool_approval_request<br>or ask_user_request"]
     answer["Client sends a response message<br>on the same task"]
     done["Agent finishes the turn"]
 
@@ -34,7 +34,7 @@ flowchart TB
     answer --> working
 ```
 
-The agent works until it either finishes the turn or needs a person. When it needs a person, the task moves to `INPUT_REQUIRED` and its status message carries either a `tool_approval_request` or an `ask_user_request`. The client answers by sending a response message on the same task, and the agent resumes the turn where it left off.
+The agent works until it either finishes the turn or needs a person. When it needs a person, the task moves to `INPUT_REQUIRED` and its status message contains either a `tool_approval_request` or an `ask_user_request`. The client answers by sending a response message on the same task, and the agent resumes the turn where it left off.
 
 ## Pause kinds
 
@@ -56,7 +56,7 @@ The `kagent` harness composes this text from the pending calls. The wording depe
 | A tool pause with no hints | `Approval is required for tool(s): delete_file` |
 | A pause that does not include a tool call | `Human input is required before the agent can continue.` |
 
-The `codex` and `claude` harnesses compose the text differently. Both pass through the hint that Codex or Claude Code supplied with the request, so the wording comes from the coding agent rather than from kagent.
+The `codex` and `claude` harnesses compose the text differently. Both pass through the hint that Codex or Claude Code supplied with the request, so the wording comes from the coding agent.
 
 ### Disable questions
 
@@ -73,7 +73,7 @@ The value removes only the question tool. A binding that sets `requireApproval` 
 
 ## Require approval for a tool
 
-Approval is a property of a tool binding. For example, if you set `requireApproval` on an `mcp` tool binding in the AgentTemplate, the agent stops before each call to a tool that the binding exposes.
+If you set `requireApproval` on an `mcp` tool binding in the AgentTemplate, the agent stops before each call to a tool that the binding exposes.
 
 ### Harness support
 
@@ -86,7 +86,7 @@ The Harness that runs an agent decides which pauses the agent can raise, and how
 | `claude` | Supported | Unsupported, because the upstream Claude Code tool that backed it was removed. A `claude` agent pauses for tool approval only. | Rejected, with `RemoteMCPServer "<name>" is bound more than once`. A binding whose tool selection kagent cannot verify against the server's discovered tools exposes the whole server and reports a warning. |
 | `byo` | Decided by your image | Decided by your image | Not applicable |
 
-kagent passes each binding's `requireApproval` setting to a `byo` image, and the image decides whether to honor it. The agent card for a `byo` Agent never declares the HITL extension, so a client cannot learn from the card that the agent pauses, even when the image implements the extension. For what else that card omits, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#compare-byo-and-declarative-agents" >}}).
+kagent passes each binding's `requireApproval` setting to a `byo` image, and the image decides whether to honor it. The agent card for a `byo` Agent never declares the HITL extension. The card omits it even when the image implements the extension, so a client cannot learn from the card that the agent pauses. For what else that card omits, see [Bring your own agent]({{< link path="agents/bring-your-own-agent#compare-byo-and-declarative-agents" >}}).
 
 ### Configure a binding
 
@@ -120,13 +120,13 @@ spec:
 Approval belongs to the binding rather than to the tool name, so one server can supply tools that require approval alongside tools that do not. Bind the tools that require approval in a binding that sets `requireApproval`, and bind the tools that do not in a second binding that omits it. The `codex` and `claude` harnesses reject a second binding to the same server. An agent on those harnesses applies one approval setting to every tool that the server offers.
 
 > [!NOTE]
-> kagent 0.x named the tools that needed approval in a `requireApproval` list on the `Agent` resource, which matched tool names across every server. In 1.x, approval is a property of one binding, so the same tool name can pause for one server and run freely for another.
+> kagent 0.x named the tools that needed approval in a `requireApproval` list on the Agent resource, which matched tool names across every server.
 
-A tool that no binding covers with `requireApproval` runs without a pause. These tools include every built-in tool, for example file access, shell, and web search, and every Model Context Protocol (MCP) tool on a binding that omits the field. The sandbox contains those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
+A tool runs without a pause unless a binding that sets `requireApproval` exposes it. These tools include every built-in tool, such as file access, shell, and web search, and every Model Context Protocol (MCP) tool on a binding that omits the field. The Actor's sandbox confines those calls. For more information, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Implement a client that supports human approval
 
-HITL is an [A2A](https://a2a-protocol.org) message extension, identified by a versioned URI. The following sections follow a client through one pause, from the header that it sends to the response that it returns.
+HITL is an [A2A](https://a2a-protocol.org) message extension, identified by a versioned Uniform Resource Identifier (URI). The following sections follow a client through one pause, from the header that it sends to the response that it returns.
 
 ### Request the extension
 
@@ -136,9 +136,9 @@ A client requests the extension by setting the extension URI as the `A2A-Extensi
 A2A-Extensions: https://kagent.dev/extensions/hitl/v1
 ```
 
-kagent activates the extension only for calls that request it. kagent then echoes the activated URI back and attaches a structured pause payload only to an activated call. An agent's card declares the extension, so a client can discover HITL support before it sends anything.
+kagent activates the extension only for calls that request it. kagent then echoes the activated URI back and attaches a structured pause payload only to an activated call. A declarative agent's card declares the extension, so a client can discover HITL support before it sends anything.
 
-A gRPC call names the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
+A gRPC call specifies the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
 
 ```bash
 grpcurl -plaintext \
@@ -201,24 +201,23 @@ An `ask_user_request` contains an `id` and a list of `questions`. The response e
 }
 ```
 
-> [!WARNING]
-> Put the extension URI in the response message's `extensions` array as well as in its `metadata`. The `kagent` harness ignores a `metadata` payload that the array does not declare, and delivers the message as ordinary text. The task resumes and the agent replies, so the mistake is silent. The `codex` and `claude` harnesses reject the message with `tool approval response must declare https://kagent.dev/extensions/hitl/v1`.
-
 ## Resume a paused task
 
 A paused task waits for the client to send a message that contains the response payload, on the same task and context. kagent rejects a resume attempt on a task that is not waiting.
 
+The response message must list the extension URI in its `extensions` array as well as in its `metadata`. The `kagent` harness ignores a `metadata` payload that the array does not declare, and delivers the message as ordinary text. The task resumes and the agent replies, so the mistake is silent. The `codex` and `claude` harnesses reject the message with `tool approval response must declare https://kagent.dev/extensions/hitl/v1`.
+
 While the task waits, kagent suspends the {{< gloss "Actor" >}}Actor{{< /gloss >}} to a durable {{< gloss "Snapshot" >}}snapshot{{< /gloss >}} in the same way as at the end of a turn. The snapshot keeps the durable volume and discards the running process. Each harness records the pending request in that volume and continues the turn when the answer arrives.
 
-The `claude` harness resumes its deferred tool call. The `codex` harness runs the approved MCP call itself and continues with the result. The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a task that waits at `INPUT_REQUIRED` does not consume pool capacity. The wait also survives the loss of the node. For more information, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
+The {{< gloss "Worker" >}}Worker{{< /gloss >}} is released in the meantime, so a task that waits at `INPUT_REQUIRED` does not consume pool capacity. The wait also survives the loss of the node. For more information, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume" >}}).
 
-On the `codex` and `claude` harnesses, only one pending request survives the suspension. The `codex` harness cancels any other request along with the interrupted turn. The `claude` harness denies a protected call that arrives in a parallel batch, but a single remaining call can still pause for approval. If an approved call fails after it starts, the harness cannot resume the task. To continue the work, start a new Session.
+The `claude` harness resumes its deferred tool call. The `codex` harness runs the approved MCP call itself and continues with the result. On these two harnesses, only one pending request survives the suspension. The `codex` harness cancels any other request along with the interrupted turn. The `claude` harness denies a protected call that arrives in a parallel batch, but a single remaining call can still pause for approval. If an approved call fails after it starts, the harness cannot resume the task. To continue the work, start a new Session.
 
 The {{< gloss "Transcript" >}}transcript{{< /gloss >}} only grows, so the question and the answer both stay in the task history. A later reader can see what was asked and what a person decided.
 
 ## Task states
 
-An A2A task moves through several states over its life. The following states mean that the task has stopped and is waiting.
+Of the states that an A2A task moves through, the following states mean that the task has stopped and is waiting.
 
 | State | Meaning |
 | ----- | ------- |
@@ -227,7 +226,7 @@ An A2A task moves through several states over its life. The following states mea
 
 ## Agents bound as tools
 
-An agent that a parent binds as a tool can raise a pause of its own. The request then includes a `nested` block that identifies the subagent, along with its task and context. A client can therefore tell the person which agent is asking rather than attributing the question to the parent.
+An agent that a parent binds as a tool can raise a pause of its own. The request then includes a `nested` block that identifies the subagent, along with its task and context. A client can therefore tell the person which agent is asking.
 
 ## Client support
 
@@ -236,8 +235,8 @@ The AgentTemplate decides that a turn pauses, and the client that raised the tur
 | Client | HITL |
 | ------ | ---- |
 | Your own A2A client | Full. Request the extension URI and handle every payload type. |
-| An {{< gloss "MCP" >}}MCP{{< /gloss >}} client that supports tasks | Supported. The `invoke_session` tool returns a task, and input requests surface as MCP elicitations. |
-| The kagent CLI | Not supported. `kagent agent invoke` does not request the extension, so a turn that pauses stays at `INPUT_REQUIRED` and the CLI cannot answer it. The CLI reports `Input required to continue this Session.` and stops there. Send the turn again from a client that requests the extension. |
+| An {{< gloss "MCP" >}}MCP{{< /gloss >}} client that supports tasks | Supported. The `invoke_agent` tool returns a task, and input requests surface as MCP elicitations. |
+| The kagent CLI | Not supported. `kagent agent invoke` does not request the extension, so a turn that pauses stays at `INPUT_REQUIRED` and the CLI cannot answer it. The CLI reports `Input required to continue this Session.` and stops there. |
 
 ## Next steps
 

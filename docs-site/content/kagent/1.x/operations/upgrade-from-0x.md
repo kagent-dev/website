@@ -163,7 +163,7 @@ The export splits into resources that convert with small changes, agents that ne
 
 ### Resources that you can convert {#resources-that-you-can-convert}
 
-ModelConfig, ModelProviderConfig, and RemoteMCPServer keep most of the fields that `v1alpha2` sets. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`, and the field's behavior does not change. `v1alpha3` removes the following ModelConfig fields. When a resource sets any of them, the API server rejects the resource and reports the field as unknown.
+ModelConfig and RemoteMCPServer keep most of the fields that `v1alpha2` sets. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`, and the field's behavior does not change. `v1alpha3` removes the following ModelConfig fields. When a resource sets any of them, the API server rejects the resource and reports the field as unknown.
 
 - `spec.openAI.tokenExchange`
 - `spec.tls.caCertSecretRef` and `spec.tls.caCertSecretKey`
@@ -171,21 +171,29 @@ ModelConfig, ModelProviderConfig, and RemoteMCPServer keep most of the fields th
 
 kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In place of `tokenExchange`, use an endpoint that accepts a static API key. For what to use in place of a custom certificate authority bundle, see [Credentials that kagent rejects]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
 
+`v1alpha3` reshapes ModelProviderConfig. Model discovery accepts only the `OpenAI` type, which covers any OpenAI-compatible endpoint, so a ModelProviderConfig of another type has no `v1alpha3` equivalent. The `spec.secretRef` field moves to `spec.discoveryAuth.secretRef`, which names the key within the Secret as well as the Secret. kagent uses that credential only to list models, never to invoke them.
+
 1. Before you apply the ModelConfigs, recreate the Secrets that they reference. Otherwise, the ModelConfigs cannot resolve their Secrets.
 
-2. Convert these resources to `v1alpha3`. The export also contains Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, ModelProviderConfig, and RemoteMCPServer resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field to `tokenPassthrough`, deletes the `spec.openAI.tokenExchange` field that `v1alpha3` removed, and removes the metadata that the 0.10.x API server set.
+2. Convert these resources to `v1alpha3`. The export also contains Agents and other kinds that `v1alpha3` does not serve, so the command keeps only ModelConfig, RemoteMCPServer, and `OpenAI` ModelProviderConfig resources. The command sets each `apiVersion`, renames the `apiKeyPassthrough` field to `tokenPassthrough`, deletes the `spec.openAI.tokenExchange` field that `v1alpha3` removed, and removes the metadata that the 0.10.x API server set. For a ModelProviderConfig, the command moves the Secret name to `spec.discoveryAuth.secretRef` and leaves a `<secret-key>` placeholder for the key.
    ```bash
-   yq '.items |= map(select(.kind == "ModelConfig" or .kind == "ModelProviderConfig" or .kind == "RemoteMCPServer"))
+   yq '.items |= map(select(.kind == "ModelConfig" or .kind == "RemoteMCPServer" or (.kind == "ModelProviderConfig" and .spec.type == "OpenAI")))
      | .items[].apiVersion = "api.kagent.dev/v1alpha3"
      | del(.items[].status, .items[].metadata.resourceVersion, .items[].metadata.uid, .items[].metadata.creationTimestamp, .items[].metadata.generation, .items[].metadata.managedFields, .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"])
      | (.items[] | select(.kind == "ModelConfig" and has("spec") and (.spec | has("apiKeyPassthrough"))) | .spec) |= (.tokenPassthrough = .apiKeyPassthrough | del(.apiKeyPassthrough))
-     | del(.items[] | select(.kind == "ModelConfig") | .spec.openAI.tokenExchange)' \
+     | del(.items[] | select(.kind == "ModelConfig") | .spec.openAI.tokenExchange)
+     | (.items[] | select(.kind == "ModelProviderConfig" and (.spec | has("secretRef"))) | .spec) |= (.discoveryAuth.secretRef = {"name": .secretRef.name, "key": "<secret-key>"} | del(.secretRef))' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
 
-3. If the converted file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
+3. If the converted file includes a ModelProviderConfig with a `<secret-key>` placeholder, replace the placeholder with the key that holds the API key. A 0.10.x discovery Secret holds exactly one key, so list the keys of the Secret that `discoveryAuth.secretRef.name` names.
+   ```bash
+   kubectl get secret <secret-name> -n <namespace> -o go-template='{{range $k, $v := .data}}{{$k}}{{"\n"}}{{end}}'
+   ```
 
-4. Apply the converted resources.
+4. If the converted file includes the `kagent-grafana-mcp` RemoteMCPServer, delete it, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
+
+5. Apply the converted resources.
    ```bash
    kubectl apply -f kagent-1.0-resources.yaml
    ```

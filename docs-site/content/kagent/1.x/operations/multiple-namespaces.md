@@ -132,7 +132,7 @@ By default, the controller watches every namespace. The chart creates ClusterRol
 
 ### Set the watched namespaces
 
-`global.watchNamespaces` sets two scopes from one value: the namespaces where the chart grants the controller RBAC, and the namespaces that the controller watches. For each listed namespace, the chart replaces the controller's getter and writer ClusterRoles and the tool server's ClusterRole with a Role and RoleBinding. The ClusterRole for service account authentication and the metrics ClusterRoles stay cluster-scoped. The chart also adds each listed namespace to the watch. The chart appends the install namespace to the list, so the release's own resources remain managed. Because one value sets both scopes, the two scopes cannot disagree.
+`global.watchNamespaces` sets two scopes from one value: the namespaces where the chart grants the controller RBAC, and the namespaces that the controller watches. For each listed namespace, the chart replaces the controller's reconciliation and management ClusterRoles with a Role and RoleBinding each. The ClusterRole for service account authentication and the metrics ClusterRoles stay cluster-scoped. The chart also adds each listed namespace to the watch. The chart appends the install namespace to the list, so the release's own resources remain managed. Because one value sets both scopes, the two scopes cannot disagree.
 
 Set `global.watchNamespaces` when you install kagent, or later with a `helm upgrade` of the kagent release. Create every listed namespace before upgrading, because the chart creates a Role and RoleBinding in each one.
 
