@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Container, FileCode2, Fingerprint, GlobeLock, KeyRound, Link2, ServerCog } from "lucide-react";
 import Jobs from "@/components/home/jobs";
@@ -130,11 +131,11 @@ export default function Home() {
         </a>
         <nav className="hidden gap-8 text-sm text-white/80 md:flex">
           <a href="#how" className="hover:text-white">How it works</a>
+          <Link href={DOCS} className="hover:text-white">Docs</Link>
+          <Link href="/blog" className="hover:text-white">Blog</Link>
           <a href="#agents" className="hover:text-white">Agents</a>
-          <a href="#faq" className="hover:text-white">FAQ</a>
-          <a href={DOCS} className="hover:text-white">Docs</a>
-          <a href="/community" className="hover:text-white">Community</a>
-          <a href="/enterprise" className="hover:text-white">Enterprise</a>
+          <Link href="/community" className="hover:text-white">Community</Link>
+          <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
         </nav>
         <div className="flex gap-2">
           <a href={GITHUB} className="hidden rounded-full bg-ks-card2 px-4 py-2 text-sm sm:block">GitHub</a>
@@ -353,11 +354,12 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-6 px-6 py-10 text-sm text-ks-muted md:flex-row">
           <span>kagent and Agent Substrate are CNCF Sandbox projects.</span>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
-            <a href={DOCS} className="hover:text-white">Docs</a>
+            <Link href={DOCS} className="hover:text-white">Docs</Link>
+            <Link href="/blog" className="hover:text-white">Blog</Link>
             <a href={GITHUB} className="hover:text-white">GitHub</a>
             <a href={SUBSTRATE} className="hover:text-white">ate.dev</a>
-            <a href="/community" className="hover:text-white">Community</a>
-            <a href="/enterprise" className="hover:text-white">Enterprise</a>
+            <Link href="/community" className="hover:text-white">Community</Link>
+            <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
             <a href="https://discord.gg/Fu3k65f2k3" className="hover:text-white">Discord</a>
           </div>
         </div>

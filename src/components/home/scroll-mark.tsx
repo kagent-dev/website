@@ -37,11 +37,11 @@ export default function ScrollMark() {
       const tr = title.getBoundingClientRect();
 
       // start: big, centered behind the title
-      const startSize = Math.min(820, vw * 0.8);
+      const startSize = Math.min(900, vw * 0.85);
       const start = { x: vw / 2, y: tr.top + tr.height / 2, s: startSize };
       // floating spot: a little bigger, on the right, partly past the edge
-      const big = Math.min(1000, vw * 0.85);
-      const dock = { x: vw - big * 0.22, y: vh * 0.55, s: big };
+      const big = Math.min(1300, vw * 1.05);
+      const dock = { x: vw - big * 0.2, y: vh * 0.55, s: big };
       const end = { x: f.left + f.width / 2, y: f.top + f.height / 2, s: f.width };
 
       // phase 1: behind the title -> right side, over the first ~900px
