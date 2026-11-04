@@ -9,7 +9,7 @@ An installation of {{< reuse "kagent-docs/snippets/name-product.md" >}} consists
 
 Upgrade from one stable release to the next, and do not skip a stable release. Before you move to the next stable release, upgrade to the latest patch release of your current stable release. Patch releases do not change the database schema, so you can upgrade directly to the latest patch release without the patch releases in between. To move a 0.10.x installation to 1.x, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}) instead.
 
-<!-- REVIEW: kagent is moving from semantic versioning to calendar versioning. The release-order rule in the preceding paragraph follows the proposed stable-release model and names no version format. Add version examples, and define a stable release, when the calendar version format is published. The version variables in "Prepare to upgrade" assume semver. -->
+<!-- REVIEW: kagent is moving from semantic versioning to calendar versioning. The release-order rule in the preceding paragraph follows the stable-release model that OSS and enterprise share and names no version format. Add version examples, and define a stable release, when the calendar version format is published. The version variables in "Prepare to upgrade" assume semver. -->
 
 ## Prepare to upgrade
 
