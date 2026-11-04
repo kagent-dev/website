@@ -62,7 +62,7 @@ The workload sends a ServiceAccount token whose audience is `kagent-invocation` 
 ```bash
 kubectl create namespace ci-bots
 kubectl create serviceaccount scheduler -n ci-bots
-kubectl port-forward -n kagent deployment/kagent-controller 8083:8083 &
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083 &
 TOKEN=$(kubectl create token scheduler -n ci-bots --audience kagent-invocation)
 grpcurl -plaintext -H "Authorization: Bearer $TOKEN" -d '{}' \
   localhost:8083 kagent.api.v1.SystemService/GetCurrentUser
