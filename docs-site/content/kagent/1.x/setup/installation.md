@@ -283,7 +283,7 @@ kagent and Agent Substrate each connect with an owner login, which applies migra
    The `sslmode=verify-full` setting makes each component verify the server certificate of the database against a root certificate. How you provide that root certificate depends on the certificate authority (CA) that signed the server certificate.
    * For a publicly trusted CA, add `sslrootcert=system` to each connection string. Each component then verifies the server certificate against the root certificates in its container image.
    * For a private CA, such as the Amazon RDS CA, kagent reads the CA certificate from a file that you mount on the controller. Agent Substrate cannot mount a CA file in this release, so the Agent Substrate connection strings cannot verify a server certificate that a private CA signed.
-     <!-- REVIEW: Agent Substrate chart gap, confirmed by engineering. Link the issue, and replace the preceding sentence with the procedure when the chart can mount a CA file. -->
+     <!-- REVIEW: Agent Substrate chart gap, tracked in https://github.com/kagent-dev/substrate/issues/125. Replace the preceding sentence with the procedure when the chart can mount a CA file. -->
      1. Store the CA certificate in a Secret.
         ```bash
         kubectl create secret generic kagent-postgres-ca -n kagent \
