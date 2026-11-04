@@ -81,18 +81,18 @@ const HARNESSES: { name: string; runtime: string; pool: string }[] = [
 ];
 
 const MODELS: { name: string; provider: string; model: string; secret: string }[] = [
-  { name: "bedrock-claude", provider: "Bedrock", model: "us.anthropic.claude-sonnet-5-5-v1:0", secret: "demo-bedrock" },
   { name: "claude-opus", provider: "Anthropic", model: "claude-opus-5-5", secret: "demo-anthropic" },
   { name: "claude-sonnet", provider: "Anthropic", model: "claude-sonnet-5-5", secret: "demo-anthropic" },
+  { name: "openai-gpt", provider: "OpenAI", model: "gpt-5.4", secret: "demo-openai" },
   { name: "default-model-config", provider: "OpenAI", model: "qwen3.8-flash-next", secret: "kagent-openai" },
+  { name: "bedrock-claude", provider: "Bedrock", model: "us.anthropic.claude-sonnet-5-5-v1:0", secret: "demo-bedrock" },
   { name: "foundry-gpt", provider: "Foundry", model: "gpt-5", secret: "demo-foundry" },
   { name: "gemini-pro", provider: "Gemini", model: "gemini-2.5-pro", secret: "demo-gemini" },
-  { name: "huggingface-qwen", provider: "OpenAI", model: "Qwen/Qwen3-Coder-480B-A35B-Instruct", secret: "demo-huggingface" },
-  { name: "mistral-large", provider: "Mistral", model: "mistral-large-latest", secret: "demo-mistral" },
-  { name: "ollama-local", provider: "Ollama", model: "qwen3:32b", secret: "—" },
-  { name: "openai-gpt", provider: "OpenAI", model: "gpt-5.4", secret: "demo-openai" },
   { name: "xai-grok", provider: "OpenAI", model: "grok-4", secret: "demo-xai" },
-];
+  { name: "mistral-large", provider: "Mistral", model: "mistral-large-latest", secret: "demo-mistral" },
+  { name: "huggingface-qwen", provider: "OpenAI", model: "Qwen/Qwen3-Coder-480B-A35B-Instruct", secret: "demo-huggingface" },
+  { name: "ollama-local", provider: "Ollama", model: "qwen3:32b", secret: "—" },
+]
 
 const MCP: { name: string; tools: number; url: string; desc: string; sample: string[] }[] = [
   { name: "stripe-mcp", tools: 25, url: "https://mcp.stripe.com", desc: "Stripe — customers, payments and subscriptions", sample: ["list_customers", "create_payment_link", "list_subscriptions", "create_refund", "retrieve_balance", "list_invoices"] },
@@ -614,14 +614,15 @@ function Models() {
   const [rows, setRows] = useState(MODELS);
   const [q, setQ] = useState("");
   const [prov, setProv] = useState("All providers");
-  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "name", dir: "desc" });
+  // default order puts Claude and OpenAI first; a header click sorts
+  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" } | null>(null);
   const [toast, setToast] = useState("");
   const providers = ["All providers", ...Array.from(new Set(MODELS.map((m) => m.provider))).sort()];
 
   const shown = rows
     .filter((m) => prov === "All providers" || m.provider === prov)
     .filter((m) => [m.name, m.provider, m.model, m.secret].join(" ").toLowerCase().includes(q.toLowerCase()))
-    .sort((x, y) => (sort.dir === "asc" ? 1 : -1) * x[sort.key].localeCompare(y[sort.key]));
+    .sort((x, y) => (sort ? (sort.dir === "asc" ? 1 : -1) * x[sort.key].localeCompare(y[sort.key]) : 0));
 
   const flash = (t: string) => {
     setToast(t);
@@ -630,9 +631,9 @@ function Models() {
   const header = (label: string, key?: SortKey) => (
     <th className="border-r border-white/[0.06] px-4 py-2.5 font-medium last:border-0">
       {key ? (
-        <button onClick={() => setSort((s) => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }))} className="flex w-full items-center justify-between gap-3">
+        <button onClick={() => setSort((s) => ({ key, dir: s?.key === key && s.dir === "asc" ? "desc" : "asc" }))} className="flex w-full items-center justify-between gap-3">
           {label}
-          <SortIcon dir={sort.key === key ? sort.dir : null} />
+          <SortIcon dir={sort?.key === key ? sort.dir : null} />
         </button>
       ) : (
         label
