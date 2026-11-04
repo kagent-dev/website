@@ -33,12 +33,31 @@ function useReducedMotion() {
   );
 }
 
-const initialWorkers = (): Worker[] => [17, 52, 89, 126].map((a, i) => ({ actor: a, prev: null, since: -i }));
+const initialWorkers = (): Worker[] => [5, 26, 47, 64].map((a, i) => ({ actor: a, prev: null, since: -i }));
+
+const SMALL = "(max-width: 639px)";
+function useSmall() {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(SMALL);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(SMALL).matches,
+    () => false,
+  );
+}
 
 export default function ActorGrid() {
   const reduce = useReducedMotion();
+  const small = useSmall();
+  const shown = small ? N / 2 : N;
+  const smallRef = useRef(small);
+  useEffect(() => {
+    smallRef.current = small;
+  }, [small]);
   const [workers, setWorkers] = useState<Worker[]>(initialWorkers);
-  const [phase, setPhase] = useState<Record<number, State>>({ 17: "running", 52: "running", 89: "running", 126: "running" });
+  const [phase, setPhase] = useState<Record<number, State>>({ 5: "running", 26: "running", 47: "running", 64: "running" });
   const [hover, setHover] = useState<number | null>(null);
   const [lastRoute, setLastRoute] = useState("waiting for requests");
   const tick = useRef(0);
@@ -73,8 +92,9 @@ export default function ActorGrid() {
     if (reduce) return;
     const timer = setInterval(() => {
       const busy = new Set(workersRef.current.map((w) => w.actor));
-      let a = Math.floor(Math.random() * N);
-      while (busy.has(a)) a = (a + 1) % N;
+      const n = smallRef.current ? N / 2 : N;
+      let a = Math.floor(Math.random() * n);
+      while (busy.has(a)) a = (a + 1) % n;
       request(a);
     }, 1800);
     return () => clearInterval(timer);
@@ -87,16 +107,16 @@ export default function ActorGrid() {
 
   return (
     <div className="select-none text-[11px]">
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 font-geistmono">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 font-geistmono">
         <span className="tracking-wider text-white/50">ACTORS</span>
         <span className="text-white/45">
-          <b className="font-normal text-white">{N}</b> agents · <b className="font-normal text-violet-300">{counts.running ?? 0}</b> running ·{" "}
-          <b className="font-normal text-white">{N - (counts.running ?? 0) - (counts.resuming ?? 0)}</b> asleep in snapshot storage
+          <b className="font-normal text-white">{shown}</b> agents · <b className="font-normal text-violet-300">{counts.running ?? 0}</b> running ·{" "}
+          <b className="font-normal text-white">{shown - (counts.running ?? 0) - (counts.resuming ?? 0)}</b> asleep
         </span>
       </div>
 
-      <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }} onMouseLeave={() => setHover(null)}>
-        {Array.from({ length: N }, (_, a) => {
+      <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${small ? COLS / 2 : COLS}, minmax(0, 1fr))` }} onMouseLeave={() => setHover(null)}>
+        {Array.from({ length: shown }, (_, a) => {
           const s = phase[a] ?? "idle";
           const style: React.CSSProperties =
             s === "running"
@@ -134,7 +154,7 @@ export default function ActorGrid() {
         <span className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.03] px-3 py-1 font-geistmono">
           <span className="text-violet-300">⇄</span>
           <b className="font-medium text-white">atenet router</b>
-          <span className="max-w-[240px] truncate text-white/50">{lastRoute}</span>
+          <span className="hidden max-w-[240px] truncate text-white/50 sm:inline">{lastRoute}</span>
         </span>
         <span className="h-px flex-1 bg-white/10" />
       </div>

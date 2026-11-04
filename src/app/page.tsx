@@ -130,9 +130,9 @@ export default function Home() {
           kagent
         </a>
         <nav className="hidden gap-8 text-sm text-white/80 md:flex">
-          <a href="#how" className="hover:text-white">How it works</a>
           <Link href={DOCS} className="hover:text-white">Docs</Link>
           <Link href="/blog" className="hover:text-white">Blog</Link>
+          <a href="#how" className="hover:text-white">How it works</a>
           <a href="#agents" className="hover:text-white">Agents</a>
           <Link href="/community" className="hover:text-white">Community</Link>
           <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
@@ -197,7 +197,7 @@ export default function Home() {
               <p className="mt-3 leading-relaxed text-ks-muted">
                 When an agent waits on a person or a model, Substrate snapshots it to storage and frees its worker. The next request goes through the atenet router, and the agent resumes on whichever warm worker has room.
               </p>
-              <p className="mt-3 leading-relaxed text-ks-muted">Here, 144 agents share four warm pods.</p>
+              <p className="mt-3 leading-relaxed text-ks-muted">Here, every agent in the grid shares the same four warm pods.</p>
               <p className="mt-6 text-sm text-white/70">Click any dim square to send that agent a request.</p>
             </div>
             <div className="min-w-0 rounded-2xl border border-ks-line bg-ks-bg p-4">

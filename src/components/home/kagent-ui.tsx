@@ -1118,6 +1118,7 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
   const [counter, setCounter] = useState(1);
   const [view, setView] = useState<"chat" | "details">("chat");
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileList, setMobileList] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menu, setMenu] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
@@ -1125,6 +1126,7 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
   const initials = agent.slice(0, 2).toUpperCase();
 
   const newChat = () => {
+    setMobileList(false);
     const key = `new-${counter}`;
     setCounter((c) => c + 1);
     setPending(key);
@@ -1140,9 +1142,9 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
   const shown = chats.filter((c) => c.title.toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="relative flex h-full min-h-0">
       {!collapsed && (
-        <aside className="flex w-[250px] shrink-0 flex-col gap-1.5 border-r border-white/[0.06] p-3">
+        <aside className={`${mobileList ? "absolute inset-y-0 left-0 z-30 flex bg-[#0c0b10] pt-11 shadow-2xl" : "hidden"} w-[250px] shrink-0 flex-col gap-1.5 border-r border-white/[0.06] p-3 md:static md:flex md:pt-3 md:shadow-none`}>
           {/* agent switcher */}
           <div className="relative">
             <button onClick={() => setPickerOpen((o) => !o)} className="flex w-full items-center gap-3 rounded-xl border border-white/[0.12] px-3 py-2.5 text-left hover:border-white/25">
@@ -1165,7 +1167,7 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
             )}
           </div>
 
-          <button onClick={() => setView("details")} className={`mt-2 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${view === "details" ? "bg-white/[0.06] text-white" : "text-white/70 hover:text-white"}`}>
+          <button onClick={() => { setView("details"); setMobileList(false); }} className={`mt-2 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${view === "details" ? "bg-white/[0.06] text-white" : "text-white/70 hover:text-white"}`}>
             <Icon name="agents" /> Agent Details
           </button>
           <button onClick={newChat} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium ${view === "chat" && pending === active ? "bg-violet-500/20 text-white" : "bg-violet-500/10 text-white/90 hover:bg-violet-500/20"}`}>
@@ -1198,7 +1200,7 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
                 ) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="shrink-0 text-white/60"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
                 )}
-                <button onClick={() => { setActive(c.id); setView("chat"); }} className="min-w-0 flex-1 truncate text-left text-white/80">
+                <button onClick={() => { setActive(c.id); setView("chat"); setMobileList(false); }} className="min-w-0 flex-1 truncate text-left text-white/80">
                   {c.title} · {c.when}
                 </button>
                 <button onClick={() => setMenu(menu === c.id ? null : c.id)} className="px-1 text-white/60 hover:text-white" aria-label="Chat options">⋮</button>
@@ -1214,7 +1216,7 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
       )}
 
       <section className="relative flex min-w-0 flex-1 flex-col">
-        <button onClick={() => setCollapsed((c) => !c)} className="absolute left-3 top-3 z-10 text-white/60 hover:text-white" aria-label="Toggle chat list">
+        <button onClick={() => { if (window.matchMedia("(min-width: 768px)").matches) setCollapsed((c) => !c); else setMobileList((m) => !m); }} className="absolute left-3 top-3 z-40 text-white/60 hover:text-white" aria-label="Toggle chat list">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>
         </button>
 
@@ -1319,7 +1321,7 @@ export default function KagentUI() {
         <span className="ml-auto hidden rounded bg-white/5 px-3 py-1 font-geistmono text-[11px] text-white/40 sm:block">kagent ui · /{page === "chat" ? `agents/${chatWith}/chat` : page === "dashboard" ? "" : page}</span>
       </div>
 
-      <div className="grid h-[620px] md:grid-cols-[200px_1fr]">
+      <div className="flex h-[620px] flex-col md:grid md:grid-cols-[200px_1fr]">
         {/* sidebar */}
         <nav className="hidden flex-col border-r border-white/[0.08] p-2 md:flex">
           {NAV.map((n) => (
@@ -1347,7 +1349,7 @@ export default function KagentUI() {
         </div>
 
         {/* main */}
-        <main className={page === "chat" ? "flex min-h-0 flex-col" : "min-h-0 overflow-y-auto p-5"}>
+        <main className={page === "chat" ? "flex min-h-0 flex-1 flex-col" : "min-h-0 flex-1 overflow-y-auto p-4 md:p-5"}>
           {page === "dashboard" && <Dashboard go={go} />}
           {page === "agents" && <Agents go={go} />}
           {page === "schedules" && <Schedules go={go} />}
