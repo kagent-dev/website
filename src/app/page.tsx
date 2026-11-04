@@ -234,6 +234,9 @@ export default function Home() {
               <br />
               Substrate decides where.
             </h2>
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ks-muted">
+              Apply the three resources with kubectl or GitOps. The kagent controller compiles each Agent into an immutable Substrate ActorTemplate, and from there Substrate&apos;s own control and data plane handle scheduling and suspend/resume, so the Kubernetes API stays off the request path.
+            </p>
           </div>
           <a href={`${DOCS}/about/core-concepts`} className="group flex items-center gap-1.5 text-sm text-violet-300 hover:text-violet-200">
             Read the core concepts <span className="transition group-hover:translate-x-0.5">→</span>
@@ -305,9 +308,6 @@ export default function Home() {
           </div>
         </div>
 
-        <p className="mt-6 max-w-3xl text-sm leading-relaxed text-ks-muted">
-          Either way, apply it with kubectl or GitOps. The kagent controller compiles each Agent into an immutable Substrate ActorTemplate, and from there Substrate&apos;s own control and data plane handle scheduling and suspend/resume, so the Kubernetes API stays off the request path.
-        </p>
       </section>
 
       {/* Zero trust */}
