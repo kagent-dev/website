@@ -15,7 +15,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "kagent | Run millions of agents, securely, on Kubernetes",
+  title: "kagent | Platform for managing agents securely on Kubernetes",
   description:
     "kagent gives platform teams one place to deploy, manage and govern AI agents on Kubernetes, running on Agent Substrate: sandboxed, suspended when idle, resumed on the next message.",
 };
