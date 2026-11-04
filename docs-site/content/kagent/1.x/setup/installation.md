@@ -56,7 +56,7 @@ The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertif
 1. Install the following CLI tools. The kagent CLI runs `helm` to install each chart.
    * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
    * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
-   * The kagent CLI, matched to the release that these docs cover.
+   * `kagent`, the command line tool of the same version as the kagent release that you want to install.
      ```bash
      curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
      kagent version
@@ -195,7 +195,7 @@ Agent Substrate authenticates its components with mutual Transport Layer Securit
         --from-literal=ca.crt="${actor_id_ca_root}"
       ```
 
-   2. Read the issuer from the cluster, and note which kind it is. Kubernetes distributions advertise different issuers, and the `ate-api-authentication` ConfigMap takes a different form for each kind of issuer. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and later surfaces as `token issuer ... not trusted` on every `kubectl ate` call.
+   2. Determine whether the issuer for the cluster is an internal or external issuer. Kubernetes distributions advertise different issuers, and the `ate-api-authentication` ConfigMap takes a different form for each kind of issuer. An issuer that does not match the cluster's own is accepted when you create the ConfigMap, and later surfaces as `token issuer ... not trusted` on every `kubectl ate` call.
       ```bash
       k8s_issuer="$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer)"
       echo "${k8s_issuer}"

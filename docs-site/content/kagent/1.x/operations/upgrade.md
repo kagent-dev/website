@@ -7,7 +7,7 @@ author: kagent.dev
 
 An installation of {{< reuse "kagent-docs/snippets/name-product.md" >}} consists of five Helm releases. Upgrade the releases in the order that you installed them, starting with the CRDs, then Agent Substrate, and then the kagent control plane.
 
-Upgrade through each release in order, and do not skip a release. For example, to move from 1.0.0 to 1.0.2, upgrade to 1.0.1 first, and then to 1.0.2. To move to a new minor version, upgrade from the last patch release of the previous minor version, such as from 1.0.2 to 1.1.0. To move a 0.10.x installation to 1.x, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}) instead.
+Upgrade through each minor version in order, and do not skip a minor version. For example, to move from 1.0.x to 1.2.0, upgrade to 1.1.0 first, and then to 1.2.0. Within a minor version, you can upgrade directly to any later patch release, such as from 1.0.0 to 1.0.2. To move a 0.10.x installation to 1.x, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}) instead.
 
 <!-- REVIEW: kagent is moving from semantic versioning to calendar versioning. The release-order examples in the preceding paragraph, the version variables in "Prepare to upgrade", and the release-order rule itself assume semver. Rewrite them when the calendar version format is published. -->
 
@@ -28,11 +28,17 @@ Complete every step in this section before you change any release. The steps mak
    * The `substrate` and `substrate-crds` releases are in the `ate-system` namespace.
    * The `substrate-podcert` release is in the `podcertificate-controller-system` namespace.
 
-4. Back up the PostgreSQL database that kagent and Agent Substrate share. The upgrade keeps your data. However, the kagent controller and the Agent Substrate API server change the database schema when they start on the new version. To return to the previous version, you must restore the backup.
+4. Back up the PostgreSQL database that kagent and Agent Substrate share. The upgrade keeps your data. However, the kagent controller and the Agent Substrate API server change the database schema when they start on the new version. To return to the previous version, you must restore the backup or roll the schema back.
    ```bash
    pg_dump "postgresql://<user>:<password>@<host>:5432/kagent" \
      --format=custom \
      --file=kagent-backup.dump
+   ```
+   Record the schema version of the database as well. To roll the schema back without restoring the backup, you move the schema to this version.
+   ```bash
+   kagent db migrate version \
+     --db-url "postgresql://<user>:<password>@<host>:5432/kagent" \
+     --db-role <owner-role>
    ```
 
 5. Save the values of each release to a file. The upgrade commands reapply these files, so each release keeps its database settings and model provider settings. The `--reuse-values` flag also reapplies the defaults of the previous chart version, and the new chart can reject a default that it removed. Do not use that flag.
@@ -43,7 +49,7 @@ Complete every step in this section before you change any release. The steps mak
    ```
    For an installation that you exported from the kagent CLI, the `kagent-values.yaml` file contains your model provider API key in plain text. Store the files securely.
 
-6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade incrementally through an earlier release first, set the versions of that release.
+6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade through an intermediate minor version first, set the versions of that release.
    ```bash
    export KAGENT_VERSION={{< reuse "kagent-docs/versions/kagent.md" >}}
    export SUBSTRATE_VERSION={{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}
@@ -68,6 +74,12 @@ Upgrade the kagent and Agent Substrate custom resource definitions (CRDs) before
      --version ${SUBSTRATE_VERSION} \
      --namespace ate-system --wait
    ```
+
+3. Confirm that both CRD releases report the target version.
+   ```bash
+   helm list -A --filter 'crds'
+   ```
+   In the output, verify that the `STATUS` column reports `deployed` for both releases. The `CHART` column shows `kagent-crds-<version>` with the target kagent version, and `substrate-crds-<version>` with the target Agent Substrate version.
 
 ## Upgrade Agent Substrate
 
