@@ -190,7 +190,7 @@ Several rules decide which executions run.
 
 * **Missed times are skipped.** When kagent cannot start an execution within 30 seconds of its scheduled time, kagent skips that time and waits for the next one. A controller outage therefore does not produce a burst of runs when the controller returns.
 * **Configuration changes apply to future executions.** An execution keeps the prompt and the timeout that were current when kagent accepted it.
-* **A prompt is sent only once.** If the agent's runtime does not accept the prompt, kagent does not resend it, because a resend could duplicate the agent's work. The execution stays in `RUNNING` until the timeout, and then ends as `TIMED_OUT`.
+* **A prompt is sent only once.** If the agent's runtime does not accept the prompt, kagent does not resend it, because a resend could duplicate the agent's work. The execution stays in `RUNNING` until the timeout. <!-- REVIEW: at rc1 such an execution can stay RUNNING past its deadline indefinitely, because the deadline path suspends the Session first and the suspend fails on a crashed or unreachable Actor. Reproduced on rc1 2026-11-04. Restore "and then ends as TIMED_OUT" once kagent fixes this. -->
 * **History outlives its Sessions.** An execution keeps its `session_id` after the Session is deleted. The ID is a historical reference and does not mean that the Session still exists.
 
 ## Next steps
