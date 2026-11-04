@@ -190,14 +190,53 @@ const PROMPTS: { name: string; usedBy: string[]; keys: [string, string][] }[] = 
   },
 ];
 
-const SCHEDULES_INIT: { name: string; agent: string; when: string; active: boolean; next: string }[] = [
-  { name: "release-notes-draft", agent: "release-notes-writer", when: "Every day at 16:00", active: false, next: "11/5/2026, 11:00:00 AM" },
-  { name: "daily-platform-digest", agent: "platform-orchestrator", when: "Every day at 08:30", active: true, next: "11/5/2026, 3:30:00 AM" },
-  { name: "pod-restart-report", agent: "local-llm-assistant", when: "Every day at 18:00", active: true, next: "11/5/2026, 1:00:00 PM" },
-  { name: "nightly-cve-scan", agent: "cve-watch", when: "Every day at 02:00", active: false, next: "11/5/2026, 9:00:00 PM" },
-  { name: "jira-inbox-zero", agent: "jira-triage", when: "Every day at 09:15", active: false, next: "11/5/2026, 4:15:00 AM" },
-  { name: "morning-health-check", agent: "sre-incident-commander", when: "Every day at 07:00", active: true, next: "11/5/2026, 2:00:00 AM" },
-  { name: "weekly-rightsizing", agent: "k8s-cost-optimizer", when: "Every day at 06:00", active: false, next: "11/5/2026, 1:00:00 AM" },
+type Execution = { id: string; created: string; trigger: "Scheduled" | "Manual"; state: "Running" | "Succeeded" | "Failed"; completed: string; failure: string; deadline: string; task: string };
+type ScheduleRow = { name: string; agent: string; when: string; tz: string; active: boolean; next: string; created: string; timeout: number; prompt: string; history: Execution[] };
+
+const exec = (created: string, completed: string, deadline: string, task: string, trigger: Execution["trigger"] = "Scheduled", state: Execution["state"] = "Succeeded", failure = "—"): Execution => ({ id: task, created, trigger, state, completed, failure, deadline, task });
+
+const SCHEDULES_INIT: ScheduleRow[] = [
+  {
+    name: "release-notes-draft", agent: "release-notes-writer", when: "Every day at 16:00", tz: "UTC", active: false, next: "11/5/2026, 11:00:00 AM", created: "11/4/2026, 11:57:31 AM", timeout: 900,
+    prompt: "Draft release notes for everything merged to main since the last tag.",
+    history: [],
+  },
+  {
+    name: "daily-platform-digest", agent: "platform-orchestrator", when: "Every day at 08:30", tz: "UTC", active: true, next: "11/5/2026, 3:30:00 AM", created: "11/4/2026, 11:56:58 AM", timeout: 1800,
+    prompt: "Ask your specialist agents for anything that needs attention today and produce a single prioritised digest.",
+    history: [
+      exec("11/4/2026, 3:30:00 AM", "11/4/2026, 3:34:12 AM", "11/4/2026, 4:00:00 AM", "01a1a6e2-6c10-7a51-9c2e-4d1f0b7e33a1"),
+      exec("11/3/2026, 3:30:00 AM", "11/3/2026, 3:33:47 AM", "11/3/2026, 4:00:00 AM", "01a19c8f-1b24-7e60-8f31-2a9d6c4e5b07"),
+    ],
+  },
+  {
+    name: "pod-restart-report", agent: "local-llm-assistant", when: "Every day at 18:00", tz: "UTC", active: true, next: "11/5/2026, 1:00:00 PM", created: "11/4/2026, 11:57:09 AM", timeout: 900,
+    prompt: "List pods that restarted more than 3 times today and show the last 20 log lines for each.",
+    history: [exec("11/4/2026, 1:00:00 PM", "11/4/2026, 1:01:38 PM", "11/4/2026, 1:15:00 PM", "01a1a7b7-c551-71d5-9e5b-9e4dada34916")],
+  },
+  {
+    name: "nightly-cve-scan", agent: "cve-watch", when: "Every day at 02:00", tz: "UTC", active: false, next: "11/5/2026, 9:00:00 PM", created: "11/4/2026, 11:57:25 AM", timeout: 900,
+    prompt: "Check new advisories from the last 24 hours against our dependencies and open issues for anything we are affected by.",
+    history: [],
+  },
+  {
+    name: "jira-inbox-zero", agent: "jira-triage", when: "Every day at 09:15", tz: "UTC", active: false, next: "11/5/2026, 4:15:00 AM", created: "11/4/2026, 11:57:44 AM", timeout: 900,
+    prompt: "Triage every Jira issue created in the last 24 hours that has no assignee.",
+    history: [],
+  },
+  {
+    name: "morning-health-check", agent: "sre-incident-commander", when: "Every day at 07:00", tz: "UTC", active: true, next: "11/5/2026, 2:00:00 AM", created: "11/4/2026, 11:56:40 AM", timeout: 900,
+    prompt: "Run a cluster health check: failing pods, warning events from the last 24h, and any saturated nodes. Summarise as a short status report.",
+    history: [
+      exec("11/4/2026, 9:45:51 AM", "11/4/2026, 9:52:52 AM", "11/4/2026, 10:00:51 AM", "01a1a706-0975-7030-b99a-8acd3ece6a04", "Manual"),
+      exec("11/4/2026, 2:00:00 AM", "11/4/2026, 2:03:21 AM", "11/4/2026, 2:15:00 AM", "01a1a5d3-88f2-7b14-a6c0-3e7d91f2c5a8"),
+    ],
+  },
+  {
+    name: "weekly-rightsizing", agent: "k8s-cost-optimizer", when: "Every day at 06:00", tz: "UTC", active: false, next: "11/5/2026, 1:00:00 AM", created: "11/4/2026, 11:58:02 AM", timeout: 900,
+    prompt: "Find workloads whose CPU or memory requests are more than 2x their p95 usage over 7 days and propose new values.",
+    history: [],
+  },
 ];
 
 /* ---------- small UI atoms ---------- */
@@ -574,7 +613,43 @@ function Agents({ go }: { go: (p: Page, agent?: string) => void }) {
 
 function Schedules({ go }: { go: (p: Page, agent?: string) => void }) {
   const [rows, setRows] = useState(SCHEDULES_INIT);
+  const [open, setOpen] = useState<string | null>(null);
   const [toast, flash] = useToast();
+  const update = (name: string, fn: (r: ScheduleRow) => ScheduleRow) => setRows((rs) => rs.map((r) => (r.name === name ? fn(r) : r)));
+  const sel = rows.find((r) => r.name === open);
+
+  if (sel) {
+    return (
+      <ScheduleDetail
+        s={sel}
+        flash={flash}
+        toast={toast}
+        onBack={() => setOpen(null)}
+        onToggle={() => {
+          update(sel.name, (r) => ({ ...r, active: !r.active }));
+          flash(`${sel.name} ${sel.active ? "paused" : "resumed"}`);
+        }}
+        onRun={() => {
+          const now = new Date();
+          const fmt = (d: Date) => d.toLocaleString("en-US", { month: "numeric", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" });
+          const id = `01a1${Math.random().toString(16).slice(2, 6)}-${Math.random().toString(16).slice(2, 6)}-7${Math.random().toString(16).slice(2, 5)}-a${Math.random().toString(16).slice(2, 5)}-${Math.random().toString(16).slice(2, 14)}`;
+          const run = exec(fmt(now), "—", fmt(new Date(now.getTime() + sel.timeout * 1000)), id, "Manual", "Running");
+          update(sel.name, (r) => ({ ...r, history: [run, ...r.history] }));
+          flash("Run started: a new conversation with " + sel.agent);
+          setTimeout(() => {
+            update(sel.name, (r) => ({ ...r, history: r.history.map((h) => (h.id === id ? { ...h, state: "Succeeded", completed: fmt(new Date()) } : h)) }));
+          }, 3500);
+        }}
+        onDelete={() => {
+          setRows((rs) => rs.filter((r) => r.name !== sel.name));
+          setOpen(null);
+          flash(`Deleted ${sel.name} (demo only)`);
+        }}
+        onAgent={() => go("chat", sel.agent)}
+      />
+    );
+  }
+
   return (
     <>
       <Header title="Schedules" sub="Run an agent automatically. Each execution starts a new conversation.">
@@ -584,16 +659,17 @@ function Schedules({ go }: { go: (p: Page, agent?: string) => void }) {
       <DataTable
         rows={rows}
         rowKey={(s) => s.name}
+        onRow={(s) => setOpen(s.name)}
         cols={[
           { label: "Name", render: (s) => <span className="text-violet-300">{s.name}</span> },
           { label: "Agent", render: (s) => <button onClick={(e) => { e.stopPropagation(); go("chat", s.agent); }} className="hover:text-violet-300">{s.agent} on kagent</button> },
           { label: "Schedule", render: (s) => s.when },
-          { label: "Time zone", render: () => "UTC" },
+          { label: "Time zone", render: (s) => s.tz },
           {
             label: "Status",
             render: (s) => (
               <button
-                onClick={(e) => { e.stopPropagation(); setRows((r) => r.map((x) => (x.name === s.name ? { ...x, active: !x.active } : x))); flash(`${s.name} ${s.active ? "paused" : "resumed"}`); }}
+                onClick={(e) => { e.stopPropagation(); update(s.name, (r) => ({ ...r, active: !r.active })); flash(`${s.name} ${s.active ? "paused" : "resumed"}`); }}
                 title="Click to pause or resume"
               >
                 <Status tone={s.active ? "green" : "amber"}>{s.active ? "Active" : "Paused"}</Status>
@@ -604,7 +680,124 @@ function Schedules({ go }: { go: (p: Page, agent?: string) => void }) {
         ]}
         actions={(s) => <RowActions name={s.name} flash={flash} onDelete={() => setRows((x) => x.filter((y) => y.name !== s.name))} />}
       />
-      <p className="mt-2 text-xs text-white/40">Click a status to pause or resume a schedule.</p>
+      <p className="mt-2 text-xs text-white/40">Click a schedule to see its details and run history.</p>
+      {toast}
+    </>
+  );
+}
+
+function ScheduleDetail({ s, flash, toast, onBack, onToggle, onRun, onDelete, onAgent }: {
+  s: ScheduleRow;
+  flash: (m: string) => void;
+  toast: React.ReactNode;
+  onBack: () => void;
+  onToggle: () => void;
+  onRun: () => void;
+  onDelete: () => void;
+  onAgent: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [expanded, setExpanded] = useState<string[]>([]);
+  const hist = s.history.filter((h) => [h.created, h.trigger, h.state, h.completed, h.task].join(" ").toLowerCase().includes(q.toLowerCase()));
+  const allOpen = hist.length > 0 && hist.every((h) => expanded.includes(h.id));
+  const toggle = (id: string) => setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
+  const cell = "border-b border-r border-white/[0.08] px-4 py-3 align-top";
+
+  return (
+    <>
+      <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
+        <h2 className="text-[28px] font-medium">{s.name}</h2>
+        <div className="flex flex-wrap gap-2">
+          <BtnGhost onClick={onBack}>← Back</BtnGhost>
+          <BtnGhost onClick={() => flash("Refreshed")}><RefreshGlyph /> Refresh</BtnGhost>
+          <BtnGhost onClick={() => flash("Edit opens the schedule form in the real UI")}><PencilIcon /> Edit</BtnGhost>
+          <BtnGhost onClick={onToggle}>{s.active ? "❚❚ Pause" : "▷ Resume"}</BtnGhost>
+          <button onClick={onRun} className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-1.5 text-sm text-white hover:bg-violet-500">▷ Run</button>
+        </div>
+      </div>
+      <div className="mb-4 flex flex-wrap gap-2 text-xs">
+        <Status tone={s.active ? "green" : "amber"}>{s.active ? "Active" : "Paused"}</Status>
+        <span className="rounded border border-white/10 bg-white/[0.06] px-2 py-px text-white/80">◷ {s.when}</span>
+        <span className="rounded border border-white/10 bg-white/[0.06] px-2 py-px text-white/80">⊕ {s.tz}</span>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-white/[0.02]">
+        <table className="w-full min-w-[600px] text-left text-[13px]">
+          <tbody>
+            <tr>
+              <td className={`${cell} w-28 text-white/60`}>Agent</td>
+              <td className={cell}><button onClick={onAgent} className="text-violet-300 hover:text-violet-200">kagent/{s.agent}</button></td>
+              <td className={`${cell} text-white/60`}>Next execution (local)</td>
+              <td className={`${cell} border-r-0`}>{s.active ? s.next : "—"}</td>
+            </tr>
+            <tr>
+              <td className={`${cell} text-white/60`}>Created</td>
+              <td className={cell}>{s.created}</td>
+              <td className={`${cell} text-white/60`}>Execution timeout</td>
+              <td className={`${cell} border-r-0`}>{s.timeout} seconds</td>
+            </tr>
+            <tr>
+              <td className={`${cell} border-b-0 text-white/60`}>Prompt</td>
+              <td colSpan={3} className={`${cell} border-b-0 border-r-0 whitespace-normal leading-relaxed`}>{s.prompt}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="mt-6 text-xl font-medium">Execution history</h3>
+      <p className="mt-1 text-sm text-white/60">Times are shown in your local time zone.</p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <SearchBox value={q} onChange={setQ} placeholder="Search the history…" />
+        <BtnGhost onClick={() => setExpanded(allOpen ? [] : hist.map((h) => h.id))}>⇕ {allOpen ? "Collapse all" : "Expand all"}</BtnGhost>
+      </div>
+      <div className="mt-3 overflow-x-auto rounded-xl bg-white/[0.03]">
+        <table className="w-full min-w-[720px] text-left text-[13px]">
+          <thead>
+            <tr className="border-b border-white/[0.08] text-white/80">
+              <th className="w-10" />
+              {["Created", "Trigger", "State", "Completed", "Failure reason", "Conversation"].map((h) => <th key={h} className="px-3 py-2.5 font-medium">{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {hist.length === 0 && <tr><td colSpan={7} className="px-4 py-6 text-center text-white/40">{s.history.length ? "No matches." : "No executions yet"}</td></tr>}
+            {hist.map((h) => (
+              <Fragment key={h.id}>
+                <tr className="border-b border-white/[0.06] hover:bg-white/[0.02]">
+                  <td className="pl-4"><button onClick={() => toggle(h.id)} className="flex h-4 w-4 items-center justify-center rounded border border-white/30 text-[11px] leading-none text-white/60" aria-label="Toggle details">{expanded.includes(h.id) ? "−" : "+"}</button></td>
+                  <td className="whitespace-nowrap px-3 py-2.5">{h.created}</td>
+                  <td className="px-3 py-2.5">{h.trigger}</td>
+                  <td className="px-3 py-2.5">
+                    {h.state === "Running" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-px text-xs text-sky-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-300" />Running</span>
+                    ) : (
+                      <Status tone="green">{h.state}</Status>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5">{h.completed}</td>
+                  <td className="px-3 py-2.5">{h.failure}</td>
+                  <td className="px-3 py-2.5"><button onClick={onAgent} className="whitespace-nowrap hover:text-violet-300">Open conversation ↗</button></td>
+                </tr>
+                {expanded.includes(h.id) && (
+                  <tr className="border-b border-white/[0.06] bg-black/20">
+                    <td />
+                    <td colSpan={6} className="space-y-2 px-3 py-3 leading-relaxed">
+                      <div><span className="text-white/50">Prompt: </span>{s.prompt}</div>
+                      <div><span className="text-white/50">Deadline: </span>{h.deadline}</div>
+                      <div><span className="text-white/50">Original task: </span><span className="font-geistmono text-[12px]">{h.task}</span></div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="mt-6 text-xl font-medium">Danger zone</h3>
+      <p className="mt-1 text-sm text-white/60">Deleting this schedule stops future executions. Accepted executions continue; history and conversations are retained.</p>
+      <button onClick={onDelete} className="mt-3 flex items-center gap-2 rounded-lg border border-red-500/60 px-3.5 py-1.5 text-sm text-red-400 hover:bg-red-500/10">
+        <TrashIcon /> Delete schedule
+      </button>
       {toast}
     </>
   );
