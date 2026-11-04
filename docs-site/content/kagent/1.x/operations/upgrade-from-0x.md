@@ -9,7 +9,7 @@ author: kagent.dev
 
 ## In-place upgrade blockers
 
-Review the following changes between 0.10.x and 1.0 before you continue. Each change prevents an in-place upgrade with `helm upgrade` on its own, so a workaround for one change does not help.
+Review the following changes between 0.10.x and 1.0 before you continue. Each change blocks `helm upgrade` by itself, so fixing one change does not unblock the upgrade.
 
 | Change | Consequence |
 | ------ | ----------- |
@@ -44,7 +44,7 @@ The two releases also cannot run side by side on one cluster. The group rename s
 
 ## Export your 0.10.x resources
 
-Export your resources before anything replaces the CRDs. Some resources convert to 1.0, and the rest serve as a reference when you write their 1.0 replacements. 1.0 cannot read the conversation history of 0.10.x.
+Export your resources before the 1.0 CRDs replace the 0.10.x CRDs. Some resources convert to 1.0, and the rest serve as a reference when you write their 1.0 replacements. 1.0 cannot read the conversation history of 0.10.x.
 
 1. Export every kagent resource in your namespace.
    ```bash

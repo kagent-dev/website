@@ -7,9 +7,9 @@ author: kagent.dev
 
 An installation of {{< reuse "kagent-docs/snippets/name-product.md" >}} consists of five Helm releases. Upgrade the releases in the order that you installed them, starting with the CRDs, then Agent Substrate, and then the kagent control plane.
 
-Upgrade from one stable release to the next, and do not skip a stable release. Before you move to the next stable release, upgrade to the latest patch release of your current stable release. Patch releases do not change the database schema, so you can upgrade directly to the latest patch release without the patch releases in between. To move a 0.10.x installation to 1.x, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}) instead.
+Upgrade from one stable release to the next, and do not skip a stable release. Before you move to the next stable release, upgrade to the latest patch version of your current stable release. Patch releases do not change the database schema, so you can upgrade directly to the latest patch release without the patch releases in between. To move a 0.10.x installation to 1.x, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}) instead.
 
-<!-- REVIEW: kagent is moving from semantic versioning to calendar versioning. The release-order rule in the preceding paragraph follows the stable-release model that OSS and enterprise share and names no version format. Add version examples, and define a stable release, when the calendar version format is published. The version variables in "Prepare to upgrade" assume semver. -->
+<!-- REVIEW: kagent is moving from semantic versioning to calendar versioning. The release-order rule in the preceding paragraph follows the stable-release model that OSS and enterprise share and names no version format. Add version examples, and define a stable release, when the calendar version format is published. The calendar versioning scheme calls these releases LTS releases, so replace "stable" with "LTS" then. The version variables in "Prepare to upgrade" assume semver. -->
 
 ## Prepare to upgrade
 
@@ -49,7 +49,7 @@ Complete every step in this section before you change any release. The steps mak
    ```
    For an installation that you exported from the kagent CLI, the `kagent-values.yaml` file contains your model provider API key in plain text. Store the files securely.
 
-6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade through an intermediate stable release first, set the versions of that release.
+6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade across more than one stable release, set the versions of the next stable release, and repeat the upgrade for each stable release.
    ```bash
    export KAGENT_VERSION={{< reuse "kagent-docs/versions/kagent.md" >}}
    export SUBSTRATE_VERSION={{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}

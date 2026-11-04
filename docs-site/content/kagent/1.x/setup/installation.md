@@ -290,7 +290,7 @@ kagent and Agent Substrate each connect with an owner login, which applies migra
           --from-file=ca.crt=<path-to-ca-certificate>
         ```
      2. Add `sslrootcert=/run/postgres-ca/ca.crt` to both kagent connection strings.
-     3. When you [install kagent](#install-kagent-helm), add the following values to the command.
+     3. When you [install kagent](#install-kagent-helm), add the following values to the command. The values mount the `kagent-postgres-ca` Secret on the controller as a read-only volume at `/run/postgres-ca`. The `sslrootcert` setting in the kagent connection strings reads the CA certificate from that path.
         ```yaml
         controller:
           volumes:
