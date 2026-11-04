@@ -31,7 +31,7 @@ When you install the charts directly with Helm, the installation sets up the fol
 ## Before you begin
 
 1. [Install kagent]({{< link path="setup/installation" >}}).
-2. Install [yq](https://github.com/mikefarah/yq) version 4. The steps use yq to edit the Agent Substrate Helm values.
+2. Install [yq](https://github.com/mikefarah/yq) version 4 and [jq](https://jqlang.org/download/). The steps use yq to edit the Agent Substrate Helm values, and jq to read a Session ID.
 
 ## Prepare a namespace to run agents
 
@@ -125,6 +125,42 @@ The following steps prepare the `team-a` namespace.
    ```
 
 5. Create a ModelConfig and its API key Secret in the namespace. For the commands, see the page for your provider, such as [Create the ModelConfig]({{< link path="setup/model-providers/openai#create-the-modelconfig" >}}) for OpenAI, and replace `kagent` with `team-a`. To use a ModelConfig from another namespace instead, see [Share configuration across namespaces](#share-configuration-across-namespaces).
+
+6. Create an AgentTemplate and an Agent in the namespace, and confirm that a turn reaches the model. A reply confirms the WorkerPool, the credential policy, and the ModelConfig together. Without the credential policy, the Agent still becomes ready, but the turn fails with a `403 Forbidden` error.
+   ```bash
+   kubectl apply -f - <<EOF
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: AgentTemplate
+   metadata:
+     name: team-a-template
+     namespace: team-a
+   spec:
+     description: An agent in the team-a namespace
+     modelConfig:
+       name: <model-config-name>
+     systemPrompt: You are a concise, helpful assistant.
+   ---
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: team-a-agent
+     namespace: team-a
+   spec:
+     template:
+       ref:
+         name: team-a-template
+     harnessRef:
+       name: team-a-harness
+   EOF
+   kubectl wait agent/team-a-agent -n team-a --for=condition=Ready --timeout=180s
+   export SESSION_ID=$(kagent -n team-a agent session create --agent team-a-agent -o json | jq -r '.session.id')
+   kagent -n team-a agent invoke --session $SESSION_ID --task "Reply with the word ready."
+   ```
+   Example output:
+   ```console
+   agent.api.kagent.dev/team-a-agent condition met
+   ready
+   ```
 
 ## Restrict kagent to specific namespaces
 
