@@ -92,7 +92,7 @@ const MODELS: { name: string; provider: string; model: string; secret: string }[
   { name: "mistral-large", provider: "Mistral", model: "mistral-large-latest", secret: "demo-mistral" },
   { name: "huggingface-qwen", provider: "OpenAI", model: "Qwen/Qwen3-Coder-480B-A35B-Instruct", secret: "demo-huggingface" },
   { name: "ollama-local", provider: "Ollama", model: "qwen3:32b", secret: "—" },
-]
+];
 
 const MCP: { name: string; tools: number; url: string; desc: string; sample: string[] }[] = [
   { name: "stripe-mcp", tools: 25, url: "https://mcp.stripe.com", desc: "Stripe — customers, payments and subscriptions", sample: ["list_customers", "create_payment_link", "list_subscriptions", "create_refund", "retrieve_balance", "list_invoices"] },
