@@ -165,19 +165,15 @@ export default function Home() {
 
       {/* Stats */}
       <section className="mx-auto max-w-6xl px-6 pt-20">
-        <div className="grid overflow-hidden rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.035] to-white/[0.01] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           {[
-            ["<150", "ms", "to resume a suspended agent, measured with a tuned config"],
-            ["500+", "/s", "suspend and resume activations per second"],
-            ["10", "×", "higher density than standard container runtimes"],
-            ["2", "\u00a0isolation modes", "microVM and gVisor sandboxes, one lifecycle"],
-          ].map(([n, unit, label], i) => (
-            <div key={label} className={`px-8 py-8 ${i > 0 ? "border-t border-ks-line sm:border-t-0" : ""} ${i % 2 === 1 ? "sm:border-l sm:border-ks-line" : ""} ${i >= 2 ? "sm:border-t lg:border-t-0" : ""} ${i === 2 ? "lg:border-l lg:border-ks-line" : ""}`}>
-              <div className="flex items-baseline">
-                <span className="text-5xl font-medium tracking-tight">{n}</span>
-                <span className="ml-0.5 text-2xl font-medium tracking-tight text-white/55">{unit}</span>
-              </div>
-              <p className="mt-3 leading-relaxed text-ks-muted">{label}</p>
+            ["Sub-second resume", "A suspended actor restores onto a warm worker. The scheduler never sees it."],
+            ["Isolated sandbox by default", "Every actor and every harness gets its own sandbox. Egress starts closed."],
+            ["10×", "higher density than standard container runtimes."],
+          ].map(([title, body]) => (
+            <div key={title} className="rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-8">
+              <div className={`font-medium tracking-tight ${title === "10×" ? "text-5xl" : "text-[28px] leading-tight"}`}>{title}</div>
+              <p className="mt-3 leading-relaxed text-ks-muted">{body}</p>
             </div>
           ))}
         </div>
