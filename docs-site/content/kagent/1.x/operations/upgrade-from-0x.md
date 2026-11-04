@@ -9,7 +9,7 @@ author: kagent.dev
 
 ## In-place upgrade blockers
 
-Each of the following independent changes rules out `helm upgrade`, so working around any one of them does not help.
+Review the following changes between 0.10.x and 1.0 before you continue. Each change blocks `helm upgrade` by itself, so fixing one change does not unblock the upgrade.
 
 | Change | Consequence |
 | ------ | ----------- |
@@ -40,11 +40,11 @@ The two releases also cannot run side by side on one cluster. The group rename s
      --file=kagent-0.10-backup.dump
    ```
 
-5. Install [`yq`](https://github.com/mikefarah/yq#install) version 4 or later. The steps in [Resources that carry forward](#resources-that-carry-forward) use `yq` to convert the exported resources.
+5. Install [`yq`](https://github.com/mikefarah/yq#install) version 4 or later. The steps in [Resources that you can convert](#resources-that-you-can-convert) use `yq` to convert the exported resources.
 
 ## Export your 0.10.x resources
 
-Your Kubernetes resources do carry forward, so export them before anything replaces the CRDs. Conversation history does not carry forward.
+Export your resources before the 1.0 CRDs replace the 0.10.x CRDs. Some resources convert to 1.0, and the rest serve as a reference when you write their 1.0 replacements. 1.0 cannot read the conversation history of 0.10.x.
 
 1. Export every kagent resource in your namespace.
    ```bash
@@ -159,9 +159,9 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
 
 ## Recreate your resources
 
-The export splits into resources that carry forward with small changes, agents that need rewriting, and resources that do not have a 1.0 equivalent. Because an AgentTemplate refers to the ModelConfigs and RemoteMCPServers that you recreate in [Resources that carry forward](#resources-that-carry-forward), work through the groups in that order.
+The export splits into resources that convert with small changes, agents that need rewriting, and resources that do not have a 1.0 equivalent. Because an AgentTemplate refers to the ModelConfigs and RemoteMCPServers that you recreate in [Resources that you can convert](#resources-that-you-can-convert), work through the groups in that order.
 
-### Resources that carry forward
+### Resources that you can convert {#resources-that-you-can-convert}
 
 ModelConfig, ModelProviderConfig, and RemoteMCPServer keep most of the fields that `v1alpha2` sets. `v1alpha3` renames the ModelConfig field `apiKeyPassthrough` to `tokenPassthrough`, and the field's behavior does not change. `v1alpha3` removes the following ModelConfig fields. When a resource sets any of them, the API server rejects the resource and reports the field as unknown.
 
