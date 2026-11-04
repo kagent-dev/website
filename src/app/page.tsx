@@ -335,17 +335,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="relative mx-auto max-w-6xl px-6 pt-40 text-center">
-        <h2 className="text-5xl font-medium tracking-tight">Run your first agent</h2>
-        <p className="mt-4 text-lg text-ks-muted">One install, three resources, one conversation.</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <BtnWhite href={START}>Get started</BtnWhite>
-          <BtnDark href={SUBSTRATE}>About Agent Substrate</BtnDark>
+      {/* Final CTA, with the top half of the kagent face behind it, cut off by the footer */}
+      <section className="relative isolate mt-24 flex min-h-[calc(min(1400px,115vw)*0.37)] items-start justify-center overflow-hidden px-6 pb-16 pt-[calc(min(1400px,115vw)*0.1)] text-center md:pb-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
+          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={1600} height={1600} className="mt-[calc(min(1400px,115vw)*-0.238)] aspect-square h-auto w-[min(1400px,115vw)] max-w-none shrink-0 self-start opacity-[0.18]" />
         </div>
-        {/* only the top half of the face shows, cut off by the footer */}
-        <div aria-hidden className="pointer-events-none mx-auto mt-16 flex h-[calc(min(1400px,115vw)*0.37)] w-full justify-center overflow-hidden">
-          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={1600} height={1600} className="mt-[calc(min(1400px,115vw)*-0.238)] aspect-square h-auto w-[min(1400px,115vw)] max-w-none shrink-0 self-start opacity-[0.22]" />
+        <div>
+          <h2 className="text-5xl font-medium tracking-tight">Run your first agent</h2>
+          <p className="mt-4 text-lg text-white/70">One install, three resources, one conversation.</p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <BtnWhite href={START}>Get started</BtnWhite>
+            <BtnDark href={SUBSTRATE}>About Agent Substrate</BtnDark>
+          </div>
         </div>
       </section>
 
