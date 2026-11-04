@@ -10,6 +10,7 @@ import ActorGrid from "@/components/home/actor-grid";
 import ScrollMark from "@/components/home/scroll-mark";
 import { ADOPTERS } from "@/components/home/adopters";
 import { SandboxVisual, ToolsVisual, TeamVisual } from "@/components/home/bento-visuals";
+import { AgentVisual, HarnessVisual, TemplateVisual } from "@/components/home/how-visuals";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -59,7 +60,7 @@ const HOW = [
     tag: "what",
     Icon: FileCode2,
     body: "The model, the prompt, the MCP tools, skills and plugins. What the agent does, owned by kagent.",
-    yaml: "kind: AgentTemplate\nspec:\n  modelConfig:\n    name: claude-sonnet\n  tools:\n  - mcp:\n      server:\n        name: github-mcp",
+    Visual: TemplateVisual,
     link: "Agent templates",
     href: `${DOCS}/agents/declarative-agents`,
   },
@@ -68,7 +69,7 @@ const HOW = [
     tag: "where",
     Icon: ServerCog,
     body: "The runtime, the warm WorkerPool and where snapshots go. How and where the agent runs, handed to Substrate.",
-    yaml: "kind: Harness\nspec:\n  kagent: {}\n  substrate:\n    workerPoolRef:\n      name: kagent-high\n    snapshotPolicy:\n      location: s3://ate-snapshots/",
+    Visual: HarnessVisual,
     link: "Harnesses",
     href: `${DOCS}/agents/agent-harness`,
   },
@@ -77,7 +78,7 @@ const HOW = [
     tag: "pair",
     Icon: Link2,
     body: "Joins one template to one harness. Callers reach it over A2A or MCP, and every chat becomes a sandboxed Session.",
-    yaml: "kind: Agent\nspec:\n  template:\n    ref:\n      name: pr-reviewer\n  harnessRef:\n    name: secure",
+    Visual: AgentVisual,
     link: "Core concepts",
     href: `${DOCS}/about/core-concepts#agent`,
   },
@@ -166,7 +167,7 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-6 pt-20">
         <div className="grid overflow-hidden rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.035] to-white/[0.01] sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["150", "ms", "to resume a suspended agent on a ready worker, measured with a tuned config"],
+            ["<150", "ms", "to resume a suspended agent, measured with a tuned config"],
             ["500+", "/s", "suspend and resume activations per second"],
             ["10", "×", "higher density than standard container runtimes"],
             ["2", "\u00a0isolation modes", "microVM and gVisor sandboxes, one lifecycle"],
@@ -235,7 +236,7 @@ export default function Home() {
               Substrate decides where.
             </h2>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ks-muted">
-              Apply the three resources with kubectl or GitOps. The kagent controller compiles each Agent into an immutable Substrate ActorTemplate, and from there Substrate&apos;s own control and data plane handle scheduling and suspend/resume, so the Kubernetes API stays off the request path.
+              Three resources, applied with kubectl or GitOps. kagent compiles them; Substrate runs them, with the Kubernetes API off the request path.
             </p>
           </div>
           <a href={`${DOCS}/about/core-concepts`} className="group flex items-center gap-1.5 text-sm text-violet-300 hover:text-violet-200">
@@ -253,7 +254,9 @@ export default function Home() {
               </div>
               <h3 className="mt-5 font-geistmono text-xl">{c.kind}</h3>
               <p className="mt-2 leading-relaxed text-ks-muted">{c.body}</p>
-              <pre className="mt-5 flex-1 overflow-x-auto rounded-xl bg-ks-bg px-4 py-3 font-geistmono text-[12px] leading-5 text-white/75">{c.yaml}</pre>
+              <div className="mt-5 flex-1">
+                <c.Visual />
+              </div>
               <a href={c.href} className="mt-5 flex items-center gap-1.5 text-sm text-violet-300 hover:text-violet-200">
                 {c.link} <span className="transition group-hover:translate-x-0.5">→</span>
               </a>
