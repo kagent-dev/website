@@ -76,7 +76,7 @@ The left menu groups the console pages by the resource that each page reads.
 | ---- | ----- |
 | **Dashboard** | Counts of agents, model configurations, MCP servers, and discovered tools, plus recent conversations. |
 | **Agents** | Every {{< gloss "Agent" >}}Agent{{< /gloss >}}, {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, and {{< gloss "Harness" >}}Harness{{< /gloss >}}, and the conversations held with each Agent. |
-| **Schedules** | Agents that run automatically. Each execution starts a new conversation. For more information, see [Scheduled runs]({{< link path="agents/scheduled-runs" >}}). |
+| **Schedules** | Schedules that send a fixed prompt to an agent on a cron schedule. Each execution starts a new conversation. For more information, see [Scheduled runs]({{< link path="agents/scheduled-runs" >}}). |
 | **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents reference, and the providers behind them. |
 | **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each. |
 | **Prompts** | Prompt libraries, which store reusable fragments that an AgentTemplate includes in its instructions. |
