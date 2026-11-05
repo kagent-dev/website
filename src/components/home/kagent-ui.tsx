@@ -1562,9 +1562,15 @@ export default function KagentUI() {
               onClick={() => { go(n.id); setTour(null); }}
               title={n.label}
               aria-label={n.label}
-              className={`flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition md:px-3 ${navActive === n.id ? "bg-violet-500/15 text-violet-200" : "text-white/70 hover:bg-white/[0.04] hover:text-white"} ${step?.page === n.id || (step?.page === "chat" && n.id === "agents") ? "ring-1 ring-violet-400/70" : ""}`}
+              className={`relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition md:px-3 ${navActive === n.id ? "bg-violet-500/15 text-violet-200" : "text-white/70 hover:bg-white/[0.04] hover:text-white"} ${step?.page === n.id || (step?.page === "chat" && n.id === "agents") ? "ring-1 ring-violet-400/70" : ""}`}
             >
               <span className="shrink-0"><Icon name={n.id} /></span>
+              {n.id === "agents" && !chatted && (
+                <span className="absolute right-1 top-1 flex h-2.5 w-2.5 md:hidden">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-violet-400" />
+                </span>
+              )}
               <span className={`hidden whitespace-nowrap ${collapsed ? "" : "md:inline"}`}>{n.label}</span>
             </button>
           ))}
