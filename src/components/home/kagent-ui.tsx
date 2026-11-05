@@ -407,6 +407,16 @@ function DataTable<T>({ cols, rows, rowKey, onRow, actions, empty = "No matches.
   );
 }
 
+const ClickHere = () => (
+  <span className="ml-2 inline-flex items-center gap-1.5 align-middle text-[11px] font-medium text-violet-200">
+    <span className="relative flex h-3.5 w-3.5">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-70" />
+      <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-violet-300 bg-violet-500/60" />
+    </span>
+    Click here to chat
+  </span>
+);
+
 const RowActions = ({ name, onDelete, flash, edit = true }: { name: string; onDelete: () => void; flash: (m: string) => void; edit?: boolean }) => (
   <>
     {edit && <button onClick={() => flash(`Editing ${name} opens the edit form in the real UI`)} className="text-white/70 hover:text-white" aria-label={`Edit ${name}`}><PencilIcon /></button>}
@@ -503,7 +513,7 @@ function Dashboard({ go }: { go: (p: Page, agent?: string) => void }) {
 
 /* ---------- Agents ---------- */
 
-function Agents({ go }: { go: (p: Page, agent?: string) => void }) {
+function Agents({ go, hotspot }: { go: (p: Page, agent?: string) => void; hotspot?: boolean }) {
   const [tab, setTab] = useState<"agents" | "templates" | "harnesses">("agents");
   const [agents, setAgents] = useState(AGENTS);
   const [templates, setTemplates] = useState(TEMPLATES);
@@ -564,7 +574,7 @@ function Agents({ go }: { go: (p: Page, agent?: string) => void }) {
           rowKey={(a) => a.name}
           onRow={(a) => go("chat", a.name)}
           cols={[
-            { label: "Agent", sort: (a) => a.name, render: (a) => <span><span className="font-geistmono text-[13px] text-violet-300">{a.name}</span><span className="mt-0.5 block max-w-xs whitespace-normal text-xs text-white/55">{a.desc}</span></span> },
+            { label: "Agent", sort: (a) => a.name, render: (a) => <span><span className="font-geistmono text-[13px] text-violet-300">{a.name}</span>{hotspot && a.name === agents[0]?.name && <ClickHere />}<span className="mt-0.5 block max-w-xs whitespace-normal text-xs text-white/55">{a.desc}</span></span> },
             { label: "Namespace", sort: () => "kagent", render: () => <span className="font-geistmono text-[13px]">kagent</span> },
             { label: "Template", sort: (a) => a.template, render: (a) => a.template === "Inline" ? <Status tone="gray">Inline</Status> : <span className="font-geistmono text-[13px]">{a.template}</span> },
             { label: "Harness", sort: (a) => a.harness, render: (a) => <span className="font-geistmono text-[13px]">{a.harness}</span> },
@@ -1503,8 +1513,10 @@ export default function KagentUI() {
   const [collapsed, setCollapsed] = useState(false);
   const [hint, setHint] = useState(true);
   const [tour, setTour] = useState<number | null>(null);
+  const [chatted, setChatted] = useState(false);
   const go = (p: Page, agent?: string) => {
     if (agent) setChatWith(agent);
+    if (p === "chat") setChatted(true);
     setPage(p);
   };
   const navActive = page === "chat" ? "agents" : page;
@@ -1576,7 +1588,7 @@ export default function KagentUI() {
         {/* main */}
         <main className={page === "chat" ? "relative flex min-h-0 min-w-0 flex-col" : "relative min-h-0 min-w-0 overflow-y-auto p-4 md:p-5"}>
           {page === "dashboard" && <Dashboard go={go} />}
-          {page === "agents" && <Agents go={go} />}
+          {page === "agents" && <Agents go={go} hotspot={!chatted} />}
           {page === "schedules" && <Schedules go={go} />}
           {page === "models" && <Models />}
           {page === "mcp" && <Mcp />}
@@ -1588,7 +1600,7 @@ export default function KagentUI() {
 
       {/* first-visit hint */}
       {hint && tour === null && (
-        <div className="absolute inset-x-3 bottom-3 z-40 flex flex-wrap items-center gap-3 rounded-xl border border-violet-400/30 bg-[#16131f]/95 p-3 text-sm shadow-2xl backdrop-blur sm:inset-x-auto sm:right-4 sm:max-w-md">
+        <div className="absolute inset-x-3 bottom-3 z-40 flex flex-wrap items-center gap-3 rounded-xl border border-violet-400/30 bg-[#16131f]/95 p-3 text-sm shadow-2xl backdrop-blur sm:inset-x-auto sm:right-4 sm:max-w-lg">
           <span className="relative flex h-2.5 w-2.5 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-violet-400" />
