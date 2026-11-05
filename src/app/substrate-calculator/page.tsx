@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const PARTS = [
   ["Download", "A wake-up after the node dropped its copy fetches the snapshot from object storage and decompresses it. Snapshots of code compress to about a third."],
   ["Wait for the disk", "Each wake-up writes and reads its snapshot on the node's disk. A slow disk adds time when its work takes longer than the download and the restore."],
-  ["Agent start", "With a files snapshot the agent process starts again. With a files and memory snapshot it continues where it stopped. More than 1 core does not make it faster."],
+  ["Agent start", "With a Volumes snapshot the agent process starts again. With a Memory snapshot it continues where it stopped. More than 1 core does not make it faster."],
   ["Restore", "Puts the workspace files, and the process memory if the snapshot keeps it, back in the sandbox. Below 1 core it runs within the agent's CPU limit."],
 ];
 
@@ -45,7 +45,7 @@ export default function SubstrateCalculatorPage() {
           ))}
         </div>
         <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ks-muted">
-          Measured on Agent Substrate v1.0.0-rc2 with gVisor, on one node with 16 vCPUs, with a minimal Python agent and object storage in the same region. The agent start is the median of the measured wake-ups, and the other values are the best measured results. Your agent&apos;s own start time adds to a wake-up with a files snapshot.
+          Measured on Agent Substrate v1.0.0-rc2 with gVisor, on one node with 16 vCPUs, with a minimal Python agent and object storage in the same region. The agent start is the median of the measured wake-ups, and the other values are the best measured results. Your agent&apos;s own start time adds to a wake-up with a Volumes snapshot.
         </p>
         <div className="mt-8 flex flex-wrap gap-6 text-sm">
           <a href={`${DOCS}/about/substrate-runtime/sandboxing`} className="group flex items-center gap-1.5 text-violet-300 hover:text-violet-200">

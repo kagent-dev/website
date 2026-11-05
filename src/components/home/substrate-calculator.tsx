@@ -8,7 +8,7 @@
 
 import { useState } from "react";
 
-type Snapshot = "files" | "memory";
+type Snapshot = "volumes" | "memory";
 
 const SIZES = [
   { name: "Small", cpu: 0.5, mib: 512, label: "½ core · 512 MiB" },
@@ -25,7 +25,7 @@ const DISKS = [125, 250, 500, 1000]; // MiB/s
 // The agent start is the median of the measured wake-ups; the other values are the best measured results.
 const C = {
   startFixS: 0.03, // the router and the request
-  startCpuS: { files: 0.37, memory: 0.11 }, // CPU-seconds; no faster above 1 core
+  startCpuS: { volumes: 0.37, memory: 0.11 }, // CPU-seconds; no faster above 1 core
   fixS: 0.1, // once per restore and per download that has something to move
   localS: 1.2, // restore, s per GB of files at 1 core
   restoreCpuS: 1.1, // restore, CPU-seconds per GB below 1 core
@@ -134,7 +134,7 @@ function Pills<T extends string | number>({ label, options, value, onChange }: {
 export default function SubstrateCalculator() {
   const [agents, setAgents] = useState(100);
   const [size, setSize] = useState(1);
-  const [snapshot, setSnapshot] = useState<Snapshot>("files");
+  const [snapshot, setSnapshot] = useState<Snapshot>("memory");
   const [held, setHeld] = useState(150);
   const [data, setData] = useState(100);
   const [disk, setDisk] = useState(500);
@@ -162,18 +162,18 @@ export default function SubstrateCalculator() {
           <Pills label="Agent size" options={SIZES.map((s, i) => ({ value: i, text: s.name }))} value={size} onChange={setSize} />
         </Field>
         <Field
-          label="Snapshot"
+          label="Snapshot fidelity"
           hint={
-            snapshot === "files"
-              ? "kagent's default. The agent process starts again at each wake-up, so your agent's own start time adds to the times shown."
-              : "The snapshot also keeps the process memory, so the agent continues where it stopped."
+            snapshot === "volumes"
+              ? "kagent's default. The snapshot keeps the files, and the agent process starts again at each wake-up, so your agent's own start time adds to the times shown."
+              : "The snapshot keeps the files and the process memory, so the agent continues where it stopped."
           }
         >
           <Pills
-            label="Snapshot"
+            label="Snapshot fidelity"
             options={[
-              { value: "files" as Snapshot, text: "Files" },
-              { value: "memory" as Snapshot, text: "Files and memory" },
+              { value: "memory" as Snapshot, text: "Memory" },
+              { value: "volumes" as Snapshot, text: "Volumes" },
             ]}
             value={snapshot}
             onChange={setSnapshot}
