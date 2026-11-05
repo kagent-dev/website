@@ -46,21 +46,20 @@ Python ADK adapter recognizes `executable_code` and `code_execution_result`.
 
 **A2A element:** Task event.
 
-Model usage for one response when the runtime reports it. This key is distinct
-from the [token-usage extension](#token-usage), which provides normalized
-task-lifetime usage totals.
+Best-effort model usage reporting for one response when the runtime reports it.
+The format of this value is harness-specific and may change in the future.
 
-The Python ADK adapter currently reports the following metadata for a single
-model response:
+For example, the Python ADK adapter currently reports the following camelCase metadata for
+a single model response:
 
 ```json
 {
   "kagent.dev/a2a/usage": {
-    "prompt_token_count": 1300,
-    "candidates_token_count": 210,
-    "thoughts_token_count": 40,
-    "cached_content_token_count": 800,
-    "total_token_count": 1550
+    "promptTokenCount": 1300,
+    "candidatesTokenCount": 210,
+    "thoughtsTokenCount": 40,
+    "cachedContentTokenCount": 800,
+    "totalTokenCount": 1550
   }
 }
 ```
@@ -68,7 +67,6 @@ model response:
 ### `kagent.dev/a2a/output-schema-sha256`
 
 **A2A element:** Result part.
-
 Binds a structured result to the SHA-256 digest of its compiled output schema.
 Consumers can use the digest to identify the schema of the result.
 
