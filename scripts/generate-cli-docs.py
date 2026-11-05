@@ -465,7 +465,7 @@ def main() -> int:
         yaml.safe_dump(index_frontmatter_data, sort_keys=False, allow_unicode=True).rstrip("\n"),
         "---",
         "",
-        f"Review the {args.display_name} CLI commands and learn how to use them effectively.",
+        f"Review the commands and flags of the {args.display_name} CLI.",
         "",
     ]
 
