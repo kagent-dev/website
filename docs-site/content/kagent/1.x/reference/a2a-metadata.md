@@ -51,7 +51,8 @@ recognizes `function_call` and `function_response`.
 **A2A element:** Task event.
 
 Best-effort model usage reporting for one response when the runtime reports it.
-The format of this value is harness-specific and may change in the future.
+The format of this value is harness-specific and may change in the future. For
+normalized, task-lifetime usage totals, use the [token-usage extension](#token-usage).
 
 The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
 reports the following camelCase metadata for a single model response:
