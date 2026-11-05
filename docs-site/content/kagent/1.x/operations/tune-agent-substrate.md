@@ -7,7 +7,7 @@ author: kagent.dev
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}). An installation with `kagent install` creates one {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} named `kagent-default` with a single Worker on the `gvisor` sandbox class. The installation writes snapshots to the object store that the Agent Substrate chart bundles.
 
-A default pool serves many concurrent {{< gloss "Session" >}}Sessions{{< /gloss >}} before it runs out of slots. Before the installation serves production traffic, tune the number of Workers, the snapshot storage location, and the Worker resource requests. You can also move a pool to the `microvm` sandbox class.
+The single Worker reports capacity for 1000 Actors, so a default pool serves many concurrent {{< gloss "Session" >}}Sessions{{< /gloss >}} before it runs out of slots. Before the installation serves production traffic, tune the number of Workers, the snapshot storage location, and the Worker resource requests. You can also move a pool to the `microvm` sandbox class.
 
 ## Before you begin
 

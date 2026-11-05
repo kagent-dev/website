@@ -246,7 +246,7 @@ The {{< gloss "Transcript" >}}transcript{{< /gloss >}} only grows, so the questi
 
 ## Task states
 
-Of the states that an A2A task moves through, the following states mean that the task has stopped and is waiting.
+The following A2A task states mean that the task has stopped and is waiting.
 
 | State | Meaning |
 | ----- | ------- |
