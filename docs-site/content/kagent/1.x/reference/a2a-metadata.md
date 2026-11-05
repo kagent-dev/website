@@ -12,8 +12,12 @@ protocol to carry extra information.
 
 Kagent runtime adapters translate metadata that a harness produces into
 canonical Kagent metadata keys and discard metadata that they cannot translate.
-**Kagent metadata keys may change as new semantics are introduced into the core
-A2A protocol.**
+Although these metadata semantics and formats are stable unless otherwise
+noted, Kagent depends on individual harnesses to produce them. Harnesses that
+the Kagent project does not own might emit different metadata across versions.
+The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
+is owned by the Kagent project, and its emitted metadata is stable across
+versions.
 
 ### `kagent.dev/a2a/timeline-position`
 
@@ -39,8 +43,8 @@ adapter. The supported values are:
 * `executable_code` - A piece of code to execute.
 * `code_execution_result` - The result of a code execution.
 
-The Go ADK adapter recognizes `function_call` and `function_response`. The
-Python ADK adapter recognizes `executable_code` and `code_execution_result`.
+The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
+recognizes `function_call` and `function_response`.
 
 ### `kagent.dev/a2a/usage`
 
@@ -49,8 +53,8 @@ Python ADK adapter recognizes `executable_code` and `code_execution_result`.
 Best-effort model usage reporting for one response when the runtime reports it.
 The format of this value is harness-specific and may change in the future.
 
-For example, the Python ADK adapter currently reports the following camelCase metadata for
-a single model response:
+The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
+reports the following camelCase metadata for a single model response:
 
 ```json
 {
@@ -67,6 +71,7 @@ a single model response:
 ### `kagent.dev/a2a/output-schema-sha256`
 
 **A2A element:** Result part.
+
 Binds a structured result to the SHA-256 digest of its compiled output schema.
 Consumers can use the digest to identify the schema of the result.
 
@@ -91,15 +96,16 @@ person's decision and resume the same operation. See
 
 ### Token usage
 
-The token-usage extension reports task-lifetime token usage. Its URI is
+The token-usage extension reports task-lifetime token usage. Its URI is:
 
 ```text
 https://kagent.dev/extensions/usage/v1
 ```
 
-The Go and Python ADK runtimes advertise the extension as optional when they
-support usage reporting. The payload is stored under the extension URI in the
-metadata of the status update that ends an execution: `completed`,
+The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
+advertises this optional extension when it supports usage reporting. The
+payload is stored under the extension URI in the metadata of the status update
+that ends an execution: `completed`,
 `input-required`, `failed`, or `canceled`. When a client reads the persisted
 task later, it finds the same payload in the task's metadata. The key is
 omitted when no model call reported usage.
