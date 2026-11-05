@@ -1490,14 +1490,31 @@ const NAV: { id: Page; label: string }[] = [
   { id: "substrate", label: "Substrate" },
 ];
 
+const TOUR: { page: Page; agent?: string; title: string; body: string }[] = [
+  { page: "agents", title: "Your agents", body: "Every agent running on the cluster. Click a row to open it, or create a new one." },
+  { page: "chat", agent: "sre-incident-commander", title: "Chat with an agent", body: "Send a message, approve or reject the tool calls it asks for, and watch it work." },
+  { page: "schedules", title: "Schedules", body: "Agents can run on a recurrence. Open one to see its execution history or run it now." },
+  { page: "substrate", title: "Substrate", body: "Idle agents suspend to snapshots and resume onto a warm worker in under a second." },
+];
+
 export default function KagentUI() {
   const [page, setPage] = useState<Page>("agents");
   const [chatWith, setChatWith] = useState("sre-incident-commander");
+  const [collapsed, setCollapsed] = useState(false);
+  const [hint, setHint] = useState(true);
+  const [tour, setTour] = useState<number | null>(null);
   const go = (p: Page, agent?: string) => {
     if (agent) setChatWith(agent);
     setPage(p);
   };
   const navActive = page === "chat" ? "agents" : page;
+  const startTour = (i: number) => {
+    setHint(false);
+    if (i >= TOUR.length) return setTour(null);
+    setTour(i);
+    go(TOUR[i].page, TOUR[i].agent);
+  };
+  const step = tour === null ? null : TOUR[tour];
 
   return (
     <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-[#0c0b10] text-left text-white shadow-[0_0_0_1px_rgba(167,139,250,0.08),0_40px_140px_-30px_rgba(139,92,246,0.55)] before:pointer-events-none before:absolute before:inset-x-12 before:top-0 before:z-10 before:h-px before:bg-gradient-to-r before:from-transparent before:via-violet-400 before:to-transparent">
@@ -1511,38 +1528,53 @@ export default function KagentUI() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/kagent-logo-mark.png" alt="" className="ml-3 h-6 w-6" />
         <span className="font-semibold">kagent</span>
-        <span className="ml-auto hidden rounded bg-white/5 px-3 py-1 font-geistmono text-[11px] text-white/40 sm:block">kagent ui · /{page === "chat" ? `agents/${chatWith}/chat` : page === "dashboard" ? "" : page}</span>
+        <button
+          onClick={() => startTour(0)}
+          className="ml-auto flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-200 transition hover:bg-violet-500/20"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
+          </span>
+          <span className="whitespace-nowrap"><span className="hidden sm:inline">Interactive · </span>Take the tour</span>
+        </button>
+        <span className="hidden rounded bg-white/5 px-3 py-1 font-geistmono text-[11px] text-white/40 lg:block">kagent ui · /{page === "chat" ? `agents/${chatWith}/chat` : page === "dashboard" ? "" : page}</span>
       </div>
 
-      <div className="flex h-[620px] flex-col md:grid md:grid-cols-[200px_1fr]">
-        {/* sidebar */}
-        <nav className="hidden flex-col border-r border-white/[0.08] p-2 md:flex">
+      <div className={`grid h-[620px] grid-cols-[52px_1fr] transition-[grid-template-columns] duration-200 ${collapsed ? "md:grid-cols-[60px_1fr]" : "md:grid-cols-[200px_1fr]"}`}>
+        {/* sidebar: icon rail on mobile, collapsible on desktop */}
+        <nav className="flex min-w-0 flex-col gap-0.5 overflow-hidden border-r border-white/[0.08] p-1.5 md:p-2">
           {NAV.map((n) => (
             <button
               key={n.id}
-              onClick={() => go(n.id)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${navActive === n.id ? "bg-violet-500/15 text-violet-200" : "text-white/70 hover:bg-white/[0.04] hover:text-white"}`}
+              onClick={() => { go(n.id); setTour(null); }}
+              title={n.label}
+              aria-label={n.label}
+              className={`flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition md:px-3 ${navActive === n.id ? "bg-violet-500/15 text-violet-200" : "text-white/70 hover:bg-white/[0.04] hover:text-white"} ${step?.page === n.id || (step?.page === "chat" && n.id === "agents") ? "ring-1 ring-violet-400/70" : ""}`}
             >
-              <Icon name={n.id} />
-              {n.label}
+              <span className="shrink-0"><Icon name={n.id} /></span>
+              <span className={`hidden whitespace-nowrap ${collapsed ? "" : "md:inline"}`}>{n.label}</span>
             </button>
           ))}
           <div className="mt-auto space-y-1 border-t border-white/[0.08] pt-2 text-sm text-white/50">
-            <a href="/docs/kagent/1.x" className="block rounded-lg px-3 py-2 hover:text-white">Documentation ↗</a>
+            <a href="/docs/kagent/1.x" title="Documentation" className="flex items-center gap-3 rounded-lg px-2.5 py-2 hover:text-white md:px-3">
+              <span className="shrink-0">↗</span>
+              <span className={`hidden whitespace-nowrap ${collapsed ? "" : "md:inline"}`}>Documentation</span>
+            </a>
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="hidden w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/[0.04] hover:text-white md:flex"
+            >
+              <svg viewBox="0 0 16 16" className={`h-4 w-4 shrink-0 transition-transform ${collapsed ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1.5" y="2.5" width="13" height="11" rx="2" /><path d="M6 2.5v11M11 6l-2 2 2 2" /></svg>
+              <span className={`whitespace-nowrap ${collapsed ? "hidden" : ""}`}>Collapse</span>
+            </button>
           </div>
         </nav>
 
-        {/* mobile nav */}
-        <div className="flex gap-1 overflow-x-auto border-b border-white/[0.08] p-2 md:hidden">
-          {NAV.map((n) => (
-            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 rounded-md px-3 py-1.5 text-xs ${navActive === n.id ? "bg-violet-500/20 text-violet-200" : "text-white/60"}`}>
-              {n.label}
-            </button>
-          ))}
-        </div>
-
         {/* main */}
-        <main className={page === "chat" ? "flex min-h-0 flex-1 flex-col" : "min-h-0 flex-1 overflow-y-auto p-4 md:p-5"}>
+        <main className={page === "chat" ? "relative flex min-h-0 min-w-0 flex-col" : "relative min-h-0 min-w-0 overflow-y-auto p-4 md:p-5"}>
           {page === "dashboard" && <Dashboard go={go} />}
           {page === "agents" && <Agents go={go} />}
           {page === "schedules" && <Schedules go={go} />}
@@ -1553,6 +1585,38 @@ export default function KagentUI() {
           {page === "chat" && <ChatView key={chatWith} agent={chatWith} onSwitch={(n) => go("chat", n)} />}
         </main>
       </div>
+
+      {/* first-visit hint */}
+      {hint && tour === null && (
+        <div className="absolute inset-x-3 bottom-3 z-40 flex flex-wrap items-center gap-3 rounded-xl border border-violet-400/30 bg-[#16131f]/95 p-3 text-sm shadow-2xl backdrop-blur sm:inset-x-auto sm:right-4 sm:max-w-md">
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-violet-400" />
+          </span>
+          <span className="min-w-0 flex-1 text-white/80">This is a live demo. Click around.</span>
+          <div className="flex w-full justify-end gap-2 sm:w-auto">
+            <button onClick={() => { setHint(false); go("agents"); }} className="rounded-md border border-white/15 px-2.5 py-1 text-xs hover:bg-white/[0.06]">View my agents</button>
+            <button onClick={() => startTour(0)} className="rounded-md bg-violet-500 px-2.5 py-1 text-xs font-medium hover:bg-violet-400">Take the tour</button>
+            <button onClick={() => setHint(false)} aria-label="Dismiss" className="px-1 text-white/40 hover:text-white">×</button>
+          </div>
+        </div>
+      )}
+
+      {/* tour step */}
+      {step && tour !== null && (
+        <div className="absolute inset-x-3 bottom-3 z-40 rounded-xl border border-violet-400/40 bg-[#16131f]/95 p-4 text-sm shadow-2xl backdrop-blur sm:inset-x-auto sm:right-4 sm:w-80">
+          <div className="flex items-center justify-between text-xs text-violet-300">
+            <span>Step {tour + 1} of {TOUR.length}</span>
+            <button onClick={() => setTour(null)} aria-label="End tour" className="text-white/40 hover:text-white">×</button>
+          </div>
+          <div className="mt-1.5 font-medium">{step.title}</div>
+          <p className="mt-1 text-white/65">{step.body}</p>
+          <div className="mt-3 flex justify-between">
+            <button onClick={() => startTour(tour - 1)} disabled={tour === 0} className="text-xs text-white/50 hover:text-white disabled:opacity-0">Back</button>
+            <button onClick={() => startTour(tour + 1)} className="rounded-md bg-violet-500 px-3 py-1 text-xs font-medium hover:bg-violet-400">{tour === TOUR.length - 1 ? "Done, explore on my own" : "Next"}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
