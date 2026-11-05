@@ -230,7 +230,20 @@ A 0.10.x Agent described both what the agent does and how it runs. In 1.0, an Ag
 | `spec.iconUrl`, `spec.documentationUrl`, `spec.version`, `spec.provider` | Nothing. kagent builds the agent card from the AgentTemplate's name and description. |
 | `spec.declarative.stream`, `executeCodeBlocks`, `shareTools`, `context` | Nothing. `v1alpha3` does not have an equivalent field. |
 
-Write one Harness for each distinct runtime and infrastructure combination that your agents need. Then write one Agent for each 0.10.x Agent. Each Agent references the AgentTemplate and the Harness that it pairs. For the full field reference, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}), and for a worked example, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
+To recreate your agents, write the three 1.0 resources for each 0.10.x Agent, then apply them. For a worked example of all three resources, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
+
+1. Write one AgentTemplate for each 0.10.x Agent. Use the field mapping in the preceding table.
+
+2. Write one Harness for each distinct runtime and infrastructure combination that your agents need. For the Harness fields, see [Agent harness]({{< link path="agents/agent-harness#configure-a-harness" >}}).
+
+3. Write one Agent for each 0.10.x Agent. Each Agent references its AgentTemplate in `spec.template.ref.name` and its Harness in `spec.harnessRef.name`.
+
+4. Apply the resources. Apply the Harnesses and AgentTemplates first, so that each Agent resolves its references when you create it.
+   ```bash
+   kubectl apply -f <harnesses-file>
+   kubectl apply -f <templates-file>
+   kubectl apply -f <agents-file>
+   ```
 
 ### Removed resources
 

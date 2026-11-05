@@ -168,6 +168,10 @@ The same `template` block also accepts `nodeSelector`, `tolerations`, `priorityC
 
 <!-- REVIEW (WorkerPool owner): the CPU and memory figures above are illustrative rather than measured, and the chart ships no defaults to derive them from. Confirm a recommended request and limit per Worker for a pool that carries production traffic, and the scheduling guidance that goes with it, before this section presents either as a recommendation. -->
 
+## Configure Worker identity and placement
+
+Each Worker pool runs as its own ServiceAccount, and kagent places Actors on a pool by two labels. Both settings live in the `substrateWorkerPool` block of the kagent Helm values.
+
 ### Give Workers their own ServiceAccount
 
 Worker pods run as a ServiceAccount that the chart creates, named after the pool. On a default installation that name is `kagent-default`. The chart does not bind a Role or ClusterRole to the account. Its purpose is to keep Workers off the namespace's `default` ServiceAccount, and to give you a Worker identity that you can attach your own policy to, such as an IAM role or an admission rule.
@@ -243,39 +247,62 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 Replace the bundled store with a bucket in Google Cloud Storage, Amazon S3, or an S3-compatible store. The Agent Substrate backend and every Harness location must point at the same bucket.
 
-1. Disable the bundled store and select the storage backend in your Agent Substrate Helm values. The `s3` value selects the S3 client. Any other value, including an empty one, selects Google Cloud Storage.
-   ```yaml
+1. Save an Agent Substrate values file that disables the bundled store and selects the storage backend. The `s3` value selects the S3 client. Any other value, including an empty one, selects Google Cloud Storage.
+   ```bash
+   cat > substrate-storage.yaml <<EOF
    rustfs:
      enabled: false
    atelet:
      storageBackend: s3
+   EOF
    ```
 
 2. Supply the credentials that your backend needs. Setting `rustfs.enabled` to `false` stops the chart from setting the `AWS_*` variables, so neither component receives an endpoint or a key from Helm. Each storage client reads its credentials from the pod's own environment.
 
    - For Google Cloud Storage, the client uses application default credentials. Bind the components' ServiceAccounts by using [Workload Identity Federation for GKE](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). The chart does not render a Helm value for Google credentials, so no other value is needed.
    - For Amazon S3, the client reads the standard AWS environment and uses a role that the pod assumes. No static key is needed.
-   - For an S3-compatible store, pass two variables and the static credentials through `objectStorePlugin.extraEnv`. `AWS_ENDPOINT_URL` sets the store's API endpoint. Without this variable, the client resolves the endpoint to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname. Most S3-compatible stores require path-style addressing. The chart applies this list to the storage client in both the `atelet` and `ate-api-server` pods. Do not set these variables through `atelet.extraEnv`, because that list reaches the `atelet` container, which no longer reads storage settings.
-   ```yaml
+   - For an S3-compatible store, store the static credentials in a Secret in the `ate-system` namespace, and pass them with two more variables through `objectStorePlugin.extraEnv`. `AWS_ENDPOINT_URL` sets the store's API endpoint. Without this variable, the client resolves the endpoint to Amazon S3. `AWS_S3_USE_PATH_STYLE` puts the bucket name in the request path instead of the hostname. Most S3-compatible stores require path-style addressing. The chart applies this list to the storage client in both the `atelet` and `ate-api-server` pods. Do not set these variables through `atelet.extraEnv`, because that list reaches the `atelet` container, which no longer reads storage settings.
+   ```bash
+   kubectl create secret generic s3-credentials -n ate-system \
+     --from-literal=access-key-id=<access-key-id> \
+     --from-literal=secret-access-key=<secret-access-key>
+   cat >> substrate-storage.yaml <<EOF
    objectStorePlugin:
      extraEnv:
        - name: AWS_ENDPOINT_URL
          value: https://objects.example.com
        - name: AWS_S3_USE_PATH_STYLE
          value: "true"
+       - name: AWS_ACCESS_KEY_ID
+         valueFrom:
+           secretKeyRef:
+             name: s3-credentials
+             key: access-key-id
+       - name: AWS_SECRET_ACCESS_KEY
+         valueFrom:
+           secretKeyRef:
+             name: s3-credentials
+             key: secret-access-key
+   EOF
    ```
 
-3. Set `spec.substrate.snapshotPolicy.location` on each Harness to the new bucket.
-   ```yaml
-   spec:
-     substrate:
-       workerPoolRef:
-         name: kagent-default
-       snapshotPolicy:
-         location: s3://<your-bucket>/kagent/
+3. Upgrade the Agent Substrate release by using the values file.
+   ```bash
+   helm upgrade substrate \
+     {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+     --namespace ate-system \
+     --reuse-values \
+     -f substrate-storage.yaml
    ```
 
-4. Confirm that a new snapshot lands under the `location` that you set. Send a message to a Session, so that kagent suspends the Session's Actor when the turn ends. Then read the Actor's latest `snapshotUri`. Because the backend and the location are configured separately, a mismatch between them prevents the Actor from resuming from its snapshot.
+4. Set `spec.substrate.snapshotPolicy.location` on each Harness to the new bucket. Repeat the command for each Harness.
+   ```bash
+   kubectl patch harness <harness-name> -n kagent --type merge \
+     -p '{"spec":{"substrate":{"snapshotPolicy":{"location":"s3://<your-bucket>/kagent/"}}}}'
+   ```
+
+5. Confirm that a new snapshot lands under the `location` that you set. Send a message to a Session, so that kagent suspends the Session's Actor when the turn ends. Then read the Actor's latest `snapshotUri`. Because the backend and the location are configured separately, a mismatch between them prevents the Actor from resuming from its snapshot.
    ```bash
    grpcurl -plaintext -d '{"atespace":"kagent"}' \
      localhost:8083 kagent.api.v1.SystemService/ListSubstrateActors \
@@ -329,21 +356,25 @@ A pool's class, its Worker image, and the cluster's SandboxConfig must all name 
 
 Set the pool's class, its Worker image, and its SandboxConfig together.
 
-1. Set the class and the matching Worker build in your kagent Helm values.
+1. Save a kagent values file that sets the class and the matching Worker build.
 
    {{< tabs >}}
    {{% tab name="gvisor" %}}
-   ```yaml
+   ```bash
+   cat > kagent-sandbox-class.yaml <<EOF
    substrateWorkerPool:
      sandboxClass: gvisor
      workerImage: "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+   EOF
    ```
    {{% /tab %}}
    {{% tab name="microvm" %}}
-   ```yaml
+   ```bash
+   cat > kagent-sandbox-class.yaml <<EOF
    substrateWorkerPool:
      sandboxClass: microvm
      workerImage: "ghcr.io/kagent-dev/substrate/ateworker-microvm:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+   EOF
    ```
    {{% /tab %}}
    {{< /tabs >}}
@@ -369,7 +400,17 @@ Set the pool's class, its Worker image, and its SandboxConfig together.
    go run ./cmd/ate-setup deploy sandboxconfig --sandbox-classes=microvm
    ```
 
-3. Confirm that the pool's `READY` count matches its `DESIRED` count.
+3. Upgrade the kagent release by using the values file.
+   ```bash
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent \
+     --reuse-values \
+     -f kagent-sandbox-class.yaml
+   ```
+
+4. Confirm that the pool's `READY` count matches its `DESIRED` count.
    ```bash
    kubectl get workerpools -n kagent
    ```

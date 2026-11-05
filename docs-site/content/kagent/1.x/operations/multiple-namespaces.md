@@ -11,22 +11,27 @@ When several teams run agents, give each team a namespace of its own. In this gu
 
 A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation places its components and permissions in a few namespaces. The layout depends on how you installed kagent. Where a section of this guide changes a default, the default links to that section.
 
-When you install kagent with `kagent install`, the installation sets up the following defaults:
+Both the Helm and CLI installation methods set up the following defaults:
 
-* The `kagent` namespace contains the controller, the UI, the tool server, the development database, and the `kagent-default` WorkerPool. It is the only namespace that can run agents. To run agents in another namespace, see [Prepare a namespace to run agents](#prepare-a-namespace-to-run-agents).
-* The `ate-system` namespace runs Agent Substrate. The `podcertificate-controller-system` namespace runs its Pod Certificate controller.
 * The controller watches every namespace. The chart grants the controller cluster-scoped role-based access control (RBAC). To narrow both scopes, see [Restrict kagent to specific namespaces](#restrict-kagent-to-specific-namespaces).
-* Agent Substrate has one credential policy. The policy lets agents in `kagent` read only the Secrets in `kagent`. Each namespace that you prepare gets a policy of its own.
-* The `default-model-config` ModelConfig and the `kagent-tool-server` RemoteMCPServer admit references from the `kagent` namespace only. To use them from another namespace, see [Share configuration across namespaces](#share-configuration-across-namespaces).
-
-When you install the charts directly with Helm, the installation sets up the following defaults:
-
-* The `kagent` namespace contains the controller, the UI, and the tool server. The namespace does not have a WorkerPool, because the kagent chart sets `substrateWorkerPool.create` to `false`. No namespace can run agents, including `kagent`, until you prepare it as described in [Prepare a namespace to run agents](#prepare-a-namespace-to-run-agents).
 * The `ate-system` namespace runs Agent Substrate.
-* The controller watches every namespace. The chart grants the controller cluster-scoped RBAC. To narrow both scopes, see [Restrict kagent to specific namespaces](#restrict-kagent-to-specific-namespaces).
-* Agent Substrate does not have a credential policy, because the Agent Substrate chart sets `credentialProvider.namespacePolicies` to an empty list. Each namespace that you prepare gets a policy of its own.
-* Agent Substrate does not have any identity pools. Only `kagent install` creates the certificate authority pools and the JWT authority pool. For more information, see [The Agent Substrate plane]({{< link path="about/substrate-runtime/identity#the-agent-substrate-plane" >}}).
-* The `default-model-config` ModelConfig and the `kagent-tool-server` RemoteMCPServer admit references from the `kagent` namespace only. The chart creates `default-model-config` for the provider that `providers.default` sets, which defaults to `openAI`. To use either resource from another namespace, see [Share configuration across namespaces](#share-configuration-across-namespaces).
+* The `default-model-config` ModelConfig and the `kagent-tool-server` RemoteMCPServer admit references from the `kagent` namespace only. To use them from another namespace, see [Share configuration across namespaces](#share-configuration-across-namespaces).
+* Each namespace that you prepare gets an Agent Substrate credential policy of its own.
+
+The other defaults depend on how you installed kagent:
+
+{{< tabs >}}
+{{% tab name="Helm" %}}
+* The `kagent` namespace contains the controller, the UI, and the tool server. The namespace does not have a WorkerPool, because the kagent chart sets `substrateWorkerPool.create` to `false`. No namespace can run agents, including `kagent`, until you prepare it as described in [Prepare a namespace to run agents](#prepare-a-namespace-to-run-agents).
+* Agent Substrate does not have a credential policy, because the Agent Substrate chart sets `credentialProvider.namespacePolicies` to an empty list.
+* The chart creates `default-model-config` for the provider that `providers.default` sets, which defaults to `openAI`.
+{{% /tab %}}
+{{% tab name="kagent install" %}}
+* The `kagent` namespace contains the controller, the UI, the tool server, the development database, and the `kagent-default` WorkerPool. It is the only namespace that can run agents. To run agents in another namespace, see [Prepare a namespace to run agents](#prepare-a-namespace-to-run-agents).
+* The `podcertificate-controller-system` namespace runs the Agent Substrate Pod Certificate controller.
+* Agent Substrate has one credential policy. The policy lets agents in `kagent` read only the Secrets in `kagent`.
+{{% /tab %}}
+{{< /tabs >}}
 
 ## Before you begin
 
@@ -166,31 +171,68 @@ The following steps prepare the `team-a` namespace.
 
 To limit the controller, restrict it to the namespaces that run agents. Then, verify that an unwatched namespace stays unmanaged.
 
-### Set the watched namespaces
+`global.watchNamespaces` sets two scopes from one value. The RBAC scope is the set of namespaces where the chart grants the controller RBAC. The watch scope is the set of namespaces that the controller watches. For each listed namespace, the chart replaces the controller's reconciliation and management ClusterRoles and the tool server's ClusterRole with a Role and RoleBinding each. The ClusterRole for service account authentication and the metrics ClusterRoles stay cluster-scoped. The chart appends the install namespace to the list, so the release's own resources remain managed. You can set `global.watchNamespaces` at installation or in a later `helm upgrade` of the kagent release.
 
-`global.watchNamespaces` sets two scopes from one value. The RBAC scope is the set of namespaces where the chart grants the controller RBAC. The watch scope is the set of namespaces that the controller watches. For each listed namespace, the chart replaces the controller's reconciliation and management ClusterRoles with a Role and RoleBinding each. The ClusterRole for service account authentication and the metrics ClusterRoles stay cluster-scoped. The chart appends the install namespace to the list, so the release's own resources remain managed.
+The following steps limit the controller to the `team-a` namespace from [Prepare a namespace to run agents](#prepare-a-namespace-to-run-agents), and use its `team-a-agent` Agent to verify the result.
 
-You can set `global.watchNamespaces` at installation or in a later `helm upgrade` of the kagent release. Because the chart creates a Role and RoleBinding in each listed namespace, create every listed namespace before you upgrade.
+1. Confirm that every namespace that you plan to list exists. The chart creates a Role and RoleBinding in each listed namespace, so the upgrade fails with `namespaces "<name>" not found` for a namespace that does not exist.
+   ```bash
+   kubectl get namespace team-a
+   ```
 
-```bash
-helm upgrade kagent \
-  {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
-  --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
-  --namespace kagent \
-  --reuse-values \
-  --set 'global.watchNamespaces={prod-agents,staging-agents}'
-```
+2. Upgrade the kagent release with the list of namespaces. The change restarts the controller with the new watch scope. To return to watching every namespace later, set the value to an empty list, such as `--set-json 'global.watchNamespaces=[]'`.
+   ```bash
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent \
+     --reuse-values \
+     --set 'global.watchNamespaces={team-a}'
+   ```
 
-The change restarts the controller with the new watch scope. To return to watching every namespace, set the value to an empty list, such as `--set-json 'global.watchNamespaces=[]'`.
+3. Create a namespace that `global.watchNamespaces` does not list, and create an Agent in it. The Agent's AgentTemplate and Harness do not need to exist, because the controller never reads the Agent.
+   ```bash
+   kubectl create namespace dev-agents
+   kubectl apply -f - <<EOF
+   apiVersion: api.kagent.dev/v1alpha3
+   kind: Agent
+   metadata:
+     name: dev-agent
+     namespace: dev-agents
+   spec:
+     template:
+       ref:
+         name: dev-template
+     harnessRef:
+       name: dev-harness
+   EOF
+   ```
 
-### Set the RBAC and watch scopes separately
+4. Confirm that the controller reconciles the Agent in the watched namespace. The `READY` column lists `True`.
+   ```bash
+   kubectl get agents -n team-a
+   ```
+   Example output:
+   ```console
+   NAME           READY   AGE
+   team-a-agent   True    66s
+   ```
 
-The chart also has a separate key for each scope. The `rbac.namespaces` key sets the RBAC scope. The `config.kubernetes.watchNamespaces` key sets the watch scope. If the two scopes must differ, use these keys. Otherwise, use `global.watchNamespaces`. The following rules apply to the separate keys:
+5. Confirm that the Agent in the unwatched namespace stays unmanaged. The controller does not have a watch entry for that namespace. The Agent's `READY` value therefore stays empty, and the conditions command does not print any conditions.
+   ```bash
+   kubectl get agents -n dev-agents
+   kubectl get agent dev-agent -n dev-agents -o jsonpath='{.status.conditions}'
+   ```
+   Example output:
+   ```console
+   NAME        READY   AGE
+   dev-agent           20s
+   ```
 
-* `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace. Otherwise, the render fails.
-* `config.kubernetes.watchNamespaces` replaces the watch scope with exactly the listed namespaces. The chart does not add the install namespace to the watch scope, so to keep watching the install namespace, list it explicitly.
-* When `rbac.namespaces` is set, a `config.kubernetes.watchNamespaces` entry outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime.
-* When `global.watchNamespaces` sets the RBAC scope, the chart adds the `config.kubernetes.watchNamespaces` entries to the RBAC scope, so the render does not fail.
+6. Delete the test namespace.
+   ```bash
+   kubectl delete namespace dev-agents
+   ```
 
 ### Grant Namespace access for selector-based sharing
 
@@ -224,44 +266,16 @@ subjects:
 EOF
 ```
 
-### Verify the restricted installation
+The controller picks up the grant without a restart. Within a few seconds, the Agent's `ResolvedRefs` condition becomes `True`.
 
-Verify a restricted installation by checking that an unwatched namespace stays unmanaged. In each watched namespace, the `kubectl get agents` command and the condition checks in [Create your first agent]({{< link path="get-started/your-first-agent" >}}) work as written.
+### Set the RBAC and watch scopes separately
 
-1. Create one Agent in each watched namespace. Each namespace must be prepared first, as described in [Prepare a namespace to run agents](#prepare-a-namespace-to-run-agents).
-   ```bash
-   kubectl apply -n prod-agents -f my-agent.yaml
-   kubectl apply -n staging-agents -f my-agent.yaml
-   ```
+The chart also has a separate key for each scope. The `rbac.namespaces` key sets the RBAC scope. The `config.kubernetes.watchNamespaces` key sets the watch scope. If the two scopes must differ, use these keys. Otherwise, use `global.watchNamespaces`. The following rules apply to the separate keys:
 
-2. Create one Agent in a namespace that `global.watchNamespaces` does not list.
-   ```bash
-   kubectl apply -n dev-agents -f my-agent.yaml
-   ```
-
-3. Confirm that the controller reconciles the watched Agents.
-   ```bash
-   kubectl get agents -n prod-agents
-   kubectl get agents -n staging-agents
-   ```
-   Example output:
-   ```console
-   NAME       READY   AGE
-   my-agent   True    30s
-   NAME       READY   AGE
-   my-agent   True    30s
-   ```
-
-4. Confirm that the Agent in the unwatched namespace stays unmanaged. The controller does not have a watch entry for that namespace. The Agent's `READY` value therefore stays empty, and the conditions command does not print any conditions.
-   ```bash
-   kubectl get agents -n dev-agents
-   kubectl get agent my-agent -n dev-agents -o jsonpath='{.status.conditions}'
-   ```
-   Example output:
-   ```console
-   NAME       READY   AGE
-   my-agent           30s
-   ```
+* `rbac.namespaces` takes precedence over `global.watchNamespaces` whenever the key is present. An explicit `rbac.namespaces: []` restores cluster-scoped RBAC. When `rbac.namespaces` is set, it must include the install namespace. Otherwise, the render fails.
+* `config.kubernetes.watchNamespaces` replaces the watch scope with exactly the listed namespaces. The chart does not add the install namespace to the watch scope, so to keep watching the install namespace, list it explicitly.
+* When `rbac.namespaces` is set, a `config.kubernetes.watchNamespaces` entry outside the RBAC scope fails the render, because the controller would loop on `Forbidden` errors at runtime.
+* When `global.watchNamespaces` sets the RBAC scope, the chart adds the `config.kubernetes.watchNamespaces` entries to the RBAC scope, so the render does not fail.
 
 ## Share configuration across namespaces
 
