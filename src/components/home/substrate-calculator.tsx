@@ -133,7 +133,7 @@ function Pills<T extends string | number>({ label, options, value, onChange }: {
 
 export default function SubstrateCalculator() {
   const [agents, setAgents] = useState(100);
-  const [size, setSize] = useState(1);
+  const [size, setSize] = useState(3);
   const [snapshot, setSnapshot] = useState<Snapshot>("memory");
   const [held, setHeld] = useState(150);
   const [data, setData] = useState(100);
