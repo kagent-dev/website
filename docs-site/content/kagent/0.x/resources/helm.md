@@ -13,17 +13,17 @@ A Helm chart for kagent, built with Google ADK
 | Repository | Name | Version |
 |------------|------|---------|
 | `${SUBSTRATE_REPO}` | substrate | `${SUBSTRATE_VERSION}` |
-| file://../agents/argo-rollouts | argo-rollouts-agent | 0.10.5 |
-| file://../agents/cilium-debug | cilium-debug-agent | 0.10.5 |
-| file://../agents/cilium-manager | cilium-manager-agent | 0.10.5 |
-| file://../agents/cilium-policy | cilium-policy-agent | 0.10.5 |
-| file://../agents/helm | helm-agent | 0.10.5 |
-| file://../agents/istio | istio-agent | 0.10.5 |
-| file://../agents/k8s | k8s-agent | 0.10.5 |
-| file://../agents/kgateway | kgateway-agent | 0.10.5 |
-| file://../agents/observability | observability-agent | 0.10.5 |
-| file://../agents/promql | promql-agent | 0.10.5 |
-| file://../tools/grafana-mcp | grafana-mcp | 0.10.5 |
+| file://../agents/argo-rollouts | argo-rollouts-agent | 0.10.6 |
+| file://../agents/cilium-debug | cilium-debug-agent | 0.10.6 |
+| file://../agents/cilium-manager | cilium-manager-agent | 0.10.6 |
+| file://../agents/cilium-policy | cilium-policy-agent | 0.10.6 |
+| file://../agents/helm | helm-agent | 0.10.6 |
+| file://../agents/istio | istio-agent | 0.10.6 |
+| file://../agents/k8s | k8s-agent | 0.10.6 |
+| file://../agents/kgateway | kgateway-agent | 0.10.6 |
+| file://../agents/observability | observability-agent | 0.10.6 |
+| file://../agents/promql | promql-agent | 0.10.6 |
+| file://../tools/grafana-mcp | grafana-mcp | 0.10.6 |
 | https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
 | oci://ghcr.io/kagent-dev/kmcp/helm | kmcp | `${KMCP_VERSION}` |
 | oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.1 |
@@ -315,7 +315,7 @@ A Helm chart for kagent, built with Google ADK
 | registry | string | `"ghcr.io"` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
 | substrate.enabled | bool | `false` |  |
-| substrateWorkerPool | object | `{"ateomImage":"","create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{}}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. |
+| substrateWorkerPool | object | `{"ateomImage":"","create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","template":{}}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources. Not supported in kagent v0.10.x: enabling it fails the install. |
 | tag | string | `""` |  |
 | tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | ui.additionalForwardedHeaders | list | `[]` | Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped. |
