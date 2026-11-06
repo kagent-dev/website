@@ -45,7 +45,7 @@ export default function SubstrateCalculatorPage() {
           ))}
         </div>
         <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ks-muted">
-          Measured on Agent Substrate v1.0.0-rc2 with gVisor, on one node with 16 vCPUs, with a minimal Python agent and object storage in the same region. The agent start is the median of the measured wake-ups, and the other values are the best measured results. Your agent&apos;s own start time adds to a wake-up with a Volumes snapshot.
+          Measured on Agent Substrate v1.0.0-rc2 with gVisor, on one node with 16 vCPUs, with a minimal Go agent that starts in almost no time, and object storage in the same region. The values are medians of the measured wake-ups. Your agent&apos;s own start time adds to a wake-up with a Volumes snapshot.
         </p>
         <div className="mt-8 flex flex-wrap gap-6 text-sm">
           <a href={`${DOCS}/about/substrate-runtime/sandboxing`} className="group flex items-center gap-1.5 text-violet-300 hover:text-violet-200">

@@ -22,16 +22,16 @@ const HELD = [0, 100, 150, 250, 500, 750, 1000]; // MiB the process holds, up to
 const NEW = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 const DISKS = [125, 250, 500, 1000]; // MiB/s
 
-// The agent start is the median of the measured wake-ups; the other values are the best measured results.
+// Medians of the measured wake-ups, with a Go test agent that starts in almost no time.
 const C = {
   startFixS: 0.03, // the router and the request
-  startCpuS: { volumes: 0.37, memory: 0.11 }, // CPU-seconds; no faster above 1 core
+  startCpuS: { volumes: 0.08, memory: 0.08 }, // CPU-seconds; no faster above 1 core
   fixS: 0.1, // once per restore and per download that has something to move
-  localS: 1.2, // restore, s per GB of files at 1 core
-  restoreCpuS: 1.1, // restore, CPU-seconds per GB below 1 core
-  remoteS: 3.3, // download and decompress, s per GB of files
-  heldDlS: 2.2, // download, s per GB of process memory
-  heldRestoreS: 0.8, // restore, s per GB of process memory
+  localS: 0.5, // restore, s per GB of files at 1 core
+  restoreCpuS: 0.45, // restore, CPU-seconds per GB below 1 core
+  remoteS: 3.5, // download and decompress, s per GB of files
+  heldDlS: 2.8, // download, s per GB of process memory
+  heldRestoreS: 0.2, // restore, s per GB of process memory
   kLocal: 0.3, // disk work per GB, wake-up from the node's copy
   kRemote: 2.0, // disk work per GB of files, wake-up from object storage
   kHeld: 1.2, // disk work per GB of process memory
