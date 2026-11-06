@@ -1,7 +1,7 @@
 # kagent UI screenshots
 
-Playwright automation that captures the screenshots of the **kagent product UI** that the 1.x
-docs embed. Every capture serves two purposes at once:
+Playwright automation that captures the screenshots of the **kagent product UI** that the main
+and latest docs embed. Every capture serves two purposes at once:
 
 1. **Docs assets** — regenerate the `docs-site/assets/img/*.png` files the guides display.
 2. **Visual regression** — CI re-captures the UI and, if anything changed, opens a PR with the
@@ -159,7 +159,7 @@ more thing to get working before a screenshot exists.
 ## Task: refresh for a new kagent version
 
 1. **Nothing here pins a version.** The provisioner reads the kagent version from the same
-   conref the install guide renders (`assets/kagent-docs/versions/kagent.md`, the `1.x` entry),
+   conref the install guide renders (`assets/kagent-docs/versions/kagent.md`, the `latest` entry),
    and `kagent install` brings the Agent Substrate release that version bundles, so bumping the
    docs is what moves the capture. Do not hardcode a version
    to "get the new UI" — that decouples the screenshot from what a reader installs.
@@ -170,15 +170,15 @@ more thing to get working before a screenshot exists.
 ### If a version line ever diverges
 
 Today every capture publishes to the bare `assets/img/<file>.png`, shared by whatever
-references it. That is safe right now because **only 1.x uses these images**: the 0.x tree is
+references it. That is safe right now because **only main and latest use these images**: the 0.x tree is
 frozen and references images as raw markdown against `static/images/`, never through the
 `reuse-image` shortcodes.
 
 When a second version line does need different images, the theme already has the mechanism —
 `utils/resolve-versioned-image.html` prefers `assets/img/<version-slug>/<file>` over the bare
 path. This site sets `params.folder`, which puts `page-context` in `siteParams` mode, so the
-slug for a `/docs/kagent/1.x/…` page is literally `1.x`. Point the diverging image's `dest` at
-`assets/img/1.x/<file>.png` and leave every other entry bare; no page edit is needed, because
+slug for a `/docs/kagent/main/…` page is literally `main`. Point the diverging image's `dest` at
+`assets/img/main/<file>.png` and leave every other entry bare; no page edit is needed, because
 authors always write the bare `src`.
 
 ---
@@ -274,7 +274,7 @@ because the released image ships no mock service worker.
 
 - **Projects are keyed by theme, not by docs version.** The kagent UI exposes a theme control
   Playwright can drive, so light and dark are two real captures and the guides carry a
-  theme-aware pair. Version is not a baseline axis because only 1.x uses these images (see
+  theme-aware pair. Version is not a baseline axis because only main and latest use these images (see
   "If a version line ever diverges"). Adding the version to a project name renames every
   committed baseline, so leave it until a second version is genuinely being captured.
 - **`@playwright/test` is pinned exactly (no caret).** CI triggers on input changes rather

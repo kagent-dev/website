@@ -3,14 +3,14 @@
 that builds a single docs version, for a quicker `make serve-docs VERSION=…`.
 
 `make serve-docs` renders every version tree under docs-site/content/<section>/
-(kagent/0.x and kagent/1.x). When you only need one version, the other one is
-wasted time. This overlay adds an `ignoreFiles` pattern for every other version
+(kagent/main, kagent/latest and kagent/0.x). When you only need one version,
+the others are wasted time. This overlay adds an `ignoreFiles` pattern for every other version
 directory, so Hugo never reads those trees. Unversioned sections, such as kmcp,
 always build.
 
 Nothing is maintained by hand. The versions come from `params.versions` in
 docs-site/hugo.yaml; --version takes a linkVersion (the version tree's directory
-name, such as `0.x` or `1.x`), or `latest` for the entry marked `latest: true`
+name, such as `0.x` or `main`), or `latest` for the entry marked `latest: true`
 (the first entry if none is). The overlay is gitignored and only ever passed by
 the Makefile's `serve-docs` target, never by a production build.
 

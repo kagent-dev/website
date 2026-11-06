@@ -141,7 +141,7 @@ kagent can place **OpenClaw / Hermes-style** harnesses on substrate (`runtime: s
 - Pins a worker while active (scale the pool: roughly `1 + active harnesses` for headroom).
 - Strong isolation for shell, git, and untrusted code.
 
-See the [kagent AgentHarness docs](https://kagent.dev/docs/kagent/examples/agent-harness) after this walkthrough.
+See the [kagent AgentHarness docs](https://kagent.dev/docs/kagent/0.x/examples/agent-harness) after this walkthrough.
 
 ### 4. Agent swarms / many-actor demos
 
@@ -483,7 +483,7 @@ kubectl scale workerpool kagent-default -n kagent --replicas=3
 - **Without substrate:** kagent runs agents as ordinary Kubernetes Deployments (always-on pods).
 - **With substrate:** `SandboxAgent` + `spec.substrate.workerPoolRef` → actor on the pool; suspend when idle.
 
-Christian Posta's write-up frames the product story: agents are long-lived but idle; you need isolation (gVisor/Firecracker) **and** real lifecycle (suspend, snapshot, resume). Substrate + kagent is that path open-sourced under the [kagent](https://kagent.dev) umbrella. See also [Solo's blog](https://www.solo.io/blog/agent-substrate-powers-kubernetes-agents-with-kagent) and the official [kagent Agent Substrate example](https://kagent.dev/docs/kagent/examples/agent-substrate).
+Christian Posta's write-up frames the product story: agents are long-lived but idle; you need isolation (gVisor/Firecracker) **and** real lifecycle (suspend, snapshot, resume). Substrate + kagent is that path open-sourced under the [kagent](https://kagent.dev) umbrella. See also [Solo's blog](https://www.solo.io/blog/agent-substrate-powers-kubernetes-agents-with-kagent) and the official [kagent Agent Substrate example](https://kagent.dev/docs/kagent/0.x/examples/agent-substrate).
 
 ---
 
@@ -524,8 +524,8 @@ Christian Posta's write-up frames the product story: agents are long-lived but i
 |------|-----|
 | [`01-kagent-agent-substrate`](https://github.com/sebbycorp/kagent-demos/tree/main/01-kagent-agent-substrate) | Runnable code for this guide: `setup.sh`, `teardown.sh`, manifests |
 | [learn.agentsubstrate.dev](https://learn.agentsubstrate.dev/) | Visual topology, resume flow, ateapi internals |
-| [AgentHarness on kagent](https://kagent.dev/docs/kagent/examples/agent-harness) | Long-lived coding sandboxes on substrate |
+| [AgentHarness on kagent](https://kagent.dev/docs/kagent/0.x/examples/agent-harness) | Long-lived coding sandboxes on substrate |
 | [agentgateway](https://agentgateway.dev) | Govern LLM/MCP egress; keep keys off the actor |
-| [kagent docs](https://kagent.dev/docs/kagent) | Agents, tools, MCP, observability |
+| [kagent docs](https://kagent.dev/docs/kagent/0.x) | Agents, tools, MCP, observability |
 
 Suspend-and-resume is the feature that finally makes **per-session stateful agents** affordable at scale on Kubernetes. Spin it up, chat with `hello-substrate`, and watch a small worker pool serve far more sessions than it has pods.

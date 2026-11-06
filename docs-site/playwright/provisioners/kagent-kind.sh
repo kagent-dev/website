@@ -4,11 +4,11 @@
 # product-UI screenshot capture.
 #
 # This reproduces the install documented in:
-#   content/kagent/1.x/setup/installation.md
+#   content/kagent/latest/setup/installation.md
 # so the screenshots always match what a reader who follows the docs would see.
 #
 # The kagent version is read from the SAME conref that guide renders
-# (assets/kagent-docs/versions/kagent.md, 1.x entry), not from "latest published".
+# (assets/kagent-docs/versions/kagent.md, latest entry), not from "latest published".
 # `kagent install` then installs the Agent Substrate release that kagent version bundles. That is the invariant to preserve: a capture must show what a
 # reader gets, so when the docs bump a version the next capture follows automatically
 # and nothing here needs editing.
@@ -57,8 +57,8 @@ SITE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # Read a version out of a docs conref, for the docs line being captured.
 #
 # The conrefs hold BOTH lines in one file, as
-#   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="1.x" >}}B{{< /version >}}
-# so the 1.x value must be selected by its include-if rather than by taking the first
+#   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="latest" >}}B{{< /version >}}...
+# so the latest value must be selected by its include-if rather than by taking the first
 # match — which would silently install the frozen 0.x version and capture the old UI.
 resolve_version() {
   local file="$1" override="$2"
@@ -69,7 +69,7 @@ resolve_version() {
     v="$(python3 - "$conref" <<'PY'
 import re, sys
 txt = open(sys.argv[1]).read()
-m = re.search(r'include-if="[^"]*\b1\.x\b[^"]*"[^>]*>}}([^<{]+)', txt)
+m = re.search(r'include-if="[^"]*\blatest\b[^"]*"[^>]*>}}([^<{]+)', txt)
 # A conref with no version shortcode at all is a bare value, which is legitimate:
 # some of these files pin one version for every docs line.
 print((m.group(1) if m else txt).strip())
