@@ -139,22 +139,29 @@ export default function Home() {
 
       {/* Stats */}
       <section className="mx-auto max-w-6xl px-6 pt-20">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             ["Sub-second resume", "A suspended actor restores onto a warm worker. The scheduler never sees it.", "/substrate-calculator", "Calculate your wake-up time"],
             ["Isolated sandbox by default", "Every actor and every harness gets its own sandbox. Egress starts closed."],
             ["10×", "higher density than standard container runtimes."],
           ].map(([title, body, href, link]) => (
-            <div key={title} className="group rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-8">
-              <div className={`font-medium tracking-tight ${title === "10×" ? "text-5xl" : "text-[28px] leading-tight"}`}>{title}</div>
+            <div key={title} className="group rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-8 lg:p-7">
+              <div className={`font-medium tracking-tight ${title === "10×" ? "text-5xl" : "text-[28px] leading-tight lg:text-2xl"}`}>{title}</div>
               <p className="mt-3 leading-relaxed text-ks-muted">{body}</p>
               {href && (
-                <Link href={href} className="mt-4 inline-flex items-center gap-1.5 text-sm text-violet-300 hover:text-violet-200">
+                <Link href={href} className="mt-4 inline-flex items-center gap-1.5 whitespace-nowrap text-sm text-violet-300 hover:text-violet-200">
                   {link} <span className="transition group-hover:translate-x-0.5">→</span>
                 </Link>
               )}
             </div>
           ))}
+          <div className="flex flex-col rounded-[24px] border border-violet-400/30 bg-gradient-to-b from-violet-500/[0.12] to-violet-500/[0.02] p-8 lg:p-7">
+            <div className="text-[28px] font-medium leading-tight tracking-tight lg:text-2xl">Size your agents</div>
+            <p className="mt-3 flex-1 leading-relaxed text-ks-muted">See how long your agents take to wake up, and the CPU, memory and storage they need.</p>
+            <Link href="/substrate-calculator" className="mt-6 self-start rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black shadow-[0_0_40px_-6px_rgba(167,139,250,0.75)] transition hover:bg-white/90">
+              Open the calculator
+            </Link>
+          </div>
         </div>
       </section>
 
