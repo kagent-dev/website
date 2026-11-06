@@ -11,10 +11,10 @@ import { useState } from "react";
 type Snapshot = "volumes" | "memory";
 
 const SIZES = [
-  { name: "Small", cpu: 0.5, mib: 512, label: "½ core · 512 MiB" },
-  { name: "Medium", cpu: 1, mib: 1024, label: "1 core · 1 GiB" },
-  { name: "Large", cpu: 2, mib: 2048, label: "2 cores · 2 GiB" },
-  { name: "X-Large", cpu: 4, mib: 4096, label: "4 cores · 4 GiB" },
+  { name: "Small", cpu: 0.1, mib: 512, label: "100m · 512 MiB" },
+  { name: "Medium", cpu: 0.25, mib: 1024, label: "250m · 1 GiB" },
+  { name: "Large", cpu: 0.5, mib: 2048, label: "500m · 2 GiB" },
+  { name: "X-Large", cpu: 1, mib: 4096, label: "1 core · 4 GiB" },
 ];
 const AGENTS = [1, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
 const DATA = [0, 50, 100, 250, 500, 1000, 2000]; // MB in the workspace
@@ -138,7 +138,7 @@ export default function SubstrateCalculator() {
   const [held, setHeld] = useState(150);
   const [data, setData] = useState(100);
   const [disk, setDisk] = useState(500);
-  const [newPct, setNewPct] = useState(20);
+  const [newPct, setNewPct] = useState(100);
   const [tip, setTip] = useState<string | null>(null);
 
   const pkg = SIZES[size];
