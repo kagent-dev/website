@@ -4,7 +4,7 @@ description: Review the reference docs for the kagent CLI commands.
 weight: 30
 ---
 
-Review the kagent CLI commands and learn how to use them effectively.
+Review the commands and flags of the kagent CLI.
 
 - [`kagent agent`]({{< link path="reference/cli/kagent-agent" >}}) - Discover agents and work with their conversations
 - [`kagent apply`]({{< link path="reference/cli/kagent-apply" >}}) - Create or update an Agent or AgentTemplate
