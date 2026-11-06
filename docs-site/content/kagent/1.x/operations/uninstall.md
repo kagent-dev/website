@@ -9,7 +9,7 @@ The `kagent uninstall` command removes everything that `kagent install` created.
 
 The command removes:
 
-- The `kagent`, `kagent-crds`, `substrate`, `substrate-podcert`, and `substrate-crds` Helm releases
+- The `kagent`, `kagent-crds`, `substrate`, `substrate-atelet`, `substrate-podcert`, and `substrate-crds` Helm releases
 - Every `kagent.dev` and `ate.dev` custom resource definition, and with them every resource of those kinds in every namespace, such as Agents, Harnesses, ModelConfigs, and SandboxTemplates
 - The development PostgreSQL database that `kagent install` deployed, together with its PersistentVolumeClaim and the data on it
 - The `ate-system` and `podcertificate-controller-system` namespaces, and the identity pools and certificate authorities in them

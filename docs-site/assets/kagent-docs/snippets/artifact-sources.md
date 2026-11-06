@@ -6,6 +6,10 @@ A skill or a plugin changes what an agent does, so kagent only accepts artifact 
 - **`git`**: A repository URL together with a full commit identifier. An abbreviated commit, a branch, or a tag is rejected.
 - **`bucket.s3`**: An endpoint, bucket, and key, together with the `versionId` of that exact object version. A region is included where the service requires one for request signing.
 
+> [!WARNING]
+> **An agent with a `git` or `bucket.s3` source does not become ready.** The Actor that builds the golden snapshot fetches the source itself. No egress policy applies to that Actor, so Agent Substrate blocks the download, and the Agent's `Ready` condition reports `GoldenActorCrashed`. An EgressPolicy in the Agent's `egressPolicyRefs` field does not resolve the failure, because that field governs Sessions only. Use an `oci` source until this limitation is fixed.
+<!-- REVIEW: kagent-dev/kagent#3435 fixes this by setting golden_egress_policy, which needs the Agent Substrate GoldenEgressPolicy preview gate. Verified live 2026-11-05 for a git source (SEFK v2026.11.0, which bundles kagent 1.0.0-rc2); S3 was not run. Remove this warning when a release with #3435 ships, and add the gate to the Helm installation path. -->
+
 If a source sets more than one kind, or none of them, the API server rejects the AgentTemplate with the error `exactly one of the fields in [oci git bucket] must be set`.
 
 For an `oci` source, the Agent Substrate worker pulls the image with the registry credentials that it uses for workload images. The worker must therefore be able to reach the registry, and a private registry must accept those credentials. The agent's egress policies do not need to grant access to the registry. Agent Substrate mounts the image in the agent sandbox as a read-only volume, and the agent runtime reads the skill or plugin from that volume.

@@ -296,9 +296,17 @@ Turn on the kagent trace, log, and metrics exporters, and point them at the coll
 
 ## Send Agent Substrate telemetry to the collector
 
-Upgrade the Agent Substrate Helm release. A single `otel.endpoint` setting turns on traces, logs, and metrics for every Agent Substrate component. Agent Substrate keeps 1% of its traces by default, so the command keeps every trace instead. Lower `samplingRatio` again for production.
+Upgrade both Agent Substrate Helm releases. A single `otel.endpoint` setting turns on traces, logs, and metrics for every Agent Substrate component. Agent Substrate keeps 1% of its traces by default, so the command keeps every trace instead. Lower `samplingRatio` again for production.
 
 ```bash
+helm upgrade substrate-atelet \
+  {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+  --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+  --namespace ate-system \
+  --reuse-values \
+  --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317 \
+  --set otel.traces.samplingRatio=1.0 \
+  --wait --timeout 10m
 helm upgrade substrate \
   {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
   --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
@@ -372,6 +380,12 @@ Check each signal in turn: traces in Jaeger, metrics in Prometheus, and logs in 
      --set config.telemetry=null \
      --set config.runtimeDefaults.telemetry=null \
      --set controller.metrics.enabled=false
+   helm upgrade substrate-atelet \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+     --namespace ate-system --reuse-values \
+     --set otel.endpoint="" \
+     --set otel.traces.samplingRatio=0.01
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
      --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \

@@ -49,7 +49,7 @@ Read the current state of the runtime before you change it. The rest of this gui
      "workerPools": [
        {
          "name": "kagent-default",
-         "workerImage": "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}",
+         "workerImage": "{{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}",
          "readyReplicas": 1
        }
      ],
@@ -218,7 +218,7 @@ spec:
   replicas: 2
   sandboxClasses:
     - name: gvisor
-  workerImage: "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+  workerImage: "{{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}"
 ```
 
 Earlier releases placed Actors with a single `kagent.dev/worker-pool` label, and the chart no longer sets it. A Session or Sandbox that is pinned to a revision from one of those releases still selects that key. Keep the old label on the pool until you recreate those Sessions and Sandboxes.
@@ -233,12 +233,13 @@ substrateWorkerPool:
 
 Agent Substrate writes every suspended Actor to an object store, so the bucket stores the Session state that a resume restores. The following settings decide where a snapshot lands.
 
-- In the Agent Substrate Helm values, `atelet.storageBackend` selects the storage client. `rustfs.enabled` decides whether the chart supplies credentials for that client.
+- In the `substrate` release values, `atelet.storageBackend` selects the storage client of the `ate-api-server`. `rustfs.enabled` decides whether the chart supplies credentials for that client.
+- In the `substrate-atelet` release values, `objectStore` selects the storage client of `atelet`, with its endpoint and credentials.
 - In each {{< gloss "Harness" >}}Harness{{< /gloss >}}, `spec.substrate.snapshotPolicy.location` sets the bucket and prefix that the Harness's Actors write under. The field is required, and it must point into a bucket that the selected client can reach.
 
 ### The bundled object store
 
-Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs an in-cluster object store and configures the `atelet` DaemonSet and the `ate-api-server` Deployment to use it. The store claims a 1Gi PersistentVolumeClaim, and it accepts an access key and secret key that the chart sets to published defaults.
+Because `rustfs.enabled` defaults to `true`, the `substrate` chart installs an in-cluster object store and configures the `ate-api-server` Deployment to use it. The [installation guide]({{< link path="setup/installation#install-agent-substrate" >}}) points the `substrate-atelet` release at the same store through its `objectStore` values. The store claims a 1Gi PersistentVolumeClaim, and it accepts an access key and secret key that the chart sets to published defaults.
 
 > [!IMPORTANT]
 > The bundled store is not durable, and every installation receives the same credentials for it. Before a production installation serves real traffic, [move its snapshots to your own bucket](#move-snapshots-to-an-external-bucket).
@@ -247,13 +248,19 @@ Because `rustfs.enabled` defaults to `true`, the Agent Substrate chart installs 
 
 Replace the bundled store with a bucket in Google Cloud Storage, Amazon S3, or an S3-compatible store. The Agent Substrate backend and every Harness location must point at the same bucket.
 
-1. Save an Agent Substrate values file that disables the bundled store and selects the storage backend. The `s3` value selects the S3 client. Any other value, including an empty one, selects Google Cloud Storage.
+1. Save an Agent Substrate values file that disables the bundled store and selects the storage backend. Both Agent Substrate releases read this file. Set `atelet.storageBackend` and `objectStore.backend` to `s3` for Amazon S3 or an S3-compatible store, or to `gcs` for Google Cloud Storage. The empty `objectStore` values clear the endpoint and the credentials of the bundled store from the `substrate-atelet` release.
    ```bash
    cat > substrate-storage.yaml <<EOF
    rustfs:
      enabled: false
    atelet:
      storageBackend: s3
+   objectStore:
+     backend: s3
+     endpoint: ""
+     region: ""
+     pathStyle: false
+     credentialsSecret: ""
    EOF
    ```
 
@@ -286,8 +293,14 @@ Replace the bundled store with a bucket in Google Cloud Storage, Amazon S3, or a
    EOF
    ```
 
-3. Upgrade the Agent Substrate release by using the values file.
+3. Upgrade both Agent Substrate releases by using the values file. Upgrade `substrate-atelet` first.
    ```bash
+   helm upgrade substrate-atelet \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+     --namespace ate-system \
+     --reuse-values \
+     -f substrate-storage.yaml
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
      --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
@@ -364,7 +377,7 @@ Set the pool's class, its Worker image, and its SandboxConfig together.
    cat > kagent-sandbox-class.yaml <<EOF
    substrateWorkerPool:
      sandboxClass: gvisor
-     workerImage: "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+     workerImage: "{{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}"
    EOF
    ```
    {{% /tab %}}
@@ -373,7 +386,7 @@ Set the pool's class, its Worker image, and its SandboxConfig together.
    cat > kagent-sandbox-class.yaml <<EOF
    substrateWorkerPool:
      sandboxClass: microvm
-     workerImage: "ghcr.io/kagent-dev/substrate/ateworker-microvm:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}"
+     workerImage: "{{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-microvm:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}"
    EOF
    ```
    {{% /tab %}}

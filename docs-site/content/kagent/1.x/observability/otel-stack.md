@@ -443,8 +443,16 @@ Turn on the kagent trace, log, and metrics exporters, and point them at the coll
 
 Point Agent Substrate at the collector. A single `otel.endpoint` setting turns on traces, logs, and metrics for every Agent Substrate component.
 
-1. Upgrade the Agent Substrate Helm release.
+1. Upgrade both Agent Substrate Helm releases.
    ```bash
+   helm upgrade substrate-atelet \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+     --namespace ate-system \
+     --reuse-values \
+     --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317 \
+     --set otel.traces.samplingRatio=1.0 \
+     --wait --timeout 10m
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
      --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
@@ -553,6 +561,12 @@ Log in to Grafana, and query each backend from the **Explore** view.
      --set config.runtimeDefaults.telemetry=null \
      --set controller.metrics.enabled=false \
      --set controller.metrics.serviceMonitor.enabled=false
+   helm upgrade substrate-atelet \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+     --namespace ate-system --reuse-values \
+     --set otel.endpoint="" \
+     --set otel.traces.samplingRatio=0.01
    helm upgrade substrate \
      {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
      --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
