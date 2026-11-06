@@ -5,7 +5,7 @@ weight: 35
 author: kagent.dev
 ---
 
-An installation of {{< reuse "kagent-docs/snippets/name-product.md" >}} consists of separate Helm releases for the custom resource definitions (CRDs), Agent Substrate, and the kagent control plane. Upgrade the kagent CRDs first, then Agent Substrate in the order that it supports, and then the kagent control plane.
+An installation of {{< reuse "kagent-docs/snippets/name-product.md" >}} consists of separate Helm releases for the custom resource definitions (CRDs), Agent Substrate, and the kagent control plane. Upgrade the kagent CRDs first, then Agent Substrate, and then the kagent control plane.
 
 Upgrade from one minor release to the next, such as from 1.0 to 1.1, and do not skip a minor release. Before you move to the next minor release, upgrade to the latest patch version of your current minor release. Patch releases do not change the database schema, so you can upgrade directly to the latest patch release without the patch releases in between. To move a 0.10.x installation to 1.x, see [Upgrade from 0.x]({{< link path="operations/upgrade-from-0x" >}}) instead.
 
