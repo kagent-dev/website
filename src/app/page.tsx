@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Container, FileCode2, Fingerprint, GlobeLock, KeyRound, Link2, ServerCog } from "lucide-react";
 import Jobs from "@/components/home/jobs";
 import KagentUI from "@/components/home/kagent-ui";
@@ -11,20 +10,13 @@ import ScrollMark from "@/components/home/scroll-mark";
 import { ADOPTERS } from "@/components/home/adopters";
 import { SandboxVisual, ToolsVisual, TeamVisual } from "@/components/home/bento-visuals";
 import { AgentVisual, HarnessVisual, TemplateVisual } from "@/components/home/how-visuals";
-
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+import { DOCS, GITHUB, HomeFooter, HomeHeader, START, SUBSTRATE, geistMono, geistSans } from "@/components/home/chrome";
 
 export const metadata: Metadata = {
   title: "kagent | Platform for managing agents securely on Kubernetes",
   description:
     "kagent gives platform teams one place to deploy, manage and govern AI agents on Kubernetes, running on Agent Substrate: sandboxed, suspended when idle, resumed on the next message.",
 };
-
-const DOCS = "/docs/kagent/1.x";
-const START = `${DOCS}/get-started/your-first-agent`;
-const GITHUB = "https://github.com/kagent-dev/kagent";
-const SUBSTRATE = "https://ate.dev/";
 
 const BtnWhite = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a href={href} className="rounded-full bg-white px-6 py-3 text-[15px] font-medium text-black shadow-[0_0_40px_-6px_rgba(167,139,250,0.75)] transition hover:bg-white/90 hover:shadow-[0_0_56px_-4px_rgba(167,139,250,0.95)]">
@@ -124,25 +116,7 @@ export default function Home() {
   return (
     <div className={`${geistSans.variable} ${geistMono.variable} relative isolate min-h-screen overflow-hidden bg-[#0a0a0a] font-geist text-white antialiased [color-scheme:dark]`}>
       <ScrollMark />
-      {/* Nav */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <a href="#" className="flex items-center gap-3 text-lg font-semibold">
-          <Image src="/images/kagent-logo-mark.png" alt="" width={36} height={36} />
-          kagent
-        </a>
-        <nav className="hidden gap-8 text-sm text-white/80 md:flex">
-          <Link href={DOCS} className="hover:text-white">Docs</Link>
-          <Link href="/blog" className="hover:text-white">Blog</Link>
-          <a href="#how" className="hover:text-white">How it works</a>
-          <a href="#agents" className="hover:text-white">Agents</a>
-          <Link href="/community" className="hover:text-white">Community</Link>
-          <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
-        </nav>
-        <div className="flex gap-2">
-          <a href={GITHUB} className="hidden rounded-full bg-ks-card2 px-4 py-2 text-sm sm:block">GitHub</a>
-          <a href={START} className="rounded-full bg-white px-4 py-2 text-sm text-black">Get started</a>
-        </div>
-      </header>
+      <HomeHeader />
 
       {/* Hero */}
       <section className="relative mx-auto max-w-6xl px-6 pt-20 text-center md:pt-28">
@@ -165,17 +139,29 @@ export default function Home() {
 
       {/* Stats */}
       <section className="mx-auto max-w-6xl px-6 pt-20">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Sub-second resume", "A suspended actor restores onto a warm worker. The scheduler never sees it."],
+            ["Sub-second resume", "A suspended actor restores onto a warm worker. The scheduler never sees it.", "/substrate-calculator", "Calculate your wake-up time"],
             ["Isolated sandbox by default", "Every actor and every harness gets its own sandbox. Egress starts closed."],
             ["10×", "higher density than standard container runtimes."],
-          ].map(([title, body]) => (
-            <div key={title} className="rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-8">
-              <div className={`font-medium tracking-tight ${title === "10×" ? "text-5xl" : "text-[28px] leading-tight"}`}>{title}</div>
+          ].map(([title, body, href, link]) => (
+            <div key={title} className="group rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-8 lg:p-7">
+              <div className={`font-medium tracking-tight ${title === "10×" ? "text-5xl" : "text-[28px] leading-tight lg:text-2xl"}`}>{title}</div>
               <p className="mt-3 leading-relaxed text-ks-muted">{body}</p>
+              {href && (
+                <Link href={href} className="mt-4 inline-flex items-center gap-1.5 whitespace-nowrap text-sm text-violet-300 hover:text-violet-200">
+                  {link} <span className="transition group-hover:translate-x-0.5">→</span>
+                </Link>
+              )}
             </div>
           ))}
+          <div className="flex flex-col rounded-[24px] border border-violet-400/30 bg-gradient-to-b from-violet-500/[0.12] to-violet-500/[0.02] p-8 lg:p-7">
+            <div className="text-[28px] font-medium leading-tight tracking-tight lg:text-2xl">Size your agents</div>
+            <p className="mt-3 flex-1 leading-relaxed text-ks-muted">See how long your agents take to wake up, and the CPU, memory and storage they need.</p>
+            <Link href="/substrate-calculator" className="mt-6 self-start rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black shadow-[0_0_40px_-6px_rgba(167,139,250,0.75)] transition hover:bg-white/90">
+              Open the calculator
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -350,20 +336,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-ks-line">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-6 px-6 py-10 text-sm text-ks-muted md:flex-row">
-          <span>kagent and Agent Substrate are CNCF Sandbox projects.</span>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            <Link href={DOCS} className="hover:text-white">Docs</Link>
-            <Link href="/blog" className="hover:text-white">Blog</Link>
-            <a href={GITHUB} className="hover:text-white">GitHub</a>
-            <a href={SUBSTRATE} className="hover:text-white">ate.dev</a>
-            <Link href="/community" className="hover:text-white">Community</Link>
-            <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
-            <a href="https://discord.gg/Fu3k65f2k3" className="hover:text-white">Discord</a>
-          </div>
-        </div>
-      </footer>
+      <HomeFooter />
     </div>
   );
 }
