@@ -172,8 +172,8 @@ export default function SubstrateCalculator() {
           <Pills
             label="Snapshot fidelity"
             options={[
-              { value: "memory" as Snapshot, text: "Memory" },
               { value: "volumes" as Snapshot, text: "Volumes" },
+              { value: "memory" as Snapshot, text: "Memory" },
             ]}
             value={snapshot}
             onChange={setSnapshot}
