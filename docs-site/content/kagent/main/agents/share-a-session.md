@@ -13,8 +13,10 @@ Every share is read-only. The holder can A2A `get`, `list`, and `subscribe` on t
 
 The share does not act with the owner's access. When a caller presents a share token, the controller checks the caller's own identity against policy and uses the share only to locate the record's owner in storage. Checking the owner instead would lend the owner's grants to visitors. A holder needs their own read permission on the Session for a share to be useful: the share supplies the lookup, the holder's own credentials supply the authority. The share does not name a person, and it does not create a second principal.
 
+{{% upstream %}}
 > [!WARNING]
 > **`insecure` mode is not a security boundary in a default install.** `config.server.auth.mode` defaults to `insecure`, where a caller supplies its own identity in `X-User-Id` and the authorizer it installs permits every check. A caller can claim any identity and reach the Session without any share token at all. The boundary holds only under `trusted-proxy`, with a credential-validating proxy in front of the controller. For the modes themselves, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}).
+{{% /upstream %}}
 
 ## Bound the lifetime with `ttl`
 
@@ -39,6 +41,6 @@ The owner revokes a share with `RevokeSessionShare`, keyed by the `SessionShare.
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Controller identity" subtitle="How authentication modes and shares scope who can reach a Session." >}}
+  {{< upstream >}}{{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Controller identity" subtitle="How authentication modes and shares scope who can reach a Session." >}}{{< /upstream >}}
   {{< card link=`{{< link path="operations/operational-considerations" >}}` title="Operational considerations" subtitle="Idle Session expiry and the share lifetime cap." >}}
 {{< /cards >}}

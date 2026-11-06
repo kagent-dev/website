@@ -165,7 +165,7 @@ The gateway can add a credential to each request for an origin. The agent sends 
 
 ### Inject the Actor's token
 
-A Secret-backed credential is the same for every agent that selects the policy, so the destination cannot tell the agents apart. When an internal API must authorize or audit each agent, inject a token that identifies the calling {{< gloss "Actor" >}}Actor{{< /gloss >}} instead. This method covers the requests that an agent's own code sends, such as a `curl` command or a script that a skill runs. For model and MCP server calls, set `actorJwt` on the ModelConfig or the RemoteMCPServer, as described in [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).
+A Secret-backed credential is the same for every agent that selects the policy, so the destination cannot tell the agents apart. When an internal API must authorize or audit each agent, inject a token that identifies the calling {{< gloss "Actor" >}}Actor{{< /gloss >}} instead. This method covers the requests that an agent's own code sends, such as a `curl` command or a script that a skill runs. For model and MCP server calls, set `actorJwt` on the ModelConfig or the RemoteMCPServer{{% upstream %}}, as described in [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}){{% /upstream %}}.
 
 The gateway mints, injects, and refreshes the token, so the policy needs no Secret, and you have no credential to rotate.
 
@@ -189,7 +189,7 @@ The gateway mints, injects, and refreshes the token, so the policy needs no Secr
    EOF
    ```
 
-   {{< reuse "kagent-docs/snippets/review-table.md" >}} For the token's claims and how the destination validates it, see [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).
+   {{< reuse "kagent-docs/snippets/review-table.md" >}}{{% upstream %}} For the token's claims and how the destination validates it, see [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).{{% /upstream %}}
 
    | Field | Description |
    | ----- | ----------- |
@@ -244,9 +244,9 @@ In a standalone Sandbox, a destination that no grant allows does not resolve. A 
 
 ## Access control
 
-An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in that namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. To give each team a namespace of its own, see [Run agents in multiple namespaces]({{< link path="operations/multiple-namespaces" >}}). For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
+An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in that namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. To give each team a namespace of its own, see [Run agents in multiple namespaces]({{< link path="operations/multiple-namespaces" >}}).{{% upstream %}} For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).{{% /upstream %}}
 
-To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller also writes EgressPolicy resources, with its own service account, for the **Policies** page of the kagent UI and the `EgressPolicyService` API. By default, kagent does not authenticate that path, so any caller that reaches the kagent API can create, edit, or delete a policy regardless of their Kubernetes permissions. For more information, see [Resources that the API writes]({{< link path="about/substrate-runtime/identity#resources-that-the-api-writes" >}}).
+To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller also writes EgressPolicy resources, with its own service account, for the **Policies** page of the kagent UI and the `EgressPolicyService` API.{{% upstream %}} By default, kagent does not authenticate that path, so any caller that reaches the kagent API can create, edit, or delete a policy regardless of their Kubernetes permissions. For more information, see [Resources that the API writes]({{< link path="about/substrate-runtime/identity#resources-that-the-api-writes" >}}).{{% /upstream %}}
 
 The gateway keeps a credential out of the sandbox, but it cannot stop an allowed destination from returning the credential in a response. Grant a credential only to a destination that you trust with it.
 

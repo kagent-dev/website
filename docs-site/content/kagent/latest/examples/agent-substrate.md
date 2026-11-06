@@ -208,5 +208,5 @@ A fork starts a new Session from a checkpoint. The new Session replays the conve
 {{< cards >}}
   {{< card link=`{{< link path="about/substrate-runtime/suspend-and-resume" >}}` title="Suspend and resume" subtitle="Understand the snapshot cycle that checkpoints pin." >}}
   {{< card link=`{{< link path="about/substrate-runtime/sandboxing" >}}` title="Sandboxing" subtitle="See what the sandbox around each Actor isolates." >}}
-  {{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Identity" subtitle="See who owns a Session and the checkpoints taken on it." >}}
+  {{< upstream >}}{{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Identity" subtitle="See who owns a Session and the checkpoints taken on it." >}}{{< /upstream >}}
 {{< /cards >}}

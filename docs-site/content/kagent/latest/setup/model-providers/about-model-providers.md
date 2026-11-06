@@ -54,7 +54,7 @@ spec:
     expirationSeconds: 900
 ```
 
-The following fields set the token that the endpoint receives. For the token's claims and how the endpoint validates it, see [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).
+The following fields set the token that the endpoint receives.{{% upstream %}} For the token's claims and how the endpoint validates it, see [Actor tokens for other services]({{< link path="about/substrate-runtime/identity#actor-tokens-for-other-services" >}}).{{% /upstream %}}
 
 | Field | Description |
 | ----- | ----------- |
