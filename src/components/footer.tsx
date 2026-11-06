@@ -18,22 +18,22 @@ export default function Footer() {
             <h3 className="text-sm font-semibold mb-4">Getting Started</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/docs/kagent/0.x/introduction/installation" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/setup/installation" className="text-sm text-muted-foreground hover:text-primary">
                   Installing kagent
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/getting-started/quickstart" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/get-started" className="text-sm text-muted-foreground hover:text-primary">
                   Quick Start
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/getting-started/first-agent" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/get-started/your-first-agent" className="text-sm text-muted-foreground hover:text-primary">
                   First Agent Guide
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/getting-started/first-mcp-tool" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/get-started/your-first-mcp-tool" className="text-sm text-muted-foreground hover:text-primary">
                   First MCP Tool
                 </Link>
               </li>
@@ -45,22 +45,22 @@ export default function Footer() {
             <h3 className="text-sm font-semibold mb-4">Documentation</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/docs/kagent/0.x/introduction/what-is-kagent" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/about/what-is-kagent" className="text-sm text-muted-foreground hover:text-primary">
                   What is kagent
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/concepts/architecture" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/about/architecture" className="text-sm text-muted-foreground hover:text-primary">
                   Architecture
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/concepts" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/about" className="text-sm text-muted-foreground hover:text-primary">
                   Core Concepts
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/supported-providers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/setup/model-providers" className="text-sm text-muted-foreground hover:text-primary">
                   Configuring LLM Providers
                 </Link>
               </li>
@@ -82,23 +82,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/examples/a2a-agents" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/examples/a2a-agents" className="text-sm text-muted-foreground hover:text-primary">
                   A2A Agents
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/examples/documentation" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/examples/documentation-agent" className="text-sm text-muted-foreground hover:text-primary">
                   Documentation Agent
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/0.x/examples/slack-a2a" className="text-sm text-muted-foreground hover:text-primary">
-                  Slack and A2A
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs/kagent/0.x/examples/discord-a2a" className="text-sm text-muted-foreground hover:text-primary">
-                  Discord and A2A
                 </Link>
               </li>
             </ul>
@@ -129,7 +119,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/kagent/0.x/resources/faq" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/docs/kagent/latest/reference/faq" className="text-sm text-muted-foreground hover:text-primary">
                   FAQ
                 </Link>
               </li>

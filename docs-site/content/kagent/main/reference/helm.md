@@ -1,0 +1,281 @@
+---
+title: Helm reference
+description: Look up the configurable values in the kagent Helm chart, including their defaults and types.
+weight: 20
+author: kagent.dev
+aliases:
+  - /kagent/main/reference/env-vars/
+---
+
+A Helm chart for kagent, built with Google ADK
+
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| https://oauth2-proxy.github.io/manifests | oauth2-proxy | ~10.7.0 |
+| oci://ghcr.io/kagent-dev/tools/helm | kagent-tools | 0.3.0 |
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
+| config.database.owner.role | string | `"kagent_owner"` |  |
+| config.database.readWrite.role | string | `"kagent_readwrite"` |  |
+| config.database.schema | string | `"kagent"` |  |
+| config.database.skipMigrations | bool | `false` |  |
+| config.database.vectorEnabled | bool | `false` |  |
+| config.database.vectorSchema | string | `"extensions"` |  |
+| config.harnessImages | object | `{}` |  |
+| config.kubernetes | object | `{}` |  |
+| config.logging.level | string | `"info"` |  |
+| config.metrics.bindAddress | string | `":8443"` |  |
+| config.metrics.secure | bool | `true` |  |
+| config.push.allowHttp | bool | `false` |  |
+| config.push.allowPrivateNetworks | bool | `false` |  |
+| config.push.maxConcurrency | int | `10` |  |
+| config.push.recoveryInterval | string | `"60s"` |  |
+| config.push.sendTimeout | string | `"5s"` |  |
+| config.runtimeDefaults.builtinTools.bashVenvPath | string | `""` |  |
+| config.runtimeDefaults.builtinTools.disableAskUser | bool | `false` |  |
+| config.runtimeDefaults.builtinTools.disableBash | bool | `false` |  |
+| config.runtimeDefaults.builtinTools.disableFileSearch | bool | `false` |  |
+| config.runtimeDefaults.cpu | string | `"1"` |  |
+| config.runtimeDefaults.logging.level | string | `"info"` |  |
+| config.runtimeDefaults.memory | string | `"1Gi"` |  |
+| config.runtimeDefaults.telemetry | object | `{}` |  |
+| config.sandboxes.cpu | string | `"1"` |  |
+| config.sandboxes.defaultTtl | string | `"3600s"` |  |
+| config.sandboxes.guestImage | string | `""` |  |
+| config.sandboxes.maxTtl | string | `"86400s"` |  |
+| config.sandboxes.memory | string | `"1Gi"` |  |
+| config.server.auth.mode | string | `"insecure"` |  |
+| config.server.grpcReflection | bool | `false` |  |
+| config.sessions.idleTtl | string | `"604800s"` |  |
+| config.sessions.shareMaxTtl | string | `"0s"` |  |
+| config.substrate.actorJwtIssuer | string | `"https://idp.ate-system.svc"` |  |
+| config.substrate.apiEndpoint | string | `"dns:///api.ate-system.svc:443"` |  |
+| config.substrate.routerUrl | string | `"https://atenet-router.ate-system.svc:443"` |  |
+| config.telemetry | object | `{}` |  |
+| controller.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod. |
+| controller.annotations | object | `{}` | Additional annotations to add to the controller Deployment metadata |
+| controller.env | list | `[]` |  |
+| controller.envFrom | list | `[]` |  |
+| controller.image.pullPolicy | string | `""` |  |
+| controller.image.registry | string | `""` |  |
+| controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
+| controller.image.tag | string | `""` |  |
+| controller.metrics.enabled | bool | `false` |  |
+| controller.metrics.service.port | int | `8443` |  |
+| controller.metrics.service.type | string | `"ClusterIP"` |  |
+| controller.metrics.serviceMonitor | object | disabled | Prometheus Operator `ServiceMonitor` for the metrics `Service`. Requires `controller.metrics.enabled` and the `monitoring.coreos.com/v1` CRDs; the chart only renders it when the target cluster serves that API, so enabling it on a cluster without the Prometheus Operator is a no-op rather than a failed install (`helm template` needs `--api-versions monitoring.coreos.com/v1`). The endpoint follows `secureServing`: port name, scheme, bearer token and TLS settings are all derived from it, so flipping `secureServing` alone keeps the scrape working. With `secureServing` enabled the scrape is also authorized only once `<fullname>-metrics-reader` is bound to the Prometheus ServiceAccount; set `prometheusServiceAccount` below and the chart renders that binding for you. |
+| controller.metrics.serviceMonitor.annotations | object | `{}` | Annotations for the `ServiceMonitor`. |
+| controller.metrics.serviceMonitor.bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | Token presented to the authenticated metrics endpoint. Only used when `secureServing` is enabled; set to `""` to omit it. |
+| controller.metrics.serviceMonitor.honorLabels | bool | `false` | Keep the scraped labels when they collide with server-side ones. |
+| controller.metrics.serviceMonitor.interval | string | `""` | Scrape interval. Prometheus' global default when empty. |
+| controller.metrics.serviceMonitor.labels | object | `{}` | Extra labels for the `ServiceMonitor` (merged with the chart labels). Set whatever label your Prometheus `serviceMonitorSelector` matches on. |
+| controller.metrics.serviceMonitor.metricRelabelings | list | `[]` | `metricRelabelings` applied to the scraped samples. |
+| controller.metrics.serviceMonitor.namespace | string | the release namespace | Namespace to create the `ServiceMonitor` in. The scrape target stays the release namespace either way. |
+| controller.metrics.serviceMonitor.prometheusServiceAccount | object | `{"name":"","namespace":""}` | ServiceAccount Prometheus scrapes with. When `name` is set and `secureServing` is enabled, the chart binds `<fullname>-metrics-reader` to it with a `ClusterRoleBinding` so the scrape does not fail with 403. Leave `name` empty to manage the binding yourself. |
+| controller.metrics.serviceMonitor.prometheusServiceAccount.namespace | string | `serviceMonitor.namespace`, then the release namespace | Namespace of the Prometheus ServiceAccount. |
+| controller.metrics.serviceMonitor.relabelings | list | `[]` | `relabelings` applied to the scrape targets. |
+| controller.metrics.serviceMonitor.scrapeTimeout | string | `""` | Scrape timeout. Prometheus' global default when empty. |
+| controller.metrics.serviceMonitor.tlsConfig | object | insecureSkipVerify: true | `tlsConfig` for the scrape. Only used when `secureServing` is enabled, where the controller serves a self-signed certificate. |
+| controller.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| controller.pdb | object | `{"annotations":{},"enabled":false,"labels":{},"maxUnavailable":1,"minAvailable":null,"unhealthyPodEvictionPolicy":""}` | [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the controller pods. Disabled by default: `controller.replicas` is 1, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, so node drains and cluster upgrades hang indefinitely. Raise `controller.replicas` before switching to `minAvailable`. |
+| controller.pdb.annotations | object | `{}` | Annotations for the controller PodDisruptionBudget. |
+| controller.pdb.enabled | bool | `false` | Set to true to create the PodDisruptionBudget. |
+| controller.pdb.labels | object | `{}` | Additional labels for the controller PodDisruptionBudget. |
+| controller.pdb.maxUnavailable | int | `1` | Maximum number of pods that may be unavailable. Int or percentage string (e.g. `1` or `"50%"`). Mutually exclusive with `minAvailable`. |
+| controller.pdb.minAvailable | string | unset (`maxUnavailable` is used instead) | Minimum number of pods that must remain available. Int or percentage string (e.g. `1` or `"50%"`). Mutually exclusive with `maxUnavailable`. |
+| controller.pdb.unhealthyPodEvictionPolicy | string | "" (defer to the Kubernetes default) | `spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when the budget is exhausted, which avoids drains wedging on a crash-looping pod. Requires Kubernetes >= 1.27. Omitted from the manifest when empty. |
+| controller.podAnnotations | object | `{}` |  |
+| controller.podLabels | object | `{}` | Additional labels for the controller pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
+| controller.push.signing.secretName | string | `""` |  |
+| controller.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
+| controller.replicas | int | `1` |  |
+| controller.resources.limits.cpu | int | `2` |  |
+| controller.resources.limits.memory | string | `"512Mi"` |  |
+| controller.resources.requests.cpu | string | `"100m"` |  |
+| controller.resources.requests.memory | string | `"128Mi"` |  |
+| controller.service.annotations | object | `{}` |  |
+| controller.service.ports.port | int | `8083` |  |
+| controller.service.ports.targetPort | int | `8083` |  |
+| controller.service.type | string | `"ClusterIP"` |  |
+| controller.serviceAccount | object | `{"annotations":{},"create":true,"name":""}` | ServiceAccount settings for the controller pod |
+| controller.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the controller ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
+| controller.serviceAccount.create | bool | `true` | Create the controller ServiceAccount. Set to false to use one managed outside the chart. |
+| controller.serviceAccount.name | string | `<fullname>-controller` | Name of the controller ServiceAccount. |
+| controller.startupProbe | object | httpGet /health on port http, periodSeconds=15, initialDelaySeconds=15 | Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding. |
+| controller.substrateClientCertificate.enabled | bool | `false` |  |
+| controller.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| controller.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the controller pod. |
+| controller.volumeMounts | list | `[]` |  |
+| controller.volumes | list | `[]` |  |
+| database.postgres.clientCertificate | object | `{"enabled":false}` | Project the bundled PostgreSQL client certificates for kagent_readwrite_user and, unless config.database.skipMigrations is true, kagent_owner_user. The connection strings must reference the files under /run/postgres.podcert.ate.dev. |
+| database.postgres.ownerConnectionStringSecretRef | object | `{"key":"ownerConnectionString","name":"kagent-postgres-owner"}` | Secret holding the owner login's connection string. The owner creates the schema and runs migrations; it is not used when config.database.skipMigrations is true. Secret changes require restarting the controller. |
+| database.postgres.readWriteConnectionStringSecretRef | object | `{"key":"readWriteConnectionString","name":"kagent-postgres-readwrite"}` | Secret holding the read/write login's connection string, used for every runtime query. Required. Secret changes require restarting the controller. |
+| extraObjects | list | [] | Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.:   extraObjects:     - apiVersion: external-secrets.io/v1       kind: ExternalSecret       metadata:         name: '`{{ include "kagent.fullname" . }}`-openai'         namespace: '`{{ .Release.Namespace }}`'       spec:         secretStoreRef:           name: aws-secretsmanager           kind: ClusterSecretStore         target:           name: kagent-openai         data:           - secretKey: OPENAI_API_KEY             remoteRef:               key: prod/kagent/openai               property: api_key |
+| fullnameOverride | string | `""` |  |
+| global.clusterDomain | string | `"cluster.local"` | Kubernetes DNS domain used in runtime-facing service URLs. |
+| global.imagePullPolicy | string | `""` | Fallback imagePullPolicy where neither a component nor the top-level imagePullPolicy sets one. |
+| global.imagePullSecrets | list | `[]` | Pull secrets for every pod. The chart merges this list (union) into each pod's own imagePullSecrets, so a local secret is never removed. Coverage matches imageRegistry above. |
+| global.imageRegistry | string | `""` | Registry that overrides every per-image registry when set. This is the air-gap mirror knob: one value redirects all images. Repository and tag stay per-image. For per-image control, leave this unset and set the per-image registry keys. Covers this chart's own images: controller, sandbox guest, ui, substrateWorkerPool.workerImage, and built-in Harness images (both packaged defaults and config.harnessImages overrides). The vendored subcharts kagent-tools adopts it when its pinned version bumps. |
+| global.watchNamespaces | list | `[]` | Namespace scope for the whole install. A non-empty list replaces ClusterRoles with Roles and scopes the controller's watch. Both derive from this one value, so they cannot disagree. Prefer this value over the per-surface keys. rbac.namespaces overrides it when the key is present. An explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in config.kubernetes.watchNamespaces is validated: the watch must stay inside the RBAC scope. A watched namespace without a Role is a permanent Forbidden loop at runtime. |
+| imagePullPolicy | string | `""` | Pull policy for all containers. Empty falls back to global.imagePullPolicy, then IfNotPresent. |
+| imagePullSecrets | list | `[]` |  |
+| ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
+| kagent-tools.enabled | bool | `true` |  |
+| kagent-tools.nameOverride | string | `"tools"` |  |
+| kagent-tools.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| kagent-tools.podSecurityContext.runAsNonRoot | bool | `true` |  |
+| kagent-tools.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| kagent-tools.remoteMCPServer.allowedNamespaces | object | `{}` | Namespaces whose Agents may reference the tool server (spec.allowedNamespaces). Unset by default, which allows only the release namespace. Example: allowedNamespaces:   from: Selector   # All | Same | Selector   selector:     matchLabels:       kagent-tools: allowed |
+| kagent-tools.replicaCount | int | `1` |  |
+| kagent-tools.resources.limits.memory | string | `"256Mi"` |  |
+| kagent-tools.resources.requests.cpu | string | `"50m"` |  |
+| kagent-tools.resources.requests.memory | string | `"128Mi"` |  |
+| kagent-tools.securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| kagent-tools.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| kagent-tools.securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| kagent-tools.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| kagent-tools.tools.loglevel | string | `"debug"` |  |
+| kagent-tools.tools.metrics.port | int | `8085` |  |
+| labels | object | `{}` | Additional labels to add to all Kubernetes resources |
+| nameOverride | string | `""` |  |
+| namespaceOverride | string | `.Release.Namespace` | Override the namespace |
+| nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| oauth2-proxy.config.clientID | string | `""` |  |
+| oauth2-proxy.config.clientSecret | string | `""` |  |
+| oauth2-proxy.config.cookieSecret | string | `""` |  |
+| oauth2-proxy.config.existingSecret | string | `""` |  |
+| oauth2-proxy.enabled | bool | `false` |  |
+| oauth2-proxy.extraArgs.approval-prompt | string | `"auto"` |  |
+| oauth2-proxy.extraArgs.cookie-samesite | string | `"lax"` |  |
+| oauth2-proxy.extraArgs.cookie-secure | bool | `true` |  |
+| oauth2-proxy.extraArgs.custom-templates-dir | string | `"/templates"` |  |
+| oauth2-proxy.extraArgs.email-domain | string | `"*"` |  |
+| oauth2-proxy.extraArgs.oidc-issuer-url | string | `"$(OIDC_ISSUER_URL)"` |  |
+| oauth2-proxy.extraArgs.pass-authorization-header | bool | `true` |  |
+| oauth2-proxy.extraArgs.provider | string | `"oidc"` |  |
+| oauth2-proxy.extraArgs.redirect-url | string | `"$(OIDC_REDIRECT_URL)"` |  |
+| oauth2-proxy.extraArgs.scope | string | `"openid profile email groups"` |  |
+| oauth2-proxy.extraArgs.set-authorization-header | bool | `true` |  |
+| oauth2-proxy.extraArgs.skip-auth-regex | string | `"^/(login|assets/|env-config\\.js|logo-.*\\.png|favicon\\.ico).*$"` |  |
+| oauth2-proxy.extraArgs.skip-auth-route | string | `"^/(health|login)$"` |  |
+| oauth2-proxy.extraArgs.skip-jwt-bearer-tokens | bool | `true` |  |
+| oauth2-proxy.extraArgs.upstream | string | `"$(UPSTREAM_URL)"` |  |
+| oauth2-proxy.extraEnv[0].name | string | `"KAGENT_OAUTH2_PROXY_SIGNIN_TEMPLATE_CHECKSUM"` |  |
+| oauth2-proxy.extraEnv[0].value | string | `"{{ include \"kagent.oauth2ProxySignInHTML\" . | sha256sum }}"` |  |
+| oauth2-proxy.extraEnv[1].name | string | `"OIDC_ISSUER_URL"` |  |
+| oauth2-proxy.extraEnv[1].value | string | `""` |  |
+| oauth2-proxy.extraEnv[2].name | string | `"OIDC_REDIRECT_URL"` |  |
+| oauth2-proxy.extraEnv[2].value | string | `""` |  |
+| oauth2-proxy.extraEnv[3].name | string | `"UPSTREAM_URL"` |  |
+| oauth2-proxy.extraEnv[3].value | string | `"http://kagent-ui:8080"` |  |
+| oauth2-proxy.extraVolumeMounts[0].mountPath | string | `"/templates"` |  |
+| oauth2-proxy.extraVolumeMounts[0].name | string | `"custom-templates"` |  |
+| oauth2-proxy.extraVolumeMounts[0].readOnly | bool | `true` |  |
+| oauth2-proxy.extraVolumes[0].configMap.name | string | `"kagent-oauth2-proxy-templates"` |  |
+| oauth2-proxy.extraVolumes[0].name | string | `"custom-templates"` |  |
+| oauth2-proxy.service.portNumber | int | `4180` |  |
+| oauth2-proxy.service.type | string | `"ClusterIP"` |  |
+| oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
+| podAnnotations | object | `{}` |  |
+| podLabels | object | `{}` | Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods. |
+| podSecurityContext | object | `{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for all pods |
+| providers.annotations | object | `{}` | Annotations added to the metadata of the generated default ModelConfig (the one derived from `providers.default`). Omitted from the resource when empty. |
+| providers.anthropic.apiKeySecretKey | string | `"ANTHROPIC_API_KEY"` |  |
+| providers.anthropic.apiKeySecretRef | string | `"kagent-anthropic"` |  |
+| providers.anthropic.model | string | `"claude-haiku-4-5"` |  |
+| providers.anthropic.provider | string | `"Anthropic"` |  |
+| providers.azureOpenAI.apiKeySecretKey | string | `"AZUREOPENAI_API_KEY"` |  |
+| providers.azureOpenAI.apiKeySecretRef | string | `"kagent-azure-openai"` |  |
+| providers.azureOpenAI.config.apiVersion | string | `"2023-05-15"` |  |
+| providers.azureOpenAI.config.azureAdToken | string | `""` |  |
+| providers.azureOpenAI.config.azureDeployment | string | `""` |  |
+| providers.azureOpenAI.config.azureEndpoint | string | `""` |  |
+| providers.azureOpenAI.model | string | `"gpt-4.1-mini"` |  |
+| providers.azureOpenAI.provider | string | `"AzureOpenAI"` |  |
+| providers.default | string | `"openAI"` |  |
+| providers.gemini.apiKeySecretKey | string | `"GOOGLE_API_KEY"` |  |
+| providers.gemini.apiKeySecretRef | string | `"kagent-gemini"` |  |
+| providers.gemini.model | string | `"gemini-3.5-flash-lite"` |  |
+| providers.gemini.provider | string | `"Gemini"` |  |
+| providers.mistral.apiKeySecretKey | string | `"MISTRAL_API_KEY"` |  |
+| providers.mistral.apiKeySecretRef | string | `"kagent-mistral"` |  |
+| providers.mistral.model | string | `"mistral-large-latest"` |  |
+| providers.mistral.provider | string | `"Mistral"` |  |
+| providers.ollama.config.host | string | `"host.docker.internal:11434"` |  |
+| providers.ollama.config.options.num_ctx | string | `"64000"` |  |
+| providers.ollama.model | string | `"llama3.2"` |  |
+| providers.ollama.provider | string | `"Ollama"` |  |
+| providers.openAI.apiKeySecretKey | string | `"OPENAI_API_KEY"` |  |
+| providers.openAI.apiKeySecretRef | string | `"kagent-openai"` |  |
+| providers.openAI.model | string | `"gpt-4.1-mini"` |  |
+| providers.openAI.provider | string | `"OpenAI"` |  |
+| proxy.url | string | `""` |  |
+| rbac | object | `{}` |  |
+| registry | string | `"ghcr.io"` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true}` | Security context for all containers |
+| substrateWorkerPool | object | `{"create":false,"labels":{},"name":"kagent-default","replicas":1,"sandboxClass":"gvisor","sandboxConfigRef":"","serviceAccount":{"create":true,"name":""},"template":{},"workerImage":""}` | Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual agents. |
+| substrateWorkerPool.serviceAccount | object | `{"create":true,"name":""}` | ServiceAccount settings for the worker pods |
+| substrateWorkerPool.serviceAccount.create | bool | `true` | Create the worker ServiceAccount. Set to false to use one managed outside the chart. |
+| substrateWorkerPool.serviceAccount.name | string | `<substrateWorkerPool.name>` | Name of the worker ServiceAccount. |
+| tag | string | `""` |  |
+| tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| ui.additionalForwardedHeaders | list | `[]` | Identity headers the UI's nginx proxy will forward to the backend on /api/, /a2a/, and /mcp. Names are case-insensitive. Authorization is always forwarded; the auth-proxy identity headers (x-auth-request-*, x-forwarded-user, x-forwarded-email, x-forwarded-groups, x-forwarded-preferred-username) are stripped from client requests unless listed here, so a caller cannot spoof an identity the backend trusts. Headers outside that set are forwarded by nginx as normal. In trusted-proxy mode, X-Agent-Name and X-User-Id are always stripped, even if listed here. |
+| ui.affinity | object | `{}` | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod. |
+| ui.annotations | object | `{}` | Additional annotations to add to the UI Deployment metadata |
+| ui.auth.ssoRedirectPath | string | `"/oauth2/start"` |  |
+| ui.basePath | string | `""` | Prefix a reverse proxy strips before forwarding, e.g. `/ui`; root-relative URLs such as `publicBackendUrl` get it too. With oauth2-proxy, set `OIDC_REDIRECT_URL` under it and restart oauth2-proxy after changing it. |
+| ui.env | list | `[]` | Extra environment variables for the UI container, applied after ConfigMap defaults. Entries stay in the Deployment to support valueFrom and $(VAR_NAME) expansion. An installed app extension's settings go here, named `KAGENT_UI_EXTENSION_*`; the container's entrypoint copies those onto `window.environmentVariables` for the browser to read. |
+| ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
+| ui.httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":[],"labels":{},"parentRefs":[],"rules":[]}` | Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via `parentRefs`. Disabled by default; enable to front the UI with a Gateway API implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the OpenShift Route or bundled oauth2-proxy. |
+| ui.httpRoute.annotations | object | `{}` | Annotations to add to the `HTTPRoute`. |
+| ui.httpRoute.hostnames | list | `[]` | Hostnames matched by the route. |
+| ui.httpRoute.labels | object | `{}` | Extra labels to add to the `HTTPRoute` (merged with the chart labels). |
+| ui.httpRoute.parentRefs | list | `[]` | Gateways this route attaches to. Required when `enabled` is `true`. |
+| ui.httpRoute.rules | list | `[]` | Routing rules. When a rule omits `backendRefs`, it defaults to the UI `Service` on `ui.service.ports.port`. Each rule may also set `matches`, `filters`, and `timeouts`. |
+| ui.image.pullPolicy | string | `""` |  |
+| ui.image.registry | string | `""` |  |
+| ui.image.repository | string | `"kagent-dev/kagent/ui"` |  |
+| ui.image.tag | string | `""` |  |
+| ui.nginx | object | `{"clientMaxBodySize":"20m","proxyReadTimeout":"1800s","proxySendTimeout":"1800s"}` | Nginx configuration for the UI sidecar (timeout values are passed directly to the corresponding nginx directives, e.g. "1800s"). |
+| ui.nginx.clientMaxBodySize | string | `"20m"` | client_max_body_size: max request body size (0 disables it). Just above the gateway's 16 MiB gRPC cap, which chat attachments hit first. |
+| ui.nginx.proxyReadTimeout | string | `"1800s"` | proxy_read_timeout: max time between two successive reads from the upstream. |
+| ui.nginx.proxySendTimeout | string | `"1800s"` | proxy_send_timeout: max time between two successive writes to the upstream. |
+| ui.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| ui.openshiftRoute.annotations."haproxy.router.openshift.io/timeout" | string | `"120m"` |  |
+| ui.pdb | object | `{"annotations":{},"enabled":false,"labels":{},"maxUnavailable":1,"minAvailable":null,"unhealthyPodEvictionPolicy":""}` | [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the UI pods. Disabled by default: `ui.replicas` is 1, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, so node drains and cluster upgrades hang indefinitely. Raise `ui.replicas` before switching to `minAvailable`. |
+| ui.pdb.annotations | object | `{}` | Annotations for the UI PodDisruptionBudget. |
+| ui.pdb.enabled | bool | `false` | Set to true to create the PodDisruptionBudget. |
+| ui.pdb.labels | object | `{}` | Additional labels for the UI PodDisruptionBudget. |
+| ui.pdb.maxUnavailable | int | `1` | Maximum number of pods that may be unavailable. Int or percentage string (e.g. `1` or `"50%"`). Mutually exclusive with `minAvailable`. |
+| ui.pdb.minAvailable | string | unset (`maxUnavailable` is used instead) | Minimum number of pods that must remain available. Int or percentage string (e.g. `1` or `"50%"`). Mutually exclusive with `maxUnavailable`. |
+| ui.pdb.unhealthyPodEvictionPolicy | string | "" (defer to the Kubernetes default) | `spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when the budget is exhausted, which avoids drains wedging on a crash-looping pod. Requires Kubernetes >= 1.27. Omitted from the manifest when empty. |
+| ui.podAnnotations | object | `{}` |  |
+| ui.podLabels | object | `{}` | Additional labels for the UI pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden. |
+| ui.podSecurityContext | object | (uses global podSecurityContext) | Pod-level security context for the UI pod. Overrides the global podSecurityContext. |
+| ui.publicBackendUrl | string | `"/api"` | Base URL the browser calls the controller API on. Reaches the browser at runtime as the `apiBaseUrl` key of /config.json, which the app fetches on startup — it is deliberately not baked into the bundle, so changing it here takes effect on pod restart rather than requiring an image rebuild. The default is a path on the UI's own hostname, which nginx proxies to the controller; set an absolute URL only if the browser must reach the API somewhere other than the UI origin. |
+| ui.readinessProbe | object | httpGet /health on port http, periodSeconds=30 | Custom readiness probe for the UI container. Override to adjust thresholds or change the health path. The image has no shell or curl, so use httpGet or tcpSocket. |
+| ui.replicas | int | `1` |  |
+| ui.resources.limits.cpu | string | `"1000m"` |  |
+| ui.resources.limits.memory | string | `"1Gi"` |  |
+| ui.resources.requests.cpu | string | `"100m"` |  |
+| ui.resources.requests.memory | string | `"256Mi"` |  |
+| ui.route | object | `{"enabled":true}` | Gates the OpenShift `Route` for the UI. Additionally conditional on the `route.openshift.io/v1` API being present, so it is a no-op off-OpenShift. Set to `false` to front the UI with your own Route/ingress or the bundled oauth2-proxy instead of the chart's edge-terminated Route. |
+| ui.securityContext | object | (uses global securityContext) | Container-level security context for the UI container. Overrides the global securityContext. |
+| ui.service.annotations | object | `{}` |  |
+| ui.service.ports.port | int | `8080` |  |
+| ui.service.ports.targetPort | int | `8080` |  |
+| ui.service.type | string | `"ClusterIP"` |  |
+| ui.serviceAccount | object | `{"annotations":{}}` | ServiceAccount settings for the UI pod |
+| ui.serviceAccount.annotations | object | {} (no extra annotations) | Annotations to add to the UI ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity. |
+| ui.startupProbe | object | httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1 | Custom startup probe for the UI container. Override to adjust thresholds or change the health path. The image has no shell or curl, so use httpGet or tcpSocket. |
+| ui.streamTimeoutSeconds | int | `1800` | Client-side chat stream inactivity timeout (seconds). The browser aborts a streaming response if no event is received within this window. Should be >= ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m). |
+| ui.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
+| ui.topologySpreadConstraints | list | `[]` | [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the UI pod. |
+| ui.volumes | object | `{"tmp":"50Mi"}` | EmptyDir volume sizes for the UI workload (typically used when enabling readOnlyRootFilesystem) |
+| ui.volumes.tmp | string | `"50Mi"` | Size limit for temporary files (/tmp). Holds the nginx temp directories and the generated config.json. Default 50Mi is ample for both. |

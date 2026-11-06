@@ -34,14 +34,14 @@ scanRoots = [
   "./content",
 ]
 
-# kagent docs are versioned (0.x frozen, 1.x in-progress rewrite), nested
-# under /docs/kagent/<version>/... . kmcp, the other product built into this
+# kagent docs are versioned (main in development, latest released, 0.x frozen),
+# nested under /docs/kagent/<version>/... . kmcp, the other product built into this
 # same Hugo site, stays flat/unversioned — see the sections.kagent.versions
 # comment in hugo.yaml for why versions are scoped per-section rather than
 # site-wide.
 [versioning]
 versionFromPath = "^/docs/kagent/(?<version>[^/]+)/"
-versions        = ["0.x", "1.x"]
+versions        = ["main", "latest", "0.x"]
 
 # All checks default to enabled. No [checks] overrides are needed: kagent runs
 # the full default set. (The former `smoke`/`crossBrowser` toggles were removed
