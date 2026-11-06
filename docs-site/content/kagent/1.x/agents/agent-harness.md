@@ -342,7 +342,7 @@ Two limits bound the result, and kagent checks both when it builds the Actor tem
 * Agent Substrate accepts at most 32 environment variables on an Actor. A revision that exceeds that count reports `runtime revision has <n> environment variables; Substrate supports at most 32`.
 * A single value is capped at 32768 characters. A revision that exceeds that length reports `environment variable "<name>" is <n> characters; Substrate supports at most 32768`.
 
-The agent configuration and the agent card are not environment variables. kagent publishes them in the revision's bootstrap bundle, and limits the two documents together to 256 KiB. A long system prompt or a large tool list counts against that limit. A revision that exceeds it reports `bootstrap configuration and Agent Card exceed 262144 bytes`.
+The agent configuration and the agent card are not environment variables. kagent publishes them in the revision's bootstrap bundle, and limits the two documents together to 256 KiB. A long system prompt or a large tool list counts against that limit.
 
 A Harness tunes telemetry for its own agents by setting `OTEL_*` variables in its `spec.env` field. Each harness reads its environment first and falls back to the installation's telemetry settings, so a value in `spec.env` wins for that Harness only and leaves every other Harness unchanged. Some variable names are reserved, and a Harness that sets one is rejected.
 

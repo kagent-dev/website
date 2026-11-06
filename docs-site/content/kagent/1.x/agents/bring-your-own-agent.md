@@ -55,7 +55,7 @@ Two AgentTemplate features continue to apply regardless of this choice. First, a
 
 Both kinds of BYO agent receive the same configuration. kagent stores the agent configuration and the agent card in a bootstrap bundle for each revision, and limits the two documents together to 256 KiB. The Actor's environment contains only a small descriptor of that bundle. At startup, the kagent helpers fetch the bundle from the kagent API, verify it against the descriptor, save it to `/data/kagent/bootstrap/bundle.pb`, and write the two documents to files. A restarted process or a resumed Session reads the saved bundle, and does not fetch it again.
 
-An image built with the helpers of an earlier release looks for the configuration in environment variables, and fails to start. Build the image with the helpers from the same kagent release as the controller.
+Build the image with the helpers from the same kagent release as the controller, because the helpers of each release read the configuration in the way that the release delivers it.
 
 The two files exist only after the helpers run. An image without the helpers reads the descriptor and fetches the bundle itself.
 
@@ -259,7 +259,7 @@ Implement the contract directly:
 2. Serve `GET /readyz` over HTTP on port 8081, returning `200`.
 3. To honor the AgentTemplate, fetch the bootstrap bundle at startup. An agent that skips this step runs as an opaque agent.
    1. Read the descriptor from the `KAGENT_BOOTSTRAP_JSON` environment variable.
-   2. Call `kagent.runtime.v1.BootstrapService/GetBootstrapConfig` over gRPC at the descriptor's `control_plane_url`. Send an `authorization` header with any bearer value, because Agent Substrate replaces that header with the Actor's own token. Without the header, the request reaches kagent with no credential.
+   2. Call `kagent.runtime.v1.BootstrapService/GetBootstrapConfig` over gRPC at the descriptor's `control_plane_url`. Send an `authorization` header with any bearer value, because Agent Substrate replaces that header with the Actor's own token.
    3. Check that the bundle's `revision` and `sha256` match the descriptor. For the digest algorithm, see [`go/api/bootstrap/bundle.go`](https://github.com/kagent-dev/kagent/blob/main/go/api/bootstrap/bundle.go) in the kagent repository.
    4. Read the agent configuration from the bundle's `config_json` field and the agent card from `agent_card_json`.
 

@@ -321,6 +321,7 @@ Agent Substrate installs as two releases in the `ate-system` namespace. The `sub
       cat > substrate-atelet-values.yaml <<EOF
       preview:
         - PerTemplateSnapshotLocation
+        - GoldenEgressPolicy
       objectStore:
         backend: s3
         endpoint: http://rustfs.ate-system.svc:9000
@@ -347,7 +348,7 @@ Agent Substrate installs as two releases in the `ate-system` namespace. The `sub
 
 3. Install the Agent Substrate control plane and data plane. The command sets the following values.
    * `atelet.enabled: false` leaves `atelet` out of the `substrate` release, because the `substrate-atelet` release runs it.
-   * `preview` turns on the `PerTemplateSnapshotLocation` gate, so that Agent Substrate stores the snapshots of each agent at the location that its Harness names.
+   * `preview` turns on the Agent Substrate feature gates that kagent needs. `PerTemplateSnapshotLocation` makes Agent Substrate store the snapshots of each agent at the location that its Harness names. `GoldenEgressPolicy` lets kagent give the Actor that builds an agent's golden snapshot its own egress policy, so that the Actor can fetch its configuration from the kagent API.
    * `ateApi.authorization.bootstrapOwners` grants owner access to the Agent Substrate API to the kagent controller and to the `ate-client` ServiceAccount. The API server authorizes every call, and without the controller entry every Agent reports `RuntimePreparationFailed (PermissionDenied)`.
    * `atenetRouter.ingressAllowedSPIFFEIDs` lets the kagent controller send traffic to agents through the Agent Substrate router.
    * `credentialProvider.namespacePolicies` lets the `kagent` atespace read Secrets in the `kagent` namespace, where the agents and the Secrets that they read both live. The provider denies every request until a policy allows it.
@@ -362,6 +363,7 @@ Agent Substrate installs as two releases in the `ate-system` namespace. The `sub
      enabled: false
    preview:
      - PerTemplateSnapshotLocation
+     - GoldenEgressPolicy
    ateApi:
      authorization:
        bootstrapOwners:

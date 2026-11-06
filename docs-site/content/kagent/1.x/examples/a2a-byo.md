@@ -24,6 +24,17 @@ The agent that you build here does not call a model or bind tools. It answers ev
    export DOCKER_REGISTRY=localhost:5001
    ```
 
+   > [!TIP]
+   > On a local kind cluster, `atelet` pulls each agent image itself, so it must reach the registry at the address that the kind network uses. In the `substrate-atelet` release, point `localhost:5001` image references at the `kind-registry` container.
+   > ```bash
+   > helm upgrade substrate-atelet \
+   >   {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+   >   --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+   >   --namespace ate-system --reuse-values \
+   >   --set 'atelet.extraArgs[0]=--localhost-registry-replacement=kind-registry:5000' \
+   >   --wait
+   > ```
+
 5. Know which {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} and snapshot location your installation uses. The Harness that you created carries both.
    ```bash
    kubectl get harness my-first-harness -n kagent \
@@ -211,7 +222,7 @@ application, err := app.New(app.AppConfig{
 }, executor{})
 ```
 
-`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks cover a configuration document that omits the port or the name. Outside Agent Substrate, no bootstrap descriptor exists, so the image exits at startup. All of this stays as it is in an agent of your own.
+`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks cover a configuration document that omits the port or the name. All of this stays as it is in an agent of your own.
 
 This agent ignores the rest of the configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what the document contains, see [Compare BYO and declarative agents]({{< link path="agents/bring-your-own-agent#compare-byo-and-declarative-agents" >}}).
 

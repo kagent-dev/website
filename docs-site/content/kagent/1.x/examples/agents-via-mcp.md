@@ -569,7 +569,7 @@ The server exposes the following agent and Session tools. They cover discovery, 
 | `list_tasks` | `session_id` | Pages through the Session's tasks, oldest first, each as the same summary that `get_session` returns. Takes `page_token` and `max_bytes`, and `page_size`, which accepts 1 to 100 and defaults to 50. |
 | `get_task` | `session_id`, `task_id` | Returns one task's A2A messages and artifacts in timeline order. Takes `tool_call`, an index or an ID, to return only the A2A parts of one tool call, `from_item` to continue a paged answer, and `max_bytes`. |
 | `rename_session` | `session_id`, `name` | Sets the Session's display name. An empty `name` clears it. |
-| `delete_session` | `session_id` | Deletes the Session and its runtime state. The call fails while the Session has an active turn. It returns a conflict while another operation on the Session is in progress, and the client can retry it. |
+| `delete_session` | `session_id` | Deletes the Session and its runtime state when no turn or other operation on the Session is in progress. |
 | `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the Session at a turn boundary. The call fails if the Session has advanced past that task. Takes `request_id` for idempotency. |
 | `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
 | `get_session_checkpoint` | `checkpoint_id` | Returns one checkpoint's state, and its failure if it has one. |
