@@ -26,7 +26,7 @@ Complete every step in this section before you change any release. The steps mak
    * The `substrate`, `substrate-atelet`, and `substrate-crds` releases are in the `ate-system` namespace.
    * The `substrate-podcert` release is in the `podcertificate-controller-system` namespace.
 
-   If the output does not list a `substrate-atelet` release, the `substrate` release still runs `atelet`. To upgrade that installation, follow the steps in [Upgrading from v1.0.0-rc2](https://github.com/kagent-dev/kagent/releases/tag/v1.0.0-rc3#upgrading-from-v100-rc2). Those steps move `atelet` to its own release without deleting the `atelet` DaemonSet.
+   If the output does not list a `substrate-atelet` release, the `substrate` release still runs `atelet`, and the rest of this guide does not apply to that installation. First, back up the PostgreSQL database and record its schema version, as this section describes. Then follow the steps in [Upgrading from v1.0.0-rc2](https://github.com/kagent-dev/kagent/releases/tag/v1.0.0-rc3#upgrading-from-v100-rc2) instead of the remaining steps of this guide. Those steps move `atelet` to its own release without deleting the `atelet` DaemonSet, turn on the `GoldenEgressPolicy` gate, and upgrade kagent. To confirm the result, see [Verify the upgrade](#verify-the-upgrade).
 
 4. Back up the PostgreSQL database that kagent and Agent Substrate share. The upgrade keeps your data. However, the kagent controller and the Agent Substrate API server change the database schema when they start on the new version. To return to the previous version, you must restore the backup or roll the schema back.
    ```bash
