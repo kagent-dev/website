@@ -134,6 +134,8 @@ After it is created, a Session talks to callers over the {{< gloss "A2A" >}}A2A{
 
 An expiration worker deletes a Session that does not record task activity for seven days. The `config.sessions.idleTtl` Helm value sets that window. A value of `0s` turns the expiration worker off. For more information about what the deletion retains, see [Expire idle Sessions]({{< link path="operations/operational-considerations#expire-idle-sessions" >}}).
 
+To delete a Session yourself, run `kagent agent session delete <session-id>`. kagent deletes a Session only when no turn or other lifecycle work, such as a resume, is in progress. To delete a Session during an active turn, add the `--force` flag. A forced deletion cancels the active turn, and records its task as canceled with the message `Session deleted while the turn was active.`
+
 ## Actor
 
 An **Actor** is the sandboxed unit of compute, provided by [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), that _runs a Session's conversation loop_. Every Session is backed by an Actor.

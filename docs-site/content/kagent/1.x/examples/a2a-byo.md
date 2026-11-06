@@ -24,6 +24,17 @@ The agent that you build here does not call a model or bind tools. It answers ev
    export DOCKER_REGISTRY=localhost:5001
    ```
 
+   > [!TIP]
+   > On a local kind cluster, `atelet` pulls each agent image itself, so it must reach the registry at the address that the kind network uses. In the `substrate-atelet` release, point `localhost:5001` image references at the `kind-registry` container.
+   > ```bash
+   > helm upgrade substrate-atelet \
+   >   {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+   >   --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+   >   --namespace ate-system --reuse-values \
+   >   --set 'atelet.extraArgs[0]=--localhost-registry-replacement=kind-registry:5000' \
+   >   --wait
+   > ```
+
 5. Know which {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} and snapshot location your installation uses. The Harness that you created carries both.
    ```bash
    kubectl get harness my-first-harness -n kagent \
@@ -196,7 +207,7 @@ func (executor) Cancel(context.Context, *a2asrv.ExecutorContext) iter.Seq2[a2aty
 
 Two events make a complete turn. `NewSubmittedTask` acknowledges the message and opens the task, and a `TaskStateCompleted` status update carrying an agent message ends it. Between them, a real agent yields whatever its work produces.
 
-`main` sets the rest up. First, `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`. Then `config.LoadAgentConfig` reads the document back, and `config.ProcessConfig` returns its `runtime` object. `app.New` serves the A2A gRPC service and the readiness endpoint.
+`main` sets the rest up. First, `config.MaterializeFromBootstrap` fetches the revision's bootstrap bundle from the kagent API and writes its documents to `/config`. Then `config.LoadAgentConfig` reads the configuration back, and `config.ProcessConfig` returns its `runtime` object. `app.New` serves the A2A gRPC service and the readiness endpoint.
 
 ```go
 compiled, err := config.LoadAgentConfig("/config/config.json")
@@ -211,7 +222,7 @@ application, err := app.New(app.AppConfig{
 }, executor{})
 ```
 
-`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
+`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks cover a configuration document that omits the port or the name. All of this stays as it is in an agent of your own.
 
 This agent ignores the rest of the configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what the document contains, see [Compare BYO and declarative agents]({{< link path="agents/bring-your-own-agent#compare-byo-and-declarative-agents" >}}).
 

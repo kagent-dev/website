@@ -11,6 +11,7 @@ kagent agent session delete ID [flags]
 ```
 
 **Flags:**
+- `--force` - Terminate ongoing turns and delete the Session
 - `-h, --help` - help for delete
 
 **Global Flags:**

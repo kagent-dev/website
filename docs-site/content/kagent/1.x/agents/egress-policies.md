@@ -246,7 +246,7 @@ In a standalone Sandbox, a destination that no grant allows does not resolve. A 
 
 An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in that namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. To give each team a namespace of its own, see [Run agents in multiple namespaces]({{< link path="operations/multiple-namespaces" >}}). For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).
 
-To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller needs only read access to EgressPolicy resources.
+To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller also writes EgressPolicy resources, with its own service account, for the **Policies** page of the kagent UI and the `EgressPolicyService` API. By default, kagent does not authenticate that path, so any caller that reaches the kagent API can create, edit, or delete a policy regardless of their Kubernetes permissions. For more information, see [Resources that the API writes]({{< link path="about/substrate-runtime/identity#resources-that-the-api-writes" >}}).
 
 The gateway keeps a credential out of the sandbox, but it cannot stop an allowed destination from returning the credential in a response. Grant a credential only to a destination that you trust with it.
 

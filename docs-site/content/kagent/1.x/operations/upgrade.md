@@ -26,7 +26,7 @@ Complete every step in this section before you change any release. The steps mak
    * The `substrate`, `substrate-atelet`, and `substrate-crds` releases are in the `ate-system` namespace.
    * The `substrate-podcert` release is in the `podcertificate-controller-system` namespace.
 
-   If the output does not list a `substrate-atelet` release, the `substrate` release still runs `atelet`. Move `atelet` to its own release first, as described in [Moving atelet to substrate-atelet](https://github.com/kagent-dev/substrate/releases/tag/v1.0.0-rc4#moving-atelet-to-substrate-atelet), with the kagent-specific changes in the [kagent Helm chart README](https://github.com/kagent-dev/kagent/blob/main/helm/README.md).
+   If the output does not list a `substrate-atelet` release, the `substrate` release still runs `atelet`, and the rest of this guide does not apply to that installation. First, back up the PostgreSQL database and record its schema version, as this section describes. Then follow the steps in [Upgrading from v1.0.0-rc2](https://github.com/kagent-dev/kagent/releases/tag/v1.0.0-rc3#upgrading-from-v100-rc2) instead of the remaining steps of this guide. Those steps move `atelet` to its own release without deleting the `atelet` DaemonSet, turn on the `GoldenEgressPolicy` gate, and upgrade kagent. To confirm the result, see [Verify the upgrade](#verify-the-upgrade).
 
 4. Back up the PostgreSQL database that kagent and Agent Substrate share. The upgrade keeps your data. However, the kagent controller and the Agent Substrate API server change the database schema when they start on the new version. To return to the previous version, you must restore the backup or roll the schema back.
    ```bash
@@ -50,13 +50,20 @@ Complete every step in this section before you change any release. The steps mak
    ```
    For an installation that you exported from the kagent CLI, the `kagent-values.yaml` file contains your model provider API key in plain text. Store the files securely.
 
-6. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade across more than one minor release, set the versions of the next minor release, and repeat the upgrade for each minor release.
+6. In `substrate-values.yaml` and `substrate-atelet-values.yaml`, turn on the `GoldenEgressPolicy` gate. The gate lets kagent give the Actor that builds each golden snapshot its own egress policy, so that the Actor can fetch its configuration from the kagent API. If the `preview` list in either file does not contain `GoldenEgressPolicy`, add it to both lists. The two lists must match.
+   ```yaml
+   preview:
+     - PerTemplateSnapshotLocation
+     - GoldenEgressPolicy
+   ```
+
+7. Save the target versions in environment variables. The following values are the versions that this documentation describes. To upgrade across more than one minor release, set the versions of the next minor release, and repeat the upgrade for each minor release.
    ```bash
    export KAGENT_VERSION={{< reuse "kagent-docs/versions/kagent.md" >}}
    export SUBSTRATE_VERSION={{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}
    ```
 
-7. Save the installed kagent chart version. The [Agent Substrate upgrade](#upgrade-agent-substrate) uses this version to change the Worker image without upgrading kagent.
+8. Save the installed kagent chart version. The [Agent Substrate upgrade](#upgrade-agent-substrate) uses this version to change the Worker image without upgrading kagent.
    ```bash
    export CURRENT_KAGENT_VERSION=$(helm get metadata kagent -n kagent -o json | jq -r .version)
    ```
