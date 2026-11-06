@@ -66,9 +66,15 @@ The metric carries labels for the Agent name, model, and error type when those v
 
 ### Export the metrics
 
-Agent Substrate exports metrics over OTLP when its Helm release has an OTLP endpoint. The same setting also turns on Agent Substrate traces and logs.
+Agent Substrate exports metrics over OTLP when both of its Helm releases have an OTLP endpoint. The same setting also turns on Agent Substrate traces and logs.
 
 ```bash
+helm upgrade substrate-atelet \
+  {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+  --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+  --namespace ate-system \
+  --reuse-values \
+  --set otel.endpoint=http://otel-collector.telemetry.svc.cluster.local:4317
 helm upgrade substrate \
   {{< reuse "kagent-docs/snippets/helm-substrate.md" >}} \
   --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \

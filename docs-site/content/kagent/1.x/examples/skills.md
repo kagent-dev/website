@@ -391,6 +391,7 @@ A skill that kagent cannot fetch stops the agent from starting at all, rather th
    | ------- | ----- |
    | `pull <image>: ... 401 Unauthorized` | The registry needs credentials that the cluster does not have. |
    | `pull <image>: ... x509` or a Transport Layer Security (TLS) error | The registry does not serve HTTPS with a certificate that the runtime trusts. |
+   | `materialize skill "<name>": exit status 128`, after `Could not resolve host` | The source is `git`, which the Actor that builds the golden snapshot cannot download. Use an `oci` source, as described in [Every source is immutable]({{< link path="skills-and-mcp/skills#every-source-is-immutable" >}}). |
    | `SKILL.md is required` | The artifact was fetched, but the root that `source.path` selects does not contain a `SKILL.md` file. |
    | `symlink "..." escapes artifact root` | A symlink in the artifact points outside it. |
    | `artifact contains more than 10000 filesystem entries`, or `artifact exceeds 104857600 bytes` | The artifact exceeds one of the plugin limits. |

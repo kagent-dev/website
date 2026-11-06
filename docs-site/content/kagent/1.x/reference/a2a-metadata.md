@@ -1,23 +1,15 @@
 ---
-title: A2A Metadata and Extension Reference
-description: Reference the canonical A2A metadata keys and versioned extensions that Kagent supports.
+title: A2A metadata and extension reference
+description: Reference the canonical A2A metadata keys and versioned extensions that kagent supports.
 weight: 15
 author: kagent.dev
 ---
 
 ## Metadata
 
-A2A metadata is a set of key-value pairs on A2A elements that allows the A2A
-protocol to carry extra information.
+Agent2Agent (A2A) metadata is a set of key-value pairs on A2A elements that lets the A2A protocol transmit extra information.
 
-Kagent runtime adapters translate metadata that a harness produces into
-canonical Kagent metadata keys and discard metadata that they cannot translate.
-Although these metadata semantics and formats are stable unless otherwise
-noted, Kagent depends on individual harnesses to produce them. Harnesses that
-the Kagent project does not own might emit different metadata across versions.
-The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
-is owned by the Kagent project, and its emitted metadata is stable across
-versions.
+kagent runtime adapters translate the metadata that a harness produces into canonical kagent metadata keys, and discard metadata that they cannot translate. These metadata semantics and formats are stable unless otherwise noted. However, kagent depends on each harness to produce them, and a harness that the kagent project does not own might emit different metadata across versions. The kagent project owns the [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}}), so the metadata from that harness is stable across versions.
 
 ### `kagent.dev/a2a/timeline-position`
 
@@ -35,27 +27,22 @@ An RFC 3339 timestamp that records when the task was created.
 
 **A2A element:** Data part.
 
-Identifies the semantic kind of a data part. The value depends on the runtime
-adapter. The supported values are:
+The semantic kind of a data part. The value depends on the runtime adapter that produced the part. Of the following values, the kagent harness recognizes `function_call` and `function_response`.
 
-* `function_call` - The name and arguments of a function call.
-* `function_response` - The return value of a function call.
-* `executable_code` - A piece of code to execute.
-* `code_execution_result` - The result of a code execution.
-
-The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
-recognizes `function_call` and `function_response`.
+| Value | Meaning |
+| --- | --- |
+| `function_call` | The name and arguments of a function call. |
+| `function_response` | The return value of a function call. |
+| `executable_code` | A piece of code to execute. |
+| `code_execution_result` | The result of a code execution. |
 
 ### `kagent.dev/a2a/usage`
 
 **A2A element:** Task event.
 
-Best-effort model usage reporting for one response when the runtime reports it.
-The format of this value is harness-specific and may change in the future. For
-normalized, task-lifetime usage totals, use the [token-usage extension](#token-usage).
+Best-effort model usage for one response, present only if the runtime reports it. The format of this value is harness-specific and might change in later versions. For normalized usage totals over the lifetime of a task, use the [token-usage extension](#token-usage).
 
-The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
-reports the following camelCase metadata for a single model response:
+The kagent harness reports the following camelCase metadata for a single model response:
 
 ```json
 {
@@ -73,43 +60,31 @@ reports the following camelCase metadata for a single model response:
 
 **A2A element:** Result part.
 
-Binds a structured result to the SHA-256 digest of its compiled output schema.
-Consumers can use the digest to identify the schema of the result.
+The SHA-256 digest of the compiled output schema of a structured result. Consumers can use the digest to identify the schema of the result.
 
 ### `kagent.dev/a2a/thought`
 
 **A2A element:** Text part.
 
-A boolean that indicates the text contains model reasoning rather than the
-model's answer.
+A boolean that indicates that the text contains model reasoning rather than the model's answer.
 
 ## A2A extensions
 
-[A2A extensions](https://a2a-protocol.org/latest/topics/extensions/) add
-semantics that the core A2A protocol does not define. Agents advertise
-extensions in their Agent Cards. Harness support varies by extension.
+[A2A extensions](https://a2a-protocol.org/latest/topics/extensions/) add semantics that the core A2A protocol does not define. Agents advertise extensions in their Agent Cards. Harness support varies by extension.
 
 ### Human in the loop
 
-The human-in-the-loop (HITL) extension lets an agent pause a task for a
-person's decision and resume the same operation. See
-[Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
+The human-in-the-loop extension lets an agent pause a task for a person's decision and then resume the same operation. For details, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
 
 ### Token usage
 
-The token-usage extension reports task-lifetime token usage. Its URI is:
+The token-usage extension reports token usage over the lifetime of a task. Its URI is:
 
 ```text
 https://kagent.dev/extensions/usage/v1
 ```
 
-The [kagent harness]({{< link path="agents/agent-harness#kagent-harness" >}})
-advertises this optional extension when it supports usage reporting. The
-payload is stored under the extension URI in the metadata of the status update
-that ends an execution: `completed`,
-`input-required`, `failed`, or `canceled`. When a client reads the persisted
-task later, it finds the same payload in the task's metadata. The key is
-omitted when no model call reported usage.
+When the kagent harness supports usage reporting, it advertises this optional extension. The payload appears under the extension URI in the metadata of the status update that ends an execution. An execution ends in the `completed`, `input-required`, `failed`, or `canceled` state. When a client reads the persisted task later, the task's metadata contains the same payload. When no model call reported usage, the metadata does not contain the key.
 
 ```json
 {
@@ -141,11 +116,14 @@ omitted when no model call reported usage.
 }
 ```
 
+The top-level counts are totals for the whole task. The `models` array reports the same fields for each model that the task called.
+
 | Field | Meaning |
 | --- | --- |
 | `inputTokens` | Prompt tokens sent to the model. |
 | `outputTokens` | Generated tokens, excluding reasoning tokens. |
-| `reasoningTokens` | Reasoning tokens, when the provider reports them. |
-| `cachedInputTokens` | Provider-cached input tokens; a subset of `inputTokens`. |
-| `totalTokens` | The provider-reported total, or the sum of input, output, and reasoning tokens when the provider reports no total. |
+| `reasoningTokens` | Reasoning tokens, if the provider reports them. |
+| `cachedInputTokens` | Provider-cached input tokens, a subset of `inputTokens`. |
+| `totalTokens` | The provider-reported total. If the provider reports no total, the sum of input, output, and reasoning tokens. |
 | `models` | The same counts per model, ordered by model name. |
+| `models[].model` | The model identifier. |

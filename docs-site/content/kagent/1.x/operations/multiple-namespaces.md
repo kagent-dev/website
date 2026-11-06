@@ -63,7 +63,7 @@ The following steps prepare the `team-a` namespace.
        - name: gvisor
          configRef:
            name: gvisor-default
-     workerImage: ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate.md" >}}
+     workerImage: {{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}
      template:
        serviceAccountName: team-a-worker
    EOF

@@ -46,6 +46,7 @@ The export must reproduce the installation that runs in your cluster, so run the
        ├── kagent-crds.yaml
        ├── substrate-crds.yaml
        ├── substrate-podcert.yaml
+       ├── substrate-atelet.yaml
        ├── substrate.yaml
        └── kagent.yaml
    ```
@@ -56,7 +57,7 @@ The export must reproduce the installation that runs in your cluster, so run the
 
 ## Apply the export
 
-The `install.sh` script runs `helm upgrade --install` for each release, in installation order, against your current kubeconfig context. In a cluster that `kagent install` set up, the releases already exist, so the script upgrades each release in place with the same values.
+The `install.sh` script runs `helm upgrade --install` for each release, in installation order, against your current kubeconfig context. After the `substrate-atelet` release, the script waits for the `atelet` DaemonSet to roll out. In a cluster that `kagent install` set up, the releases already exist, so the script upgrades each release in place with the same values.
 
 1. Confirm that your kubeconfig points at the cluster that runs kagent.
    ```bash
@@ -73,7 +74,7 @@ The `install.sh` script runs `helm upgrade --install` for each release, in insta
    sh ./kagent-install/install.sh
    ```
 
-4. Confirm that the releases are deployed. The `STATUS` column shows `deployed` for `kagent-crds`, `kagent`, `substrate-crds`, `substrate`, and `substrate-podcert`.
+4. Confirm that the releases are deployed. The `STATUS` column shows `deployed` for `kagent-crds`, `kagent`, `substrate-crds`, `substrate-atelet`, `substrate`, and `substrate-podcert`.
    ```bash
    helm list -A --filter 'kagent|substrate'
    ```
