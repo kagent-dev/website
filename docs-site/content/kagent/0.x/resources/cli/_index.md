@@ -4,7 +4,7 @@ description: Review the reference docs for the kagent CLI commands.
 weight: 1
 ---
 
-Review the kagent CLI commands and learn how to use them effectively.
+Review the commands and flags of the kagent CLI.
 
 - [`kagent add-mcp`](/docs/kagent/0.x/resources/cli/kagent-add-mcp/) - Add an MCP server entry to kagent.yaml
 - [`kagent bug-report`](/docs/kagent/0.x/resources/cli/kagent-bug-report/) - Generate a bug report
