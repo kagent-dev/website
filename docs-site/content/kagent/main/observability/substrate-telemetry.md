@@ -182,7 +182,7 @@ The Worker records an `Actor usage sampled` event each time an Actor starts runn
 
 ## Learn more
 
-The Agent Substrate project documents its telemetry in full, including the complete metric registry, in [Actor observability](https://github.com/agent-substrate/substrate/blob/main/docs/observability.md). That page describes the newest Agent Substrate, which can be ahead of version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} that this guide uses. Records that it describes might not exist in your version.
+The Agent Substrate project documents its telemetry in full, including the complete metric registry, in [Actor observability](https://github.com/agent-substrate/substrate/blob/main/docs/guides/observability.md). That page describes the newest Agent Substrate, which can be ahead of version {{< reuse "kagent-docs/versions/agent-substrate.md" >}} that this guide uses. Records that it describes might not exist in your version.
 
 You can also check out the following resources in this documentation set.
 
