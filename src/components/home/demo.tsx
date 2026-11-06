@@ -146,9 +146,9 @@ export const DEMO: DemoAgent[] = [
     time: "8:30 AM",
     historyUser: "how do we rotate the payments API key?",
     history: [TOOL("search", "notion-mcp"), T("Rotate it from the Stripe dashboard, then update the `payments-stripe` secret in Vault; External Secrets syncs it within 5 minutes. Sources: Payments runbook (Notion), Secrets handbook (Notion), and the external-secrets README.")],
-    suggestions: ["how does Substrate suspend an agent?", "what's our on-call policy?", "explain A2A"],
+    suggestions: ["how does Agent Substrate suspend an agent?", "what's our on-call policy?", "explain A2A"],
     scripts: [
-      { match: /substrate|suspend|resume/i, steps: [TOOL("get-library-docs", "context7-mcp"), T("When an agent goes idle, Substrate writes its durable state to a snapshot in object storage and frees the worker. The next message restores it onto any worker with room. Source: kagent docs, Suspend and resume.")] },
+      { match: /substrate|suspend|resume/i, steps: [TOOL("get-library-docs", "context7-mcp"), T("When an agent goes idle, Agent Substrate writes its durable state to a snapshot in object storage and frees the worker. The next message restores it onto any worker with room. Source: kagent docs, Suspend and resume.")] },
       { match: /on.?call|policy/i, steps: [TOOL("search", "notion-mcp"), T("Primary on-call rotates weekly on Mondays at 10:00. You must acknowledge a page within 15 minutes. Source: Engineering handbook, On-call.")] },
       { match: /a2a|agent.to.agent/i, steps: [T("A2A (Agent2Agent) is the open protocol kagent agents use to talk to callers and to each other. Each agent is reachable at `/agents/{namespace}/{name}`. Source: kagent docs, Core concepts.")] },
     ],

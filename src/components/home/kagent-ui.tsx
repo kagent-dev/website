@@ -552,7 +552,7 @@ function Agents({ go, hotspot }: { go: (p: Page, agent?: string) => void; hotspo
           <svg viewBox="0 0 32 60" className="hidden h-14 text-violet-400 md:block" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 8c14 0 14 22 26 22M2 52c14 0 14-22 26-22M22 25l6 5-6 5" /></svg>
           <button onClick={() => setTab("agents")} className="flex h-full flex-col justify-center rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-left hover:border-violet-400/50"><div className="font-geistmono text-[13px]">Agent</div><div className="text-xs text-white/60">Inline or shared behavior on a platform-managed harness.</div></button>
           <span className="hidden text-center text-violet-400 md:block">→</span>
-          <button onClick={() => go("substrate")} className="flex h-full flex-col justify-center rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-left hover:border-violet-400/50"><div className="font-geistmono text-[13px]">Session</div><div className="text-xs text-white/60">One chat with an agent, run as a Substrate Actor.</div></button>
+          <button onClick={() => go("substrate")} className="flex h-full flex-col justify-center rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-left hover:border-violet-400/50"><div className="font-geistmono text-[13px]">Session</div><div className="text-xs text-white/60">One chat with an agent, run as an Agent Substrate Actor.</div></button>
         </div>
       </div>
 
@@ -1281,8 +1281,8 @@ function Substrate() {
     <>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-medium">Substrate</h2>
-          <p className="mt-2 text-sm text-white/60">Kubernetes worker pools, plus actor templates, live actors, and worker assignments from Substrate.</p>
+          <h2 className="text-[28px] font-medium">Agent Substrate</h2>
+          <p className="mt-2 text-sm text-white/60">Kubernetes worker pools, plus actor templates, live actors, and worker assignments from Agent Substrate.</p>
         </div>
         <div className="flex shrink-0 gap-2">
           <label className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition ${polling ? "border-violet-400/60 bg-violet-500/10 text-violet-200" : "border-white/15 hover:border-white/30"}`}>
@@ -1599,14 +1599,14 @@ const NAV: { id: Page; label: string }[] = [
   { id: "models", label: "Models" },
   { id: "mcp", label: "MCP Servers" },
   { id: "prompts", label: "Prompts" },
-  { id: "substrate", label: "Substrate" },
+  { id: "substrate", label: "Agent Substrate" },
 ];
 
 const TOUR: { page: Page; agent?: string; title: string; body: string }[] = [
   { page: "agents", title: "Your agents", body: "Every agent running on the cluster. Click a row to open it, or create a new one." },
   { page: "chat", agent: "sre-incident-commander", title: "Chat with an agent", body: "Send a message, approve or reject the tool calls it asks for, and watch it work." },
   { page: "schedules", title: "Schedules", body: "Agents can run on a recurrence. Open one to see its execution history or run it now." },
-  { page: "substrate", title: "Substrate", body: "Idle agents suspend to snapshots and resume onto a warm worker in under a second." },
+  { page: "substrate", title: "Agent Substrate", body: "Agent Substrate suspends idle agents to snapshots and resumes them onto a warm worker in under a second." },
 ];
 
 export default function KagentUI() {

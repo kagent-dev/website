@@ -39,7 +39,7 @@ export const HEADLINES: Record<string, { title: React.ReactNode; sub: string; lo
   },
   "4": {
     title: <>Bring AI Agents to every cluster you run</>,
-    sub: "kagent decides what each agent does. Substrate decides where it runs: in its own sandbox, asleep while it waits, and back in under a second when there's more to do.",
+    sub: "kagent decides what each agent does. Agent Substrate decides where it runs: in its own sandbox, asleep while it waits, and back in under a second when there's more to do.",
   },
   "1": {
     title: <>Meet <Mark />kagent</>,

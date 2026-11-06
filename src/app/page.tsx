@@ -39,10 +39,11 @@ const Card = ({ title, body, children, className = "" }: { title: string; body: 
 
 const FAQ: [string, string][] = [
   ["What is Agent Substrate?", "An open-source, Kubernetes-native runtime for agents, originally created by Google and now a CNCF Sandbox project. It runs each agent in its own gVisor sandbox or microVM, suspends idle agents to object storage, and resumes them on any ready worker in as little as 150ms."],
-  ["How do kagent and Substrate split the work?", "kagent decides what an agent does: its model, prompt, tools and skills, defined in an AgentTemplate. Substrate decides where it runs: which pre-warmed worker, when to suspend it, and where its snapshot lives, configured through a Harness."],
+  ["How do kagent and Agent Substrate split the work?", "kagent decides what an agent does: its model, prompt, tools and skills, defined in an AgentTemplate. Agent Substrate decides where it runs: which pre-warmed worker, when to suspend it, and where its snapshot lives, configured through a Harness."],
   ["Which models can I use?", "OpenAI, Anthropic, Gemini, Vertex AI, Azure OpenAI and AI Foundry, Amazon Bedrock, Mistral, Ollama, and any OpenAI-compatible endpoint such as xAI or Hugging Face."],
   ["Can I bring my own agent?", "Yes. A Harness can run kagent's own engine, Claude, Codex, or any container image that speaks kagent's A2A contract."],
-  ["What happens to a conversation while the agent sleeps?", "The session stays ready. Substrate writes the agent's durable state, including pending approvals, to a snapshot and frees the worker. The next message restores it, usually onto a different worker, and the caller never notices."],
+  ["What happens to a conversation while the agent sleeps?", "The session stays ready. Agent Substrate writes the agent's durable state, including pending approvals, to a snapshot and frees the worker. The next message restores it, usually onto a different worker, and the caller never notices."],
+  ["How fast does an agent wake up on Agent Substrate?", "In as little as 150ms. Agent Substrate resumes a suspended agent onto any ready worker, and the time depends on the agent's size, the snapshot type and the node's disk. The Agent Substrate calculator shows the wake-up time and the CPU, memory and storage for your agents."],
   ["Is it open source?", "Yes. Both kagent and Agent Substrate are Apache 2.0 licensed CNCF Sandbox projects."],
 ];
 
@@ -60,7 +61,7 @@ const HOW = [
     kind: "Harness",
     tag: "where",
     Icon: ServerCog,
-    body: "The runtime, the warm WorkerPool and where snapshots go. How and where the agent runs, handed to Substrate.",
+    body: "The runtime, the warm WorkerPool and where snapshots go. How and where the agent runs, handed to Agent Substrate.",
     Visual: HarnessVisual,
     link: "Harnesses",
     href: `${DOCS}/agents/agent-harness`,
@@ -141,9 +142,9 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-6 pt-20">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Sub-second resume", "A suspended actor restores onto a warm worker. The scheduler never sees it.", "/substrate-calculator", "Calculate your wake-up time"],
-            ["Isolated sandbox by default", "Every actor and every harness gets its own sandbox. Egress starts closed."],
-            ["10×", "higher density than standard container runtimes."],
+            ["Sub-second resume", "Agent Substrate restores a suspended actor onto a warm worker. The scheduler never sees it.", "/substrate-calculator", "Calculate your wake-up time"],
+            ["Isolated sandbox by default", "Agent Substrate gives every actor and every harness its own sandbox. Egress starts closed."],
+            ["10×", "higher agent density on Agent Substrate than on standard container runtimes."],
           ].map(([title, body, href, link]) => (
             <div key={title} className="group rounded-[24px] border border-ks-line bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-8 lg:p-7">
               <div className={`font-medium tracking-tight ${title === "10×" ? "text-5xl" : "text-[28px] leading-tight lg:text-2xl"}`}>{title}</div>
@@ -157,7 +158,7 @@ export default function Home() {
           ))}
           <div className="flex flex-col rounded-[24px] border border-violet-400/30 bg-gradient-to-b from-violet-500/[0.12] to-violet-500/[0.02] p-8 lg:p-7">
             <div className="text-[28px] font-medium leading-tight tracking-tight lg:text-2xl">Size your agents</div>
-            <p className="mt-3 flex-1 leading-relaxed text-ks-muted">See how long your agents take to wake up, and the CPU, memory and storage they need.</p>
+            <p className="mt-3 flex-1 leading-relaxed text-ks-muted">See how long your agents take to wake up on Agent Substrate, and the CPU, memory and storage they need.</p>
             <Link href="/substrate-calculator" className="mt-6 self-start rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black shadow-[0_0_40px_-6px_rgba(167,139,250,0.75)] transition hover:bg-white/90">
               Open the calculator
             </Link>
@@ -170,7 +171,7 @@ export default function Home() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-4xl font-medium tracking-tight">Run thousands of agents on a few pods</h2>
           <p className="mt-4 text-lg leading-relaxed text-ks-muted">
-            Agents aren&apos;t microservices or batch jobs. They hold state, wait most of the time, and run code you didn&apos;t write. A pod per agent pays for every idle minute. Substrate packs them onto a few warm workers and puts the idle ones to sleep.
+            Agents aren&apos;t microservices or batch jobs. They hold state, wait most of the time, and run code you didn&apos;t write. A pod per agent pays for every idle minute. Agent Substrate packs them onto a few warm workers and puts the idle ones to sleep.
           </p>
         </div>
         <div className="mt-14 grid gap-4 md:grid-cols-2">
@@ -178,7 +179,7 @@ export default function Home() {
             <div>
               <h3 className="text-2xl font-medium tracking-tight">Asleep when idle, back in milliseconds</h3>
               <p className="mt-3 leading-relaxed text-ks-muted">
-                When an agent waits on a person or a model, Substrate snapshots it to storage and frees its worker. The next request goes through the atenet router, and the agent resumes on whichever warm worker has room.
+                When an agent waits on a person or a model, Agent Substrate snapshots it to storage and frees its worker. The next request goes through the atenet router, and the agent resumes on whichever warm worker has room.
               </p>
               <p className="mt-3 leading-relaxed text-ks-muted">Here, every agent in the grid shares the same four warm pods.</p>
               <p className="mt-6 text-sm text-white/70">Click any dim square to send that agent a request.</p>
@@ -215,10 +216,10 @@ export default function Home() {
             <h2 className="mt-3 max-w-3xl text-4xl font-medium leading-[1.1] tracking-tight md:text-5xl">
               kagent decides what.
               <br />
-              Substrate decides where.
+              Agent Substrate decides where.
             </h2>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ks-muted">
-              Three resources, applied with kubectl or GitOps. kagent compiles them; Substrate runs them, with the Kubernetes API off the request path.
+              Three resources, applied with kubectl or GitOps. kagent compiles them; Agent Substrate runs them, with the Kubernetes API off the request path.
             </p>
           </div>
           <a href={`${DOCS}/about/core-concepts`} className="group flex items-center gap-1.5 text-sm text-violet-300 hover:text-violet-200">
@@ -305,6 +306,16 @@ export default function Home() {
 
       {/* FAQ */}
       <section id="faq" className="mx-auto max-w-6xl px-6 pt-32">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
         <div className="grid gap-10 md:grid-cols-[1fr_1.6fr]">
           <h2 className="text-4xl font-medium tracking-tight">FAQs</h2>
           <div className="divide-y divide-ks-line border-t border-ks-line">
