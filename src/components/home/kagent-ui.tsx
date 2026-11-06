@@ -5,7 +5,7 @@
  * cluster's resources. Runs entirely in the browser.
  */
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import KagentDemo, { DEMO, type DemoAgent } from "./demo";
 
 type Page = "dashboard" | "agents" | "schedules" | "models" | "mcp" | "prompts" | "substrate" | "chat";
@@ -1102,7 +1102,10 @@ const WORKERS: [string, string, string][] = [
   ["kagent-high-859895f6fd-lhgxg", "kagent-high", "10.244.0.28"],
 ];
 
-type Actor = { id: string; template: string; worker: string | null };
+// `phase` marks a transition caught mid-poll: Resuming holds its new worker,
+// Suspending still holds its old one until the snapshot lands.
+type Actor = { id: string; template: string; worker: string | null; phase?: "Resuming" | "Suspending" };
+type SubEvent = { id: number; at: string; kind: "resume" | "suspend" | "create" | "end"; text: string };
 const ACTORS_INIT: Actor[] = [
   { id: "session-01a15b65-c3b3-7a1c-84b7-77a5f605c7a3", template: "assistant-high-162fd863cfb4", worker: null },
   { id: "session-01a17e1c-df89-7647-93ec-8439843003cb", template: "assistant-high-162fd863cfb4", worker: null },
@@ -1138,7 +1141,7 @@ function SectionCard({ title, count, q, setQ, children }: { title: string; count
   );
 }
 
-function MiniTable({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
+function MiniTable({ head, rows, rowClass }: { head: string[]; rows: React.ReactNode[][]; rowClass?: (i: number) => string }) {
   return (
     <table className="w-full min-w-[620px] whitespace-nowrap text-left text-sm">
       <thead>
@@ -1152,7 +1155,7 @@ function MiniTable({ head, rows }: { head: string[]; rows: React.ReactNode[][] }
       </thead>
       <tbody>
         {rows.map((r, i) => (
-          <tr key={i} className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.02]">
+          <tr key={i} className={`border-b border-white/[0.06] transition-colors duration-700 last:border-0 hover:bg-white/[0.02] ${rowClass?.(i) ?? ""}`}>
             {r.map((c, k) => <td key={k} className="px-3 py-2 align-middle">{c}</td>)}
           </tr>
         ))}
@@ -1162,43 +1165,116 @@ function MiniTable({ head, rows }: { head: string[]; rows: React.ReactNode[][] }
   );
 }
 
-const Phase = ({ ok, children }: { ok: boolean; children: React.ReactNode }) => (
-  <span className={`inline-block rounded border px-1.5 py-px text-xs ${ok ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/15 bg-white/[0.05] text-white/60"}`}>{children}</span>
+const Phase = ({ ok, busy, children }: { ok: boolean; busy?: boolean; children: React.ReactNode }) => (
+  <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-px text-xs ${busy ? "border-amber-400/40 bg-amber-400/10 text-amber-300" : ok ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/15 bg-white/[0.05] text-white/60"}`}>
+    {busy && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />}
+    {children}
+  </span>
 );
+
+const POLL_OPTIONS = [
+  { ms: 0, label: "disabled" },
+  { ms: 2000, label: "every 2s" },
+  { ms: 5000, label: "every 5s" },
+  { ms: 10000, label: "every 10s" },
+];
+const MAX_ACTORS = 10;
+const hex = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+const newSessionId = () => `session-01a1${hex(4)}-${hex(4)}-7${hex(3)}-${(8 + Math.floor(Math.random() * 4)).toString(16)}${hex(3)}-${hex(12)}`;
+const short = (id: string) => id.replace(/^session-/, "").slice(0, 13);
+const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
+const EVENT_DOT: Record<SubEvent["kind"], string> = { resume: "bg-emerald-400", suspend: "bg-white/50", create: "bg-violet-400", end: "bg-rose-400" };
 
 function Substrate() {
   const [ns, setNs] = useState("all");
-  const [polling, setPolling] = useState(false);
+  const [pollMs, setPollMs] = useState(2000);
   const [actors, setActors] = useState(ACTORS_INIT);
+  const [events, setEvents] = useState<SubEvent[]>([]);
+  const [changed, setChanged] = useState<string[]>([]);
+  const [lastPoll, setLastPoll] = useState("");
   const [qPools, setQPools] = useState("");
   const [qTpl, setQTpl] = useState("");
   const [qAct, setQAct] = useState("");
   const [qWrk, setQWrk] = useState("");
   const [toast, setToast] = useState("");
+  const polling = pollMs > 0;
+  const actorsRef = useRef(actors);
+  useEffect(() => { actorsRef.current = actors; }, [actors]);
 
-  // "Request polling": simulate Substrate suspending and resuming actors
+  // Request polling: each poll simulates Substrate suspending idle actors to
+  // snapshots, resuming them onto warm workers, and sessions starting and ending.
   useEffect(() => {
-    if (!polling) return;
-    const t = setInterval(() => {
-      setActors((list) => {
-        const i = Math.floor(Math.random() * list.length);
-        const a = list[i];
-        const busy = new Set(list.map((x) => x.worker).filter(Boolean));
-        let worker: string | null = null;
-        if (!a.worker) {
-          const free = WORKERS.filter((w) => w[1] === poolOfTemplate(a.template) && !busy.has(w[0]));
-          if (!free.length) return list;
-          worker = free[Math.floor(Math.random() * free.length)][0];
+    if (!pollMs) return;
+    let seq = 0;
+    const tick = () => {
+      if (document.hidden) return;
+      const at = new Date().toLocaleTimeString([], { hour12: false });
+      const evs: SubEvent[] = [];
+      const touched: string[] = [];
+      const log = (kind: SubEvent["kind"], text: string, id: string) => {
+        evs.push({ id: Date.now() * 10 + seq++, at, kind, text });
+        touched.push(id);
+      };
+      {
+        // Land transitions started on the previous poll
+        let list = actorsRef.current.map((a): Actor => {
+          if (a.phase === "Resuming") {
+            log("resume", `${short(a.id)} resumed on ${a.worker} in ${180 + Math.floor(Math.random() * 600)}ms`, a.id);
+            return { ...a, phase: undefined };
+          }
+          if (a.phase === "Suspending") {
+            log("suspend", `${short(a.id)} suspended to snapshot, freed ${a.worker}`, a.id);
+            return { ...a, worker: null, phase: undefined };
+          }
+          return a;
+        });
+        const busy = () => new Set(list.map((x) => x.worker).filter(Boolean));
+        const freeIn = (pool: string) => WORKERS.filter((w) => w[1] === pool && !busy().has(w[0]));
+
+        // Start one or two new transitions
+        for (let n = 0; n < 1 + (Math.random() < 0.4 ? 1 : 0); n++) {
+          const idle = list.filter((a) => !a.phase && !a.worker && freeIn(poolOfTemplate(a.template)).length);
+          const live = list.filter((a) => !a.phase && a.worker);
+          const resume = idle.length && (!live.length || Math.random() < 0.55);
+          const a = resume ? pick(idle) : live.length ? pick(live) : null;
+          if (!a) break;
+          const next: Actor = resume ? { ...a, worker: pick(freeIn(poolOfTemplate(a.template)))[0], phase: "Resuming" } : { ...a, phase: "Suspending" };
+          list = list.map((x) => (x.id === a.id ? next : x));
+          touched.push(a.id);
         }
-        return list.map((x, k) => (k === i ? { ...x, worker } : x));
-      });
-    }, 1800);
+
+        // Occasionally a new session starts, or an old idle one ends
+        if (Math.random() < 0.25 && list.length < MAX_ACTORS) {
+          const tpl = pick(ACTOR_TEMPLATES)[0];
+          const free = freeIn(poolOfTemplate(tpl));
+          const id = newSessionId();
+          list = [...list, { id, template: tpl, worker: free.length ? pick(free)[0] : null, phase: free.length ? "Resuming" : undefined }];
+          log("create", `${short(id)} created from ${tpl}`, id);
+        } else if (Math.random() < 0.12 && list.length > 4) {
+          const gone = list.find((a) => !a.worker && !a.phase);
+          if (gone) {
+            list = list.filter((a) => a !== gone);
+            log("end", `${short(gone.id)} ended, snapshot released`, gone.id);
+          }
+        }
+        actorsRef.current = list;
+        setActors(list);
+      }
+      setEvents((e) => [...evs.reverse(), ...e].slice(0, 6));
+      setChanged(touched);
+      setLastPoll(at);
+    };
+    const t = setInterval(tick, pollMs);
     return () => clearInterval(t);
-  }, [polling]);
+  }, [pollMs]);
 
   const inNs = ns === "all" || ns === "kagent";
   const has = (q: string, ...xs: string[]) => xs.join(" ").toLowerCase().includes(q.toLowerCase());
-  const running = actors.filter((a) => a.worker).length;
+  const running = actors.filter((a) => a.worker && !a.phase).length;
+  const busyWorkers = actors.filter((a) => a.worker).length;
+  const transitioning = actors.filter((a) => a.phase).length;
+  const shownActors = (inNs ? actors : []).filter((a) => has(qAct, a.id, a.template, a.worker ?? ""));
+  const shownWorkers = (inNs ? WORKERS : []).filter((w) => has(qWrk, ...w));
   const ip = (w: string) => WORKERS.find((x) => x[0] === w)?.[2];
 
   return (
@@ -1209,11 +1285,14 @@ function Substrate() {
           <p className="mt-2 text-sm text-white/60">Kubernetes worker pools, plus actor templates, live actors, and worker assignments from Substrate.</p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <button onClick={() => setPolling((p) => !p)} className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition ${polling ? "border-violet-400/60 bg-violet-500/10 text-violet-200" : "border-white/15 hover:border-white/30"}`}>
+          <label className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition ${polling ? "border-violet-400/60 bg-violet-500/10 text-violet-200" : "border-white/15 hover:border-white/30"}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${polling ? "animate-pulse bg-emerald-400" : "bg-white/40"}`} />
-            Request polling: {polling ? "every 2s" : "disabled"}
-          </button>
-          <button onClick={() => { setActors(ACTORS_INIT); setToast("Refreshed"); setTimeout(() => setToast(""), 1500); }} className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-1.5 text-sm hover:border-white/30">
+            <span className="hidden sm:inline">Request polling:</span>
+            <select value={pollMs} onChange={(e) => setPollMs(Number(e.target.value))} className="cursor-pointer bg-transparent outline-none" aria-label="Request polling interval">
+              {POLL_OPTIONS.map((o) => <option key={o.ms} value={o.ms} className="bg-[#16151c]">{o.label}</option>)}
+            </select>
+          </label>
+          <button onClick={() => { setActors(ACTORS_INIT); setEvents([]); setChanged([]); setToast("Refreshed"); setTimeout(() => setToast(""), 1500); }} className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-1.5 text-sm hover:border-white/30">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" /></svg>
             Refresh
           </button>
@@ -1239,14 +1318,36 @@ function Substrate() {
           ["Worker pools", inNs ? "3" : "0"],
           ["Templates ready", inNs ? "16/16" : "0/0"],
           ["Actors running", inNs ? `${running}/${actors.length}` : "0/0"],
-          ["Workers busy", inNs ? `${running}/6` : "0/0"],
+          ["Workers busy", inNs ? `${busyWorkers}/6` : "0/0"],
           ["Scope", ns],
         ].map(([l, v]) => (
           <div key={l} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-2.5">
             <div className="text-xs text-white/60">{l}</div>
-            <div className="mt-0.5 text-2xl font-medium">{v}</div>
+            <div key={v} className="mt-0.5 text-2xl font-medium tabular-nums motion-safe:animate-[pulse_0.8s_ease-out_1]">{v}</div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-3 rounded-xl border border-white/[0.08] bg-white/[0.02]">
+        <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-5 py-3">
+          <div className="font-medium">
+            Activity <span className="ml-1 text-sm font-normal text-white/45">{transitioning ? `${transitioning} in flight` : "idle"}</span>
+          </div>
+          <span className="flex items-center gap-1.5 text-xs text-white/45">
+            <span className={`h-1.5 w-1.5 rounded-full ${polling ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
+            {polling ? (lastPoll ? `Last poll ${lastPoll}` : "Waiting for first poll") : "Polling paused"}
+          </span>
+        </div>
+        <ul className="h-[148px] overflow-hidden px-5 py-2 font-geistmono text-[12px]">
+          {events.map((e) => (
+            <li key={e.id} className="flex items-center gap-2.5 py-0.5 motion-safe:animate-[pulse_1s_ease-out_1]">
+              <span className="text-white/35">{e.at}</span>
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${EVENT_DOT[e.kind]}`} />
+              <span className="truncate text-white/75">{e.text}</span>
+            </li>
+          ))}
+          {!events.length && <li className="py-6 text-center font-sans text-sm text-white/40">{polling ? "Watching for actor changes…" : "Turn on request polling to watch actors move."}</li>}
+        </ul>
       </div>
 
       <SectionCard title="Worker pools" count="3" q={qPools} setQ={setQPools}>
@@ -1270,9 +1371,10 @@ function Substrate() {
       <SectionCard title="Actors" count={`${actors.length} on this page`} q={qAct} setQ={setQAct}>
         <MiniTable
           head={["Actor", "Status", "Template", "Worker pod"]}
-          rows={(inNs ? actors : []).filter((a) => has(qAct, a.id, a.template, a.worker ?? "")).map((a) => [
+          rowClass={(i) => (changed.includes(shownActors[i]?.id) ? "bg-violet-500/[0.08]" : "")}
+          rows={shownActors.map((a) => [
             <Ns key="a" v={a.id} />,
-            <Phase key="s" ok={!!a.worker}>{a.worker ? "Running" : "Suspended"}</Phase>,
+            <Phase key="s" ok={!!a.worker} busy={!!a.phase}>{a.phase ?? (a.worker ? "Running" : "Suspended")}</Phase>,
             <Ns key="t" v={a.template} />,
             a.worker ? <span key="w" className="font-geistmono text-[12.5px]"><span className="text-white/45">kagent/</span>{a.worker} <span className="text-white/45">· {ip(a.worker)}</span></span> : <span key="w" className="text-white/40">—</span>,
           ])}
@@ -1282,14 +1384,14 @@ function Substrate() {
       <SectionCard title="Workers" count="6 on this page" q={qWrk} setQ={setQWrk}>
         <MiniTable
           head={["Pod", "Pool", "IP"]}
-          rows={(inNs ? WORKERS : []).filter((w) => has(qWrk, ...w)).map(([pod, pool, addr]) => [
+          rowClass={(i) => (actors.some((a) => a.worker === shownWorkers[i]?.[0] && changed.includes(a.id)) ? "bg-violet-500/[0.08]" : "")}
+          rows={shownWorkers.map(([pod, pool, addr]) => [
             <span key="p" className="flex items-center gap-2"><Ns v={pod} />{actors.some((a) => a.worker === pod) && <Phase ok>busy</Phase>}</span>,
             <span key="l" className="font-geistmono text-[12.5px]">{pool}</span>,
             <span key="i" className="font-geistmono text-[12.5px] text-white/75">{addr}</span>,
           ])}
         />
       </SectionCard>
-      {polling && <p className="mt-3 text-xs text-white/40">Polling is on: watch actors suspend and resume across workers.</p>}
       {toast && <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm text-black shadow-lg">{toast}</div>}
     </>
   );
