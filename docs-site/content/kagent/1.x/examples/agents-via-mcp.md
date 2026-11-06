@@ -524,7 +524,7 @@ The checkpoint tools pin a Session's state. These tools do not need the tasks ex
    ```json
    {
      "session": {
-       "agent": "my-first-agent",
+       "agent": "kagent/my-first-agent",
        "id": "01a06d1a-2b7c-7d40-8e13-5c9f04b1a6d2",
        "state": "RUNTIME_STATE_READY"
      }
@@ -535,11 +535,20 @@ You can now safely [clean up these resources](#clean-up).
 
 ## Clean up
 
-1. Delete the checkpoint that you created. If you used Claude Code or Cursor, set `CHECKPOINT_ID` to the ID that the client reported. `CheckpointService` listens on the same port that serves MCP, so the port-forward from [Connect a client](#connect-a-client) already reaches the service.
+1. Delete the checkpoint that you created with the `delete_session_checkpoint` tool. If you used Claude Code or Cursor, set `CHECKPOINT_ID` to the ID that the client reported, or ask the client to delete the checkpoint.
    ```bash
-   grpcurl -plaintext \
-     -d '{"checkpointId":"'"$CHECKPOINT_ID"'"}' \
-     localhost:8083 kagent.api.v1.CheckpointService/DeleteCheckpoint
+   curl -s -X POST http://localhost:8083/mcp \
+     -H 'Content-Type: application/json' \
+     -H 'Accept: application/json, text/event-stream' \
+     -d '{
+       "jsonrpc": "2.0",
+       "id": 9,
+       "method": "tools/call",
+       "params": {
+         "name": "delete_session_checkpoint",
+         "arguments": { "checkpoint_id": "'"$CHECKPOINT_ID"'" }
+       }
+     }'
    ```
 
 2. Remove the server entry from your client. In Claude Code, run `claude mcp remove kagent`. In Cursor, delete the `kagent` entry from your MCP settings.
@@ -548,15 +557,23 @@ You can now safely [clean up these resources](#clean-up).
 
 ## MCP tool reference
 
-The server exposes the following agent and Session tools. Some cover discovery and conversation, and the rest expose the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can pin an agent's state as well as talk to it. An Agent is addressed by its namespace and name, and a Session by its own universally unique identifier (UUID). None of these tools deletes a Session or a checkpoint. To delete a Session, run `kagent agent session delete`. To delete a checkpoint, call the gRPC API directly, because the CLI has no checkpoint command. The server also exposes a set of [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
+The server exposes the following agent and Session tools. They cover discovery, conversation, reading back what an agent did, and the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can manage an agent's state as well as talk to it. An Agent is addressed by its namespace and name, and a Session by its own universally unique identifier (UUID). Every tool that returns a Session reports its `agent` as `<namespace>/<name>`. The server also exposes a set of [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
 
 | Tool | Required arguments | What it does |
 | ---- | ------------------ | ------------ |
 | `list_agents` | None | Lists the Agents that the caller can see. Takes `namespace` to filter, and `page_size` and `page_token`. |
-| `list_sessions` | None | Lists the ready Sessions that the caller created. Takes `page_size` and `page_token`. |
+| `list_sessions` | None | Lists the ready Sessions that the caller created. Takes `agent` to filter by Agent, `all_states` to include failed and suspended Sessions, and `page_size` and `page_token`. |
+| `create_session` | `agent` | Starts a Session with the Agent. Takes `message` to send a first message, `name` for a display name, and `request_id` for idempotency. With `message`, the call returns once the agent accepts the turn. To read the reply, call `get_session`. |
 | `invoke_agent` | `message`, and exactly one of `agent` or `session_id` | Starts a new Session with `agent`, or continues one with `session_id`, and returns the agent's reply with the Session and task IDs. Takes `message_id` for idempotency. |
+| `get_session` | `session_id` | Returns the Session's state, its failure if it has one, and its turns, oldest first. Each turn summarizes the user message, the reply, and the tool calls. Takes `last_turns` to return only the most recent turns, and `max_bytes` to cap the answer, which drops the oldest turns first. To poll a running turn, pass `last_turns` set to `1`. |
+| `list_tasks` | `session_id` | Pages through the Session's tasks, oldest first, each as the same summary that `get_session` returns. Takes `page_token` and `max_bytes`, and `page_size`, which accepts 1 to 100 and defaults to 50. |
+| `get_task` | `session_id`, `task_id` | Returns one task's A2A messages and artifacts in timeline order. Takes `tool_call`, an index or an ID, to return only the A2A parts of one tool call, `from_item` to continue a paged answer, and `max_bytes`. |
+| `rename_session` | `session_id`, `name` | Sets the Session's display name. An empty `name` clears it. |
+| `delete_session` | `session_id` | Deletes the Session and its runtime state. The call fails while the Session has an active turn. It returns a conflict while another operation on the Session is in progress, and the client can retry it. |
 | `create_session_checkpoint` | `session_id`, `expected_head_task_id` | Pins the Session at a turn boundary. The call fails if the Session has advanced past that task. Takes `request_id` for idempotency. |
 | `list_session_checkpoints` | `session_id` | Lists that Session's checkpoints. Takes `page_size` and `page_token`. |
+| `get_session_checkpoint` | `checkpoint_id` | Returns one checkpoint's state, and its failure if it has one. |
+| `delete_session_checkpoint` | `checkpoint_id` | Deletes the checkpoint. |
 | `fork_session` | `checkpoint_id` | Starts a second Session from a checkpoint, replaying the Session's transcript through the pinned turn. Takes `request_id` for idempotency. |
 
 ## Next steps

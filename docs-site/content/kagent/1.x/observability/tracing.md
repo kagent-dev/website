@@ -78,7 +78,7 @@ Use attributes, not span names, to identify a request in a trace. The runtime co
 | `a2a.task.id` | Span | The A2A task ID, which identifies one turn of a conversation. |
 | `gen_ai.conversation.id` | Span | The A2A context ID, which identifies the conversation and is stable across its turns. |
 | `gen_ai.agent.id` | Span | The Agent, as `<namespace>/<name>`. The shorter `gen_ai.agent.name` carries the name alone. |
-| `enduser.id` | Span | The authenticated caller, such as `admin@kagent.dev`. |
+| `user.id` | Span | The authenticated caller, such as `admin@kagent.dev`, on the request span and the spans beneath it. Earlier releases recorded this attribute as `enduser.id`. On the `claude` runtime, the Claude Code spans set their own `user.id`, which is a hash of the Claude account. Read the kagent caller from the `invoke_agent` span. |
 | `gen_ai.main_agent.id` | Resource | The main Agent that the runtime process was compiled for, as `<namespace>/<name>`. This resource attribute replaces the resource-level `gen_ai.agent.id` name. |
 | `kagent.runtime` | Resource | The runtime that served the request, such as `adk-go`. |
 | `kagent.genai.producer` | Resource | `runtime` on a native `codex` or `claude` process. The value shows that kagent writes the GenAI model and tool spans for that process. A collector can use the value to avoid counting the native spans as duplicate model calls. |

@@ -196,7 +196,7 @@ func (executor) Cancel(context.Context, *a2asrv.ExecutorContext) iter.Seq2[a2aty
 
 Two events make a complete turn. `NewSubmittedTask` acknowledges the message and opens the task, and a `TaskStateCompleted` status update carrying an agent message ends it. Between them, a real agent yields whatever its work produces.
 
-`main` sets the rest up. First, `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`. Then `config.LoadAgentConfig` reads the document back, and `config.ProcessConfig` returns its `runtime` object. `app.New` serves the A2A gRPC service and the readiness endpoint.
+`main` sets the rest up. First, `config.MaterializeFromBootstrap` fetches the revision's bootstrap bundle from the kagent API and writes its documents to `/config`. Then `config.LoadAgentConfig` reads the configuration back, and `config.ProcessConfig` returns its `runtime` object. `app.New` serves the A2A gRPC service and the readiness endpoint.
 
 ```go
 compiled, err := config.LoadAgentConfig("/config/config.json")
@@ -211,7 +211,7 @@ application, err := app.New(app.AppConfig{
 }, executor{})
 ```
 
-`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks keep the image runnable outside Agent Substrate, where no configuration document exists. All of this stays as it is in an agent of your own.
+`ControlPlaneURL` is required because the helper reports task state to the kagent API. The `cmp.Or` fallbacks cover a configuration document that omits the port or the name. Outside Agent Substrate, no bootstrap descriptor exists, so the image exits at startup. All of this stays as it is in an agent of your own.
 
 This agent ignores the rest of the configuration. To honor the AgentTemplate instead, read the other fields of the document that `LoadAgentConfig` returns. To review what the document contains, see [Compare BYO and declarative agents]({{< link path="agents/bring-your-own-agent#compare-byo-and-declarative-agents" >}}).
 

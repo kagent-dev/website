@@ -23,7 +23,7 @@ kagent runs a BYO agent exactly as it runs one on a managed harness, and owns th
 - Running the {{< gloss "Actor" >}}Actor{{< /gloss >}} that hosts your image inside a sandbox. The {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that the Harness references sets the class: `gvisor`, which every installation provides, or `microvm`, which needs its own Agent Substrate provisioning. For more information, see [Sandbox classes]({{< link path="about/substrate-runtime/sandboxing#sandbox-classes" >}}).
 - [Suspending and resuming]({{< link path="about/substrate-runtime/suspend-and-resume#suspension-between-turns" >}}) the Actor between turns. A suspend keeps only the durable volume mounted at `/data`, so an image must write any state that it needs across turns to that directory.
 - Routing every conversation through the A2A gateway, so callers address the {{< gloss "Agent" >}}Agent{{< /gloss >}} rather than the Actor behind it.
-- Delivering the agent configuration and agent card to the container, which the kagent helpers write to `/config/config.json` and `/config/agent-card.json` at startup.
+- Publishing the agent configuration and agent card in a bootstrap bundle for the revision. At startup, the kagent helpers fetch the bundle and write its contents to `/config/config.json` and `/config/agent-card.json`.
 
 Because Agent Substrate snapshots the whole Actor, an image that keeps conversation state in memory keeps it across a suspend. Your image does not need to persist anything to survive the gap between turns.
 
@@ -44,7 +44,7 @@ Both the Harness and the image must meet the following requirements, and kagent 
 
 ## Compare BYO and declarative agents
 
-kagent resolves the AgentTemplate in the same way for a BYO agent as for a [declarative agent]({{< link path="agents/declarative-agents" >}}), then delivers the result to the container as a JSON document in an environment variable. Both harnesses resolve a ModelConfig through the same code, so the same model providers work and the same ones are rejected. For the provider matrix, see [Model provider support]({{< link path="agents/agent-harness#model-provider-support" >}}).
+kagent resolves the AgentTemplate in the same way for a BYO agent as for a [declarative agent]({{< link path="agents/declarative-agents" >}}), then publishes the result as a JSON document in the revision's bootstrap bundle. Both harnesses resolve a ModelConfig through the same code, so the same model providers work and the same ones are rejected. For the provider matrix, see [Model provider support]({{< link path="agents/agent-harness#model-provider-support" >}}).
 
 The kagent harness reads that document and assembles the agent from it. A BYO image decides whether to read it:
 
@@ -53,12 +53,17 @@ The kagent harness reads that document and assembles the agent from it. A BYO im
 
 Two AgentTemplate features continue to apply regardless of this choice. First, a `byo` Harness rejects structured output, with `Harness runtime "byo" does not support structured output`. Second, the agent card that kagent advertises for a `byo` Agent leaves out the AgentTemplate's skills and declares no extension, so a client cannot discover human-in-the-loop support the way it can for a declarative agent.
 
-Both kinds of BYO agent receive the same environment variables. Agent Substrate delivers the two JSON payloads as private variables, and the kagent helpers write them to files before the agent starts. An image in another language either reads the files that `MaterializeFromEnv` writes or parses the variables itself.
+Both kinds of BYO agent receive the same configuration. kagent stores the agent configuration and the agent card in a bootstrap bundle for each revision, and limits the two documents together to 256 KiB. The Actor's environment contains only a small descriptor of that bundle. At startup, the kagent helpers fetch the bundle from the kagent API, verify it against the descriptor, save it to `/data/kagent/bootstrap/bundle.pb`, and write the two documents to files. A restarted process or a resumed Session reads the saved bundle, and does not fetch it again.
 
-| Environment variable | Contents |
-| -------------------- | -------- |
-| `KAGENT_CONFIG_JSON`, which the helpers write to `/config/config.json` | The agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
-| `KAGENT_AGENT_CARD_JSON`, which the helpers write to `/config/agent-card.json` | The agent card that kagent advertises for this agent, rendered as JSON. |
+An image built with the helpers of an earlier release looks for the configuration in environment variables, and fails to start. Build the image with the helpers from the same kagent release as the controller.
+
+The two files exist only after the helpers run. An image without the helpers reads the descriptor and fetches the bundle itself.
+
+| Item | Contents |
+| ---- | -------- |
+| `/config/config.json`, which the helpers write | The agent configuration, including the resolved system prompt, the model and its settings, every tool, skill, and plugin that the AgentTemplate binds, and a `runtime` object that sets the process settings. |
+| `/config/agent-card.json`, which the helpers write | The agent card that kagent advertises for this agent, rendered as JSON. |
+| `KAGENT_BOOTSTRAP_JSON` | The bootstrap descriptor, with the control-plane URL, the revision, the format version, and the SHA-256 digest of the bundle. |
 | Anything in `spec.env` | The literal values that the Harness sets. |
 | Certificate-authority variables and `SSL_CERT_DIR` | The egress gateway's trust bundle, which every Actor receives. For the list and the limit on how many variables an Actor takes, see [Environment variables on an Actor]({{< link path="agents/agent-harness#environment-variables-on-an-actor" >}}). |
 
@@ -157,7 +162,7 @@ The A2A contract is a gRPC service and a readiness endpoint, so any language wit
 
 {{< tabs >}}
 {{% tab name="Go" %}}
-`github.com/kagent-dev/kagent/go/adk/pkg/app` serves the A2A gRPC service, the readiness endpoint on 8081, and the agent card, given any type that implements `a2asrv.AgentExecutor`. The helper is framework-agnostic, so the executor is the only part that you write. `config.MaterializeFromEnv` writes the payloads that Agent Substrate delivers to `/config`, and `config.LoadAgentConfig` reads the document back.
+`github.com/kagent-dev/kagent/go/adk/pkg/app` serves the A2A gRPC service, the readiness endpoint on 8081, and the agent card, given any type that implements `a2asrv.AgentExecutor`. The helper is framework-agnostic, so the executor is the only part that you write. `config.MaterializeFromBootstrap` fetches the bootstrap bundle and writes its documents to `/config`, and `config.LoadAgentConfig` reads the configuration back.
 
 ```go
 import (
@@ -174,7 +179,7 @@ import (
     "github.com/kagent-dev/kagent/go/pkg/logging"
 )
 
-if err := config.MaterializeFromEnv("/config"); err != nil {
+if err := config.MaterializeFromBootstrap(context.Background(), "/config"); err != nil {
     return err
 }
 compiled, err := config.LoadAgentConfig("/config/config.json")
@@ -210,12 +215,13 @@ return application.Run()
 For a complete executor, see [`go/core/test/byoa2a/main.go`](https://github.com/kagent-dev/kagent/blob/main/go/core/test/byoa2a/main.go) in the kagent repository.
 {{% /tab %}}
 {{% tab name="Python" %}}
-The `kagent-adk` package provides helpers for agents that are built with the Google Agent Development Kit (ADK). `KAgentApp` wraps an ADK agent rather than an arbitrary framework, serves A2A over gRPC, and answers the readiness endpoint on 8081. `KAgentConfig.from_file` materializes the payloads that Agent Substrate delivers and reads the `runtime` object back. The listener defaults to `[::]:80`, which matches what kagent dials.
+The `kagent-adk` package provides helpers for agents that are built with the Google Agent Development Kit (ADK). `KAgentApp` wraps an ADK agent rather than an arbitrary framework, serves A2A over gRPC, and answers the readiness endpoint on 8081. `materialize_from_bootstrap` fetches the bootstrap bundle and writes its documents to `/config`, and `KAgentConfig.from_file` reads the `runtime` object back. The listener defaults to `[::]:80`, which matches what kagent dials.
 
 ```python
 from kagent.adk import KAgentApp
-from kagent.core import KAgentConfig
+from kagent.core import KAgentConfig, materialize_from_bootstrap
 
+materialize_from_bootstrap("/config")
 config = KAgentConfig.from_file()
 
 app = KAgentApp(
@@ -226,9 +232,9 @@ app = KAgentApp(
 ).build()
 ```
 
-`from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`, so a standalone process that runs outside Agent Substrate must supply its own `/config/config.json`.
+`from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`. Because `from_file` only reads the file, a standalone process that runs outside Agent Substrate skips `materialize_from_bootstrap` and supplies its own `/config/config.json`.
 
-The page uses two configuration objects. `KAgentConfig` holds only the `runtime` object, which supplies the API URL and the app name. `kagent.adk.types.parse_config` parses the whole document into a `Config`, and `KAgentApp` reads the listener address from that `Config`. To bind the address that the configuration names, pass a parsed `Config` as the `config` argument. `parse_config` takes JSON text or a dict rather than a path, so read the file first. Call `from_file` before `parse_config`, because `from_file` materializes the file.
+The page uses two configuration objects. `KAgentConfig` holds only the `runtime` object, which supplies the API URL and the app name. `kagent.adk.types.parse_config` parses the whole document into a `Config`, and `KAgentApp` reads the listener address from that `Config`. To bind the address that the configuration names, pass a parsed `Config` as the `config` argument. `parse_config` takes JSON text or a dict rather than a path, so read the file first. Call `materialize_from_bootstrap` before either reader, because only `materialize_from_bootstrap` writes the file.
 
 ```python
 from pathlib import Path
@@ -251,9 +257,13 @@ Implement the contract directly:
 
 1. Serve `lf.a2a.v1.A2AService` over gRPC on port 80. Generate the stubs from the [A2A protocol](https://a2a-protocol.org) definitions.
 2. Serve `GET /readyz` over HTTP on port 8081, returning `200`.
-3. To honor the AgentTemplate, read the agent configuration from the `KAGENT_CONFIG_JSON` environment variable. An agent that ignores the variable runs as an opaque agent.
+3. To honor the AgentTemplate, fetch the bootstrap bundle at startup. An agent that skips this step runs as an opaque agent.
+   1. Read the descriptor from the `KAGENT_BOOTSTRAP_JSON` environment variable.
+   2. Call `kagent.runtime.v1.BootstrapService/GetBootstrapConfig` over gRPC at the descriptor's `control_plane_url`. Send an `authorization` header with any bearer value, because Agent Substrate replaces that header with the Actor's own token. Without the header, the request reaches kagent with no credential.
+   3. Check that the bundle's `revision` and `sha256` match the descriptor. For the digest algorithm, see [`go/api/bootstrap/bundle.go`](https://github.com/kagent-dev/kagent/blob/main/go/api/bootstrap/bundle.go) in the kagent repository.
+   4. Read the agent configuration from the bundle's `config_json` field and the agent card from `agent_card_json`.
 
-The kagent helpers read `KAGENT_CONFIG_JSON` and materialize its contents into `/config/config.json`. An image without those helpers parses the variable directly.
+The kagent helpers also save the bundle to `/data/kagent/bootstrap/bundle.pb`, and read that file on a restart without calling the service again.
 {{% /tab %}}
 {{< /tabs >}}
 
