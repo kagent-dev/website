@@ -25,7 +25,7 @@ export function HomeHeader() {
         <Link href="/#how" className="hover:text-white">How it works</Link>
         <Link href="/#agents" className="hover:text-white">Agents</Link>
         <Link href="/community" className="hover:text-white">Community</Link>
-        <Link href="/substrate-calculator" className="hover:text-white">Calculator</Link>
+        <Link href="/substrate-calculator" className="hover:text-white">Substrate Calculator</Link>
         <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
       </nav>
       <div className="flex gap-2">
@@ -45,8 +45,8 @@ export function HomeFooter() {
           <Link href={DOCS} className="hover:text-white">Docs</Link>
           <Link href="/blog" className="hover:text-white">Blog</Link>
           <a href={GITHUB} className="hover:text-white">GitHub</a>
-          <a href={SUBSTRATE} className="hover:text-white">ate.dev</a>
-          <Link href="/substrate-calculator" className="hover:text-white">Calculator</Link>
+          <a href={SUBSTRATE} className="hover:text-white">Agent Substrate</a>
+          <Link href="/substrate-calculator" className="hover:text-white">Substrate Calculator</Link>
           <Link href="/community" className="hover:text-white">Community</Link>
           <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
           <a href="https://discord.gg/Fu3k65f2k3" className="hover:text-white">Discord</a>

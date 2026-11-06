@@ -13,7 +13,7 @@ import { AgentVisual, HarnessVisual, TemplateVisual } from "@/components/home/ho
 import { DOCS, GITHUB, HomeFooter, HomeHeader, START, SUBSTRATE, geistMono, geistSans } from "@/components/home/chrome";
 
 export const metadata: Metadata = {
-  title: "kagent | Platform for managing agents securely on Kubernetes",
+  title: "kagent | Manage AI agents securely on Kubernetes with Agent Substrate",
   description:
     "kagent gives platform teams one place to deploy, manage and govern AI agents on Kubernetes, running on Agent Substrate: sandboxed, suspended when idle, resumed on the next message.",
 };
