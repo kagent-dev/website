@@ -11,7 +11,7 @@ kagent stores schedules in its database, not as Kubernetes resources. You manage
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}). To call the API with grpcurl, set `config.server.grpcReflection=true`. grpcurl uses server reflection to find the `ScheduledRunService` methods.
+1. [Install kagent]({{< link path="setup/installation" >}}). If you call the `ScheduledRunService` API with grpcurl rather than the UI, note the following. {{< reuse "kagent-docs/snippets/grpcurl-reflection.md" >}}
 2. Create an Agent that answers a prompt, such as the one in [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Create a schedule in the UI
