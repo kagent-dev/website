@@ -25,15 +25,15 @@ interface Feature {
 
 export function FeatureCard({ icon, title, description }: Feature) {
   return (
-    <div className="rd-cap-item">
-      <div className="rd-cap-check">
+    <div className="not-prose flex flex-col items-start rounded-[14px] border border-[#ECEAF2] bg-white px-[22px] pb-[22px] pt-6 transition duration-200 hover:-translate-y-0.5 hover:border-[#CFCAE0] hover:shadow-[0_4px_20px_rgba(15,19,35,0.07)] dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-violet-500/40 dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+      <div className="mb-4 grid h-[42px] w-[42px] shrink-0 place-items-center rounded-xl bg-[#F4EEFE] text-[#8A3FFC] dark:bg-violet-500/15 dark:text-violet-400">
         <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           {iconPaths[icon] || iconPaths.cube}
         </svg>
       </div>
       <div>
-        <strong>{title}</strong>
-        <span>{description}</span>
+        <strong className="mb-2 block text-[15px] font-semibold tracking-[-0.01em] text-[#151927] dark:text-[#F0F0F5]">{title}</strong>
+        <span className="text-[13.5px] leading-[1.55] text-[#6B7289] dark:text-gray-400">{description}</span>
       </div>
     </div>
   );
@@ -56,7 +56,7 @@ const ALL_FEATURES: Feature[] = [
 
 export default function FeatureGrid() {
   return (
-    <div className="rd-cap-grid" style={{ marginTop: 24 }}>
+    <div className="not-prose mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {ALL_FEATURES.map((f, i) => (
         <FeatureCard key={i} {...f} />
       ))}

@@ -10,6 +10,15 @@ export default {
   theme: {
   	extend: {
   		colors: {
+  			// homepage palette (always dark), kept apart from the shadcn tokens
+  			ks: {
+  				bg: '#0a0a0a',
+  				card: '#141414',
+  				card2: '#1c1c1c',
+  				line: 'rgb(255 255 255 / 0.08)',
+  				muted: '#8f8f8f',
+  				accent: '#a78bfa'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -49,6 +58,20 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			}
+  		},
+  		fontFamily: {
+  			geist: ['var(--font-geist-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			geistmono: ['var(--font-geist-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace']
+  		},
+  		keyframes: {
+  			grow: {
+  				from: { transform: 'scaleX(0.04)' },
+  				to: { transform: 'scaleX(1)' }
+  			},
+  			float: {
+  				'0%, 100%': { transform: 'translateY(0)' },
+  				'50%': { transform: 'translateY(-6px)' }
   			}
   		},
   		borderRadius: {

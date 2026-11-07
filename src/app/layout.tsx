@@ -5,11 +5,12 @@ import { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
+import SiteChrome from "@/components/site-chrome";
 import { GoogleTagManager } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
-  title: "kagent | Bringing Agentic AI to cloud native",
-  description: "An open-source framework for DevOps and platform engineers to run AI agents in Kubernetes, automating complex operations and troubleshooting tasks.",
+  title: "kagent | Manage AI agents securely on Kubernetes with Agent Substrate",
+  description: "kagent is an open-source platform for deploying, managing and governing AI agents on Kubernetes. Agents run on Agent Substrate: sandboxed, suspended when idle, and resumed in as little as 150ms.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kagent.dev"),
 };
 
@@ -34,9 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <GoogleTagManager gtmId="GTM-KNRGVQPF" />
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Navbar />
+          <SiteChrome><Navbar /></SiteChrome>
           <main className="flex-1">{children}</main>
-          <Footer />
+          <SiteChrome><Footer /></SiteChrome>
         </ThemeProvider>
       </body>
     </html>
