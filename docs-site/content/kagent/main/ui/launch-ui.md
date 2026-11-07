@@ -77,7 +77,7 @@ The left menu groups the console pages by the resource that each page reads.
 | **Dashboard** | Counts of agents, model configurations, MCP servers, and discovered tools, plus recent conversations. |
 | **Agents** | Every {{< gloss "Agent" >}}Agent{{< /gloss >}}, {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}}, and {{< gloss "Harness" >}}Harness{{< /gloss >}}, and the conversations held with each Agent. |
 | **Schedules** | Agents that receive a fixed prompt on a cron schedule. Each execution starts a new conversation. For more information, see [Scheduled runs]({{< link path="agents/scheduled-runs" >}}). |
-| **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents reference, and the providers behind them. |
+| **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents reference, and the providers behind them. The ModelConfig form offers `apiFormat` and `reasoningEffort` as lists of the accepted values. |
 | **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each. |
 | **Prompts** | Prompt libraries, which store reusable fragments that an AgentTemplate includes in its instructions. |
 | **Substrate** | WorkerPools, Actors, and Workers, read from both Kubernetes and the Agent Substrate API. |
@@ -88,6 +88,10 @@ Start at the **Agents** page to review your agents and the resources behind them
 {{< reuse-image-dark srcDark="img/kagent-ui-agents-dark.png" alt="The Agents page, listing agents, templates, and harnesses" caption="Figure: The Agents page" >}}
 
 The **Agents** tab authors the Agent custom resource directly. Create one to pair a template with a Harness, edit one to change either side, and delete one to retire the pairing. Deleting an Agent leaves its Sessions in place, along with the AgentTemplate and Harness that it referenced. For CLI steps, see [Create your first agent]({{< link path="get-started/your-first-agent" >}}).
+
+The Agent form asks for the Harness first and preselects one. When no suitable Harness exists, **Create harness** opens the Harness form inline, and the Agent form keeps what you entered. The form warns you when the chosen Harness and ModelConfig are incompatible, and it shows every validation error at once rather than one at a time. When the last update of an Agent failed, the agent's page shows the reason.
+
+The **Harnesses** tab creates Harnesses and edits them in place. For the kagent, Codex, and Claude runtimes, the image is optional, because each runtime has a default. The worker pool field suggests the WorkerPools in the cluster as you type, and the snapshot location starts with a default value that you can change.
 
 ## Read a conversation
 

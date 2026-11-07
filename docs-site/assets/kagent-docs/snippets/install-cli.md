@@ -1,5 +1,7 @@
-Download the kagent CLI. The `--version` flag matches the CLI to the release that these docs cover.
+Download the kagent CLI.
 
 ```bash
-curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
+curl -sL https://kagent.dev/install | bash
 ```
+
+The script installs the newest kagent release. To install the release that these docs cover instead, run `curl -sL https://kagent.dev/install | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}`.

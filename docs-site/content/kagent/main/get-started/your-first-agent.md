@@ -42,6 +42,9 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
          location: s3://ate-snapshots/kagent/
    ```
 
+   > [!TIP]
+   > Your installation also comes with the `kagent-default`, `codex-default`, and `claude-default` Harnesses in the kagent namespace, for the kagent, Codex, and Claude runtimes. An Agent in the kagent namespace can name one of them in `spec.harnessRef` instead of a Harness of your own. `spec.harnessRef` is namespace-local, so an Agent in another namespace needs its own Harness. This guide creates its own Harness so that you can see each field, and because later guides build on it.
+
 2. Apply an `AgentTemplate`. The `modelConfig` field references the `default-model-config` {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that was automatically created for the model provider API key that you provided during kagent installation.
    ```yaml
    apiVersion: api.kagent.dev/v1alpha3

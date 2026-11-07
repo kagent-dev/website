@@ -129,7 +129,7 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
    | `database.postgres.ownerConnectionStringSecretRef.name` and `database.postgres.readWriteConnectionStringSecretRef.name` | Read the two connection strings from the Secrets that you created. The keys default to `ownerConnectionString` and `readWriteConnectionString`. |
    | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the kagent setup script created. If you passed other role names to the script, set those names instead. |
    | `config.database.vectorEnabled` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. If your database does not have the pgvector extension installed, omit the value. |
-   | `config.server.grpcReflection` | Lets the guides that use `grpcurl` discover the controller API, as in the installation guide. |
+   | `config.server.grpcReflection` | Lets the guides that use `grpcurl` discover the controller API. `kagent install` enables it by default, so this value only keeps the setting explicit in the values file. |
 
 6. Save a CLI configuration file that references `kagent-values.yaml`. The `kagent db` commands read `database.vectorEnabled` from this file, not from the Helm values. Set `database.vectorEnabled` to match `config.database.vectorEnabled`. If you omitted `config.database.vectorEnabled`, omit `database.vectorEnabled` too.
    ```bash
