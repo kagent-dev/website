@@ -184,7 +184,7 @@ const HowItWorks = () => {
    Quick Start — tabbed terminal install block
    ============================================================ */
 const INSTALL_TABS = [
-  { label: 'One-liner', cmd: 'curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash' },
+  { label: 'One-liner', cmd: 'curl -sL https://kagent.dev/install | bash && kagent install' },
   { label: 'Brew', cmd: 'brew install kagent' },
 ];
 
