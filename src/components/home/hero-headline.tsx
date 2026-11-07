@@ -30,7 +30,7 @@ const Lockup = () => (
 export const HEADLINES: Record<string, { title: React.ReactNode; sub: string; lockup?: boolean }> = {
   // Default
   "0": {
-    title: <>Platform for managing agents<br className="hidden sm:block" /> <span className="bg-gradient-to-r from-white via-violet-200 to-violet-400 bg-clip-text text-transparent">securely on Kubernetes</span></>,
+    title: <>Build, secure, and manage agents<br className="hidden sm:block" /> <span className="bg-gradient-to-r from-white via-violet-200 to-violet-400 bg-clip-text text-transparent">at scale on Agent Substrate!</span></>,
     sub: "kagent gives platform teams one place to deploy, manage and govern AI agents on Kubernetes. Orchestrated by kagent, Agent Substrate runs each one in its own sandbox, puts it to sleep while it waits, and wakes it in as little as 150ms.",
   },
   "5": {
