@@ -6,7 +6,7 @@
  */
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import KagentDemo, { DEMO, type DemoAgent } from "./demo";
+import KagentDemo, { DEMO, PAST, type DemoAgent } from "./demo";
 
 type Page = "dashboard" | "agents" | "schedules" | "models" | "mcp" | "prompts" | "substrate" | "chat";
 
@@ -16,17 +16,17 @@ const AGENTS: { name: string; desc: string; template: string; harness: string; c
   { name: "assistant", desc: "General-purpose assistant (low priority).", template: "Inline", harness: "low", convos: 1 },
   { name: "assistant-high", desc: "General-purpose assistant (high priority).", template: "Inline", harness: "high", convos: 2 },
   { name: "assistant-medium", desc: "General-purpose assistant (medium priority).", template: "Inline", harness: "medium", convos: 0 },
-  { name: "billing-ops", desc: "Investigates failed payments and refund requests. Every write needs a human approval.", template: "billing-ops", harness: "secure", convos: 0 },
-  { name: "cve-watch", desc: "Watches upstream advisories and opens tracking issues for affected repos.", template: "cve-watch", harness: "low", convos: 0 },
-  { name: "design-to-code", desc: "Turns Figma frames into React components and opens the pull request.", template: "design-to-code", harness: "claude-code", convos: 0 },
-  { name: "docs-librarian", desc: "Answers questions from internal Notion pages, public repo wikis and live library docs, with citations.", template: "docs-librarian", harness: "long-context", convos: 0 },
-  { name: "jira-triage", desc: "Sorts new Jira issues, links duplicates, finds the owning repo and suggests a priority.", template: "jira-triage", harness: "low", convos: 0 },
-  { name: "k8s-cost-optimizer", desc: "Finds idle and over-provisioned workloads and proposes right-sizing PRs.", template: "k8s-cost-optimizer", harness: "medium", convos: 0 },
+  { name: "billing-ops", desc: "Investigates failed payments and refund requests. Every write needs a human approval.", template: "billing-ops", harness: "secure", convos: 2 },
+  { name: "cve-watch", desc: "Watches upstream advisories and opens tracking issues for affected repos.", template: "cve-watch", harness: "low", convos: 1 },
+  { name: "design-to-code", desc: "Turns Figma frames into React components and opens the pull request.", template: "design-to-code", harness: "claude-code", convos: 1 },
+  { name: "docs-librarian", desc: "Answers questions from internal Notion pages, public repo wikis and live library docs, with citations.", template: "docs-librarian", harness: "long-context", convos: 1 },
+  { name: "jira-triage", desc: "Sorts new Jira issues, links duplicates, finds the owning repo and suggests a priority.", template: "jira-triage", harness: "low", convos: 1 },
+  { name: "k8s-cost-optimizer", desc: "Finds idle and over-provisioned workloads and proposes right-sizing PRs.", template: "k8s-cost-optimizer", harness: "medium", convos: 1 },
   { name: "local-llm-assistant", desc: "A private assistant on a local Ollama model, so no data leaves the cluster.", template: "local-llm-assistant", harness: "low", convos: 1 },
-  { name: "model-scout", desc: "Finds and compares open models and datasets on Hugging Face for a given task.", template: "model-scout", harness: "low", convos: 0 },
-  { name: "platform-orchestrator", desc: "Routes platform requests to the right specialist agent and stitches the answers together.", template: "platform-orchestrator", harness: "high", convos: 0 },
-  { name: "pr-reviewer", desc: "Reviews pull requests against the team rubric and checks API usage against current library docs.", template: "pr-reviewer", harness: "medium", convos: 0 },
-  { name: "release-notes-writer", desc: "Drafts release notes from merged PRs and Linear issues and posts them to Slack.", template: "release-notes-writer", harness: "low", convos: 0 },
+  { name: "model-scout", desc: "Finds and compares open models and datasets on Hugging Face for a given task.", template: "model-scout", harness: "low", convos: 1 },
+  { name: "platform-orchestrator", desc: "Routes platform requests to the right specialist agent and stitches the answers together.", template: "platform-orchestrator", harness: "high", convos: 1 },
+  { name: "pr-reviewer", desc: "Reviews pull requests against the team rubric and checks API usage against current library docs.", template: "pr-reviewer", harness: "medium", convos: 2 },
+  { name: "release-notes-writer", desc: "Drafts release notes from merged PRs and Linear issues and posts them to Slack.", template: "release-notes-writer", harness: "low", convos: 1 },
   { name: "sre-incident-commander", desc: "Triages alerts, correlates metrics and errors, and drafts the mitigation for an on-call human to approve.", template: "sre-incident-commander", harness: "secure", convos: 2 },
 ];
 
@@ -1401,18 +1401,13 @@ function Substrate() {
 
 type ChatEntry = { id: string; title: string; when: string; seeded: boolean };
 
-const PAST_CHATS: Record<string, { title: string; when: string }[]> = {
-  assistant: [{ title: "What can you help me with?", when: "5 days ago" }],
-  "assistant-high": [{ title: "Summarize this week's cluster events", when: "8 days ago" }, { title: "Draft a capacity plan for Q1", when: "15 days ago" }],
-  "local-llm-assistant": [{ title: "Pod restart report", when: "32 minutes ago" }],
-};
 
 function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string) => void }) {
   const demo = demoFor(agent);
   const a = AGENTS.find((x) => x.name === agent);
   const tpl = TEMPLATES.find((t) => t.name === a?.template);
   const harness = HARNESSES.find((h) => h.name === a?.harness);
-  const past = PAST_CHATS[agent] ?? [];
+  const past = PAST[agent] ?? [];
   const [chats, setChats] = useState<ChatEntry[]>(() => [
     ...(demo.historyUser ? [{ id: "seed", title: demo.historyUser, when: "2 hours ago", seeded: true }] : []),
     ...past.map((p, i) => ({ id: `past-${i}`, title: p.title, when: p.when, seeded: true })),
@@ -1574,7 +1569,7 @@ function ChatView({ agent, onSwitch }: { agent: string; onSwitch: (name: string)
         {mounted.map((key) => (
           <div key={key} className={view === "chat" && active === key ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
             <KagentDemo
-              agents={[key.startsWith("past-") ? { ...demo, historyUser: past[Number(key.slice(5))].title, history: [{ t: "text", text: `I'm ${agent}. ${a?.desc ?? ""} Ask me about my tools, or give me a task.` }] } : demo]}
+              agents={[key.startsWith("past-") ? { ...demo, historyUser: undefined, history: past[Number(key.slice(5))].history } : demo]}
               bare
               startEmpty={key.startsWith("new-")}
               title={agent}
