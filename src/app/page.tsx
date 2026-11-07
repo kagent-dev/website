@@ -140,6 +140,21 @@ export default function Home() {
 
       {/* Stats */}
       <section className="mx-auto max-w-6xl px-6 pt-20">
+        <div className="mb-10 flex flex-col items-center text-center">
+          <div className="flex items-center gap-3 font-geistmono text-xs uppercase tracking-[0.2em] text-violet-300">
+            <span aria-hidden className="h-px w-10 bg-gradient-to-r from-transparent to-violet-400/60" />
+            Powered by
+            <span aria-hidden className="h-px w-10 bg-gradient-to-l from-transparent to-violet-400/60" />
+          </div>
+          <h2 className="mt-3 text-4xl font-medium tracking-tight md:text-5xl">
+            <a href={SUBSTRATE} className="bg-gradient-to-r from-white to-violet-300 bg-clip-text text-transparent transition hover:to-violet-200">
+              Agent Substrate
+            </a>
+          </h2>
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-ks-muted">
+            The open-source runtime under every kagent agent: sandboxed, suspended when idle, resumed on the next message.
+          </p>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             ["Sub-second resume", "Agent Substrate restores a suspended actor onto a warm worker. The scheduler never sees it.", "/substrate-calculator", "Calculate your wake-up time"],
