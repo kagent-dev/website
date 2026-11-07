@@ -22,7 +22,6 @@ export function HomeHeader() {
       <nav className="hidden gap-8 text-sm text-white/80 md:flex">
         <Link href={DOCS} className="hover:text-white">Docs</Link>
         <Link href="/blog" className="hover:text-white">Blog</Link>
-        <Link href="/#how" className="hover:text-white">How it works</Link>
         <Link href="/#agents" className="hover:text-white">Agents</Link>
         <Link href="/community" className="hover:text-white">Community</Link>
         <Link href="/substrate-calculator" className="hover:text-white">Substrate Calculator</Link>

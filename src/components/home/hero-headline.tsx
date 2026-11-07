@@ -68,6 +68,9 @@ export default function HeroHeadline() {
     <>
       <h1 id="hero-title" className="mx-auto max-w-5xl text-[44px] font-medium leading-[1.08] tracking-tight sm:text-5xl md:text-[64px]">{head.title}</h1>
       {head.lockup && <Lockup />}
+      <a href="https://www.cncf.io/projects/kagent/" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/80 hover:border-violet-400/40 hover:text-white">
+        Part of the CNCF Sandbox <span aria-hidden>→</span>
+      </a>
       <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ks-muted">{head.sub}</p>
     </>
   );
