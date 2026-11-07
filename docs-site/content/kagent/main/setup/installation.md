@@ -40,76 +40,84 @@ author: kagent.dev
    {{% /tab %}}
    {{< /tabs >}}
 
-2. Set your model provider API key. The examples in this guide use OpenAI, the default provider of `kagent install`. To install with another provider, pass its name in the `--provider` flag and set that provider's API key variable instead, such as `ANTHROPIC_API_KEY` for `--provider Anthropic`. For the supported providers, see [Configure model providers]({{< link path="setup/model-providers" >}}).
-   ```bash
-   export OPENAI_API_KEY="your-api-key-here"
-   ```
-
-3. Choose an installation method.
-   * **CLI**: For an evaluation, use the `kagent install` command of the kagent CLI. The CLI also deploys a development PostgreSQL database. Follow the steps in [Install with the CLI](#install-kagent).
-   * **Helm**: For a production installation that Helm manages from the start, install each Helm chart yourself, against a PostgreSQL database that you provide. Follow the steps in [Install with Helm](#install-with-helm).
+2. Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl) and [`helm`](https://helm.sh/docs/intro/install/) 3. The kagent CLI runs `helm` to install each chart.
 
 ## Install with the CLI {#install-kagent}
 
-The kagent CLI installs the CRDs, Agent Substrate, the Agent Substrate PodCertificate controller, a development PostgreSQL database, and kagent in the correct order. The CLI also creates the Agent Substrate identity material and database connection Secrets that the releases need.
+Set your OpenAI API key, then install the kagent CLI and run it.
 
-1. Install the following CLI tools. The kagent CLI runs `helm` to install each chart.
-   * [`helm`](https://helm.sh/docs/intro/install/), the Kubernetes package manager. Use Helm 3.
-   * [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl), the Kubernetes command line tool.
-   * `kagent`, the command line tool. The CLI installs the kagent release of its own version.
-     ```bash
-     curl -sL https://kagent.dev/install | bash
-     kagent version --client
-     ```
-     The script installs the newest kagent release. To install a specific release, such as the release that these docs cover, pass `--version`: `curl -sL https://kagent.dev/install | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}`. The script supports macOS and Linux on `amd64` and `arm64`, and Windows on `amd64` from Git Bash or MSYS, where it installs `kagent.exe`.
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+curl -sL https://kagent.dev/install | bash && kagent install
+```
 
-2. If your cluster uses a DNS domain other than `cluster.local`, set `global.clusterDomain` for the kagent chart. The chart builds the URLs of the controller and the built-in `kagent-tool-server` MCP server from this domain, so agents cannot reach either service when the value is wrong. `kagent install` does not detect the domain. Clusters that use `cluster.local` skip this step.
-   1. Save a Helm values file that sets the domain.
-      ```bash
-      cat > kagent-values.yaml <<EOF
-      global:
-        clusterDomain: corp.example
-      EOF
-      ```
-   2. Save a CLI configuration file that points the installer at those values. `kagent install` does not take Helm flags of its own, so chart values reach it through this file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
-      ```bash
-      cat > kagent-config.yaml <<EOF
-      install:
-        kagent:
-          valuesFiles: [kagent-values.yaml]
-      EOF
-      ```
+When `kagent install` finishes, it prints the next steps. To open the UI, run `kagent dashboard`. To create an agent, continue with [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
-      | Field | Description |
-      | --- | --- |
-      | `install.kagent.valuesFiles` | The Helm values files that the installer passes to the kagent chart, in order. The last file wins. |
-      | `install.defaultModelProvider` | Optional. The provider to install with when you omit `--provider`. Defaults to `OpenAI`. |
-      | `install.bundledPostgresImage` | Optional. The image of the development PostgreSQL database that the installer deploys, for both the database container and its TLS reloader. Defaults to `postgres:18-alpine`, pinned by digest. To pull the image from a mirror, such as in an air-gapped cluster, set the full image reference, such as `mirror.example.com/library/postgres:18-alpine`. |
-   3. In the next step, pass the file to the installer with `kagent --config kagent-config.yaml install --namespace kagent`.
+The CLI installation suits evaluation, because it deploys a development PostgreSQL database. For a production installation that Helm manages from the start, [install with Helm](#install-with-helm) instead. To use another model provider, pin a release, or pass your own chart values, see [Customize the CLI installation](#customize-the-cli-installation).
 
-3. Install kagent. To use a provider other than OpenAI, add `--provider <name>`, such as `--provider Anthropic`.
+## Customize the CLI installation
+
+### Use another model provider
+
+`kagent install` uses OpenAI by default. To use another provider, set that provider's API key variable and pass its name in the `--provider` flag. For the supported providers, see [Configure model providers]({{< link path="setup/model-providers" >}}).
+
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+kagent install --provider Anthropic
+```
+
+### Install a specific release
+
+The install script installs the newest kagent release, and the CLI installs the kagent release of its own version. To install a specific release instead, such as the release that these docs cover, pass `--version` to the script.
+
+```bash
+curl -sL https://kagent.dev/install | bash -s -- --version v{{< reuse "kagent-docs/versions/kagent.md" >}}
+kagent version --client
+```
+
+The script supports macOS and Linux on `amd64` and `arm64`, and Windows on `amd64` from Git Bash or MSYS, where it installs `kagent.exe`.
+
+### Pass Helm values to the kagent chart {#cli-helm-values}
+
+`kagent install` does not take Helm flags of its own. To pass your own values to the kagent chart, list the values files in a CLI configuration file and pass the file with `--config`.
+
+For example, if your cluster uses a DNS domain other than `cluster.local`, set `global.clusterDomain`. The chart builds the URLs of the controller and the built-in `kagent-tool-server` MCP server from this domain, so agents cannot reach either service when the value is wrong. `kagent install` does not detect the domain.
+
+1. Save a Helm values file.
    ```bash
-   kagent install --namespace kagent
+   cat > kagent-values.yaml <<EOF
+   global:
+     clusterDomain: corp.example
+   EOF
    ```
-
-   The command reads your provider API key, installs Agent Substrate into `ate-system`, and deploys PostgreSQL as `kagent-postgresql` in the kagent namespace. It then connects kagent and Agent Substrate to that database with Pod Certificates. The development database runs the stock `postgres` image. That image does not include the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs.
-
-   The installer also sets up the following defaults.
-   * The `kagent-default` WorkerPool, and the `kagent-default`, `codex-default`, and `claude-default` Harnesses that run on it. An Agent in the kagent namespace can set `spec.harnessRef` to one of these Harnesses without you writing your own. `spec.harnessRef` is namespace-local, so an Agent in another namespace still needs its own Harness.
-   * gRPC server reflection on the controller, so that guides that use `grpcurl` can discover the controller API.
-
-   When the command finishes, it prints the next steps.
-
-4. Wait for the controller to roll out.
+2. Save a CLI configuration file that lists the values file. A relative path in `valuesFiles` resolves against the configuration file's own directory.
    ```bash
-   kubectl rollout status deployment/kagent-controller -n kagent --timeout=300s
-   ```
-   Example output:
-   ```console
-   deployment "kagent-controller" successfully rolled out
+   cat > kagent-config.yaml <<EOF
+   install:
+     kagent:
+       valuesFiles: [kagent-values.yaml]
+   EOF
    ```
 
-   For production database requirements, see [Operational considerations]({{< link path="operations/operational-considerations#choose-a-database" >}}).
+   | Field | Description |
+   | --- | --- |
+   | `install.kagent.valuesFiles` | The Helm values files that the installer passes to the kagent chart, in order. The last file wins. |
+   | `install.defaultModelProvider` | Optional. The provider to install with when you omit `--provider`. Defaults to `OpenAI`. |
+   | `install.bundledPostgresImage` | Optional. The image of the development PostgreSQL database that the installer deploys, for both the database container and its TLS reloader. Defaults to `postgres:18-alpine`, pinned by digest. To pull the image from a mirror, such as in an air-gapped cluster, set the full image reference, such as `mirror.example.com/library/postgres:18-alpine`. |
+3. Install kagent with the configuration file.
+   ```bash
+   kagent --config kagent-config.yaml install
+   ```
+
+### What the CLI installs
+
+`kagent install` installs the CRDs, Agent Substrate into `ate-system`, the Agent Substrate PodCertificate controller, and kagent into the `kagent` namespace, in the correct order. It also sets up the following.
+
+* A development PostgreSQL database, `kagent-postgresql` in the kagent namespace. kagent and Agent Substrate connect to it with Pod Certificates. The database runs the stock `postgres` image, which does not include the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs. For production database requirements, see [Operational considerations]({{< link path="operations/operational-considerations#choose-a-database" >}}).
+* The `kagent-default` WorkerPool, and the `kagent-default`, `codex-default`, and `claude-default` Harnesses that run on it. An Agent in the kagent namespace can set `spec.harnessRef` to one of these Harnesses without you writing your own. `spec.harnessRef` is namespace-local, so an Agent in another namespace needs its own Harness.
+* gRPC server reflection on the controller, so that guides that use `grpcurl` can discover the controller API.
+
+To check each component, see [Verify the installation](#verify-the-installation).
 
 ## Install with Helm {#install-with-helm}
 
@@ -405,8 +413,9 @@ Agent Substrate installs as two releases in the `ate-system` namespace. The `sub
 
 Install the kagent control plane into the `kagent` namespace. The controller applies its database migrations when it starts.
 
-1. Store your model provider API key in the Secret that the chart reads by default. You create this Secret, so Helm does not own it, and you rotate the key by updating the Secret.
+1. Store your model provider API key in the Secret that the chart reads by default. You create this Secret, so Helm does not own it, and you rotate the key by updating the Secret. For other providers, see [Configure model providers]({{< link path="setup/model-providers" >}}).
    ```bash
+   export OPENAI_API_KEY="your-api-key-here"
    kubectl create secret generic kagent-openai -n kagent \
      --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY}"
    ```
