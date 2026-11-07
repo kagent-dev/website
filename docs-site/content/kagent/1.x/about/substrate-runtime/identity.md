@@ -57,7 +57,7 @@ config:
         authority: prod-cluster
 ```
 
-The workload sends a ServiceAccount token whose audience is `kagent-invocation` as a bearer token in the `Authorization` header. A workload usually mounts the token as a projected volume. To test from a terminal, create a token with `kubectl`, port-forward the controller's port `8083`, and call the API. The `grpcurl` command relies on gRPC reflection, so your installation must set `config.server.grpcReflection=true`.
+The workload sends a ServiceAccount token whose audience is `kagent-invocation` as a bearer token in the `Authorization` header. A workload usually mounts the token as a projected volume. To test from a terminal, create a token with `kubectl`, port-forward the controller's port `8083`, and call the API. The `grpcurl` command relies on gRPC reflection, which `kagent install` turns on and a Helm installation turns on with `config.server.grpcReflection=true`. Reflection requires the same authentication as the other gRPC calls, and the `-H` flag sends the token on the reflection requests as well as on the call.
 
 ```bash
 kubectl create namespace ci-bots
@@ -181,7 +181,7 @@ actorJwt:
   audiences: [ticket-api, kagent-agent-info]
 ```
 
-The service sends the token that it received as a bearer token, with an empty request. In the following command, `$ACTOR_TOKEN` holds that token. The `grpcurl` command relies on gRPC reflection, so your installation must set `config.server.grpcReflection=true`. The `-rpc-header` flag keeps the token off the reflection requests.
+The service sends the token that it received as a bearer token, with an empty request. In the following command, `$ACTOR_TOKEN` holds that token. The `grpcurl` command relies on gRPC reflection, which `kagent install` turns on and a Helm installation turns on with `config.server.grpcReflection=true`. The `-rpc-header` flag sends the Actor token on the call only, so the reflection requests that grpcurl makes first carry no token. Reflection requires the same authentication as the other user calls. In the default `insecure` mode it needs no credentials. When authentication is on, also pass a user credential with `-reflect-header`, such as `-reflect-header "authorization: Bearer <token>"`.
 
 ```bash
 grpcurl -plaintext -rpc-header "Authorization: Bearer $ACTOR_TOKEN" -d '{}' \

@@ -23,7 +23,7 @@ The MCP server runs on the controller's HTTP port, so a default installation alr
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets a gRPC client discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+1. [Install kagent]({{< link path="setup/installation" >}}). {{< reuse "kagent-docs/snippets/grpcurl-reflection.md" >}}
 
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that the cluster has an {{< gloss "Agent" >}}Agent{{< /gloss >}} to invoke.
 
