@@ -318,13 +318,11 @@ h6 {
    hx:dark:hidden) to show exactly one per theme, but several of those aren't in
    Hextra's prebuilt main.css, so the switch fails and BOTH render (most visibly
    in dark mode). Drive it explicitly off the .dark class, keyed on the SVG src.
-   Scoped to md+ so the existing mobile behavior (no navbar logo) is untouched. */
-@media (min-width: 768px) {
-  .hextra-nav-container img[src*="kagent-logo-light"] { display: block; }
-  .hextra-nav-container img[src*="kagent-logo-dark"]  { display: none; }
-  :where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-light"] { display: none; }
-  :where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-dark"]  { display: block; }
-}
+   Applies at every width: on mobile both logos were rendering side by side. */
+.hextra-nav-container img[src*="kagent-logo-light"] { display: block; }
+.hextra-nav-container img[src*="kagent-logo-dark"]  { display: none; }
+:where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-light"] { display: none; }
+:where(.dark, .dark *) .hextra-nav-container img[src*="kagent-logo-dark"]  { display: block; }
 
 /* ── Mermaid diagram alignment ────────────────────────────────────────────
    Hextra renders every diagram into a full-width <pre class="mermaid"> that
