@@ -180,7 +180,6 @@ The controller applies the database migrations of the new version when it starts
        --db-url "postgresql://<user>:<password>@<host>:5432/kagent" \
        --db-role <owner-role>
      ```
-     <!-- REVIEW: The goto command was verified only as a no-op at 1.0.0-rc1, which ships a single migration. Verify a real schema rollback when a release adds a second migration. -->
    * Restore the database backup that you took in [Prepare to upgrade]({{< link path="operations/upgrade#prepare-to-upgrade" >}}).
 
 ## Collect logs

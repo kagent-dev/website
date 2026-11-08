@@ -9,7 +9,7 @@ The `kagent uninstall` command removes everything that `kagent install` created.
 
 The command removes:
 
-- The `kagent`, `kagent-crds`, `substrate`, `substrate-podcert`, and `substrate-crds` Helm releases
+- The `kagent`, `kagent-crds`, `substrate`, `substrate-atelet`, `substrate-podcert`, and `substrate-crds` Helm releases
 - Every `kagent.dev` and `ate.dev` custom resource definition, and with them every resource of those kinds in every namespace, such as Agents, Harnesses, ModelConfigs, and SandboxTemplates
 - The development PostgreSQL database that `kagent install` deployed, together with its PersistentVolumeClaim and the data on it
 - The `ate-system` and `podcertificate-controller-system` namespaces, and the identity pools and certificate authorities in them
@@ -20,7 +20,7 @@ The command keeps the `kagent` namespace and anything else in it. A database tha
 ## Before you begin
 
 1. Confirm that you have administrative access to the cluster.
-2. Confirm that your kubeconfig points at the cluster that you want to uninstall from. The `kagent uninstall` command does not ask for confirmation, and it acts on the current context.
+2. Confirm that your kubeconfig points at the cluster that you want to uninstall from. The `kagent uninstall` command acts on the current context, and asks for confirmation only before it deletes WorkerPools that `kagent install` did not create.
    ```bash
    kubectl config current-context
    ```
@@ -35,6 +35,8 @@ The command keeps the `kagent` namespace and anything else in it. A database tha
 Uninstall kagent with the kagent CLI. The command waits for each Helm release to finish its removal before it continues.
 
 1. Uninstall kagent. When kagent runs in a namespace other than `kagent`, add the `--namespace` flag with that namespace. If the namespace does not match, the command stops before it deletes anything, and prints the namespace to use.
+
+   A self-managed WorkerPool, one that `kagent install` did not create, runs on the Agent Substrate installation that the command removes. If the cluster has one, the command lists each self-managed WorkerPool and asks `Delete them and continue? [y/N]` before it deletes anything. To stop with nothing deleted, answer `n`. Without a terminal, such as in a continuous integration (CI) job, the command stops with nothing deleted. To delete the WorkerPools without the question, add the `--delete-worker-pools` flag.
    ```bash
    kagent uninstall
    ```

@@ -15,6 +15,8 @@ This example uses [grpcurl](https://github.com/fullstorydev/grpcurl) to show the
 
 The controller serves `lf.a2a.v1.A2AService` on port `8083`, alongside its REST API and its MCP endpoint. The kagent CLI reaches the same port and the same service.
 
+Every A2A call must send the `A2A-Version: 1.0` header, as gRPC metadata or as an HTTP header. Without it, the controller rejects the call with `this version is not supported: requested "0.3", served "1.0"`. The A2A client libraries set the header automatically, but a hand-assembled request such as a `grpcurl` call must set it.
+
 A gRPC caller identifies the Agent in the standard A2A `tenant` field, as `<namespace>/<name>`, and the controller routes the call to that Agent. The same controller serves A2A over HTTP JSON-RPC, where the URL path selects the Agent instead:
 
 | Transport | How a caller selects the Agent |
@@ -58,6 +60,7 @@ An A2A client typically starts by reading the agent card, which tells it what th
 1. Fetch the card for your Agent.
    ```bash
    grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
      -d '{"tenant":"'"$AGENT"'"}' \
      localhost:8083 lf.a2a.v1.A2AService/GetExtendedAgentCard
    ```
@@ -122,6 +125,7 @@ A message part can also contain a file. Put the file's bytes in the part's `raw`
 1. Send a message to the Agent. Omitting a `contextId` starts a new Session.
    ```bash
    grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
      -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","parts":[{"text":"What is 7 times 6? Answer with just the number."}]}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendMessage
    ```
@@ -165,6 +169,7 @@ A message part can also contain a file. Put the file's bytes in the part's `raw`
 1. Send a message on the streaming method.
    ```bash
    grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
      -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","contextId":"'"$SESSION_ID"'","role":"ROLE_USER","parts":[{"text":"Count from 1 to 3."}]}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendStreamingMessage
    ```
@@ -186,6 +191,7 @@ A task outlives the call that created it, so a caller that lost its connection c
 1. Read the task by ID.
    ```bash
    grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
      -d '{"tenant":"'"$AGENT"'","id":"'"$TASK_ID"'"}' \
      localhost:8083 lf.a2a.v1.A2AService/GetTask
    ```
@@ -353,6 +359,7 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
 1. Send a message that requests the extension.
    ```bash
    grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
      -H "A2A-Extensions: https://kagent.dev/extensions/hitl/v1" \
      -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","role":"ROLE_USER","extensions":["https://kagent.dev/extensions/hitl/v1"],"parts":[{"text":"Should I increase the replica count?"}]}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendMessage
@@ -397,6 +404,7 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
 4. Answer on the same task. The response goes in the same metadata key, references the request `id` that it answers, and sets `taskId` so that it answers the paused task rather than starting a new turn.
    ```bash
    grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
      -H "A2A-Extensions: https://kagent.dev/extensions/hitl/v1" \
      -d '{"tenant":"'"$AGENT"'","message":{"messageId":"'"$(uuidgen)"'","taskId":"'"$PAUSED_TASK_ID"'","contextId":"'"$PAUSED_SESSION_ID"'","role":"ROLE_USER","extensions":["https://kagent.dev/extensions/hitl/v1"],"parts":[{"text":"staging"}],"metadata":{"https://kagent.dev/extensions/hitl/v1":{"type":"ask_user_response","id":"'"$REQUEST_ID"'","answers":[{"answer":["staging"]}]}}}}' \
      localhost:8083 lf.a2a.v1.A2AService/SendMessage

@@ -4,7 +4,7 @@ description: Review the reference docs for the kmcp CLI commands.
 weight: 1
 ---
 
-Review the kmcp CLI commands and learn how to use them effectively.
+Review the commands and flags of the kmcp CLI.
 
 - [`kmcp add-tool`](/docs/kmcp/reference/cli/kmcp-add-tool/) - Add a new MCP tool to your project
 - [`kmcp build`](/docs/kmcp/reference/cli/kmcp-build/) - Build MCP server as a Docker image

@@ -12,11 +12,17 @@ resource created from them, such as agents and model configs.
 A database that kagent install did not deploy, such as one used with
 --skip-database-setup, stays. The kagent namespace stays.
 
+Self-managed Substrate WorkerPools, ones kagent install did not create, run on
+the Substrate that uninstall removes. Uninstall lists them and asks before
+deleting them. Without a terminal it stops before deleting anything unless
+--delete-worker-pools is set.
+
 ```bash
 kagent uninstall [flags]
 ```
 
 **Flags:**
+- `--delete-worker-pools` - Delete self-managed Substrate WorkerPools without asking
 - `-h, --help` - help for uninstall
 
 **Global Flags:**

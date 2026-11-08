@@ -62,7 +62,7 @@ The workload sends a ServiceAccount token whose audience is `kagent-invocation` 
 ```bash
 kubectl create namespace ci-bots
 kubectl create serviceaccount scheduler -n ci-bots
-kubectl port-forward -n kagent deployment/kagent-controller 8083:8083 &
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083 &
 TOKEN=$(kubectl create token scheduler -n ci-bots --audience kagent-invocation)
 grpcurl -plaintext -H "Authorization: Bearer $TOKEN" -d '{}' \
   localhost:8083 kagent.api.v1.SystemService/GetCurrentUser
@@ -92,10 +92,10 @@ When an agent forwards the caller's token to a model or MCP server that sets `to
 
 ### Resources that the API writes
 
-kagent's gRPC API also writes Harness and AgentTemplate resources. The AgentTemplate service creates, updates, and deletes AgentTemplates, and the Harness service creates and deletes Harnesses, both through the kagent controller. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call either service. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The controller's authenticator resolves the caller instead, as described in [Controller authentication modes](#controller-authentication-modes).
+kagent's gRPC API also writes Harness, AgentTemplate, and EgressPolicy resources. The AgentTemplate service creates, updates, and deletes AgentTemplates, the Harness service creates and deletes Harnesses, and the EgressPolicy service creates, updates, and deletes EgressPolicies, all through the kagent controller. The **Policies** page of the kagent UI calls the EgressPolicy service. The `kagent apply -f` command calls the AgentTemplate service, and any client that reaches the gRPC endpoint can call each of these services. The controller writes these resources with its own service account rather than the caller's, so Kubernetes RBAC never evaluates the caller. The controller's authenticator resolves the caller instead, as described in [Controller authentication modes](#controller-authentication-modes).
 
 > [!WARNING]
-> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's Harness and AgentTemplate, regardless of their Kubernetes permissions. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
+> By default, kagent neither authenticates nor authorizes this path. The `insecure` authenticator admits every request, and the authorizer it installs permits every check. Any caller that reaches the gRPC endpoint can author an agent's Harness and AgentTemplate, and its EgressPolicies, regardless of their Kubernetes permissions. Do not expose port `8083` outside the cluster. For the identity that this mode gives an anonymous caller, and for the mode that changes it, see [Controller authentication modes](#controller-authentication-modes).
 
 ### Creator ownership
 

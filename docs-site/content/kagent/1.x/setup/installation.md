@@ -148,7 +148,7 @@ The kagent and Agent Substrate custom resource definitions (CRDs) install from t
 2. Install the Agent Substrate CRDs.
    ```bash
    helm upgrade --install substrate-crds \
-     oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-crds \
      --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
      --namespace ate-system --create-namespace --wait
    ```
@@ -229,7 +229,7 @@ Agent Substrate authenticates its components with mutual Transport Layer Securit
 3. Install the Agent Substrate PodCertificate controller, which signs the certificates that components present to each other.
    ```bash
    helm upgrade --install substrate-podcert \
-     oci://ghcr.io/kagent-dev/substrate/helm/substrate-podcert \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-podcert \
      --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
      --namespace podcertificate-controller-system --create-namespace \
      --wait --timeout 5m
@@ -307,10 +307,48 @@ kagent and Agent Substrate each connect with an owner login, which applies migra
 
 ### Install Agent Substrate
 
-The `substrate` release installs the Agent Substrate control plane and data plane. The release name must be `substrate`, and the namespace must be `ate-system`.
+Agent Substrate installs as two releases in the `ate-system` namespace. The `substrate-atelet` release runs `atelet`, the node agent that starts the Workers on each node. The `substrate` release runs the control plane and the rest of the data plane. The releases must be named `substrate-atelet` and `substrate`.
 
-1. Install Agent Substrate. The command sets the following values.
-   * `preview` turns on the `PerTemplateSnapshotLocation` gate, so that Agent Substrate stores the snapshots of each agent at the location that its Harness names.
+1. Save the object store values for `atelet`. The `substrate-atelet` release cannot read the settings of the bundled object store from the `substrate` release, so you set them.
+   1. Create a Secret with the default `rustfs.accessKey` and `rustfs.secretKey` values of the `substrate` chart.
+      ```bash
+      kubectl create secret generic kagent-rustfs-credentials -n ate-system \
+        --from-literal=AWS_ACCESS_KEY_ID=rustfsadmin \
+        --from-literal=AWS_SECRET_ACCESS_KEY=rustfsadmin
+      ```
+   2. Save the values that point `atelet` to the bundled object store and the Secret. To use your own bucket instead, see [Move snapshots to an external bucket]({{< link path="operations/tune-agent-substrate#move-snapshots-to-an-external-bucket" >}}).
+      ```bash
+      cat > substrate-atelet-values.yaml <<EOF
+      preview:
+        - PerTemplateSnapshotLocation
+        - GoldenEgressPolicy
+      objectStore:
+        backend: s3
+        endpoint: http://rustfs.ate-system.svc:9000
+        region: us-east-1
+        pathStyle: true
+        credentialsSecret: kagent-rustfs-credentials
+      EOF
+      ```
+
+2. Install `atelet`, and wait for the rollout to finish. The `preview` value must match the `preview` value of the `substrate` release. Do not continue until the output reports that the `atelet` DaemonSet rolled out.
+   ```bash
+   helm upgrade --install substrate-atelet \
+     {{< reuse "kagent-docs/snippets/helm-substrate-path.md" >}}/substrate-atelet \
+     --version {{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}} \
+     --namespace ate-system \
+     --wait --timeout 10m \
+     -f substrate-atelet-values.yaml
+   kubectl rollout status daemonset/atelet -n ate-system --timeout=5m
+   ```
+   Example output:
+   ```console
+   daemon set "atelet" successfully rolled out
+   ```
+
+3. Install the Agent Substrate control plane and data plane. The command sets the following values.
+   * `atelet.enabled: false` leaves `atelet` out of the `substrate` release, because the `substrate-atelet` release runs it.
+   * `preview` turns on the Agent Substrate feature gates that kagent needs. `PerTemplateSnapshotLocation` makes Agent Substrate store the snapshots of each agent at the location that its Harness names. `GoldenEgressPolicy` lets kagent give the Actor that builds an agent's golden snapshot its own egress policy, so that the Actor can fetch its configuration from the kagent API.
    * `ateApi.authorization.bootstrapOwners` grants owner access to the Agent Substrate API to the kagent controller and to the `ate-client` ServiceAccount. The API server authorizes every call, and without the controller entry every Agent reports `RuntimePreparationFailed (PermissionDenied)`.
    * `atenetRouter.ingressAllowedSPIFFEIDs` lets the kagent controller send traffic to agents through the Agent Substrate router.
    * `credentialProvider.namespacePolicies` lets the `kagent` atespace read Secrets in the `kagent` namespace, where the agents and the Secrets that they read both live. The provider denies every request until a policy allows it.
@@ -321,8 +359,11 @@ The `substrate` release installs the Agent Substrate control plane and data plan
      --namespace ate-system \
      --wait --timeout 10m \
      -f - <<EOF
+   atelet:
+     enabled: false
    preview:
      - PerTemplateSnapshotLocation
+     - GoldenEgressPolicy
    ateApi:
      authorization:
        bootstrapOwners:
@@ -338,7 +379,7 @@ The `substrate` release installs the Agent Substrate control plane and data plan
    EOF
    ```
 
-2. Verify that Agent Substrate is running.
+4. Verify that Agent Substrate is running.
    ```bash
    kubectl get pods -n ate-system
    ```
@@ -387,7 +428,7 @@ Install the kagent control plane into the `kagent` namespace. The controller app
        enabled: true
    substrateWorkerPool:
      create: true
-     workerImage: "ghcr.io/kagent-dev/substrate/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}"
+     workerImage: "{{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}"
    EOF
    ```
 
