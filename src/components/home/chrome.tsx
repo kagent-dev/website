@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MobileMenu } from "./mobile-menu";
 
 /* The homepage's own header, footer and fonts, shared with the pages that use its look. */
 
@@ -12,24 +13,31 @@ export const START = `${DOCS}/get-started/your-first-agent`;
 export const GITHUB = "https://github.com/kagent-dev/kagent";
 export const SUBSTRATE = "https://ate.dev/";
 
+const NAV = [
+  { href: DOCS, label: "Docs" },
+  { href: "/blog", label: "Blog" },
+  { href: "/#agents", label: "Agents" },
+  { href: "/community", label: "Community" },
+  { href: "/substrate-calculator", label: "Substrate Calculator" },
+  { href: "/enterprise", label: "Enterprise" },
+];
+
 export function HomeHeader() {
   return (
-    <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
       <Link href="/" className="flex items-center gap-3 text-lg font-semibold">
         <Image src="/images/kagent-logo-mark.png" alt="" width={36} height={36} />
         kagent
       </Link>
       <nav className="hidden gap-8 text-sm text-white/80 md:flex">
-        <Link href={DOCS} className="hover:text-white">Docs</Link>
-        <Link href="/blog" className="hover:text-white">Blog</Link>
-        <Link href="/#agents" className="hover:text-white">Agents</Link>
-        <Link href="/community" className="hover:text-white">Community</Link>
-        <Link href="/substrate-calculator" className="hover:text-white">Substrate Calculator</Link>
-        <Link href="/enterprise" className="hover:text-white">Enterprise</Link>
+        {NAV.map((l) => (
+          <Link key={l.href} href={l.href} className="hover:text-white">{l.label}</Link>
+        ))}
       </nav>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <a href={GITHUB} className="hidden rounded-full bg-ks-card2 px-4 py-2 text-sm sm:block">GitHub</a>
         <a href={START} className="rounded-full bg-white px-4 py-2 text-sm text-black">Get started</a>
+        <MobileMenu links={[...NAV, { href: GITHUB, label: "GitHub", external: true }]} />
       </div>
     </header>
   );
