@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Anthropic Self Managed Sandboxes with Kagent",
+  title: "Anthropic Self-Hosted Sandboxes with Kagent",
   publishDate: "2026-11-07T00:00:00Z",
   description:
     "Kagent lets you efficiently run Anthropic self-hosted sandboxes on your own infrastructure.",
@@ -7,64 +7,64 @@ export const metadata = {
   authorIds: ["stevenjin8"],
 };
 
+# Anthropic Self-Hosted Sandboxes with Kagent
+
 <Aside type="warning">
-  This post uses a pre-release version of Kagent and an experimental feature. The API will likely change in the future.
+  This post uses a pre-release version with commit `4de694355985` of Kagent and an experimental feature.
+  The API will likely change in the future.
 </Aside>
 
-In May 2026, [Anthropic released self-hosted sandboxes](https://claude.com/resources/articles/claude-managed-agents-updates) allowing your Anthropic agents to provision sandboxes in your own infrastructure.
-This blog post shows you how Kagent 1.0's Agent Substrate efficiently runs Anthropic self-hosted sandboxes on your infrastructure with dynamic suspends and resumes.
+In May 2026, Anthropic released [self-hosted sandboxes](https://claude.com/resources/articles/claude-managed-agents-updates), allowing your Claude agents to provision sandboxes and execute code in your infrastructure.
+Although this blog post focuses on Anthropic integration, we plan on providing similar integrations for other managed agent platforms.
+Kagent aims to be a complete agentic infrastructure solution on your Kubernetes cluster, regardless of your provider or harness.
+
+This post shows you how to use Kagent to run Anthropic self-hosted sandboxes with strong egress controls and automatic suspension/resumption.
 
 ## Prerequisites
 
-You will need to install the [`ant` CLI](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/quickstart) and login with
+You will need Kind, the kagent CLI, and the Anthropic `ant` CLI to follow these instructions.
+
+Install the kagent CLI with
+
+```
+curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v1.0.0-rc3
+kagent version
+```
+
+See the [Anthropic docs](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/quickstart) to install the Anthropic CLI and log in with
 
 ```
 ant auth login # Or export ANTHROPIC_API_KEY
 ```
 
-You will also need to create an Environment on [Claude Platform](https://platform.claude.com/dashboard).
-After that, set the following environment variables
+Next, create a [self-hosted environment](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes#run-your-first-session) on [Claude Platform](https://platform.claude.com/environments), then generate its environment key.
 
 ```
 ANTHROPIC_ENVIRONMENT_ID=env_xxx
 ANTHROPIC_ENVIRONMENT_KEY=sk-ant-oatxxx
 ```
 
-We will use the following commit of Kagent, which is in the `main` branch.
+## Setup and Installation
+
+Provision a [Kind](https://kind.sigs.k8s.io/) cluster as follows
 
 ```bash
-COMMIT=4de69435
+curl -fsSL https://raw.githubusercontent.com/kagent-dev/kagent/4de694355985e9d06dc92ad1adfa64d96d32f19e/scripts/kind/kind-config.yaml |
+  kind create cluster --name kagent \
+    --image kindest/node:v1.35.0 --config -
 ```
 
-## Set Up and Installation
-
-Since we are using an experimental version of Kagent, you will need to clone the Kagent repository
-
-```bash
-git clone git@github.com:kagent-dev/kagent.git
-cd kagent
-git checkout ${COMMIT}
-```
-
-Next, provision a [Kind](https://kind.sigs.k8s.io/) cluster and build kagent with
-
-```bash
-make create-kind-cluster
-make build # adjust DOCKER_REGISTRY if not using kind
-make helm-dev
-```
-
-Then, create the configuration files for Kagent
+Next, create the configuration files for our Kagent install.
 
 ```bash
 VALUES_DIR=$(mktemp -d)
 
 cat > ${VALUES_DIR}/kagent-values.yaml <<EOF
-registry: localhost:5001
-tag: v1.0.0-rc3-8-g${COMMIT}
+registry: ghcr.io
+tag: 0.0.0-alpha.g4de694355985
 config:
   sandboxes:
-    guestImage: localhost:5001/kagent-dev/kagent/sandbox-guest@sha256:2c11e6c9551d00de442d13cdb1953ee07cfc68aa2630284d34ef5269401674bd
+    guestImage: ghcr.io/kagent-dev/kagent/sandbox-guest@sha256:94b1f9e216eee8778797d54b9d6e2b17b74089157d708097577b1479e4d92bd0
 
 controller:
   image:
@@ -80,40 +80,28 @@ controller:
       value: kagent
     - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAME
       value: anthropic-self-hosted-sandbox
-    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TTL
-      value: 12h
-EOF
-
-# Let Substrate pull images from the Kind registry.
-cat > ${VALUES_DIR}/atelet-values.yaml <<EOF
-atelet:
-  extraArgs:
-    - --localhost-registry-replacement=kind-registry:5000
 EOF
 
 cat > ${VALUES_DIR}/config.yaml <<EOF
 install:
   kagent:
-    repository: $(pwd)/helm/
-    version: v1.0.0-rc3-8-g${COMMIT}
+    repository: oci://ghcr.io/kagent-dev/kagent/helm/
+    version: 0.0.0-alpha.g4de694355985
     valuesFiles:
       - kagent-values.yaml
-  atelet:
-    valuesFiles:
-      - atelet-values.yaml
 EOF
 ```
 
-Now, build the Kagent CLI and install Kagent on your cluster. The CLI refuses to install a development build, so use `make` to stamp it with a version. The `repository` and `version` settings above make the CLI install the chart you just built, rather than a released one.
+and install Kagent
 
 ```bash
-make build-cli-local
-OPENAI_API_KEY=unset ./go/core/bin/kagent-local --config ${VALUES_DIR}/config.yaml install
+# This can take a while
+OPENAI_API_KEY=unset kagent --config "${VALUES_DIR}/config.yaml" install
 ```
 
-and create the `anthropic-self-hosted-sandbox` referenced above
+Next, create the [`SandboxTemplate`](/docs/kagent/1.x/reference/api-ref#sandboxtemplate) referenced above and its [`EgressPolicy`](/docs/kagent/1.x/reference/api-ref#egresspolicy).
 
-```
+```bash
 kubectl apply -f - <<EOF
 apiVersion: api.kagent.dev/v1alpha3
 kind: EgressPolicy
@@ -122,7 +110,6 @@ metadata:
   namespace: kagent
 spec:
   destinations:
-    - origin: https://api.anthropic.com
     - origin: https://*.anthropic.com
 ---
 apiVersion: api.kagent.dev/v1alpha3
@@ -132,9 +119,8 @@ metadata:
   namespace: kagent
 spec:
   workload:
-    # Local sandbox-guest build containing ant v2.5.0.
-    image: localhost:5001/kagent-dev/kagent/sandbox-guest@sha256:2c11e6c9551d00de442d13cdb1953ee07cfc68aa2630284d34ef5269401674bd
-    # FIXME
+    # Nightly sandbox-guest image containing ant v2.5.0.
+    image: ghcr.io/kagent-dev/kagent/sandbox-guest@sha256:94b1f9e216eee8778797d54b9d6e2b17b74089157d708097577b1479e4d92bd0
   substrate:
     workerPoolRef:
       name: kagent-default
@@ -143,14 +129,22 @@ spec:
   egressPolicyRefs:
     - name: anthropic-managed-agents
 EOF
+kubectl wait -n kagent --for=condition=Ready \
+  sandboxtemplate/anthropic-self-hosted-sandbox --timeout=15m
+```
+
+In a separate terminal, run
+
+```
+kubectl port-forward -n kagent service/kagent-controller 8083:8083
 ```
 
 ## Kagent in action
 
-Create your agent by running
+Create an [Anthropic agent](https://platform.claude.com/docs/en/managed-agents/agent-setup).
 
 ```bash
-AGENT_ID=$(ant beta:agents create \
+AGENT_ID=$(ant --format json beta:agents create \
   --name "kagent-sandbox-agent" \
   --model claude-haiku-5-5 \
   --system "You are a helpful coding agent that is testing a sandbox implementation. Your working directory is /data/workspace" \
@@ -158,66 +152,69 @@ AGENT_ID=$(ant beta:agents create \
   jq -r .id)
 ```
 
-and create a session for it in your environment
+Then, create a [session](https://platform.claude.com/docs/en/managed-agents/sessions) for the agent in your environment:
 
 ```bash
-SESSION_ID=$(ant beta:sessions create \
+SESSION_ID=$(ant --format json beta:sessions create \
   --agent "$AGENT_ID" \
   --environment-id "$ANTHROPIC_ENVIRONMENT_ID" | \
   jq -r .id)
 ```
 
-In one terminal, open an interactive chat with it and ask it to run a command
+Open an interactive chat with the agent and ask it to create `/data/workspace/helloworld.txt` containing `Hello world!`:
 
 ```bash
 ant beta:sessions connect "$SESSION_ID"
 ```
 
 ```
+ ● User
+ │ Make a file named helloworld.txt with the contents "Hello world!"
+
  ● kagent-sandbox-agent
  │ Thought for 0s
  │ ▸ ✎ write  /data/workspace/helloworld.txt                            0.9s
 
- │ I created /data/workspace/helloworld.txt containing Hello world!. The write
- │ reported 12 bytes, which matches the text with no trailing newline.
+ │ I created /data/workspace/helloworld.txt containing Hello world!.
 ───────────────────────────────────────────────────────────────────────────────
  >
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-We can see that a sandbox has been created:
+We can see that Kagent provisioned a sandbox in our cluster.
 
-user=$(printf '%s' 'kagent:anthropic-self-hosted-sandboxes' | base64 -w0 | tr -d '=')
-user=${token}.$(printf '%s' "$ANTHROPIC_ENVIRONMENT_ID" | base64 -w0 | tr -d '=')
+```bash
+USER_ID=$(printf '%s' 'kagent:anthropic-self-hosted-sandboxes' | base64 | tr '+/' '-_' | tr -d '=\n')
+USER_ID="${USER_ID}.$(printf '%s' "$ANTHROPIC_ENVIRONMENT_ID" | base64 | tr '+/' '-_' | tr -d '=\n')"
+kagent sandbox list --user-id "$USER_ID"
+```
 
 ```
-% kagent sandbox list --user-id $token
 ID            TEMPLATE                              STATE                OPERATION               EXPIRES               FAILURE
 01a1b853-xxx  kagent/anthropic-self-hosted-sandbox  RUNTIME_STATE_READY  RUNTIME_OPERATION_NONE  2026-11-08T11:24:07Z
 ```
 
-After waiting for five minutes, we see that the sandbox is autosuspends and consuems no resources.
+After about five minutes without work, the sandbox automatically suspends and stops consuming CPU and memory.
 
 ```
-$ kagent sandbox list --user-id $token
+$ kagent sandbox list --user-id "$USER_ID"
 ID            TEMPLATE                              STATE                    OPERATION               EXPIRES               FAILURE
 01a1b853-xxx  kagent/anthropic-self-hosted-sandbox  RUNTIME_STATE_SUSPENDED  RUNTIME_OPERATION_NONE  2026-11-08T11:24:07Z
 ```
 
-More important, we see that the agent's sandbox automatically resumes and and its filesystem persists!
+When the agent needs the sandbox again, it automatically resumes with its filesystem intact.
 
 ```
  ● User
- │ make a file called helloworld.txt with the contents "Hello world!"
+ │ Make a file named helloworld.txt with the contents "Hello world!"
 
  ● kagent-sandbox-agent
  │ Thought for 0s
  │ ▸ ✎ write  /data/workspace/helloworld.txt                            0.9s
 
- │ I created /data/workspace/helloworld.txt containing Hello world!. The write
- │ reported 12 bytes, which matches the text with no trailing newline.
+ │ I created /data/workspace/helloworld.txt containing Hello world!.
 
- ╌╌ Session idle · 8m 53s ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ ╌╌ Session idle · 5m 01s ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
 
  ● User
  │ What are the contents of /data/workspace/helloworld.txt?
@@ -231,7 +228,7 @@ More important, we see that the agent's sandbox automatically resumes and and it
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-Further, outbound network access is disabled by default.
+By default, all outbound network access is denied
 
 ```
  ● User
@@ -251,11 +248,12 @@ Further, outbound network access is disabled by default.
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-You can have dynamic fine grained control over which websites your agent can access with Egress Policies.
-Further, Egress Policies allow you to inject credentials into your agent's requests without the credential ever entering the sandbox!
+You can dynamically control which websites your agent can access using [Egress Policies](/docs/kagent/1.x/reference/api-ref#egresspolicy).
+These policies also let you inject credentials into your agent's outbound requests without placing those credentials in the sandbox.
 
 ## What's next
 
-We are excited to keep pushing the capabilities of the Sandbox API and tighter integration with Anthropic self hosted agents.
-We plan on making a more expressive API, so operators have fine-grained controls over which which agents have access to which sandboxes.
-Further, we also plan on implementing more intelligent suspension and resumptions so you can pack even more sandboxes on your cluster!
+We are excited to expand the Sandbox API and deepen its integration with Anthropic self-hosted sandboxes.
+We plan to make the API more expressive so operators can control which agents get which `SandboxTemplate`.
+We also plan to improve suspension and resumption so you can run more sandboxes on your cluster.
+Finally, we hope to release integrations for other managed agent platforms!

@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'anthropic-self-managed-sandboxes',
+        publishDate: '2026-11-07',
+        title: 'Anthropic Self-Hosted Sandboxes with Kagent',
+        description: 'Kagent lets you efficiently run Anthropic self-hosted sandboxes on your own infrastructure.',
+        authorId: 'stevenjin8',
+    },
+    {
         slug: 'agent-sandboxes-four-axes',
         publishDate: '2026-10-27',
         title: 'Not All Agent Sandboxes Are Created Equally',
