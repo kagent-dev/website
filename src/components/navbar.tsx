@@ -34,6 +34,7 @@ const marketingLinks = [
   { href: "/tools", label: "Tools" },
   { href: "/agents", label: "Agents" },
   { href: "/community", label: "Community" },
+  { href: "/substrate-calculator", label: "Calculator" },
   { href: "/enterprise", label: "Enterprise" },
 ];
 

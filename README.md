@@ -15,6 +15,8 @@
 
 **kagent** is a Kubernetes native framework for building AI agents. Kubernetes is the most popular orchestration platform for running workloads, and **kagent** makes it easy to build, deploy and manage AI agents in kubernetes. The **kagent** framework is designed to be easy to understand and use, and to provide a flexible and powerful way to build and manage AI agents.
 
+kagent runs agents on [Agent Substrate](https://ate.dev/), a Kubernetes-native agent runtime: each agent gets its own sandbox, is suspended when idle, and resumes in as little as 150ms. Both are CNCF Sandbox projects. The [Agent Substrate calculator](https://kagent.dev/substrate-calculator) shows wake-up time and resource needs for your agents.
+
 ## Local development
 
 For instructions on how to run everything locally, see the [DEVELOPMENT.md](DEVELOPMENT.md) file.
