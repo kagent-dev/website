@@ -9,7 +9,7 @@ import SiteChrome from "@/components/site-chrome";
 import { GoogleTagManager } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
-  title: "Build, secure, and manage agents at scale on Agent Substrate",
+  title: "kagent | Secure platform for managing AI agents on Kubernetes",
   description: "kagent is an open-source platform for deploying, managing and governing AI agents on Kubernetes. Agents run on Agent Substrate: sandboxed, suspended when idle, and resumed in as little as 150ms.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kagent.dev"),
 };
