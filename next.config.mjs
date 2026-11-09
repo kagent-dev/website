@@ -36,11 +36,27 @@ const nextConfig = {
         destination: '/docs/kagent/0.x/observability/tracing',
         permanent: true,
       },
+      // At 1.0.0 the 1.x tree was renamed latest/ (and copied to main/), but
+      // 1.x URLs were already published during the alphas and release
+      // candidates. latest/ keeps the 1.x paths one-for-one, so the rest of the
+      // path carries over unchanged. Keep this above the catch-all, which no
+      // longer exempts 1.x.
+      {
+        source: '/docs/kagent/1.x/:path*',
+        destination: '/docs/kagent/latest/:path*',
+        permanent: true,
+      },
       // The kagent docs became versioned and every pre-1.0 page moved under
       // 0.x/, so all 106 published URLs changed. The negative lookahead
       // exempts paths that already carry a version segment: without it
-      // /docs/kagent/0.x/... would match and redirect onto itself forever.
-      // /docs/kagent does not match and stays the version picker.
+      // /docs/kagent/0.x/... would match and redirect onto itself forever, and
+      // main/ and latest/ would be sent into 0.x. /docs/kagent does not match
+      // and stays the version picker.
+      //
+      // The destination stays 0.x after 1.0. Every unversioned URL was a 0.x
+      // page, and the 1.x information architecture does not match it
+      // path-for-path, so retargeting would land readers on 404s. The same
+      // holds for the two redirects above.
       //
       // `+` on both sides is required for paths deeper than one segment. With a
       // plain `:path`, `next dev` redirects them fine, but OpenNext (the
@@ -48,7 +64,7 @@ const nextConfig = {
       // per-segment validation and throws on the slash in
       // "supported-providers/byo-openai", so the page returns a 500.
       {
-        source: '/docs/kagent/:path((?!0\\.x(?:/|$)|1\\.x(?:/|$)).+)+',
+        source: '/docs/kagent/:path((?!(?:0\\.x|main|latest)(?:/|$)).+)+',
         destination: '/docs/kagent/0.x/:path+',
         permanent: true,
       },

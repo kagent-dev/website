@@ -1,0 +1,39 @@
+---
+title: kagent agent invoke
+description: Invoke a Session.
+weight: 30
+---
+
+Invoke an existing Session through the A2A API.
+
+```bash
+kagent agent invoke [flags]
+```
+
+**Flags:**
+- `-f, --file string` - Read task text from a file or - for stdin
+- `-h, --help` - help for invoke
+- `--push-id string` - Callback ID (generated when omitted; requires --push-url)
+- `--push-url string` - Register a callback before task dispatch; return the task immediately
+- `--session string` - Session ID
+- `-S, --stream` - Stream the response
+- `-t, --task string` - Task text
+
+**Global Flags:**
+- `--api-url string` - KAgent control-plane API URL (default "http://localhost:8083")
+- `--ca-file string` - CA certificate file for KAgent endpoints
+- `--config string` - Configuration file (default: user config directory/kagent/config.yaml)
+- `--gateway-url string` - KAgent A2A and MCP gateway URL (default "http://localhost:8083")
+- `--log-level string` - Log level: debug, info, warn, error (default "info")
+- `-n, --namespace string` - Namespace (default "kagent")
+- `-o, --output-format string` - Output format (default "table")
+- `--server-name string` - TLS server name for KAgent endpoints
+- `--timeout duration` - Timeout (default 5m0s)
+- `--user-id string` - Caller identity used to select the server-side data partition (default "admin@kagent.dev")
+- `-v, --verbose` - Verbose output
+
+## Example
+
+```bash
+kagent agent invoke --session 8bd650a8-9775-488f-8bc1-0d52bf7bdcab --task "Get all the pods"
+```

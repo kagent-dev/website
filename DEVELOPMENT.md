@@ -68,7 +68,7 @@ To preview the docs alone at http://localhost:1313/docs/, use one of these comma
 | Command | Builds |
 |---|---|
 | `make serve-docs` | Every docs version in `docs-site/content/`. |
-| `make serve-docs VERSION=<linkVersion>` | Only one kagent version, such as `VERSION=1.x` or `VERSION=latest`, for a faster preview. kmcp always builds. Links into other versions do not resolve locally. |
+| `make serve-docs VERSION=<linkVersion>` | Only one kagent version, such as `VERSION=main` or `VERSION=latest`, for a faster preview. kmcp always builds. Links into other versions do not resolve locally. |
 | `make serve-docs NO_SEARCH=1` | Same as `make serve-docs`, without the search index. The search box does nothing, but the build is faster. Combine with `VERSION=`. |
 
 To preview the docs and marketing site together the way they deploy (so

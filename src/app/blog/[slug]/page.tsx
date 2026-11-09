@@ -56,7 +56,7 @@ export default async function Page({
         </div>
         <div className="flex flex-col lg:flex-row lg:space-x-8">
             <div className="lg:w-3/4">
-                <article className="prose lg:prose-xl max-w-none">
+                <article className="prose prose-invert lg:prose-xl max-w-none">
                     <Post />
                 </article>
             </div>

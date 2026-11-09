@@ -8,10 +8,10 @@
        kagent's baseURL is https://kagent.dev/docs/, so every RelPermalink
        starts with a "/docs/" segment that comes from the baseURL PATH, not from
        a content directory — content/kagent/1.x/... is served at
-       /docs/kagent/1.x/.... `site.GetPage` resolves paths relative to
+       /docs/kagent/latest/.... `site.GetPage` resolves paths relative to
        contentDir, so it never matches a path carrying that prefix:
 
-         site.GetPage "/docs/kagent/1.x/observability/tracing"  -> nil
+         site.GetPage "/docs/kagent/latest/observability/tracing"  -> nil
          site.GetPage "/kagent/1.x/observability/tracing"       -> the page
 
        Upstream's `lookupPath` comment calls the prefix "genuinely part of the
@@ -25,9 +25,9 @@
        Fix: strip the site's own home prefix before the GetPage lookup, and
        nothing else. Every other line matches upstream, including the
        duplicates-only behavior — a non-latest page with no equivalent in the
-       latest version is left indexable on purpose. `latest` sits on the 0.x
-       entry while 1.0 is in beta, so today that spares every 1.x page the 0.x
-       tree has no counterpart for.
+       latest version is left indexable on purpose. `latest` sits on the 1.0.x
+       entry, so a main or 0.x page is noindexed only where the same path also
+       exists under latest/.
 
        Like upstream, this RETURNS a directive string ("noindex, follow" or "")
        and emits no markup: the module's _partials/head.html folds the result
@@ -42,10 +42,10 @@
 {{- $directive := "" -}}
 {{- $root := partial "utils/version-root.html" . -}}
 {{- with partial "utils/resolve-section-versions.html" $root.section -}}
-  {{- /* The current version's URL segment. `latest = true` is the only signal
-         available on this site; the upstream fallback is a `linkVersion` of
-         literally "latest", which kagent does not use. Exactly one entry may
-         carry the flag — on both, or on neither, this partial does nothing. */ -}}
+  {{- /* The current version's URL segment. The 1.0.x entry carries both
+         signals, `latest = true` and a `linkVersion` of literally "latest",
+         and both resolve to the same segment. Exactly one entry may carry the
+         flag — on two, or on none, this partial does nothing. */ -}}
   {{- $latestSeg := "" -}}
   {{- range . -}}{{ if eq (.latest | default false) true }}{{ $latestSeg = .linkVersion | default .version }}{{ end }}{{- end -}}
   {{- if not $latestSeg -}}

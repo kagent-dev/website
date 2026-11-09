@@ -59,7 +59,7 @@ export default defineConfig({
    * and dark are two real captures and the guides can carry a theme-aware pair.
    *
    * Version is not a baseline axis here, which is the part worth not reversing. Only the
-   * 1.x docs use these captures: the 0.x tree is frozen, and it references images as raw
+   * main and latest docs use these captures: the 0.x tree is frozen, and it references images as raw
    * markdown against `static/images/`, never through the `reuse-image` shortcodes this
    * harness publishes for. So there is nothing for a second version project to keep
    * apart, and no DOC_VERSION knob — the publish destination is written out per image in

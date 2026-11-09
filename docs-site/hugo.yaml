@@ -71,7 +71,7 @@ markup:
 enableInlineShortcodes: true
 
 # kmcp is registered under params.sections to scope the version dropdown (so
-# kagent's 0.x/1.x never appear on kmcp pages) and to put both doc sets in the
+# kagent's version segments never appear on kmcp pages) and to put both doc sets in the
 # navbar section selector. It nests no version tree of its own, which is the
 # shape docs-theme-extras warns about on every build. That registration is
 # deliberate here, and the module documents allowlisting the warning as the way
@@ -129,82 +129,75 @@ params:
   # Tagging is what keeps this ONE list rather than two. Before v0.2.2 a section
   # could carry its own `sections.<x>.versions`, and everything that reads
   # site.Params.versions directly was blind to it: the `version` shortcode (so
-  # every {{< version include-if="1.x" >}} inside assets/kagent-docs/versions/*.md
+  # every {{< version include-if="latest" >}} inside assets/kagent-docs/versions/*.md
   # rendered EMPTY, blanking the version table on reference/versions.md with no
   # error), flexsearch's visibleVersions, the version banner, and the noindex
   # partial. A clean build with blank version numbers is the failure mode this
   # single list prevents.
   #
-  # 1.x documents the kagent 1.0 alpha, written against the v1alpha3/Agent
-  # Substrate API. 0.x is the frozen pre-1.0 set (moved verbatim from the former
-  # flat content/kagent/ tree) and stays the current supported release while 1.0
-  # is in alpha.
+  # latest documents the current kagent release, written against the
+  # v1alpha3/Agent Substrate API, and main documents the next release while it is
+  # in development. Both were the single 1.x tree until 1.0.0 was cut. 0.x is the
+  # frozen pre-1.0 set (moved verbatim from the former flat content/kagent/ tree)
+  # and stays published for 0.10.x installations.
   #
   # Declaring versions at all moves section resolution off the theme's
   # version-less positional path (utils/section-segment.html condition (c)) and
   # onto the versioned path, where a section is recognized only directly above a
   # version tree — condition (a) — or as its own landing page — condition (b).
-  # kagent satisfies (a): /docs/kagent/<0.x|1.x>/…. kmcp has no version tree, so
+  # kagent satisfies (a): /docs/kagent/<main|latest|0.x>/…. kmcp has no version tree, so
   # it satisfies (a) nowhere and (b) only on its own landing page, /docs/kmcp/.
   # Every kmcp page below that resolves to no section and falls back to a left
   # nav rooted at site.Home — which is why layouts/_partials/sidebar.html carries
   # a local override. Verify a kmcp sub-page's sidebar after any change here.
   versions:
-    # ORDER sets the order of the dropdown, and is also the theme's fallback
-    # answer for "the latest version": utils/resolve-latest-version.html takes
-    # the entry whose `linkVersion` is literally "latest" and, finding none —
-    # this site versions by 0.x/1.x, not by a /latest/ segment — falls back to
-    # the FIRST entry. Nothing on this site reads that answer today, because its
-    # callers are the PDF book cover and the print-book running footer and this
-    # site enables no `book` output format. 1.x sits first so the dropdown reads
-    # newest-first.
+    # ORDER sets the order of the dropdown, newest first. It is also the theme's
+    # fallback answer for "the latest version": utils/resolve-latest-version.html
+    # takes the entry whose `linkVersion` is literally "latest", which is the
+    # 1.0.x entry, and falls back to the FIRST entry only when none has it.
     #
     # That partial keys off `linkVersion`, NOT the `latest: true` flag below;
-    # the two are read by different templates and are not interchangeable.
-    - version: "1.x"
-      dropdown: "1.x (alpha)"
-      linkVersion: "1.x"
-      url: "/kagent/1.x"
+    # the two are read by different templates and are not interchangeable. Both
+    # sit on the 1.0.x entry, so both templates agree on which version is latest.
+    - version: "main"
+      dropdown: "main (in development)"
+      linkVersion: "main"
+      url: "/kagent/main"
       sections: ["kagent"]
-      # kagent 1.0 ships as an alpha, so this entry deliberately does not carry
-      # `latest`. The flag stays on the 0.x entry below; move it here at 1.0 GA.
+      # main documents the next release while it is in development. It starts
+      # as a copy of latest/ taken when 1.0.0 was cut, and diverges as unreleased
+      # features land. The noindex partial marks every main page that also
+      # exists under latest/, so unreleased docs do not outrank the release.
+      banner: "This documentation covers kagent while it is in development and can describe unreleased features. For the current release, see the [latest docs](/docs/kagent/latest/)."
+    - version: "latest"
+      # Relabel this entry at each release. It likely becomes a calendar version,
+      # such as 2026.11.1, when kagent moves to calendar versioning.
+      dropdown: "1.0.x (release)"
+      linkVersion: "latest"
+      url: "/kagent/latest"
+      sections: ["kagent"]
+      # `latest` marks the current release. It is one of two signals
+      # utils/version-noindex.html accepts, and `linkVersion: "latest"` above is
+      # the other; both name this entry, so they agree.
       #
-      # Alpha banner. Rendered by the local layouts/partials/version-banner.html
-      # override, which matches an entry by exact path segment and runs the text
-      # through `markdownify` — so the link below works, and a kmcp page matches
-      # nothing and shows no banner. Delete this line at GA.
-      banner: "This documentation covers the kagent 1.0 alpha. For the latest 0.x release, see the [0.x docs](/docs/kagent/0.x/)."
+      # EXACTLY ONE entry may carry the flag. On two, or on none, the partial
+      # silently does nothing.
+      #
+      # The partial noindexes a NON-latest page whenever the same page exists in
+      # the latest version, so main and 0.x pages whose path also exists under
+      # latest/ get `noindex, follow`. A page with no latest/ counterpart stays
+      # indexable.
+      latest: true
     - version: "0.x"
-      dropdown: "0.x (current)"
+      dropdown: "0.10.x"
       linkVersion: "0.x"
       url: "/kagent/0.x"
       sections: ["kagent"]
-      # `latest` marks the current release, and v0.10.1 is still that release
-      # while 1.0 is in alpha. It is one of only two signals
-      # utils/version-noindex.html accepts, and the only one available to this
-      # site (the other is a `linkVersion: "latest"` URL segment, which this
-      # site does not use). Without it that partial matches nothing and emits no
-      # robots meta at all, so no version is ever marked as superseding another.
-      #
-      # EXACTLY ONE entry may carry it. On both, or on neither, the partial
-      # silently does nothing.
-      #
-      # It starts mattering now that 1.x publishes. The partial noindexes a
-      # NON-latest page whenever the same page exists in the latest version, so
-      # the 1.x pages whose path also exists under 0.x get `noindex, follow` —
-      # the 1.x landing page among them, since /kagent/0.x is its equivalent.
-      # Every other 1.x page has no 0.x counterpart and stays indexable. That is
-      # the theme's deliberate "unreleased docs should not outrank the current
-      # release" behavior. Moving the flag to the 1.x entry at GA reverses the
-      # polarity, and 0.x pages get noindexed instead.
-      latest: true
-      # Alpha announcement banner, rendered by the same override as the 1.x
-      # banner above. Replace it with a superseded-version notice at GA.
-      banner: "kagent 1.0 is available as an alpha release. To read its documentation, see the [1.x docs](/docs/kagent/1.x/)."
+      # Superseded-version notice, rendered by the local
+      # layouts/partials/version-banner.html override, which matches an entry by
+      # exact path segment and runs the text through `markdownify`.
+      banner: "kagent 0.10.x is superseded by kagent 1.0. For the current release, see the [latest docs](/docs/kagent/latest/). To move an existing installation, see [Upgrade from 0.x](/docs/kagent/latest/operations/upgrade-from-0x/)."
 
-  # Label on the section selector button. Without it the button falls back to
-  # site.Title ("kagent docs"), which reads oddly above a menu offering kagent
-  # and kmcp. Matches the "Docs" label the hand-rolled menu dropdown used.
   product: "Docs"
 
   # The docs root segment, as it appears in every page's RelPermalink. It comes

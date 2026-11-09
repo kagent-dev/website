@@ -33,10 +33,10 @@ Furthermore, your agent will be able to interact with other agents and MCP serve
 Make sure you have:
 
 - A working CrewAI agent
-- KAgent installed in your Kubernetes cluster ([quick start guide](/docs/kagent/getting-started/quickstart))
+- KAgent installed in your Kubernetes cluster ([quick start guide](/docs/kagent/0.x/getting-started/quickstart))
 - Docker for building container images
 - kubectl for Kubernetes operations
-- Tracing configured if desired, see the [tracing guide](/docs/kagent/getting-started/tracing)
+- Tracing configured if desired, see the [tracing guide](/docs/kagent/0.x/observability/tracing)
 
 ## Step 0: Test Your Agent Locally
 
@@ -274,7 +274,7 @@ You can also access the agent through the dashboard UI or the CLI (reference the
 
 If your CrewAI agent needs to maintain state or memory across sessions, you can leverage KAgent's session-aware memory feature. **No additional change is needed at all in your CrewAI code!** This means if you have already enabled `memory=True` or `@persist` on your Crew or Flow, they will automatically use the Kagent backend! You don't need to define any storage interface or connect to any database, `KAgentApp` handles that!
 
-For tracing, if you have already enabled tracing for KAgent following the [tracing guide](/docs/kagent/getting-started/tracing), your CrewAI agent's operations will automatically be traced as well without any additional effort.
+For tracing, if you have already enabled tracing for KAgent following the [tracing guide](/docs/kagent/0.x/observability/tracing), your CrewAI agent's operations will automatically be traced as well without any additional effort.
 
 ## Conclusion
 
