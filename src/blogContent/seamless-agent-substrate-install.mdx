@@ -31,7 +31,19 @@ You run `kubectl ate install`, answer a few questions, and it takes it from ther
 
 When it's done, it hands you the config it built. Save that, and your next install, on another laptop, in CI or on a new cluster, comes out the same way.
 
-Day 2 works the same way. `kubectl ate upgrade` shows you what's going to change before it touches anything, and it won't take a step that could lose your data. `kubectl ate uninstall` cleans up, but keeps your keys and snapshots unless you tell it otherwise.
+## Day 2
+
+Installing happens once. Upgrading keeps happening, and that's where a stack with this many parts usually gets painful. `kubectl ate upgrade` gives you the same experience as the install:
+
+```bash
+kubectl ate upgrade
+```
+
+It starts by showing you what's going to change, version by version, before it touches anything. Then it checks that the CRD storage versions on your cluster are compatible with the new release, and it won't take a step that could lose your data. From there it upgrades each component in order, skips anything that's already in place, and finishes by checking that the API answers.
+
+![kubectl ate upgrade moving a kind cluster from Agent Substrate 1.0.0 to 1.0.1, showing version changes, a CRD compatibility check and each component upgrading in turn](/images/blog/seamless-agent-substrate-install/kubectl-ate-upgrade.gif)
+
+When you're done with substrate, `kubectl ate uninstall` cleans up, but keeps your keys and snapshots unless you tell it otherwise.
 
 ## Why kagent
 
