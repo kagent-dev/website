@@ -2,7 +2,7 @@ import { test, expect, gotoUI, settle } from '../fixtures/test';
 
 /**
  * Baseline captures for Observability > Launch the UI
- * (content/kagent/1.x/ui/launch-ui.md).
+ * (content/kagent/latest/ui/launch-ui.md).
  *
  * LIVE CLUSTER captures. These show real resources from a real kagent install, which is
  * the point: a reader who has just followed the install guide and port-forwarded the UI

@@ -24,9 +24,9 @@ concurrency:
 
 # The docs are a Hugo site under docs-site/ (served at /docs). This workflow
 # generates the reference pages directly as Hugo markdown into docs-site/content:
-#   - kagent CRD API ref -> docs-site/content/kagent/1.x/reference/api-ref.md
+#   - kagent CRD API ref -> docs-site/content/kagent/latest/reference/api-ref.md
 #   - kmcp CRD API ref   -> docs-site/content/kmcp/reference/api-ref.md
-#   - kagent Helm ref    -> docs-site/content/kagent/1.x/reference/helm.md
+#   - kagent Helm ref    -> docs-site/content/kagent/latest/reference/helm.md
 # Each page uses plain Hugo YAML frontmatter (no MDX `export const metadata`).
 #
 # It also refreshes the version conrefs under
@@ -48,7 +48,11 @@ concurrency:
 # 0.10.x is the stable line and still takes patches -- v0.10.2 landed on
 # 2026-09-23 -- so it is not frozen, and the by-hand regeneration it used to
 # need is what let its pages drift in the first place. Publishing a docs
-# release tagged v0.10.2 regenerates 0.x; v1.0.0-alphaN regenerates 1.x.
+# release tagged v0.10.2 regenerates 0.x; v1.0.N regenerates latest.
+#
+# main/ is not generated here. It documents unreleased work, so no release tag
+# describes it, and it took its reference pages from latest/ when 1.0.0 was
+# cut. Its version-split conref spans are asserted unchanged on every run.
 #
 # The two must never write each other's values. Every conref a page of either
 # line reads is version-split, and the conref helper refuses to continue if a
@@ -166,13 +170,14 @@ jobs:
           fi
 
           # Which documented line this release belongs to. Both are live: 0.10.x
-          # is the stable line and still takes patches, 1.0 is the alpha line.
+          # still takes patches, and 1.x is the current release line, documented under
+          # latest/.
           # Everything downstream -- page paths, API version, frontmatter,
           # which conrefs are in scope -- follows from this.
           case "$KAGENT_VERSION" in
             0.*) LINE=0.x ;;
-            1.*) LINE=1.x ;;
-            *)   echo "Error: $KAGENT_VERSION belongs to no documented line. Only 0.x and 1.x exist."; exit 1 ;;
+            1.*) LINE=latest ;;
+            *)   echo "Error: $KAGENT_VERSION belongs to no documented line. Only 0.x and latest (1.x) exist."; exit 1 ;;
           esac
           echo "Documenting the $LINE line."
           echo "line=$LINE" >> "$GITHUB_OUTPUT"
@@ -304,7 +309,7 @@ jobs:
               WITH_RUNTIME_IMAGES=false
               WITH_KMCP=false
               ;;
-            1.x)
+            latest)
               SECTION=reference
               API_DIR=go/api/v1alpha3
               API_TITLE="API reference"
@@ -317,9 +322,9 @@ jobs:
               HELM_WEIGHT=20
               # --weight 30 slots CLI docs after api-ref (10) and helm (20).
               CLI_WEIGHT=30
-              # Version-root-relative path behind the `link` shortcode. 1.x
+              # Version-root-relative path behind the `link` shortcode. latest
               # pages are rebased into the enterprise docs hub, so their
-              # cross-links must not hardcode the 1.x segment.
+              # cross-links must not hardcode the version segment.
               KAGENT_CLI_LINK_PREFIX=reference/cli
               WITH_RUNTIME_IMAGES=true
               WITH_KMCP=true
@@ -609,7 +614,7 @@ jobs:
           }
 
           # Version-split conrefs. Each carries one span per documented line:
-          #   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="1.x" >}}B{{< /version >}}
+          #   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="latest" >}}B{{< /version >}}{{< version include-if="main" >}}C{{< /version >}}
           # Only this run's span is written, and the helper refuses to continue
           # if any other span moved -- that assertion is the whole safety net
           # keeping a 0.10.x run from rewriting 1.x values and vice versa.

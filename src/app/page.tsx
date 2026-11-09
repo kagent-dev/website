@@ -138,13 +138,38 @@ export default function Home() {
       </section>
 
 
-      {/* Stats */}
-      <section className="mx-auto max-w-6xl px-6 pt-20">
-        <div className="mb-10 flex flex-col items-center text-center">
-          <div className="flex items-center gap-3 font-geistmono text-xs uppercase tracking-[0.2em] text-violet-300">
-            <span aria-hidden className="h-px w-10 bg-gradient-to-r from-transparent to-violet-400/60" />
-            Powered by
-            <span aria-hidden className="h-px w-10 bg-gradient-to-l from-transparent to-violet-400/60" />
+      {/* HERO */}
+      <section className="rd-hero">
+        <div className="rd-hero-wash" />
+        <div className="rd-container rd-hero-inner">
+          <div className="rv rd-hero-text">
+            <span className="rd-eyebrow">Kubernetes-native agent runtime</span>
+            <h1 className="rd-hero-h1">
+              Bring AI agents to <span className="rd-grad">every cluster you run</span>
+            </h1>
+            <p className="rd-lead">
+              kagent runs your agents where your workloads already live — on Kubernetes.
+              Deploy, observe, and govern AI agents with the tools your platform team
+              already trusts. Open source. Production grade. Built by the founders of Istio.
+            </p>
+            <div className="rd-hero-ctas">
+              <Link href="/docs/kagent/latest/get-started" className="rd-btn rd-btn--purple">
+                Get Started
+                <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+              </Link>
+              <Link href={GITHUB_LINK} className="rd-btn rd-btn--ghost" target="_blank" rel="noopener noreferrer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>
+                Star on GitHub
+              </Link>
+            </div>
+            <div className="rd-hero-meta">
+              <span>CNCF Sandbox</span>
+              <span className="rd-dot" />
+              <span>Works with any LLM</span>
+            </div>
+
+            {/* Quick Start terminal */}
+            <QuickStart />
           </div>
           <h2 className="mt-3 text-4xl font-medium tracking-tight md:text-5xl">
             <a href={SUBSTRATE} className="bg-gradient-to-r from-white to-violet-300 bg-clip-text text-transparent transition hover:to-violet-200">
@@ -347,17 +372,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA, with the top half of the kagent face behind it, cut off by the footer */}
-      <section className="relative isolate mt-24 flex min-h-[calc(min(1400px,115vw)*0.37)] items-start justify-center overflow-hidden px-6 pb-16 pt-[calc(min(1400px,115vw)*0.1)] text-center md:pb-0">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
-          <Image id="footer-mark" src="/images/kagent-logo-mark.png" alt="" width={1600} height={1600} className="mt-[calc(min(1400px,115vw)*-0.238)] aspect-square h-auto w-[min(1400px,115vw)] max-w-none shrink-0 self-start opacity-[0.18]" />
-        </div>
-        <div>
-          <h2 className="text-5xl font-medium tracking-tight">Run your first agent</h2>
-          <p className="mt-4 text-lg text-white/70">One install, three resources, one conversation.</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <BtnWhite href={START}>Get started</BtnWhite>
-            <BtnDark href={SUBSTRATE}>About Agent Substrate</BtnDark>
+      {/* CTA BAND */}
+      <section className="rd-cta-band">
+        <div className="rd-container">
+          <div className="rd-cta-card rv">
+            <span className="rd-eyebrow" style={{ color: '#9DD9F8' }}>Ready in 5 minutes</span>
+            <h2>Run your first agent on Kubernetes today.</h2>
+            <p className="rd-lead">One Helm chart. One CRD. One namespace. You&apos;ll be looking at agent traces before your coffee gets cold.</p>
+            <div className="rd-hero-ctas">
+              <Link href="/docs/kagent/latest/get-started" className="rd-btn rd-btn--purple">
+                Get Started
+                <svg className="rd-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+              </Link>
+              <Link href="/docs/kagent" className="rd-btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
+                Read the docs
+              </Link>
+            </div>
           </div>
         </div>
       </section>

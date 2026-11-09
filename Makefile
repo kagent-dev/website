@@ -60,7 +60,7 @@ inject-docs: ## Copy built docs into public/docs (preserves tracked assets, e.g.
 # back but the stylesheets never do, and the preview degrades edit by edit
 # instead of failing outright. Rendering to memory removes the shared directory.
 #
-# VERSION=<linkVersion> (for example VERSION=1.x, or VERSION=latest) builds only
+# VERSION=<linkVersion> (for example VERSION=main, or VERSION=latest) builds only
 # that docs version, for a faster preview. scripts/local-version-config.py
 # derives the skip list from docs-site/hugo.yaml's `params.versions` and writes
 # docs-site/hugo-local-version.yaml (gitignored). NO_SEARCH=1 builds without the

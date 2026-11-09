@@ -316,7 +316,7 @@ def cli_link(url_prefix: str, link_prefix: str | None, slug: str) -> str:
 
     With `link_prefix` set, emit the theme's version- and product-aware `link`
     shortcode. A hardcoded root-relative URL bakes in the OSS version segment
-    (/docs/kagent/1.x/...), which is correct upstream and wrong anywhere the
+    (/docs/kagent/latest/...), which is correct upstream and wrong anywhere the
     page is reused: the enterprise docs hub rebases these pages under its own
     version, and the shortcode is what lets one source resolve in both.
 
