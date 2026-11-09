@@ -162,7 +162,7 @@ Create an [Anthropic agent](https://platform.claude.com/docs/en/managed-agents/a
 AGENT_ID=$(ant --format json beta:agents create \
   --name "kagent-sandbox-agent" \
   --model claude-haiku-5-5 \
-  --system "You are a helpful coding agent that is testing a sandbox implementation. Your working directory is /data/workspace" \
+  --system "You are a helpful coding agent that is testing a sandbox implementation. Your working directory is /data/workspace. Be concise." \
   --tool '{type: agent_toolset_20260401}' | \
   jq -r .id)
 ```
@@ -239,7 +239,7 @@ This will automatically resume the sandbox with the filesystem intact!
  │ What are the contents of /data/workspace/helloworld.txt?
 
  ● kagent-sandbox-agent
- │ ▸ ≡ read  /data/workspace/helloworld.txt                             9.6s
+ │ ▸ ≡ read  /data/workspace/helloworld.txt                             2.4s
 
  │ The file contains Hello world!.
 ───────────────────────────────────────────────────────────────────────────────
@@ -252,11 +252,11 @@ In the same session, if we ask the agent to access `kagent.dev`, we see that net
 
 ```console
  ● User
- │ What happens when you try to wget kagent.dev
+ │ What happens when you try to wget kagent.dev?
 
  ● kagent-sandbox-agent
  │ Thought for 0s
- │ ▸ $ bash  cd /data/workspace && timeout 30 wget kagent.dev…   Error  9.0s
+ │ ▸ $ bash  cd /data/workspace && timeout 30 wget kagent.dev…   Error  2.4s
  │  Error  wget: bad address 'kagent.dev'
 
  │ Thought for 0s
