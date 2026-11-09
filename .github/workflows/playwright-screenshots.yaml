@@ -220,7 +220,7 @@ jobs:
           version="$(python3 - assets/kagent-docs/versions/kagent.md <<'PY'
           import re, sys
           txt = open(sys.argv[1]).read()
-          m = re.search(r'include-if="[^"]*\b1\.x\b[^"]*"[^>]*>}}([^<{]+)', txt)
+          m = re.search(r'include-if="[^"]*\blatest\b[^"]*"[^>]*>}}([^<{]+)', txt)
           print((m.group(1) if m else txt).strip())
           PY
           )"
