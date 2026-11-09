@@ -15,8 +15,9 @@ export const metadata = {
 </Aside>
 
 In May 2026, Anthropic released [self-hosted sandboxes](https://claude.com/resources/articles/claude-managed-agents-updates), allowing your Claude agents to provision sandboxes and execute code in your infrastructure.
-Although this blog post focuses on Anthropic integration, we plan on providing similar integrations for other managed agent platforms.
-Kagent aims to be a complete agentic infrastructure solution on your Kubernetes cluster, regardless of your provider or harness.
+As a new contributor, I was surprised that Kagent aims to be a complete agentic solution regardless of your provider or harness.
+This post is an example of Kagent doing things beyond running harnesses. Anthropic hosts the agent loop, while Kagent provides the infrastructure where its code executes.
+Although this post focuses on Anthropic integration, we plan on providing similar integrations for other managed agent platforms.
 
 This post shows you how to use Kagent to run Anthropic self-hosted sandboxes with strong egress controls and automatic suspension/resumption.
 
