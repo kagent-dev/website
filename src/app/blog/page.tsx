@@ -1,4 +1,3 @@
-import { Background } from "@/components/background";
 import Link from "next/link";
 import React from "react";
 import externalPostsData from "@/data/external-blog-posts.yaml";
@@ -190,7 +189,6 @@ type ExternalYamlPost = { title: string; description: string; publishDate: strin
 export default async function BlogPage() {
     return (
         <>
-            <Background />
             <div className="min-h-screen py-8">
                 <div className="max-w-3xl mx-auto px-4">
                     <h1 className="text-4xl font-bold text-center mb-16 text-foreground">Blog</h1>
