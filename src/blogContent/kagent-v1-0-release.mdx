@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "kagent 1.0 is Here: Open Source Agents on Agent Substrate",
+  title: "kagent 1.0 Is Here: Open Source Agents on Agent Substrate",
   publishDate: "2026-11-09T10:00:00Z",
   description:
     "kagent 1.0 is out, and every agent now runs on Agent Substrate: sandboxed by default, suspended when idle, and resumed on the next message. Why Pods don't fit agents, what Substrate and kagent each do, and how to get started.",
@@ -7,7 +7,7 @@ export const metadata = {
   authorIds: ["sebastianmaniak"],
 };
 
-# kagent 1.0 is Here: Open Source Agents on Agent Substrate
+# kagent 1.0 Is Here: Open Source Agents on Agent Substrate
 
 Back in August, Eitan wrote [The Future of kagent](/blog/the-future-of-kagent). The short version: the team was going to rip out kagent's Deployment-based runtime and rebuild it on [Agent Substrate](https://github.com/agent-substrate/substrate). He boiled the reasoning down to three things we'd learned about agents:
 
@@ -38,7 +38,7 @@ A Pod comes with assumptions that are great for microservices. It runs code you 
 
 **Agents mostly wait.** And while they wait, their Pods hold CPU and memory. Tool sandboxes have the opposite problem: a Pod or Job per tool call can spend longer getting through the API server and scheduler than actually running.
 
-![A grid of squares, each standing for 50 sessions in their own Pods. Only a handful are working; the rest are waiting for their next message, yet each waiting Pod still holds memory, schedulable capacity on a node, and an IP address](/images/blog/introducing-kagent-1-0/pods-idle-grid.png)
+![A grid of squares, each standing for 50 sessions in their own Pods. Only a handful are working; the rest are waiting for their next message, yet each waiting Pod still holds memory, schedulable capacity on a node, and an IP address](/images/blog/kagent-v1-0-release/pods-idle-grid.png)
 
 **Sessions act for people.** An agent session works on behalf of a specific user, and one shared ServiceAccount can't tell sessions apart for policy or audit. Once you start moving sessions between Pods to fix the idle problem, an identity tied to the Pod can't follow them anyway.
 
@@ -50,17 +50,17 @@ Agent Substrate is a layer on top of Kubernetes built for these workloads. It ke
 
 When an actor goes idle, Substrate snapshots its workspace (and optionally its whole memory) and gives the worker back. When a request comes in for a paused actor, Substrate's router finds a free worker and restores the actor into it. If no worker is free yet, the router holds the request for a moment instead of failing it. None of this goes through the Kubernetes API server, which is why it's cheap enough to do on every turn or every tool call.
 
-![The suspend and resume cycle: an Actor on Worker A suspends to an actor snapshot holding its memory and files, freeing the slot; when a request arrives, the atenet-router routes it and the Actor resumes on Worker B with the same state](/images/blog/introducing-kagent-1-0/suspend-resume.png)
+![The suspend and resume cycle: an Actor on Worker A suspends to an actor snapshot holding its memory and files, freeing the slot; when a request arrives, the atenet-router routes it and the Actor resumes on Worker B with the same state](/images/blog/kagent-v1-0-release/suspend-resume.png)
 
 The other half is security. Every actor runs in its own gVisor or microVM sandbox. Substrate doesn't run plain containers at all, because every actor is treated as untrusted, even when it shares a worker with other actors.
 
-![Two Worker Pods: a gVisor worker hosting two Actors, each in its own sandbox with a user-space kernel, and a Cloud Hypervisor microVM worker hosting an Actor with a guest kernel of its own. Every Actor is treated as untrusted, and each activation starts from its own snapshot](/images/blog/introducing-kagent-1-0/actor-sandboxes.png)
+![Two Worker Pods: a gVisor worker hosting two Actors, each in its own sandbox with a user-space kernel, and a Cloud Hypervisor microVM worker hosting an Actor with a guest kernel of its own. Every Actor is treated as untrusted, and each activation starts from its own snapshot](/images/blog/kagent-v1-0-release/actor-sandboxes.png)
 
 Each actor also gets its own SPIFFE-based identity that follows it from worker to worker, instead of belonging to the Pod. Incoming requests hit an ingress router that authenticates the caller and checks policy before the actor even wakes up. Outgoing traffic goes through the egress gateway, and the sandbox itself holds no credentials. Both gateways run on [agentgateway](https://agentgateway.dev), which understands LLM, MCP and A2A traffic, so a policy can say which models, MCP tools or other agents an actor is allowed to call.
 
 My favorite part is how secrets work. The agent only ever sees a placeholder. When it calls an API, the egress gateway checks the request against that actor's policy and swaps in the real key or token on the way out. Anything the policy doesn't allow is denied.
 
-![Actor -1 sends a request carrying a placeholder Authorization header to agentgateway, atenet-egress's data plane, which checks the actor's EgressPolicy, fetches the real token from a credential provider using the actor's JWT, and swaps it in before the request reaches source control. A prompt-injected agent has nothing to leak, and the token never ends up in an actor snapshot](/images/blog/introducing-kagent-1-0/egress-credentials.png)
+![Actor -1 sends a request carrying a placeholder Authorization header to agentgateway, atenet-egress's data plane, which checks the actor's EgressPolicy, fetches the real token from a credential provider using the actor's JWT, and swaps it in before the request reaches source control. A prompt-injected agent has nothing to leak, and the token never ends up in an actor snapshot](/images/blog/kagent-v1-0-release/egress-credentials.png)
 
 So a prompt-injected agent has nothing to steal, and the token never ends up in a snapshot either.
 
@@ -72,7 +72,7 @@ Substrate is deliberately low level. Its own README calls it "a low-opinion runt
 
 That's kagent's job. The simplest way I can put it: **kagent decides what an agent does, and Agent Substrate decides where it runs.**
 
-![The stack: kagent as the agent platform on top (Sessions kept in kagent's database, credential injection on egress, Agent plus Harness compiled into an ActorTemplate, suspending Actors while agents wait, and an A2A gateway that decides who may talk to which conversation), Agent Substrate in the middle (Actors, Workers, snapshots, sandboxes, identity, egress), and Kubernetes at the bottom (nodes, Worker Pods, networking, storage, autoscaling)](/images/blog/introducing-kagent-1-0/kagent-substrate-layers.png)
+![The stack: kagent as the agent platform on top (Sessions kept in kagent's database, credential injection on egress, Agent plus Harness compiled into an ActorTemplate, suspending Actors while agents wait, and an A2A gateway that decides who may talk to which conversation), Agent Substrate in the middle (Actors, Workers, snapshots, sandboxes, identity, egress), and Kubernetes at the bottom (nodes, Worker Pods, networking, storage, autoscaling)](/images/blog/kagent-v1-0-release/kagent-substrate-layers.png)
 
 Here's what you get in 1.0:
 
@@ -97,11 +97,11 @@ Under the hood, 1.0 splits an agent in two. An **AgentTemplate** is what the age
 
 Here's the kagent UI on a real cluster running Agent Substrate. A new conversation starts an actor, and once the turn is done, the Substrate view shows that session (and every other one) suspended and holding no compute until the next message comes in. Keep an eye on **Actors running: 0/20**.
 
-![The kagent UI on a cluster running Agent Substrate: starting a conversation with an agent, then switching to the Substrate view, where every session is suspended and 0 of 20 actors are running](/images/blog/introducing-kagent-1-0/kagent-ui-substrate.gif)
+![The kagent UI on a cluster running Agent Substrate: starting a conversation with an agent, then switching to the Substrate view, where every session is suspended and 0 of 20 actors are running](/images/blog/kagent-v1-0-release/kagent-ui-substrate.gif)
 
 If you'd rather click around yourself without installing anything, I built an interactive version of the UI on the [kagent.dev](https://kagent.dev) homepage. Hit **Take the tour** for the guided version. This is the one that sums up Substrate for me: an SRE agent works out why checkouts are failing, then stops to ask before running `kubectl rollout undo`. While it waits for that approval, it's suspended and using no compute at all.
 
-![An SRE incident commander agent in the interactive kagent UI demo: it queries Loki logs through the Grafana MCP server, reports 1,240 failed checkout attempts, and asks for approval before running kubectl rollout undo. A status pill reads gVisor, kagent-high, suspended, and a divider reads idle, actor suspended to snapshot, worker freed](/images/blog/introducing-kagent-1-0/ui-chat.png)
+![An SRE incident commander agent in the interactive kagent UI demo: it queries Loki logs through the Grafana MCP server, reports 1,240 failed checkout attempts, and asks for approval before running kubectl rollout undo. A status pill reads gVisor, kagent-high, suspended, and a divider reads idle, actor suspended to snapshot, worker freed](/images/blog/kagent-v1-0-release/kagent-ui-chat.png)
 
 ## Getting started
 
