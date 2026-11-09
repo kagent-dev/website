@@ -14,6 +14,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'anthropic-self-managed-sandboxes',
+        publishDate: '2026-11-07',
+        title: 'Anthropic Self-Hosted Sandboxes with kagent',
+        description: 'kagent lets you run Anthropic self-hosted sandboxes on your own infrastructure.',
+        authorId: 'stevenjin8',
+    },
+    {
         slug: 'kagent-v1-0-release',
         publishDate: '2026-11-09',
         title: 'kagent 1.0 Is Here: Open Source Agents on Agent Substrate',
