@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "The seamless way to install and manage Agent Substrate",
+  publishDate: "2026-11-10T00:00:00Z",
+  description:
+    "Getting from an empty Kubernetes cluster to sandboxed, stateful agents should take one command. Kagent Substrate v1.0.1 adds kubectl ate install, upgrade and uninstall, with secure defaults, a live view of every step, and upgrades that show you what will change before anything risks your data.",
+  author: "Eitan Yarmush",
+  authorIds: ["eitanya"],
+};
+
+# The seamless way to install and manage Agent Substrate
+
+## Day 0
+
+The first step of using any software is installing it, and it's also where a lot of people stop. If an install takes an afternoon, or has too many steps, most people never get far enough to see what the software can actually do.
+
+For Agent Substrate, we want that first step to be seamless. If you have a Kubernetes cluster, whether that's kind on your laptop, a CI runner or a managed cloud service, you should be able to go from nothing to running sandboxed, stateful agents. And you should get secure defaults without having to put them together yourself.
+
+That's a big ask for a system like substrate. It runs agents in gVisor or microVM sandboxes and packs a lot of actors onto a small number of pods, checkpointing idle ones so they can resume on any free worker. The demo runs about 250 actors on 8 pods. Something that capable has a lot of moving parts, and I don't think fitting them together should be your job.
+
+So we built an installer. The first version shipped in [Agent Substrate v1.0.1](https://github.com/kagent-dev/substrate/releases/tag/v1.0.1): `kubectl-ate` can now install, upgrade and uninstall substrate, so getting started is one command:
+
+```bash
+kubectl ate install
+```
+
+## The experience
+
+You run `kubectl ate install`, answer a few questions, and it takes it from there. You get a live checklist of each step as it runs, and if you change your mind, Ctrl+C stops it cleanly.
+
+![kubectl ate install running on a kind cluster, showing a live checklist of install steps](/images/blog/seamless-agent-substrate-install/kubectl-ate-tui.gif)
+
+When it's done, it hands you the config it built. Save that, and your next install, on another laptop, in CI or on a new cluster, comes out the same way.
+
+Day 2 works the same way. `kubectl ate upgrade` shows you what's going to change before it touches anything, and it won't take a step that could lose your data. `kubectl ate uninstall` cleans up, but keeps your keys and snapshots unless you tell it otherwise.
+
+## Why kagent
+
+kagent runs its sandboxed agents on substrate, so how easily substrate installs directly shapes how easily kagent installs. We need to get this right for our own users, and we want everyone running substrate to benefit from that work.
+
+That's why the installer, the release images and the end-to-end tests that exercise them all live in [kagent-dev/substrate](https://github.com/kagent-dev/substrate). Whatever cluster you're on, our goal is for kagent to be where you find the easiest and most secure way to run substrate.
+
+## Try it
+
+Grab `kubectl-ate` for your platform from the [v1.0.1 release](https://github.com/kagent-dev/substrate/releases/tag/v1.0.1), then run:
+
+```bash
+kubectl ate install
+```
+
+## What's next
+
+Right now `kubectl ate install` treats every cluster the same, and that's a good place to start. But clusters aren't all the same. Every cloud has its own defaults, its own identity system, its own registry and its own sharp edges, so the secure way to run substrate looks a little different on each one.
+
+Where we want to go is an installer that knows where it's running. Point it at a cluster on your cloud of choice and it should check what matters there, set up the integrations you'd expect, and flag problems before they show up in production. We're starting on the first of these cloud profiles now.
+
+We can't get every platform right on our own, and honestly we don't want to. The people running substrate on their own clusters know those quirks better than anyone, so we'd love to build this with you. Tell us where you run Kubernetes, [open an issue](https://github.com/kagent-dev/substrate/issues) when something breaks, or come find us in #substrate-users on [CNCF Slack](https://slack.cncf.io) or at the weekly [community meeting](https://kagent.dev/community). Excited to see where you run it!

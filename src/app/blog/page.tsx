@@ -15,6 +15,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'seamless-agent-substrate-install',
+        publishDate: '2026-11-10',
+        title: 'The seamless way to install and manage Agent Substrate',
+        description: 'Getting from an empty Kubernetes cluster to sandboxed, stateful agents should take one command. Kagent Substrate v1.0.1 adds kubectl ate install, upgrade and uninstall, with secure defaults, a live view of every step, and upgrades that show you what will change before anything risks your data.',
+        authorId: 'eitanya',
+    },
+    {
         slug: 'agent-sandboxes-four-axes',
         publishDate: '2026-10-27',
         title: 'Not All Agent Sandboxes Are Created Equally',
