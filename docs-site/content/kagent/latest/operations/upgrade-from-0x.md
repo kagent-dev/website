@@ -62,7 +62,7 @@ Export your resources before you uninstall 0.10.x. Some resources convert to 1.0
 
 3. If you install 1.0 on the same cluster, uninstall 0.10.x now. For the steps, see [Uninstall kagent]({{< link path="operations/uninstall#uninstall-with-helm" version="0.x" >}}) in the 0.x documentation.
 
-## Install kagent 1.0
+## Install kagent 1.0 {#install}
 
 Install 1.0 against the empty database that you provisioned. kagent and Agent Substrate both store their state in that database, each with an owner login that applies migrations and a read/write login that serves runtime queries. `kagent install` normally creates a development database for both. When you pass `--skip-database-setup`, `kagent install` does not create the development database. The kagent and Agent Substrate charts then read the connection Secrets that you create in this section.
 

@@ -119,7 +119,7 @@ Connections to this database do not use a password. `kagent install` sets `datab
 
 For production, run PostgreSQL outside the cluster's lifecycle so that a kagent uninstall cannot delete the data. kagent requires a new, empty database, and the roles and the schema must exist before the controller starts. kagent ships a `psql` script that creates them.
 
-Agent Substrate connects to the same database with its own owner and read/write logins. The Agent Substrate setup script creates these logins. The Agent Substrate chart reads the connection strings for those logins from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install-kagent-10" >}}).
+Agent Substrate connects to the same database with its own owner and read/write logins. The Agent Substrate setup script creates these logins. The Agent Substrate chart reads the connection strings for those logins from the Secrets that its `postgres.ownerConnectionStringSecretRef` and `postgres.readWriteConnectionStringSecretRef` values reference. For a procedure that prepares the database for both, see [Install kagent 1.0]({{< link path="operations/upgrade-from-0x#install" >}}).
 
 1. Download the setup script for your kagent version.
 
