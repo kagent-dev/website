@@ -14,13 +14,13 @@ export const metadata = {
   The API will likely change in the future.
 </Aside>
 
-In May 2026, Anthropic released [self-hosted sandboxes](https://claude.com/resources/articles/claude-managed-agents-updates), allowing your Claude agents to provision sandboxes and execute code in your infrastructure.
-As a new contributor, I was surprised that Kagent aims to be a complete agentic solution regardless of your provider or harness.
-This post is an example of Kagent doing things beyond running harnesses.
-In this post, we will create an agent on Anthropic, watch kagent provision a sandbox for it, and show how kagent suspends idle sandboxes while persisting sandbox state.
-Anthropic hosts the agent loop, while kagent connects and configures your cluster so that the agent's code execution sandbox runs on your Kubernetes cluster.
+In May 2026, Anthropic released [self-hosted sandboxes](https://claude.com/resources/articles/claude-managed-agents-updates), allowing your Claude agents to provision sandboxes and execute code on your infrastructure.
+Anthropic hosts the agent loop, while kagent connects to Anthropic and runs the agent's code execution sandbox on your Kubernetes cluster.
 
-Although this post focuses on Anthropic integration, we plan on providing similar integrations for other managed agent platforms.
+As a new contributor, I was surprised that kagent aims to be a complete agentic solution regardless of your provider or harness.
+This integration is an example of doing things beyond running harnesses.
+In this post, we will create an agent on Anthropic, watch kagent provision a sandbox for it, and see how kagent suspends idle sandboxes while persisting their state.
+Although this post focuses on Anthropic, we plan on providing similar integrations for other managed agent platforms.
 
 ## Prerequisites
 
@@ -64,7 +64,7 @@ kubectl create secret generic anthropic-environment-key -n kagent \
   --from-literal=key="${ANTHROPIC_ENVIRONMENT_KEY}"
 ```
 
-Next, create the configuration files for our Kagent install.
+Next, create the configuration files for our kagent install.
 
 ```bash
 VALUES_DIR=$(mktemp -d)
@@ -114,7 +114,7 @@ OPENAI_API_KEY=unset kagent --config "${VALUES_DIR}/config.yaml" install
 ```
 
 Next, create the [`SandboxTemplate`](/docs/kagent/1.x/reference/api-ref#sandboxtemplate) referenced above and its [`EgressPolicy`](/docs/kagent/1.x/reference/api-ref#egresspolicy).
-These configure the sandboxes we will create for our Anthropic agents.
+These configure the sandboxes kagent will create for our Anthropic agents.
 
 ```bash
 kubectl apply -f - <<EOF
@@ -148,13 +148,13 @@ kubectl wait -n kagent --for=condition=Ready \
   sandboxtemplate/anthropic-self-hosted-sandbox --timeout=15m
 ```
 
-In a separate terminal, port-forward the kagent controller on your local machine. 
+In a separate terminal, port-forward the kagent controller on your local machine so the `kagent` CLI can connect to the control plane.
 
 ```
 kubectl port-forward -n kagent service/kagent-controller 8083:8083
 ```
 
-## Kagent in action
+## kagent in action
 
 Create an [Anthropic agent](https://platform.claude.com/docs/en/managed-agents/agent-setup).
 
@@ -182,7 +182,7 @@ Open an interactive chat with the agent and ask it to create the `/data/workspac
 ant beta:sessions connect "$SESSION_ID"
 ```
 
-Your TUI should look something like
+Your TUI should look something like:
 
 ```console
  ● User
@@ -198,7 +198,7 @@ Your TUI should look something like
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-We can see that Kagent provisioned a sandbox in our cluster by running by listing sandboxes in another terminal.
+We can see that kagent provisioned a sandbox in our cluster by listing sandboxes in another terminal.
 Note that you will have to set the `ANTHROPIC_ENVIRONMENT_ID` environment variable again.
 
 ```bash
@@ -207,18 +207,20 @@ USER_ID="${USER_ID}.$(printf '%s' "$ANTHROPIC_ENVIRONMENT_ID" | base64 | tr '+/'
 kagent sandbox list --user-id "$USER_ID"
 ```
 
+```console
 ID            TEMPLATE                              STATE                OPERATION               EXPIRES               FAILURE
 01a1b853-xxx  kagent/anthropic-self-hosted-sandbox  RUNTIME_STATE_READY  RUNTIME_OPERATION_NONE  2026-11-08T11:24:07Z
 ```
 
 After about five minutes without work, the sandbox automatically suspends and stops consuming CPU and memory.
 
+```console
 $ kagent sandbox list --user-id "$USER_ID"
 ID            TEMPLATE                              STATE                    OPERATION               EXPIRES               FAILURE
 01a1b853-xxx  kagent/anthropic-self-hosted-sandbox  RUNTIME_STATE_SUSPENDED  RUNTIME_OPERATION_NONE  2026-11-08T11:24:07Z
 ```
 
-We can ask the agent to check the contents of the file we just created.
+In the same session, we can ask the agent to check the contents of the file we just created.
 This will automatically resume the sandbox with the filesystem intact!
 
 ```console
@@ -246,7 +248,7 @@ This will automatically resume the sandbox with the filesystem intact!
 ```
 
 By default, all outbound network access is denied.
-If we ask the agent to access `kagent.dev`, we see that network access is denied.
+In the same session, if we ask the agent to access `kagent.dev`, we see that network access is denied.
 
 ```console
  ● User
