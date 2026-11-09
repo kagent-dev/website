@@ -182,21 +182,7 @@ Open an interactive chat with the agent and ask it to create the `/data/workspac
 ant beta:sessions connect "$SESSION_ID"
 ```
 
-Your TUI should look something like:
-
-```console
- ● User
- │ Make a file named helloworld.txt with the contents "Hello world!"
-
- ● kagent-sandbox-agent
- │ Thought for 0s
- │ ▸ ✎ write  /data/workspace/helloworld.txt                            0.9s
-
- │ I created /data/workspace/helloworld.txt containing Hello world!.
-───────────────────────────────────────────────────────────────────────────────
- >
-───────────────────────────────────────────────────────────────────────────────
-```
+![Asking the agent to create helloworld.txt in the sandbox](/images/blog/anthropic-self-managed-sandboxes/write-file.gif "The agent creates helloworld.txt inside the sandbox")
 
 We can see that kagent provisioned a sandbox in our cluster by listing sandboxes in another terminal.
 Note that you will have to set the `ANTHROPIC_ENVIRONMENT_ID` environment variable again.
@@ -223,50 +209,12 @@ ID            TEMPLATE                              STATE                    OPE
 In the same session, we can ask the agent to check the contents of the file we just created.
 This will automatically resume the sandbox with the filesystem intact!
 
-```console
- ● User
- │ Make a file named helloworld.txt with the contents "Hello world!"
-
- ● kagent-sandbox-agent
- │ Thought for 0s
- │ ▸ ✎ write  /data/workspace/helloworld.txt                            0.9s
-
- │ I created /data/workspace/helloworld.txt containing Hello world!.
-
- ╌╌ Session idle · 5m 01s ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
-
- ● User
- │ What are the contents of /data/workspace/helloworld.txt?
-
- ● kagent-sandbox-agent
- │ ▸ ≡ read  /data/workspace/helloworld.txt                             2.4s
-
- │ The file contains Hello world!.
-───────────────────────────────────────────────────────────────────────────────
- >
-───────────────────────────────────────────────────────────────────────────────
-```
+![Reconnecting to the session after the sandbox suspended and reading helloworld.txt](/images/blog/anthropic-self-managed-sandboxes/resume.gif "After the sandbox suspends, the agent resumes it and reads helloworld.txt back")
 
 By default, all outbound network access is denied.
 In the same session, if we ask the agent to access `kagent.dev`, we see that network access is denied.
 
-```console
- ● User
- │ What happens when you try to wget kagent.dev?
-
- ● kagent-sandbox-agent
- │ Thought for 0s
- │ ▸ $ bash  cd /data/workspace && timeout 30 wget kagent.dev…   Error  2.4s
- │  Error  wget: bad address 'kagent.dev'
-
- │ Thought for 0s
- │ Running wget kagent.dev fails immediately with wget: bad address
- │ 'kagent.dev' and exit code 1. wget never connects, so no file is
- │ downloaded.
-───────────────────────────────────────────────────────────────────────────────
- >
-───────────────────────────────────────────────────────────────────────────────
-```
+![Asking the agent to run wget kagent.dev and getting a bad address error](/images/blog/anthropic-self-managed-sandboxes/egress-denied.gif "Outbound access to kagent.dev is denied from the sandbox")
 
 You can dynamically control which websites your agent can access using [Egress Policies](/docs/kagent/1.x/reference/api-ref#egresspolicy).
 These policies also let you inject credentials into your agent's outbound requests without placing those credentials in the sandbox.
