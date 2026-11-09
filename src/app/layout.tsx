@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <GoogleTagManager gtmId="GTM-KNRGVQPF" />
       <body className="min-h-screen bg-background flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <SiteChrome><Navbar /></SiteChrome>
+          <SiteChrome nav><Navbar /></SiteChrome>
           <main className="flex-1">{children}</main>
           <SiteChrome><Footer /></SiteChrome>
         </ThemeProvider>
