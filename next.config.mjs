@@ -11,6 +11,16 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   async redirects() {
     return [
+      // Short install URL for the kagent CLI:
+      //   curl -sL https://kagent.dev/install | bash
+      // Temporary (307) so clients never cache it and the target can move.
+      // `curl -L` follows it; the script itself picks the release to install.
+      {
+        source: '/install',
+        destination:
+          'https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent',
+        permanent: false,
+      },
       // Order matters: Next applies the first matching redirect. These two name
       // a page that also moved section, so the catch-all below would send them
       // to a 0.x path that does not exist (there is no 0.x/getting-started/

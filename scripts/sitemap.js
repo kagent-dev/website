@@ -34,7 +34,9 @@ function findPages(dir, excludedDynamicPatterns, pages = []) {
                      // Convert file path to URL path
                     let relativePath = path.relative(pagesDir, fullPath);
 
-                    if (relativePath.endsWith('/page.tsx')) {
+                    if (['page.tsx', 'page.js', 'page.mdx'].includes(relativePath)) {
+                        relativePath = '';
+                    } else if (relativePath.endsWith('/page.tsx')) {
                         relativePath = relativePath.substring(0, relativePath.length - '/page.tsx'.length);
                     } else if (relativePath.endsWith('/page.js')) {
                         relativePath = relativePath.substring(0, relativePath.length - '/page.js'.length);
