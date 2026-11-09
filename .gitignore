@@ -56,3 +56,7 @@ next-env.d.ts
 /public/docs/*
 !/public/docs/versions/
 
+
+# Python bytecode. scripts/generate-cli-docs.py rewrites it whenever it runs.
+__pycache__/
+*.py[cod]
