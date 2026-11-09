@@ -1,16 +1,16 @@
 export const metadata = {
-  title: "Anthropic Self-Hosted Sandboxes with Kagent",
+  title: "Anthropic Self-Hosted Sandboxes with kagent",
   publishDate: "2026-11-07T00:00:00Z",
   description:
-    "Kagent lets you efficiently run Anthropic self-hosted sandboxes on your own infrastructure.",
+    "kagent lets you run Anthropic self-hosted sandboxes on your own infrastructure.",
   author: "Steven Jin",
   authorIds: ["stevenjin8"],
 };
 
-# Anthropic Self-Hosted Sandboxes with Kagent
+# Anthropic Self-Hosted Sandboxes with kagent
 
 <Aside type="warning">
-  This post uses a pre-release version with commit `4de694355985` of Kagent and an experimental feature.
+  This post uses a pre-release version with commit `4de694355985` of kagent and an experimental feature.
   The API will likely change in the future.
 </Aside>
 
@@ -25,20 +25,20 @@ This post shows you how to use Kagent to run Anthropic self-hosted sandboxes wit
 
 You will need Kind, the kagent CLI, and the Anthropic `ant` CLI to follow these instructions.
 
-Install the kagent CLI with
+Install the kagent CLI.
 
 ```
 curl https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v1.0.0-rc3
 kagent version
 ```
 
-See the [Anthropic docs](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/quickstart) to install the Anthropic CLI and log in with
+See the [Anthropic docs](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/quickstart) to install the Anthropic CLI. Then, log in to the CLI.
 
 ```
 ant auth login # Or export ANTHROPIC_API_KEY
 ```
 
-Next, create a [self-hosted environment](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes#run-your-first-session) on [Claude Platform](https://platform.claude.com/environments), then generate its environment key.
+Next, create a [self-hosted environment](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes#run-your-first-session) on [Claude Platform](https://platform.claude.com/environments), and generate its environment key.
 
 ```
 ANTHROPIC_ENVIRONMENT_ID=env_xxx
@@ -47,7 +47,7 @@ ANTHROPIC_ENVIRONMENT_KEY=sk-ant-oatxxx
 
 ## Setup and Installation
 
-Provision a [Kind](https://kind.sigs.k8s.io/) cluster as follows
+Start by provisioning a [Kind](https://kind.sigs.k8s.io/) cluster.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kagent-dev/kagent/4de694355985e9d06dc92ad1adfa64d96d32f19e/scripts/kind/kind-config.yaml |
@@ -93,7 +93,7 @@ install:
 EOF
 ```
 
-and install Kagent
+Install kagent in your cluster.
 
 ```bash
 # This can take a while
@@ -134,7 +134,7 @@ kubectl wait -n kagent --for=condition=Ready \
   sandboxtemplate/anthropic-self-hosted-sandbox --timeout=15m
 ```
 
-In a separate terminal, run
+In a separate terminal, port-forward the kagent controller on your local machine. 
 
 ```
 kubectl port-forward -n kagent service/kagent-controller 8083:8083
@@ -153,7 +153,7 @@ AGENT_ID=$(ant --format json beta:agents create \
   jq -r .id)
 ```
 
-Then, create a [session](https://platform.claude.com/docs/en/managed-agents/sessions) for the agent in your environment:
+Then, create a [session](https://platform.claude.com/docs/en/managed-agents/sessions) for the agent in your environment.
 
 ```bash
 SESSION_ID=$(ant --format json beta:sessions create \
@@ -162,7 +162,7 @@ SESSION_ID=$(ant --format json beta:sessions create \
   jq -r .id)
 ```
 
-Open an interactive chat with the agent and ask it to create `/data/workspace/helloworld.txt` containing `Hello world!`:
+Open an interactive chat with the agent and ask it to create the `/data/workspace/helloworld.txt` file containing the `Hello world!` string.
 
 ```bash
 ant beta:sessions connect "$SESSION_ID"
@@ -190,14 +190,12 @@ USER_ID="${USER_ID}.$(printf '%s' "$ANTHROPIC_ENVIRONMENT_ID" | base64 | tr '+/'
 kagent sandbox list --user-id "$USER_ID"
 ```
 
-```
 ID            TEMPLATE                              STATE                OPERATION               EXPIRES               FAILURE
 01a1b853-xxx  kagent/anthropic-self-hosted-sandbox  RUNTIME_STATE_READY  RUNTIME_OPERATION_NONE  2026-11-08T11:24:07Z
 ```
 
 After about five minutes without work, the sandbox automatically suspends and stops consuming CPU and memory.
 
-```
 $ kagent sandbox list --user-id "$USER_ID"
 ID            TEMPLATE                              STATE                    OPERATION               EXPIRES               FAILURE
 01a1b853-xxx  kagent/anthropic-self-hosted-sandbox  RUNTIME_STATE_SUSPENDED  RUNTIME_OPERATION_NONE  2026-11-08T11:24:07Z
@@ -229,7 +227,7 @@ When the agent needs the sandbox again, it automatically resumes with its filesy
 ───────────────────────────────────────────────────────────────────────────────
 ```
 
-By default, all outbound network access is denied
+By default, all outbound network access is denied.
 
 ```
  ● User
