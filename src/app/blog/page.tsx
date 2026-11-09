@@ -1,4 +1,3 @@
-import { Background } from "@/components/background";
 import Link from "next/link";
 import React from "react";
 import externalPostsData from "@/data/external-blog-posts.yaml";
@@ -14,6 +13,13 @@ function shortDate(date: string) {
 }
 
 const posts = [
+    {
+        slug: 'kagent-v1-0-release',
+        publishDate: '2026-11-09',
+        title: 'kagent 1.0 Is Here: Open Source Agents on Agent Substrate',
+        description: 'kagent 1.0 is out, and every agent now runs on Agent Substrate: sandboxed by default, suspended when idle, and resumed on the next message. Why Pods don\'t fit agents, what Substrate and kagent each do, and how to get started.',
+        authorId: 'sebastianmaniak',
+    },
     {
         slug: 'agent-sandboxes-four-axes',
         publishDate: '2026-10-27',
@@ -183,7 +189,6 @@ type ExternalYamlPost = { title: string; description: string; publishDate: strin
 export default async function BlogPage() {
     return (
         <>
-            <Background />
             <div className="min-h-screen py-8">
                 <div className="max-w-3xl mx-auto px-4">
                     <h1 className="text-4xl font-bold text-center mb-16 text-foreground">Blog</h1>

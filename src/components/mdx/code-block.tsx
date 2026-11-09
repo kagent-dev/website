@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Highlight, themes } from 'prism-react-renderer';
 import { Check, Copy } from 'lucide-react';
-import { useTheme } from 'next-themes';
 
 interface CodeBlockProps {
   children: string;
@@ -11,8 +10,6 @@ interface CodeBlockProps {
 }
 
 export function CodeBlock({ children, language = 'typescript', className }: CodeBlockProps) {
-  const { resolvedTheme } = useTheme();
-
   const [copied, setCopied] = useState(false);
 
   const highlightedLines = new Set<number>();
@@ -63,7 +60,7 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
         </button>
       </div>
       <Highlight
-        theme={resolvedTheme === 'dark' ? themes.jettwaveDark : themes.jettwaveLight}
+        theme={themes.jettwaveDark}
         code={code}
         language={language}
       >
