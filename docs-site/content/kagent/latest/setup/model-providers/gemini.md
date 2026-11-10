@@ -46,7 +46,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that stores the API key, in the same namespace as this ModelConfig. |
    | `apiKeySecretKey` | The key within that Secret that holds the API key. |
-   | `model` | The model to use. For the available models, see the [Gemini API docs](https://ai.google.dev/gemini-api/docs/models). |
+   | `model` | The model to use. For the available models, see the [Gemini API docs](https://aistudio.google.com/docs/models). |
    | `provider` | The provider to use, `Gemini`. |
    | `gemini` | Settings that only the Gemini provider takes. An empty block is valid. |
 

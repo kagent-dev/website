@@ -869,6 +869,12 @@ jobs:
           sed -i 's/>/\&gt;/g' "./out.md"
           sed -i 's/__BR_TAG__/<br \/>/g' "./out.md"
 
+          # crd-ref-docs links the underlying type of a type whose Go definition
+          # is an anonymous struct (S3Object) to a heading that it never emits,
+          # so the link is dead in the page and the link checker reports it.
+          # Keep the type text and drop the link.
+          sed -i -E 's/\[(struct\{[^]]*\})\]\(#struct\{[^)]*\}\)/\1/g' "./out.md"
+
           # crd-ref-docs's markdown renderer emits multiple consecutive blank
           # lines around headings/descriptions. Collapse runs of 2+ blank
           # lines to a single one so regenerating doesn't churn whitespace
