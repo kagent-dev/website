@@ -336,7 +336,7 @@ The chart can create resources of your own as part of the kagent release. Helm t
 
 Helm renders every entry with `tpl`, so a value can reference the release, such as `{{ include "kagent.fullname" . }}` or `{{ .Release.Namespace }}`. An entry can be a map or a multi-line string.
 
-The following example creates the `kagent-openai` Secret from an external secret store, in place of the Secret that [Install kagent with Helm]({{< link path="setup/installation#install-kagent-helm" >}}) has you create by hand. Install the External Secrets Operator first, because the install fails when the cluster does not have the custom resource definition for a kind that you list.
+The following example creates the `kagent-openai` Secret from an external secret store. Install the External Secrets Operator first, because the install fails when the cluster does not have the custom resource definition for a kind that you list.
 
 ```yaml
 extraObjects:
