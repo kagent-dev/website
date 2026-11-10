@@ -81,7 +81,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    | `destinations[].origin` | A scheme, a DNS hostname, and an optional port, such as `https://registry.npmjs.org` or `https://search.example.com:8443`. An origin has no path, and a wildcard can replace only the leftmost label of the hostname, such as `https://*.example.com`. For all of the accepted forms and the limits, see [Origin format and limits](#origin-format). |
    | `destinations[].authentication` | Optional. A credential for the gateway to add to each request. For more information, see [Inject a credential](#inject-a-credential). |
 
-3. Update the Agent or SandboxTemplate to referencethe policy in the `spec.egressPolicyRefs` field.
+3. Update the Agent or SandboxTemplate to reference the policy in the `spec.egressPolicyRefs` field.
    {{< tabs >}}
    {{% tab name="Agent" %}}
    The AgentTemplate and the Harness cannot select a policy, so two Agents that share an AgentTemplate can have different access. The grant applies to the whole {{< gloss "Actor" >}}Actor{{< /gloss >}}, including the subagents that run in it.

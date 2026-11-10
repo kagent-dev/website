@@ -232,7 +232,7 @@ Setting `contextId` lists the tasks of that one Session. Leaving it out lists th
      localhost:8083 lf.a2a.v1.A2AService/ListTasks
    ```
 
-2. Narrow or shape the list with the request fields. Every field is optional.
+2. Narrow or shape the list with the following request fields. Every field is optional.
 
    | Field | Meaning |
    | ----- | ------- |
