@@ -24,7 +24,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
 1. Check that the destination is blocked before you grant access.
    {{< tabs >}}
    {{% tab name="Agent" %}}
-   The kagent runtime image does not include `curl`, so create a Session and ask the Agent to open a connection with its `bash` tool.
+   Create a Session and ask the Agent to open a connection with its `bash` tool. (The kagent runtime image does not include `curl`.)
    ```bash
    export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
    kagent agent invoke --session $SESSION_ID \
@@ -297,7 +297,7 @@ A destination that redirects to another origin needs a grant for that origin as 
 
 ## Origin format and limits {#origin-format}
 
-An origin names exactly one scheme, host, and port. The scheme must be `http` or `https`. When the port is omitted, kagent uses `443` for `https` and `80` for `http`. The API server rejects an origin that contains a path, a query, a fragment, user information, or an IP address.
+An origin can have only one value for each scheme, host, and port. The scheme must be `http` or `https`. When the port is omitted, kagent uses `443` for `https` and `80` for `http`. The API server rejects an origin that contains a path, a query, a fragment, user information, or an IP address.
 
 A wildcard can replace the leftmost label of the hostname. For example, `https://*.example.com` matches `api.example.com`, but it matches neither `example.com` nor `a.b.example.com`. The API server rejects `*` and `https://*.com`.
 

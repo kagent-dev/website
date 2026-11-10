@@ -244,7 +244,7 @@ Setting `contextId` lists the tasks of that one Session. Leaving it out lists th
    | `historyLength` | Keeps only the most recent messages of each task. Setting `0` returns none, and omitting the field returns every message. |
    | `includeArtifacts` | Returns each task's artifacts. The default is `false`, so a list omits artifacts unless you ask for them. |
 
-3. Read the response. It holds the page of `tasks`, the `pageSize` that applied, and `totalSize`, which counts every task that matches the filters across all pages. The `nextPageToken` value is empty on the last page, so a caller pages until it comes back empty. To read the artifacts of a task that a list returned, set `includeArtifacts` or call `GetTask` with the task's `id`.
+3. Read the response. It holds the page of `tasks`, the `pageSize` that applied, and `totalSize`, which counts every task that matches the filters across all pages. The `nextPageToken` value is empty on the last page, so a caller keeps requesting pages until `nextPageToken` comes back empty. To read the artifacts of a task that a list returned, set `includeArtifacts` or call `GetTask` with the task's `id`.
 
 ## Read token usage {#read-token-usage}
 
@@ -351,7 +351,7 @@ Build the receiver around these rules:
 * kagent makes up to ten attempts for each state that a task publishes, and the count carries across controller restarts. After the last attempt, kagent drops that delivery but keeps the callback registered, so the next state still reaches the receiver.
 * kagent does not expose delivery status, so nothing reports whether a delivery failed.
 
-Three Helm values tune delivery. Set them under `config.push`.
+To tune delivery, configure the following Helm values under `config.push`.
 
 | Value | Default | Effect |
 | ----- | ------- | ------ |
