@@ -44,6 +44,7 @@ The following table covers the methods that this example uses. The `TaskPushNoti
 | `SendMessage` | Sends a message and returns the task after the agent either finishes the turn or pauses for a person. |
 | `SendStreamingMessage` | Sends a message and streams events as the agent works. |
 | `GetTask` | Reads a task that a previous call created. |
+| `ListTasks` | Lists the tasks of one Session, or of every Session that the Agent has and the caller can see. |
 | `CancelTask` | Stops a task that is still running. |
 | `CreateTaskPushNotificationConfig` | Adds or replaces a callback for a task that is still active. |
 | `ListTaskPushNotificationConfigs` | Lists the active callbacks for one task. |
@@ -217,6 +218,34 @@ A task outlives the call that created it, so a caller that lost its connection c
    
 A task that is still running reports `TASK_STATE_WORKING` and does not have artifacts yet. To stop a task that is still running, call `CancelTask` with the same `id`.
 
+## List tasks {#list-tasks}
+
+`ListTasks` finds tasks without a task ID. Use it to recover a task ID that a caller lost, or to see what an Agent has run.
+
+Setting `contextId` lists the tasks of that one Session. Leaving it out lists the tasks of every Session that the Agent has and the caller can see.
+
+1. List the completed tasks of a Session, with a page size of 5.
+   ```bash
+   grpcurl -plaintext \
+     -H 'A2A-Version: 1.0' \
+     -d '{"tenant":"'"$AGENT"'","contextId":"'"$SESSION_ID"'","status":"TASK_STATE_COMPLETED","pageSize":5}' \
+     localhost:8083 lf.a2a.v1.A2AService/ListTasks
+   ```
+
+2. Narrow or shape the list with the request fields. Every field is optional.
+
+   | Field | Meaning |
+   | ----- | ------- |
+   | `contextId` | Limits the list to one Session. |
+   | `status` | Returns only the tasks in this state, such as `TASK_STATE_COMPLETED`. |
+   | `statusTimestampAfter` | Returns only the tasks whose status changed after this timestamp. |
+   | `pageSize` | Sets the number of tasks in a page. The default is `50`. A value above `100` fails with an invalid request error instead of being capped. |
+   | `pageToken` | Continues a list from the `nextPageToken` of the previous response. |
+   | `historyLength` | Keeps only the most recent messages of each task. Setting `0` returns none, and omitting the field returns every message. |
+   | `includeArtifacts` | Returns each task's artifacts. The default is `false`, so a list omits artifacts unless you ask for them. |
+
+3. Read the response. It holds the page of `tasks`, the `pageSize` that applied, and `totalSize`, which counts every task that matches the filters across all pages. The `nextPageToken` value is empty on the last page, so a caller pages until it comes back empty. To read the artifacts of a task that a list returned, set `includeArtifacts` or call `GetTask` with the task's `id`.
+
 ## Read token usage {#read-token-usage}
 
 The `kagent` harness reports the model tokens that a task uses through the optional usage extension, `https://kagent.dev/extensions/usage/v1`. The agent card of an Agent on this harness advertises the extension. A `byo` image that is built with the Go or Python helper also reports usage, but the agent card does not advertise the extension. The `codex` and `claude` harnesses do not report usage.
@@ -300,6 +329,35 @@ The kagent CLI wraps the push notification configuration methods, so this sectio
    ```bash
    kagent agent session push delete $SESSION_ID $PUSH_TASK_ID audit-webhook
    ```
+
+### Handle deliveries
+
+A delivery is an A2A `StreamResponse` that holds a `statusUpdate` with the task ID, the context ID, and the latest published status, including any status message. Ordinary progress updates do not trigger a callback. For example, the receiver gets this body when a task completes:
+
+```json
+{
+  "statusUpdate": {
+    "taskId": "task-123",
+    "contextId": "context-456",
+    "status": { "state": "TASK_STATE_COMPLETED" }
+  }
+}
+```
+
+Build the receiver around these rules:
+
+* Any `2xx` response acknowledges a delivery. Every other response counts as a failed attempt, and a redirect is one of them, so register the final callback URL.
+* A delivery can arrive more than once, or out of order. Treat `GetTask` as the source of truth for the task's current state.
+* kagent makes up to ten attempts for each state that a task publishes, and the count carries across controller restarts. After the last attempt, kagent drops that delivery but keeps the callback registered, so the next state still reaches the receiver.
+* kagent does not expose delivery status, so nothing reports whether a delivery failed.
+
+Three Helm values tune delivery. Set them under `config.push`.
+
+| Value | Default | Effect |
+| ----- | ------- | ------ |
+| `maxConcurrency` | `10` | The number of deliveries that each controller replica sends at once. Setting `1` sends them one at a time. |
+| `sendTimeout` | `5s` | How long one HTTP attempt can take before it counts as failed. |
+| `recoveryInterval` | `60s` | How often an idle controller scans for deliveries that a missed wake-up left pending. |
 
 ### Secure callback deliveries
 

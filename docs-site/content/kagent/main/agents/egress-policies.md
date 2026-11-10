@@ -21,7 +21,21 @@ Create the resource that you want to grant access to. The examples on this page 
 
 Create an EgressPolicy that lists the destinations that you want to grant access to, and then select the policy on the Agent or SandboxTemplate.
 
-1. Create the EgressPolicy in the namespace of the Agent or SandboxTemplate. A resource can select only the policies in its own namespace. This example grants access to the npm registry and the Node.js download site.
+1. For an Agent, check that the destination is blocked before you grant access. The kagent runtime image does not include `curl`, so create a Session and ask the Agent to open a connection with its `bash` tool.
+   ```bash
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID \
+     --task "Use your bash tool to run exactly this command, then reply with only its output: bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'"
+   ```
+
+   Example output:
+   ```console
+   blocked
+   ```
+
+   A destination that no grant allows does not resolve, so the connection fails. Because a model runs the command, repeat the request if the reply describes the result in other words instead of printing it.
+
+2. Create the EgressPolicy in the namespace of the Agent or SandboxTemplate. A resource can select only the policies in its own namespace. This example grants access to the npm registry and the Node.js download site.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -44,7 +58,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    | `destinations[].origin` | A scheme, a DNS hostname, and an optional port, such as `https://registry.npmjs.org` or `https://search.example.com:8443`. For the accepted forms, see [Origin format](#origin-format). |
    | `destinations[].authentication` | Optional. A credential for the gateway to add to each request. For more information, see [Inject a credential](#inject-a-credential). |
 
-2. Select the policy in the `spec.egressPolicyRefs` field.
+3. Select the policy in the `spec.egressPolicyRefs` field.
    {{< tabs >}}
    {{% tab name="Agent" %}}
    The AgentTemplate and the Harness cannot select a policy, so two Agents that share an AgentTemplate can have different access. The grant applies to the whole {{< gloss "Actor" >}}Actor{{< /gloss >}}, including the subagents that run in it.
@@ -62,7 +76,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    {{% /tab %}}
    {{< /tabs >}}
 
-3. Check that kagent admitted the grant. When kagent admits every selected policy, the `EgressPoliciesApplied` condition reports `True` with the reason `Applied`.
+4. Check that kagent accepted the policy. The `EgressPoliciesApplied` condition reports `True` with the reason `Applied` when kagent has validated every selected policy and sent its rules to the egress gateway. The condition does not test a request, so it can report `True` for a moment before running Sessions pick up the change.
    {{< tabs >}}
    {{% tab name="Agent" %}}
    ```bash
@@ -82,6 +96,19 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    ```console
    True Applied All requested egress grants are admitted
    ```
+
+5. For an Agent, send the same request again in the same Session. The condition from the previous step does not test a request, so this result shows whether the Agent reaches the destination now.
+   ```bash
+   kagent agent invoke --session $SESSION_ID \
+     --task "Use your bash tool to run exactly this command, then reply with only its output: bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'"
+   ```
+
+   Example output:
+   ```console
+   reachable
+   ```
+
+   The update is asynchronous, so if the reply still says `blocked`, wait a few seconds and send the request again.
 
 The grant reaches existing workloads as well as new ones. kagent updates the policy of every running and suspended Actor without restarting it. For an Agent, this update covers every {{< gloss "Session" >}}Session{{< /gloss >}}. For a SandboxTemplate, the update covers every Sandbox that was created from the template. The update is asynchronous, so a request that is sent immediately after the change might still use the previous policy.
 
@@ -218,9 +245,32 @@ The gateway mints, injects, and refreshes the token, so the policy needs no Secr
      https://tickets.example.com/tickets
    ```
 
+## Manage policies in the UI {#manage-policies-in-the-ui}
+
+The **Policies** page of the kagent UI creates, edits, and deletes EgressPolicy resources without `kubectl`. Its **Egress Policies** tab lists the policies that you can read, with each policy's name, namespace, origins, and authentication type, which is **None**, **Secret key**, or **Actor JWT**. A search box matches names and origins, and a namespace filter narrows the list. For how to open the UI, see [Launch the UI]({{< link path="ui/launch-ui" >}}).
+
+Selecting a policy opens its details page. The page lists the destinations, with the origin, header, prefix, and credential of each. A **Used by** table lists the Agents and SandboxTemplates in the policy's namespace that select the policy, and its **Applied** column reports **Applied**, **Not applied**, or **Not reported yet** for each one. The table counts only the resources that you can see, so the numbers can be lower than the real ones.
+
+To create a policy, select **Create egress policy**.
+
+1. Enter a name and choose a namespace. Neither can change after you create the policy.
+
+2. Add one destination for each origin that agents need, up to 64 per policy. Enter the origin in the [format described earlier](#origin-format), and optionally set authentication. A **Secret key** sets the header and prefix, and names a Secret and key in the policy's namespace. An **Actor JWT** sets the audiences and the token lifetime, which is between 300 and 3600 seconds and defaults to 900. For what each field does, see [Inject a credential](#inject-a-credential).
+
+3. Select **Create policy**.
+
+Before the form saves, it checks the policy against the API server's rules and lists any problems under **Fix these before you save**. For example, the form blocks a wildcard origin that has authentication.
+
+Editing a policy replaces its destinations. When someone else saves the policy after you open it, the form reports that your copy is out of date and asks you to reload before you redo your changes. Deleting a policy that Agents or SandboxTemplates still select warns you first, because they lose access to the hosts that the policy allows as soon as you delete it.
+
+To attach a policy to an Agent, select it in the **Egress policies** field of the Agent form, which lists the policies in the Agent's namespace. The Agent's details page links back to the policies that it uses. To check that the Agent reaches the destination, send the request from [Grant access to a destination](#grant-access-to-a-destination) before and after you select the policy.
+
+> [!NOTE]
+> The UI writes EgressPolicy resources through the controller, not through your own Kubernetes credentials. For who can reach that path, see [Access control](#access-control).
+
 ## Troubleshoot a grant
 
-The `EgressPoliciesApplied` condition on the Agent or SandboxTemplate reports whether kagent admitted the grants. This condition is independent of `Ready`. An Agent with a missing or invalid policy still reports `Ready`, and it still serves Sessions with its inferred destinations.
+The `EgressPoliciesApplied` condition on the Agent or SandboxTemplate reports whether kagent admitted the grants. This condition is independent of `Ready`. An Agent with a missing or invalid policy still reports `Ready`, and it still serves Sessions with its inferred destinations. The UI follows the same rule, so an Agent whose condition is `False` does not appear as failed.
 
 The condition message names the affected policies, and the reason identifies the problem.
 

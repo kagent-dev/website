@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-The `Foundry` provider calls a model deployment in an Azure AI Foundry resource. The chat model must be reachable through Foundry's OpenAI-compatible chat completions API.
+The `Foundry` provider calls a model deployment in an Azure AI Foundry resource. By default, the chat model must be reachable through Foundry's OpenAI-compatible chat completions API. To call a Claude model, which Foundry serves over the Anthropic Messages API, set `foundry.apiFormat` to `Anthropic`. For more information, see [Use a Claude model](#use-a-claude-model).
 
 ## Create the ModelConfig
 
@@ -42,12 +42,14 @@ The `Foundry` provider calls a model deployment in an Azure AI Foundry resource.
    | Field | Description |
    | ----- | ----------- |
    | `apiKeySecret` | The name of the Kubernetes Secret that stores the API key, in the same namespace as this ModelConfig. |
-   | `apiKeySecretKey` | The key within that Secret that holds the API key. |
+   | `apiKeySecretKey` | The key within that Secret that holds the API key. For other ways to authenticate, see [Authentication](#authentication). |
    | `model` | The model that the deployment serves. |
    | `provider` | The provider to use, `Foundry`. |
-   | `foundry.endpoint` | The endpoint of your Foundry account. |
+   | `foundry.endpoint` | The endpoint of your Foundry account. To read it from a ConfigMap instead, see [Read the endpoint from a ConfigMap](#read-the-endpoint-from-a-configmap). |
    | `foundry.deployment` | The name of the deployment within the account. This field is required. |
    | `foundry.apiVersion` | The Foundry API version to call. Defaults to `2024-10-21`. |
+
+   For the other `foundry` settings, see [Azure AI Foundry provider settings](#azure-ai-foundry-provider-settings).
 
 ## Azure AI Foundry provider settings
 
@@ -57,8 +59,9 @@ The `foundry` block takes the following settings. For every field, including its
 | ----- | ----------- |
 | `deployment` | The deployment name within the Foundry account. Required. |
 | `endpoint` | The endpoint of the Foundry account. |
-| `endpointFrom` | Read the endpoint from a key in a ConfigMap instead of setting it inline. Use this field when the endpoint differs per environment and is published by a platform team. |
-| `apiVersion` | The Foundry API version. Defaults to `2024-10-21`. |
+| `endpointFrom` | Read the endpoint from a key in a ConfigMap instead of setting it inline. Use this field when the endpoint differs per environment and is published by a platform team. For more information, see [Read the endpoint from a ConfigMap](#read-the-endpoint-from-a-configmap). |
+| `apiVersion` | The Foundry API version. Defaults to `2024-10-21`. kagent ignores this field when `apiFormat` is `Anthropic`. |
+| `apiFormat` | The API that kagent calls on the deployment. `OpenAI`, the default, calls the OpenAI-compatible chat completions API. `Anthropic` calls the Anthropic Messages API, which serves Claude models. For more information, see [Use a Claude model](#use-a-claude-model). |
 
 ### Read the endpoint from a ConfigMap
 
@@ -83,6 +86,31 @@ When the named ConfigMap or key does not exist, the {{< gloss "ModelConfig" >}}M
 kubectl describe modelconfig foundry-model-config -n kagent
 ```
 
+## Use a Claude model {#use-a-claude-model}
+
+Foundry serves Claude models over the Anthropic Messages API and not over the OpenAI-compatible API. Set `foundry.apiFormat` to `Anthropic` so that kagent calls the Messages API. The example reuses the Secret that [Create the ModelConfig](#create-the-modelconfig) creates.
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: foundry-claude
+  namespace: kagent
+spec:
+  apiKeySecret: foundry-api-key
+  apiKeySecretKey: api-key
+  model: claude-sonnet-4-5
+  provider: Foundry
+  foundry:
+    endpoint: https://<account>.cognitiveservices.azure.com/
+    deployment: claude-sonnet-4-5
+    apiFormat: Anthropic
+EOF
+```
+
+kagent sends each request to `<endpoint>/anthropic/v1/messages` and puts the deployment name in the request's `model` field. The `apiVersion` field has no effect, because the Messages API takes its version from a request header instead. Authentication works as it does for any other Foundry deployment, as described in [Authentication](#authentication).
+
 ## Authentication
 
 | Configuration | Credential |
@@ -106,7 +134,7 @@ spec:
 
 ## Memory embeddings
 
-A Foundry deployment can also serve the embedding model behind [long-term memory]({{< link path="agents/agent-memory" >}}). Point a second ModelConfig at your embedding deployment, then name it from the Harness's `spec.kagent.memory.modelConfigRef`.
+A Foundry deployment can also serve the embedding model behind [long-term memory]({{< link path="agents/agent-memory" >}}). Point a second ModelConfig at your embedding deployment, reusing the Secret that [Create the ModelConfig](#create-the-modelconfig) creates, then name it from the Harness's `spec.kagent.memory.modelConfigRef`.
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -130,8 +158,8 @@ EOF
 
 | Symptom | Cause |
 | ------- | ----- |
-| The ModelConfig reports `Accepted` as `False` | A referenced Secret or `endpointFrom` ConfigMap does not exist, or does not hold the named key. Run `kubectl describe modelconfig` to see which one. |
-| Foundry returns `401 Unauthorized` or `403 Forbidden` | The API key does not have access to the resource. |
+| The ModelConfig reports `Accepted` as `False` | A referenced Secret or [`endpointFrom` ConfigMap](#read-the-endpoint-from-a-configmap) does not exist, or does not hold the named key. Run `kubectl describe modelconfig` to see which one. |
+| Foundry returns `401 Unauthorized` or `403 Forbidden` | The API key does not have access to the resource. For the credential options, see [Authentication](#authentication). |
 | The Agent reports `Compatible` as `False` | The resolved configuration cannot run on the Harness. Read the condition message for the specific reason. |
 
 ## Next steps

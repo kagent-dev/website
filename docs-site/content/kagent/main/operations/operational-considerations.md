@@ -317,11 +317,11 @@ A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so e
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
 * An Actor that is still running a turn is lost. The Session's in-flight execution state lives in the Actor's sandbox memory on the Worker, and Agent Substrate writes nothing new to snapshot storage until this Actor suspends.
 
-A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. Through kagent, deleting the Actor and starting a new {{< gloss "Session" >}}Session{{< /gloss >}} is the only available option, so the Session ends with the node.
+A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. kagent does not recover the Actor on its own, so the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery.
 
-<!-- REVIEW (runtime reviewer): Agent Substrate does have a recovery verb. RevertActor (cmd/ateapi/internal/controlapi/workflow_revert.go) accepts a CRASHED actor, returns it to SUSPENDED, leaves the external snapshot in place for a later resume, and needs no live worker. kagent never calls it, so a kagent user cannot reach it today and this section describes the kagent-level outcome only. Confirm whether kagent should expose revert before GA, and rewrite this paragraph if it does. -->
+A client with update access to the Session recovers it by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. Calling it on a Session whose Actor is not crashed returns the Session unchanged, so a retry is safe. If the Actor is missing or was replaced, the call fails with `FAILED_PRECONDITION`, and starting a new Session is the only option. Neither the `kagent` CLI nor the UI offers a way to revert a Session.
 
-Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors still lose their Sessions, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
+Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors lose everything since their last snapshot, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
 
 ### Graceful pod deletion
 
@@ -339,7 +339,7 @@ gcloud container node-pools update "${NODE_POOL}" \
 
 ### Spot and preemptible nodes
 
-A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for Sessions that end without warning. Use these nodes only where a lost turn is acceptable for the agents on the pool.
+A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for turns that fail without warning. Use these nodes only where a lost turn is acceptable for the agents on the pool.
 
 ### WorkerPool scale-down
 

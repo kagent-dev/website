@@ -19,9 +19,46 @@ Create the resource that you want to grant access to. The examples on this page 
 
 ## Grant access to a destination
 
-Create an EgressPolicy that lists the destinations that you want to grant access to, and then select the policy on the Agent or SandboxTemplate.
+Create an EgressPolicy that lists the destinations that you want to grant access to, and then select the policy on the Agent or SandboxTemplate. The following example shows the steps for an Agent.
 
-1. Create the EgressPolicy in the namespace of the Agent or SandboxTemplate. A resource can select only the policies in its own namespace. This example grants access to the npm registry and the Node.js download site.
+1. Check that the destination is blocked before you grant access.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
+   The kagent runtime image does not include `curl`, so create a Session and ask the Agent to open a connection with its `bash` tool.
+   ```bash
+   export SESSION_ID=$(kagent agent session create --agent my-first-agent -o json | jq -r '.session.id')
+   kagent agent invoke --session $SESSION_ID \
+     --task "Use your bash tool to run exactly this command, then reply with only its output: bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'"
+   ```
+
+   Example output:
+   ```console
+   blocked
+   ```
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
+   Create a Sandbox from the template, and run the check in it. The check uses `bash`, so the tools image of the template must include `bash`.
+   ```bash
+   export SANDBOX_ID=$(kagent sandbox create scratch --request-id egress-check -o json | jq -r '.id')
+   kagent sandbox exec $SANDBOX_ID -- bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'
+   ```
+
+   Example output:
+   ```console
+   Process proc-5182872b055b6f61a9dc86cc in sandbox 0198c3f1-2a44-7c90-b5e1-9d8f3a7b2c04: started (stdout offset 0, stderr offset 0)
+   blocked
+   bash: line 1: registry.npmjs.org: Name or service not known
+   bash: line 1: /dev/tcp/registry.npmjs.org/443: Invalid argument
+   Process proc-5182872b055b6f61a9dc86cc: PROCESS_STATE_EXITED, exit_code=0
+   ```
+
+   The process exits with code `0` in either case, so read the word that the command prints and not the exit code.
+   {{% /tab %}}
+   {{< /tabs >}}
+
+   A destination that no grant allows does not resolve, so the connection fails. 
+
+2. Create the EgressPolicy in the namespace of the Agent or SandboxTemplate. A resource can select only the policies in its own namespace. This example grants access to the npm registry and the Node.js download site.
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -41,10 +78,10 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    | Field | Description |
    | ----- | ----------- |
    | `destinations` | The destinations to grant, from 1 to 64 entries. |
-   | `destinations[].origin` | A scheme, a DNS hostname, and an optional port, such as `https://registry.npmjs.org` or `https://search.example.com:8443`. For the accepted forms, see [Origin format](#origin-format). |
+   | `destinations[].origin` | A scheme, a DNS hostname, and an optional port, such as `https://registry.npmjs.org` or `https://search.example.com:8443`. An origin has no path, and a wildcard can replace only the leftmost label of the hostname, such as `https://*.example.com`. For all of the accepted forms and the limits, see [Origin format and limits](#origin-format). |
    | `destinations[].authentication` | Optional. A credential for the gateway to add to each request. For more information, see [Inject a credential](#inject-a-credential). |
 
-2. Select the policy in the `spec.egressPolicyRefs` field.
+3. Update the Agent or SandboxTemplate to referencethe policy in the `spec.egressPolicyRefs` field.
    {{< tabs >}}
    {{% tab name="Agent" %}}
    The AgentTemplate and the Harness cannot select a policy, so two Agents that share an AgentTemplate can have different access. The grant applies to the whole {{< gloss "Actor" >}}Actor{{< /gloss >}}, including the subagents that run in it.
@@ -62,7 +99,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    {{% /tab %}}
    {{< /tabs >}}
 
-3. Check that kagent admitted the grant. When kagent admits every selected policy, the `EgressPoliciesApplied` condition reports `True` with the reason `Applied`.
+4. Check that kagent accepted the policy. The `EgressPoliciesApplied` condition reports `True` with the reason `Applied` when kagent has validated every selected policy and sent its rules to the egress gateway. The condition does not test a request, so it can report `True` for a moment before running Sessions pick up the change.
    {{< tabs >}}
    {{% tab name="Agent" %}}
    ```bash
@@ -83,24 +120,38 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    True Applied All requested egress grants are admitted
    ```
 
+5. Send the same request again. The condition from the previous step does not test a request, so this result shows whether the Agent or Sandbox reaches the destination now.
+   {{< tabs >}}
+   {{% tab name="Agent" %}}
+   Use the same Session.
+   ```bash
+   kagent agent invoke --session $SESSION_ID \
+     --task "Use your bash tool to run exactly this command, then reply with only its output: bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'"
+   ```
+
+   Example output:
+   ```console
+   reachable
+   ```
+   {{% /tab %}}
+   {{% tab name="Standalone sandbox" %}}
+   Use the same Sandbox. It picks up the grant without being created again.
+   ```bash
+   kagent sandbox exec $SANDBOX_ID -- bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'
+   ```
+
+   Example output:
+   ```console
+   Process proc-360e1e86c15990081d976630 in sandbox 0198c3f1-2a44-7c90-b5e1-9d8f3a7b2c04: started (stdout offset 0, stderr offset 0)
+   reachable
+   Process proc-360e1e86c15990081d976630: PROCESS_STATE_EXITED, exit_code=0
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
+
+   The update is asynchronous, so if the result still says `blocked`, wait a few seconds and send the request again.
+
 The grant reaches existing workloads as well as new ones. kagent updates the policy of every running and suspended Actor without restarting it. For an Agent, this update covers every {{< gloss "Session" >}}Session{{< /gloss >}}. For a SandboxTemplate, the update covers every Sandbox that was created from the template. The update is asynchronous, so a request that is sent immediately after the change might still use the previous policy.
-
-## Origin format
-
-An origin names exactly one scheme, host, and port. The scheme must be `http` or `https`. When the port is omitted, kagent uses `443` for `https` and `80` for `http`. The API server rejects an origin that contains a path, a query, a fragment, user information, or an IP address.
-
-A wildcard can replace the leftmost label of the hostname. For example, `https://*.example.com` matches `api.example.com`, but it matches neither `example.com` nor `a.b.example.com`. The API server rejects `*` and `https://*.com`.
-
-A redirect to another origin needs its own grant. For example, a package registry often serves downloads from a separate host. An install fails at that host until the policy grants it as well.
-
-The API server rejects an `egressPolicyRefs` list that selects more than 16 policies and a policy that lists more than 64 destinations. The compiled policy limit also counts the destinations that kagent inferred, so an Agent with many tools reaches it sooner.
-
-| Limit | Value |
-| ----- | ----- |
-| Policies that one Agent or SandboxTemplate selects | 16 |
-| Destinations in one policy | 64 |
-| Rules in the compiled policy of one Actor | 256 |
-| Credential headers for one origin | 16 |
 
 ## Inject a credential
 
@@ -220,7 +271,7 @@ The gateway mints, injects, and refreshes the token, so the policy needs no Secr
 
 ## Troubleshoot a grant
 
-The `EgressPoliciesApplied` condition on the Agent or SandboxTemplate reports whether kagent admitted the grants. This condition is independent of `Ready`. An Agent with a missing or invalid policy still reports `Ready`, and it still serves Sessions with its inferred destinations.
+The `EgressPoliciesApplied` condition on the Agent or SandboxTemplate reports whether kagent admitted the grants. This condition is independent of `Ready`. An Agent with a missing or invalid policy still reports `Ready`, and it still serves Sessions with its inferred destinations. The UI follows the same rule, so an Agent whose condition is `False` does not appear as failed.
 
 The condition message names the affected policies, and the reason identifies the problem.
 
@@ -241,6 +292,29 @@ A grant conflict happens in the following cases:
 - The compiled policy would exceed 256 rules.
 
 In a standalone Sandbox, a destination that no grant allows does not resolve. A client therefore reports a name-resolution error, not an HTTP error. For example, `curl` fails with `Could not resolve host` and exit code `6`. For how to find a denied request in the gateway's log, see [Diagnose a denied request]({{< link path="about/substrate-runtime/networking-and-egress#diagnose-a-denied-request" >}}).
+
+A destination that redirects to another origin needs a grant for that origin as well. For example, a package registry often serves downloads from a separate host, so an install fails at that host until the policy grants it too.
+
+## Origin format and limits {#origin-format}
+
+An origin names exactly one scheme, host, and port. The scheme must be `http` or `https`. When the port is omitted, kagent uses `443` for `https` and `80` for `http`. The API server rejects an origin that contains a path, a query, a fragment, user information, or an IP address.
+
+A wildcard can replace the leftmost label of the hostname. For example, `https://*.example.com` matches `api.example.com`, but it matches neither `example.com` nor `a.b.example.com`. The API server rejects `*` and `https://*.com`.
+
+The API server rejects an `egressPolicyRefs` list that selects more than 16 policies and a policy that lists more than 64 destinations. The compiled policy limit also counts the destinations that kagent inferred, so an Agent with many tools reaches it sooner.
+
+| Limit | Value |
+| ----- | ----- |
+| Policies that one Agent or SandboxTemplate selects | 16 |
+| Destinations in one policy | 64 |
+| Rules in the compiled policy of one Actor | 256 |
+| Credential headers for one origin | 16 |
+
+## Manage policies in the UI {#manage-policies-in-the-ui}
+
+You can create, edit, and delete EgressPolicy resources in the **Policies** page of the kagent UI without `kubectl`. The **Egress Policies** tab on the page lists the policies that you can read, with each policy's name, namespace, origins, and authentication type, which can be **None**, **Secret key**, or **Actor JWT**. You can filter the list by name, origins, or namespaces by using the search box. For how to open the UI, see [Launch the UI]({{< link path="ui/launch-ui" >}}).
+
+For who can reach this path, see [Access control](#access-control).
 
 ## Access control
 
