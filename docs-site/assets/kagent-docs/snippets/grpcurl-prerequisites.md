@@ -1,4 +1,9 @@
+{{% version include-if="latest" %}}
 1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets grpcurl discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+{{% /version %}}
+{{% version include-if="main" %}}
+1. [Install kagent]({{< link path="setup/installation" >}}). {{< reuse "kagent-docs/snippets/grpcurl-reflection.md" >}}
+{{% /version %}}
 
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), then save the Agent's namespace and name to an environment variable, in the `<namespace>/<name>` form that the A2A `tenant` field takes. To list your Agents, run `kagent agent list`.
    ```bash

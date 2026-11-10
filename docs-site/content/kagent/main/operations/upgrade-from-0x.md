@@ -66,7 +66,7 @@ Export your resources before you uninstall 0.10.x. Some resources convert to 1.0
 
 Install 1.0 against the empty database that you provisioned. kagent and Agent Substrate both store their state in that database, each with an owner login that applies migrations and a read/write login that serves runtime queries. `kagent install` normally creates a development database for both. When you pass `--skip-database-setup`, `kagent install` does not create the development database. The kagent and Agent Substrate charts then read the connection Secrets that you create in this section.
 
-Before you start, complete the [Before you begin]({{< link path="setup/installation#before-you-begin" >}}) steps of the installation guide. Those steps prepare a cluster at Kubernetes 1.37 or later and your provider API key. Then install the CLI tools in step 1 of [Install with the CLI]({{< link path="setup/installation#install-kagent" >}}).
+Before you start, complete the [Before you begin]({{< link path="setup/installation#before-you-begin" >}}) steps of the installation guide, which prepare a cluster at Kubernetes 1.37 or later and the `kubectl` and `helm` tools. Then set your provider API key and install the kagent CLI as described in [Install with the CLI]({{< link path="setup/installation#install-kagent" >}}), without running `kagent install` yet.
 
 1. Create the namespaces that contain the connection Secrets. If a namespace already exists, `kagent install` uses it.
    ```bash
@@ -129,7 +129,7 @@ Before you start, complete the [Before you begin]({{< link path="setup/installat
    | `database.postgres.ownerConnectionStringSecretRef.name` and `database.postgres.readWriteConnectionStringSecretRef.name` | Read the two connection strings from the Secrets that you created. The keys default to `ownerConnectionString` and `readWriteConnectionString`. |
    | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the kagent setup script created. If you passed other role names to the script, set those names instead. |
    | `config.database.vectorEnabled` | Applies the pgvector migrations, which [long-term memory]({{< link path="agents/agent-memory" >}}) depends on. If your database does not have the pgvector extension installed, omit the value. |
-   | `config.server.grpcReflection` | Lets the guides that use `grpcurl` discover the controller API, as in the installation guide. |
+   | `config.server.grpcReflection` | Lets the guides that use `grpcurl` discover the controller API. `kagent install` enables it by default, so this value only keeps the setting explicit in the values file. |
 
 6. Save a CLI configuration file that references `kagent-values.yaml`. The `kagent db` commands read `database.vectorEnabled` from this file, not from the Helm values. Set `database.vectorEnabled` to match `config.database.vectorEnabled`. If you omitted `config.database.vectorEnabled`, omit `database.vectorEnabled` too.
    ```bash

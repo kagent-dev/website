@@ -15,7 +15,7 @@ The export contains only the Helm releases. `kagent install` also creates the Ag
 
 ## Before you begin
 
-1. Install kagent with the kagent CLI, as described in [Install with the CLI]({{< link path="setup/installation#install-kagent" >}}). Keep the CLI configuration file that passes Helm values to `kagent install`, and the values files that it references. The CLI reads the configuration file from one of the following locations:
+1. Install kagent with the kagent CLI, as described in [Install with the CLI]({{< link path="setup/installation#install-kagent" >}}). If you [passed your own Helm values]({{< link path="setup/installation#cli-helm-values" >}}), keep the CLI configuration file that passes Helm values to `kagent install`, and the values files that it references. The CLI reads the configuration file from one of the following locations:
    * The path that you passed with the `--config` flag, such as `kagent-config.yaml`.
    * When you omit `--config`, `$XDG_CONFIG_HOME/kagent/config.yaml` on Linux, or `~/.config/kagent/config.yaml` when `XDG_CONFIG_HOME` is not set. On macOS, `~/Library/Application Support/kagent/config.yaml`.
 
