@@ -1012,7 +1012,7 @@ _Appears in:_
 
 #### S3Object
 
-_Underlying type:_ _[struct{Endpoint string "json:\"endpoint\""; Bucket string "json:\"bucket\""; Key string "json:\"key\""; VersionID string "json:\"versionId\""; Region string "json:\"region,omitempty\""}](#struct{endpoint-string-"json:\"endpoint\"";-bucket-string-"json:\"bucket\"";-key-string-"json:\"key\"";-versionid-string-"json:\"versionid\"";-region-string-"json:\"region,omitempty\""})_
+_Underlying type:_ _struct{Endpoint string "json:\"endpoint\""; Bucket string "json:\"bucket\""; Key string "json:\"key\""; VersionID string "json:\"versionId\""; Region string "json:\"region,omitempty\""}_
 
 S3Object identifies one immutable S3 object version.
 
