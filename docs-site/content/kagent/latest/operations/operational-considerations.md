@@ -210,7 +210,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
 
 ## Run multiple controller replicas
 
-So that a controller failure does not stop reconciliation, set `controller.replicas` to a number higher than `1`.
+To ensure that a controller failure does not stop reconciliation, increase the number of controller replicas by setting the `controller.replicas` Helm value to a number higher than `1`.
 
 ```yaml
 controller:
@@ -221,6 +221,26 @@ Leader election keeps the replicas from conflicting. One replica takes a Kuberne
 
 > [!IMPORTANT]
 > If an installation runs on the development database, extra controller replicas do not make the installation highly available. That database is a single pod backed by one PersistentVolumeClaim, so losing it stops every replica at once. Run an external PostgreSQL instance before counting controller replicas toward availability.
+
+Configure a [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) to ensure that a minimum number of control plane instances are up and running at any given time during voluntary disruptions, such as cluster upgrades or node drains. The controller's budget is off by default. 
+
+The following example keeps two of three controller replicas available. Note that the two budget values are mutually exclusive, and the chart fails the install when both are set. Because `maxUnavailable` defaults to `1`, setting `minAvailable` also requires setting `maxUnavailable` to `null`, as shown in the example.
+
+```yaml
+controller:
+  replicas: 3
+  pdb:
+    enabled: true
+    minAvailable: 2
+    maxUnavailable: null
+```
+
+| Value | Description |
+| ----- | ----------- |
+| `controller.pdb.enabled` | Set to `true` to create the budget. Defaults to `false`. |
+| `controller.pdb.maxUnavailable` | The number of pods, or a percentage such as `"50%"`, that can be unavailable. Defaults to `1`. |
+| `controller.pdb.minAvailable` | The number of pods, or a percentage, that must stay available. Unset by default. |
+
 
 ## Sign push notification callbacks
 
@@ -310,6 +330,34 @@ ui:
     periodSeconds: 30
 ```
 
+## Deploy extra resources with the release {#extra-objects}
+
+The chart can create resources of your own as part of the kagent release. Helm then installs, upgrades, and removes them together with kagent, so you do not maintain a separate chart for them. List each manifest under `extraObjects`. Typical uses are an ExternalSecret that fills the model provider Secret, an HTTPRoute, or a NetworkPolicy.
+
+Helm renders every entry with `tpl`, so a value can reference the release, such as `{{ include "kagent.fullname" . }}` or `{{ .Release.Namespace }}`. An entry can be a map or a multi-line string.
+
+The following example creates the `kagent-openai` Secret from an external secret store. Install the External Secrets Operator first, because the install fails when the cluster does not have the custom resource definition for a kind that you list.
+
+```yaml
+extraObjects:
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: '{{ include "kagent.fullname" . }}-openai'
+      namespace: '{{ .Release.Namespace }}'
+    spec:
+      secretStoreRef:
+        name: aws-secretsmanager
+        kind: ClusterSecretStore
+      target:
+        name: kagent-openai
+      data:
+        - secretKey: OPENAI_API_KEY
+          remoteRef:
+            key: prod/kagent/openai
+            property: api_key
+```
+
 ## Node operations
 
 A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so every node event reaches the {{< gloss "Actor" >}}Actors{{< /gloss >}} that this Worker hosts. What the event costs depends on what each Actor was doing when the node went away.
@@ -317,11 +365,11 @@ A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so e
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
 * An Actor that is still running a turn is lost. The Session's in-flight execution state lives in the Actor's sandbox memory on the Worker, and Agent Substrate writes nothing new to snapshot storage until this Actor suspends.
 
-A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses `resume` and `suspend` on an Actor in this state. Through kagent, deleting the Actor and starting a new {{< gloss "Session" >}}Session{{< /gloss >}} is the only available option, so the Session ends with the node.
+A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses the `resume` and `suspend` operation on an Actor in this state. kagent does not recover the Actor on its own, so the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery.
 
-<!-- REVIEW (runtime reviewer): Agent Substrate does have a recovery verb. RevertActor (cmd/ateapi/internal/controlapi/workflow_revert.go) accepts a CRASHED actor, returns it to SUSPENDED, leaves the external snapshot in place for a later resume, and needs no live worker. kagent never calls it, so a kagent user cannot reach it today and this section describes the kagent-level outcome only. Confirm whether kagent should expose revert before GA, and rewrite this paragraph if it does. -->
+A client with update access to the Session can recover a crashed agent by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. If the Actor is missing or was replaced, the call fails with `FAILED_PRECONDITION`, and starting a new Session is the only option. Neither the `kagent` CLI nor the UI offers a way to revert a Session.
 
-Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors still lose their Sessions, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
+Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors lose everything since their last snapshot, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
 
 ### Graceful pod deletion
 
@@ -339,7 +387,7 @@ gcloud container node-pools update "${NODE_POOL}" \
 
 ### Spot and preemptible nodes
 
-A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for Sessions that end without warning. Use these nodes only where a lost turn is acceptable for the agents on the pool.
+A provider reclaims spot and preemptible nodes on its own schedule, and each reclaim crashes every Actor that was awake on the node. A pool on reclaimable capacity therefore trades a lower bill for turns that fail without warning. Use these nodes only where a lost turn is acceptable for the agents on the pool.
 
 ### WorkerPool scale-down
 

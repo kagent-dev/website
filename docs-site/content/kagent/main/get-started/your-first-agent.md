@@ -23,6 +23,7 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
 
 1. Apply a `Harness` that uses kagent's native runtime. Its `substrate` section names the [WorkerPool]({{< link path="about/architecture/agent-substrate#workers-and-workerpools" >}}) that this Harness's Actors run on, and the object storage location for their [snapshots]({{< link path="about/architecture/agent-substrate#suspend-snapshot-and-resume" >}}).
    ```yaml
+   kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
    kind: Harness
    metadata:
@@ -40,6 +41,7 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
          # The bucket that the Agent Substrate chart creates in its bundled object store.
          # If your Substrate installation uses your own object storage, use that location instead.
          location: s3://ate-snapshots/kagent/
+   EOF
    ```
 
    > [!TIP]
@@ -47,6 +49,7 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
 
 2. Apply an `AgentTemplate`. The `modelConfig` field references the `default-model-config` {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} that was automatically created for the model provider API key that you provided during kagent installation.
    ```yaml
+   kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
    kind: AgentTemplate
    metadata:
@@ -58,10 +61,12 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
        # Default config created by the kagent install guide
        name: default-model-config
      systemPrompt: You are a concise, helpful assistant.
+   EOF
    ```
 
 3. Apply an `Agent` that pairs a Harness and an AgentTemplate.
    ```yaml
+   kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
    kind: Agent
    metadata:
@@ -73,6 +78,7 @@ Three resources define a runnable agent: a Harness holds the runtime, an AgentTe
          name: my-first-template
      harnessRef:
        name: my-first-harness
+   EOF
    ```
    > [!NOTE]
    > `spec.template` takes either a reference, as shown here, or a complete AgentTemplate spec under `inline`. An inline template is a complete value rather than an override, and kagent does not create a Kubernetes object to back it. `spec.harnessRef` takes a reference only, so a Harness must exist before an Agent can name it.
@@ -126,9 +132,9 @@ A Session is one running conversation with an Agent. Creating it starts an Actor
    kagent agent invoke --session $SESSION_ID --task "What is 2+2?"
    ```
 
-   The agent's reply prints as text.
+   The agent's reply prints as text. The wording of the reply depends on the model.
    ```console
-   4
+   2+2 equals 4.
    ```
 
 2. Send a follow-up message to the same Session. A Session holds the {{< gloss "Transcript" >}}transcript{{< /gloss >}} of its conversation, so the agent answers with the earlier turns in context.

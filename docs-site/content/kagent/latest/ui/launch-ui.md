@@ -79,6 +79,7 @@ The left menu groups the console pages by the resource that each page reads.
 | **Schedules** | Agents that receive a fixed prompt on a cron schedule. Each execution starts a new conversation. For more information, see [Scheduled runs]({{< link path="agents/scheduled-runs" >}}). |
 | **Models** | The {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}} resources that agents reference, and the providers behind them. |
 | **MCP Servers** | Connected {{< gloss "RemoteMCPServer" >}}RemoteMCPServer{{< /gloss >}} resources and the tools discovered from each. |
+| **Policies** | The [EgressPolicy]({{< link path="agents/egress-policies" >}}) resources, which list the extra HTTP(S) hosts that agents and sandbox templates can reach. The page has one tab, **Egress Policies**. For more information, see [Manage policies in the UI]({{< link path="agents/egress-policies#manage-policies-in-the-ui" >}}). |
 | **Prompts** | Prompt libraries, which store reusable fragments that an AgentTemplate includes in its instructions. |
 | **Substrate** | WorkerPools, Actors, and Workers, read from both Kubernetes and the Agent Substrate API. |
 
@@ -112,6 +113,8 @@ Select the mark to open the record behind it. The record shows the checkpoint's 
 > A checkpoint is always taken at the latest turn boundary, so the UI offers checkpoint controls on your own most recent message and not on earlier ones.
 
 The bell icon on the latest message of a task opens **Task notifications**. Use it to add, edit, or remove the callback URLs that kagent posts task updates to. A new callback receives only the updates that its task sends after you register it, and only when the task needs input or reaches a final state. After the task finishes, you can view and remove its callbacks, but you cannot add or edit them. For how kagent delivers and signs a callback, see [Register task callbacks]({{< link path="examples/a2a-agents#task-callbacks" >}}).
+
+The UI renders an agent's replies as markdown. A fenced code block whose language is `mermaid` appears as a diagram, in the light or dark theme that the UI uses. While a diagram loads, or when its source does not parse, the UI shows the source in a code block, so a reply never loses content.
 
 ## Attach files to a message
 
