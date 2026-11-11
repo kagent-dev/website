@@ -153,6 +153,16 @@ EOF
 
 To configure the agent from Kubernetes instead, add the fields that any AgentTemplate takes, and read `/config/config.json` in the image. For what those fields mean, see [Your first agent]({{< link path="get-started/your-first-agent#create-a-harness-an-agenttemplate-and-an-agent" >}}).
 
+## Create a BYO Harness in the UI
+
+The [kagent UI]({{< link path="ui/launch-ui" >}}) is another route to the same contract, not a separate feature. On the **Agents** page, **New Harness** opens the Harness form; pick `byo` under **Runtime adapter**.
+
+The form asks for the two fields [The A2A contract](#the-a2a-contract) says a `byo` Harness must satisfy: **Workload image**, pinned by `sha256` digest, and **Command**, which overrides the image entrypoint. Enter each part of the command and press Enter. **Arguments** is optional. **Create harness** stays disabled while the form reports a problem, so a `byo` Harness with no command cannot be submitted from the UI either. The rule is the same as the API's `BYO harnesses must specify workload.command` rejection; only the moment it is enforced differs — authoring instead of apply.
+
+The **Harnesses** tab reports the runtime of each Harness, and shows `byo` for a bring-your-own one.
+
+A BYO image decides its own model calls, so the model is optional on a `byo` agent. The Agent form asks for a model configuration only when the selected Harness is not `byo`, and it warns when the Harness you pair a template with still needs one.
+
 ## Build the image
 
 The A2A contract is a gRPC service and a readiness endpoint, so any language with a gRPC server can satisfy it. kagent ships helpers for Go and Python. To build and run a minimal image end to end before writing your own, see [Run your own agent image]({{< link path="examples/a2a-byo" >}}).
