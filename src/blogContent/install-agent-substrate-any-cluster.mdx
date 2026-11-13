@@ -19,93 +19,79 @@ In this blog post, you'll learn how to install and configure Agent Substrate on 
 
 ## Prerequisites
 
-To follow along with this blog post in a hands-on fashion, you need:
-
-1. A Kubernetes cluster running v1.37 or above. It can be any cluster, from a Kind or Minikube cluster to an AKS, EKS, or GKE cluster.
-
-You need v1.37 or above because Agent Substrate uses the PodCertificate API to issue certs to Substrate Workers.
+To follow along with this blog post in a hands-on fashion, you need a Kubernetes cluster running v1.37 or above. It can be any cluster, from a Kind or Minikube cluster to an AKS, EKS, or GKE cluster. Version 1.37 is the minimum because Agent Substrate uses the PodCertificate API to issue certs to Substrate Workers.
 
 ## Why Is a Universal Installer Needed?
 
-"Where can this run?"
+Portability is one of the first things teams weigh when they adopt a platform. They want to know whether it runs outside a single cloud, whether their data can leave, and whether a workload can move from one environment to another.
 
-That's one of the most important questions for anyone implementing any software or platform.
-
-It comes in a few forms:
-
-- Can this only run on X cloud?
-- Can I export my data?
-- Can I migrate from X environment to Y environment?
-
-If a tool, platform, or piece of software only runs in one cloud, you're stuck between a rock and a hard place the moment you need to move, whether that's because of billing, a better deal, or more experience with another cloud.
-
-A universal installer is the difference between a team that reuses the same systems everywhere and a team that has to build "snowflakes" in every environment.
+A tool that only runs in one cloud locks you in the moment your needs change, whether the trigger is billing, a better deal, or more experience with another provider. A universal installer removes that risk. Teams reuse the same setup everywhere instead of building a one-off "snowflake" for each environment.
 
 ## What Does the Installer Entail?
 
-When you run the installer, you get everything that comes with a standard Agent Substrate installation, the same as if you'd installed it on GKE or Kind.
+When you run the Agent Substrate installer, you get everything that comes with a standard Agent Substrate installation, whether you install on GKE, Kind, or any other cluster.
 
 ![The kubectl-ate installer running against a cluster: preflight checks, component installation, and post-install verification.](/images/blog/install-agent-substrate-any-cluster/installer-run.gif)
 
-The installer:
+The installer completes the following steps:
 
 1. Checks that the cluster has what it needs to run as expected (for example, the PodCertificate API).
-2. Installs all of the necessary components: CRDs, the cert controller, Postgres, and all of the Substrate components.
+2. Installs all of the necessary components, including the CRDs, the cert controller, Postgres, and all of the Substrate components.
 3. Verifies that everything installed successfully and is working as expected.
 
-The key difference is that it doesn't make assumptions about where it's running. For example, if you install Agent Substrate today, it expects you to set the `PROJECT_ID` environment variable. A project ID only exists in Google Cloud, so if you're installing on something like AKS or EKS, the "hacky" workaround is to set the variable to a placeholder value, because if you don't, the installation fails.
+The key difference is that it doesn't make assumptions about where it's running. The standard Agent Substrate install expects you to set the `PROJECT_ID` environment variable. A project ID only exists in Google Cloud, so if you install on something like AKS or EKS, the "hacky" workaround is to set the variable to a placeholder value, because if you don't, the installation fails. The universal installer drops that requirement, so you don't need a placeholder or any other cloud-specific setting.
 
 ## How to Use the Installer
 
-To get past those "hacky" workarounds, use the universal installer in the [kagent Agent Substrate fork](https://github.com/kagent-dev/substrate).
+The universal installer lives in the [kagent Agent Substrate fork](https://github.com/kagent-dev/substrate).
 
 1. Download the `kubectl-ate` binary, which is how you interact with Agent Substrate on the CLI. This example pulls the macOS (Apple silicon) build; pick the pattern that matches your OS and architecture.
 
-```bash
-gh release download v1.0.1 \
-  --repo kagent-dev/substrate \
-  --pattern 'kubectl-ate-darwin-arm64*'
-```
+   ```bash
+   gh release download v1.0.1 \
+     --repo kagent-dev/substrate \
+     --pattern 'kubectl-ate-darwin-arm64*'
+   ```
 
 2. Put the binary on your `PATH` so you can use it against your Kubernetes cluster.
 
-```bash
-mkdir -p "$HOME/.local/bin"
-install -m 0755 kubectl-ate-darwin-arm64 "$HOME/.local/bin/kubectl-ate"
-export PATH="$HOME/.local/bin:$PATH"
-```
+   ```bash
+   mkdir -p "$HOME/.local/bin"
+   install -m 0755 kubectl-ate-darwin-arm64 "$HOME/.local/bin/kubectl-ate"
+   export PATH="$HOME/.local/bin:$PATH"
+   ```
 
 3. Set an environment variable with the context name of the cluster you're installing Agent Substrate on.
 
-```bash
-export CTX="your-cluster"
-```
+   ```bash
+   export CTX="your-cluster"
+   ```
 
 4. Run the install.
 
-```bash
-kubectl-ate --context "$CTX" install
-```
+   ```bash
+   kubectl-ate --context "$CTX" install
+   ```
 
-The installer asks you a few things:
+   The installer asks you a few things:
 
-- Which Postgres to use: a bundled single replica for evaluation, or an external database you've already created the connection Secrets for.
-- Where to store snapshots: RustFS in the cluster, Amazon S3 (or a compatible store), or Google Cloud Storage.
-- Whether you want hardware-level isolation with the microVM sandbox class. If you choose **No**, it defaults to gVisor (software-level isolation).
+   - Which Postgres to use: a bundled single replica for evaluation, or an external database you've already created the connection Secrets for.
+   - Where to store snapshots: RustFS in the cluster, Amazon S3 (or a compatible store), or Google Cloud Storage.
+   - Whether you want hardware-level isolation with the microVM sandbox class. If you choose **No**, it defaults to gVisor (software-level isolation).
 
-![kubectl-ate install options: PostgreSQL (bundled or external), snapshot storage (RustFS in the cluster, Amazon S3 or compatible, or Google Cloud Storage), and whether to install the microVM sandbox class.](/images/blog/install-agent-substrate-any-cluster/installer-options.png)
+   ![kubectl-ate install options: PostgreSQL (bundled or external), snapshot storage (RustFS in the cluster, Amazon S3 or compatible, or Google Cloud Storage), and whether to install the microVM sandbox class.](/images/blog/install-agent-substrate-any-cluster/installer-options.png)
 
-Then confirm the install.
+5. Confirm the install.
 
-![kubectl-ate install confirmation prompt: Install Agent Substrate? with Install and Cancel buttons.](/images/blog/install-agent-substrate-any-cluster/installer-confirm.png)
+   ![kubectl-ate install confirmation prompt: Install Agent Substrate? with Install and Cancel buttons.](/images/blog/install-agent-substrate-any-cluster/installer-confirm.png)
 
-Once the installation completes, you can see all of the Agent Substrate resources running in your Kubernetes environment.
+6. Once the installation completes, verify that all of the Agent Substrate resources are running in your Kubernetes environment.
 
-```bash
-kubectl get pods -n ate-system
-```
+   ```bash
+   kubectl get pods -n ate-system
+   ```
 
-![kubectl get pods -n ate-system showing the API server, controller, IDP server, atelet DaemonSet, atenet egress and router, k8s credential provider, Postgres, and RustFS pods all running.](/images/blog/install-agent-substrate-any-cluster/ate-system-pods.png)
+   ![kubectl get pods -n ate-system showing the API server, controller, IDP server, atelet DaemonSet, atenet egress and router, k8s credential provider, Postgres, and RustFS pods all running.](/images/blog/install-agent-substrate-any-cluster/ate-system-pods.png)
 
 ## Wrapping Up
 
