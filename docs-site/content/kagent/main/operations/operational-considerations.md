@@ -415,6 +415,16 @@ A fork is the case where the creation time decides. A fork replays its source Se
 
 Active work is never deleted. A Session with a submitted or running task survives past the interval. A pending lifecycle operation or a checkpoint being captured also holds a Session open. A turn that waits at `INPUT_REQUIRED` or `AUTH_REQUIRED` does not hold the Session open. When the request for input or sign-in is not answered within the interval, the Session expires like an idle one. Expiry does not resume the agent or end the waiting task with a timeout.
 
+{{< version exclude-if="latest,0.5.x" >}}
+Client-requested deletion follows a stricter default than idle expiry. `kagent agent session delete <session-id>` returns an error while a submitted or running turn exists, and the Session stays `READY`. To force deletion from the CLI, add `--force`.
+
+```bash
+kagent agent session delete <session-id> --force
+```
+
+The `--force` flag stops active turns and deletes the Session. API callers keep the same `DeleteSessionRequest.sessionId` and set `force` to `true`. Forced deletion still checks authorization, checkpoint creation, and pending lifecycle work. After forced deletion is admitted, retries do not need `--force` again. The delete workflow sends `DeleteActor` directly, without suspending the Actor or taking a final snapshot first. An Actor that is `RESUMING` can be deleted. Completed or waiting tasks keep their state, and submitted or running tasks are recorded as canceled with the message `Session deleted while the turn was active.`
+{{< /version >}}
+
 > [!IMPORTANT]
 > **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
 
