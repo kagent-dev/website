@@ -314,6 +314,12 @@ The API server rejects an `egressPolicyRefs` list that selects more than 16 poli
 
 You can create, edit, and delete EgressPolicy resources in the **Policies** page of the kagent UI without `kubectl`. The **Egress Policies** tab on the page lists the policies that you can read, with each policy's name, namespace, origins, and authentication type, which can be **None**, **Secret key**, or **Actor JWT**. You can filter the list by name, origins, or namespaces by using the search box. For how to open the UI, see [Launch the UI]({{< link path="ui/launch-ui" >}}).
 
+{{< version exclude-if="latest,0.x" >}}When you open a policy, the details page lists each destination and credential. The **Used by** table lists Agents and SandboxTemplates in the policy's namespace that reference the policy. For each resource, the table shows whether the policy was applied. The list includes only resources that you can read, so the count can be lower than the total resources that use the policy.
+
+The policy form checks the EgressPolicy rules before saving. For example, a wildcard origin cannot use authentication. An Actor JWT lifetime must be 300 to 3600 seconds. Saving an edit replaces the policy's destinations. If someone saved the policy after you opened the page, the form asks you to reload before you save the policy again.
+
+You can also select EgressPolicy resources when you create or edit an Agent in the UI. The Agent form offers only policies in the Agent's namespace, because an Agent cannot select a policy from another namespace. When you open an Agent, the details page links each selected policy.{{< /version >}}
+
 For who can reach this path, see [Access control](#access-control).
 
 ## Access control
