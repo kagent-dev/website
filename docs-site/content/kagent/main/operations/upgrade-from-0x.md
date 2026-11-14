@@ -175,7 +175,7 @@ ModelConfig and RemoteMCPServer keep most of the fields that `v1alpha2` sets. `v
 
 kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In place of `tokenExchange`, use an endpoint that accepts a static API key. For what to use in place of a custom certificate authority bundle, see [Credentials that kagent rejects]({{< link path="setup/model-providers/about-model-providers#credentials-that-kagent-rejects" >}}).
 
-`v1alpha3` reshapes ModelProviderConfig. Model discovery accepts only the `OpenAI` type, which covers any OpenAI-compatible endpoint. A ModelProviderConfig of another type does not have a `v1alpha3` equivalent. The `spec.secretRef` field moves to `spec.discoveryAuth.secretRef`, which references both the Secret and the key within it. kagent uses that credential only to list models, never to invoke them.
+{{< version include-if="latest,0.x" >}}`v1alpha3` reshapes ModelProviderConfig. Model discovery accepts only the `OpenAI` type, which covers any OpenAI-compatible endpoint. A ModelProviderConfig of another type does not have a `v1alpha3` equivalent. The `spec.secretRef` field moves to `spec.discoveryAuth.secretRef`, which references both the Secret and the key within it. kagent uses that credential only to list models, never to invoke them.{{< /version >}}{{< version exclude-if="latest,0.x" >}}`v1alpha3` reshapes ModelProviderConfig. Model discovery accepts only the `OpenAI` type, which covers any OpenAI-compatible endpoint. A ModelProviderConfig of another type does not have a `v1alpha3` equivalent. The `spec.secretRef` field becomes two explicit credential settings. The `spec.discoveryAuth.secretRef` field authenticates model discovery. The `spec.modelConfigTemplate.auth.secretRef` field sets invocation credentials on the ModelConfigs that discovery creates. Generated ModelConfigs do not inherit discovery credentials for invocation.{{< /version >}}
 
 1. Recreate the Secrets that your ModelConfigs reference. Without them, the ModelConfigs cannot resolve their API keys.
    ```bash
@@ -187,8 +187,9 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
    - Renames the `apiKeyPassthrough` field to `tokenPassthrough`.
    - Deletes the ModelConfig fields that `v1alpha3` removed.
    - Removes the metadata that the 0.10.x API server set.
-   - Moves the ModelProviderConfig Secret name to `spec.discoveryAuth.secretRef`, with a `<secret-key>` placeholder for the key.
+   {{< version include-if="latest,0.x" >}}- Moves the ModelProviderConfig Secret name to `spec.discoveryAuth.secretRef`, with a `<secret-key>` placeholder for the key.{{< /version >}}{{< version exclude-if="latest,0.x" >}}- Moves the ModelProviderConfig Secret name to `spec.discoveryAuth.secretRef` and `spec.modelConfigTemplate.auth.secretRef`. Adds `<secret-key>` placeholders for both keys.{{< /version >}}
    - Drops the `kagent-grafana-mcp` RemoteMCPServer, because 1.0 does not deploy the Grafana Model Context Protocol (MCP) server behind it.
+   {{< version include-if="latest,0.x" >}}
    ```bash
    yq '.items |= map(select(.kind == "ModelConfig" or .kind == "RemoteMCPServer" or (.kind == "ModelProviderConfig" and .spec.type == "OpenAI")))
      | .items[].apiVersion = "api.kagent.dev/v1alpha3"
@@ -199,8 +200,20 @@ kagent 1.0 cannot pass a mounted credential or certificate file to an agent. In 
      | (.items[] | select(.kind == "ModelProviderConfig" and (.spec | has("secretRef"))) | .spec) |= (.discoveryAuth.secretRef = {"name": .secretRef.name, "key": "<secret-key>"} | del(.secretRef))' \
      kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
    ```
+   {{< /version >}}{{< version exclude-if="latest,0.x" >}}
+   ```bash
+   yq '.items |= map(select(.kind == "ModelConfig" or .kind == "RemoteMCPServer" or (.kind == "ModelProviderConfig" and .spec.type == "OpenAI")))
+     | .items[].apiVersion = "api.kagent.dev/v1alpha3"
+     | del(.items[].status, .items[].metadata.resourceVersion, .items[].metadata.uid, .items[].metadata.creationTimestamp, .items[].metadata.generation, .items[].metadata.managedFields, .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"])
+     | (.items[] | select(.kind == "ModelConfig" and has("spec") and (.spec | has("apiKeyPassthrough"))) | .spec) |= (.tokenPassthrough = .apiKeyPassthrough | del(.apiKeyPassthrough))
+     | del(.items[] | select(.kind == "ModelConfig") | (.spec.openAI.tokenExchange, .spec.tls.caCertSecretRef, .spec.tls.caCertSecretKey, .spec.tls.disableSystemCAs))
+     | del(.items[] | select(.kind == "RemoteMCPServer" and .metadata.name == "kagent-grafana-mcp"))
+     | (.items[] | select(.kind == "ModelProviderConfig" and (.spec | has("secretRef"))) | .spec) |= (.discoveryAuth.secretRef = {"name": .secretRef.name, "key": "<secret-key>"} | .modelConfigTemplate.auth.secretRef = {"name": .secretRef.name, "key": "<secret-key>"} | del(.secretRef))' \
+     kagent-0.10-resources.yaml > kagent-1.0-resources.yaml
+   ```
+   {{< /version >}}
 
-3. If the converted file includes a ModelProviderConfig with a `<secret-key>` placeholder, replace the placeholder with the key that contains the API key. A 0.10.x discovery Secret contains exactly one key. To find the key, list the keys of the Secret that `discoveryAuth.secretRef.name` references.
+{{< version include-if="latest,0.x" >}}3. If the converted file includes a ModelProviderConfig with a `<secret-key>` placeholder, replace the placeholder with the key that contains the API key. A 0.10.x discovery Secret contains exactly one key. To find the key, list the keys of the Secret that `discoveryAuth.secretRef.name` references.{{< /version >}}{{< version exclude-if="latest,0.x" >}}3. If the converted file includes a ModelProviderConfig with `<secret-key>` placeholders, replace both placeholders with the key that contains the API key. A 0.10.x discovery Secret contains exactly one key. List the keys of the Secret that `discoveryAuth.secretRef.name` references.{{< /version >}}
    ```bash
    kubectl get secret <secret-name> -n <namespace> -o go-template='{{range $k, $v := .data}}{{$k}}{{"\n"}}{{end}}'
    ```

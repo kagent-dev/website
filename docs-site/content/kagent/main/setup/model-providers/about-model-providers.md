@@ -137,6 +137,46 @@ Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `
 
 For the full matrix, including the per-combination restrictions, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 
+{{< version exclude-if="latest,0.x" >}}
+## Discover models from a provider {#discover-models-from-a-provider}
+
+A ModelProviderConfig discovers model IDs from an OpenAI-compatible endpoint and creates ModelConfigs in the ModelProviderConfig namespace. Discovery credentials are separate from invocation credentials. The generated ModelConfigs do not inherit the Secret that lists models.
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelProviderConfig
+metadata:
+  name: llm-gateway
+  namespace: kagent
+spec:
+  type: OpenAI
+  endpoint: https://llm-gateway.example.com/v1
+  discoveryAuth:
+    secretRef:
+      name: discovery-token
+      key: token
+  modelConfigTemplate:
+    auth:
+      secretRef:
+        name: invocation-token
+        key: token
+    allowedNamespaces:
+      from: Same
+```
+
+Use these fields to control discovery and the generated ModelConfigs.
+
+| Field | Description |
+| ----- | ----------- |
+| `type` | The discovery protocol. Only `OpenAI` is accepted. Use this value for any OpenAI-compatible endpoint. |
+| `endpoint` | Optional. The endpoint for model discovery. The URL must start with `http://` or `https://`. The URL can include a path such as `/v1`, and cannot include user information or query parameters. |
+| `discoveryAuth.secretRef` | Optional. The Secret and key for the bearer token that kagent uses to list models. If you set `discoveryAuth`, both `name` and `key` are required. The `optional` field cannot be `true`. Omit `discoveryAuth` for unauthenticated discovery. |
+| `modelConfigTemplate.auth` | Optional. The invocation credentials for generated ModelConfigs. Set at most one of `actorJwt`, `secretRef`, and `tokenPassthrough`. Discovery credentials are not inherited. |
+| `modelConfigTemplate.allowedNamespaces` | Optional. The namespaces that can reference generated ModelConfigs and their invocation credentials. The default admits only the ModelProviderConfig namespace. |
+
+ModelProviderConfig status reports conditions, observed generation, and model count. It does not store the model inventory, the last discovery time, or Secret hashes. Refresh model discovery to list the provider's models.
+{{< /version >}}
+
 ## Use a ModelConfig
 
 Reference the ModelConfig by name in an AgentTemplate. When the reference omits `namespace`, kagent looks up the ModelConfig in the AgentTemplate's namespace. To use a ModelConfig from another namespace, see [Share a ModelConfig across namespaces](#share-a-modelconfig-across-namespaces).
