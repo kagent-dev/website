@@ -157,6 +157,7 @@ Agent Substrate connects to the same database with its own owner and read/write 
 
 4. In your Helm values file, configure the chart to reference your Secrets and roles.
 
+   {{< version include-if="latest,0.x" >}}
    ```yaml
    database:
      postgres:
@@ -183,6 +184,36 @@ Agent Substrate connects to the same database with its own owner and read/write 
    controller:
      replicas: 3
    ```
+   {{< /version >}}
+   {{< version exclude-if="latest,0.x" >}}
+   ```yaml
+   database:
+     postgres:
+       ownerConnectionStringSecretRef:
+         name: my-postgres-owner
+         key: ownerConnectionString
+       readWriteConnectionStringSecretRef:
+         name: my-postgres-readwrite
+         key: readWriteConnectionString
+       clientCertificate:
+         enabled: false
+   config:
+     database:
+       owner:
+         role: kagent_owner
+       readWrite:
+         role: kagent_readwrite
+       schema: kagent
+       vectorEnabled: true
+       skipMigrations: false
+       pool:
+         maxConns: 20
+         minConns: 2
+         connectRetryTimeout: 90s
+   controller:
+     replicas: 3
+   ```
+   {{< /version >}}
 
    `database.postgres` configures the Kubernetes packaging, including the Secret references and the client certificate. `config.database` sets what the controller reads from its configuration file. For more information about these settings, see [Controller configuration](#controller-configuration).
 
@@ -193,9 +224,18 @@ Agent Substrate connects to the same database with its own owner and read/write 
    | `database.postgres.clientCertificate` | Set `enabled` to `true` only for a database that authenticates clients with Pod Certificates, such as the one that `kagent install` creates. Both connection strings must then point their `sslcert` and `sslkey` parameters at the files under `/run/postgres.podcert.ate.dev`. An external instance that authenticates with a password, such as the one in this procedure, leaves `enabled` at `false`. |
    | `config.database.owner.role` and `config.database.readWrite.role` | The roles that the two logins assume after they connect. Match the role names that you passed to the setup script. Give each installation that shares one database distinct roles. |
    | `config.database.schema` | The schema that holds kagent's tables. Match the `kagent_schema` value that you passed to the setup script. `config.database.vectorSchema` names the schema that holds the shared `pgvector` extension, and both kagent roles need `USAGE` on it. |
-   | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed in `config.database.vectorSchema`. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |
-   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. If you omit `minConns` or set it to `0`, the pool keeps no minimum number of connections open. Each of `maxConns`, `maxConnIdleTime`, and `maxConnLifetime` that you omit keeps its pgx library default. |
+   | `config.database.vectorEnabled` | Set to `true` only when the instance has the `pgvector` extension installed in `config.database.vectorSchema`. The setting enables the vector migration, and features that depend on it, such as [long-term memory]({{< link path="agents/agent-memory" >}}), fail without the extension. The development database does not include `pgvector`. |{{< version include-if="latest,0.x" >}}
+   | `config.database.pool` | Connection pool sizing, through `maxConns`, `minConns`, `maxConnIdleTime`, and `maxConnLifetime`. The two durations take protobuf seconds notation, as in `1800s`. If you omit `minConns` or set it to `0`, the pool keeps no minimum number of connections open. Each of `maxConns`, `maxConnIdleTime`, and `maxConnLifetime` that you omit keeps its pgx library default. |{{< /version >}}{{< version exclude-if="latest,0.x" >}}
+   | `config.database.pool` | Connection pool sizing and failed-login retry behavior, through `maxConns`, `minConns`, `maxConnIdleTime`, `maxConnLifetime`, and `connectRetryTimeout`. The three durations take protobuf seconds notation, as in `90s` or `1800s`. If you omit `minConns` or set it to `0`, the pool keeps no minimum number of connections open. Each of `maxConns`, `maxConnIdleTime`, and `maxConnLifetime` that you omit keeps its pgx library default. |{{< /version >}}
    | `config.database.skipMigrations` | Set to `true` to stop the controller from running migrations at startup. The controller then verifies through the read/write login that the database is already migrated, and fails if it is not. Apply the migrations from a pipeline before you install or upgrade. The controller then does not need the owner Secret or role. |
+
+   {{< version exclude-if="latest,0.x" >}}
+   `config.database.pool.connectRetryTimeout` sets the retry window for a failed PostgreSQL login, such as while a serverless database resumes from a pause or a database restarts. The default is `90s`. Set the value to `0s` to make each call try one login, as in earlier releases. The controller rejects negative values and values greater than `600s`.
+
+   The retry starts only when the login fails before PostgreSQL runs any SQL statement. The retry does not repeat database work. PostgreSQL logins rejected because of credentials, a missing database, or missing connect permission are not retried. A query that fails after login is not retried.
+
+   The retry window controls when a new login attempt can start. A running login attempt can finish after the retry window. As a result, a call can take up to the retry window plus one login attempt. To shorten a login attempt that waits on an unreachable host, set the PostgreSQL `connect_timeout` connection-string parameter to a number of seconds. Clients with shorter request timeouts, such as the web UI, might still fail the first request. Those clients must retry the request.
+   {{< /version >}}
 
 5. Apply the values to the kagent Helm release. The `--reuse-values` flag keeps the values that an existing release was installed with, such as the provider key and the Agent Substrate settings that `kagent install` sets. On a first installation, the flag has no effect.
 
