@@ -62,6 +62,48 @@ An invalid field stops the controller from starting. After you apply a change, c
 kubectl logs -n kagent deployment/kagent-controller
 ```
 
+{{< version exclude-if="latest,0.x" >}}
+
+### Anthropic self-hosted sandboxes {#anthropic-self-hosted-sandboxes}
+
+You can run Anthropic self-hosted sandbox work by using the controller and kagent Sandbox service. The controller polls an Anthropic environment for Session work. When work is available, the controller provisions a Sandbox from the configured SandboxTemplate and starts the `ant beta:worker run` command in that Sandbox. The integration is off by default and reads its settings from controller environment variables.
+
+```yaml
+controller:
+  env:
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENABLED
+      value: "true"
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENVIRONMENT_ID
+      value: "<environment-id>"
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENVIRONMENT_KEY
+      valueFrom:
+        secretKeyRef:
+          name: anthropic-self-hosted
+          key: environment-key
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAMESPACE
+      value: kagent
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAME
+      value: claude
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_BASE_URL
+      value: "https://api.anthropic.com"
+    - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TTL
+      value: 12h
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENABLED` | Set to `true` to start the launcher on the leader controller replica. If the value is omitted or `false`, the launcher stays off and the other variables are ignored. |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENVIRONMENT_ID` | The Anthropic environment whose work the launcher claims. Required when the launcher is enabled. |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENVIRONMENT_KEY` | The standing Anthropic environment credential for polling and heartbeats. Required when the launcher is enabled. The controller does not forward this credential into Sandboxes. |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAMESPACE` | The namespace of the SandboxTemplate to use for each claimed Session. Required when the launcher is enabled. |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAME` | The name of the SandboxTemplate to use for each claimed Session. Required when the launcher is enabled. |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_BASE_URL` | Optional. The Anthropic API endpoint override for the launcher and sandbox CLI. The value must be an `http` or `https` URL without credentials, a query, or a fragment. |
+| `EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TTL` | Optional. The lifetime of new Anthropic self-hosted Sandboxes. The same value is also the timeout for their CLI workers. The default is `12h`, and the value must be a positive Go duration such as `2h30m`. |
+
+If the launcher configuration is invalid, the controller logs an error and starts without the launcher.
+
+{{< /version >}}
+
 ### Agent Substrate actor ingress {#agent-substrate-actor-ingress}
 
 The kagent controller sends A2A calls and Sandbox guest calls through the Agent Substrate router. `kagent install` sets the router values on both charts, and an [exported installation]({{< link path="operations/export-to-helm" >}}) carries them. When you write the Helm values yourself, set both charts as follows.
@@ -218,6 +260,12 @@ controller:
 ```
 
 Leader election keeps the replicas from conflicting. One replica takes a Kubernetes lease and performs reconciliation, garbage collection, and scheduled runs. The other replicas stay ready and take over when the leader's lease expires.
+
+{{< version exclude-if="latest,0.x" >}}
+
+When Anthropic self-hosted sandboxes are enabled, only the leader controller replica polls Anthropic and launches workers. The chart sets `controller.terminationGracePeriodSeconds` to `180` by default. The grace period lets an accepted launch drain before the leader releases the lease. Established CLI workers continue independently in their Sandboxes.
+
+{{< /version >}}
 
 > [!IMPORTANT]
 > If an installation runs on the development database, extra controller replicas do not make the installation highly available. That database is a single pod backed by one PersistentVolumeClaim, so losing it stops every replica at once. Run an external PostgreSQL instance before counting controller replicas toward availability.
