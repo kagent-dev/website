@@ -58,8 +58,8 @@ The `azureOpenAI` block takes the following settings. For every field, including
 | `azureEndpoint` | The endpoint of the Azure OpenAI resource. Required. |
 | `apiFormat` | Which Azure OpenAI HTTP API to call, either `chatCompletions` or `responses`. Defaults to `chatCompletions`. |
 | `apiVersion` | The Azure OpenAI API version. Required unless `apiFormat` is `responses`. |
-| `azureDeployment` | The deployment name within the resource. |
-| `azureAdToken` | A Microsoft Entra ID token to send instead of an API key. |
+| `azureDeployment` | The deployment name within the resource. |{{< version include-if="latest,0.x" >}}
+| `azureAdToken` | A Microsoft Entra ID token to send instead of an API key. |{{< /version >}}
 | `temperature` | How much randomness the model applies when it picks the next token. |
 | `topP` | The nucleus sampling cutoff. |
 | `maxTokens` | A cap on the tokens generated in one response. |
@@ -102,10 +102,14 @@ A link reaches Azure regardless of its media type. Inline bytes reach Azure as a
 
 ## Authentication
 
+{{< version exclude-if="latest,0.x" >}}
+The `azureAdToken` field is not available in a ModelConfig. Use one of the following credential configurations.
+{{< /version >}}
+
 | Configuration | Credential |
 | ------------- | ---------- |
-| `apiKeySecret` is set | The API key from the referenced Secret. |
-| `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |
+| `apiKeySecret` is set | The API key from the referenced Secret. |{{< version include-if="latest,0.x" >}}
+| `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |{{< /version >}}
 | `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
 | `actorJwt` is set | A newly issued Actor token, sent in the `api-key` header. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`, `apiKeySecretKey`, and `tokenPassthrough`. For more information, see [Authenticate as the Actor]({{< link path="setup/model-providers/about-model-providers#authenticate-as-the-actor" >}}). |
 
