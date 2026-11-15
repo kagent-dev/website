@@ -121,8 +121,9 @@ EOF
 | Field | Required | Description |
 | ----- | -------- | ----------- |
 | `byo` | Yes | Selects this harness. The object is always empty, and naming a second harness alongside it is rejected. |
-| `workload.image` | Yes | Your image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |
-| `workload.command` | Yes | The entrypoint to run, up to 32 entries. Required for `byo` and optional for every other harness. |
+| `workload.image` | Yes | Your image, pinned by `sha256` digest. A tag alone is rejected, because a revision must be reproducible. |{{< version include-if="latest,0.x" >}}
+| `workload.command` | Yes | The entrypoint to run, up to 32 entries. Required for `byo` and optional for every other harness. |{{< /version >}}{{< version exclude-if="latest,0.x" >}}
+| `workload.command` | Yes | The entrypoint to run, up to 32 entries. Required for `byo` and optional for the `kagent` harness. The `claude` and `codex` harnesses reject this field. |{{< /version >}}
 | `env` | No | Any setting that your image reads. Each entry takes a literal `value` only. Put credentials in a ModelConfig or a RemoteMCPServer instead. |
 
 An opaque agent's AgentTemplate sets only a description for the agent card. An Agent then pairs it with the Harness.
