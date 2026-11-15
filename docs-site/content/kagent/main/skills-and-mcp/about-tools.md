@@ -36,6 +36,18 @@ tools:
 | `mcp.tools` | Optional. The names of the tools to bind, up to 50. Duplicates are collapsed. Omit the list, or leave it empty, to expose every tool on the server. On the Claude {{< gloss "Harness" >}}Harness{{< /gloss >}}, a list does not narrow the server. See [Tool selection on the Claude harness](#tool-selection-on-the-claude-harness). |
 | `mcp.requireApproval` | Optional. Pauses the agent for a person's approval before each call to a tool that this binding exposes. On the Claude harness, the pause covers every tool on the server, because Claude approves one server at a time rather than one tool at a time. Omit the field to run the bound tools without approval. For more information, see [Human in the loop]({{< link path="agents/human-in-the-loop#require-approval-for-a-tool" >}}). |
 
+{{< version exclude-if="latest,0.x" >}}
+
+### Runtime tool discovery {#runtime-tool-discovery}
+
+On the kagent harness, an agent discovers MCP tools when it prepares an invocation. Startup, readiness checks, and Session resume do not wait for HTTP or Server-Sent Events (SSE) connections. These paths do not start `stdio` MCP processes.
+
+Runtime discovery applies the `mcp.tools` list before the model sees the catalog. If one server's catalog cannot be listed, that server's tools are omitted for the current Agent2Agent (A2A) execution. Tools from other MCP servers remain available. The next execution retries the omitted server. When the server publishes cache metadata, the cached catalog stays filtered. The cached catalog is refreshed when the server's cache expires or when the server sends a tool-list change notification.
+
+This runtime discovery is separate from controller-side discovery. Controller-side discovery records `status.discoveredTools` on the RemoteMCPServer and fills UI tool pickers, as described in [Tools ecosystem]({{< link path="reference/tools-ecosystem#read-the-tools-that-a-server-serves" >}}).
+
+{{< /version >}}
+
 ### Tool selection on the Claude harness
 
 Claude's MCP configuration does not have a per-tool allowlist. On the Claude harness, the `tools` list does not narrow a server, and the agent reaches every tool that the server serves. kagent admits the {{< gloss "Revision" >}}revision{{< /gloss >}} either way. Unless the list exactly matches the tools that kagent currently discovers on the server, kagent also records a warning on the Agent.
@@ -50,7 +62,12 @@ For the bundled tool server, see the installation-level settings that drop provi
 
 ### Caller token passthrough
 
+{{< version include-if="latest,0.x" >}}
 An MCP server that authorizes each user individually needs the caller's token. For the authorizing server, set `tokenPassthrough: true` on its RemoteMCPServer resource. The agent sends the bearer token from the incoming Agent2Agent (A2A) request to the server as its `Authorization` header. When the incoming request does not present a bearer token, the MCP request fails.
+{{< /version >}}
+{{< version exclude-if="latest,0.x" >}}
+An MCP server that authorizes each user individually needs the caller's token. For the authorizing server, set `tokenPassthrough: true` on its RemoteMCPServer resource. The agent sends the bearer token from the incoming A2A request to the server as its `Authorization` header. When the incoming request does not present a bearer token, runtime discovery omits the server's tools for the current execution.
+{{< /version >}}
 
 ```yaml
 apiVersion: api.kagent.dev/v1alpha3
