@@ -13,7 +13,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
 
 ## Configuring Gemini
 
-1. Get your API key from [Google AI Studio](https://ai.google.dev/).
+1. Get your API key from [Google AI Studio](https://aistudio.google.com/welcome).
 
 2. Create a Kubernetes Secret that stores the API key.
 
