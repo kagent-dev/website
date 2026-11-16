@@ -13,7 +13,7 @@ Make sure that your Google Cloud account has a project with the Gemini API enabl
 
 ## Create the ModelConfig
 
-1. Save your [Google AI Studio](https://ai.google.dev/) API key as an environment variable.
+1. Save your [Google AI Studio](https://aistudio.google.com/welcome) API key as an environment variable.
    ```bash
    export GOOGLE_API_KEY=<your_api_key>
    ```

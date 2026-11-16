@@ -75,4 +75,4 @@ See the [API reference]({{< link path="resources/api-ref" >}}) for the full `Age
 ## Learn more
 
 - [Run a declarative agent on Agent Substrate]({{< link path="examples/agent-substrate" >}}) — end-to-end walkthrough on a kind cluster.
-- For a deeper dive into the runtime internals, see the [Agent Substrate documentation](https://learn.agentsubstrate.dev/).
+- For a deeper dive into the runtime internals, see the [Agent Substrate documentation](https://ate.dev/).
