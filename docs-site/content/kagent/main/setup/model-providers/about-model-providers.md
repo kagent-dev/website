@@ -137,7 +137,6 @@ Neither `codex` nor `claude` accepts a ModelConfig that sets `defaultHeaders`, `
 
 For the full matrix, including the per-combination restrictions, see [Agent harness]({{< link path="agents/agent-harness#model-provider-support" >}}).
 
-{{< version exclude-if="latest,0.x" >}}
 ## Discover models from a provider {#discover-models-from-a-provider}
 
 A ModelProviderConfig discovers model IDs from an OpenAI-compatible endpoint and creates ModelConfigs in the ModelProviderConfig namespace. Discovery credentials are separate from invocation credentials. The generated ModelConfigs do not inherit the Secret that lists models.
@@ -175,7 +174,6 @@ Use these fields to control discovery and the generated ModelConfigs.
 | `modelConfigTemplate.allowedNamespaces` | Optional. The namespaces that can reference generated ModelConfigs and their invocation credentials. The default admits only the ModelProviderConfig namespace. |
 
 ModelProviderConfig status reports conditions, observed generation, and model count. It does not store the model inventory, the last discovery time, or Secret hashes. Refresh model discovery to list the provider's models.
-{{< /version >}}
 
 ## Use a ModelConfig
 
