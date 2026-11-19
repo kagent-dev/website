@@ -413,7 +413,7 @@ Idle time runs from whichever is later: the Session's creation, or its most rece
 
 A fork is the case where the creation time decides. A fork replays its source Session's events and keeps their original timestamps, so its most recently stored event is older than the fork itself. Idle time therefore runs from the fork's own creation. The fork gets a full interval rather than an almost expired one.
 
-Active work is never deleted. A Session with a submitted or running task survives past the interval. A pending lifecycle operation or a checkpoint being captured also holds a Session open. A turn that waits at `INPUT_REQUIRED` or `AUTH_REQUIRED` does not hold the Session open. When the request for input or sign-in is not answered within the interval, the Session expires like an idle one. Expiry does not resume the agent or end the waiting task with a timeout.
+Expiry never deletes active work. A Session with a submitted or running task survives past the interval. A pending lifecycle operation or a checkpoint being captured also holds a Session open. A turn that waits at `INPUT_REQUIRED` or `AUTH_REQUIRED` does not hold the Session open. When the request for input or sign-in is not answered within the interval, the Session expires like an idle one. Expiry does not resume the agent or end the waiting task with a timeout.
 
 > [!IMPORTANT]
 > **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
@@ -431,6 +431,46 @@ config:
 ```
 
 To watch the sweep, scrape `kagent_session_expired_total`. The metric counts the Sessions that the sweep removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
+
+## Delete a Session {#delete-a-session}
+
+A client can delete a Session at any time, and kagent runs the same deletion workflow that idle expiry uses. By default, kagent refuses to delete a Session that has work in progress, so that a delete does not cut off a turn by accident. To end the work and delete the Session anyway, force the deletion.
+
+1. Delete the Session. An idle Session is deleted, and the command prints the Session with the state `DELETED`.
+   ```bash
+   kagent agent session delete <session-id>
+   ```
+   Example output:
+   ```console
+   +--------------------------------------+----------------------------+---------+----------------------+
+   | ID                                   | AGENT                      | STATE   | CREATED              |
+   +--------------------------------------+----------------------------+---------+----------------------+
+   | 01a1f56d-9848-7613-9aae-650ceda490e9 | kagent/docs-test-del-agent | DELETED | 2026-11-19T20:09:22Z |
+   +--------------------------------------+----------------------------+---------+----------------------+
+   ```
+
+2. If the command fails with a conflict, wait for the work to finish, and run the command again. The conflict means that the Session has a submitted or running turn, a checkpoint being created, or another lifecycle operation in progress. The Session stays `READY`.
+   ```console
+   Error: delete Session: work is active or pending; stop active turns or use --force, and retry any pending lifecycle operation: rpc error: code = Aborted desc = begin Session operation: session has an active task or checkpoint: resource conflict
+   ```
+
+3. To end the work, add the `--force` flag. Forcing stops the active turns, and kagent records each submitted or running task as canceled with the message `Session deleted while the turn was active.` Completed tasks and tasks that wait at `INPUT_REQUIRED` or `AUTH_REQUIRED` keep their state. kagent deletes the Actor without suspending it first and without taking a final snapshot, and it can delete an Actor that is `RESUMING`.
+   ```bash
+   kagent agent session delete <session-id> --force
+   ```
+   Forcing does not interrupt a checkpoint that kagent is creating or an idle suspension that a worker already claimed. In those cases the request fails with the same conflict, so run it again after that work finishes. An API caller sets `force` to `true` in the `DeleteSessionRequest`, next to `sessionId`.
+
+4. Confirm that the Session is gone. After a deletion, the Session no longer exists, so a request for it fails with `NotFound`.
+   ```bash
+   kagent agent session get <session-id>
+   ```
+   Example output:
+   ```console
+   Error: get Session: rpc error: code = NotFound desc = Session not found
+   ```
+   When a turn was active, the command in step 3 can print `rpc error: code = Unavailable desc = error reading from server: EOF` even though the deletion succeeded. Use this step to learn the result in that case.
+
+<!-- REVIEW: with an active turn, `kagent agent session delete --force` printed `Unavailable ... error reading from server: EOF` in 3 of 3 runs on a 1.0.1 cluster, yet the Session was deleted (a following get returned NotFound). Idle Sessions print the DELETED table. Confirm with the kagent engineers whether the error is expected, and remove the last paragraph of step 4 if they fix it. -->
 
 ## Configuration changes and running agents {#how-configuration-changes-reach-agents}
 
