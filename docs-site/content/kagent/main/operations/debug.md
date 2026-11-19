@@ -150,6 +150,36 @@ ERROR:
    * To review the list of states, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#actor-lifecycle-operations" >}}).
    * To get the current state for every actor, [call `ListSubstrateActors`]({{< link path="operations/tune-agent-substrate#inspect-the-runtime" >}}).
 
+## An agent is missing tools from an MCP server {#missing-mcp-tools}
+
+The agent answers, but it cannot use the tools of one MCP server. The model might say that it has no such tool, or the tool never appears in its list. The Agent shows `Ready` and no error reaches you, so nothing on the Agent points to the cause.
+
+The agent connects to each MCP server at the start of every execution. When a server does not answer, kagent leaves that server out of the execution, keeps the tools of the servers that did answer, and writes a `failed to discover MCP tools; omitting toolset for this invocation` warning to the log. The next execution tries the missing server again. To find out why the server was left out, read that warning.
+
+1. Search the WorkerPool logs where the agent runs to see if a warning was logged. Replace `kagent-default` with the name of the WorkerPool that your Harness uses.
+   ```bash
+   kubectl logs -n kagent -l ate.dev/worker-pool=kagent-default --tail=-1 | grep "omitting toolset"
+   ```
+   Example output:
+   ```console
+   {"level":"WARN","msg":"failed to discover MCP tools; omitting toolset for this invocation","error":"failed to list MCP tools: ... Post \"http://my-server.kagent.svc.cluster.local:8080/mcp\": dial tcp: lookup my-server.kagent.svc.cluster.local ...: no such host"}
+   ```
+   The warning appears once for each execution that skipped the server. If you find no warning, the server answered. Continue with step 3.
+
+2. Match the end of the `error` field to a cause, and apply the fix.
+
+   | The error says | What it means | What to do |
+   | -------------- | ------------- | ---------- |
+   | `no such host`, `connection refused`, or a timeout | The agent cannot reach the URL in the RemoteMCPServer. | Check `spec.url` on the RemoteMCPServer. Then confirm that the server runs and that its Service name and port match. |
+   | `MCP token passthrough requires a caller bearer token` | The RemoteMCPServer sets `tokenPassthrough: true`, and the request that started this execution had no bearer token. | Send the request with the caller's bearer token. To keep the server without a token, remove `tokenPassthrough` from the RemoteMCPServer. For more information, see [Caller token passthrough]({{< link path="skills-and-mcp/about-tools#caller-token-passthrough" >}}). |
+   | An HTTP status such as `401` or `403` | The server rejected the credentials that the agent sent. | Check the credentials that the RemoteMCPServer sends, such as `headersFrom`. |
+
+3. If the server answered but one tool is still missing, check how the tool is bound. The binding's `mcp.tools` list exposes only the tools that it names, so a tool that is not in the list never reaches the model. A tool that exists only to serve an MCP App's interface is also hidden by design. For more information, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
+
+4. Run the agent again to confirm the fix.
+   * If you fixed the server itself, such as by restarting it, send another message in the same Session. The next execution connects to the server again.
+   * If you changed a RemoteMCPServer or an AgentTemplate, create a new Session. An existing Session keeps the revision that it started from, as described in [An edit to an AgentTemplate has no effect](#an-edit-to-an-agenttemplate-has-no-effect).
+
 ## An edit to an AgentTemplate has no effect
 
 An edit that appears to do nothing has two possible causes, and the Agent's conditions distinguish them.
