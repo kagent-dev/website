@@ -413,7 +413,7 @@ Idle time runs from whichever is later: the Session's creation, or its most rece
 
 A fork is the case where the creation time decides. A fork replays its source Session's events and keeps their original timestamps, so its most recently stored event is older than the fork itself. Idle time therefore runs from the fork's own creation. The fork gets a full interval rather than an almost expired one.
 
-Active work is never deleted. A Session with a submitted or running task survives past the interval. A pending lifecycle operation or a checkpoint being captured also holds a Session open. A turn that waits at `INPUT_REQUIRED` or `AUTH_REQUIRED` does not hold the Session open. When the request for input or sign-in is not answered within the interval, the Session expires like an idle one. Expiry does not resume the agent or end the waiting task with a timeout.
+Expiry never deletes active work. A Session with a submitted or running task survives past the interval. A pending lifecycle operation or a checkpoint being captured also holds a Session open. A turn that waits at `INPUT_REQUIRED` or `AUTH_REQUIRED` does not hold the Session open. When the request for input or sign-in is not answered within the interval, the Session expires like an idle one. Expiry does not resume the agent or end the waiting task with a timeout.
 
 > [!IMPORTANT]
 > **Expiry deletes the Session, not its history.** Deleting an idle Session removes the Session, its shares, its runtime row, and its creation receipt. The A2A context, its tasks, its event history, and any explicit {{< gloss "Checkpoint" >}}checkpoints{{< /gloss >}} stay in PostgreSQL, and a retained checkpoint outlives the Session it was taken on. kagent has no setting that bounds this retained history, so size a database for a long-running installation with the audit history planned separately.
@@ -469,7 +469,6 @@ A client can delete a Session at any time, and kagent runs the same deletion wor
    Error: get Session: rpc error: code = NotFound desc = Session not found
    ```
    When a turn was active, the command in step 3 can print `rpc error: code = Unavailable desc = error reading from server: EOF` even though the deletion succeeded. Use this step to learn the result in that case.
-
 
 ## Configuration changes and running agents {#how-configuration-changes-reach-agents}
 

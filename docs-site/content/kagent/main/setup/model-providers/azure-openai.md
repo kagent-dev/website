@@ -47,7 +47,7 @@ The `AzureOpenAI` provider calls an Azure OpenAI deployment. It differs from the
    | `provider` | The provider to use, `AzureOpenAI`. |
    | `azureOpenAI.azureEndpoint` | The endpoint of your Azure OpenAI resource. This field is required. |
    | `azureOpenAI.apiVersion` | The Azure OpenAI API version to call. This field is required unless `apiFormat` is `responses`. |
-   | `azureOpenAI.azureDeployment` | The name of the deployment within the resource. |
+   | `azureOpenAI.azureDeployment` | The name that you gave the model deployment when you created it in your Azure OpenAI resource. The name can differ from the model name. |
 
 ## Azure OpenAI provider settings
 
@@ -58,8 +58,7 @@ The `azureOpenAI` block takes the following settings. For every field, including
 | `azureEndpoint` | The endpoint of the Azure OpenAI resource. Required. |
 | `apiFormat` | Which Azure OpenAI HTTP API to call, either `chatCompletions` or `responses`. Defaults to `chatCompletions`. |
 | `apiVersion` | The Azure OpenAI API version. Required unless `apiFormat` is `responses`. |
-| `azureDeployment` | The deployment name within the resource. |
-| `azureAdToken` | A Microsoft Entra ID token to send instead of an API key. |
+| `azureDeployment` | The name that you gave the model deployment when you created it in your Azure OpenAI resource. The name can differ from the model name. |
 | `temperature` | How much randomness the model applies when it picks the next token. |
 | `topP` | The nucleus sampling cutoff. |
 | `maxTokens` | A cap on the tokens generated in one response. |
@@ -102,10 +101,11 @@ A link reaches Azure regardless of its media type. Inline bytes reach Azure as a
 
 ## Authentication
 
+The `azureAdToken` field is not available in a ModelConfig. Use one of the following credential configurations.
+
 | Configuration | Credential |
 | ------------- | ---------- |
 | `apiKeySecret` is set | The API key from the referenced Secret. |
-| `azureOpenAI.azureAdToken` is set | The Microsoft Entra ID token given in the field. |
 | `tokenPassthrough: true` | The bearer token from the caller's request, forwarded to Azure OpenAI as the API key. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`. |
 | `actorJwt` is set | A newly issued Actor token, sent in the `api-key` header. This is not Microsoft Entra ID authentication, and it is mutually exclusive with `apiKeySecret`, `apiKeySecretKey`, and `tokenPassthrough`. For more information, see [Authenticate as the Actor]({{< link path="setup/model-providers/about-model-providers#authenticate-as-the-actor" >}}). |
 

@@ -314,6 +314,16 @@ The API server rejects an `egressPolicyRefs` list that selects more than 16 poli
 
 You can create, edit, and delete EgressPolicy resources in the **Policies** page of the kagent UI without `kubectl`. The **Egress Policies** tab on the page lists the policies that you can read, with each policy's name, namespace, origins, and authentication type, which can be **None**, **Secret key**, or **Actor JWT**. You can filter the list by name, origins, or namespaces by using the search box. For how to open the UI, see [Launch the UI]({{< link path="ui/launch-ui" >}}).
 
+Select a policy in the list to open its details page. The page lists each destination with its header, prefix, and credential. The **Used by** table lists the Agents and SandboxTemplates in the policy's namespace that select the policy, and shows **Applied**, **Not applied**, or **Not reported yet** for each one. The table includes only the resources that you can read, so it can list fewer resources than actually use the policy.
+
+The form checks each destination before it saves the policy. When an origin is a wildcard, the form turns off authentication for that destination and explains why. A destination that uses Actor JWT authentication needs a header and at least one audience. Its **Token lifetime (seconds)** must be 300 to 3600, and a blank value uses 900 seconds. Saving an edit replaces the policy's whole destination list with the destinations that the form shows.
+
+If someone saves the policy after you open it, the form shows **Your copy is out of date** and asks you to reload. Reloading discards your unsaved changes, so make them again after the reload.
+
+When you delete a policy that Agents or SandboxTemplates still select, the confirmation dialog states how many of them you can see. Those resources lose access to the policy's destinations immediately, and the deletion cannot be undone.
+
+When you create or edit an Agent, the **Egress policies** field lists the policies in the Agent's namespace, because an Agent cannot select a policy from another namespace. The **Details** section of a conversation with the Agent lists the selected policies under **Egress policies**, and each one links to its policy page.
+
 For who can reach this path, see [Access control](#access-control).
 
 ## Access control
@@ -321,6 +331,10 @@ For who can reach this path, see [Access control](#access-control).
 An EgressPolicy is namespace-scoped, and kagent does not check who may select it. A user who can create or edit an Agent or a SandboxTemplate in a namespace can select every EgressPolicy in that namespace and use its credentials. Treat the namespace as the boundary for sharing policies and the Secrets that they reference. To give each team a namespace of its own, see [Run agents in multiple namespaces]({{< link path="operations/multiple-namespaces" >}}).{{% upstream %}} For more information about how Kubernetes role-based access control (RBAC) governs who can write these resources, see [The Kubernetes plane]({{< link path="about/substrate-runtime/identity#the-kubernetes-plane" >}}).{{% /upstream %}}
 
 To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller also writes EgressPolicy resources, with its own service account, for the **Policies** page of the kagent UI and the `EgressPolicyService` API.{{% upstream %}} By default, kagent does not authenticate that path, so any caller that reaches the kagent API can create, edit, or delete a policy regardless of their Kubernetes permissions. For more information, see [Resources that the API writes]({{< link path="about/substrate-runtime/identity#resources-that-the-api-writes" >}}).{{% /upstream %}}
+
+{{% downstream %}}
+To control who can read and change EgressPolicy resources through the **Policies** page and the `EgressPolicyService` API, grant the `kagent:egress-policies` resource in an EnterpriseKagentRBACPolicy resource. The `view` level lists and reads EgressPolicy resources, and the `manage` level creates, updates, and deletes them. Both levels accept the `namespace` and `name` constraints. For more information, see [Restrict access to specific resources]({{< link path="security/policies#restrict-access-to-specific-resources" >}}).
+{{% /downstream %}}
 
 The gateway keeps a credential out of the sandbox, but it cannot stop an allowed destination from returning the credential in a response. Grant a credential only to a destination that you trust with it.
 

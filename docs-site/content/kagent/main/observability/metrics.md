@@ -43,7 +43,18 @@ Besides the standard Go runtime and process metrics, the controller reports the 
 | `leader_election_master_status` | Gauge | `1` on the controller replica that holds the leader lease. With several replicas, exactly one reports `1`. |
 | `rest_client_requests_total` | Counter | Requests from the controller to the Kubernetes API server, by status code. |
 | `kagent_runtime_revision_gc_pending` | Gauge | Runtime revisions that the last successful discovery found eligible for cleanup. The controller reports a cached count, so a scrape does not make a database or network call. The metric is absent until a discovery succeeds, and `0` reports a discovery that matched nothing. A failed discovery holds the previous value rather than clearing it. |
-| `kagent_runtime_revision_gc_duration_seconds` | Histogram | Time that one revision cleanup attempt takes, by the `kagent_gc_stage` label: `discovery` or `collection`. A `collection` attempt covers the database claim, the Agent Substrate read and deletion, and the database finalization. A failed attempt carries an `error_type` label holding a gRPC status code name, or `_OTHER` for every other failure, so the series that carry the label give both the failure rate and the reason. |
+| `kagent_runtime_revision_gc_duration_seconds` | Histogram | Time that one cleanup attempt takes, by the `kagent_gc_stage` label: `discovery` or `collection`. A `discovery` attempt covers the database query that lists every revision eligible for cleanup, and it updates `kagent_runtime_revision_gc_pending`. A `collection` attempt covers the database claim, the Agent Substrate read and deletion, and the database finalization. A failed attempt carries an `error_type` label holding a gRPC status code name, or `_OTHER` for every other failure, so the series that carry the label give both the failure rate and the reason. |
+
+{{% version exclude-if="1.0.x,0.x" %}}
+The controller also reports the following counters.
+
+| Metric | Type | Measures |
+| ------ | ---- | -------- |
+| `kagent_session_quiescence_claimed_total` | Counter | Session quiescence claims that the controller acquired before runtime I/O. Repeated quiescence of the same Session counts again, and a claim counts even when later processing fails. |
+| `kagent_push_delivery_claimed_total` | Counter | Push delivery attempts that the controller acquired before delivery I/O. Push retries count as separate attempts, and a claim counts even when later delivery fails. |
+
+The session quiescence and push delivery counters carry the `kagent_worker_trigger` label. The label value is `signal`, `recovery`, `startup`, `retry`, or `backlog`. Use `recovery` to count timer-driven discoveries of work. Follow-on claims use `backlog`, including worker handoffs and push delivery capacity refills. Empty scans and failed claim requests do not increase either counter. When the recovery timer finds work, the controller also writes the `recovery scan found work` log message with the `operation`, `recovery_interval_seconds`, and first `session_id` or `registration_id` fields.
+{{% /version %}}
 
 The Agent Substrate `atecontroller` component reports the same `controller_runtime_*` and `workqueue_*` metrics for its own reconcilers. To keep the two apart in a query, filter by the scrape job, such as `job="kagent-controller-metrics"` in the OTel stack.
 
@@ -131,6 +142,13 @@ Run the following queries in Prometheus or Grafana.
   ```text
   sum by (controller) (rate(controller_runtime_reconcile_errors_total{job="kagent-controller-metrics"}[5m]))
   ```
+
+{{% version exclude-if="1.0.x,0.x" %}}
+- Timer-driven session quiescence discoveries in the last hour.
+  ```text
+  increase(kagent_session_quiescence_claimed_total{kagent_worker_trigger="recovery"}[1h])
+  ```
+{{% /version %}}
 
 - The 95th percentile agent invocation duration, per Agent. Because both stack guides configure the collector to derive the metric, the query covers every runtime that opens an `invoke_agent` span.
   ```text

@@ -159,7 +159,7 @@ params:
     # That partial keys off `linkVersion`, NOT the `latest: true` flag below;
     # the two are read by different templates and are not interchangeable. Both
     # sit on the 1.0.x entry, so both templates agree on which version is latest.
-    - version: "main"
+    - version: "1.1.x"
       dropdown: "main (in development)"
       linkVersion: "main"
       url: "/kagent/main"
@@ -169,7 +169,7 @@ params:
       # features land. The noindex partial marks every main page that also
       # exists under latest/, so unreleased docs do not outrank the release.
       banner: "This documentation covers kagent while it is in development and can describe unreleased features. For the current release, see the [latest docs](/docs/kagent/latest/)."
-    - version: "latest"
+    - version: "1.0.x"
       # Relabel this entry at each release. It likely becomes a calendar version,
       # such as 2026.11.1, when kagent moves to calendar versioning.
       dropdown: "1.0.x (release)"

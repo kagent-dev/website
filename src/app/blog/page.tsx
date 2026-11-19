@@ -14,6 +14,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'install-agent-substrate-any-cluster',
+        publishDate: '2026-11-11',
+        title: 'Install Agent Substrate on Any Kubernetes Cluster',
+        description: 'Agentic infrastructure shouldn\'t be tied to one cloud. The universal kubectl-ate installer sets up Agent Substrate on any Kubernetes cluster, including Kind, Minikube, AKS, EKS, and GKE, with no cloud-specific workarounds.',
+        authorId: 'michaellevan',
+    },
+    {
         slug: 'anthropic-self-managed-sandboxes',
         publishDate: '2026-11-07',
         title: 'Anthropic Self-Hosted Sandboxes with kagent',
