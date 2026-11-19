@@ -322,6 +322,10 @@ An EgressPolicy is namespace-scoped, and kagent does not check who may select it
 
 To control who can grant access, give the permission to create and edit EgressPolicy resources only to administrators. The kagent controller also writes EgressPolicy resources, with its own service account, for the **Policies** page of the kagent UI and the `EgressPolicyService` API.{{% upstream %}} By default, kagent does not authenticate that path, so any caller that reaches the kagent API can create, edit, or delete a policy regardless of their Kubernetes permissions. For more information, see [Resources that the API writes]({{< link path="about/substrate-runtime/identity#resources-that-the-api-writes" >}}).{{% /upstream %}}
 
+{{% downstream %}}
+To control who can read and change EgressPolicy resources through the **Policies** page and the `EgressPolicyService` API, grant the `kagent:egress-policies` resource in an EnterpriseKagentRBACPolicy resource. The `view` level lists and reads EgressPolicy resources, and the `manage` level creates, updates, and deletes them. Both levels accept the `namespace` and `name` constraints. For more information, see [Restrict access to specific resources]({{< link path="security/policies#restrict-access-to-specific-resources" >}}).
+{{% /downstream %}}
+
 The gateway keeps a credential out of the sandbox, but it cannot stop an allowed destination from returning the credential in a response. Grant a credential only to a destination that you trust with it.
 
 ## Clean up
