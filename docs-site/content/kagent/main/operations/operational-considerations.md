@@ -365,28 +365,17 @@ A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so e
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
 * An Actor that is still running a turn is lost. The Session's in-flight execution state lives in the Actor's sandbox memory on the Worker, and Agent Substrate writes nothing new to snapshot storage until this Actor suspends.
 
-{{< version include-if="latest,0.x" >}}
-A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses the `resume` and `suspend` operation on an Actor in this state. kagent does not recover the Actor on its own, so the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery.
-{{< /version >}}
-{{< version exclude-if="latest,0.x" >}}
-A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses the `resume` and `suspend` operation on an Actor in this state. By default, the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery.
-{{< /version >}}
+A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses the `resume` and `suspend` operation on an Actor in this state. By default, the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery. To recover without a separate call, see [Recover crashed Sessions automatically](#recover-crashed-sessions-automatically).
 
-{{< version include-if="latest,0.x" >}}
-A client with update access to the Session can recover a crashed agent by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. If the Actor is missing or was replaced, the call fails with `FAILED_PRECONDITION`, and starting a new Session is the only option. Neither the `kagent` CLI nor the UI offers a way to revert a Session.
-{{< /version >}}
-{{< version exclude-if="latest,0.x" >}}
-A client with update access to the Session can recover a crashed agent by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. The UI offers a Recover action when a recovery is pending, when a send is refused for an open turn, or after a send retry window runs out. If the Actor is missing or was replaced, the Session is recorded as `FAILED` with operation `NONE` and failure reason `RuntimeLost`. Start a new Session, or fork one from a checkpoint.
-{{< /version >}}
+A client with update access to the Session can recover a crashed agent by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. The UI offers a **Recover** action when a recovery is pending, when a send is refused for an open turn, or after a send retry window runs out. If the Actor is missing or was replaced, the Session is recorded as `FAILED` with operation `NONE` and failure reason `RuntimeLost`. Start a new Session, or fork one from a checkpoint.
 
 Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors lose everything since their last snapshot, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
 
-{{< version exclude-if="latest,0.x" >}}
-### Recover crashed Sessions from sends {#recover-crashed-sessions-from-sends}
+### Recover crashed Sessions automatically {#recover-crashed-sessions-automatically}
 
-You can let send requests attempt the same recovery that `RevertSession` performs. The sender still needs Session update access, because the send can start or continue a runtime revert.
+By default, kagent recovers a crashed Session only when a client calls `RevertSession` or someone selects **Recover** in the UI. To let an ordinary send request start the same recovery, turn on automatic recovery. The sender still needs update access to the Session, because the send can start or continue a recovery.
 
-Set `config.sessions.automaticRecovery` in the controller configuration.
+Set `config.sessions.automaticRecovery` in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
 
 ```yaml
 config:
@@ -396,10 +385,15 @@ config:
 
 | Setting | Description |
 | ------- | ----------- |
-| `config.sessions.automaticRecovery` | Set to `true` to let a send attempt recovery when the send reaches a crashed runtime, is refused because a crashed turn is still open, or is blocked by a suspension whose Worker was lost. The setting defaults to `false`, so existing installations require an explicit `RevertSession` call or UI Recover action. |
+| `config.sessions.automaticRecovery` | Set to `true` to let a send start a recovery. The default is `false`. |
 
-A send that starts recovery waits at most 10 seconds. If recovery is still running, the send returns `KAGENT_SEND_NOT_ACCEPTED` with `state: RECOVERING` and `retryAfterMs: 1000`. Retry the send with the same message ID to continue the recovery. A send while recovery is pending joins that recovery.
-{{< /version >}}
+With the setting on, a send starts a recovery in the following cases.
+
+* The send reaches a crashed runtime.
+* The send is refused because a crashed turn is still open.
+* The send is blocked by a suspension whose Worker was lost.
+
+A send that starts a recovery waits at most 10 seconds. If the recovery is still running, the send returns `KAGENT_SEND_NOT_ACCEPTED` with `state: RECOVERING` and `retryAfterMs: 1000`. Retry the send with the same message ID to continue the recovery. A send that arrives while a recovery is already running waits for that recovery.
 
 ### Graceful pod deletion
 
@@ -461,6 +455,46 @@ config:
 ```
 
 To watch the sweep, scrape `kagent_session_expired_total`. The metric counts the Sessions that the sweep removed. Each removal also logs `expired idle session` at debug level with the Session's ID and how long it had been idle.
+
+## Delete a Session {#delete-a-session}
+
+A client can delete a Session at any time, and kagent runs the same deletion workflow that idle expiry uses. By default, kagent refuses to delete a Session that has work in progress, so that a delete does not cut off a turn by accident. To end the work and delete the Session anyway, force the deletion.
+
+1. Delete the Session. An idle Session is deleted, and the command prints the Session with the state `DELETED`.
+   ```bash
+   kagent agent session delete <session-id>
+   ```
+   Example output:
+   ```console
+   +--------------------------------------+----------------------------+---------+----------------------+
+   | ID                                   | AGENT                      | STATE   | CREATED              |
+   +--------------------------------------+----------------------------+---------+----------------------+
+   | 01a1f56d-9848-7613-9aae-650ceda490e9 | kagent/docs-test-del-agent | DELETED | 2026-11-19T20:09:22Z |
+   +--------------------------------------+----------------------------+---------+----------------------+
+   ```
+
+2. If the command fails with a conflict, wait for the work to finish, and run the command again. The conflict means that the Session has a submitted or running turn, a checkpoint being created, or another lifecycle operation in progress. The Session stays `READY`.
+   ```console
+   Error: delete Session: work is active or pending; stop active turns or use --force, and retry any pending lifecycle operation: rpc error: code = Aborted desc = begin Session operation: session has an active task or checkpoint: resource conflict
+   ```
+
+3. To end the work, add the `--force` flag. Forcing stops the active turns, and kagent records each submitted or running task as canceled with the message `Session deleted while the turn was active.` Completed tasks and tasks that wait at `INPUT_REQUIRED` or `AUTH_REQUIRED` keep their state. kagent deletes the Actor without suspending it first and without taking a final snapshot, and it can delete an Actor that is `RESUMING`.
+   ```bash
+   kagent agent session delete <session-id> --force
+   ```
+   Forcing does not interrupt a checkpoint that kagent is creating or an idle suspension that a worker already claimed. In those cases the request fails with the same conflict, so run it again after that work finishes. An API caller sets `force` to `true` in the `DeleteSessionRequest`, next to `sessionId`.
+
+4. Confirm that the Session is gone. After a deletion, the Session no longer exists, so a request for it fails with `NotFound`.
+   ```bash
+   kagent agent session get <session-id>
+   ```
+   Example output:
+   ```console
+   Error: get Session: rpc error: code = NotFound desc = Session not found
+   ```
+   When a turn was active, the command in step 3 can print `rpc error: code = Unavailable desc = error reading from server: EOF` even though the deletion succeeded. Use this step to learn the result in that case.
+
+<!-- REVIEW: with an active turn, `kagent agent session delete --force` printed `Unavailable ... error reading from server: EOF` in 3 of 3 runs on a 1.0.1 cluster, yet the Session was deleted (a following get returned NotFound). Idle Sessions print the DELETED table. Confirm with the kagent engineers whether the error is expected, and remove the last paragraph of step 4 if they fix it. -->
 
 ## Configuration changes and running agents {#how-configuration-changes-reach-agents}
 
