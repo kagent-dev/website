@@ -193,7 +193,6 @@ A Helm chart for kagent, built with Google ADK
 | providers.azureOpenAI.apiKeySecretKey | string | `"AZUREOPENAI_API_KEY"` |  |
 | providers.azureOpenAI.apiKeySecretRef | string | `"kagent-azure-openai"` |  |
 | providers.azureOpenAI.config.apiVersion | string | `"2023-05-15"` |  |
-| providers.azureOpenAI.config.azureAdToken | string | `""` |  |
 | providers.azureOpenAI.config.azureDeployment | string | `""` |  |
 | providers.azureOpenAI.config.azureEndpoint | string | `""` |  |
 | providers.azureOpenAI.model | string | `"gpt-4.1-mini"` |  |
