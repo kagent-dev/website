@@ -13,7 +13,7 @@ Upgrade from one minor release to the next, such as from 1.0 to 1.1, and do not 
 
 Complete every step in this section before you change any release. The steps make sure that Helm manages the installation, back up the database, save the configuration of each release, and set the target versions that the upgrade commands use.
 
-1. If you installed with the kagent CLI, export the installation to Helm first. The `kagent install` command is for getting started, and the upgrade commands in this guide use Helm. For the steps, see [Export a CLI installation to Helm]({{< link path="operations/export-to-helm" >}}). An installation that you [installed with Helm]({{< link path="setup/installation#install-with-helm" >}}) needs no export.
+1. If you installed with the kagent CLI, export the installation to Helm first. The `kagent install` command is for getting started, and the upgrade commands in this guide use Helm. For the steps, see [Export a CLI installation to Helm]({{< link path="operations/export-to-helm" >}}). An installation that you [installed with Helm]({{< link path="setup/install-helm" >}}) needs no export.
 
 2. Read the [kagent release notes](https://github.com/kagent-dev/kagent/releases) for every release between your current version and the target version. A release can rename or remove a Helm value, and the chart fails to render when a removed value is still set.
 

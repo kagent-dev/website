@@ -1,5 +1,5 @@
 {{% version include-if="1.0.x" %}}
-1. [Install kagent]({{< link path="setup/installation" >}}), and confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets grpcurl discover the controller's methods without a local copy of kagent's protocol buffer definitions.
+1. [Install kagent]({{< link path="setup/installation" >}}), and [turn on gRPC reflection]({{< link path="setup/installation#install-kagent" >}}). Reflection lets grpcurl discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 {{% /version %}}
 {{% version include-if="1.1.x" %}}
 1. [Install kagent]({{< link path="setup/installation" >}}). {{< reuse "kagent-docs/snippets/grpcurl-reflection.md" >}}

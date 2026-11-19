@@ -239,7 +239,7 @@ Agent Substrate writes every suspended Actor to an object store, so the bucket s
 
 ### The bundled object store
 
-Because `rustfs.enabled` defaults to `true`, the `substrate` chart installs an in-cluster object store and configures the `ate-api-server` Deployment to use it. The [installation guide]({{< link path="setup/installation#install-agent-substrate" >}}) points the `substrate-atelet` release at the same store through its `objectStore` values. The store claims a 1Gi PersistentVolumeClaim, and it accepts an access key and secret key that the chart sets to published defaults.
+Because `rustfs.enabled` defaults to `true`, the `substrate` chart installs an in-cluster object store and configures the `ate-api-server` Deployment to use it. The [installation guide]({{< link path="setup/install-helm#install-agent-substrate" >}}) points the `substrate-atelet` release at the same store through its `objectStore` values. The store claims a 1Gi PersistentVolumeClaim, and it accepts an access key and secret key that the chart sets to published defaults.
 
 > [!IMPORTANT]
 > The bundled store is not durable, and every installation receives the same credentials for it. Before a production installation serves real traffic, [move its snapshots to your own bucket](#move-snapshots-to-an-external-bucket).

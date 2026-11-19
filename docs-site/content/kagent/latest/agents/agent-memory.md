@@ -220,7 +220,7 @@ No CLI command manages memories, so these examples call the service with [grpcur
 
 Each call also takes the `agent_name` exactly as the memory table stores it. An incorrect name fails silently, so copy the value from the table instead of typing it by hand.
 
-1. Port-forward the controller's gRPC port, and confirm that your kagent installation sets `config.server.grpcReflection=true`.
+1. Port-forward the controller's gRPC port, and [turn on gRPC reflection]({{< link path="setup/installation#install-kagent" >}}).
    ```bash
    kubectl port-forward -n kagent svc/kagent-controller 8083:8083
    ```
