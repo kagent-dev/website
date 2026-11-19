@@ -314,11 +314,15 @@ The API server rejects an `egressPolicyRefs` list that selects more than 16 poli
 
 You can create, edit, and delete EgressPolicy resources in the **Policies** page of the kagent UI without `kubectl`. The **Egress Policies** tab on the page lists the policies that you can read, with each policy's name, namespace, origins, and authentication type, which can be **None**, **Secret key**, or **Actor JWT**. You can filter the list by name, origins, or namespaces by using the search box. For how to open the UI, see [Launch the UI]({{< link path="ui/launch-ui" >}}).
 
-{{< version exclude-if="latest,0.x" >}}When you open a policy, the details page lists each destination and credential. The **Used by** table lists Agents and SandboxTemplates in the policy's namespace that reference the policy. For each resource, the table shows whether the policy was applied. The list includes only resources that you can read, so the count can be lower than the total resources that use the policy.
+Select a policy in the list to open its details page. The page lists each destination with its header, prefix, and credential. The **Used by** table lists the Agents and SandboxTemplates in the policy's namespace that select the policy, and shows **Applied**, **Not applied**, or **Not reported yet** for each one. The table includes only the resources that you can read, so it can list fewer resources than actually use the policy.
 
-The policy form checks the EgressPolicy rules before saving. For example, a wildcard origin cannot use authentication. An Actor JWT lifetime must be 300 to 3600 seconds. Saving an edit replaces the policy's destinations. If someone saved the policy after you opened the page, the form asks you to reload before you save the policy again.
+The form checks each destination before it saves the policy. When an origin is a wildcard, the form turns off authentication for that destination and explains why. A destination that uses Actor JWT authentication needs a header and at least one audience. Its **Token lifetime (seconds)** must be 300 to 3600, and a blank value uses 900 seconds. Saving an edit replaces the policy's whole destination list with the destinations that the form shows.
 
-You can also select EgressPolicy resources when you create or edit an Agent in the UI. The Agent form offers only policies in the Agent's namespace, because an Agent cannot select a policy from another namespace. When you open an Agent, the details page links each selected policy.{{< /version >}}
+If someone saves the policy after you open it, the form shows **Your copy is out of date** and asks you to reload. Reloading discards your unsaved changes, so make them again after the reload.
+
+When you delete a policy that Agents or SandboxTemplates still select, the confirmation dialog states how many of them you can see. Those resources lose access to the policy's destinations immediately, and the deletion cannot be undone.
+
+When you create or edit an Agent, the **Egress policies** field lists the policies in the Agent's namespace, because an Agent cannot select a policy from another namespace. The **Details** section of a conversation with the Agent lists the selected policies under **Egress policies**, and each one links to its policy page.
 
 For who can reach this path, see [Access control](#access-control).
 
