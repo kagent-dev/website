@@ -150,6 +150,16 @@ ERROR:
    * To review the list of states, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#actor-lifecycle-operations" >}}).
    * To get the current state for every actor, [call `ListSubstrateActors`]({{< link path="operations/tune-agent-substrate#inspect-the-runtime" >}}).
 
+## An agent is missing tools from an MCP server {#missing-mcp-tools}
+
+An agent connects to its MCP servers when it prepares each execution, and a server that fails to list its tools does not fail the execution. kagent hides that server's tools until the execution ends, keeps the tools from healthy servers, and retries the failed server on the next execution. An agent can therefore run normally while it lacks the tools of one server.
+
+1. **Read the agent's log for the warning.** Each omission logs `failed to discover MCP tools; omitting toolset for this invocation` with the underlying error. The error usually names an unreachable server, a rejected credential, or a failed `tools/list` call.
+
+2. **Check the caller token.** A RemoteMCPServer with `tokenPassthrough: true` is omitted when the incoming request carries no bearer token. The log error reads `MCP token passthrough requires a caller bearer token`. For more information, see [Caller token passthrough]({{< link path="skills-and-mcp/about-tools#caller-token-passthrough" >}}).
+
+3. **Check the tool list.** A tool that is missing from a server that did connect is filtered out by the binding's `mcp.tools` list or hidden because it only serves an MCP App's interface. For more information, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
+
 ## An edit to an AgentTemplate has no effect
 
 An edit that appears to do nothing has two possible causes, and the Agent's conditions distinguish them.
