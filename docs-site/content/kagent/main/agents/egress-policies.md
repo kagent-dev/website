@@ -15,7 +15,7 @@ A policy can also have the gateway add a credential to each request, either a va
 
 Create the resource that you want to grant access to. The examples on this page use the `kagent` namespace.
 * **Agent**: [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-agent` Agent. Use commands in the "Agent" tabs in the following steps.
-* **Standalone sandbox**: Create the `scratch` SandboxTemplate, as described in [Create a SandboxTemplate]({{< link path="about/substrate-runtime/standalone-sandboxes#create-a-sandboxtemplate" >}}). Use commands in the "Standalone sandbox" tabs in the following steps.
+* **Standalone sandbox**: Create a SandboxTemplate named `scratch`, as described in [Create a SandboxTemplate]({{< link path="sandboxes/templates#create-a-sandboxtemplate" >}}). Use commands in the "Standalone sandbox" tabs in the following steps.
 
 ## Grant access to a destination
 
@@ -352,5 +352,5 @@ The gateway keeps a credential out of the sandbox, but it cannot stop an allowed
 
 {{< cards >}}
   {{< card link=`{{< link path="about/substrate-runtime/networking-and-egress" >}}` title="Egress control" subtitle="Learn how the egress gateway authorizes each connection." >}}
-  {{< card link=`{{< link path="about/substrate-runtime/standalone-sandboxes" >}}` title="Standalone sandboxes" subtitle="Create sandboxes that agents and scripts can run commands in." >}}
+  {{< card link=`{{< link path="sandboxes" >}}` title="Sandboxes" subtitle="Create sandboxes that people, applications, and agents can run commands in." >}}
 {{< /cards >}}
