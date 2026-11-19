@@ -251,7 +251,6 @@ _Appears in:_
 | `azureEndpoint` _string_ | Endpoint for the Azure OpenAI API |  | **Required** <br /> |
 | `apiVersion` _string_ | API version for the Azure OpenAI API. Required unless apiFormat is responses. |  |  |
 | `azureDeployment` _string_ | Deployment name for the Azure OpenAI API |  |  |
-| `azureAdToken` _string_ | Azure AD token for authentication |  |  |
 | `temperature` _string_ | Temperature for sampling |  |  |
 | `maxTokens` _integer_ | Maximum tokens to generate |  | Minimum: 1 <br /> |
 | `topP` _string_ | Top-p sampling parameter |  |  |
