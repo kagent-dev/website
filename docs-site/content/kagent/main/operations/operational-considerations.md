@@ -366,11 +366,34 @@ A {{< gloss "Worker" >}}Worker{{< /gloss >}} is an ordinary Kubernetes pod, so e
 * A suspended Actor costs nothing. Its state is already written to snapshot storage, and it occupies no Worker while it waits, so the next message resumes it onto whichever Worker in the pool has availability.
 * An Actor that is still running a turn is lost. The Session's in-flight execution state lives in the Actor's sandbox memory on the Worker, and Agent Substrate writes nothing new to snapshot storage until this Actor suspends.
 
-A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses the `resume` and `suspend` operation on an Actor in this state. kagent does not recover the Actor on its own, so the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery.
+A lost Actor moves to `ACTOR_STATE_CRASHED`, and Agent Substrate refuses the `resume` and `suspend` operation on an Actor in this state. By default, the {{< gloss "Session" >}}Session{{< /gloss >}} stays crashed until a client asks for recovery. To recover without a separate call, see [Recover crashed Sessions automatically](#recover-crashed-sessions-automatically).
 
-A client with update access to the Session can recover a crashed agent by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. If the Actor is missing or was replaced, the call fails with `FAILED_PRECONDITION`, and starting a new Session is the only option. Neither the `kagent` CLI nor the UI offers a way to revert a Session.
+A client with update access to the Session can recover a crashed agent by calling `RevertSession` on the `SessionService` gRPC API. The call restores the Actor to its last durable snapshot and marks the turn that was running as failed. The UI offers a **Recover** action when a recovery is pending, when a send is refused for an open turn, or after a send retry window runs out. If the Actor is missing or was replaced, the Session is recorded as `FAILED` with operation `NONE` and failure reason `RuntimeLost`. Start a new Session, or fork one from a checkpoint.
 
 Many Actors on a node are suspended at any moment, so losing the node crashes only the ones that are mid-turn. Those Actors lose everything since their last snapshot, and a node pool that runs Workers therefore needs stricter rules than the rest of the cluster. A Worker pod that Kubernetes deletes gives its Actors time to suspend. Node auto-upgrade, a spot reclaim, and a pool scale-down do not.
+
+### Recover crashed Sessions automatically {#recover-crashed-sessions-automatically}
+
+By default, kagent recovers a crashed Session only when a client calls `RevertSession` or someone selects **Recover** in the UI. With automatic recovery turned on, the client does not need to send a separate request to recover the crashed session. Instead, the client sends the next message as usual, and kagent recovers the Session as part of handling that message. The sender still needs update access to the Session, because the recovery restores the Session to its last snapshot and fails the interrupted turn. 
+
+Automatic recovery is started in the following cases: 
+* The send reaches a crashed runtime.
+* The send is refused because a crashed turn is still open.
+* The send is blocked by a suspension whose Worker was lost.
+
+A send that starts a recovery waits at most 10 seconds. If the recovery is still running, the send returns `KAGENT_SEND_NOT_ACCEPTED` with `state: RECOVERING` and `retryAfterMs: 1000`. Wait for the 1000ms to pass. Then, retry the send with the same message ID to continue the recovery. A send that arrives while a recovery is already running waits for that recovery.
+
+To enable automatic session recovery, set the `config.sessions.automaticRecovery` field in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
+
+```yaml
+config:
+  sessions:
+    automaticRecovery: true
+```
+
+| Setting | Description |
+| ------- | ----------- |
+| `config.sessions.automaticRecovery` | Set to `true` to let a send start a recovery. The default is `false`. |
 
 ### Graceful pod deletion
 

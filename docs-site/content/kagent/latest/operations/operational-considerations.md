@@ -470,8 +470,6 @@ A client can delete a Session at any time, and kagent runs the same deletion wor
    ```
    When a turn was active, the command in step 3 can print `rpc error: code = Unavailable desc = error reading from server: EOF` even though the deletion succeeded. Use this step to learn the result in that case.
 
-<!-- REVIEW: with an active turn, `kagent agent session delete --force` printed `Unavailable ... error reading from server: EOF` in 3 of 3 runs on a 1.0.1 cluster, yet the Session was deleted (a following get returned NotFound). Idle Sessions print the DELETED table. Confirm with the kagent engineers whether the error is expected, and remove the last paragraph of step 4 if they fix it. -->
-
 ## Configuration changes and running agents {#how-configuration-changes-reach-agents}
 
 kagent watches the Secrets and ConfigMaps that a {{< gloss "Harness" >}}Harness{{< /gloss >}} and {{< gloss "AgentTemplate" >}}AgentTemplate{{< /gloss >}} reference, such as the API keys and TLS certificates in a {{< gloss "ModelConfig" >}}ModelConfig{{< /gloss >}}. An edit to one of them recompiles the pair into a new revision.
