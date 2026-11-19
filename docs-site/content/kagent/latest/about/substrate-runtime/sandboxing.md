@@ -11,7 +11,7 @@ An agent runs an **agentic loop**. A model proposes the next step, the agent car
 
 kagent runs an agent's loop inside an **Actor**, a unit of compute that [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) creates and manages. An Actor is not an ordinary container process. Each Actor runs inside its own **sandbox**, and one {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts many of those sandboxed Actors at the same time.
 
-This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it. The same boundary isolates a standalone Sandbox, the scratch environment that a person, an application, or an agent creates to run commands. To create one, see [Sandboxes]({{< link path="sandboxes" >}}).
+This page explains what selects a sandbox, what the sandbox separates, and how traffic reaches an Actor through it. The same boundary isolates a standalone {{< gloss "Sandbox" >}}Sandbox{{< /gloss >}}, the scratch environment that a person, an application, or an agent creates to run commands. To create one, see [Sandboxes]({{< link path="sandboxes" >}}).
 </br></br>
 
 ```mermaid

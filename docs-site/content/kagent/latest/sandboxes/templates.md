@@ -5,7 +5,7 @@ weight: 20
 author: kagent.dev
 ---
 
-A **SandboxTemplate** defines the tools environment that a Sandbox starts from. It names a tools image, the {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that runs it, and the network access that it gets. An operator creates templates, and a caller picks one by namespace and name when it creates a Sandbox. This page shows how to set up the installation for Sandboxes, choose an image, and create a template.
+A {{< gloss "SandboxTemplate" >}}SandboxTemplate{{< /gloss >}} defines the tools environment that a Sandbox starts from. It names a tools image, the {{< gloss "WorkerPool" >}}WorkerPool{{< /gloss >}} that runs it, and the network access that it gets. An operator creates templates, and a caller picks one by namespace and name when it creates a Sandbox. This page shows how to set up the installation for Sandboxes, choose an image, and create a template.
 
 ## Before you begin
 
@@ -70,7 +70,7 @@ A SandboxTemplate is a namespaced kagent custom resource that describes a reusab
    | Field | Required | Description |
    | ----- | -------- | ----------- |
    | `workload.image` | Yes | The tools image, pinned by `sha256` digest, in the `<image>@sha256:<digest>` form. The API server rejects a reference without a digest, with the message `spec.workload.image in body should match '^[^[:space:]@]+@sha256:[a-f0-9]{64}$'`. |
-   | `env` | No | Environment variables for every process in the Sandbox, up to 100. Each entry sets a literal `value`, which is required and can be an empty string. A template cannot read a value from a Secret, and the API server rejects a `credentialRef` entry as an unknown field. To give a Sandbox a credential, [inject it at the egress gateway](#grant-network-access) instead. |
+   | `env` | No | Environment variables for every process in the Sandbox. This example sets `LANG=C.UTF-8` to select a UTF-8 locale for programs that read the locale setting, so they can handle non-ASCII text consistently. Each entry sets a literal `value`, which is required and can be an empty string. A template cannot read a value from a Secret, and the API server rejects a `credentialRef` entry as an unknown field. To give a Sandbox a credential, [inject it at the egress gateway](#grant-network-access) instead. |
    | `substrate.workerPoolRef.name` | Yes | The WorkerPool in the template's namespace that runs the Sandboxes. The pool also decides the sandbox class, such as gVisor. |
    | `substrate.snapshotPolicy.location` | Yes | The object storage location for the Sandbox's {{< gloss "Snapshot" >}}snapshots{{< /gloss >}}. |
    | `egressPolicyRefs` | No | Up to 16 EgressPolicy resources in the template's namespace that grant the Sandbox outbound access. When this field is omitted, the Sandbox has no outbound access. |

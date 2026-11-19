@@ -5,9 +5,32 @@ weight: 10
 author: kagent.dev
 ---
 
-A **Sandbox** is a scratch environment for running commands and working with files. You create a Sandbox from a **SandboxTemplate**, run processes and move files in it, then delete it or let it expire. The Sandbox belongs to the caller that created it, and nobody else can see it.
+A kagent {{< gloss "Sandbox" >}}Sandbox{{< /gloss >}} is an isolated scratch environment for running commands and working with files. You create a Sandbox from a {{< gloss "SandboxTemplate" >}}SandboxTemplate{{< /gloss >}}, run processes and move files in it, then delete it or let it expire. The Sandbox belongs to the caller that created it, and other identities cannot see it.
 
 A Sandbox has no harness, no model, and no conversation. It runs whatever its caller tells it to run. That caller can be a person at a terminal, an application, or an agent that wants a safe place to run the code that it wrote.
+
+The isolation boundary separates the Sandbox's files, tools, and processes from the host and other runtimes. Network access is controlled in both directions: ingress follows the controller and Agent Substrate router's permitted path, and egress requires an EgressPolicy that allows the destination.
+
+```mermaid
+flowchart LR
+    caller["Person, application, or agent"] --> ingress["Ingress<br/>e.g. kagent API,<br/>Agent Substrate router"]
+    subgraph worker["Worker"]
+        subgraph isolation["Sandbox isolation boundary: gVisor or micro-VM"]
+            guest["Guest process and file API"]
+            tools["Tools and processes"]
+            files["Private files<br/>Durable workspace at /data"]
+            guest --> tools
+            tools --> files
+        end
+    end
+    ingress --> guest
+    tools --> egress["Egress gateway<br/>Deny unless a policy allows"]
+    egress --> allowed["Allowed destinations"]
+    classDef boundary fill:#a78bfa26,stroke:#a78bfa,stroke-width:2px
+    class isolation boundary
+```
+
+The ingress path is managed by Agent Substrate; creating a Sandbox does not expose a public endpoint for programs inside it. You grant outbound access through the SandboxTemplate's egress policy references. For the routing and policy details, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Sandboxes and sandbox isolation
 
@@ -18,6 +41,8 @@ The word _sandbox_ names two related things in kagent.
 
 The pages in this section cover the Sandbox runtime. To change the isolation technology itself, such as moving a pool from gVisor to micro-VMs, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
+For a broader comparison of sandbox designs, read Christian Posta's [Not All Agent Sandboxes Are Created Equally](https://kagent.dev/blog/agent-sandboxes-four-axes). The blog introduces four axes for evaluating a sandbox: boundary and access controls, environment, lifecycle, and interface and experience.
+
 ## Where the agent loop runs
 
 An agent runs a loop. A model proposes a step, a tool or a command carries it out, and the result feeds the model's next decision. Where that loop runs decides which kagent feature you use.
@@ -27,10 +52,14 @@ An agent runs a loop. A model proposes a step, a tool or a command carries it ou
 | In your cluster, as a kagent agent | The whole agent: the harness, its tools, and its working files | An {{< gloss "Agent" >}}Agent{{< /gloss >}}, which runs each conversation as a {{< gloss "Session" >}}Session{{< /gloss >}}. For more information, see [Agents]({{< link path="agents" >}}). |
 | In your cluster, as a kagent agent that needs a separate place to run code | Only the code that the agent hands off, apart from the agent's own Session | An Agent with the sandbox tools from the kagent MCP server. For more information, see [Give an agent a sandbox]({{< link path="sandboxes/agent-sandbox-tools" >}}). |
 | Outside the cluster, in an MCP client such as Claude Code or Cursor | Only the code or commands that the client sends | The sandbox tools and prompts of the kagent MCP server. For more information, see [Use sandboxes from an MCP client]({{< link path="sandboxes/mcp-clients" >}}). |
-| In your own application | Only the code or commands that the application sends | The `SandboxService` gRPC API. For more information, see [Drive sandboxes over gRPC]({{< link path="sandboxes/grpc" >}}). |
+| In your own application | Only the code or commands that the application sends | The `SandboxService` gRPC API. For more information, see [Use sandboxes with the gRPC API]({{< link path="sandboxes/grpc" >}}). |
 | Nowhere, because a person runs the commands | Commands and files from a terminal | The `kagent sandbox` CLI. For more information, see [Run commands with the CLI]({{< link path="sandboxes/cli" >}}). |
 
 When the whole agent runs in the isolated environment, its Session holds the conversation, and the Actor holds the agent's files. When the loop runs elsewhere, the conversation is already safe with the caller, so a Sandbox is usually short-lived. The caller creates it for a task, collects the results, and deletes it.
+
+{{< cards >}}
+  {{< card link="https://kagent.dev/blog/anthropic-self-managed-sandboxes" title="Claude Managed Agents with kagent" subtitle="Read the blog about the experimental integration for hosting Claude Managed Agents' sandboxes on your own infrastructure." >}}
+{{< /cards >}}
 
 ## Sandboxes and Sessions
 

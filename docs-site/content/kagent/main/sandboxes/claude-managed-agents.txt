@@ -8,6 +8,10 @@ author: kagent.dev
 > [!WARNING]
 > This integration is experimental. Its settings are environment variables with the `EXPERIMENTAL_` prefix, and they can change in a future release without notice.
 
+<!-- Hidden pending validation: Sessions remained waiting on a tool result after
+more than five minutes. A subsequent user.message was rejected because the
+pending tool event had not received a response. -->
+
 [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes) can run their tools in a self-hosted sandbox. Anthropic hosts the agent loop, and your infrastructure runs the code that the agent executes. kagent can be that infrastructure. The kagent controller claims work from an Anthropic self-hosted environment, creates a Sandbox for each Claude Session, and starts Anthropic's worker in it. The Sandbox suspends when the Session is idle, and it resumes with its files intact when the Session continues.
 
 ## How it works
@@ -33,18 +37,18 @@ Each Sandbox lives for 12 hours by default, after which kagent deletes it, even 
 2. Create a [self-hosted environment](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes) on the Claude Platform, and generate its environment key. Save both values.
    ```bash
    export ANTHROPIC_ENVIRONMENT_ID=env_xxx
-   export ANTHROPIC_ENVIRONMENT_KEY=<environment-key>
+   export ANTHROPIC_ENVIRONMENT_KEY="<environment-key>"
    ```
 
 3. Install kagent from a build that includes the integration, and set the [sandbox values]({{< link path="sandboxes/templates#before-you-begin" >}}).
 
 ## Set up the Sandbox template
 
-The launcher runs the `ant` CLI inside the Sandbox, so the template's tools image must include it. The kagent `sandbox-guest` image includes the `ant` CLI, so you can use that image as the tools image.
+The launcher runs the `ant` CLI inside the Sandbox, so the template's tools image must include it. The experimental image pinned in the blog includes the `ant` CLI. It is separate from the installation's `config.sandboxes.guestImage`, which supplies kagent's process and file service. This draft uses the blog's tools image while the integration is under development.
 
 1. Create an EgressPolicy that lets the worker reach Anthropic, and a SandboxTemplate that selects it. Every Sandbox has no outbound access by default, and the worker cannot run without access to the Anthropic API.
    ```yaml
-   kubectl apply -f - <<EOF
+   kubectl apply -f - <<'EOF'
    apiVersion: api.kagent.dev/v1alpha3
    kind: EgressPolicy
    metadata:
@@ -52,7 +56,7 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
      namespace: kagent
    spec:
      destinations:
-       - origin: https://*.anthropic.com
+        - origin: "https://*.anthropic.com"
    ---
    apiVersion: api.kagent.dev/v1alpha3
    kind: SandboxTemplate
@@ -61,8 +65,8 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
      namespace: kagent
    spec:
      workload:
-       # The kagent sandbox-guest image of your installation, which includes the ant CLI.
-       image: ghcr.io/kagent-dev/kagent/sandbox-guest@sha256:<digest>
+        # Experimental tools image from the blog, including the ant CLI.
+        image: ghcr.io/kagent-dev/kagent/sandbox-guest@sha256:94b1f9e216eee8778797d54b9d6e2b17b74089157d708097577b1479e4d92bd0
      substrate:
        workerPoolRef:
          name: kagent-default
@@ -73,7 +77,9 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
    EOF
    ```
 
-   To give the agent access to more destinations, such as a package registry, add them to the EgressPolicy. For more information, see [Egress policies]({{< link path="agents/egress-policies" >}}).
+   For wildcard matches to Anthropic, use the quoted YAML value `"https://*.anthropic.com"` as shown. A destination that injects a credential must use an exact hostname instead of a wildcard. For the accepted forms, see [Origin format and limits]({{< link path="agents/egress-policies#origin-format" >}}).
+
+   The workload image must contain a complete 64-character SHA-256 digest, such as the example.
 
 2. Wait until the template is ready.
    ```bash
@@ -88,14 +94,15 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
      --from-literal=key="${ANTHROPIC_ENVIRONMENT_KEY}"
    ```
 
-2. Add the launcher's environment variables to your kagent Helm values, and upgrade the release.
-   ```yaml
+2. Create `anthropic-launcher-values.yaml`. The shell substitutes the `$ANTHROPIC_ENVIRONMENT_ID` that you exported in the previous steps. If your release already sets `controller.env`, include those entries in this file before upgrading: Helm replaces the list rather than appending to it.
+   ```bash
+   cat > anthropic-launcher-values.yaml <<EOF
    controller:
      env:
        - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENABLED
          value: "true"
        - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENVIRONMENT_ID
-         value: "<environment-id>"
+         value: "$ANTHROPIC_ENVIRONMENT_ID"
        - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_ENVIRONMENT_KEY
          valueFrom:
            secretKeyRef:
@@ -104,7 +111,18 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
        - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAMESPACE
          value: kagent
        - name: EXPERIMENTAL_ANTHROPIC_SELF_HOSTED_SANDBOXES_TEMPLATE_NAME
-         value: claude
+         value: "claude"
+   EOF
+   ```
+
+   [Upgrade the existing Helm release]({{< link path="setup/installation#install-with-helm" >}}). Use the same experimental chart version that you installed, as shown by `helm list -n kagent`.
+   ```bash
+   export KAGENT_CHART_VERSION=$(helm list -n kagent -o json \
+     | jq -er '.[] | select(.name == "kagent") | .chart | ltrimstr("kagent-")')
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --namespace kagent --version "$KAGENT_CHART_VERSION" \
+     --reuse-values -f anthropic-launcher-values.yaml --wait
    ```
 
    | Variable | Description |
@@ -142,16 +160,23 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
      --environment-id "$ANTHROPIC_ENVIRONMENT_ID" | jq -r .id)
    ```
 
-3. Connect to the Session, and ask the agent to create a file, such as `/data/workspace/helloworld.txt` that contains `Hello world!`.
+3. Connect to the Session.
+   
    ```bash
    ant beta:sessions connect "$SESSION_ID"
    ```
 
-   The launcher claims the work and creates a Sandbox named `anthropic-<session-id>` from the `claude` template. The agent's tool calls run in that Sandbox.
+4. Ask the agent to create a file, such as `/data/workspace/helloworld.txt` that contains `Hello world!`.
 
-4. After 5 minutes without work, the worker exits and kagent suspends the Sandbox. Ask the agent to read the file back. kagent resumes the Sandbox, and the file is still there.
+   ```bash
+   > Write a file /data/workspace/helloworld.txt that says, "Hello world!"
+   ```
 
-5. Ask the agent to fetch a page from a destination that the EgressPolicy does not allow, such as `https://kagent.dev`. The request fails, because the Sandbox cannot reach that destination.
+   In the `ant` terminal session, you can see the `kagent-sandbox-agent` write the file. The launcher claims the work and creates a Sandbox named `anthropic-<session-id>` from the `claude` template. The agent's tool calls run in that Sandbox.
+
+5. After 5 minutes without work, the worker exits and kagent suspends the Sandbox. Ask the agent to read the file back. kagent resumes the Sandbox, and the file is still there.
+
+6. Ask the agent to fetch a page from a destination that the EgressPolicy does not allow, such as `https://kagent.dev`. The request fails, because the Sandbox cannot reach that destination.
 
 ## View the Sandboxes
 

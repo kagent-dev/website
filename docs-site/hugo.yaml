@@ -7,6 +7,9 @@
 # comes only from baseURL and isn't doubled.
 baseURL: "https://kagent.dev/docs/"
 enableRobotsTXT: true
+# Keep the experimental Sandbox guide in source without publishing it as a file.
+ignoreFiles:
+  - 'claude-managed-agents\.txt$'
 # Derive each page's .Lastmod from its last git commit — no manually maintained
 # front-matter dates. Feeds the sitemap <lastmod> for SEO. Listing "lastmod"
 # before ":git" keeps an explicit front-matter date ahead of the commit date

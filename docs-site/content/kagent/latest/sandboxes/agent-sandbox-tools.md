@@ -127,7 +127,15 @@ Review the following table of kagent tools. Bind only the tools that the agent n
    Exit code: 0
    ```
 
-2. Check which tools the agent called. In the kagent UI, the Session's conversation view shows each tool call that the agent made. The agent in this example calls `create_sandbox`, `write_sandbox_file`, `start_sandbox_process`, `get_sandbox_process`, `read_sandbox_outputs`, and `delete_sandbox`, in that order.
+2. [Launch the kagent UI]({{< link path="ui/launch-ui" >}}) to check which tools the agent called. Leave the following command running, then open [http://localhost:8082](http://localhost:8082).
+   ```bash
+   kagent dashboard
+   ```
+
+   Open the `code-runner` agent's Session. The conversation view shows each tool call that the agent made. A typical run calls `create_sandbox`, `write_sandbox_file`, `start_sandbox_process`, `get_sandbox_process`, `read_sandbox_outputs`, and `delete_sandbox`. The model can repeat a status check or make additional calls.
+
+   {{< reuse-image-light src="img/kagent-ui-sandbox-tools.png" alt="The code-runner Session in the kagent UI, showing sandbox tool calls and the Python result." >}}
+   {{< reuse-image-dark srcDark="img/kagent-ui-sandbox-tools-dark.png" alt="The code-runner Session in the kagent UI in dark mode, showing sandbox tool calls and the Python result." >}}
 
 3. Confirm that the agent deleted its Sandbox.
    ```bash
@@ -140,7 +148,29 @@ Review the following table of kagent tools. Bind only the tools that the agent n
 
 An agent owns the Sandboxes that it creates under the identity that its MCP connection authenticated, not under the identity of the person that the agent is talking to. A {{< gloss "Session" >}}Session{{< /gloss >}} share token does not grant access to a Sandbox.
 
-To have an agent create Sandboxes as the person who invoked it, configure credential propagation by setting `config.runtimeDefaults.tokenPropagation.enabled` to `true`. The kagent runtime then passes the caller's credentials and identity to the MCP servers that you trust, so each person sees only the Sandboxes that the agent created for them. For how an MCP server opts in to receiving the caller's token, see [Caller token passthrough]({{< link path="skills-and-mcp/about-tools#caller-token-passthrough" >}}).
+To have an agent create Sandboxes as the person who invoked it, enable credential propagation. The kagent runtime then passes the caller's credentials and identity to the MCP servers that you trust, so each person sees only the Sandboxes that the agent created for them.
+
+1. Save the runtime setting in a Helm values file.
+   ```bash
+   cat > token-propagation-values.yaml <<'EOF'
+   config:
+     runtimeDefaults:
+       tokenPropagation:
+         enabled: true
+   EOF
+   ```
+
+2. Read the installed chart version and apply the file to the existing release, preserving its other values.
+   ```bash
+   export KAGENT_CHART_VERSION=$(helm list -n kagent -o json \
+     | jq -er '.[] | select(.name == "kagent") | .chart | ltrimstr("kagent-")')
+   helm upgrade kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --namespace kagent --version "$KAGENT_CHART_VERSION" \
+     --reuse-values -f token-propagation-values.yaml --wait
+   ```
+
+3. Configure the MCP server to opt in to receiving the caller's token, as described in [Caller token passthrough]({{< link path="skills-and-mcp/about-tools#caller-token-passthrough" >}}). Enabling propagation alone does not make every MCP server trusted.
 
 ## Clean up
 

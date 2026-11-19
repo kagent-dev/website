@@ -9,6 +9,8 @@
     "update:launch-ui": "playwright test tests/launch-ui.spec.ts --update-snapshots",
     "test:chat": "playwright test tests/chat.spec.ts",
     "update:chat": "playwright test tests/chat.spec.ts --update-snapshots",
+    "test:sandbox-tools": "playwright test tests/sandbox-tools.spec.ts",
+    "update:sandbox-tools": "playwright test tests/sandbox-tools.spec.ts --update-snapshots",
     "sync-docs": "node scripts/sync-docs-images.mjs",
     "report": "playwright show-report"
   },
