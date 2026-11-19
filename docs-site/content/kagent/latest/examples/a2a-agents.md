@@ -54,6 +54,8 @@ The following table covers the methods that this example uses. The `TaskPushNoti
 
 {{< reuse "kagent-docs/snippets/grpcurl-prerequisites.md" >}}
 
+The examples in the rest of this page use `grpcurl` to call the gRPC transport. The controller serves the same service over HTTP/JSON-RPC on the same port `8083`; the `Call it over HTTP` section near the end of this page shows the equivalent `curl` calls.
+
 ## Read the agent card
 
 An A2A client typically starts by reading the agent card, which tells it what the agent is and which protocol features the agent supports.
@@ -478,6 +480,40 @@ Answering a pause needs the human-in-the-loop extension, which a caller requests
 > A caller that does not request the extension is still interrupted. The task stops at `TASK_STATE_INPUT_REQUIRED`, and the question arrives as ordinary text on the status message. However, the metadata does not include a request `id`. Without that `id`, the caller cannot answer the pause, so the task waits until the task is canceled. Request the extension on any call to an agent that can pause.
 
 A tool approval works in the same way, but the agent sends `tool_approval_request`, and the caller answers with `tool_approval_response`. For the pause kinds, the approval model, and what a nested agent's pause looks like, see [Human in the loop]({{< link path="agents/human-in-the-loop" >}}).
+
+## Call it over HTTP
+
+The examples so far call the gRPC transport with `grpcurl`. The controller serves the same service over HTTP/JSON-RPC on the same port `8083`, where the URL path selects the Agent instead of a `tenant` field. Both forms below reach the same service the `grpcurl` examples use, with the same `A2A-Version: 1.0` header.
+
+1. Read the Agent's card with the JSON-RPC interface URL.
+   ```bash
+   curl -s localhost:8083/agents/kagent/my-first-agent/.well-known/agent-card.json
+   ```
+
+   The card advertises the JSON-RPC URL first, then the gRPC interface. Point every JSON-RPC call at the first `supportedInterfaces` entry, whose `url` is `http://<controller>/agents/<namespace>/<name>`. A hand-assembled HTTP call sets the Agent in the URL and needs no `tenant`; a `tenant` that an HTTP request does supply must match its URL.
+
+2. Send a message with a JSON-RPC `2.0` request. The body mirrors the `SendMessage` call from [Send a message](#send-a-message): `messageId`, `role`, and at least one `parts` entry. Omitting both a `contextId` and a task ID starts a new Session.
+   ```bash
+   curl -s -X POST localhost:8083/agents/kagent/my-first-agent \
+     -H 'Content-Type: application/json' \
+     -H 'A2A-Version: 1.0' \
+     -d '{
+           "jsonrpc": "2.0",
+           "id": "request-1",
+           "method": "SendMessage",
+           "params": {
+             "message": {
+               "messageId": "'$(uuidgen)'",
+               "role": "ROLE_USER",
+               "parts": [{"text": "What is 7 times 6? Answer with just the number."}]
+             }
+           }
+         }'
+   ```
+
+   The reply is the same task the `SendMessage` gRPC call returns: the answer arrives in `artifacts`, and `contextId` is the Session ID to repeat on a follow-up message.
+
+3. The JSON-RPC surface uses the pinned upstream A2A v1 SDK method names: `SendMessage`, `SendStreamingMessage` (streams events over the same `POST` endpoint), `GetTask`, `ListTasks`, `CancelTask`, `SubscribeToTask`, and `GetExtendedAgentCard`. Those are the v1 names for what older A2A clients called `message/send`, `message/stream`, `tasks/get`, `tasks/list`, `tasks/cancel`, and `tasks/resubscribe`.
 
 ## Clean up
 
