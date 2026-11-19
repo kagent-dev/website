@@ -159,7 +159,7 @@ more thing to get working before a screenshot exists.
 ## Task: refresh for a new kagent version
 
 1. **Nothing here pins a version.** The provisioner reads the kagent version from the same
-   conref the install guide renders (`assets/kagent-docs/versions/kagent.md`, the `latest` entry),
+   conref the install guide renders (`assets/kagent-docs/versions/kagent.md`, the `1.0.x` entry, which is `latest`),
    and `kagent install` brings the Agent Substrate release that version bundles, so bumping the
    docs is what moves the capture. Do not hardcode a version
    to "get the new UI" — that decouples the screenshot from what a reader installs.

@@ -614,7 +614,7 @@ jobs:
           }
 
           # Version-split conrefs. Each carries one span per documented line:
-          #   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="latest" >}}B{{< /version >}}{{< version include-if="main" >}}C{{< /version >}}
+          #   {{< version include-if="0.x" >}}A{{< /version >}}{{< version include-if="1.0.x" >}}B{{< /version >}}{{< version include-if="1.1.x" >}}C{{< /version >}}
           # Only this run's span is written, and the helper refuses to continue
           # if any other span moved -- that assertion is the whole safety net
           # keeping a 0.10.x run from rewriting 1.x values and vice versa.
@@ -664,12 +664,23 @@ jobs:
           PY_SPAN
           }
 
-          echo "Version-split conrefs (writing the $LINE span):"
-          write_span_conref "$VERSIONS_DIR/kagent.md"          "$LINE" "$KAGENT_VERSION"
-          write_span_conref "$VERSIONS_DIR/agent-substrate.md" "$LINE" "$SUBSTRATE_VERSION"
+          # The spans are named for the docs version they describe (0.x, 1.0.x),
+          # while $LINE names the content directory (0.x, latest). Map one to the
+          # other here. When latest moves to a new minor line, change this case,
+          # the `version` values in docs-site/hugo.yaml, and the include-if tokens
+          # in docs-site/assets/kagent-docs/versions/ together.
+          case "$LINE" in
+            0.x)    SPAN=0.x ;;
+            latest) SPAN=1.0.x ;;
+            *)      echo "Error: no conref span for line '$LINE'."; exit 1 ;;
+          esac
+
+          echo "Version-split conrefs (writing the $SPAN span):"
+          write_span_conref "$VERSIONS_DIR/kagent.md"          "$SPAN" "$KAGENT_VERSION"
+          write_span_conref "$VERSIONS_DIR/agent-substrate.md" "$SPAN" "$SUBSTRATE_VERSION"
           # The Agent Substrate chart is published at the same version as the release.
-          write_span_conref "$VERSIONS_DIR/agent-substrate-chart.md" "$LINE" "$SUBSTRATE_VERSION"
-          write_span_conref "$VERSIONS_DIR/max-kube.md"        "$LINE" "$MAX_KUBE"
+          write_span_conref "$VERSIONS_DIR/agent-substrate-chart.md" "$SPAN" "$SUBSTRATE_VERSION"
+          write_span_conref "$VERSIONS_DIR/max-kube.md"        "$SPAN" "$MAX_KUBE"
 
           # Flat conrefs, read only by 1.x pages. On a 0.x run their values
           # would come from the 0.10.x tree and silently replace what the 1.x
