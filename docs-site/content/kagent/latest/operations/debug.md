@@ -150,6 +150,20 @@ ERROR:
    * To review the list of states, see [Suspend and resume]({{< link path="about/substrate-runtime/suspend-and-resume#actor-lifecycle-operations" >}}).
    * To get the current state for every actor, [call `ListSubstrateActors`]({{< link path="operations/tune-agent-substrate#inspect-the-runtime" >}}).
 
+## An agent is missing tools from an MCP server {#missing-mcp-tools}
+
+An agent connects to its MCP servers when it prepares each execution, and a server that fails to list its tools does not fail the execution. kagent hides that server's tools until the execution ends, keeps the tools from healthy servers, and retries the failed server on the next execution. An agent can therefore run normally while it lacks the tools of one server.
+
+1. **Read the log of the WorkerPool's pods for the warning.** Each omission logs `failed to discover MCP tools; omitting toolset for this invocation` at the `WARN` level, with the underlying error. The error usually names an unreachable server, a rejected credential, or a failed `tools/list` call. The log has one warning for each execution, because kagent retries the server every time.
+   ```bash
+   kubectl logs -n kagent -l ate.dev/worker-pool=kagent-default --tail=-1 | grep "omitting toolset"
+   ```
+   Replace `kagent-default` with the name of the WorkerPool that your Harness uses. The line carries the Actor's name, so you can match it to a Session.
+
+2. **Check the caller token.** A RemoteMCPServer with `tokenPassthrough: true` is omitted when the incoming request carries no bearer token. The error at the end of the warning reads `MCP token passthrough requires a caller bearer token`. For more information, see [Caller token passthrough]({{< link path="skills-and-mcp/about-tools#caller-token-passthrough" >}}).
+
+3. **Check the tool list.** A tool that is missing from a server that did connect is filtered out by the binding's `mcp.tools` list or hidden because it only serves an MCP App's interface. For more information, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
+
 ## An edit to an AgentTemplate has no effect
 
 An edit that appears to do nothing has two possible causes, and the Agent's conditions distinguish them.
