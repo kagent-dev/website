@@ -12,9 +12,9 @@ The `kagent sandbox` commands give a person or a script a scratch environment on
 
 ## Before you begin
 
-1. Create a SandboxTemplate whose image includes Python, as described in [Set up sandbox templates]({{< link path="sandboxes/templates" >}}). The steps in this guide use the `python` template in the `kagent` namespace.
+1. {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
-2. {{< reuse "kagent-docs/snippets/install-cli.md" >}}
+2. Create a SandboxTemplate whose image includes Python, as described in [Set up sandbox templates]({{< link path="sandboxes/templates" >}}). The steps in this guide use the `python` template in the `kagent` namespace.
 
 3. To read the Sandbox ID from the CLI's JSON output, install [`jq`](https://jqlang.org/download/).
 

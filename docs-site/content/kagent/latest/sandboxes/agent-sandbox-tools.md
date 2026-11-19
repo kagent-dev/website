@@ -11,11 +11,11 @@ A separate Sandbox keeps the code that an agent writes apart from the agent's ow
 
 ## About the sandbox tools
 
-kagent's Helm chart installs a `RemoteMCPServer` named `kagent-api` in the controller's namespace, pointing at the controller's own `/mcp` endpoint. The server exposes the sandbox tools alongside the Session and checkpoint tools, so an AgentTemplate reaches Sandboxes through an ordinary tool binding. An AgentTemplate can reference only an MCP server in its own namespace, so an agent in another namespace needs its own `RemoteMCPServer` that points at the same URL.
+kagent's Helm chart installs a `RemoteMCPServer` named `kagent-api` in the controller's namespace, pointing at the controller's own `/mcp` endpoint. The server exposes the sandbox tools alongside the session and checkpoint tools, so an AgentTemplate reaches Sandboxes through an ordinary tool binding. An AgentTemplate can reference only an MCP server in its own namespace, so an agent in another namespace needs its own `RemoteMCPServer` that points at the same URL.
+
+Review the following table of kagent tools. Bind only the tools that the agent needs. An agent that runs a program and reads its output does not need the suspend, resume, or kill tools.
 
 {{< reuse "kagent-docs/snippets/sandbox-mcp-tools.md" >}}
-
-Bind only the tools that the agent needs. An agent that runs a program and reads its output does not need the suspend, resume, or kill tools.
 
 ## Before you begin
 

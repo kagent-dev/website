@@ -211,7 +211,7 @@ A tool call that fails still returns a result, with `isError` set to `true` and 
 
 ## Limits
 
-The MCP tools move data through the model's context, so their limits are tighter than the CLI's and the gRPC API's.
+The MCP tools move data through the model's context, so their limits are tighter than the CLI's and the gRPC API's. For a larger file, use the CLI or the gRPC API, which stream files up to 64 MiB.
 
 | What | Limit |
 | ---- | ----- |
@@ -219,8 +219,6 @@ The MCP tools move data through the model's context, so their limits are tighter
 | `read_sandbox_outputs` | 1 MiB of combined output per call, in base64. Pass the returned offsets to read more. |
 | `read_sandbox_file`, text | 2,000 lines or 32 KiB per page, whichever comes first. A line longer than 2,000 bytes is cut and marked `[line cut]`. Pass `offset` and `limit` to page. |
 | `read_sandbox_file`, images | PNG, JPEG, and GIF files up to 10 MiB. Other files return a description instead of their content. |
-
-For a larger file, use the CLI or the gRPC API, which stream files up to 64 MiB.
 
 ## Clean up
 

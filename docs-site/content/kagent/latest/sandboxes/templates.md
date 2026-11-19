@@ -15,9 +15,9 @@ A **SandboxTemplate** defines the tools environment that a Sandbox starts from. 
 
 ## Choose a tools image
 
-The tools image supplies the programs that commands in the Sandbox run, such as an interpreter, a compiler, or a command line tool. kagent adds its own guest program to every Sandbox to serve process and file operations, so the tools image needs nothing else. You can use a public image as it is, or build your own.
+Each Sandbox needs a container image with all of the tools, or programs, that the Sandbox can run, such as an interpreter, a compiler, or a command line tool. kagent adds its own guest program to every Sandbox to serve process and file operations, so the tools image needs nothing else. You can use a public image as it is, or build your own.
 
-1. Pick or build an image that already contains every program that the Sandbox needs. A Sandbox has no outbound network access by default, so a command cannot install a missing package at run time unless you [grant access](#grant-network-access).
+1. Pick a public image such as Python, or build an image that already contains every program that the Sandbox needs. A Sandbox has no outbound network access by default, so a command cannot install a missing package at run time unless you [grant network access](#grant-network-access).
 
 2. Look up the image's digest. The API server rejects an image that is referenced by a tag alone, because each prepared revision must be reproducible. For a multi-architecture image, use the digest of the image index, so that each node pulls the variant for its own architecture.
    ```bash
@@ -40,9 +40,10 @@ The tools image supplies the programs that commands in the Sandbox run, such as 
 
 ## Create a SandboxTemplate
 
-A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource. Applying one prepares a reusable runtime but does not allocate a Sandbox.
+A SandboxTemplate is a namespaced kagent custom resource that describes a reusable runtime for Sandbox instances.
 
-1. Apply a SandboxTemplate. The following example uses the Python image from the previous section.
+1. Create a SandboxTemplate. The following example uses the Python image from the previous section.
+
    ```yaml
    kubectl apply -f - <<EOF
    apiVersion: api.kagent.dev/v1alpha3
@@ -106,7 +107,7 @@ A SandboxTemplate is a namespaced `api.kagent.dev/v1alpha3` resource. Applying o
 
 A Sandbox cannot open any outbound connection until its template selects an EgressPolicy. Inside the Sandbox, a destination that no policy allows does not resolve, so a client reports a name-resolution error. For example, Python reports `Name or service not known`.
 
-To allow a destination, create an EgressPolicy in the template's namespace and list it in `spec.egressPolicyRefs`. A policy can also inject a credential into the requests to a destination, so the credential never enters the Sandbox. A policy change applies to running and suspended Sandboxes without recreating them. For the steps, see [Egress policies]({{< link path="agents/egress-policies" >}}).
+To allow a destination, [create an egress policy]({{< link path="agents/egress-policies" >}}) in the template's namespace and update the template to refer to the egress policy. A policy change applies to running and suspended Sandboxes without recreating them.
 
 ## Update or delete a template
 
