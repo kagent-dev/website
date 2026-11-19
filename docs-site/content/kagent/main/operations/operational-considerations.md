@@ -373,9 +373,16 @@ Many Actors on a node are suspended at any moment, so losing the node crashes on
 
 ### Recover crashed Sessions automatically {#recover-crashed-sessions-automatically}
 
-By default, kagent recovers a crashed Session only when a client calls `RevertSession` or someone selects **Recover** in the UI. To let an ordinary send request start the same recovery, turn on automatic recovery. The sender still needs update access to the Session, because the send can start or continue a recovery.
+By default, kagent recovers a crashed Session only when a client calls `RevertSession` or someone selects **Recover** in the UI. With automatic recovery turned on, the client does not need to send a separate request to recover the crashed session. Instead, the client sends the next message as usual, and kagent recovers the Session as part of handling that message. The sender still needs update access to the Session, because the recovery restores the Session to its last snapshot and fails the interrupted turn. 
 
-Set `config.sessions.automaticRecovery` in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
+Automatic recovery is started in the following cases: 
+* The send reaches a crashed runtime.
+* The send is refused because a crashed turn is still open.
+* The send is blocked by a suspension whose Worker was lost.
+
+A send that starts a recovery waits at most 10 seconds. If the recovery is still running, the send returns `KAGENT_SEND_NOT_ACCEPTED` with `state: RECOVERING` and `retryAfterMs: 1000`. Wait for the 1000ms to pass. Then, retry the send with the same message ID to continue the recovery. A send that arrives while a recovery is already running waits for that recovery.
+
+To enable automatic session recovery, set the `config.sessions.automaticRecovery` field in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values.
 
 ```yaml
 config:
@@ -386,14 +393,6 @@ config:
 | Setting | Description |
 | ------- | ----------- |
 | `config.sessions.automaticRecovery` | Set to `true` to let a send start a recovery. The default is `false`. |
-
-With the setting on, a send starts a recovery in the following cases.
-
-* The send reaches a crashed runtime.
-* The send is refused because a crashed turn is still open.
-* The send is blocked by a suspension whose Worker was lost.
-
-A send that starts a recovery waits at most 10 seconds. If the recovery is still running, the send returns `KAGENT_SEND_NOT_ACCEPTED` with `state: RECOVERING` and `retryAfterMs: 1000`. Retry the send with the same message ID to continue the recovery. A send that arrives while a recovery is already running waits for that recovery.
 
 ### Graceful pod deletion
 
