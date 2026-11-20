@@ -8,14 +8,6 @@ author: kagent.dev
 > [!WARNING]
 > This integration is experimental. Its settings are environment variables with the `EXPERIMENTAL_` prefix, and they can change in a future release without notice.
 
-<!-- Hidden pending validation: Sessions remained waiting on a tool result after
-more than five minutes. A subsequent user.message was rejected because the
-pending tool event had not received a response.
-Before publishing, verify a complete Session against a supported release: the
-worker must finish its tool calls, suspend after idle time, and resume to read
-the saved file. Record the working release and output, then restore the .md
-extension and remove this file's ignoreFiles entry from docs-site/hugo.yaml. -->
-
 [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes) can run their tools in a self-hosted sandbox. Anthropic hosts the agent loop, and your infrastructure runs the code that the agent executes. kagent can be that infrastructure. The kagent controller claims work from an Anthropic self-hosted environment, creates a Sandbox for each Claude Session, and starts Anthropic's worker in it. The Sandbox suspends when the Session is idle, and it resumes with its files intact when the Session continues.
 
 ## How it works
@@ -176,11 +168,41 @@ The launcher runs the `ant` CLI inside the Sandbox, so the template's tools imag
    > Write a file /data/workspace/helloworld.txt that says, "Hello world!"
    ```
 
-   In the `ant` terminal session, you can see the `kagent-sandbox-agent` write the file. The launcher claims the work and creates a Sandbox named `anthropic-<session-id>` from the `claude` template. The agent's tool calls run in that Sandbox.
+   In the `ant` terminal session, you can see the `kagent-sandbox-agent` write the file. The launcher claims the work and creates a Sandbox named `anthropic-<session-id>` from the `claude` template. The agent's tool calls run in that Sandbox. You see a response similar to the following:
 
-5. After 5 minutes without work, the worker exits and kagent suspends the Sandbox. Ask the agent to read the file back. kagent resumes the Sandbox, and the file is still there.
+   ```console
+   I created `/data/workspace/helloworld.txt` containing `"Hello world!"` followed by a newline.
+   ```
 
-6. Ask the agent to fetch a page from a destination that the EgressPolicy does not allow, such as `https://kagent.dev`. The request fails, because the Sandbox cannot reach that destination.
+5. After 5 minutes without work, the worker exits and kagent suspends the Sandbox. In the Claude Console, the status becomes **Idle**. 
+
+6. Ask the agent to read the file back. kagent resumes the Sandbox, and the file is still there.
+
+   ```bash
+   > Read me the contents of /data/workspace/helloworld.txt
+   ```
+
+   Example output:
+
+   ```console
+   The file contains:
+     
+     Hello world!
+   ```
+
+7. Ask the agent to fetch a page from a destination that the EgressPolicy does not allow. The request fails, because the Sandbox cannot reach that destination.
+
+   ```bash
+   > Use wget to tell me about kagent.dev
+   ```
+
+   Example output:
+
+   ```console
+   wget can't reach kagent.dev from this environment
+   ```
+
+   Note that if the session has access to other tools, such as Claude's `web_search` or `web_fetch`, the agent might fall back to use those allowed tools. The EgressPolicy prevents access only for the tools that run in the kagent Sandbox, not in the Claude environment.
 
 ## View the Sandboxes
 
