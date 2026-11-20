@@ -14,6 +14,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'infrastructure-as-code-kagent',
+        publishDate: '2026-11-20',
+        title: 'Infrastructure as code from a kagent agent',
+        description: 'Give a kagent agent Terraform plan and apply as MCP tools, keep the cloud key out of its sandbox, and let a person approve every plan before it runs.',
+        authorId: 'eronwright',
+    },
+    {
         slug: 'install-agent-substrate-any-cluster',
         publishDate: '2026-11-11',
         title: 'Install Agent Substrate on Any Kubernetes Cluster',
