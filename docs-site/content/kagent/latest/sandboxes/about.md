@@ -9,7 +9,7 @@ A kagent {{< gloss "Sandbox" >}}Sandbox{{< /gloss >}} is an isolated scratch env
 
 A Sandbox has no harness, no model, and no conversation. It runs whatever its caller tells it to run. That caller can be a person at a terminal, an application, or an agent that wants a safe place to run the code that it wrote.
 
-The isolation boundary separates the Sandbox's files, tools, and processes from the host and other runtimes. Network access is controlled in both directions: ingress follows the controller and Agent Substrate router's permitted path, and egress requires an EgressPolicy that allows the destination.
+The isolation boundary separates the Sandbox's files, tools, and processes from the host and other runtimes. kagent controls network access in both directions. Inbound traffic reaches the Sandbox only through the controller and the Agent Substrate router. Outbound traffic requires an EgressPolicy that allows the destination.
 
 ```mermaid
 flowchart LR
@@ -30,7 +30,7 @@ flowchart LR
     class isolation boundary
 ```
 
-The ingress path is managed by Agent Substrate; creating a Sandbox does not expose a public endpoint for programs inside it. You grant outbound access through the SandboxTemplate's egress policy references. For the routing and policy details, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
+Agent Substrate manages the ingress path. Creating a Sandbox does not expose a public endpoint for programs inside it. You grant outbound access through the SandboxTemplate's egress policy references. For the routing and policy details, see [Sandboxing]({{< link path="about/substrate-runtime/sandboxing" >}}).
 
 ## Sandboxes and sandbox isolation
 
@@ -50,8 +50,8 @@ An agent runs a loop. A model proposes a step, a tool or a command carries it ou
 | Where the loop runs | What runs in the isolated environment | What you use |
 | ------------------- | ------------------------------------- | ------------ |
 | In your cluster, as a kagent agent | The whole agent: the harness, its tools, and its working files | An {{< gloss "Agent" >}}Agent{{< /gloss >}}, which runs each conversation as a {{< gloss "Session" >}}Session{{< /gloss >}}. For more information, see [Agents]({{< link path="agents" >}}). |
-| In your cluster, as a kagent agent that needs a separate place to run code | Only the code that the agent hands off, apart from the agent's own Session | An Agent with the sandbox tools from the kagent MCP server. For more information, see [Give an agent a sandbox]({{< link path="sandboxes/agent-sandbox-tools" >}}). |
-| Outside the cluster, in an MCP client such as Claude Code or Cursor | Only the code or commands that the client sends | The sandbox tools and prompts of the kagent MCP server. For more information, see [Use sandboxes from an MCP client]({{< link path="sandboxes/mcp-clients" >}}). |
+{{% upstream %}}| In your cluster, as a kagent agent that needs a separate place to run code | Only the code that the agent hands off, apart from the agent's own Session | An Agent with the sandbox tools from the kagent MCP server. For more information, see [Give an agent a sandbox]({{< link path="sandboxes/agent-sandbox-tools" >}}). |
+{{% /upstream %}}| Outside the cluster, in an MCP client such as Claude Code or Cursor | Only the code or commands that the client sends | The sandbox tools and prompts of the kagent MCP server. For more information, see [Use sandboxes from an MCP client]({{< link path="sandboxes/mcp-clients" >}}). |
 | In your own application | Only the code or commands that the application sends | The `SandboxService` gRPC API. For more information, see [Use sandboxes with the gRPC API]({{< link path="sandboxes/grpc" >}}). |
 | Nowhere, because a person runs the commands | Commands and files from a terminal | The `kagent sandbox` CLI. For more information, see [Run commands with the CLI]({{< link path="sandboxes/cli" >}}). |
 
@@ -70,7 +70,7 @@ A Sandbox and a Session are separate runtimes with separate configuration and se
 | An Agent that pairs an AgentTemplate with a Harness | A Session | A2A interactions and tasks |
 | A SandboxTemplate that defines a tools environment | A Sandbox | Guest process and file operations |
 
-An agent that creates a Sandbox through the MCP server uses the same service that a person calls. The Sandbox does not end when the agent's Session ends, and it does not share the Session's files.
+{{% upstream %}}An agent that creates a Sandbox through the MCP server uses the same service that a person calls. The Sandbox does not end when the agent's Session ends, and it does not share the Session's files.{{% /upstream %}}
 
 ## How a Sandbox is built
 
@@ -118,8 +118,8 @@ A Sandbox cannot open any outbound connection by default. A command that install
 A Sandbox belongs to the identity that created it. A list returns only the caller's own Sandboxes, and a request for another identity's Sandbox returns a not-found error.
 
 * **People and applications**: The owner is the identity that the kagent API resolved for the call.{{% upstream %}} In the default `insecure` authentication mode, a caller names its own identity, so this ownership keeps one caller's Sandboxes out of another caller's list but is not a security boundary. For the authentication modes, see [Controller authentication modes]({{< link path="about/substrate-runtime/identity#controller-authentication-modes" >}}).{{% /upstream %}}
-* **Agents**: An agent owns the Sandboxes that it creates under the identity that its MCP connection authenticated, not the identity of the person that the agent is talking to. To have an agent act for the person who invoked it, turn on credential propagation.
-* **Session share tokens**: A share token for a Session does not grant access to any Sandbox.
+{{% upstream %}}* **Agents**: An agent owns the Sandboxes that it creates under the identity that its MCP connection authenticated, not the identity of the person that the agent is talking to. For details, see [Who owns an agent's Sandboxes]({{< link path="sandboxes/agent-sandbox-tools#who-owns-an-agents-sandboxes" >}}).
+{{% /upstream %}}* **Session share tokens**: A share token for a Session does not grant access to any Sandbox.
 
 ## Interfaces and limits
 
@@ -128,7 +128,7 @@ Every interface reaches the same service, so a Sandbox that you create with one 
 | Interface | Best for | File transfer limit |
 | --------- | -------- | ------------------- |
 | The `kagent sandbox` CLI | People, scripts, and continuous integration jobs | 64 MiB per file, streamed |
-| The kagent MCP server's sandbox tools | Agents and MCP clients | 1 MiB per write or output read, base64-encoded |
+| The kagent MCP server's sandbox tools | {{% upstream %}}Agents and {{% /upstream %}}MCP clients | 1 MiB per write or output read, base64-encoded |
 | The `kagent.api.v1.SandboxService` gRPC API, with the Agent Substrate process and file services | Applications | 64 MiB per file, streamed |
 
 The installation sets the CPU, memory, default lifetime, and maximum lifetime for every Sandbox. A SandboxTemplate cannot override them. The defaults are one CPU, 1 GiB of memory, a one-hour lifetime, and a 24-hour maximum.

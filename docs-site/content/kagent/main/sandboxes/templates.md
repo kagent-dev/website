@@ -107,7 +107,7 @@ A SandboxTemplate is a namespaced kagent custom resource that describes a reusab
 
 A Sandbox cannot open any outbound connection until its template selects an EgressPolicy. Inside the Sandbox, a destination that no policy allows does not resolve, so a client reports a name-resolution error. For example, Python reports `Name or service not known`.
 
-To allow a destination, [create an egress policy]({{< link path="agents/egress-policies" >}}) in the template's namespace and update the template to refer to the egress policy. A policy change applies to running and suspended Sandboxes without recreating them.
+To allow a destination, [create and attach an egress policy]({{< link path="agents/egress-policies#grant-access-to-a-destination" >}}) in the template's namespace. Use the "Standalone sandbox" tab in that procedure to add the policy to `spec.egressPolicyRefs` on the `python` template. A policy change applies to running and suspended Sandboxes without recreating them.
 
 ## Update or delete a template
 

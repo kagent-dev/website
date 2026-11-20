@@ -251,7 +251,7 @@ Suspending a Sandbox releases its compute while keeping its files. Resuming it b
 
    Example output:
    ```console
-   Process proc-c1c4db1babc16359c2e26b2e in sandbox 01a1f07c-f027-7cd1-aeed-1e01814d85d6: started (stdout offset 0, stderr offset 0)
+   Process proc-c1c4db1babc16359c2e26b2e in sandbox 01a1f073-a9ad-77b8-88fc-8f63b3381122: started (stdout offset 0, stderr offset 0)
    input.json
    summarize.py
    summary.json
@@ -277,7 +277,7 @@ If you do not delete a Sandbox, kagent deletes it when it expires.
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="sandboxes/agent-sandbox-tools" >}}` title="Give an agent a sandbox" subtitle="Let an agent create Sandboxes and run code through the kagent MCP server." >}}
+  {{< reuse "kagent-docs/snippets/sandbox-agent-card.md" >}}
   {{< card link=`{{< link path="sandboxes/grpc" >}}` title="Use sandboxes with the gRPC API" subtitle="Call the same service from your own application." >}}
   {{< card link=`{{< link path="reference/cli/kagent-sandbox" >}}` title="kagent sandbox" subtitle="Look up every flag that the sandbox commands take." >}}
 {{< /cards >}}

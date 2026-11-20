@@ -9,7 +9,7 @@ An MCP client such as Claude Code, Codex, or Cursor runs its agent loop on your 
 
 ## About the sandbox tools and prompts
 
-The kagent MCP server runs on the controller's HTTP port, at `/mcp` on port `8083`. It exposes the following sandbox tools, alongside the agent and Session tools.
+The controller's port `8083` serves both the gRPC API and the `/mcp` HTTP endpoint. The kagent MCP server exposes the following sandbox tools, alongside the agent and Session tools.
 
 {{< reuse "kagent-docs/snippets/sandbox-mcp-tools.md" >}}
 
@@ -26,23 +26,24 @@ A prompt only returns instructions to the client. It does not call any tool by i
 
 1. Create a SandboxTemplate whose image includes Python, as described in [Set up sandbox templates]({{< link path="sandboxes/templates" >}}). The steps in this guide use the `python` template in the `kagent` namespace.
 
-2. Port-forward the controller's HTTP port, and leave the command running.
-   ```bash
-   kubectl port-forward -n kagent svc/kagent-controller 8083:8083
-   ```
+2. {{< reuse "kagent-docs/snippets/sandbox-api-port-forward.md" >}}
+
+3. {{< reuse "kagent-docs/snippets/sandbox-api-auth.md" >}}
 
 ## Connect a client
 
-Add `http://localhost:8083/mcp` to your client. If your installation requires authentication, the server rejects a request without a bearer token with `401 Unauthorized`. In that case, get an access token for your user, and add it as an `Authorization: Bearer <token>` header, as shown in each tab.
+Add `http://localhost:8083/mcp` to your client. {{% upstream %}}If your installation requires authentication, send the token from the prerequisites as an `Authorization: Bearer <token>` header.{{% /upstream %}}{{% downstream %}}Send the token from the prerequisites as an `Authorization: Bearer <token>` header.{{% /downstream %}} The client examples show how to configure the header. The curl helper adds it automatically from `TOKEN`.
 
 {{< tabs >}}
 {{% tab name="Claude Code" %}}
 To limit the entry to the current project, add `--scope project`.
+{{% upstream %}}
 ```bash
 claude mcp add --transport http kagent http://localhost:8083/mcp
 ```
+{{% /upstream %}}
 
-If your installation requires authentication, add the token as a header.
+For an authenticated connection, add the token as a header.
 ```bash
 claude mcp add --transport http kagent http://localhost:8083/mcp \
   --header "Authorization: Bearer $TOKEN"
@@ -50,18 +51,20 @@ claude mcp add --transport http kagent http://localhost:8083/mcp \
 {{% /tab %}}
 {{% tab name="Codex" %}}
 Add the server to the [Codex CLI](https://developers.openai.com/codex/mcp/).
+{{% upstream %}}
 ```bash
 codex mcp add kagent --url http://localhost:8083/mcp
 ```
+{{% /upstream %}}
 
-If your installation requires authentication, configure Codex to read the token from the `TOKEN` environment variable. Export that variable in the shell where you run Codex.
+For an authenticated connection, configure Codex to read the token from the `TOKEN` environment variable. Export that variable in the shell where you run Codex.
 ```bash
 codex mcp add kagent --url http://localhost:8083/mcp \
   --bearer-token-env-var TOKEN
 ```
 {{% /tab %}}
 {{% tab name="Cursor" %}}
-Add the server to your Cursor MCP settings. If your installation does not require authentication, omit `headers`.
+Add the server to your Cursor MCP settings. {{% upstream %}}If your installation does not require authentication, omit `headers`.{{% /upstream %}}
 ```json
 {
   "mcpServers": {
@@ -76,19 +79,7 @@ Add the server to your Cursor MCP settings. If your installation does not requir
 ```
 {{% /tab %}}
 {{% tab name="curl" %}}
-A `curl` client does not need to register the server. If your installation requires authentication, add `-H "Authorization: Bearer $TOKEN"` to every `curl` command in this guide. Streamable HTTP replies are framed as events, so each response arrives on a `data:` line. Confirm that the server offers both tools and prompts.
-```bash
-curl -s -X POST http://localhost:8083/mcp \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
-```
-
-Example output:
-```console
-event: message
-data: {"jsonrpc":"2.0","id":1,"result":{"capabilities":{"extensions":{"io.modelcontextprotocol/tasks":{}},"prompts":{"listChanged":true},"tools":{"listChanged":true}},"instructions":"...","protocolVersion":"2025-06-18","serverInfo":{"name":"kagent","version":"1.0.1"}}}
-```
+A `curl` client does not need to register the server. Continue with [Run a task by using curl](#run-a-task-by-using-curl) to define the request helper and initialize the client. The helper adds the bearer header from `TOKEN` and reads the JSON from the server's `data:` event lines.
 {{% /tab %}}
 {{< /tabs >}}
 
@@ -119,31 +110,17 @@ Claude Code, Codex, and Cursor read the tool schemas and the server's instructio
 
 The following steps make the same calls that a client makes for you, so you can see each request and reply. The task reads a JSON array from a file and writes its count and its sum to another file.
 
-Install [`jq`](https://jqlang.org/download/), then define this helper in your shell. It extracts the JSON from the server's event stream and checks both JSON-RPC errors and MCP tool errors before returning the result. `pipefail` makes a pipeline fail when any command in it fails.
-```bash
-set -o pipefail
-mcp_result() {
-  sed -n 's/^data: //p' | jq -e '
-    if .error then error(.error.message)
-    elif .result.isError then
-      error([.result.content[]? | select(.type == "text") | .text] | join("\n"))
-    elif .result then .result
-    else error("Missing MCP result") end'
-}
-```
+{{< reuse "kagent-docs/snippets/sandbox-mcp-call.md" >}}
 
-1. Generate a request ID for this walkthrough, then create a Sandbox. Keep `$REQUEST_ID` unchanged when retrying the same create request. For a new walkthrough, generate a new ID: reusing the ID of an expired or deleted Sandbox returns `Sandbox is expired, deleted, suspended, or unavailable for this operation`. Changing only the display name does not reset a request ID.
+1. Generate a request ID for this walkthrough, then create a Sandbox. Keep `$REQUEST_ID` unchanged when retrying the same create request. For a new walkthrough, generate a new ID. Reusing the ID of an expired or deleted Sandbox returns `Sandbox is expired, deleted, suspended, or unavailable for this operation`. Changing only the display name does not reset a request ID.
    ```bash
    export REQUEST_ID="mcp-$(uuidgen)"
    ```
 
    ```bash
-   curl -fsS -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"create_sandbox","arguments":{
+   mcp_call '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"create_sandbox","arguments":{
        "namespace":"kagent","template":"python","request_id":"'"$REQUEST_ID"'","name":"json-summary","ttl_seconds":900}}}' \
-     | mcp_result | jq -ce '.structuredContent | select(.id != "")' | tee mcp-sandbox.json
+     | jq -ce '.structuredContent | select(.id != "")' | tee mcp-sandbox.json
    ```
 
    Example output:
@@ -158,12 +135,9 @@ mcp_result() {
 
 2. Write the input file. The `data_base64` value `WzIsMyw1XQo=` is the base64 form of `[2,3,5]` followed by a newline. A relative path resolves against `/data/workspace`.
    ```bash
-   curl -fsS -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"write_sandbox_file","arguments":{
+   mcp_call '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"write_sandbox_file","arguments":{
        "sandbox_id":"'"$SANDBOX_ID"'","path":"input.json","data_base64":"WzIsMyw1XQo="}}}' \
-     | mcp_result | jq -c '.structuredContent'
+     | jq -c '.structuredContent'
    ```
 
    Example output:
@@ -173,13 +147,10 @@ mcp_result() {
 
 3. Start the program, and save the process ID that the call returns.
    ```bash
-   curl -fsS -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"start_sandbox_process","arguments":{
+   mcp_call '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"start_sandbox_process","arguments":{
        "sandbox_id":"'"$SANDBOX_ID"'",
        "command":["python3","-c","import json; from pathlib import Path; v = json.loads(Path(\"input.json\").read_text()); Path(\"summary.json\").write_text(json.dumps({\"count\": len(v), \"sum\": sum(v)}))"]}}}' \
-     | mcp_result | jq -ce '.structuredContent | select(.process_id != "")' | tee mcp-process.json
+     | jq -ce '.structuredContent | select(.process_id != "")' | tee mcp-process.json
    ```
 
    Example output:
@@ -193,12 +164,9 @@ mcp_result() {
 
 4. Check that the process exited successfully. While the process runs, `state` reads `PROCESS_STATE_RUNNING` and `exit_code` is absent. Repeat this command until `state` is `PROCESS_STATE_EXITED` and `exit_code` is `0` before reading the result file.
    ```bash
-   curl -fsS -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_sandbox_process","arguments":{
+   mcp_call '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_sandbox_process","arguments":{
        "sandbox_id":"'"$SANDBOX_ID"'","process_id":"'"$PROCESS_ID"'"}}}' \
-     | mcp_result | jq -c '.structuredContent'
+     | jq -c '.structuredContent'
    ```
 
    Example output:
@@ -210,12 +178,9 @@ mcp_result() {
 
 5. Read the result file. Text returns as numbered lines, so the JSON arrives as line 1.
    ```bash
-   curl -fsS -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"read_sandbox_file","arguments":{
+   mcp_call '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"read_sandbox_file","arguments":{
        "sandbox_id":"'"$SANDBOX_ID"'","path":"summary.json"}}}' \
-     | mcp_result | jq -c '.content'
+     | jq -c '.content'
    ```
 
    Example output:
@@ -225,12 +190,9 @@ mcp_result() {
 
 6. Delete the Sandbox.
    ```bash
-   curl -fsS -X POST http://localhost:8083/mcp \
-     -H 'Content-Type: application/json' \
-     -H 'Accept: application/json, text/event-stream' \
-     -d '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"delete_sandbox","arguments":{
+   mcp_call '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"delete_sandbox","arguments":{
        "sandbox_id":"'"$SANDBOX_ID"'"}}}' \
-     | mcp_result | jq -c '.structuredContent | {id, state}'
+     | jq -c '.structuredContent | {id, state}'
    ```
 
    Example output:
@@ -238,7 +200,7 @@ mcp_result() {
    {"id":"01a1f083-5eeb-74aa-a0eb-8e16a919ead7","state":"RUNTIME_STATE_DELETED"}
    ```
 
-A tool call that fails can return HTTP success and a result with `isError` set to `true`. Its text content carries the error, such as `Sandbox or process not found`. Filtering directly to `structuredContent` hides that error; the helper checks it first. Stop at a failed step and correct the error before using its output in another call.
+A tool call that fails can return HTTP success and a result with `isError` set to `true`. Its text content carries the error, such as `Sandbox or process not found`. Filtering directly to `structuredContent` hides that error, so the helper checks it first. Stop at a failed step and correct the error before using its output in another call.
 
 ## Limits
 
@@ -280,12 +242,12 @@ The MCP tools move data through the model's context, so their limits are tighter
    ```bash
    rm mcp-sandbox.json mcp-process.json
    unset SANDBOX_ID PROCESS_ID REQUEST_ID
-   unset -f mcp_result
+   unset -f mcp_call mcp_result
    ```
    {{% /tab %}}
    {{< /tabs >}}
 
-2. Stop the port-forward with `Ctrl+C`.
+2. Stop the port-forward by pressing `Ctrl+C` in its terminal. Run `unset TOKEN` in your client terminal to remove the token from that shell.
 
 ## Next steps
 

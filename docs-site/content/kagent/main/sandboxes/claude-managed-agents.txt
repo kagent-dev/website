@@ -10,7 +10,11 @@ author: kagent.dev
 
 <!-- Hidden pending validation: Sessions remained waiting on a tool result after
 more than five minutes. A subsequent user.message was rejected because the
-pending tool event had not received a response. -->
+pending tool event had not received a response.
+Before publishing, verify a complete Session against a supported release: the
+worker must finish its tool calls, suspend after idle time, and resume to read
+the saved file. Record the working release and output, then restore the .md
+extension and remove this file's ignoreFiles entry from docs-site/hugo.yaml. -->
 
 [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes) can run their tools in a self-hosted sandbox. Anthropic hosts the agent loop, and your infrastructure runs the code that the agent executes. kagent can be that infrastructure. The kagent controller claims work from an Anthropic self-hosted environment, creates a Sandbox for each Claude Session, and starts Anthropic's worker in it. The Sandbox suspends when the Session is idle, and it resumes with its files intact when the Session continues.
 

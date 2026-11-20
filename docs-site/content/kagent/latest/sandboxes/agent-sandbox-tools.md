@@ -34,6 +34,8 @@ Review the following table of kagent tools. Bind only the tools that the agent n
    kagent-api   STREAMABLE_HTTP   http://kagent-controller.kagent.svc.cluster.local:8083/mcp   True
    ```
 
+4. To read the Session ID from the CLI's JSON output, install [`jq`](https://jqlang.org/download/).
+
 ## Create the agent
 
 1. Apply an AgentTemplate that binds the sandbox tools, and an Agent that pairs it with a Harness.
@@ -54,8 +56,9 @@ Review the following table of kagent tools. Bind only the tools that the agent n
          kagent namespace, with a new request_id and ttl_seconds set to 900.
          If a call fails, retry it with the same request_id instead of creating
          another Sandbox.
-       - Write the code to main.py with write_sandbox_file. The data_base64
-         argument takes the file content encoded in base64.
+       - Write the code to main.py with write_sandbox_file. In the data_base64
+         argument, encode the exact file bytes as standard base64, with
+         padding and no line breaks.
        - Run it with start_sandbox_process, using the command
          ["python3", "main.py"]. Poll get_sandbox_process until the state is
          PROCESS_STATE_EXITED, then read the output with read_sandbox_outputs.
@@ -123,7 +126,9 @@ Review the following table of kagent tools. Bind only the tools that the agent n
 
    Example output:
    ```console
-   {'count': 3, 'sum': 10}
+   Program output (stdout):
+   {"count": 3, "sum": 10}
+
    Exit code: 0
    ```
 
@@ -132,7 +137,9 @@ Review the following table of kagent tools. Bind only the tools that the agent n
    kagent dashboard
    ```
 
-   Open the `code-runner` agent's Session. The conversation view shows each tool call that the agent made. A typical run calls `create_sandbox`, `write_sandbox_file`, `start_sandbox_process`, `get_sandbox_process`, `read_sandbox_outputs`, and `delete_sandbox`. The model can repeat a status check or make additional calls.
+   Open the `code-runner` agent's Session. The conversation view shows each tool call and its result. Check that the program exited successfully and that the agent deleted its Sandbox.
+
+   A model can supply an invalid tool argument and then recover. In the captured Session, `write_sandbox_file` rejected the model's invalid base64. The agent recovered by passing the Python code directly to `start_sandbox_process` with `["python3", "-c", "..."]`. It then read the output and deleted the Sandbox. This run did not create `main.py`. Tool calls and recovery steps can vary between runs.
 
    {{< reuse-image-light src="img/kagent-ui-sandbox-tools.png" alt="The code-runner Session in the kagent UI, showing sandbox tool calls and the Python result." >}}
    {{< reuse-image-dark srcDark="img/kagent-ui-sandbox-tools-dark.png" alt="The code-runner Session in the kagent UI in dark mode, showing sandbox tool calls and the Python result." >}}
@@ -146,9 +153,15 @@ Review the following table of kagent tools. Bind only the tools that the agent n
 
 ## Who owns an agent's Sandboxes
 
-An agent owns the Sandboxes that it creates under the identity that its MCP connection authenticated, not under the identity of the person that the agent is talking to. A {{< gloss "Session" >}}Session{{< /gloss >}} share token does not grant access to a Sandbox.
+An agent owns the Sandboxes that it creates under the identity that its MCP connection authenticated, not under the identity of the person that the agent is talking to. A {{< gloss "Session" >}}Session{{< /gloss >}} share token does not grant access to a Sandbox. Use the identity of the MCP connection to list or delete those Sandboxes.
 
-To have an agent create Sandboxes as the person who invoked it, enable credential propagation. The kagent runtime then passes the caller's credentials and identity to the MCP servers that you trust, so each person sees only the Sandboxes that the agent created for them.
+To have the agent create Sandboxes as the person who invoked it, turn on token propagation, as described in the next section. To create Sandboxes under your own identity without an agent, connect an authenticated client as described in [Use sandboxes from an MCP client]({{< link path="sandboxes/mcp-clients" >}}).
+
+## Create Sandboxes as the invoking user
+
+The `config.runtimeDefaults.tokenPropagation.enabled` Helm value turns on token propagation. The kagent runtime then forwards the caller's identity and credentials to the MCP servers that the agent calls, so each person sees only the Sandboxes that the agent created for them. You do not need to set `tokenPassthrough` on the `kagent-api` RemoteMCPServer.
+
+Token propagation applies to every MCP server that an agent on kagent's native runtime calls, not only to `kagent-api`. Turn it on only if you trust those servers with your users' credentials.
 
 1. Save the runtime setting in a Helm values file.
    ```bash
@@ -163,14 +176,12 @@ To have an agent create Sandboxes as the person who invoked it, enable credentia
 2. Read the installed chart version and apply the file to the existing release, preserving its other values.
    ```bash
    export KAGENT_CHART_VERSION=$(helm list -n kagent -o json \
-     | jq -er '.[] | select(.name == "kagent") | .chart | ltrimstr("kagent-")')
+     | jq -er '.[] | select(.name == "kagent") | .chart | ltrimstr("{{< reuse "kagent-docs/snippets/helm-kagent.md" >}}-")')
    helm upgrade kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
      --namespace kagent --version "$KAGENT_CHART_VERSION" \
      --reuse-values -f token-propagation-values.yaml --wait
    ```
-
-3. Configure the MCP server to opt in to receiving the caller's token, as described in [Caller token passthrough]({{< link path="skills-and-mcp/about-tools#caller-token-passthrough" >}}). Enabling propagation alone does not make every MCP server trusted.
 
 ## Clean up
 

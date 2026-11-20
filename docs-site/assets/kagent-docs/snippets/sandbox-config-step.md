@@ -14,7 +14,7 @@ EOF
 Apply the file to your existing Helm release. The following commands use [`jq`](https://jqlang.org/download/) to read the installed chart version, so the upgrade preserves both that version and the release's other values.
 ```bash
 export KAGENT_CHART_VERSION=$(helm list -n kagent -o json \
-  | jq -er '.[] | select(.name == "kagent") | .chart | ltrimstr("kagent-")')
+  | jq -er '.[] | select(.name == "kagent") | .chart | ltrimstr("{{< reuse "kagent-docs/snippets/helm-kagent.md" >}}-")')
 helm upgrade kagent \
   {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
   --namespace kagent --version "$KAGENT_CHART_VERSION" \
@@ -23,7 +23,7 @@ helm upgrade kagent \
 
 A SandboxTemplate cannot override these values, so they apply to every Sandbox in the installation.
 
-The **guest image** provides kagent's process and file service. Use the published `kagent/sandbox-guest` image for your release, or mirror that image into your own registry. A custom build must provide a compatible `kagent-sandbox-guest` executable at `/usr/local/bin/kagent-sandbox-guest`, including its readiness endpoint and process and file APIs. A custom build is useful when you maintain a patched guest; an arbitrary Python or Node.js image cannot replace it. To add interpreters, packages, or command line tools for a task, customize the SandboxTemplate's `spec.workload.image` instead, as described in [Choose a tools image](#choose-a-tools-image).
+The **guest image** provides kagent's process and file service. Use the published `kagent/sandbox-guest` image for your release, or mirror that image into your own registry. A custom build must provide a compatible `kagent-sandbox-guest` executable at `/usr/local/bin/kagent-sandbox-guest`, including its readiness endpoint and process and file APIs. A custom build is useful when you maintain a patched guest. An arbitrary Python or Node.js image cannot replace it. To add interpreters, packages, or command line tools for a task, customize the SandboxTemplate's `spec.workload.image` instead, as described in [Choose a tools image](#choose-a-tools-image).
 
 | Value | Default | Description |
 | ----- | ------- | ----------- |

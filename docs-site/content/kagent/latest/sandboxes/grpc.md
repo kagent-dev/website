@@ -9,7 +9,7 @@ An application that keeps its own agent loop, such as a chat app that runs the c
 
 ## About the Sandbox API
 
-The controller serves the Sandbox API on port `8083`, the same port as the rest of the kagent gRPC API. The CLI and the MCP server reach the same services.
+The controller's port `8083` serves both the gRPC API and the `/mcp` HTTP endpoint. The CLI and the MCP server reach the same Sandbox services.
 
 | Service | Methods | What it covers |
 | ------- | ------- | -------------- |
@@ -23,7 +23,7 @@ The process and file services are the Agent Substrate guest protocol, unchanged.
 The lifecycle methods follow these rules.
 
 * **Retries**: Each call makes one attempt. After a temporary error, repeat the same call. `CreateSandbox` takes a required `request_id`, from 1 to 128 characters. A retry with the same `request_id` and the same input returns the same Sandbox. A retry with the same `request_id` and different input fails with `AlreadyExists`, and the message `request_id was used for different input`.
-* **Conflicts**: A call that conflicts with a lifecycle change that is still running fails with `ABORTED`. Retry it after the other call returns.
+* **Conflicts**: A call that conflicts with a lifecycle change that is still running fails with `Aborted`. Retry it after the other call returns.
 * **Reads**: `GetSandbox` and `ListSandboxes` only read state. They never advance pending work.
 * **Process starts**: `StartProcess` has no request ID. A start that times out might have started the process anyway, so check before you start it again.
 
@@ -31,7 +31,7 @@ The lifecycle methods follow these rules.
 
 1. Create a SandboxTemplate whose image includes Python, as described in [Set up sandbox templates]({{< link path="sandboxes/templates" >}}). The steps in this guide use the `python` template in the `kagent` namespace.
 
-2. Confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets grpcurl discover the controller's methods without a local copy of kagent's protocol buffer definitions. If your installation requires authentication, also get an access token for your user, and add `-H "Authorization: Bearer $TOKEN"` to every `grpcurl` command in this guide.
+2. Confirm that your installation sets `config.server.grpcReflection=true`. Reflection lets grpcurl discover the controller's methods without a local copy of kagent's protocol buffer definitions.
 
    Install [grpcurl](https://github.com/fullstorydev/grpcurl) and [`jq`](https://jqlang.org/download/), then check the setting.
    ```bash
@@ -59,10 +59,11 @@ The lifecycle methods follow these rules.
      --reuse-values -f grpc-values.yaml --wait
    ```
 
-3. Port-forward the controller's gRPC port, and leave the command running.
-   ```bash
-   kubectl port-forward -n kagent svc/kagent-controller 8083:8083
-   ```
+3. {{< reuse "kagent-docs/snippets/sandbox-api-port-forward.md" >}}
+
+4. {{< reuse "kagent-docs/snippets/sandbox-api-auth.md" >}}
+
+   {{% upstream %}}If you set `TOKEN`, add `-H "Authorization: Bearer $TOKEN"` to every `grpcurl` command in this guide.{{% /upstream %}}{{% downstream %}}Add `-H "Authorization: Bearer $TOKEN"` to every `grpcurl` command in this guide.{{% /downstream %}}
 
 ## Create a Sandbox
 
@@ -87,7 +88,7 @@ The lifecycle methods follow these rules.
 
    The command prints nothing when you have no Sandboxes. It lists only Sandboxes owned by the identity making the call.
 
-3. If you need a new Sandbox, generate a request ID, create the Sandbox, and save its ID. Reuse `$REQUEST_ID` only to retry this same create request. For a new walkthrough, generate a new ID: the ID of an expired or deleted Sandbox produces `FailedPrecondition`, even if you change the display name.
+3. If you need a new Sandbox, generate a request ID, create the Sandbox, and save its ID. Reuse `$REQUEST_ID` only to retry this same create request. For a new walkthrough, generate a new ID. The ID of an expired or deleted Sandbox produces `FailedPrecondition`, even if you change the display name.
    ```bash
    export REQUEST_ID="grpc-$(uuidgen)"
    ```
@@ -221,7 +222,7 @@ The lifecycle methods follow these rules.
 
    The exit message has no `exitCode` field, because grpcurl omits a field that has its default value, and the default exit code is `0`. A process that fails reports its code, such as `"exitCode": 4`.
 
-4. Decode the base64-encoded `stdout` from the saved stream. Pass the encoded text through standard input; an argument to `base64` is not the text to decode. This command works on macOS and Linux and decodes each chunk separately.
+4. Decode the base64-encoded `stdout` from the saved stream. Pass the encoded text through standard input, because `base64` does not decode a text argument. This command works on macOS and Linux and decodes each chunk separately.
    ```bash
    jq -r '.stdout // empty' process-output.json | while IFS= read -r chunk; do
      printf '%s' "$chunk" | base64 --decode
@@ -286,6 +287,16 @@ Example output:
 ```
 
 A deleted Sandbox stays deleted. Replaying the original `CreateSandbox` request with the same `request_id` fails with `FailedPrecondition`, rather than creating a new Sandbox. To start over, use a new `request_id`.
+
+## Clean up
+
+1. Remove the local response files after deleting the Sandbox. Also remove `grpc-values.yaml` if you created it to enable reflection.
+   ```bash
+   rm -f sandbox.json process.json process-output.json grpc-values.yaml
+   unset SANDBOX_ID PROCESS_ID REQUEST_ID KAGENT_CHART_VERSION TOKEN
+   ```
+
+2. Stop the port-forward by pressing `Ctrl+C` in its terminal.
 
 ## Next steps
 
