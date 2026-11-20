@@ -51,12 +51,12 @@ Agent:
   link: "/docs/kagent/latest/about/core-concepts/#agent"
 
 Sandbox:
-  short: "An owner-scoped scratch environment for running commands and working with files, created from a SandboxTemplate. It expires on a timer, reaches no network destination, and no agent conversation owns it."
-  link: "/docs/kagent/latest/about/substrate-runtime/standalone-sandboxes/"
+  short: "A kagent runtime that provides an isolated scratch environment for running commands and working with files. Created from a SandboxTemplate, it belongs to its caller, expires on a timer, and has no outbound network access unless an EgressPolicy allows it."
+  link: "/docs/kagent/latest/sandboxes/about/"
 
 SandboxTemplate:
-  short: "A Kubernetes custom resource defining the tools image, environment, WorkerPool, and snapshot storage that a Sandbox is created from. Applying one prepares a reusable runtime rather than allocating a Sandbox."
-  link: "/docs/kagent/latest/about/substrate-runtime/standalone-sandboxes/#create-a-sandboxtemplate"
+  short: "A kagent custom resource that prepares a reusable runtime with a tools image, environment variables, WorkerPool, snapshot storage, and egress policy references. Sandboxes are created from this template."
+  link: "/docs/kagent/latest/sandboxes/templates/"
 
 Session:
   short: "A running conversation with one Agent. Unlike the resources it is built from, a Session is not a Kubernetes resource: kagent's gRPC API creates it and its PostgreSQL database tracks it."

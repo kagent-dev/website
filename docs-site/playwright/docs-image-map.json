@@ -1,6 +1,11 @@
 {
   "_comment": "Maps a captured baseline (by its file name, without the -<project> theme suffix) to its published paths under the docs img tree. sync-docs-images.mjs copies the `light` and `dark` baselines to those destinations. Paths are relative to docs-site/. Guides reference them as img/<file> through the reuse-image-light / reuse-image-dark shortcodes. Keep the $note current: it is what makes a stale capture traceable to the page it serves.",
   "images": {
+    "kagent-ui-sandbox-tools.png": {
+      "light": "assets/img/kagent-ui-sandbox-tools.png",
+      "dark": "assets/img/kagent-ui-sandbox-tools-dark.png",
+      "$note": "sandboxes/agent-sandbox-tools.md — completed live code-runner Session. Set SANDBOX_SESSION_ID; see tests/sandbox-tools.spec.ts."
+    },
     "kagent-ui-dashboard.png": {
       "light": "assets/img/kagent-ui-dashboard.png",
       "dark": "assets/img/kagent-ui-dashboard-dark.png",

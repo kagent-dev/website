@@ -557,7 +557,7 @@ You can now safely [clean up these resources](#clean-up).
 
 ## MCP tool reference
 
-The server exposes the following agent and Session tools. They cover discovery, conversation, reading back what an agent did, and the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can manage an agent's state as well as talk to it. An Agent is addressed by its namespace and name, and a Session by its own universally unique identifier (UUID). Every tool that returns a Session reports its `agent` as `<namespace>/<name>`. The server also exposes a set of [standalone sandbox]({{< link path="about/substrate-runtime/standalone-sandboxes" >}}) tools, which this example does not cover.
+The server exposes the following agent and Session tools. They cover discovery, conversation, reading back what an agent did, and the {{< gloss "Checkpoint" >}}checkpoint{{< /gloss >}} operations, so a client can manage an agent's state as well as talk to it. An Agent is addressed by its namespace and name, and a Session by its own universally unique identifier (UUID). Every tool that returns a Session reports its `agent` as `<namespace>/<name>`. The server also exposes a set of [sandbox]({{< link path="sandboxes" >}}) tools, which this example does not cover. For a sandbox example, see [Use sandboxes from an MCP client]({{< link path="sandboxes/mcp-clients" >}}).
 
 | Tool | Required arguments | What it does |
 | ---- | ------------------ | ------------ |

@@ -118,6 +118,24 @@ only tests that the variable is non-empty, and the Launch the UI captures are of
 installed cluster — dashboard, agents list, substrate page — none of which invokes a model.
 Use a real key only for a capture that shows an agent doing something.
 
+## Task: capture an existing sandbox-tools conversation
+
+The sandbox guide uses a completed `code-runner` Session from a live cluster. Run
+the guide first, then pass its Session ID to the opt-in capture. It reads the
+conversation without sending a new request to the agent. The spec skips when the
+ID is absent, so CI does not depend on a particular user's live Session.
+
+```sh
+UI_BASE_URL=http://localhost:8082 SANDBOX_SESSION_ID=<session-id> npm run update:sandbox-tools
+npm run sync-docs
+```
+
+The initial pair was captured from kagent 1.0.1 on `kind-kagent-oss` on 2026-11-19,
+using Session `01a1f4f5-1b50-76de-ad92-a5eb4442c6de`. It shows the end of the actual
+conversation, including sandbox cleanup and the result. The model recovered from
+an earlier invalid base64 tool argument by running Python with `-c`; the screenshot
+does not imply that every run makes exactly the same calls.
+
 ## Task: capture against the mock backend
 
 ```sh

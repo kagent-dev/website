@@ -15,7 +15,7 @@ A policy can also have the gateway add a credential to each request, either a va
 
 Create the resource that you want to grant access to. The examples on this page use the `kagent` namespace.
 * **Agent**: [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have the `my-first-agent` Agent. Use commands in the "Agent" tabs in the following steps.
-* **Standalone sandbox**: Create the `scratch` SandboxTemplate, as described in [Create a SandboxTemplate]({{< link path="about/substrate-runtime/standalone-sandboxes#create-a-sandboxtemplate" >}}). Use commands in the "Standalone sandbox" tabs in the following steps.
+* **Standalone sandbox**: Create a SandboxTemplate named `python`, as described in [Create a SandboxTemplate]({{< link path="sandboxes/templates#create-a-sandboxtemplate" >}}). Use commands in the "Standalone sandbox" tabs in the following steps.
 
 ## Grant access to a destination
 
@@ -39,7 +39,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    {{% tab name="Standalone sandbox" %}}
    Create a Sandbox from the template, and run the check in it. The check uses `bash`, so the tools image of the template must include `bash`.
    ```bash
-   export SANDBOX_ID=$(kagent sandbox create scratch --request-id egress-check -o json | jq -r '.id')
+   export SANDBOX_ID=$(kagent sandbox create python --request-id egress-check -o json | jq -r '.id')
    kagent sandbox exec $SANDBOX_ID -- bash -c 'exec 3<>/dev/tcp/registry.npmjs.org/443 && echo reachable || echo blocked'
    ```
 
@@ -93,7 +93,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    {{% tab name="Standalone sandbox" %}}
    Every Sandbox that is created from the template receives the grant.
    ```bash
-   kubectl patch sandboxtemplate scratch -n kagent --type merge \
+   kubectl patch sandboxtemplate python -n kagent --type merge \
      -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"}]}}'
    ```
    {{% /tab %}}
@@ -109,7 +109,7 @@ Create an EgressPolicy that lists the destinations that you want to grant access
    {{% /tab %}}
    {{% tab name="Standalone sandbox" %}}
    ```bash
-   kubectl get sandboxtemplate scratch -n kagent \
+   kubectl get sandboxtemplate python -n kagent \
      -o jsonpath='{range .status.conditions[?(@.type=="EgressPoliciesApplied")]}{.status} {.reason} {.message}{end}'
    ```
    {{% /tab %}}
@@ -202,7 +202,7 @@ The gateway can add a credential to each request for an origin. The agent sends 
    {{% /tab %}}
    {{% tab name="Standalone sandbox" %}}
    ```bash
-   kubectl patch sandboxtemplate scratch -n kagent --type merge \
+   kubectl patch sandboxtemplate python -n kagent --type merge \
      -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"},{"name":"ticket-api"}]}}'
    ```
    {{% /tab %}}
@@ -257,7 +257,7 @@ The gateway mints, injects, and refreshes the token, so the policy needs no Secr
    {{% /tab %}}
    {{% tab name="Standalone sandbox" %}}
    ```bash
-   kubectl patch sandboxtemplate scratch -n kagent --type merge \
+   kubectl patch sandboxtemplate python -n kagent --type merge \
      -p '{"spec":{"egressPolicyRefs":[{"name":"node-dependencies"},{"name":"ticket-api"}]}}'
    ```
    {{% /tab %}}
@@ -350,7 +350,7 @@ The gateway keeps a credential out of the sandbox, but it cannot stop an allowed
    {{% /tab %}}
    {{% tab name="Standalone sandbox" %}}
    ```bash
-   kubectl patch sandboxtemplate scratch -n kagent --type json \
+   kubectl patch sandboxtemplate python -n kagent --type json \
      -p '[{"op":"remove","path":"/spec/egressPolicyRefs"}]'
    ```
    {{% /tab %}}
@@ -366,5 +366,5 @@ The gateway keeps a credential out of the sandbox, but it cannot stop an allowed
 
 {{< cards >}}
   {{< card link=`{{< link path="about/substrate-runtime/networking-and-egress" >}}` title="Egress control" subtitle="Learn how the egress gateway authorizes each connection." >}}
-  {{< card link=`{{< link path="about/substrate-runtime/standalone-sandboxes" >}}` title="Standalone sandboxes" subtitle="Create sandboxes that agents and scripts can run commands in." >}}
+  {{< card link=`{{< link path="sandboxes" >}}` title="Sandboxes" subtitle="Create sandboxes that people, applications, and agents can run commands in." >}}
 {{< /cards >}}
