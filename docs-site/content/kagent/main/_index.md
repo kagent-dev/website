@@ -26,13 +26,18 @@ kagent gives platform teams one place to deploy, manage, and govern AI agents on
 
 ## Get Started
 
-Follow a hands-on guide to install kagent and run your first agent.
+Build a working agent in the kagent UI. Each project takes you from an empty installation to an agent that you can use.
 
-{{< cards cols="2" >}}
-  {{< card title="Build a personal AI assistant" subtitle="An assistant with a personality, a weather tool, and a morning routine." path="/get-started/personal-assistant/" icon="sparkles" >}}
-  {{< card title="Build a K8s SRE" subtitle="An agent that investigates the cluster and asks before it acts." path="/get-started/k8s-sre/" icon="cube" >}}
-  {{< card title="Build a sandbox coding agent" subtitle="An agent that writes and runs code in a Sandbox." path="/get-started/sandbox-coding-agent/" icon="chip" >}}
-  {{< card title="Build a scheduled agent" subtitle="An agent that reports on the cluster every day." path="/get-started/scheduled-agent/" icon="puzzle" >}}
+{{< cards cols="3" >}}
+  {{< card title="Build a personal AI assistant" subtitle="A personality, a weather tool, and a morning routine." path="/get-started/personal-assistant/" icon="/icons/tutorial-agent.svg" >}}
+  {{< card title="Build a K8s SRE" subtitle="Investigates your cluster and asks before it acts." path="/get-started/k8s-sre/" icon="/icons/tutorial-policy.svg" >}}
+  {{< card title="Build a sandbox coding agent" subtitle="Writes code and runs it in an isolated Sandbox." path="/get-started/sandbox-coding-agent/" icon="/icons/tutorial-sandbox.svg" >}}
+  {{< card title="Build a scheduled agent" subtitle="Reports on your cluster every day." path="/get-started/scheduled-agent/" icon="/icons/tutorial-schedule.svg" >}}
+  {{< card title="Build a CVE agent" subtitle="Reports the newest exploited vulnerabilities from CISA." path="/get-started/cve-agent/" icon="/icons/tutorial-model.svg" >}}
+  {{< card title="Add an MCP server" subtitle="Give any agent tools from a server." path="/get-started/add-an-mcp-server/" icon="/icons/tutorial-mcp.svg" >}}
+  {{< card title="Human in the loop" subtitle="Make an agent ask before it runs a tool." path="/get-started/human-in-the-loop/" icon="/icons/tutorial-approval.svg" >}}
+  {{< card title="Add a skill" subtitle="Package know-how and attach it to an agent." path="/get-started/add-a-skill/" icon="/icons/tutorial-skill.svg" >}}
+  {{< card title="All tutorials" subtitle="Every project and single-task tutorial." path="/get-started/" icon="/icons/tutorial-prompts.svg" >}}
 {{< /cards >}}
 
 ## What's new in 1.0
