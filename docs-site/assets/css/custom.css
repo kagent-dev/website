@@ -1161,3 +1161,9 @@ svg.section-card-icon[data-tutorial-icon] {
 @media (max-width: 640px) {
     .tutorial-banner-substrate { display: none; }
 }
+
+/* A code block inside an expandable note sits flush under the summary. */
+.doc-details > .hextra-code-block,
+.doc-details > div {
+    margin-top: 0.75rem;
+}

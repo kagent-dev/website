@@ -45,6 +45,30 @@ kagent stores a library as a ConfigMap of the same name, in the namespace that y
 * **As the whole system prompt:** In the template form, set **System prompt** to **Read from a ConfigMap**, so that the prompt comes from one key of the library.
 * **As part of a prompt:** List the library as a data source of the template, and place the `include` tag where the fragment belongs. For the YAML, see [Template the prompt]({{< link path="agents/system-prompts#template-the-prompt" >}}).
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML. A prompt library is a ConfigMap with the `kagent.dev/prompt-library` label, and each fragment is one key.
+
+<details class="doc-details">
+<summary>The assistant-prompts library</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: assistant-prompts
+  namespace: kagent
+  labels:
+    kagent.dev/prompt-library: "true"
+data:
+  tone: Be friendly and concise. Use plain language and short sentences.
+  safety-rules: Never share personal data. Say so when you are not sure of an answer.
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}

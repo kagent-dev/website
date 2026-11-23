@@ -72,6 +72,56 @@ kagent installs an MCP server, `kagent-tool-server`, with tools for Kubernetes. 
 
 3. Ask for a change, such as `Scale the kagent-ui deployment to 2 replicas.` The agent asks for your approval before it calls `k8s_scale`.
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML.
+
+<details class="doc-details">
+<summary>The k8s-sre agent, with both sets of tools</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: k8s-sre
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  template:
+    inline:
+      description: Kubernetes SRE that investigates before it acts
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You are a Kubernetes site reliability engineer.
+        Investigate with your read-only tools before you suggest a change.
+        Explain what you found, then propose the smallest fix.
+        Never guess. When the tools cannot answer, say so.
+      tools:
+        - mcp:
+            server:
+              kind: RemoteMCPServer
+              name: kagent-tool-server
+            tools:
+              - k8s_get_resources
+              - k8s_describe_resource
+              - k8s_get_events
+              - k8s_get_pod_logs
+        - mcp:
+            requireApproval: true
+            server:
+              kind: RemoteMCPServer
+              name: kagent-tool-server
+            tools:
+              - k8s_scale
+              - k8s_rollout
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}

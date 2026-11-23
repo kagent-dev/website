@@ -57,6 +57,39 @@ To compare the two models, send the same message to this agent and to an agent t
 
 To move an existing agent to the new model instead, open the agent's edit form, choose the configuration from the **Model configuration** list, and click **Save agent**.
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML. In the UI, kagent creates the Secret for you. From the command line, you create it yourself.
+
+<details class="doc-details">
+<summary>The Secret with the API key, and the model configuration</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: claude-sonnet-5-5
+  namespace: kagent
+stringData:
+  ANTHROPIC_API_KEY: your-api-key-here
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: claude-sonnet-5-5
+  namespace: kagent
+spec:
+  provider: Anthropic
+  model: claude-sonnet-5-5
+  apiKeySecret: claude-sonnet-5-5
+  apiKeySecretKey: ANTHROPIC_API_KEY
+  stream: true
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}

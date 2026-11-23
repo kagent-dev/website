@@ -58,9 +58,50 @@ Build an agent that works on a timer. Every day, it reads the cluster, writes a 
 
 The page of the schedule shows the next execution and an **Execution history** table. To get the first report without waiting, click **Run**. Each row of the table links to the conversation of that run, which holds the report.
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML.
+
+<details class="doc-details">
+<summary>The cluster-reporter agent</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: cluster-reporter
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  template:
+    inline:
+      description: Writes a short cluster health report
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You write a short health report for a Kubernetes cluster.
+        List pods that are not Running or Ready, and recent Warning events.
+        Keep the report under ten lines. If everything is healthy, say so in one line.
+      tools:
+        - mcp:
+            server:
+              kind: RemoteMCPServer
+              name: kagent-tool-server
+            tools:
+              - k8s_get_resources
+              - k8s_get_events
+EOF
+```
+
+</details>
+
+A schedule is not a Kubernetes resource, so it has no YAML. To create one without the UI, use the API, as described in [Scheduled runs]({{< link path="agents/scheduled-runs#manage-schedules-with-the-api" >}}).
+
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="agents/scheduled-runs" >}}` title="Scheduled runs" subtitle="Read how schedules work and how to define one in YAML." >}}
+  {{< card link=`{{< link path="agents/scheduled-runs" >}}` title="Scheduled runs" subtitle="Read how schedules work and how to manage one with the API." >}}
   {{< card link=`{{< link path="get-started/k8s-sre" >}}` title="Build a K8s SRE" subtitle="Build an agent that investigates the cluster with you." >}}
 {{< /cards >}}

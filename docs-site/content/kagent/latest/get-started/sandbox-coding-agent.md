@@ -125,6 +125,60 @@ For the fields of a template and how to choose an image, see [Set up sandbox tem
 
 The conversation shows each tool call that the agent makes: creating the Sandbox, writing the file, starting the process, reading the output, and deleting the Sandbox.
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML. The sandbox template is already YAML, in [Set up a sandbox template](#set-up-a-sandbox-template).
+
+<details class="doc-details">
+<summary>The code-runner agent, with the sandbox tools</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: code-runner
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  template:
+    inline:
+      description: Runs Python code in a Sandbox and reports the result
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You run Python code for the user in a standalone kagent Sandbox.
+        - Create one Sandbox per request from the python SandboxTemplate in the
+          kagent namespace, with a new request_id and ttl_seconds set to 900.
+          If a call fails, retry it with the same request_id.
+        - Write the code to main.py with write_sandbox_file, with the file bytes
+          as standard base64.
+        - Run it with start_sandbox_process, using the command
+          ["python3", "main.py"]. Poll get_sandbox_process until the state is
+          PROCESS_STATE_EXITED, then read the output with read_sandbox_outputs.
+        - Always delete the Sandbox with delete_sandbox before you answer.
+        - Reply with the program output and its exit code.
+      tools:
+        - mcp:
+            server:
+              kind: RemoteMCPServer
+              name: kagent-api
+            tools:
+              - list_sandbox_templates
+              - create_sandbox
+              - get_sandbox
+              - write_sandbox_file
+              - start_sandbox_process
+              - get_sandbox_process
+              - read_sandbox_outputs
+              - read_sandbox_file
+              - delete_sandbox
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}

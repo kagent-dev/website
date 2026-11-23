@@ -50,9 +50,13 @@ Use the buttons at the top of the page of the schedule.
 
 Each row of the **Execution history** table links to the conversation of that run.
 
+## YAML version
+
+A schedule is not a Kubernetes resource, so it has no YAML. To create one without the UI, use the API, as described in [Scheduled runs]({{< link path="agents/scheduled-runs#manage-schedules-with-the-api" >}}).
+
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="agents/scheduled-runs" >}}` title="Scheduled runs" subtitle="Read how schedules work and how to define one in YAML." >}}
+  {{< card link=`{{< link path="agents/scheduled-runs" >}}` title="Scheduled runs" subtitle="Read how schedules work and how to manage one with the API." >}}
   {{< card link=`{{< link path="get-started/your-first-agent" >}}` title="Your first agent" subtitle="Build an agent from YAML and the CLI." >}}
 {{< /cards >}}

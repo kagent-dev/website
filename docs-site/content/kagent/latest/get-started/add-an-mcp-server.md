@@ -65,6 +65,60 @@ Register a second server the same way. The Solo.io documentation search server i
 
 The server offers three tools: `search`, `get_chunks`, and `get_full_page`. Add it to the personal assistant to let the agent answer questions from the Solo.io product documentation.
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML.
+
+<details class="doc-details">
+<summary>The weather MCP server</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata:
+  name: weather
+  namespace: kagent
+spec:
+  protocol: STREAMABLE_HTTP
+  url: https://mcp-weather-1cyg.onrender.com/mcp
+  timeout: 5s
+  terminateOnClose: true
+EOF
+```
+
+</details>
+
+<details class="doc-details">
+<summary>The personal-assistant agent, with the weather tools</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: personal-assistant
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  template:
+    inline:
+      description: My personal assistant
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You are my personal assistant. Be friendly and concise. Help me plan my day, draft messages, and answer questions.
+      tools:
+        - mcp:
+            server:
+              kind: RemoteMCPServer
+              name: weather
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}

@@ -37,6 +37,8 @@ One task each, a few minutes long.
   {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" icon="/icons/tutorial-model.svg" >}}
   {{< card title="Add a skill" subtitle="Package know-how as a skill and attach it." path="/get-started/add-a-skill/" icon="/icons/tutorial-skill.svg" >}}
   {{< card title="Add a plugin" subtitle="Ship several skills together as one plugin." path="/get-started/add-a-plugin/" icon="/icons/tutorial-plugin.svg" >}}
+  {{< card title="Set up a sandbox template" subtitle="Create a template and run a command in a Sandbox." path="/get-started/sandbox-template/" icon="/icons/tutorial-sandbox.svg" >}}
+  {{< card title="Human in the loop" subtitle="Make an agent ask before it runs a tool." path="/get-started/human-in-the-loop/" icon="/icons/tutorial-approval.svg" >}}
 {{< /cards >}}
 
 ## Build with YAML

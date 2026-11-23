@@ -38,6 +38,55 @@ An agent runs in a sandbox that cannot reach arbitrary hosts. It can always reac
 
 The agent can now send requests to `https://api.github.com`. Requests to hosts that no policy lists are still blocked.
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML.
+
+<details class="doc-details">
+<summary>The github-api egress policy</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: EgressPolicy
+metadata:
+  name: github-api
+  namespace: kagent
+spec:
+  destinations:
+    - origin: https://api.github.com
+EOF
+```
+
+</details>
+
+<details class="doc-details">
+<summary>The personal-assistant agent, with the policy attached</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: personal-assistant
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  egressPolicyRefs:
+    - name: github-api
+  template:
+    inline:
+      description: My personal assistant
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You are my personal assistant. Be friendly and concise. Help me plan my day, draft messages, and answer questions.
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}

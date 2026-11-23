@@ -82,6 +82,67 @@ Both agents run on the `kagent-default` harness. A harness sets the runtime that
 
 To create a harness of your own, click **New Harness** on the **Agents** page. For the options, see [Agent harness]({{< link path="agents/agent-harness" >}}).
 
+## YAML version
+
+Everything that you did in the UI is stored as Kubernetes resources. To create the same resources from the command line, or to keep them in a Git repository, apply this YAML.
+
+<details class="doc-details">
+<summary>The personal-assistant agent, with its behavior inline</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: personal-assistant
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  template:
+    inline:
+      description: My personal assistant
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You are my personal assistant. Be friendly and concise. Help me plan my day, draft messages, and answer questions.
+EOF
+```
+
+</details>
+
+<details class="doc-details">
+<summary>The shared template, and the team-assistant agent that references it</summary>
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: assistant-template
+  namespace: kagent
+spec:
+  description: A friendly, concise assistant
+  modelConfig:
+    name: default-model-config
+  systemPrompt: You are a personal assistant. Be friendly and concise. Help plan the day, draft messages, and answer questions.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: team-assistant
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  template:
+    ref:
+      name: assistant-template
+EOF
+```
+
+</details>
+
 ## Next steps
 
 {{< cards >}}
