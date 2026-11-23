@@ -81,7 +81,11 @@ async function docsAsset(request, url, env) {
     return assetAt(url, path + 'index.html', env);
   }
   const exact = await env.ASSETS.fetch(request);
-  if (exact.ok) return exact;
+  // 304 is not `ok`, but it is a hit: the browser sent If-None-Match for a
+  // file it already has cached. Treating it as a miss fell through to Next.js,
+  // which answered every cached CSS/JS file with its 404 page, so pages loaded
+  // unstyled after the first visit until a hard refresh.
+  if (exact.ok || exact.status === 304) return exact;
   if (!/\.[a-zA-Z0-9]{1,5}$/.test(path) && (await assetAt(url, path + '/index.html', env))) {
     return redirectTo(url, path + '/');
   }
