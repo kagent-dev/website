@@ -5,6 +5,9 @@ weight: 6
 author: kagent.dev
 # This page lays out its own path and cards, so skip the auto-generated child grid.
 disableCards: true
+# First entry under Tutorials in the left nav: a link back to this page.
+sidebarLinks:
+  - title: Get Started
 ---
 
 {{< tutorial-banner title="Learn kagent by building" text="Pick a project and follow it from an empty installation to a working agent, or go straight to the one task that you need." cta="Start with a personal assistant" page="personal-assistant" >}}
