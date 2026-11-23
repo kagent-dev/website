@@ -1,0 +1,74 @@
+{{- /*
+  kagent override of the docs-theme-extras `docs/chrome-top.html` extension
+  slot: adds a product sub-navigation bar directly under the top navbar on
+  every docs page (product mark + name, then Install, Tutorials,
+  Documentation, KMCP, Reference, CLI).
+
+  The module's default for this slot is the announcement banner, so it is
+  called first by its own name to keep it. Do NOT call "docs/chrome-top.html"
+  from here: this file wins the lookup, so that would recurse forever.
+
+  Links resolve against the kagent version the reader is in (main, latest,
+  0.x), so the bar never jumps versions. Pages outside a kagent version tree
+  (the /docs home, the version picker, kmcp) link into `latest`. An item with
+  no target page in that version is skipped rather than linked to a 404.
+*/ -}}
+{{- partial "docs/announcement-banner.html" . -}}
+
+{{- $root := site.GetPage "/kagent/latest" -}}
+{{- if eq .Section "kagent" -}}
+  {{- $segments := split (strings.Trim .Path "/") "/" -}}
+  {{- if ge (len $segments) 2 -}}
+    {{- with site.GetPage (printf "/kagent/%s" (index $segments 1)) -}}{{- $root = . -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- with $root -}}
+  {{- $rootPath := .Path -}}
+  {{- /* Each item lists candidate paths under the version root, newest layout
+         first; the first that exists wins. 0.x predates the 1.0 reorganisation
+         (introduction/, getting-started/, resources/), hence the second entry. */ -}}
+  {{- $specs := slice
+      (dict "label" "Install" "paths" (slice "setup" "introduction/installation"))
+      (dict "label" "Tutorials" "paths" (slice "get-started" "getting-started"))
+      (dict "label" "Documentation" "paths" (slice "about" "introduction"))
+      (dict "label" "KMCP" "abs" "/kmcp")
+      (dict "label" "Reference" "paths" (slice "reference" "resources"))
+      (dict "label" "CLI" "paths" (slice "reference/cli" "resources/cli"))
+  -}}
+  {{- $items := slice -}}
+  {{- range $specs -}}
+    {{- $target := false -}}
+    {{- with .abs -}}{{- $target = site.GetPage . -}}{{- end -}}
+    {{- range .paths -}}
+      {{- if not $target -}}{{- $target = site.GetPage (printf "%s/%s" $rootPath .) -}}{{- end -}}
+    {{- end -}}
+    {{- if $target -}}
+      {{- $items = $items | append (dict "label" .label "url" $target.RelPermalink) -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- /* Active item: the deepest target the current page sits at or under, so
+         a CLI page lights up CLI rather than its parent, Reference. */ -}}
+  {{- $activeURL := "" -}}
+  {{- range $items -}}
+    {{- if and (strings.HasPrefix $.RelPermalink .url) (gt (len .url) (len $activeURL)) -}}
+      {{- $activeURL = .url -}}
+    {{- end -}}
+  {{- end -}}
+
+  <nav class="product-subnav hx:print:hidden" aria-label="kagent docs">
+    <div class="product-subnav-inner">
+      <a class="product-subnav-brand" href="{{ .RelPermalink }}">
+        {{- with resources.Get "icons/nav-kagent.svg" -}}
+          {{- .Content | replaceRE "<svg" `<svg class="product-subnav-icon"` | safeHTML -}}
+        {{- end -}}
+        <span>kagent</span>
+      </a>
+      {{- range $items -}}
+        {{- $active := eq .url $activeURL -}}
+        <a class="product-subnav-link{{ if $active }} is-active{{ end }}" href="{{ .url }}"{{ if $active }} aria-current="true"{{ end }}>{{ .label }}</a>
+      {{- end -}}
+    </div>
+  </nav>
+{{- end -}}

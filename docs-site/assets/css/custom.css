@@ -384,3 +384,442 @@ html .glossary-term:focus {
 html .glossary-term > span span {
   font-weight: 400;
 }
+
+/* ── Docs landing page (content/kagent/latest/_index.md) ────────────────────
+   Hero banner, action cards, and the "What is kagent" split block, modeled on
+   a product developer-portal landing. See the landing-hero and landing-split
+   shortcodes. */
+
+/* The hero carries the page's visible h1, so hide the theme's own title row
+   and description on pages that have one. */
+.content:has(.landing-hero) > div:has(> div > h1),
+.content:has(.landing-hero) > .page-description {
+    display: none;
+}
+
+.landing-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 11.5rem;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px solid #2a2440;
+    background:
+        radial-gradient(120% 140% at 0% 0%, rgba(139, 92, 246, 0.28), transparent 60%),
+        linear-gradient(135deg, #1b1530 0%, #0e0b18 100%);
+}
+.content .landing-hero-title {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 2rem;
+    max-width: 55%;
+    font-size: 1.75rem;
+    line-height: 1.25;
+    font-weight: 700;
+    color: #fff;
+    text-wrap: balance;
+}
+/* Watermark: the kagent mark behind the headline, very faint, drifting slowly.
+   Sits under the title (z-index 1) and stops moving for readers who ask for
+   reduced motion. */
+.landing-hero-mark {
+    position: absolute;
+    top: 50%;
+    left: 1.5rem;
+    width: 15rem;
+    height: auto;
+    margin-top: -5.7rem;
+    color: #c4b5fd;
+    opacity: 0.12;
+    pointer-events: none;
+    animation: landing-hero-float 9s ease-in-out infinite;
+}
+@keyframes landing-hero-float {
+    0%, 100% { transform: translateY(-6px) rotate(-4deg); }
+    50% { transform: translateY(8px) rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .landing-hero-mark { animation: none; transform: rotate(-4deg); }
+}
+
+/* Dashboard illustration: anchored top-left inside a window that runs off the
+   banner's right and bottom edges, so only the dashboard's corner shows. Drawn
+   in HTML (see the landing-hero shortcode); fixed px sizes because it is a
+   picture of a UI, not text that should scale with the reader's font size. */
+.landing-hero-shot {
+    position: absolute;
+    top: 2.25rem;
+    left: 58%;
+    width: 46rem;
+    height: 20rem;
+    border-top-left-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    background: #0a0910;
+    color: #fff;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.2;
+    user-select: none;
+    pointer-events: none;
+}
+.landing-ui-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #14121c;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.landing-ui-logo {
+    width: 16px;
+    height: 16px;
+    color: #8b5cf6;
+}
+.landing-ui-body {
+    display: grid;
+    grid-template-columns: 124px 1fr;
+    height: 100%;
+}
+.landing-ui-side {
+    padding: 6px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.landing-ui-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.65);
+}
+.landing-ui-item + .landing-ui-item {
+    margin-top: 2px;
+}
+.landing-ui-item.is-active {
+    background: rgba(139, 92, 246, 0.28);
+    color: #fff;
+}
+/* Stand-in for each item's icon. */
+.landing-ui-item i {
+    width: 8px;
+    height: 8px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    opacity: 0.8;
+}
+.landing-ui-main {
+    padding: 14px 14px 0;
+}
+.landing-ui-h {
+    font-size: 15px;
+    font-weight: 700;
+}
+.landing-ui-sub {
+    margin-top: 6px;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.6);
+}
+.landing-ui-tiles {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+.landing-ui-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 0 0 142px;
+    padding: 8px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    background: #15131d;
+}
+.landing-ui-tile span {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.7);
+}
+.landing-ui-tile b {
+    font-size: 15px;
+    font-weight: 700;
+}
+.landing-ui-tile small {
+    font-size: 6.5px;
+    color: rgba(255, 255, 255, 0.55);
+}
+@media (max-width: 640px) {
+    .content .landing-hero-title { max-width: 100%; font-size: 1.5rem; }
+    .landing-hero-shot { display: none; }
+}
+
+/* Split block: text left, diagram right. */
+.landing-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: center;
+    --landing-primary: #7c3aed;
+    --landing-line: #9ca3af;
+    --landing-node-bg: #f9fafb;
+    --landing-node-border: #d1d5db;
+    --landing-text: #1f2937;
+    --landing-muted: #6b7280;
+}
+.dark .landing-split {
+    --landing-primary: #8b5cf6;
+    --landing-line: #6b7280;
+    --landing-node-bg: #1a1a22;
+    --landing-node-border: #3f3f4a;
+    --landing-text: #e5e7eb;
+    --landing-muted: #9ca3af;
+}
+@media (min-width: 768px) {
+    .landing-split { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+}
+.landing-split-figure svg {
+    display: block;
+    width: 100%;
+    max-width: 20rem;
+    height: auto;
+    margin: 0 auto;
+}
+.landing-node { fill: var(--landing-node-bg); stroke: var(--landing-node-border); }
+.landing-node-primary { fill: var(--landing-primary); }
+.landing-node-active { stroke: var(--landing-primary); }
+.landing-node-asleep { stroke-dasharray: 4 3; }
+.landing-wire { fill: none; stroke: var(--landing-line); stroke-width: 1.25; }
+.landing-arrowhead { fill: var(--landing-line); }
+.landing-dot-active { fill: #22c55e; }
+.landing-bolt { fill: var(--landing-primary); }
+.landing-text { fill: var(--landing-text); }
+.landing-text-muted { fill: var(--landing-muted); }
+.landing-text-on-primary { fill: #fff; }
+
+/* Sidebar home link: product mark + name pinned above the tree, returning to
+   the docs main page from anywhere. Outlined so it reads as the anchor of the
+   nav rather than as one more tree item. */
+.sidebar-home-link {
+    margin-bottom: 0.5rem;
+    border: 1px solid #d1d5db;
+    font-weight: 600;
+}
+.dark .sidebar-home-link {
+    border-color: #3f3f4a;
+}
+.sidebar-home-link.sidebar-active-item {
+    border-color: #7c3aed;
+}
+.sidebar-home-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    color: #7c3aed;
+}
+.dark .sidebar-home-icon {
+    color: #a78bfa;
+}
+
+/* Product sub-navigation bar under the top navbar (see
+   layouts/partials/docs/chrome-top.html). Scrolls horizontally on narrow
+   screens instead of wrapping. */
+.product-subnav {
+    border-bottom: 1px solid #e5e7eb;
+}
+.dark .product-subnav {
+    border-bottom-color: #374151;
+}
+.product-subnav-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+.product-subnav-inner::-webkit-scrollbar {
+    display: none;
+}
+.product-subnav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 0.75rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #111827;
+    text-decoration: none;
+}
+.dark .product-subnav-brand {
+    color: #fff;
+}
+.product-subnav-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    color: #7c3aed;
+}
+.dark .product-subnav-icon {
+    color: #a78bfa;
+}
+.product-subnav-link {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+    text-decoration: none;
+    transition: color 0.15s, background-color 0.15s;
+}
+.dark .product-subnav-link {
+    color: #d1d5db;
+}
+.product-subnav-link:hover {
+    color: #111827;
+    background: #f3f4f6;
+}
+.dark .product-subnav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+.product-subnav-link.is-active {
+    color: #6d28d9;
+    background: rgba(124, 58, 237, 0.1);
+}
+.dark .product-subnav-link.is-active {
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.18);
+}
+
+/* Navbar "Docs" is a plain link here, not a dropdown (see
+   layouts/_partials/components/section-dropdown.html). */
+.section-docs-link {
+    text-decoration: none;
+}
+
+/* Landing page: no rule under the section headings, so each heading reads as
+   one block with the content below it. */
+.content:has(.landing-hero) h2 {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Landing page action buttons (Install / Tutorials / Documentation): the card
+   grid directly under the hero. Compact single-row buttons, icon beside the
+   label, instead of the tall icon-over-title cards used elsewhere. Matched by
+   position because the `cards` shortcode takes no class. */
+.landing-hero + .section-cards {
+    grid-auto-rows: auto;
+    margin-top: 1rem;
+}
+.landing-hero + .section-cards .section-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+}
+.landing-hero + .section-cards svg.section-card-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    align-self: center;
+    color: #7c3aed;
+}
+.dark .landing-hero + .section-cards svg.section-card-icon {
+    color: #a78bfa;
+}
+.landing-hero + .section-cards .section-card-title {
+    margin: 0 !important;
+    font-size: 0.9375rem !important;
+}
+
+/* ── Product pages (Install) ────────────────────────────────────────────────
+   product-title: the kagent mark in a tile beside the page's h1.
+   doc-panel: a block with its own heading, no box around it. See the
+   product-title and panel shortcodes. */
+.content:has(.product-title) > div:has(> div > h1),
+.content:has(.product-title) > .page-description {
+    display: none;
+}
+.product-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.product-title-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(124, 58, 237, 0.35);
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
+}
+.dark .product-title-tile {
+    border-color: rgba(139, 92, 246, 0.45);
+    background: rgba(139, 92, 246, 0.14);
+    color: #a78bfa;
+}
+.product-title-tile svg {
+    width: 2.5rem;
+    height: auto;
+}
+.content .product-title h1 {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.doc-panel {
+    margin-top: 2.5rem;
+}
+.content .doc-panel > h2 {
+    margin-top: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: 1.5rem;
+}
+.doc-panel > :last-child {
+    margin-bottom: 0;
+}
+/* Cards inside a panel are compact link rows, not feature tiles. */
+.doc-panel .section-cards {
+    grid-auto-rows: auto;
+    margin-top: 1rem;
+}
+.doc-panel .section-card {
+    padding: 0.875rem 1rem;
+}
+.doc-panel .section-card-title {
+    margin: 0 !important;
+    font-size: 0.9375rem !important;
+}
+
+/* Content that only applies to a local kind cluster, such as the install
+   recording that starts with `kind create cluster`. The kind tab in "Before
+   you begin" carries a .kind-tab-marker; when the page has that tab and
+   another tab of the group is selected, .kind-only content is hidden. A page
+   without the marker shows it unconditionally. */
+.content:has(.kind-tab-marker):not(:has(.hextra-tabs-panel[data-state="selected"] .kind-tab-marker)) .kind-only {
+    display: none;
+}
+
+/* Top navbar spans the full window, like everything below it. Hextra caps the
+   navbar row at 90rem and centers it, but this site's page body (sub-nav,
+   sidebar, content) runs edge to edge, so on a wide window the logo floated in
+   from the left while the sub-nav and sidebar beneath it stayed flush. */
+.hextra-nav-container > nav {
+    max-width: none;
+}

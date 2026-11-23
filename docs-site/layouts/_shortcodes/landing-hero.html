@@ -1,0 +1,52 @@
+{{- /*
+  Landing-page hero banner: a headline on the left and, on the right, the
+  top-left corner of the kagent dashboard running off the banner's edge.
+
+  The dashboard is drawn in HTML/CSS rather than cropped from a screenshot, so
+  it stays sharp at any size and its numbers are parameters. It is an
+  illustration, not a capture of a real cluster, and is hidden from assistive
+  technology. The banner is dark in both themes.
+
+  Parameters:
+    - title | string | yes | — | Headline. Rendered as the page's visible h1;
+      custom.css hides the theme's own title row on pages that carry a hero.
+    - agents | int | no | 42 | Number on the Agents tile (also "N ready").
+    - models | int | no | 6 | Number on the Model configurations tile.
+
+  Example: {{< landing-hero title="Run AI agents on Kubernetes" agents="42" models="6" >}}
+*/ -}}
+{{- $agents := .Get "agents" | default "42" -}}
+{{- $models := .Get "models" | default "6" -}}
+{{- $nav := slice "Dashboard" "Agents" "Schedules" "Models" "MCP Servers" "Policies" -}}
+<div class="landing-hero not-prose">
+  {{- /* Decorative watermark: the kagent mark, very faint, drifting behind the
+         headline. */ -}}
+  {{- with resources.Get "icons/nav-kagent.svg" -}}
+    {{- .Content | replaceRE "<svg" `<svg class="landing-hero-mark"` | safeHTML -}}
+  {{- end }}
+  <h1 class="landing-hero-title">{{ .Get "title" }}</h1>
+  <div class="landing-hero-shot" aria-hidden="true">
+    <div class="landing-ui-bar">
+      {{- with resources.Get "icons/nav-kagent.svg" -}}
+        {{- .Content | replaceRE "<svg" `<svg class="landing-ui-logo"` | safeHTML -}}
+      {{- end -}}
+      <span>kagent</span>
+    </div>
+    <div class="landing-ui-body">
+      <div class="landing-ui-side">
+        {{- range $i, $label := $nav -}}
+          <div class="landing-ui-item{{ if eq $i 0 }} is-active{{ end }}"><i></i>{{ $label }}</div>
+        {{- end -}}
+      </div>
+      <div class="landing-ui-main">
+        <div class="landing-ui-h">Dashboard</div>
+        <div class="landing-ui-sub">Overview of agents, models, and recent activity.</div>
+        <div class="landing-ui-tiles">
+          <div class="landing-ui-tile"><span>Agents</span><b>{{ $agents }}</b><small>{{ $agents }} ready</small></div>
+          <div class="landing-ui-tile"><span>Model configurations</span><b>{{ $models }}</b></div>
+          <div class="landing-ui-tile"><span>MCP servers</span><b>14</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

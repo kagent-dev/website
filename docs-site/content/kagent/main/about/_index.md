@@ -1,7 +1,7 @@
 ---
-title: About
+title: Intro to Kagent
 description: Learn the core concepts and architecture behind kagent 1.0.
-weight: 20
+weight: 7
 author: kagent.dev
 ---
 

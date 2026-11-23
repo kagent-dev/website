@@ -1,0 +1,31 @@
+{{- /*
+  kagent override of docs-theme-extras' navbar section selector.
+
+  The module renders a "Docs" dropdown here listing the registered sections
+  (kagent, kmcp). On this site "Docs" is instead a plain link that always goes
+  to the current kagent docs main page, /kagent/latest/. kmcp stays reachable
+  from the product sub-navigation bar (partials/docs/chrome-top.html) and the
+  mobile drawer's section chips.
+
+  The sections stay registered in hugo.yaml's params.sections: the sidebar and
+  the version dropdown's scoping both depend on that registration. Only this
+  control's markup changes.
+
+  It reuses the module's .section-dropdown / .section-dropdown-btn classes so
+  the link is styled and positioned exactly like the button it replaces
+  (including the `section-dropdown-inline` modifier, see the module's partial).
+  With no .section-dropdown-menu inside, there is nothing for the module's
+  dropdown script to open.
+
+  Input: the resolved section slice (unused beyond the same "fewer than two
+  sections renders nothing" guard the module applies).
+*/ -}}
+{{- if gt (len .) 1 -}}
+{{- with site.GetPage "/kagent/latest" -}}
+<div class="section-dropdown{{ if not site.Params.versions }} section-dropdown-inline{{ end }}">
+  <a class="section-dropdown-btn section-docs-link" href="{{ .RelPermalink }}">
+    <span>{{ site.Params.product | default "Docs" }}</span>
+  </a>
+</div>
+{{- end -}}
+{{- end -}}

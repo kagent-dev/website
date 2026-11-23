@@ -1,0 +1,27 @@
+{{- /*
+  A section with a heading and no rule under it, for pages built from a few self-contained
+  blocks (the Install page's "Install with CLI" and "Install with Helm").
+
+  Call it with the PERCENT form, {{% panel %}}. The heading is emitted as
+  Markdown and rendered with the page, which is what puts it in the "On this
+  page" list and gives it an anchor; the angle-bracket form would print the
+  "##" literally. The blank lines around the Markdown are required for the
+  same reason: without them Goldmark treats everything inside the <div> as raw
+  HTML.
+
+  Parameters:
+    - title | string | yes | — | Panel heading (an h2).
+    - id | string | no | derived from the title | Anchor for the heading.
+
+  Example:
+    {{% panel title="Helm" id="helm" %}}
+    Body in **Markdown**.
+    {{% /panel %}}
+*/ -}}
+<div class="doc-panel">
+
+## {{ .Get "title" }}{{ with .Get "id" }} {#{{ . }}}{{ end }}
+
+{{ .Inner }}
+
+</div>

@@ -2,7 +2,13 @@
 title: Install kagent
 description: Install kagent 1.0 and Agent Substrate on a Kubernetes cluster.
 weight: 10
+# Left-nav and breadcrumb label; the section landing page is "Install kagent".
+linkTitle: Full install guide
 author: kagent.dev
+# Tab groups with the same tab names switch together, so picking a provider for
+# the API key also picks it for the install command.
+tabs:
+  sync: true
 ---
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on. kagent provides the Harness, AgentTemplate, and Agent API that you author against.
@@ -12,11 +18,13 @@ author: kagent.dev
 
 ## Before you begin
 
-1. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
+1. Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl) and [`helm`](https://helm.sh/docs/intro/install/) 3. The kagent CLI runs `helm` to install each chart.
+
+2. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
 
    {{< tabs >}}
    {{% tab name="Local kind cluster" %}}
-   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. The cluster does not need extra API configuration.
+   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. The cluster does not need extra API configuration.<span class="kind-tab-marker"></span>
    ```bash
    kind create cluster --name kagent --image kindest/node:v1.37.0
    ```
@@ -40,20 +48,89 @@ author: kagent.dev
    {{% /tab %}}
    {{< /tabs >}}
 
-2. Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl) and [`helm`](https://helm.sh/docs/intro/install/) 3. The kagent CLI runs `helm` to install each chart.
+3. Set the API key of your model provider. The CLI installation reads it from this variable. A Helm installation stores it in a Secret in a later step.
 
-## Install with the CLI {#install-kagent}
+   {{< tabs >}}
+   {{% tab name="OpenAI" %}}
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-Set your OpenAI API key, then install the kagent CLI and run it.
+   {{% tab name="Anthropic" %}}
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-curl -sL https://kagent.dev/install | bash && kagent install
-```
+   {{% tab name="Gemini" %}}
+   ```bash
+   export GOOGLE_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-When `kagent install` finishes, it prints the next steps. To open the UI, run `kagent dashboard`. To create an agent, continue with [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+   {{% tab name="Ollama" %}}
+   The installer sets up an [Ollama Cloud](https://docs.ollama.com/cloud) model, which takes an API key. To use an Ollama server that you host yourself, see [Ollama]({{< link path="setup/model-providers/ollama" >}}).
+   ```bash
+   export OLLAMA_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-The CLI installation suits evaluation, because it deploys a development PostgreSQL database. For a production installation that Helm manages from the start, [install with Helm](#install-with-helm) instead. To use another model provider, pin a release, or pass your own chart values, see [Customize the CLI installation](#customize-the-cli-installation).
+   {{% tab name="Others" %}}
+   For every other provider, such as xAI, Azure OpenAI, Amazon Bedrock, Google Vertex AI, or a provider of your own, see [Configure model providers]({{< link path="setup/model-providers" >}}).
+   {{% /tab %}}
+   {{< /tabs >}}
+
+## Install with CLI {#install-kagent}
+
+The CLI installation suits evaluation, because it deploys a development PostgreSQL database. To pin a release or pass your own chart values, see [Customize the CLI installation](#customize-the-cli-installation).
+
+1. Install the kagent CLI and run it. The first command downloads the `kagent` CLI. The second installs the CRDs, Agent Substrate, a development PostgreSQL database, and kagent into your cluster, in that order, and takes a few minutes. `kagent install` reads the API key that you set in [Before you begin](#before-you-begin), and uses OpenAI unless you name another provider in the `--provider` flag.
+
+   {{< tabs >}}
+   {{% tab name="OpenAI" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Anthropic" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install --provider Anthropic
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Gemini" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install --provider Gemini
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Ollama" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install --provider Ollama
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Others" %}}
+   `kagent install` sets up one of the providers in the other tabs. To use a different provider, install with one of them, then add yours as described in [Configure model providers]({{< link path="setup/model-providers" >}}).
+   {{% /tab %}}
+   {{< /tabs >}}
+
+   <div class="kind-only">
+
+   {{< reuse-image src="img/kagent-install-cli-kind.gif" alt="A terminal creating a kind cluster, running the kagent install command, and listing the running kagent pods" caption="Figure: Installing kagent on a local kind cluster with the CLI, sped up" >}}
+
+   </div>
+
+2. Open the kagent dashboard. The command forwards the UI to `http://localhost:8082`, and on macOS also opens it in your browser. On Linux and Windows, follow the port-forward steps in [Launch the UI]({{< link path="ui/launch-ui" >}}). The dashboard lists your agents, models, MCP servers, and the tools that kagent discovered.
+   ```bash
+   kagent dashboard
+   ```
+
+   {{< reuse-image src="img/kagent-ui-dashboard.png" srcDark="img/kagent-ui-dashboard-dark.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
+
+Then create an agent in [Your first agent]({{< link path="get-started/your-first-agent" >}}).
 
 ## Customize the CLI installation
 

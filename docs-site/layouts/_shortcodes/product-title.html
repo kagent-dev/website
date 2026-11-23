@@ -1,0 +1,16 @@
+{{- /*
+  Page title with the kagent mark in a tile beside it, for a product-level page
+  such as Install. Renders the page's visible h1; custom.css hides the theme's
+  own title row and description on pages that carry one.
+
+  Parameters:
+    - title | string | no | the page title | Heading text.
+
+  Example: {{< product-title title="Install kagent" >}}
+*/ -}}
+<div class="product-title not-prose">
+  <span class="product-title-tile" aria-hidden="true">
+    {{- with resources.Get "icons/nav-kagent.svg" -}}{{- .Content | safeHTML -}}{{- end -}}
+  </span>
+  <h1>{{ .Get "title" | default .Page.Title }}</h1>
+</div>

@@ -84,6 +84,25 @@
     <aside class="sidebar-container hextra-sidebar-container sidebar-mobile-panel hx:order-first hx:w-64 hx:shrink-0 hx:hidden hx:xl:block hx:print:hidden">
       <div class="sidebar-nav-wrapper">
         <nav class="sidebar-nav">
+          {{- /* Home link, pinned above the tree on every page: always returns
+                 to the docs main page for the current product (and version, for
+                 kagent). The product mark comes from params.sections.<x>.icon,
+                 the same file the navbar section selector uses. */ -}}
+          {{- with $navRoot -}}
+            {{- $homeActive := eq .RelPermalink $context.RelPermalink -}}
+            <a href="{{ .RelPermalink }}"
+               class="sidebar-link sidebar-home-link {{ if $homeActive }}sidebar-active-item{{ end }}"
+               {{ if $homeActive }}aria-current="page"{{ end }}>
+              {{- with index $context.Site.Params.sections $sectionKey -}}
+                {{- with .icon -}}
+                  {{- with resources.Get . -}}
+                    {{- .Content | replaceRE "<svg" `<svg class="sidebar-home-icon"` | safeHTML -}}
+                  {{- end -}}
+                {{- end -}}
+              {{- end -}}
+              <span class="hx:flex-1">{{ $context.FirstSection.Title }}</span>
+            </a>
+          {{- end -}}
           {{- with $navRoot -}}
             {{- template "kagent-sidebar-tree" (dict "page" . "current" $context "depth" 0) -}}
           {{- end -}}
@@ -100,14 +119,42 @@
   {{- $depth := .depth | default 0 -}}
   {{- if gt $depth 4 -}}{{- return -}}{{- end -}}
 
-  {{- $children := $page.Pages -}}
-  {{- if gt (len $children) 0 -}}
+  {{- /* Two kagent front-matter extensions, both sidebar-only:
+
+         - `sidebarLinks` on a section adds entries above its child pages that
+           point at an anchor, e.g. the Install section listing "Install with CLI"
+           and "Install with Helm", which are two panels of its landing
+           page. Each entry is {title, page, anchor}; `page` is relative to the
+           section and defaults to the section's own landing page. An entry
+           whose page does not resolve is skipped with a build warning.
+         - `sidebarHidden: true` on a page leaves it out of the tree. It is
+           still built, linked, searchable and listed in section cards. For a
+           page that `sidebarLinks` already covers. */ -}}
+  {{- $children := where $page.Pages "Params.sidebarHidden" "ne" true -}}
+  {{- $extraLinks := $page.Params.sidebarLinks | default slice -}}
+  {{- if or (gt (len $children) 0) (gt (len $extraLinks) 0) -}}
     <ul class="sidebar-list sidebar-list-depth-{{ $depth }}">
+      {{- range $extraLinks -}}
+        {{- $link := . -}}
+        {{- $target := $page -}}
+        {{- with .page -}}{{- $target = $page.GetPage . -}}{{- end -}}
+        {{- with $target -}}
+          <li class="hx:relative">
+            <div class="sidebar-link-wrapper">
+              <a href="{{ .RelPermalink }}{{ with $link.anchor }}#{{ . }}{{ end }}" class="sidebar-link">
+                <span class="hx:flex-1">{{ $link.title }}</span>
+              </a>
+            </div>
+          </li>
+        {{- else -}}
+          {{- warnf "sidebar: sidebarLinks page %q not found under %s" .page $page.Path -}}
+        {{- end -}}
+      {{- end -}}
       {{- range $children.ByWeight -}}
         {{- $childIsActive := eq .RelPermalink $current.RelPermalink -}}
         {{- $childIsAncestor := $current.IsDescendant . -}}
         {{- $childIsExpanded := or $childIsActive $childIsAncestor -}}
-        {{- $hasChildren := gt (len .Pages) 0 -}}
+        {{- $hasChildren := or (gt (len (where .Pages "Params.sidebarHidden" "ne" true)) 0) (gt (len (.Params.sidebarLinks | default slice)) 0) -}}
         {{- $navLabel := .LinkTitle | default .Title -}}
 
         <li class="hx:relative"{{ if $hasChildren }} data-sidebar-item data-expanded="{{ $childIsExpanded }}"{{ end }}>
