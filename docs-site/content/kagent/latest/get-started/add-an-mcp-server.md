@@ -67,6 +67,6 @@ The server offers three tools: `search`, `get_chunks`, and `get_full_page`. Add 
 
 {{< cards >}}
   {{< card link=`{{< link path="get-started/your-first-mcp-tool" >}}` title="Your first MCP tool" subtitle="Bind a tool to an AgentTemplate from YAML." >}}
-  {{< card link=`{{< link path="get-started/add-a-model" >}}` title="Add a model" subtitle="Add a second model configuration in the UI." >}}
+  {{< card link=`{{< link path="get-started/prompt-library" >}}` title="Create a prompt library" subtitle="Keep reusable prompt text in one place." >}}
   {{< card link=`{{< link path="skills-and-mcp" >}}` title="Skills and MCP" subtitle="Read about the ways to give an agent tools and know-how." >}}
 {{< /cards >}}

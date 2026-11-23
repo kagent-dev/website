@@ -1,7 +1,7 @@
 ---
 title: Schedule an agent
 description: Create a schedule in the kagent UI that runs your agent automatically with a prompt that you choose.
-weight: 6
+weight: 5
 author: kagent.dev
 ---
 

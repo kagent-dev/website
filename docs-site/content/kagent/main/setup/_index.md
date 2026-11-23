@@ -94,7 +94,7 @@ For the full requirements, see the [install guide]({{< link path="setup/installa
 {{% /panel %}}
 
 {{% panel title="Install with CLI" id="install-kagent" %}}
-{{< include-section page="installation" heading="Install with CLI" local="before-you-begin" >}}
+{{< embed-section page="installation" heading="Install with CLI" local="before-you-begin" >}}
 {{% /panel %}}
 
 {{% panel title="Next steps" id="next-steps" %}}

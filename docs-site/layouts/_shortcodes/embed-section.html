@@ -21,7 +21,7 @@
       calling page (because it gives its own sections the same ids), so links
       to them stay on this page.
 
-  Example: {{< include-section page="installation" heading="Install with CLI" >}}
+  Example: {{< embed-section page="installation" heading="Install with CLI" >}}
 
   Fails the build if the page or the heading is missing, so a renamed heading
   is caught instead of silently publishing an empty panel.
@@ -30,12 +30,12 @@
 {{- $heading := .Get "heading" -}}
 {{- $source := .Page.GetPage $pagePath -}}
 {{- if not $source -}}
-  {{- errorf "include-section: page %q not found, called from %s" $pagePath .Position -}}
+  {{- errorf "embed-section: page %q not found, called from %s" $pagePath .Position -}}
 {{- else -}}
   {{- $re := printf `(?s)(?:^|\n)## %s[^\n]*\n(.*?)(?:\n## |\z)` $heading -}}
   {{- $match := findRESubmatch $re $source.RawContent 1 -}}
   {{- if not $match -}}
-    {{- errorf "include-section: no h2 %q in %s, called from %s" $heading $source.Path .Position -}}
+    {{- errorf "embed-section: no h2 %q in %s, called from %s" $heading $source.Path .Position -}}
   {{- else -}}
     {{- $text := index (index $match 0) 1 -}}
     {{- /* Shield the anchors that exist on this page, repoint the rest at the

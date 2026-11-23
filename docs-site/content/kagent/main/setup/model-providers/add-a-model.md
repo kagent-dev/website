@@ -1,7 +1,7 @@
 ---
-title: Add a model
+title: Add a model in the UI
 description: Add a second model configuration in the kagent UI, so that your agents can use another provider.
-weight: 3
+weight: 5
 author: kagent.dev
 ---
 
@@ -41,5 +41,5 @@ A template names its model configuration, so to move an agent to the new model, 
 
 {{< cards >}}
   {{< card link=`{{< link path="setup/model-providers" >}}` title="Configure model providers" subtitle="Read the settings for each provider, and how to share a model across namespaces." >}}
-  {{< card link=`{{< link path="get-started/prompt-library" >}}` title="Create a prompt library" subtitle="Keep reusable prompt text in one place." >}}
+  {{< card link=`{{< link path="get-started" >}}` title="Tutorials" subtitle="Build a personal assistant in the UI, step by step." >}}
 {{< /cards >}}

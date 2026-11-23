@@ -1,0 +1,12 @@
+{{- /*
+  A numbered learning path: tutorials meant to be followed in order, drawn as
+  steps on a line. Wraps story-step shortcodes.
+
+  Example:
+    {{< story-path >}}
+      {{< story-step title="Build an Agent" page="build-an-agent" image="img/x.png" text="..." >}}
+    {{< /story-path >}}
+*/ -}}
+<ol class="story-path not-prose">
+  {{ .Inner }}
+</ol>

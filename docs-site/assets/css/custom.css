@@ -872,3 +872,172 @@ html .glossary-term > span span {
 .doc-details > p {
     margin: 0.5rem 0 0 1rem;
 }
+
+/* ── Tutorials landing: banner + story path ─────────────────────────────────
+   See the tutorial-banner, story-path and story-step shortcodes. */
+/* :not() keeps the rule off the banner itself, whose own markup is div > div > h1. */
+.content:has(.tutorial-banner) > div:not(.tutorial-banner):has(> div > h1),
+.content:has(.tutorial-banner) > .page-description {
+    display: none;
+}
+.tutorial-banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px solid #2a2440;
+    background:
+        radial-gradient(120% 140% at 0% 0%, rgba(139, 92, 246, 0.28), transparent 60%),
+        linear-gradient(135deg, #1b1530 0%, #0e0b18 100%);
+}
+.tutorial-banner-body {
+    position: relative;
+    z-index: 1;
+    max-width: 44rem;
+    padding: 1.75rem 2rem;
+}
+.content .tutorial-banner h1 {
+    margin: 0;
+    font-size: 1.625rem;
+    line-height: 1.25;
+    font-weight: 700;
+    color: #fff;
+}
+.content .tutorial-banner p {
+    margin: 0.5rem 0 0;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.78);
+}
+.content .tutorial-banner-cta {
+    display: inline-block;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+}
+.content .tutorial-banner-cta:hover {
+    text-decoration: underline;
+}
+.tutorial-banner-stripes {
+    position: absolute;
+    top: -20%;
+    right: -3rem;
+    width: 16rem;
+    height: 140%;
+    background: repeating-linear-gradient(135deg, transparent 0 9px, rgba(139, 92, 246, 0.55) 9px 11px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 55%);
+    mask-image: linear-gradient(90deg, transparent, #000 55%);
+}
+
+.content .story-path {
+    position: relative;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+/* The path line, running behind the numbered markers. */
+.story-path::before {
+    content: "";
+    position: absolute;
+    top: 1.25rem;
+    bottom: 1.25rem;
+    left: 1.0625rem;
+    width: 2px;
+    background: linear-gradient(#8b5cf6, rgba(139, 92, 246, 0.15));
+}
+.content .story-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    gap: 1rem;
+    margin: 0 0 1rem;
+    padding: 0 !important;   /* the theme indents list items to make room for its badge */
+}
+/* Drop the theme's own ordered-list number badge; the marker replaces it. */
+.content ol.story-path > li.story-step::before {
+    content: none !important;
+    display: none !important;
+}
+.story-step-marker {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-top: 0.75rem;
+    border-radius: 9999px;
+    background: #7c3aed;
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    box-shadow: 0 0 0 4px #fff;
+}
+.dark .story-step-marker {
+    box-shadow: 0 0 0 4px rgb(3, 7, 18);
+}
+.content .story-step-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem 1.125rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.2s, box-shadow 0.25s ease;
+}
+.dark .content .story-step-card {
+    border-color: #2b2f3a;
+    background: rgba(255, 255, 255, 0.02);
+}
+.content .story-step-card:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 18px rgba(124, 58, 237, 0.14);
+}
+@media (min-width: 768px) {
+    .content .story-step-card { grid-template-columns: 1fr 15rem; }
+}
+.story-step-body > span {
+    display: block;
+}
+.story-step-kicker {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7c3aed;
+}
+.dark .story-step-kicker {
+    color: #a78bfa;
+}
+.story-step-title {
+    margin-top: 0.125rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+.story-step-text {
+    margin-top: 0.375rem;
+    font-size: 0.9375rem;
+    color: #4b5563;
+}
+.dark .story-step-text {
+    color: #b6bcc8;
+}
+.story-step-result {
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+.dark .story-step-result {
+    color: #9ca3af;
+}
+.content .story-step-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}

@@ -27,9 +27,9 @@ Follow the steps in order, because each one creates what the next one needs.
 {{% /panel %}}
 
 {{% panel title="Get the tools and a database" id="install-with-helm" %}}
-{{< include-section page="installation" heading="Install with Helm" local="install-kagent-helm" >}}
+{{< embed-section page="installation" heading="Install with Helm" local="install-kagent-helm" >}}
 {{% /panel %}}
 
 {{% panel title="Verify the installation" id="verify-the-installation" %}}
-{{< include-section page="installation" heading="Verify the installation" >}}
+{{< embed-section page="installation" heading="Verify the installation" >}}
 {{% /panel %}}
