@@ -5,7 +5,7 @@ weight: 10
 author: kagent.dev
 ---
 
-{{< tutorial-banner >}}
+{{< tutorial-banner art="logo" substrate="true" >}}
 
 {{< reuse "kagent-docs/snippets/about/what-is-kagent-intro.md" >}}
 

@@ -13,6 +13,10 @@
     - anchor | string | no | — | Anchor on the target page, without the "#".
     - art | string | no | stripes | Decoration in the right corner: "stripes",
       or "logo" for a large, faint kagent mark.
+    - substrate | bool | no | false | With art="logo", also show the small
+      Agent Substrate logo under the kagent mark. The logo is the project's
+      own (assets/img/agent-substrate-logo.svg, from the logo/ directory of
+      github.com/agent-substrate/substrate, Apache-2.0).
 
   Called with no parameters, it shows the page's own title and description:
   {{< tutorial-banner >}}
@@ -34,6 +38,11 @@
   {{- if eq (.Get "art" | default "stripes") "logo" -}}
     {{- with resources.Get "icons/nav-kagent.svg" -}}
       {{- .Content | replaceRE "<svg" `<svg class="tutorial-banner-logo"` | safeHTML -}}
+    {{- end -}}
+    {{- if .Get "substrate" -}}
+      {{- with resources.Get "img/agent-substrate-logo.svg" -}}
+        <span class="tutorial-banner-substrate"><img src="{{ .RelPermalink }}" alt="" width="40" height="40" /><span>Agent Substrate</span></span>
+      {{- end -}}
     {{- end -}}
   {{- else -}}
     <div class="tutorial-banner-stripes" aria-hidden="true"></div>
