@@ -21,6 +21,14 @@ Follow the steps in order. You start with an empty installation and finish with 
   {{< story-step title="Schedule an agent" page="schedule-an-agent" image="img/kagent-tutorial-schedule.png" text="Have the assistant write a plan for your day every morning, without being asked." result="You end up with: a daily schedule and its run history." >}}
 {{< /story-path >}}
 
+## More use cases
+
+Tutorials that stand on their own. You do not need the personal assistant to follow them.
+
+{{< cards cols="2" >}}
+  {{< card title="Add a model" subtitle="Run an agent on a second provider, beside your default model." path="/get-started/add-a-model/" icon="sparkles" >}}
+{{< /cards >}}
+
 ## Build with YAML
 
 Prefer files and the command line? These tutorials build an agent and bind a tool as Kubernetes resources.
