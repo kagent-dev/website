@@ -35,7 +35,7 @@ The other defaults depend on how you installed kagent:
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}).
+1. [Install kagent]({{< link path="setup" >}}).
 2. Install [yq](https://github.com/mikefarah/yq) version 4 and [jq](https://jqlang.org/download/). The steps use yq to edit the Agent Substrate Helm values, and jq to read a Session ID.
 
 ## Prepare a namespace to run agents

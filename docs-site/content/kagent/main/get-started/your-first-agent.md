@@ -11,7 +11,7 @@ This guide walks you through creating an agent, from applying a Harness and an A
 
 ## Before you begin
 
-1. [Install kagent with a WorkerPool provisioned]({{< link path="setup/installation" >}}).
+1. [Install kagent with a WorkerPool provisioned]({{< link path="setup" >}}).
 2. {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
 3. Install [`jq`](https://jqlang.org/download/), to read the Session ID out of the CLI's JSON output.

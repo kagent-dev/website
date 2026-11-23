@@ -1,4 +1,4 @@
-[Install kagent]({{< link path="setup/installation" >}}), then save the following settings in `sandbox-values.yaml`. Sandbox preparation needs a guest image. The chart does not ship a default guest image, so a SandboxTemplate does not become ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
+[Install kagent]({{< link path="setup" >}}), then save the following settings in `sandbox-values.yaml`. Sandbox preparation needs a guest image. The chart does not ship a default guest image, so a SandboxTemplate does not become ready until you set one. The remaining values allocate the compute that each Sandbox runs on and bound how long it lives.
 ```bash
 cat > sandbox-values.yaml <<'EOF'
 config:

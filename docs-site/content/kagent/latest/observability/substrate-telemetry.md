@@ -42,7 +42,7 @@ Agent Substrate metrics carry template and WorkerPool labels rather than the Act
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), including the `kubectl-ate` plugin that the installation guide describes.
+1. [Install kagent]({{< link path="setup" >}}), including the `kubectl-ate` plugin that the installation guide describes.
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}) and send it at least one message. This setup gives the `my-first-agent` Agent an Actor with logs to read. The guide also installs the kagent CLI.
 3. Install [`jq`](https://jqlang.org/download/), to read the Session ID and filter the JSON log records.
 

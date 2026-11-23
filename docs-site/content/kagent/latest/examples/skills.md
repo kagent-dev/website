@@ -62,7 +62,7 @@ When you attach a skill, the runtime appends the name and description of each at
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}).
+1. [Install kagent]({{< link path="setup" >}}).
 
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness and an AgentTemplate to attach a skill to.
 

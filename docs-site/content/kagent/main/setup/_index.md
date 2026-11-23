@@ -90,11 +90,64 @@ tabs:
    {{% /tab %}}
    {{< /tabs >}}
 
-For the full requirements, see the [install guide]({{< link path="setup/installation#before-you-begin" >}}).
+For the full requirements, see [Advanced Install]({{< link path="setup/installation#before-you-begin" >}}).
 {{% /panel %}}
 
 {{% panel title="Install with CLI" id="install-kagent" %}}
-{{< embed-section page="installation" heading="Install with CLI" local="before-you-begin" >}}
+The CLI installation suits evaluation, because it deploys a development PostgreSQL database. To pin a release or pass your own chart values, see [Customize the CLI installation]({{< link path="setup/installation#customize-the-cli-installation" >}}).
+
+1. Install the kagent CLI and run it. The first command downloads the `kagent` CLI. The second installs the CRDs, Agent Substrate, a development PostgreSQL database, and kagent into your cluster, in that order, and takes a few minutes. `kagent install` reads the API key that you set in [Before you begin](#before-you-begin), and uses OpenAI unless you name another provider in the `--provider` flag.
+
+   {{< tabs >}}
+   {{% tab name="OpenAI" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Anthropic" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install --provider Anthropic
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Gemini" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install --provider Gemini
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Ollama" %}}
+   ```bash
+   curl -sL https://kagent.dev/install | bash && kagent install --provider Ollama
+   ```
+   {{% /tab %}}
+
+   {{% tab name="Others" %}}
+   `kagent install` sets up one of the providers in the other tabs. To use a different provider, install with one of them, then add yours as described in [Configure model providers]({{< link path="setup/model-providers" >}}).
+   {{% /tab %}}
+   {{< /tabs >}}
+
+   <details class="doc-details">
+   <summary>Password prompt, or an older kagent already installed?</summary>
+   <p>The install script puts the CLI in <code>/usr/local/bin</code>, and asks for your password to write there. To install without <code>sudo</code>, into <code>$HOME/bin</code>, run the script with <code>bash -s -- --no-sudo</code>.</p>
+   <p>If an older <code>kagent</code> is already on your path, your shell can keep running that one, and <code>kagent install</code> then installs the older release. Run <code>kagent version</code> and check that <code>kagent_version</code> is the release that the script downloaded.</p>
+   </details>
+
+   <div class="kind-only">
+
+   {{< reuse-image src="img/kagent-install-cli-kind.gif" alt="A terminal creating a kind cluster, running the kagent install command, and listing the running kagent pods" caption="Figure: Installing kagent on a local kind cluster with the CLI, sped up" >}}
+
+   </div>
+
+2. Open the kagent dashboard. The command forwards the UI to `http://localhost:8082`, and on macOS also opens it in your browser. On Linux and Windows, follow the port-forward steps in [Launch the UI]({{< link path="ui/launch-ui" >}}). The dashboard lists your agents, models, MCP servers, and the tools that kagent discovered.
+   ```bash
+   kagent dashboard
+   ```
+
+   {{< reuse-image src="img/kagent-ui-dashboard.png" srcDark="img/kagent-ui-dashboard-dark.png" alt="The kagent dashboard after a fresh installation" caption="Figure: The kagent dashboard after a fresh installation" >}}
+
+Then create an agent in [Build an Agent]({{< link path="get-started/build-an-agent" >}}).
 {{% /panel %}}
 
 {{% panel title="Next steps" id="next-steps" %}}

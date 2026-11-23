@@ -7,11 +7,11 @@ aliases:
   - /kagent/latest/observability/launch-ui/
 ---
 
-The {{< reuse "kagent-docs/snippets/name-product.md" >}} UI is a read-and-write console for everything that the controller knows about, including the agents that you defined, the conversations that the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup/installation" >}}) already runs a UI instance.
+The {{< reuse "kagent-docs/snippets/name-product.md" >}} UI is a read-and-write console for everything that the controller knows about, including the agents that you defined, the conversations that the agents hold, and the Agent Substrate capacity that those conversations run on. The kagent chart installs the UI alongside the controller, so a cluster that follows [Install kagent]({{< link path="setup" >}}) already runs a UI instance.
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}) in your cluster.
+1. [Install kagent]({{< link path="setup" >}}) in your cluster.
 
 2. Confirm that the UI service exists.
 

@@ -7,7 +7,7 @@ author: kagent.dev
 disableCards: true
 ---
 
-{{< tutorial-banner title="Install with Helm" text="Get a Helm installation running with one command, then manage it with Helm from there. For a production setup with your own database, follow the full guide." cta="Get it running" anchor="get-it-running" art="logo" >}}
+{{< tutorial-banner title="Install with Helm" text="Get a Helm installation running with one command, then manage it with Helm from there. For a production setup with your own database, follow Advanced Install." cta="Get it running" anchor="get-it-running" art="logo" >}}
 
 kagent installs as six Helm releases: two for the custom resource definitions, three for Agent Substrate, and one for kagent itself. The charts need some things to exist first, such as the identity material that Agent Substrate signs with, and a PostgreSQL database.
 
@@ -16,7 +16,7 @@ The `kagent install` command does that preparation and then runs Helm for each c
 | You want | Follow |
 | --- | --- |
 | A working installation to try, managed with Helm | [Get it running](#get-it-running), on this page |
-| A production installation with your own PostgreSQL, where you run every chart yourself | The [full install guide]({{< link path="setup/installation#install-with-helm" >}}) |
+| A production installation with your own PostgreSQL, where you run every chart yourself | [Advanced Install]({{< link path="setup/installation#install-with-helm" >}}) |
 | Every value that the kagent chart accepts | The [Helm reference]({{< link path="reference/helm" >}}) |
 
 {{% panel title="Get it running" id="get-it-running" %}}
@@ -83,7 +83,7 @@ To keep the Helm commands and values of the installation in a Git repository, ex
 {{% /panel %}}
 
 {{% panel title="Go further" id="go-further" %}}
-The installation that you now have uses a development database and evaluation defaults. For production, install each chart yourself, against a PostgreSQL database that you provide. The full install guide walks through it in six steps.
+The installation that you now have uses a development database and evaluation defaults. For production, install each chart yourself, against a PostgreSQL database that you provide. Advanced Install walks through it in six steps.
 
 1. [Get the tools and a database]({{< link path="setup/installation#install-with-helm" >}})
 2. [Install the CRDs]({{< link path="setup/installation#install-the-crds" >}})
@@ -93,7 +93,7 @@ The installation that you now have uses a development database and evaluation de
 6. [Install kagent]({{< link path="setup/installation#install-kagent-helm" >}})
 
 {{< cards cols="3" >}}
-  {{< card title="Full install guide" subtitle="Every chart, in order, with your own database." path="/setup/installation/#install-with-helm" >}}
+  {{< card title="Advanced Install" subtitle="Every chart, in order, with your own database." path="/setup/installation/#install-with-helm" >}}
   {{< card title="Helm reference" subtitle="Every value of the kagent chart." path="/reference/helm/" >}}
   {{< card title="Operational considerations" subtitle="What to change before production." path="/operations/operational-considerations/" >}}
 {{< /cards >}}

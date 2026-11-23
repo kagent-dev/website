@@ -138,7 +138,7 @@ A2A-Extensions: https://kagent.dev/extensions/hitl/v1
 
 kagent activates the extension only for calls that request it. kagent then echoes the activated URI back and attaches a structured pause payload only to an activated call. A declarative agent's card declares the extension, so a client can discover HITL support before it sends anything.
 
-A gRPC call specifies the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Every A2A call also sends the `A2A-Version: 1.0` header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup/installation" >}}).
+A gRPC call specifies the {{< gloss "Agent" >}}Agent{{< /gloss >}} in the standard A2A `tenant` field, as `<namespace>/<name>`, and requests the extension through a header. Every A2A call also sends the `A2A-Version: 1.0` header. Port-forward the controller's gRPC port first, as in [Install kagent]({{< link path="setup" >}}).
 
 ```bash
 grpcurl -plaintext \

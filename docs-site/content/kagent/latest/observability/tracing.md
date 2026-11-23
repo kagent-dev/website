@@ -92,7 +92,7 @@ The runtime also adds each scalar value in the A2A message's metadata as an `a2a
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}).
+1. [Install kagent]({{< link path="setup" >}}).
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have an {{< gloss "Agent" >}}Agent{{< /gloss >}} to send a request to. That guide also installs the kagent CLI. The steps on this page need the {{< reuse "kagent-docs/versions/kagent.md" >}} CLI, because the CLIs of other releases, newer ones included, do not have the Session commands that these steps use. To check your version, run `kagent version`.
 3. Set up a tracing backend.
 

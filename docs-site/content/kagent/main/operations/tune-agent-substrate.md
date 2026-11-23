@@ -11,7 +11,7 @@ The single Worker reports capacity for 1000 Actors, so a default pool serves man
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}). {{< reuse "kagent-docs/snippets/grpcurl-reflection.md" >}}
+1. [Install kagent]({{< link path="setup" >}}). {{< reuse "kagent-docs/snippets/grpcurl-reflection.md" >}}
 
 2. Confirm that you have administrative access to the cluster, because this guide scales WorkerPools and reads cluster-scoped resources.
 
