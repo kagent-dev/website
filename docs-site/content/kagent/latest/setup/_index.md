@@ -21,7 +21,7 @@ tabs:
   sync: true
 ---
 
-{{< product-title title="Install kagent" >}}
+{{< tutorial-banner title="Install kagent" text="Install kagent and Agent Substrate on your Kubernetes cluster with one command, then open the dashboard and build your first agent." cta="Install with CLI" anchor="install-kagent" art="logo" >}}
 
 {{% panel title="Before you begin" id="before-you-begin" %}}
 1. Install the following tools.

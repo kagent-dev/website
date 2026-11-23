@@ -7,9 +7,9 @@ author: kagent.dev
 disableCards: true
 ---
 
-{{< product-title title="Install with Helm" >}}
+{{< tutorial-banner title="Install with Helm" text="For a production installation that Helm manages from the start: you install each chart yourself, against a PostgreSQL database that you provide." cta="See the steps" anchor="steps" art="logo" >}}
 
-For a production installation that Helm manages from the start. To try kagent quickly instead, [install with the CLI]({{< link path="setup#install-kagent" >}}).
+To try kagent quickly instead, [install with the CLI]({{< link path="setup#install-kagent" >}}).
 
 {{% panel title="Before you begin" id="before-you-begin" %}}
 Have a Kubernetes cluster at version **1.37 or later**. For how to check an existing cluster, see the [install guide]({{< link path="setup/installation#before-you-begin" >}}).

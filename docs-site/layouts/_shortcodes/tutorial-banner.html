@@ -1,25 +1,38 @@
 {{- /*
-  Banner for a tutorials landing page: a headline, one line of text, and a
-  call-to-action link, on the same dark surface as the docs landing hero, with
-  diagonal stripes in the corner. Renders the page's visible h1; custom.css
-  hides the theme's own title row on pages that carry one.
+  Banner for a landing page: a headline, one line of text, and a
+  call-to-action link, on the same dark surface as the docs landing hero.
+  Renders the page's visible h1; custom.css hides the theme's own title row on
+  pages that carry one.
 
   Parameters:
     - title | string | yes | — | Headline.
     - text | string | no | — | One line under the headline.
-    - cta | string | no | — | Link text. Needs `page`.
-    - page | path | no | — | Target page, relative to the current page.
+    - cta | string | no | — | Link text.
+    - page | path | no | this page | Target page of the link, relative to the
+      current page.
+    - anchor | string | no | — | Anchor on the target page, without the "#".
+    - art | string | no | stripes | Decoration in the right corner: "stripes",
+      or "logo" for a large, faint kagent mark.
 
-  Example: {{< tutorial-banner title="Build your first agent" text="..." cta="Start the path" page="build-an-agent" >}}
+  Example: {{< tutorial-banner title="Install kagent" text="..." cta="Install with CLI" anchor="install-kagent" art="logo" >}}
 */ -}}
+{{- $cta := .Get "cta" -}}
+{{- $target := .Page -}}
+{{- with .Get "page" -}}{{- $target = $.Page.GetPage . -}}{{- end -}}
+{{- if not $target -}}{{- errorf "tutorial-banner: page %q not found, called from %s" (.Get "page") .Position -}}{{- end -}}
 <div class="tutorial-banner not-prose">
   <div class="tutorial-banner-body">
     <h1>{{ .Get "title" }}</h1>
     {{- with .Get "text" }}<p>{{ . }}</p>{{ end -}}
-    {{- $cta := .Get "cta" -}}
-    {{- with .Page.GetPage (.Get "page" | default "__none__") -}}
-      {{- if $cta }}<a class="tutorial-banner-cta" href="{{ .RelPermalink }}">{{ $cta }} <span aria-hidden="true">→</span></a>{{ end -}}
+    {{- if $cta -}}
+      <a class="tutorial-banner-cta" href="{{ $target.RelPermalink }}{{ with .Get "anchor" }}#{{ . }}{{ end }}">{{ $cta }} <span aria-hidden="true">→</span></a>
     {{- end -}}
   </div>
-  <div class="tutorial-banner-stripes" aria-hidden="true"></div>
+  {{- if eq (.Get "art" | default "stripes") "logo" -}}
+    {{- with resources.Get "icons/nav-kagent.svg" -}}
+      {{- .Content | replaceRE "<svg" `<svg class="tutorial-banner-logo"` | safeHTML -}}
+    {{- end -}}
+  {{- else -}}
+    <div class="tutorial-banner-stripes" aria-hidden="true"></div>
+  {{- end -}}
 </div>

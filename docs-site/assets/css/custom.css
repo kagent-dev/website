@@ -1110,3 +1110,17 @@ html .glossary-term > span span {
 .dark .tile-note {
     color: #a78bfa;
 }
+
+/* Banner art "logo": a large, faint kagent mark in the right corner, tilted and
+   cropped by the banner's edge. */
+.tutorial-banner-logo {
+    position: absolute;
+    top: 50%;
+    right: -1.5rem;
+    width: 17rem;
+    height: auto;
+    transform: translateY(-50%) rotate(-8deg);
+    color: #c4b5fd;
+    opacity: 0.14;
+    pointer-events: none;
+}
