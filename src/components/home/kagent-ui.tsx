@@ -1068,16 +1068,157 @@ const FlowBox = ({ title, body, className = "" }: { title: string; body: string;
 );
 const FlowArrow = () => <span className="hidden self-center text-violet-300 md:block">→</span>;
 
+/* The "New egress policy" form, as at /policies/egress/new in the real UI.
+   Creating a policy only adds a row to this demo's table. */
+type DestDraft = { origin: string; auth: "none" | "secret" | "actorJwt"; header: string; prefix: string; secretName: string; secretKey: string; audiences: string; lifetime: string };
+const newDest = (): DestDraft => ({ origin: "", auth: "none", header: "Authorization", prefix: "Bearer ", secretName: "", secretKey: "", audiences: "", lifetime: "" });
+
+const Field = ({ label, required, help, error, children }: { label: string; required?: boolean; help?: string; error?: string; children: React.ReactNode }) => (
+  <label className="block min-w-0 text-sm">
+    <span className="mb-1.5 block">{required && <span className="mr-1 text-red-400">*</span>}{label}</span>
+    {children}
+    {error ? <span className="mt-1 block text-xs text-red-400">{error}</span> : help && <span className="mt-1 block text-xs leading-5 text-white/45">{help}</span>}
+  </label>
+);
+const TextInput = ({ value, onChange, placeholder, invalid }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean }) => (
+  <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} spellCheck={false} className={`w-full rounded-lg border bg-transparent px-3 py-1.5 font-geistmono text-[13px] outline-none placeholder:text-white/30 focus:border-violet-400/70 ${invalid ? "border-red-500/70" : "border-white/20"}`} />
+);
+
+const ORIGIN_RE = /^https?:\/\/(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$/i;
+const NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+
+function NewPolicy({ taken, onCreate, onCancel }: { taken: string[]; onCreate: (p: (typeof POLICIES)[number]) => void; onCancel: () => void }) {
+  const [name, setName] = useState("");
+  const [dests, setDests] = useState<DestDraft[]>([newDest()]);
+  const [tried, setTried] = useState(false);
+  const set = (i: number, patch: Partial<DestDraft>) => setDests((d) => d.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+
+  const nameError = !name ? "Enter a name." : !NAME_RE.test(name) ? "Use lowercase letters, numbers and hyphens." : taken.includes(name) ? "A policy with this name already exists." : "";
+  const destError = (d: DestDraft) => ({
+    origin: !d.origin ? "Enter an origin." : !ORIGIN_RE.test(d.origin.trim()) ? "Use a scheme and host, with no path, such as https://api.example.com." : "",
+    header: d.auth !== "none" && !d.header.trim() ? "Enter a header." : "",
+    secretName: d.auth === "secret" && !d.secretName.trim() ? "Enter a Secret name." : "",
+    secretKey: d.auth === "secret" && !d.secretKey.trim() ? "Enter a Secret key." : "",
+    audiences: d.auth === "actorJwt" && !d.audiences.trim() ? "Enter at least one audience." : "",
+    lifetime: d.auth === "actorJwt" && d.lifetime.trim() && !(/^\d+$/.test(d.lifetime.trim()) && +d.lifetime >= 300 && +d.lifetime <= 3600) ? "Enter a number from 300 to 3600." : "",
+  });
+  const errors = dests.map(destError);
+  const valid = !nameError && errors.every((e) => Object.values(e).every((v) => !v));
+  const show = (msg: string) => (tried ? msg : "");
+
+  const submit = () => {
+    setTried(true);
+    if (!valid) return;
+    onCreate({
+      name,
+      desc: "Created in this demo. List it on an agent or a sandbox template to put it to use.",
+      destinations: dests.map((d) => ({
+        origin: d.origin.trim(),
+        auth: d.auth === "secret" ? { kind: "Secret key", header: d.header.trim(), prefix: d.prefix, secret: `${d.secretName.trim()}/${d.secretKey.trim()}` }
+          : d.auth === "actorJwt" ? { kind: "Actor JWT", header: d.header.trim(), prefix: d.prefix, audience: d.audiences.split(/[\s,]+/).filter(Boolean).join(", ") }
+          : { kind: "None" },
+      })),
+      usedBy: [],
+    });
+  };
+
+  return (
+    <>
+      <Header title="New egress policy" sub="Let agents and sandboxes reach more HTTP(S) hosts." />
+      <div className="max-w-3xl">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Name" required error={show(nameError)}><TextInput value={name} onChange={setName} placeholder="github-api" invalid={!!show(nameError)} /></Field>
+          <Field label="Namespace" required>
+            <select aria-label="Namespace" className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-[13px] outline-none"><option className="bg-[#16151c]">kagent</option></select>
+          </Field>
+        </div>
+
+        <div className="mt-6 text-sm font-medium">Destinations</div>
+        <p className="mt-0.5 text-sm text-white/55">Each destination allows one origin and all its paths. You can add up to 64.</p>
+
+        {dests.map((d, i) => {
+          const e = errors[i];
+          return (
+            <div key={i} className="mt-3 rounded-xl border border-white/[0.12] bg-white/[0.02]">
+              <div className="flex items-center justify-between border-b border-white/[0.08] px-3.5 py-2 text-sm font-medium">
+                Destination {i + 1}
+                {dests.length > 1 && <button onClick={() => setDests((x) => x.filter((_, j) => j !== i))} className="text-red-500/90 hover:text-red-400" aria-label={`Remove destination ${i + 1}`}><TrashIcon /></button>}
+              </div>
+              <div className="space-y-4 px-3.5 py-3.5">
+                <Field label="Origin" required help="Scheme, host and optional port. No path. *.example.com matches one level of subdomain." error={show(e.origin)}>
+                  <TextInput value={d.origin} onChange={(v) => set(i, { origin: v })} placeholder="https://api.example.com" invalid={!!show(e.origin)} />
+                </Field>
+                <div className="text-sm">
+                  <div className="mb-1.5">Authentication</div>
+                  <div className="inline-flex overflow-hidden rounded-lg border border-white/15" role="radiogroup" aria-label={`Authentication for destination ${i + 1}`}>
+                    {([["none", "None"], ["secret", "Secret key"], ["actorJwt", "Actor JWT"]] as const).map(([id, label]) => (
+                      <button key={id} role="radio" aria-checked={d.auth === id} onClick={() => set(i, { auth: id })} className={`border-r border-white/15 px-3.5 py-1.5 text-[13px] last:border-0 ${d.auth === id ? "bg-violet-500/15 text-violet-200 ring-1 ring-inset ring-violet-400/70" : "text-white/80 hover:bg-white/[0.05]"}`}>{label}</button>
+                    ))}
+                  </div>
+                  <div className="mt-1 text-xs text-white/45">The gateway sets this header on each request. The credential never reaches the agent.</div>
+                </div>
+                {d.auth !== "none" && (
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <Field label="Header" required error={show(e.header)}><TextInput value={d.header} onChange={(v) => set(i, { header: v })} placeholder="Authorization" invalid={!!show(e.header)} /></Field>
+                    <Field label="Prefix" help={'Added before the credential. Include any space, as in "Bearer ".'}><TextInput value={d.prefix} onChange={(v) => set(i, { prefix: v })} placeholder="Bearer " /></Field>
+                    {d.auth === "secret" ? (
+                      <>
+                        <Field label="Secret name" required help="A Secret in the policy's namespace." error={show(e.secretName)}><TextInput value={d.secretName} onChange={(v) => set(i, { secretName: v })} placeholder="api-credentials" invalid={!!show(e.secretName)} /></Field>
+                        <Field label="Secret key" required error={show(e.secretKey)}><TextInput value={d.secretKey} onChange={(v) => set(i, { secretKey: v })} placeholder="token" invalid={!!show(e.secretKey)} /></Field>
+                      </>
+                    ) : (
+                      <>
+                        <Field label="Audiences" required help="The services that accept the token. Separate them with a comma." error={show(e.audiences)}><TextInput value={d.audiences} onChange={(v) => set(i, { audiences: v })} placeholder="https://api.example.com" invalid={!!show(e.audiences)} /></Field>
+                        <Field label="Token lifetime (seconds)" help="300 to 3600. Leave blank for 900." error={show(e.lifetime)}><TextInput value={d.lifetime} onChange={(v) => set(i, { lifetime: v })} placeholder="900" invalid={!!show(e.lifetime)} /></Field>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="mt-3">
+          <button onClick={() => setDests((x) => (x.length < 64 ? [...x, newDest()] : x))} className="flex items-center gap-2 rounded-lg border border-white/15 px-3.5 py-1.5 text-sm hover:border-white/30">+ Add destination</button>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <button onClick={submit} className="rounded-lg bg-violet-600 px-3.5 py-1.5 text-sm text-white hover:bg-violet-500">Create policy</button>
+          <BtnGhost onClick={onCancel}>Cancel</BtnGhost>
+        </div>
+        <p className="mt-3 text-xs text-white/40">This is a demo. The policy is added to the list on this page only.</p>
+      </div>
+    </>
+  );
+}
+
 function Policies({ go }: { go: (p: Page, agent?: string) => void }) {
   const [rows, setRows] = useState(POLICIES);
   const [open, setOpen] = useState<string | null>("github-api");
   const [q, setQ] = useState("");
+  const [creating, setCreating] = useState(false);
   const [toast, flash] = useToast();
   const shown = rows.filter((p) => [p.name, ...p.destinations.map((d) => d.origin)].join(" ").toLowerCase().includes(q.toLowerCase()));
+  if (creating) {
+    return (
+      <NewPolicy
+        taken={rows.map((p) => p.name)}
+        onCancel={() => setCreating(false)}
+        onCreate={(p) => {
+          setRows((r) => [p, ...r]);
+          setOpen(p.name);
+          setQ("");
+          setCreating(false);
+          flash(`Created ${p.name} (demo only)`);
+        }}
+      />
+    );
+  }
+
   return (
     <>
       <Header title="Policies" sub="Agents and sandboxes reach no HTTP(S) host unless a policy allows it.">
-        <BtnPrimary onClick={() => flash("Create egress policy opens the policy form in the real UI")}>Create egress policy</BtnPrimary>
+        <BtnPrimary onClick={() => setCreating(true)}>Create egress policy</BtnPrimary>
       </Header>
 
       <div className="mb-4 rounded-xl border border-white/[0.1] bg-white/[0.02]">
@@ -1107,7 +1248,7 @@ function Policies({ go }: { go: (p: Page, agent?: string) => void }) {
       <div className="mb-2 flex flex-wrap items-center gap-3">
         <SearchBox value={q} onChange={setQ} placeholder="Search by name or origin" />
         <Select label="Namespace" options={["All namespaces", "kagent"]} />
-        <BtnGhost onClick={() => { setRows(POLICIES); flash("Refreshed"); }}><RefreshGlyph /> Refresh</BtnGhost>
+        <BtnGhost onClick={() => flash("Refreshed")}><RefreshGlyph /> Refresh</BtnGhost>
       </div>
       <p className="mb-3 text-xs text-white/45">Used by counts only the agents and sandbox templates you can see.</p>
 
@@ -1157,6 +1298,7 @@ function Policies({ go }: { go: (p: Page, agent?: string) => void }) {
                       </div>
                       <div className="mt-3 flex flex-wrap items-center gap-1.5">
                         <span className="mr-1 text-xs text-white/45">Used by</span>
+                        {p.usedBy.length === 0 && <span className="text-xs text-white/55">No agent or sandbox template yet.</span>}
                         {p.usedBy.map((u) => u.kind === "Agent" ? (
                           <button key={u.name} onClick={() => go("chat", u.name)} className="rounded bg-violet-500/15 px-2 py-0.5 font-geistmono text-xs text-violet-200 hover:bg-violet-500/25">{u.name}</button>
                         ) : (
