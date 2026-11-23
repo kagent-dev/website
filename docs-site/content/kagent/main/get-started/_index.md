@@ -34,6 +34,8 @@ One task each, a few minutes long.
   {{< card title="Create a policy" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" >}}
   {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" >}}
   {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" >}}
+  {{< card title="Add a skill" subtitle="Package know-how as a skill and attach it." path="/get-started/add-a-skill/" >}}
+  {{< card title="Add a plugin" subtitle="Ship several skills together as one plugin." path="/get-started/add-a-plugin/" >}}
 {{< /cards >}}
 
 ## Build with YAML
