@@ -1124,3 +1124,11 @@ html .glossary-term > span span {
     opacity: 0.14;
     pointer-events: none;
 }
+
+/* Tutorial card icons (static/icons/tutorial-*.svg): small two-tone purple
+   illustrations in a tinted tile, larger than the theme's line icons. */
+svg.section-card-icon[data-tutorial-icon] {
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 0;
+}

@@ -29,14 +29,14 @@ Five agents, each built from start to finish in the kagent UI. Pick any one. If 
 One task each, a few minutes long.
 
 {{< cards cols="3" >}}
-  {{< card title="Build an Agent" subtitle="Create an agent from one form, then a shared template." path="/get-started/build-an-agent/" icon="sparkles" >}}
-  {{< card title="Add an MCP server" subtitle="Register a server and give its tools to an agent." path="/get-started/add-an-mcp-server/" icon="puzzle" >}}
-  {{< card title="Create a prompt library" subtitle="Keep reusable prompt text in one place." path="/get-started/prompt-library/" icon="book-open" >}}
-  {{< card title="Create a policy" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" icon="shield-check" >}}
-  {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" icon="clock" >}}
-  {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" icon="chip" >}}
-  {{< card title="Add a skill" subtitle="Package know-how as a skill and attach it." path="/get-started/add-a-skill/" icon="academic-cap" >}}
-  {{< card title="Add a plugin" subtitle="Ship several skills together as one plugin." path="/get-started/add-a-plugin/" icon="collection" >}}
+  {{< card title="Build an Agent" subtitle="Create an agent from one form, then a shared template." path="/get-started/build-an-agent/" icon="/icons/tutorial-agent.svg" >}}
+  {{< card title="Add an MCP server" subtitle="Register a server and give its tools to an agent." path="/get-started/add-an-mcp-server/" icon="/icons/tutorial-mcp.svg" >}}
+  {{< card title="Create a prompt library" subtitle="Keep reusable prompt text in one place." path="/get-started/prompt-library/" icon="/icons/tutorial-prompts.svg" >}}
+  {{< card title="Create a policy" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" icon="/icons/tutorial-policy.svg" >}}
+  {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" icon="/icons/tutorial-schedule.svg" >}}
+  {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" icon="/icons/tutorial-model.svg" >}}
+  {{< card title="Add a skill" subtitle="Package know-how as a skill and attach it." path="/get-started/add-a-skill/" icon="/icons/tutorial-skill.svg" >}}
+  {{< card title="Add a plugin" subtitle="Ship several skills together as one plugin." path="/get-started/add-a-plugin/" icon="/icons/tutorial-plugin.svg" >}}
 {{< /cards >}}
 
 ## Build with YAML
