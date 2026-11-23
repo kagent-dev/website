@@ -25,8 +25,10 @@
        upstream, where reformatting breaks two things in the same edit, silently:
 
          - `utils/md-strip-glossary.html` matches
-           `<span class="tooltip-content"><strong>` and `</strong><span>` as
-           LITERAL adjacencies. Indented markup stops being stripped, and the
+           `<span class="tooltip-content" ...><strong>` and `</strong><span>` as
+           LITERAL adjacencies. (The module accepts attributes on the tooltip
+           span, such as this file's `data-markdown-ignore`, only from its
+           agent-readiness release on.) Indented markup stops being stripped, and the
            whole definition reappears inline in every `.md` URL and
            Copy-as-Markdown payload — the bug that partial exists to fix.
            page-to-markdown.html runs that strip on every page, and kagent emits
@@ -45,7 +47,7 @@
 {{- $key := .Get 0 -}}
 {{- $entry := index hugo.Data.glossary $key -}}
 {{- if $entry -}}
-<span class="glossary-term" tabindex="0" data-glossary-term="{{ $key }}">{{ .Inner | default $key }}<span class="tooltip-content"><strong>{{ $key }}</strong><span>{{ $entry.short }}</span>{{- if $entry.link }}<a href="{{ $entry.link }}" class="tooltip-link"{{ if strings.HasPrefix $entry.link "http" }} target="_blank" rel="noopener"{{ end }}>Learn more</a>{{- end }}</span></span>
+<span class="glossary-term" tabindex="0" data-glossary-term="{{ $key }}">{{ .Inner | default $key }}<span class="tooltip-content" data-markdown-ignore><strong>{{ $key }}</strong><span>{{ $entry.short }}</span>{{- if $entry.link }}<a href="{{ $entry.link }}" class="tooltip-link"{{ if strings.HasPrefix $entry.link "http" }} target="_blank" rel="noopener"{{ end }}>Learn more</a>{{- end }}</span></span>
 {{- else -}}
 {{ .Inner | default $key }}
 {{- end -}}
