@@ -31,7 +31,7 @@ One task each, a few minutes long.
   {{< card title="Build an Agent" subtitle="Create an agent from one form, then a shared template." path="/get-started/build-an-agent/" >}}
   {{< card title="Add an MCP server" subtitle="Register a server and give its tools to an agent." path="/get-started/add-an-mcp-server/" >}}
   {{< card title="Create a prompt library" subtitle="Keep reusable prompt text in one place." path="/get-started/prompt-library/" >}}
-  {{< card title="Allow an agent to reach a host" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" >}}
+  {{< card title="Create a policy" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" >}}
   {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" >}}
   {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" >}}
 {{< /cards >}}

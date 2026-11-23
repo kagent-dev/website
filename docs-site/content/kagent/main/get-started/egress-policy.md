@@ -1,5 +1,5 @@
 ---
-title: Allow an agent to reach a host
+title: Create a policy
 description: Create an egress policy in the kagent UI and attach it to an agent, so that the agent can call an external API.
 weight: 13
 author: kagent.dev

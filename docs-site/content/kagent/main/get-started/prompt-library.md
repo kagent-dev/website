@@ -47,5 +47,5 @@ kagent stores a library as a ConfigMap of the same name, in the namespace that y
 
 {{< cards >}}
   {{< card link=`{{< link path="agents/system-prompts" >}}` title="System prompts" subtitle="Write, store, and template the prompt of an agent." >}}
-  {{< card link=`{{< link path="get-started/egress-policy" >}}` title="Allow an agent to reach a host" subtitle="Create an egress policy in the UI." >}}
+  {{< card link=`{{< link path="get-started/egress-policy" >}}` title="Create a policy" subtitle="Create an egress policy in the UI." >}}
 {{< /cards >}}
