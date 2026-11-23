@@ -14,13 +14,14 @@ sidebarLinks:
 
 ## Build a project
 
-Four agents, each built from start to finish in the kagent UI. Pick any one. If you are new to kagent, start with the personal assistant.
+Five agents, each built from start to finish in the kagent UI. Pick any one. If you are new to kagent, start with the personal assistant.
 
-{{< tile-grid >}}
+{{< tile-grid cols="3" >}}
   {{< tile title="Build a personal assistant" page="personal-assistant" image="img/kagent-tutorial-personal-assistant.png" text="Five short steps that grow one agent: create it, give it a tool, share its prompts, open one outside host, and put it on a schedule." note="Best first project" >}}
   {{< tile title="Build a K8s SRE" page="k8s-sre" image="img/kagent-tutorial-k8s-sre.png" text="An agent that reads the cluster on its own to find out what is wrong, and asks for your approval before it changes anything." note="You learn: tool selection and approval" >}}
   {{< tile title="Build a sandbox coding agent" page="sandbox-coding-agent" image="img/kagent-tutorial-code-runner.png" text="An agent that writes Python, runs it in an isolated Sandbox, reports the output, and cleans up after itself." note="You learn: sandbox templates and tools" >}}
   {{< tile title="Build a scheduled agent" page="scheduled-agent" image="img/kagent-tutorial-scheduled-agent.png" text="An agent that writes a cluster health report every day and leaves it for you to read." note="You learn: schedules and run history" >}}
+  {{< tile title="Build a CVE agent" page="cve-agent" image="img/kagent-tutorial-cve-agent.png" text="An agent that reads the CISA catalog of exploited vulnerabilities and reports the newest entries." note="You learn: built-in tools and outside access" >}}
 {{< /tile-grid >}}
 
 ## Tutorials
@@ -28,14 +29,14 @@ Four agents, each built from start to finish in the kagent UI. Pick any one. If 
 One task each, a few minutes long.
 
 {{< cards cols="3" >}}
-  {{< card title="Build an Agent" subtitle="Create an agent from one form, then a shared template." path="/get-started/build-an-agent/" >}}
-  {{< card title="Add an MCP server" subtitle="Register a server and give its tools to an agent." path="/get-started/add-an-mcp-server/" >}}
-  {{< card title="Create a prompt library" subtitle="Keep reusable prompt text in one place." path="/get-started/prompt-library/" >}}
-  {{< card title="Create a policy" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" >}}
-  {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" >}}
-  {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" >}}
-  {{< card title="Add a skill" subtitle="Package know-how as a skill and attach it." path="/get-started/add-a-skill/" >}}
-  {{< card title="Add a plugin" subtitle="Ship several skills together as one plugin." path="/get-started/add-a-plugin/" >}}
+  {{< card title="Build an Agent" subtitle="Create an agent from one form, then a shared template." path="/get-started/build-an-agent/" icon="sparkles" >}}
+  {{< card title="Add an MCP server" subtitle="Register a server and give its tools to an agent." path="/get-started/add-an-mcp-server/" icon="puzzle" >}}
+  {{< card title="Create a prompt library" subtitle="Keep reusable prompt text in one place." path="/get-started/prompt-library/" icon="book-open" >}}
+  {{< card title="Create a policy" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" icon="shield-check" >}}
+  {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" icon="clock" >}}
+  {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" icon="chip" >}}
+  {{< card title="Add a skill" subtitle="Package know-how as a skill and attach it." path="/get-started/add-a-skill/" icon="academic-cap" >}}
+  {{< card title="Add a plugin" subtitle="Ship several skills together as one plugin." path="/get-started/add-a-plugin/" icon="collection" >}}
 {{< /cards >}}
 
 ## Build with YAML

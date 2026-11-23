@@ -17,7 +17,7 @@
 <a class="tile" href="{{ $target.RelPermalink }}">
   {{- with .Get "image" -}}
     {{- with resources.Get . -}}
-      {{- $img := .Fill "720x360 Top webp q82" -}}
+      {{- $img := .Fill "600x250 Top webp q82" -}}
       <img class="tile-image" src="{{ $img.RelPermalink }}" width="{{ $img.Width }}" height="{{ $img.Height }}" alt="" loading="lazy" />
     {{- end -}}
   {{- end -}}
