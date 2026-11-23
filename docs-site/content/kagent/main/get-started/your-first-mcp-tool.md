@@ -1,7 +1,7 @@
 ---
 title: Your first MCP tool
 description: Give an agent a Model Context Protocol tool by binding an MCP server to its AgentTemplate.
-weight: 20
+weight: 21
 author: kagent.dev
 ---
 

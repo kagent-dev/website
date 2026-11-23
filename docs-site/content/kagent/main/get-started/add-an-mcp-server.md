@@ -1,7 +1,7 @@
 ---
 title: Add an MCP server
 description: Register a Model Context Protocol server in the kagent UI and give its tools to your agent.
-weight: 2
+weight: 11
 author: kagent.dev
 ---
 

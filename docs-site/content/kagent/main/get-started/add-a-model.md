@@ -1,7 +1,7 @@
 ---
 title: Add a model
 description: Add a model from a second provider in the kagent UI, and run an agent on it beside your default model.
-weight: 8
+weight: 15
 author: kagent.dev
 ---
 

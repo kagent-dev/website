@@ -1,32 +1,36 @@
 ---
 title: Tutorials
-description: Build your first agent and give it tools, in the kagent UI or from YAML.
+description: Build agents in the kagent UI with four projects to follow from start to finish, and short tutorials for single tasks.
 weight: 6
 author: kagent.dev
 # This page lays out its own path and cards, so skip the auto-generated child grid.
 disableCards: true
 ---
 
-{{< tutorial-banner title="Build a personal assistant, step by step" text="One story, five short tutorials, all in the kagent UI. Each one adds something to the same agent." cta="Start with Build an Agent" page="build-an-agent" >}}
+{{< tutorial-banner title="Learn kagent by building" text="Pick a project and follow it from an empty installation to a working agent, or go straight to the one task that you need." cta="Start with a personal assistant" page="personal-assistant" >}}
 
-## The personal assistant path
+## Build a project
 
-Follow the steps in order. You start with an empty installation and finish with an assistant that has a tool, shared prompt text, access to an outside API, and a daily job. Each tutorial takes a few minutes.
+Four agents, each built from start to finish in the kagent UI. Start with the first one. The others stand on their own.
 
 {{< story-path >}}
-  {{< story-step title="Build an Agent" page="build-an-agent" image="img/kagent-tutorial-build-agent.png" text="Create the personal assistant from one form, then turn its behavior into a template that other agents can share." result="You end up with: two agents and a shared template." >}}
-  {{< story-step title="Add an MCP server" page="add-an-mcp-server" image="img/kagent-tutorial-mcp-server.png" text="Register a weather server and give its tool to the assistant, so that it can do something beyond talking." result="You end up with: an assistant that can look up the weather." >}}
-  {{< story-step title="Create a prompt library" page="prompt-library" image="img/kagent-tutorial-prompt-library.png" text="Keep the assistant's tone and safety rules as reusable fragments, in one place." result="You end up with: a prompt library with two fragments." >}}
-  {{< story-step title="Allow an agent to reach a host" page="egress-policy" image="img/kagent-tutorial-egress-policy.png" text="Agents run in a sandbox. Open one door: let the assistant call the GitHub API." result="You end up with: an egress policy attached to the assistant." >}}
-  {{< story-step title="Schedule an agent" page="schedule-an-agent" image="img/kagent-tutorial-schedule.png" text="Have the assistant write a plan for your day every morning, without being asked." result="You end up with: a daily schedule and its run history." >}}
+  {{< story-step kicker="Project" title="Build a personal assistant" page="personal-assistant" image="img/kagent-tutorial-personal-assistant.png" text="Five short steps that grow one agent: create it, give it a tool, share its prompts, open one outside host, and put it on a schedule." result="Best first project. It introduces every part of kagent that the others use." >}}
+  {{< story-step kicker="Project" title="Build a K8s SRE" page="k8s-sre" image="img/kagent-tutorial-k8s-sre.png" text="An agent that reads the cluster on its own to find out what is wrong, and asks for your approval before it changes anything." result="You learn: tool selection and approval before a tool runs." >}}
+  {{< story-step kicker="Project" title="Build a sandbox coding agent" page="sandbox-coding-agent" image="img/kagent-tutorial-code-runner.png" text="An agent that writes Python, runs it in an isolated Sandbox, reports the output, and cleans up after itself." result="You learn: sandbox templates and the sandbox tools." >}}
+  {{< story-step kicker="Project" title="Build a scheduled agent" page="scheduled-agent" image="img/kagent-tutorial-scheduled-agent.png" text="An agent that writes a cluster health report every day and leaves it for you to read." result="You learn: schedules, unattended runs, and run history." >}}
 {{< /story-path >}}
 
-## More use cases
+## Tutorials
 
-Tutorials that stand on their own. You do not need the personal assistant to follow them.
+One task each, a few minutes long.
 
-{{< cards cols="2" >}}
-  {{< card title="Add a model" subtitle="Run an agent on a second provider, beside your default model." path="/get-started/add-a-model/" icon="sparkles" >}}
+{{< cards cols="3" >}}
+  {{< card title="Build an Agent" subtitle="Create an agent from one form, then a shared template." path="/get-started/build-an-agent/" >}}
+  {{< card title="Add an MCP server" subtitle="Register a server and give its tools to an agent." path="/get-started/add-an-mcp-server/" >}}
+  {{< card title="Create a prompt library" subtitle="Keep reusable prompt text in one place." path="/get-started/prompt-library/" >}}
+  {{< card title="Allow an agent to reach a host" subtitle="Create an egress policy and attach it." path="/get-started/egress-policy/" >}}
+  {{< card title="Schedule an agent" subtitle="Run an agent automatically." path="/get-started/schedule-an-agent/" >}}
+  {{< card title="Add a model" subtitle="Run an agent on a second provider." path="/get-started/add-a-model/" >}}
 {{< /cards >}}
 
 ## Build with YAML

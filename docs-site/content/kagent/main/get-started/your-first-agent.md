@@ -1,7 +1,7 @@
 ---
 title: Your first agent
 description: Create and communicate with your first agent by using the kagent project.
-weight: 10
+weight: 20
 author: kagent.dev
 ---
 

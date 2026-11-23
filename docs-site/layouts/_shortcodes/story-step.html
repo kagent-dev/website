@@ -11,6 +11,7 @@
     - text | string | no | — | What the reader builds in this step.
     - result | string | no | — | Short "you end up with" label.
     - image | string | no | — | assets-relative image for the thumbnail.
+    - kicker | string | no | Step | Word in front of the number, such as "Project".
 */ -}}
 {{- $target := .Page.GetPage (.Get "page") -}}
 {{- if not $target -}}
@@ -20,7 +21,7 @@
   <span class="story-step-marker" aria-hidden="true">{{ add .Ordinal 1 }}</span>
   <a class="story-step-card" href="{{ $target.RelPermalink }}">
     <span class="story-step-body">
-      <span class="story-step-kicker">Step {{ add .Ordinal 1 }}</span>
+      <span class="story-step-kicker">{{ .Get "kicker" | default "Step" }} {{ add .Ordinal 1 }}</span>
       <span class="story-step-title">{{ .Get "title" }}</span>
       {{- with .Get "text" }}<span class="story-step-text">{{ . }}</span>{{ end -}}
       {{- with .Get "result" }}<span class="story-step-result">{{ . }}</span>{{ end -}}

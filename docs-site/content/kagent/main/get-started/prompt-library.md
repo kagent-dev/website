@@ -1,7 +1,7 @@
 ---
 title: Create a prompt library
 description: Create a library of reusable prompt fragments in the kagent UI.
-weight: 3
+weight: 12
 author: kagent.dev
 ---
 
