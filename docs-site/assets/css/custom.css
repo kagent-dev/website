@@ -823,3 +823,52 @@ html .glossary-term > span span {
 .hextra-nav-container > nav {
     max-width: none;
 }
+
+/* Keep the product sub-navigation bar on screen: it pins directly under the
+   top navbar while the page scrolls.
+
+   --solo-tabs-height is the theme's own slot for a band pinned under the
+   navbar. Setting it to the bar's height moves everything that hangs off
+   --solo-rail-top down by the same amount: the sticky sidebar and "On this
+   page" rails, and the scroll offset of headings reached by an anchor link.
+   Without it they would slide underneath the bar. The bar's height is fixed
+   to the same value so the two cannot drift apart. */
+:root {
+    --kagent-subnav-height: 3.25rem;
+    --solo-tabs-height: var(--kagent-subnav-height);
+}
+.product-subnav {
+    position: sticky;
+    top: calc(var(--navbar-height) + 1px); /* navbar height + its bottom border */
+    z-index: 19;                           /* just under the navbar (20) */
+    height: var(--kagent-subnav-height);
+    box-sizing: border-box;
+    background: #fff;
+}
+/* Same dark surface the theme gives the body, sidebar and navbar. */
+.dark .product-subnav {
+    background: rgb(3, 7, 18);
+}
+.product-subnav-inner {
+    height: 100%;
+}
+
+/* One-line expandable note (<details class="doc-details">): closed by default,
+   the summary reads as a quiet link, and the body opens underneath. Written as
+   raw HTML where it sits inside a numbered step, because the theme's details
+   shortcode does not survive being nested in a list there. */
+.doc-details {
+    margin: 0.75rem 0 1rem;
+    font-size: 0.9375rem;
+}
+.doc-details > summary {
+    cursor: pointer;
+    color: #6d28d9;
+    font-weight: 500;
+}
+.dark .doc-details > summary {
+    color: #c4b5fd;
+}
+.doc-details > p {
+    margin: 0.5rem 0 0 1rem;
+}

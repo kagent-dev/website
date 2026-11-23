@@ -29,10 +29,10 @@ kagent gives platform teams one place to deploy, manage, and govern AI agents on
 Follow a hands-on guide to install kagent and run your first agent.
 
 {{< cards cols="2" >}}
-  {{< card title="Your first agent" subtitle="Create an agent and chat with it." path="/get-started/your-first-agent/" icon="sparkles" >}}
-  {{< card title="Your first MCP tool" subtitle="Give an agent a tool to call." path="/get-started/your-first-mcp-tool/" icon="puzzle" >}}
-  {{< card title="Agent Substrate" subtitle="Run an agent in a sandbox that sleeps and wakes." path="/examples/agent-substrate/" icon="cube" >}}
-  {{< card title="Skills" subtitle="Package reusable know-how for your agents." path="/examples/skills/" icon="chip" >}}
+  {{< card title="Build an Agent" subtitle="Create a personal assistant in the UI." path="/get-started/build-an-agent/" icon="sparkles" >}}
+  {{< card title="Add an MCP server" subtitle="Give your agent a weather tool from the UI." path="/get-started/add-an-mcp-server/" icon="puzzle" >}}
+  {{< card title="Your first agent" subtitle="Build an agent from YAML and the CLI." path="/get-started/your-first-agent/" icon="cube" >}}
+  {{< card title="Your first MCP tool" subtitle="Bind a tool to an agent from YAML." path="/get-started/your-first-mcp-tool/" icon="chip" >}}
 {{< /cards >}}
 
 ## What's new in 1.0

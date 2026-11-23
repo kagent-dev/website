@@ -2,10 +2,12 @@
 title: Install kagent
 # Sidebar and breadcrumb label. The section leads the left nav as "Install".
 linkTitle: Install
-# Left-nav entry under Install for this page's CLI panel (see `sidebarLinks`
+# Left-nav entries under Install for this page's panels (see `sidebarLinks`
 # in layouts/_partials/sidebar.html). Install with Helm is its own page,
 # helm.md, and lists itself.
 sidebarLinks:
+  - title: Before you begin
+    anchor: before-you-begin
   - title: Install with CLI
     anchor: install-kagent
 description: Install kagent and configure the model providers that your agents use.
@@ -97,7 +99,7 @@ For the full requirements, see the [install guide]({{< link path="setup/installa
 
 {{% panel title="Next steps" id="next-steps" %}}
 {{< cards cols="3" >}}
-  {{< card title="Create your first agent" path="/get-started/your-first-agent/" >}}
+  {{< card title="Build an Agent" path="/get-started/build-an-agent/" >}}
   {{< card title="Verify the installation" path="/setup/installation/#verify-the-installation" >}}
   {{< card title="Configure model providers" path="/setup/model-providers/" >}}
 {{< /cards >}}
