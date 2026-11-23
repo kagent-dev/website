@@ -7,11 +7,11 @@ author: kagent.dev
 
 {{< tutorial-banner >}}
 
-An agent runs in a sandbox that cannot reach arbitrary hosts. It can always reach its model and its registered MCP servers. For any other HTTP or HTTPS host, you list the host in an egress policy, and attach the policy to the agent. In this tutorial, you allow the personal assistant to reach the GitHub API.
+An agent runs in a sandbox that cannot reach arbitrary hosts. It can always reach its model and its registered MCP servers. For any other HTTP or HTTPS host, you list the host in an egress policy, and attach the policy to the agent. In this tutorial, you allow an agent to reach the GitHub API, as you would for an agent that reads issues or pull requests.
 
 ## Before you begin
 
-1. Complete [Build an Agent]({{< link path="get-started/build-an-agent" >}}), so that the `personal-assistant` agent exists.
+1. Complete [Build an Agent]({{< link path="get-started/build-an-agent" >}}), so that you have an agent to attach the policy to. The steps use its `personal-assistant` agent. Any agent works.
 2. Open the kagent UI with `kagent dashboard`.
 
 ## Create the policy

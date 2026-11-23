@@ -17,7 +17,7 @@ sidebarLinks:
 Five agents, each built from start to finish in the kagent UI. Pick any one. If you are new to kagent, start with the personal assistant.
 
 {{< tile-grid cols="3" >}}
-  {{< tile title="Build a personal assistant" page="personal-assistant" image="img/kagent-tutorial-personal-assistant.png" text="Five short steps that grow one agent: create it, give it a tool, share its prompts, open one outside host, and put it on a schedule." note="Best first project" >}}
+  {{< tile title="Build a personal assistant" page="personal-assistant" image="img/kagent-tutorial-personal-assistant.png" text="Four short steps that grow one agent: create it, give it a tool, share its prompts, and put it on a schedule." note="Best first project" >}}
   {{< tile title="Build a K8s SRE" page="k8s-sre" image="img/kagent-tutorial-k8s-sre.png" text="An agent that reads the cluster on its own to find out what is wrong, and asks for your approval before it changes anything." note="You learn: tool selection and approval" >}}
   {{< tile title="Build a sandbox coding agent" page="sandbox-coding-agent" image="img/kagent-tutorial-code-runner.png" text="An agent that writes Python, runs it in an isolated Sandbox, reports the output, and cleans up after itself." note="You learn: sandbox templates and tools" >}}
   {{< tile title="Build a scheduled agent" page="scheduled-agent" image="img/kagent-tutorial-scheduled-agent.png" text="An agent that writes a cluster health report every day and leaves it for you to read." note="You learn: schedules and run history" >}}
