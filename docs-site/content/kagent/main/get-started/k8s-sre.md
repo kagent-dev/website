@@ -1,7 +1,7 @@
 ---
 title: Build a K8s SRE
 description: Build a Kubernetes SRE agent in the kagent UI that investigates the cluster on its own and asks for approval before it changes anything.
-weight: 2
+weight: 3
 author: kagent.dev
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Build a sandbox coding agent
 description: Build an agent that writes Python code, runs it in an isolated Sandbox, and reports the result.
-weight: 3
+weight: 4
 author: kagent.dev
 ---
 

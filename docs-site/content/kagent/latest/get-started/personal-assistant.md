@@ -1,7 +1,7 @@
 ---
 title: Build a personal AI assistant
 description: Build an assistant in the kagent UI that knows how you like to work, can check the weather, and sends you a plan for the day every morning.
-weight: 1
+weight: 2
 author: kagent.dev
 ---
 

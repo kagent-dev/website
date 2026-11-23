@@ -1,7 +1,7 @@
 ---
 title: Build a scheduled agent
 description: Build an agent in the kagent UI that writes a cluster health report every day, without being asked.
-weight: 4
+weight: 5
 author: kagent.dev
 ---
 

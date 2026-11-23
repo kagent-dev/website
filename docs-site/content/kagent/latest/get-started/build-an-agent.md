@@ -1,7 +1,7 @@
 ---
 title: Build an Agent
 description: Create a personal assistant agent in the kagent UI, then make its behavior reusable with a shared template.
-weight: 0
+weight: 1
 author: kagent.dev
 ---
 
