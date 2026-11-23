@@ -8,7 +8,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import KagentDemo, { DEMO, PAST, type DemoAgent } from "./demo";
 
-type Page = "dashboard" | "agents" | "schedules" | "models" | "mcp" | "prompts" | "substrate" | "chat";
+type Page = "dashboard" | "agents" | "schedules" | "models" | "mcp" | "policies" | "prompts" | "substrate" | "chat";
 
 /* ---------- data (mirrors the seeded maniak-goose cluster) ---------- */
 
@@ -109,6 +109,66 @@ const MCP: { name: string; tools: number; url: string; desc: string; sample: str
   { name: "deepwiki-mcp", tools: 3, url: "https://mcp.deepwiki.com/mcp", desc: "DeepWiki — ask questions about any public GitHub repo", sample: ["read_wiki_structure", "read_wiki_contents", "ask_question"] },
   { name: "context7-mcp", tools: 2, url: "https://mcp.context7.com/mcp", desc: "Context7 — up-to-date library and framework docs", sample: ["resolve-library-id", "get-library-docs"] },
   { name: "atlassian-mcp", tools: 4, url: "https://mcp.atlassian.com/v1/mcp", desc: "Atlassian — Jira issues and Confluence pages", sample: ["jira_search", "jira_get_issue", "confluence_search", "jira_update_issue"] },
+];
+
+/* Egress policies. Each one allows extra HTTP(S) origins; "usedBy" names the
+   agents and sandbox templates that list the policy. */
+type PolicyAuth = { kind: "None" } | { kind: "Secret key"; header: string; prefix?: string; secret: string } | { kind: "Actor JWT"; header: string; prefix?: string; audience: string };
+type PolicyUser = { kind: "Agent" | "SandboxTemplate"; name: string };
+const POLICIES: { name: string; desc: string; destinations: { origin: string; auth: PolicyAuth }[]; usedBy: PolicyUser[] }[] = [
+  {
+    name: "github-api",
+    desc: "Read repositories and open issues and pull requests. The gateway adds the token.",
+    destinations: [{ origin: "https://api.github.com", auth: { kind: "Secret key", header: "Authorization", prefix: "Bearer ", secret: "github-token/token" } }],
+    usedBy: [{ kind: "Agent", name: "pr-reviewer" }, { kind: "Agent", name: "cve-watch" }, { kind: "Agent", name: "release-notes-writer" }],
+  },
+  {
+    name: "stripe-api",
+    desc: "Look up payments and refunds. The restricted key stays in the cluster Secret.",
+    destinations: [{ origin: "https://api.stripe.com", auth: { kind: "Secret key", header: "Authorization", prefix: "Bearer ", secret: "stripe-restricted-key/key" } }],
+    usedBy: [{ kind: "Agent", name: "billing-ops" }],
+  },
+  {
+    name: "billing-internal",
+    desc: "Call the internal billing service as the agent itself, with a short-lived Actor token.",
+    destinations: [{ origin: "https://billing.internal.acme.dev", auth: { kind: "Actor JWT", header: "Authorization", prefix: "Bearer ", audience: "billing.internal.acme.dev" } }],
+    usedBy: [{ kind: "Agent", name: "billing-ops" }],
+  },
+  {
+    name: "pagerduty",
+    desc: "Acknowledge and annotate incidents.",
+    destinations: [
+      { origin: "https://api.pagerduty.com", auth: { kind: "Secret key", header: "Authorization", prefix: "Token token=", secret: "pagerduty-api/key" } },
+      { origin: "https://events.pagerduty.com", auth: { kind: "None" } },
+    ],
+    usedBy: [{ kind: "Agent", name: "sre-incident-commander" }],
+  },
+  {
+    name: "cisa-kev",
+    desc: "Fetch the CISA Known Exploited Vulnerabilities catalog. Public, so no credential.",
+    destinations: [{ origin: "https://www.cisa.gov", auth: { kind: "None" } }],
+    usedBy: [{ kind: "Agent", name: "cve-watch" }],
+  },
+  {
+    name: "package-registries",
+    desc: "Install dependencies inside a sandbox from the public npm, PyPI and Go registries.",
+    destinations: [
+      { origin: "https://registry.npmjs.org", auth: { kind: "None" } },
+      { origin: "https://pypi.org", auth: { kind: "None" } },
+      { origin: "https://files.pythonhosted.org", auth: { kind: "None" } },
+      { origin: "https://proxy.golang.org", auth: { kind: "None" } },
+    ],
+    usedBy: [{ kind: "SandboxTemplate", name: "python" }, { kind: "SandboxTemplate", name: "node" }, { kind: "Agent", name: "design-to-code" }],
+  },
+  {
+    name: "huggingface-hub",
+    desc: "Download model cards and dataset files. *.hf.co matches one level of subdomain.",
+    destinations: [
+      { origin: "https://huggingface.co", auth: { kind: "Secret key", header: "Authorization", prefix: "Bearer ", secret: "demo-huggingface/token" } },
+      { origin: "https://*.hf.co", auth: { kind: "None" } },
+    ],
+    usedBy: [{ kind: "Agent", name: "model-scout" }],
+  },
 ];
 
 const PROMPTS: { name: string; usedBy: string[]; keys: [string, string][] }[] = [
@@ -247,6 +307,7 @@ const ICONS: Record<string, string> = {
   schedules: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
   models: "M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM9 9h6v6H9z",
   mcp: "M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01",
+  policies: "M12 3l8 3v6c0 4.6-3.2 8-8 9-4.8-1-8-4.4-8-9V6zM9 12l2 2 4-4",
   prompts: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2zM8 9h8M8 13h5",
   substrate: "M12 2l3 3-3 3-3-3zM5 9l3 3-3 3-3-3zM19 9l3 3-3 3-3-3zM12 16l3 3-3 3-3-3z",
 };
@@ -989,6 +1050,135 @@ function Mcp() {
   );
 }
 
+/* ---------- Policies ---------- */
+
+const authKinds = (p: (typeof POLICIES)[number]) => [...new Set(p.destinations.map((d) => d.auth.kind))];
+
+const AuthBadge = ({ kind }: { kind: PolicyAuth["kind"] }) => {
+  if (kind === "None") return <span className="text-white/60">None</span>;
+  const tone = kind === "Actor JWT" ? "border-sky-500/50 bg-sky-500/10 text-sky-300" : "border-violet-400/50 bg-violet-500/10 text-violet-200";
+  return <span className={`rounded border px-1.5 py-px text-xs ${tone}`}>{kind}</span>;
+};
+
+const FlowBox = ({ title, body, className = "" }: { title: string; body: string; className?: string }) => (
+  <div className={`flex flex-col justify-center rounded-lg border border-white/15 bg-black/40 px-3 py-2 ${className}`}>
+    <div className="font-geistmono text-[13px]">{title}</div>
+    <div className="mt-0.5 text-xs text-white/55">{body}</div>
+  </div>
+);
+const FlowArrow = () => <span className="hidden self-center text-violet-300 md:block">→</span>;
+
+function Policies({ go }: { go: (p: Page, agent?: string) => void }) {
+  const [rows, setRows] = useState(POLICIES);
+  const [open, setOpen] = useState<string | null>("github-api");
+  const [q, setQ] = useState("");
+  const [toast, flash] = useToast();
+  const shown = rows.filter((p) => [p.name, ...p.destinations.map((d) => d.origin)].join(" ").toLowerCase().includes(q.toLowerCase()));
+  return (
+    <>
+      <Header title="Policies" sub="Agents and sandboxes reach no HTTP(S) host unless a policy allows it.">
+        <BtnPrimary onClick={() => flash("Create egress policy opens the policy form in the real UI")}>Create egress policy</BtnPrimary>
+      </Header>
+
+      <div className="mb-4 rounded-xl border border-white/[0.1] bg-white/[0.02]">
+        <div className="border-b border-white/[0.08] px-4 py-2.5 text-sm font-medium">Overview</div>
+        <div className="px-4 py-3">
+          <p className="text-[13px] leading-6 text-white/60">
+            A policy lists extra HTTP(S) hosts that agents and sandbox templates can reach.<br />
+            The gateway can add a credential to requests. The agent never sees it.<br />
+            Model and MCP server hosts work without a policy.
+          </p>
+          <div className="mt-3 grid gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+            <div className="grid gap-2">
+              <FlowBox title="Agent" body="Lists the policies it needs." />
+              <FlowBox title="SandboxTemplate" body="Lists the policies its sandboxes need." />
+            </div>
+            <FlowArrow />
+            <FlowBox title="EgressPolicy" body="Origins it allows, and any credential." className="border-violet-400/40" />
+            <FlowArrow />
+            <FlowBox title="HTTP(S) hosts" body="What the agent can now reach." />
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-3 border-b border-white/[0.08]">
+        <span className="-mb-px inline-block border-b-2 border-violet-400 pb-2 text-sm text-violet-300">Egress Policies</span>
+      </div>
+      <div className="mb-2 flex flex-wrap items-center gap-3">
+        <SearchBox value={q} onChange={setQ} placeholder="Search by name or origin" />
+        <Select label="Namespace" options={["All namespaces", "kagent"]} />
+        <BtnGhost onClick={() => { setRows(POLICIES); flash("Refreshed"); }}><RefreshGlyph /> Refresh</BtnGhost>
+      </div>
+      <p className="mb-3 text-xs text-white/45">Used by counts only the agents and sandbox templates you can see.</p>
+
+      <div className="overflow-x-auto rounded-xl bg-white/[0.03]">
+        <table className="w-full min-w-[680px] text-left text-[13px]">
+          <thead>
+            <tr className="border-b border-white/[0.08]">
+              <th className="w-10" />
+              {["Name", "Namespace", "Origins", "Authentication", "Used by"].map((h) => (
+                <th key={h} className="whitespace-nowrap border-r border-white/[0.06] px-3 py-2.5 font-medium last:border-0"><span className="flex items-center justify-between gap-3">{h}{h !== "Authentication" && <SortIcon dir={null} />}</span></th>
+              ))}
+              <th className="w-20" />
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((p) => (
+              <Fragment key={p.name}>
+                <tr onClick={() => setOpen(open === p.name ? null : p.name)} className="cursor-pointer border-b border-white/[0.06] hover:bg-white/[0.02]">
+                  <td className="pl-4 text-white/60"><span className="flex h-4 w-4 items-center justify-center rounded border border-white/30 text-[11px] leading-none">{open === p.name ? "−" : "+"}</span></td>
+                  <td className="px-3 py-2.5 font-geistmono text-violet-300">{p.name}</td>
+                  <td className="px-3 py-2.5">kagent</td>
+                  <td className="px-3 py-2.5">{p.destinations.length}</td>
+                  <td className="px-3 py-2.5"><span className="flex flex-wrap gap-1.5">{authKinds(p).map((k) => <AuthBadge key={k} kind={k} />)}</span></td>
+                  <td className="px-3 py-2.5">{p.usedBy.length}</td>
+                  <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <span className="flex justify-end gap-3"><RowActions name={p.name} flash={flash} onDelete={() => setRows((x) => x.filter((y) => y.name !== p.name))} /></span>
+                  </td>
+                </tr>
+                {open === p.name && (
+                  <tr className="border-b border-white/[0.06] bg-black/30">
+                    <td />
+                    <td colSpan={6} className="px-3 py-3">
+                      <div className="text-white/70">{p.desc}</div>
+                      <div className="mt-3 space-y-1.5">
+                        {p.destinations.map((d) => (
+                          <div key={d.origin} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+                            <span className="font-geistmono text-[12.5px] text-white/90">{d.origin}</span>
+                            <AuthBadge kind={d.auth.kind} />
+                            {d.auth.kind === "Secret key" && (
+                              <span className="font-geistmono text-[12px] text-white/50">{d.auth.header}: {d.auth.prefix}•••• <span className="text-white/35">from Secret {d.auth.secret}</span></span>
+                            )}
+                            {d.auth.kind === "Actor JWT" && (
+                              <span className="font-geistmono text-[12px] text-white/50">{d.auth.header}: {d.auth.prefix}&lt;actor token&gt; <span className="text-white/35">audience {d.auth.audience}</span></span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        <span className="mr-1 text-xs text-white/45">Used by</span>
+                        {p.usedBy.map((u) => u.kind === "Agent" ? (
+                          <button key={u.name} onClick={() => go("chat", u.name)} className="rounded bg-violet-500/15 px-2 py-0.5 font-geistmono text-xs text-violet-200 hover:bg-violet-500/25">{u.name}</button>
+                        ) : (
+                          <span key={u.name} className="rounded bg-white/[0.08] px-2 py-0.5 font-geistmono text-xs text-white/75">SandboxTemplate/{u.name}</span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+            {shown.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-white/40">No egress policies match.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      <Pager n={shown.length} />
+      <p className="mt-2 text-xs text-white/40">Click a policy to see the hosts it allows and who uses it.</p>
+      {toast}
+    </>
+  );
+}
+
 /* ---------- Prompts ---------- */
 
 const CopyGlyph = () => (
@@ -1593,6 +1783,7 @@ const NAV: { id: Page; label: string }[] = [
   { id: "schedules", label: "Schedules" },
   { id: "models", label: "Models" },
   { id: "mcp", label: "MCP Servers" },
+  { id: "policies", label: "Policies" },
   { id: "prompts", label: "Prompts" },
   { id: "substrate", label: "Agent Substrate" },
 ];
@@ -1600,6 +1791,7 @@ const NAV: { id: Page; label: string }[] = [
 const TOUR: { page: Page; agent?: string; title: string; body: string }[] = [
   { page: "agents", title: "Your agents", body: "Every agent running on the cluster. Click a row to open it, or create a new one." },
   { page: "chat", agent: "sre-incident-commander", title: "Chat with an agent", body: "Send a message, approve or reject the tool calls it asks for, and watch it work." },
+  { page: "policies", title: "Policies", body: "An agent reaches no outside host unless a policy allows it. The gateway adds the credential, so the agent never holds a secret." },
   { page: "schedules", title: "Schedules", body: "Agents can run on a recurrence. Open one to see its execution history or run it now." },
   { page: "substrate", title: "Agent Substrate", body: "Agent Substrate suspends idle agents to snapshots and resumes them onto a warm worker in under a second." },
 ];
@@ -1695,6 +1887,7 @@ export default function KagentUI() {
           {page === "schedules" && <Schedules go={go} />}
           {page === "models" && <Models />}
           {page === "mcp" && <Mcp />}
+          {page === "policies" && <Policies go={go} />}
           {page === "prompts" && <Prompts go={go} />}
           {page === "substrate" && <Substrate />}
           {page === "chat" && <ChatView key={chatWith} agent={chatWith} onSwitch={(n) => go("chat", n)} />}
