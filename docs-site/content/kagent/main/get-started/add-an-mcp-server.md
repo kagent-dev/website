@@ -5,6 +5,8 @@ weight: 11
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 A system prompt tells an agent how to behave. Tools tell it what it can do. In this tutorial, you register a weather {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) server in the kagent UI, and give its tool to the personal assistant from [Build an Agent]({{< link path="get-started/build-an-agent" >}}).
 
 To bind a tool from YAML instead, see [Your first MCP tool]({{< link path="get-started/your-first-mcp-tool" >}}).

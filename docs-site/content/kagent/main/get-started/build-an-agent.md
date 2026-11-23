@@ -5,6 +5,8 @@ weight: 10
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 Build your first agent in the kagent UI: a personal assistant that you create from one form. Then turn its behavior into a shared template that other agents can reuse.
 
 An agent has two halves. A **template** describes what the agent does: its model, its system prompt, and its tools. A **harness** describes where and how the agent runs. `kagent install` creates a `kagent-default` harness for you, so the first agent needs only the template half.

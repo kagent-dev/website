@@ -5,6 +5,8 @@ weight: 15
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 **Use case:** your team wants to run an agent on a different provider, or to compare two models on the same task.
 
 An agent reaches its model through a model configuration, which names a provider, a model, and where the API key is stored. The installation created one, `default-model-config`, from the API key that you set. In this tutorial, you add a second configuration for another provider in the kagent UI, and create an agent that uses it. Your other agents keep the model that they have.

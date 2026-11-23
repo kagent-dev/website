@@ -5,6 +5,8 @@ weight: 17
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 A {{< gloss "Plugin" >}}plugin{{< /gloss >}} is a bundle of skills that you publish and attach as one unit. An agent attaches the plugin once, and lists the skills that it wants from it. Use a plugin to ship a set of skills together, or to share the same set across several agents.
 
 In this tutorial, you turn the skill from [Add a skill]({{< link path="get-started/add-a-skill" >}}) into a plugin, publish it, and switch the agent to it. The kagent UI has no page for plugins, so you work from the command line.

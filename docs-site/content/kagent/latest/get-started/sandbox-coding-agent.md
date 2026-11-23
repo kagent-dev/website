@@ -5,6 +5,8 @@ weight: 3
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 Build an agent that writes a Python program for a request, runs it in a fresh Sandbox, reports the output, and deletes the Sandbox. The Sandbox keeps the code that the agent writes apart from the agent itself, with its own files and no network access unless you grant it.
 
 This tutorial has two parts. You prepare Sandboxes from the command line, because the kagent UI has no page for sandbox templates. Then you build the agent in the UI.

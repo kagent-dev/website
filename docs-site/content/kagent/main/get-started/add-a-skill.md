@@ -5,6 +5,8 @@ weight: 16
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 A {{< gloss "Skill" >}}skill{{< /gloss >}} packages know-how that an agent picks up at run time: a `SKILL.md` file of instructions, plus any scripts and reference files that the instructions use. A tool lets an agent call something. A skill tells it how to do a job.
 
 In this tutorial, you build a skill that turns commit subjects into release notes, publish it as a container image, and attach it to an agent. The kagent UI has no page for skills, so you work from the command line, and then try the agent in the UI.

@@ -5,6 +5,8 @@ weight: 12
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 A prompt library is a named set of prompt fragments, such as a tone of voice or a list of safety rules. Agents include a fragment by its key, so the text lives in one place and a change reaches every agent that uses it. kagent installs one library, `kagent-builtin-prompts`. In this tutorial, you create your own in the kagent UI.
 
 ## Before you begin

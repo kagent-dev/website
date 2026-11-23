@@ -5,6 +5,8 @@ weight: 4
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 Build an agent that works on a timer. Every day, it reads the cluster, writes a short health report, and leaves the report in a conversation for you to read. Nobody has to ask.
 
 ## Before you begin

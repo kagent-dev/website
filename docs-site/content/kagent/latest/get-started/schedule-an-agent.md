@@ -5,6 +5,8 @@ weight: 14
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 A schedule runs an agent automatically, at times that you choose, with a prompt that you write. Each run starts a new conversation with the agent. In this tutorial, you schedule the personal assistant to write a plan for your day every morning.
 
 ## Before you begin

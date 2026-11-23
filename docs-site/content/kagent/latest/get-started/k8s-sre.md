@@ -5,6 +5,8 @@ weight: 2
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 Build an agent that works like a careful site reliability engineer. It reads the cluster on its own to find out what is wrong, and it stops to ask you before it changes anything.
 
 kagent installs an MCP server, `kagent-tool-server`, with tools for Kubernetes. You give the agent two sets of those tools: read-only tools that it can call freely, and tools that change the cluster, which need your approval on every call.

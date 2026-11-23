@@ -5,14 +5,17 @@
   pages that carry one.
 
   Parameters:
-    - title | string | yes | — | Headline.
-    - text | string | no | — | One line under the headline.
+    - title | string | no | the page title | Headline.
+    - text | string | no | the page description | One line under the headline.
     - cta | string | no | — | Link text.
     - page | path | no | this page | Target page of the link, relative to the
       current page.
     - anchor | string | no | — | Anchor on the target page, without the "#".
     - art | string | no | stripes | Decoration in the right corner: "stripes",
       or "logo" for a large, faint kagent mark.
+
+  Called with no parameters, it shows the page's own title and description:
+  {{< tutorial-banner >}}
 
   Example: {{< tutorial-banner title="Install kagent" text="..." cta="Install with CLI" anchor="install-kagent" art="logo" >}}
 */ -}}
@@ -22,8 +25,8 @@
 {{- if not $target -}}{{- errorf "tutorial-banner: page %q not found, called from %s" (.Get "page") .Position -}}{{- end -}}
 <div class="tutorial-banner not-prose">
   <div class="tutorial-banner-body">
-    <h1>{{ .Get "title" }}</h1>
-    {{- with .Get "text" }}<p>{{ . }}</p>{{ end -}}
+    <h1>{{ .Get "title" | default .Page.Title }}</h1>
+    {{- with (.Get "text" | default .Page.Description) }}<p>{{ . }}</p>{{ end -}}
     {{- if $cta -}}
       <a class="tutorial-banner-cta" href="{{ $target.RelPermalink }}{{ with .Get "anchor" }}#{{ . }}{{ end }}">{{ $cta }} <span aria-hidden="true">→</span></a>
     {{- end -}}
