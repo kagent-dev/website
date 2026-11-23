@@ -1,0 +1,11 @@
+{{- /*
+  A grid of project tiles: unnumbered cards with a picture on top, for choices
+  that do not have to be taken in order. Wraps tile shortcodes. For steps that
+  do have an order, use story-path.
+
+  Parameters:
+    - cols | int | no | 2 | Columns on a wide screen.
+*/ -}}
+<div class="tile-grid not-prose"{{ with .Get "cols" }} style="--tile-cols: {{ . }};"{{ end }}>
+  {{ .Inner }}
+</div>
