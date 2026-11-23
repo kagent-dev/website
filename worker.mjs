@@ -21,7 +21,13 @@
  *
  *   1. Accept includes text/markdown and the URL has no file extension: serve
  *      <path>.md, else <path>/index.md, as text/markdown with `Vary: Accept`.
- *   2. Anything else under /docs: serve the static asset, exactly as before.
+ *   2. Anything else under /docs: serve the static asset. wrangler.toml sets
+ *      `html_handling = "none"` (OpenNext requires it with run_worker_first),
+ *      so this file does the directory handling the asset layer used to do,
+ *      with the same responses as before:
+ *        /docs/foo/            -> /docs/foo/index.html (200)
+ *        /docs/foo             -> 307 to /docs/foo/   (when foo/index.html exists)
+ *        /docs/foo/index.html  -> 307 to /docs/foo/
  *      If there is no asset, fall through to the Next.js Worker, which is what
  *      happened before this file existed (an asset miss reached the Worker).
  *
@@ -46,6 +52,41 @@ const MARKDOWN_HEADERS = {
   "Cache-Control": "public, max-age=3600",
   Vary: "Accept",
 };
+
+async function assetAt(url, pathname, env) {
+  const u = new URL(url);
+  u.pathname = pathname;
+  const resp = await env.ASSETS.fetch(new Request(u.href));
+  return resp.ok ? resp : null;
+}
+
+function redirectTo(url, pathname) {
+  const u = new URL(url);
+  u.pathname = pathname;
+  return Response.redirect(u.href, 307);
+}
+
+/**
+ * Static files under /docs, with the directory handling that Cloudflare's
+ * `html_handling = "auto-trailing-slash"` used to provide. Returns null when
+ * there is no matching file, so the caller can fall through to Next.js.
+ */
+async function docsAsset(request, url, env) {
+  const path = url.pathname;
+  if (path.endsWith('/index.html')) {
+    if (await assetAt(url, path, env)) return redirectTo(url, path.slice(0, -'index.html'.length));
+    return null;
+  }
+  if (path.endsWith('/')) {
+    return assetAt(url, path + 'index.html', env);
+  }
+  const exact = await env.ASSETS.fetch(request);
+  if (exact.ok) return exact;
+  if (!/\.[a-zA-Z0-9]{1,5}$/.test(path) && (await assetAt(url, path + '/index.html', env))) {
+    return redirectTo(url, path + '/');
+  }
+  return null;
+}
 
 async function markdownTwin(url, env) {
   const base = url.pathname.replace(/\/$/, "");
@@ -73,8 +114,8 @@ export default {
         const md = await markdownTwin(url, env);
         if (md) return md;
       }
-      const asset = await env.ASSETS.fetch(request);
-      if (asset.status !== 404) return asset;
+      const asset = await docsAsset(request, url, env);
+      if (asset) return asset;
     }
 
     return openNext.fetch(request, env, ctx);
