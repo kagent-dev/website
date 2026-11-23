@@ -5,6 +5,8 @@ weight: 30
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 The previous page defined the [core concepts]({{< link path="about/core-concepts" >}}) of Harness, AgentTemplate, Agent, Session, and Actor. This page connects them into one system. It traces how applying those three custom resources leads to a running conversation. It also marks which parts of that path Kubernetes governs, and which parts kagent governs itself.
 
 ## Two authorization planes

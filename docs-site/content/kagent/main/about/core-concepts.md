@@ -5,6 +5,8 @@ weight: 20
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 ## kagent 1.0
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 replaces 0.x's Deployment-based `Agent` custom resource with a new model built around **Harness**, **AgentTemplate**, **Agent**, and **Session**. The 1.0 `Agent` kind keeps the 0.x name but not its meaning, because it pairs an AgentTemplate with a Harness rather than describing a Deployment. This page defines the vocabulary that the rest of the 1.0 documentation uses.

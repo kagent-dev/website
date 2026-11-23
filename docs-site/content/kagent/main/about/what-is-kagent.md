@@ -5,6 +5,8 @@ weight: 10
 author: kagent.dev
 ---
 
+{{< tutorial-banner >}}
+
 {{< reuse "kagent-docs/snippets/about/what-is-kagent-intro.md" >}}
 
 ## How kagent works
