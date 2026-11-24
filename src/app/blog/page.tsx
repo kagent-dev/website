@@ -7,9 +7,10 @@ import Discord from "@/components/icons/discord";
 import Github from "@/components/icons/github";
 import { BlogIndex, type BlogCardPost, type Category } from "@/components/blog/blog-index";
 
-const posts: { slug: string; publishDate: string; title: string; description: string; authorId: string; category: Category }[] = [
+const posts: { slug: string; publishDate: string; title: string; description: string; authorId: string; category: Category; image?: string }[] = [
     {
         slug: 'kagent-cve-agent-substrate-secure-sandbox',
+        image: '/images/blog/thumbnails/kagent-cve-agent-substrate-secure-sandbox.webp',
         publishDate: '2026-11-24',
         title: 'Build a CVE Agent with kagent and Agent Substrate in a Secure Sandbox',
         description: 'An agent that tracks vulnerabilities has to read the internet, which makes it the agent you least want running loose in your cluster. Build cve-watch the safe way: one egress policy for www.cisa.gov, one agent, and one schedule, running in a gVisor sandbox with default-deny egress on Agent Substrate.',
@@ -18,6 +19,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'personal-ai-assistant-kagent-agent-substrate',
+        image: '/images/blog/thumbnails/personal-ai-assistant-kagent-agent-substrate.webp',
         publishDate: '2026-11-24',
         title: 'Build a Personal AI Assistant with kagent and Agent Substrate',
         description: 'A hands-on tutorial: build a personal AI assistant in the kagent UI with a personality, a weather tool, and a morning routine. Along the way, see why Agent Substrate is the engine underneath: it sandboxes the assistant, suspends it when it waits, and resumes it on the next message.',
@@ -26,6 +28,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'install-agent-substrate-any-cluster',
+        image: '/images/blog/thumbnails/install-agent-substrate-any-cluster.webp',
         publishDate: '2026-11-11',
         title: 'Install Agent Substrate on Any Kubernetes Cluster',
         description: 'Agentic infrastructure shouldn\'t be tied to one cloud. The universal kubectl-ate installer sets up Agent Substrate on any Kubernetes cluster, including Kind, Minikube, AKS, EKS, and GKE, with no cloud-specific workarounds.',
@@ -34,6 +37,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'anthropic-self-managed-sandboxes',
+        image: '/images/blog/thumbnails/anthropic-self-managed-sandboxes.webp',
         publishDate: '2026-11-07',
         title: 'Anthropic Self-Hosted Sandboxes with kagent',
         description: 'kagent lets you run Anthropic self-hosted sandboxes on your own infrastructure.',
@@ -42,6 +46,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'kagent-v1-0-release',
+        image: '/images/blog/thumbnails/kagent-v1-0-release.webp',
         publishDate: '2026-11-09',
         title: 'kagent 1.0 Is Here: Open Source Agents on Agent Substrate',
         description: 'kagent 1.0 is out, and every agent now runs on Agent Substrate: sandboxed by default, suspended when idle, and resumed on the next message. Why Pods don\'t fit agents, what Substrate and kagent each do, and how to get started.',
@@ -50,6 +55,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'agent-sandboxes-four-axes',
+        image: '/images/blog/thumbnails/agent-sandboxes-four-axes.webp',
         publishDate: '2026-10-27',
         title: 'Not All Agent Sandboxes Are Created Equally',
         description: 'Discobox, OpenShell, E2B, SPACE, Agent Substrate, and other agent sandboxes make very different assumptions. This post introduces four axes for comparing them: boundary and access controls, environment, lifecycle, and interface and experience.',
@@ -58,6 +64,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'kagent-agent-substrate-sandboxes',
+        image: '/images/blog/thumbnails/kagent-agent-substrate-sandboxes.webp',
         publishDate: '2026-09-21',
         title: 'Kagent and Agent Substrate: Running AI Agent Sandboxes on Kubernetes',
         description: "Isolation, security, and scale are what stand between an agent demo and an agent in production. Here is how Agent Substrate sandboxes agents with gVisor and microVMs, and how to run those sandboxed agents with kagent.",
@@ -74,6 +81,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'agents-on-every-cloud',
+        image: '/images/blog/thumbnails/agents-on-every-cloud.webp',
         publishDate: '2026-08-27',
         title: 'Agents on Every Cloud',
         description: 'The open source distributions of kagent and agentgateway are now on the AWS, Azure, and Google Cloud marketplaces. Deploy both and connect them: from install to an agent served through agentgateway over A2A.',
@@ -82,6 +90,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'dnb-kagent-agentgateway',
+        image: '/images/blog/thumbnails/dnb-kagent-agentgateway.webp',
         publishDate: '2026-07-13',
         title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
         description: 'Lin spoke with David Karlsen and Ibrahim Umar from DNB about their journey adopting kagent and agentgateway',
@@ -90,6 +99,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'deploy-kagent-with-agent-substrate',
+        image: '/images/blog/thumbnails/deploy-kagent-with-agent-substrate.webp',
         publishDate: '2026-07-13',
         title: 'Code Share: Deploy kagent with Agent Substrate',
         description: 'Agent sessions are bursty and idle most of the time. Agent Substrate multiplexes gVisor-sandboxed actors onto a small pool of warm workers with sub-second suspend/resume. This guide explains the model, the use cases, and how to stand up kagent OSS with substrate on a kind cluster.',
@@ -98,6 +108,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'community-nginx-khook-kagent',
+        image: '/images/blog/thumbnails/community-nginx-khook-kagent.webp',
         publishDate: '2025-10-15',
         title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
         description: 'How the community is using Kagent and Khook to automate Nginx troubleshooting tasks.',
@@ -106,6 +117,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: "crewai-byo-agent",
+        image: "/images/blog/thumbnails/crewai-byo-agent.webp",
         publishDate: "2025-10-30",
         title: "From CrewAI to KAgent: Deploying Your Custom AI Agents",
         description:
@@ -115,6 +127,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'reactive-agents-khook',
+        image: '/images/blog/thumbnails/reactive-agents-khook.webp',
         publishDate: '2025-09-09',
         title: "Truly Reactive Cloud Native AI Agents with Kagent and Khook",
         description: "Khook makes Kagent Agents Reactive",
@@ -131,6 +144,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'kgateway-guardrails',
+        image: '/images/blog/thumbnails/kgateway-guardrails.webp',
         publishDate: '2025-05-19',
         title: 'Adding Guardrails to kagent with kgateway AI Gateway',
         description: 'Adding guardrails, observability, and security to Agent to LLM communication with an AI gateway like kgateway',
@@ -139,6 +153,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'kagent-celebrating-100-days',
+        image: '/images/blog/thumbnails/kagent-celebrating-100-days.webp',
         publishDate: '2025-07-01',
         title: 'Celebrating 100 Days of Kagent',
         description: '100+ contributors, 1000+ GitHub stars and more!',
@@ -187,6 +202,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'nemoclaw-kagent-sandbox-secure-production-imp',
+        image: '/images/blog/thumbnails/nemoclaw-kagent-sandbox-secure-production-imp.webp',
         publishDate: '2026-05-07',
         title: 'NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation',
         description: 'Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell',
@@ -195,6 +211,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     },
     {
         slug: 'is-pod-right-deployment-unit-ai-agent',
+        image: '/images/blog/thumbnails/is-pod-right-deployment-unit-ai-agent.webp',
         publishDate: '2026-06-25',
         title: 'Is a Pod the Right Deployment Unit for an AI Agent?',
         description: 'How kagent evolved from one runtime hosting many agents to agent-substrate—and why Pods may be the right execution unit, but not the right deployment model, for AI agents.',
@@ -223,6 +240,7 @@ export default async function BlogPage() {
             href: `/blog/${p.slug}`,
             isExternal: false,
             category: p.category,
+            image: p.image,
             authorName: author?.name ?? "Unknown Author",
             authorPhoto: author?.photo,
         };

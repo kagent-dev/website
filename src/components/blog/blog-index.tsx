@@ -24,6 +24,8 @@ export type BlogCardPost = {
   href: string;
   isExternal: boolean;
   category: Category;
+  /* A 1200x630 thumbnail under /images/blog/thumbnails. Posts without one get the generated cover. */
+  image?: string;
   authorName: string;
   authorPhoto?: string;
 };
@@ -56,8 +58,24 @@ function hostname(url: string) {
   }
 }
 
-/* A generated cover, so every card has one without a per-post image. */
+/* The post's thumbnail, or a generated cover so every card has one without a per-post image. */
 function Cover({ post }: { post: BlogCardPost }) {
+  if (post.image) {
+    return (
+      <div className="relative mb-5 aspect-[800/420] overflow-hidden rounded-xl border border-white/10 bg-ks-card2">
+        {/* Thumbnails are pre-sized, so skip the image optimizer. */}
+        <Image
+          src={post.image}
+          alt=""
+          fill
+          unoptimized
+          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       aria-hidden
