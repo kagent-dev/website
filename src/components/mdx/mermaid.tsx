@@ -27,7 +27,9 @@ export function Mermaid({ chart }: { chart: string }) {
     if (!resolvedTheme) return;
 
     let cancelled = false;
-    const theme = resolvedTheme === 'dark' ? 'dark' : 'neutral';
+    // The blog and homepage are always dark (a `dark` class on their layout), whatever the site theme is.
+    const inDarkSection = !!ref.current?.closest('.dark');
+    const theme = resolvedTheme === 'dark' || inDarkSection ? 'dark' : 'neutral';
 
     mermaid.initialize({
       startOnLoad: false,
