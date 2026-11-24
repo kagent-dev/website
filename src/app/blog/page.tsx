@@ -1,24 +1,20 @@
 import Link from "next/link";
 import React from "react";
 import externalPostsData from "@/data/external-blog-posts.yaml";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { getAuthorById, type Author } from "./authors";
+import { getAuthorById } from "./authors";
 import { DISCORD_LINK, GITHUB_LINK } from "@/data/links";
 import Discord from "@/components/icons/discord";
 import Github from "@/components/icons/github";
+import { BlogIndex, type BlogCardPost, type Category } from "@/components/blog/blog-index";
 
-function shortDate(date: string) {
-    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-const posts = [
+const posts: { slug: string; publishDate: string; title: string; description: string; authorId: string; category: Category }[] = [
     {
         slug: 'kagent-cve-agent-substrate-secure-sandbox',
         publishDate: '2026-11-24',
         title: 'Build a CVE Agent with kagent and Agent Substrate in a Secure Sandbox',
         description: 'An agent that tracks vulnerabilities has to read the internet, which makes it the agent you least want running loose in your cluster. Build cve-watch the safe way: one egress policy for www.cisa.gov, one agent, and one schedule, running in a gVisor sandbox with default-deny egress on Agent Substrate.',
         authorId: 'sebastianmaniak',
+        category: 'Tutorial',
     },
     {
         slug: 'personal-ai-assistant-kagent-agent-substrate',
@@ -26,6 +22,7 @@ const posts = [
         title: 'Build a Personal AI Assistant with kagent and Agent Substrate',
         description: 'A hands-on tutorial: build a personal AI assistant in the kagent UI with a personality, a weather tool, and a morning routine. Along the way, see why Agent Substrate is the engine underneath: it sandboxes the assistant, suspends it when it waits, and resumes it on the next message.',
         authorId: 'sebastianmaniak',
+        category: 'Tutorial',
     },
     {
         slug: 'install-agent-substrate-any-cluster',
@@ -33,6 +30,7 @@ const posts = [
         title: 'Install Agent Substrate on Any Kubernetes Cluster',
         description: 'Agentic infrastructure shouldn\'t be tied to one cloud. The universal kubectl-ate installer sets up Agent Substrate on any Kubernetes cluster, including Kind, Minikube, AKS, EKS, and GKE, with no cloud-specific workarounds.',
         authorId: 'michaellevan',
+        category: 'Tutorial',
     },
     {
         slug: 'anthropic-self-managed-sandboxes',
@@ -40,6 +38,7 @@ const posts = [
         title: 'Anthropic Self-Hosted Sandboxes with kagent',
         description: 'kagent lets you run Anthropic self-hosted sandboxes on your own infrastructure.',
         authorId: 'stevenjin8',
+        category: 'Integration',
     },
     {
         slug: 'kagent-v1-0-release',
@@ -47,6 +46,7 @@ const posts = [
         title: 'kagent 1.0 Is Here: Open Source Agents on Agent Substrate',
         description: 'kagent 1.0 is out, and every agent now runs on Agent Substrate: sandboxed by default, suspended when idle, and resumed on the next message. Why Pods don\'t fit agents, what Substrate and kagent each do, and how to get started.',
         authorId: 'sebastianmaniak',
+        category: 'Release',
     },
     {
         slug: 'agent-sandboxes-four-axes',
@@ -54,6 +54,7 @@ const posts = [
         title: 'Not All Agent Sandboxes Are Created Equally',
         description: 'Discobox, OpenShell, E2B, SPACE, Agent Substrate, and other agent sandboxes make very different assumptions. This post introduces four axes for comparing them: boundary and access controls, environment, lifecycle, and interface and experience.',
         authorId: 'christianposta',
+        category: 'Deep Dive',
     },
     {
         slug: 'kagent-agent-substrate-sandboxes',
@@ -61,6 +62,7 @@ const posts = [
         title: 'Kagent and Agent Substrate: Running AI Agent Sandboxes on Kubernetes',
         description: "Isolation, security, and scale are what stand between an agent demo and an agent in production. Here is how Agent Substrate sandboxes agents with gVisor and microVMs, and how to run those sandboxed agents with kagent.",
         authorId: 'michaellevan',
+        category: 'Deep Dive',
     },
     {
         slug: 'blacksmith-ci',
@@ -68,6 +70,7 @@ const posts = [
         title: 'Next generation CI using Blacksmith',
         description: 'Life of a maintainer: How we cut our CI time by 1/3 using Blacksmith',
         authorId: 'eitanya',
+        category: 'Deep Dive',
     },
     {
         slug: 'agents-on-every-cloud',
@@ -75,6 +78,7 @@ const posts = [
         title: 'Agents on Every Cloud',
         description: 'The open source distributions of kagent and agentgateway are now on the AWS, Azure, and Google Cloud marketplaces. Deploy both and connect them: from install to an agent served through agentgateway over A2A.',
         authorId: 'petrmcallister',
+        category: 'Announcement',
     },
     {
         slug: 'dnb-kagent-agentgateway',
@@ -82,6 +86,7 @@ const posts = [
         title: 'How One Platform Team Scaled AI Adoption with Kagent and Agentgateway',
         description: 'Lin spoke with David Karlsen and Ibrahim Umar from DNB about their journey adopting kagent and agentgateway',
         authorId: 'linsun',
+        category: 'Community',
     },
     {
         slug: 'deploy-kagent-with-agent-substrate',
@@ -89,6 +94,7 @@ const posts = [
         title: 'Code Share: Deploy kagent with Agent Substrate',
         description: 'Agent sessions are bursty and idle most of the time. Agent Substrate multiplexes gVisor-sandboxed actors onto a small pool of warm workers with sub-second suspend/resume. This guide explains the model, the use cases, and how to stand up kagent OSS with substrate on a kind cluster.',
         authorId: 'sebastianmaniak',
+        category: 'Tutorial',
     },
     {
         slug: 'community-nginx-khook-kagent',
@@ -96,6 +102,7 @@ const posts = [
         title: 'Community Spotlight: Automated Nginx Troubleshooting with Kagent and Khook',
         description: 'How the community is using Kagent and Khook to automate Nginx troubleshooting tasks.',
         authorId: "antweiss",
+        category: "Community",
     },
     {
         slug: "crewai-byo-agent",
@@ -104,6 +111,7 @@ const posts = [
         description:
         "Learn how to take your existing CrewAI agents and deploy them as Bring-Your-Own (BYO) agents in KAgent.",
         authorId: "jetchiang",
+        category: "Tutorial",
     },
     {
         slug: 'reactive-agents-khook',
@@ -111,6 +119,7 @@ const posts = [
         title: "Truly Reactive Cloud Native AI Agents with Kagent and Khook",
         description: "Khook makes Kagent Agents Reactive",
         authorId: "antweiss",
+        category: "Feature",
     },
     {
         slug: 'ai-reliability-aire',
@@ -118,6 +127,7 @@ const posts = [
         title: 'AI Reliability Engineering For More Dependable Humans',
         description: 'AI Reliability Engineering (AIRE) brings AI agents to SRE and Platform Engineering workflows for dependable humans.',
         authorId: "christianposta",
+        category: "Deep Dive",
     },
     {
         slug: 'kgateway-guardrails',
@@ -125,6 +135,7 @@ const posts = [
         title: 'Adding Guardrails to kagent with kgateway AI Gateway',
         description: 'Adding guardrails, observability, and security to Agent to LLM communication with an AI gateway like kgateway',
         authorId: "christianposta",
+        category: "Integration",
     },
     {
         slug: 'kagent-celebrating-100-days',
@@ -132,6 +143,7 @@ const posts = [
         title: 'Celebrating 100 Days of Kagent',
         description: '100+ contributors, 1000+ GitHub stars and more!',
         authorId: "linsun",
+        category: "Community",
     },
     {
         slug: 'kmcp',
@@ -139,6 +151,7 @@ const posts = [
         title: 'From MCP Servers to Services: Introducing kmcp for Enterprise-Grade MCP Development',
         description: 'Discover kmcp, the lightweight toolkit that takes MCP servers from prototype to production. Learn how to scaffold, build, and deploy enterprise-grade MCP services to Kubernetes in minutes—no Dockerfiles or complex manifests required. Includes demo video and complete getting started guide.',
         authorId: "christianposta",
+        category: "Announcement",
     },
     {
         slug: 'human-in-the-loop-kagent',
@@ -146,6 +159,7 @@ const posts = [
         title: 'Human-in-the-Loop with kagent: Keeping Humans in Control of AI Agents',
         description: 'How to build Kubernetes-native AI agents that pause and ask for approval before taking destructive actions, using kagent\'s human-in-the-loop capabilities.',
         authorId: 'sebastianmaniak',
+        category: 'Feature',
     },
     {
         slug: 'go-vs-python-runtime',
@@ -153,6 +167,7 @@ const posts = [
         title: 'We Added a Go Runtime to kagent and the Numbers Are Wild',
         description: 'We benchmarked kagent\'s Go and Python agent runtimes on image size, startup time, and memory. The results: 11x smaller images, 6.7x faster startup, and 36x less memory.',
         authorId: 'eitanya',
+        category: 'Deep Dive',
     },
     {
         slug: 'inside-kagent-oss-ent-ai-meshes',
@@ -160,6 +175,7 @@ const posts = [
         title: 'Inside Kagent: Architecting Open Source and Enterprise AI Agent Meshes for 2026',
         description: 'Learn how to architect open source and enterprise AI agent meshes for 2026.',
         authorId: "michaellevan",
+        category: "Deep Dive",
     },
     {
         slug: 'kagent-v0-9-1-release',
@@ -167,6 +183,7 @@ const posts = [
         title: "kagent v0.9.1 — What's New in Kubernetes-Native Agentic AI",
         description: 'kagent v0.9.1 brings AWS Bedrock support for Claude with extended thinking, REST API secret management, sidecar container support, Git-based skill configuration, and a configurable Helm runtime.',
         authorId: 'sebastianmaniak',
+        category: 'Release',
     },
     {
         slug: 'nemoclaw-kagent-sandbox-secure-production-imp',
@@ -174,6 +191,7 @@ const posts = [
         title: 'NemoClaw + Kagent + Sandbox: The Secure, Production Grade Implementation',
         description: 'Learn how to bridge the gap between Agent client, sandbox, and what the enterprise needs for security, governance, and observability with kagent, nemoclaw, and openshell',
         authorId: 'michaellevan',
+        category: 'Integration',
     },
     {
         slug: 'is-pod-right-deployment-unit-ai-agent',
@@ -181,6 +199,7 @@ const posts = [
         title: 'Is a Pod the Right Deployment Unit for an AI Agent?',
         description: 'How kagent evolved from one runtime hosting many agents to agent-substrate—and why Pods may be the right execution unit, but not the right deployment model, for AI agents.',
         authorId: 'linsun',
+        category: 'Deep Dive',
     },
     {
         slug: 'the-future-of-kagent',
@@ -188,117 +207,74 @@ const posts = [
         title: 'The future of kagent',
         description: 'Thousands of agents per cluster, resuming in milliseconds, sandboxed by default. kagent is rebuilding its runtime on Agent Substrate to get there.',
         authorId: 'eitanya',
+        category: 'Announcement',
     }
 ]
 
-type InternalPostCombined = {
-    title: string;
-    description: string;
-    publishDate: string;
-    href: string;
-    isExternal: false;
-    slug: string;
-    author: Author | null;
-}
-
-type ExternalPostCombined = {
-    title: string;
-    description: string;
-    publishDate: string;
-    href: string;
-    isExternal: true;
-    author: string; // Keep as string for external posts since they're not in our authors.ts
-}
-
-type CombinedPost = InternalPostCombined | ExternalPostCombined;
-
-type ExternalYamlPost = { title: string; description: string; publishDate: string; url: string; author: string };
+type ExternalYamlPost = { title: string; description: string; publishDate: string; url: string; author: string; category?: Category };
 
 export default async function BlogPage() {
-    return (
-        <>
-            <div className="min-h-screen py-8">
-                <div className="max-w-3xl mx-auto px-4">
-                    <h1 className="text-4xl font-bold text-center mb-16 text-foreground">Blog</h1>
-                    <div className="space-y-12 md:space-y-16">
-                        {(() => {
-                            const internalPosts: InternalPostCombined[] = posts.map(p => ({
-                                title: p.title,
-                                description: p.description,
-                                publishDate: p.publishDate,
-                                href: `/blog/${p.slug}`,
-                                isExternal: false as const,
-                                slug: p.slug,
-                                author: getAuthorById(p.authorId) || null,
-                            }));
-                            const rawExternal: ExternalYamlPost[] = (externalPostsData && (externalPostsData as { externalPosts?: ExternalYamlPost[] }).externalPosts) || [];
-                            const externalPosts: ExternalPostCombined[] = rawExternal.map((p: ExternalYamlPost) => ({
-                                title: p.title,
-                                description: p.description,
-                                publishDate: p.publishDate,
-                                href: p.url,
-                                isExternal: true as const,
-                                author: p.author,
-                            }));
-                            const allPosts: CombinedPost[] = [...internalPosts, ...externalPosts].sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
-                            return allPosts.map((post) => (
-                                <div key={post.isExternal ? post.href : post.slug} className="py-4">
-                                    <div className="flex items-center space-x-3 text-sm text-muted-foreground mb-2">
-                                        <span>{shortDate(post.publishDate)}</span>
-                                        {post.isExternal && <Badge variant="default" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">External</Badge>}
-                                    </div>
-                                    <div className="mt-5 text-3xl lg:text-4xl font-bold mb-3 text-foreground">
-                                        {post.isExternal ? (
-                                            <a href={post.href} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors duration-200">{post.title}</a>
-                                        ) : (
-                                            <Link href={post.href} className="hover:text-primary transition-colors duration-200">{post.title}</Link>
-                                        )}
-                                    </div>
-                                    <div className="text-sm font-medium text-foreground/70 mb-4 italic">
-                                        by {post.isExternal ? post.author : post.author ? `${post.author.name}, ${post.author.title}` : 'Unknown Author'}
-                                    </div>
-                                    <p className="text-muted-foreground mb-4 leading-relaxed text-lg font-normal">{post.description}</p>
-                                    {post.isExternal ? (
-                                        <a href={post.href} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline text-sm inline-flex items-center">
-                                            Read the post <span aria-hidden="true" className="ml-1">→</span>
-                                        </a>
-                                    ) : (
-                                        <Link href={post.href} className="text-primary font-medium hover:underline text-sm inline-flex items-center">
-                                            Read the post <span aria-hidden="true" className="ml-1">→</span>
-                                        </Link>
-                                    )}
-                                </div>
-                            ));
-                        })()}
-                    </div>
-                </div>
+    const internalPosts: BlogCardPost[] = posts.map((p) => {
+        const author = getAuthorById(p.authorId);
+        return {
+            title: p.title,
+            description: p.description,
+            publishDate: p.publishDate,
+            href: `/blog/${p.slug}`,
+            isExternal: false,
+            category: p.category,
+            authorName: author?.name ?? "Unknown Author",
+            authorPhoto: author?.photo,
+        };
+    });
+    const rawExternal: ExternalYamlPost[] = (externalPostsData && (externalPostsData as { externalPosts?: ExternalYamlPost[] }).externalPosts) || [];
+    // External posts are community write-ups unless the YAML says otherwise.
+    const externalPosts: BlogCardPost[] = rawExternal.map((p) => ({
+        title: p.title,
+        description: p.description,
+        publishDate: p.publishDate,
+        href: p.url,
+        isExternal: true,
+        category: p.category ?? "Community",
+        authorName: p.author,
+    }));
+    const allPosts = [...internalPosts, ...externalPosts].sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
 
-                {/* Community Section */}
-                <div className="py-16 border-t border-border">
-                    <div className="max-w-3xl mx-auto px-4 text-center">
-                        <h2 className="text-3xl font-medium mb-8 text-foreground">
-                            Join our <span className="text-primary font-semibold">community</span>
-                        </h2>
-                        <p className="text-lg text-muted-foreground mb-12 leading-relaxed">
-                            Connect with other developers, share your experiences, and get support from the kagent community.
-                        </p>
-                        <div className="flex justify-center space-x-6">
-                            <Button size="lg" className="text-base px-6 py-3">
-                                <Discord className="mr-2 h-5 w-5" />
-                                <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer">
-                                    Discord
-                                </Link>
-                            </Button>
-                            <Button size="lg" variant="outline" className="text-base px-6 py-3">
-                                <Github className="mr-2 h-5 w-5" />
-                                <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer">
-                                    GitHub
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
+    return (
+        <div className="not-prose">
+            {/* Full-bleed grid behind the header and hero; it anchors to the blog layout's root. */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[length:56px_56px] [mask-image:linear-gradient(to_bottom,black_30%,transparent)]"
+            />
+
+            <section className="pb-10 pt-6 md:pb-14 md:pt-10">
+                <h1 className="mb-4 text-[2.75rem] font-semibold leading-tight tracking-tight text-white lg:text-[4.0625rem]">Blog</h1>
+                <p className="max-w-2xl text-lg leading-relaxed text-ks-muted lg:text-2xl">
+                    Tutorials, deep dives, and releases from the kagent community.
+                </p>
+            </section>
+
+            <BlogIndex posts={allPosts} />
+
+            <section className="mt-16 rounded-2xl border border-ks-line bg-ks-card px-6 py-12 text-center md:mt-24 md:py-16">
+                <h2 className="mb-4 text-3xl font-semibold tracking-tight text-white">
+                    Join our <span className="text-ks-accent">community</span>
+                </h2>
+                <p className="mx-auto mb-8 max-w-xl text-lg leading-relaxed text-ks-muted">
+                    Connect with other developers, share your experiences, and get support from the kagent community.
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                    <Link href={DISCORD_LINK} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black hover:bg-white/90">
+                        <Discord className="h-4 w-4" />
+                        Discord
+                    </Link>
+                    <Link href={GITHUB_LINK} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-ks-card2 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10">
+                        <Github className="h-4 w-4" />
+                        GitHub
+                    </Link>
                 </div>
-            </div>
-        </>
+            </section>
+        </div>
     );
 }
