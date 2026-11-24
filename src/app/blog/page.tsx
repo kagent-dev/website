@@ -242,10 +242,10 @@ export default async function BlogPage() {
 
     return (
         <div className="not-prose">
-            {/* Full-bleed grid behind the header and hero; it anchors to the blog layout's root. */}
+            {/* Full-bleed dot pattern behind the header and hero; it anchors to the blog layout's root. */}
             <div
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[length:56px_56px] [mask-image:linear-gradient(to_bottom,black_30%,transparent)]"
+                className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-[radial-gradient(rgba(255,255,255,0.14)_1px,transparent_1.5px)] bg-[length:24px_24px] [mask-image:linear-gradient(to_bottom,black_30%,transparent)]"
             />
 
             <section className="pb-10 pt-6 md:pb-14 md:pt-10">

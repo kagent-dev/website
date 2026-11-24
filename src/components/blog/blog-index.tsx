@@ -63,7 +63,7 @@ function Cover({ post }: { post: BlogCardPost }) {
       aria-hidden
       className="relative mb-5 flex aspect-[800/420] flex-col overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(120%_120%_at_0%_0%,#4c1d95_0%,#1e1033_45%,#0d0816_100%)] p-5"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:28px_28px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.16)_1px,transparent_1.5px)] bg-[length:16px_16px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
       <div className="relative flex items-center justify-between gap-3">
         <span className="flex items-center gap-2 text-xs font-semibold text-white/90">
           <Image src="/images/kagent-logo-mark.png" alt="" width={18} height={18} />
