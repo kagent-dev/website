@@ -14,6 +14,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'kagent-cve-agent-substrate-secure-sandbox',
+        publishDate: '2026-11-24',
+        title: 'Build a CVE Agent with kagent and Agent Substrate in a Secure Sandbox',
+        description: 'An agent that tracks vulnerabilities has to read the internet, which makes it the agent you least want running loose in your cluster. Build cve-watch the safe way: one egress policy for www.cisa.gov, one agent, and one schedule, running in a gVisor sandbox with default-deny egress on Agent Substrate.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'personal-ai-assistant-kagent-agent-substrate',
         publishDate: '2026-11-24',
         title: 'Build a Personal AI Assistant with kagent and Agent Substrate',
