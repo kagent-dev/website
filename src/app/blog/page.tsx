@@ -9,6 +9,15 @@ import { BlogIndex, type BlogCardPost, type Category } from "@/components/blog/b
 
 const posts: { slug: string; publishDate: string; title: string; description: string; authorId: string; category: Category; image?: string }[] = [
     {
+        slug: 'kagent-policies-ui-egress-policy-walkthrough',
+        image: '/images/blog/thumbnails/kagent-policies-ui-egress-policy-walkthrough.webp',
+        publishDate: '2026-11-24',
+        title: 'kagent Has a Policies Page Now: A Walkthrough of Egress Policies in the Open Source UI',
+        description: 'The open source kagent UI has a Policies page for EgressPolicy, the allow-list that decides which HTTP(S) hosts a sandboxed agent can reach on Agent Substrate. A walkthrough of every screen, the three authentication modes, and a live test from inside a sandbox: blocked, allowed, then blocked again, with no restart.',
+        authorId: 'sebastianmaniak',
+        category: 'Feature',
+    },
+    {
         slug: 'install-kagent-with-the-cli',
         publishDate: '2026-11-24',
         title: 'Install kagent in One Command with the kagent CLI',
