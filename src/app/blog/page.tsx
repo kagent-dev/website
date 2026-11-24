@@ -14,6 +14,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'install-kagent-with-the-cli',
+        publishDate: '2026-11-24',
+        title: 'Install kagent in One Command with the kagent CLI',
+        description: 'The fastest way to get kagent running: create a cluster, set a model API key, and run one command. The kagent CLI installs the CRDs, Agent Substrate, a development PostgreSQL database, and kagent for you.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'install-agent-substrate-any-cluster',
         publishDate: '2026-11-11',
         title: 'Install Agent Substrate on Any Kubernetes Cluster',
