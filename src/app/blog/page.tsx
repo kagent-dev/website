@@ -14,6 +14,13 @@ function shortDate(date: string) {
 
 const posts = [
     {
+        slug: 'personal-ai-assistant-kagent-agent-substrate',
+        publishDate: '2026-11-24',
+        title: 'Build a Personal AI Assistant with kagent and Agent Substrate',
+        description: 'A hands-on tutorial: build a personal AI assistant in the kagent UI with a personality, a weather tool, and a morning routine. Along the way, see why Agent Substrate is the engine underneath: it sandboxes the assistant, suspends it when it waits, and resumes it on the next message.',
+        authorId: 'sebastianmaniak',
+    },
+    {
         slug: 'install-agent-substrate-any-cluster',
         publishDate: '2026-11-11',
         title: 'Install Agent Substrate on Any Kubernetes Cluster',
