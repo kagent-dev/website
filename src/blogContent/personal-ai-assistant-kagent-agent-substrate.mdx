@@ -51,12 +51,11 @@ Keep those in mind. Each step below maps onto them.
    kind create cluster --name kagent --image kindest/node:v1.37.0
    ```
 
-2. Install the kagent CLI, set your model provider key (OpenAI is the default), and install. One command sets up Agent Substrate, PostgreSQL, and kagent together:
+2. Set your model provider key (OpenAI is the default), then install the kagent CLI and run the installer. One command sets up Agent Substrate, PostgreSQL, and kagent together:
 
    ```bash
-   curl -sL https://raw.githubusercontent.com/kagent-dev/kagent/refs/heads/main/scripts/get-kagent | bash -s -- --version v1.0.0
    export OPENAI_API_KEY=<your key>
-   kagent install
+   curl -sL https://kagent.dev/install | bash && kagent install
    ```
 
 3. Open the kagent UI:
