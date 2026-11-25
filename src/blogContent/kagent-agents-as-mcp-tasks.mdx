@@ -17,21 +17,7 @@ The MCP Tasks extension fixes that, and kagent implements it. With tasks, a clie
 
 I ran all of this on kagent 1.0.1 on a local kind cluster. Every command and every output below is from that run.
 
-```mermaid
-sequenceDiagram
-    participant C as MCP client
-    participant K as kagent /mcp
-    participant A as Agent in a Substrate sandbox
-    C->>K: tools/call invoke_agent
-    K->>A: start a session and a turn
-    K-->>C: task handle, status working
-    Note over C: The client is free to do other work
-    A->>A: download, analyse, write
-    C->>K: tasks/get
-    K-->>C: working
-    C->>K: tasks/get
-    K-->>C: completed, with the result
-```
+![A timeline with two lanes. The MCP client hands off a job with invoke_agent, keeps working and polls with tasks/get, answers a question with tasks/update, and collects the result. The kagent agent works in its own Substrate sandbox, pauses at input_required, finishes, and is suspended.](/images/blog/kagent-agents-as-mcp-tasks/00-mcp-task-handoff.png "The client hands off the job and keeps working. The agent runs in its own sandbox, asks if it needs to, and is suspended when it finishes.")
 
 ## Every agent is already on the endpoint
 
