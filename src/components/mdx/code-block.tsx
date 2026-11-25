@@ -36,7 +36,7 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
     // whitespace and newlines are preserved instead of collapsing to inline.
     if (content.includes('\n')) {
       return (
-        <pre className="overflow-x-auto p-4 text-sm rounded-lg bg-muted font-mono text-foreground whitespace-pre">
+        <pre className="not-prose my-6 overflow-x-auto p-4 text-sm rounded-lg bg-muted font-mono text-foreground whitespace-pre">
           <code className="font-mono">{content.replace(/\n$/, '')}</code>
         </pre>
       );
@@ -45,7 +45,7 @@ export function CodeBlock({ children, language = 'typescript', className }: Code
   }
 
   return (
-    <div className={`relative rounded-lg ${className}`}>
+    <div className={`not-prose my-6 relative rounded-lg ${className}`}>
       <div className="absolute right-4 top-4">
         <button
           onClick={handleCopy}
