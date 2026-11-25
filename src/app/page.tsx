@@ -7,6 +7,7 @@ import KagentUI from "@/components/home/kagent-ui";
 import HeroHeadline from "@/components/home/hero-headline";
 import ActorGrid from "@/components/home/actor-grid";
 import ScrollMark from "@/components/home/scroll-mark";
+import InstallCommand from "@/components/home/install-command";
 import { ADOPTERS } from "@/components/home/adopters";
 import { SandboxVisual, ToolsVisual, TeamVisual } from "@/components/home/bento-visuals";
 import { AgentVisual, HarnessVisual, TemplateVisual } from "@/components/home/how-visuals";
@@ -18,7 +19,9 @@ export const metadata: Metadata = {
     "kagent gives platform teams one place to deploy, manage and govern AI agents on Kubernetes, running on Agent Substrate: sandboxed, suspended when idle, resumed on the next message.",
 };
 
-const BtnWhite = ({ href, children }: { href: string; children: React.ReactNode }) => (
+const INSTALL = "/docs/kagent/latest/setup/installation/";
+
+const BtnWhite =({ href, children }: { href: string; children: React.ReactNode }) => (
   <a href={href} className="rounded-full bg-white px-6 py-3 text-[15px] font-medium text-black shadow-[0_0_40px_-6px_rgba(167,139,250,0.75)] transition hover:bg-white/90 hover:shadow-[0_0_56px_-4px_rgba(167,139,250,0.95)]">
     {children}
   </a>
@@ -130,6 +133,9 @@ export default function Home() {
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <BtnWhite href={START}>Run your first agent</BtnWhite>
           <BtnDark href={GITHUB}>View on GitHub</BtnDark>
+        </div>
+        <div className="mt-12">
+          <InstallCommand href={INSTALL} />
         </div>
         <div className="mt-16 lg:-mx-12">
           <KagentUI />
