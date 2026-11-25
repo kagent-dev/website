@@ -7,6 +7,8 @@ aliases:
   - /kagent/main/about/agent-substrate/
 ---
 
+{{< tutorial-banner >}}
+
 {{< reuse "kagent-docs/snippets/about/agent-substrate-intro.md" >}}
 
 ## ActorTemplate

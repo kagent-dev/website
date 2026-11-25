@@ -1,0 +1,30 @@
+{{- /*
+  One tile of a tile-grid: a picture, a title, a line of text, and an optional
+  footnote. The whole tile is one link.
+
+  Parameters:
+    - title | string | yes | — | Tile title.
+    - page | path | yes | — | Target page, relative to the current page. The
+      build fails if it does not exist.
+    - text | string | no | — | What the reader builds.
+    - note | string | no | — | Small line at the foot of the tile.
+    - image | string | no | — | assets-relative image shown at the top.
+*/ -}}
+{{- $target := .Page.GetPage (.Get "page") -}}
+{{- if not $target -}}
+  {{- errorf "tile: page %q not found, called from %s" (.Get "page") .Position -}}
+{{- else -}}
+<a class="tile" href="{{ $target.RelPermalink }}">
+  {{- with .Get "image" -}}
+    {{- with resources.Get . -}}
+      {{- $img := .Fill "600x250 Top webp q82" -}}
+      <img class="tile-image" src="{{ $img.RelPermalink }}" width="{{ $img.Width }}" height="{{ $img.Height }}" alt="" loading="lazy" />
+    {{- end -}}
+  {{- end -}}
+  <span class="tile-body">
+    <span class="tile-title">{{ .Get "title" }}</span>
+    {{- with .Get "text" }}<span class="tile-text">{{ . }}</span>{{ end -}}
+    {{- with .Get "note" }}<span class="tile-note">{{ . }}</span>{{ end -}}
+  </span>
+</a>
+{{- end -}}

@@ -1,9 +1,11 @@
 ---
 title: Your first MCP tool
 description: Give an agent a Model Context Protocol tool by binding an MCP server to its AgentTemplate.
-weight: 20
+weight: 21
 author: kagent.dev
 ---
+
+{{< tutorial-banner >}}
 
 A system prompt tells an agent how to behave. Tools tell it what it can do. This guide binds a {{< gloss "Model Context Protocol" >}}Model Context Protocol{{< /gloss >}} (MCP) tool to the agent that you built in [Your first agent]({{< link path="get-started/your-first-agent" >}}), so that the agent can read live data out of your cluster instead of answering from the model alone. For the full {{< gloss "Tool binding" >}}tool binding{{< /gloss >}} schema, including binding one AgentTemplate as another agent's subagent, see [About tools]({{< link path="skills-and-mcp/about-tools" >}}).
 

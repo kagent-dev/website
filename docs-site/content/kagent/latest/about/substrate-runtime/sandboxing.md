@@ -7,6 +7,8 @@ aliases:
   - /kagent/latest/substrate-runtime/sandboxing/
 ---
 
+{{< tutorial-banner >}}
+
 An agent runs an **agentic loop**. A model proposes the next step, the agent carries it out by running a command or calling a tool, and the result feeds the model's next decision. The loop repeats until the task finishes or the agent stops to wait on input from a person.
 
 kagent runs an agent's loop inside an **Actor**, a unit of compute that [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}) creates and manages. An Actor is not an ordinary container process. Each Actor runs inside its own **sandbox**, and one {{< gloss "Worker" >}}Worker{{< /gloss >}} hosts many of those sandboxed Actors at the same time.

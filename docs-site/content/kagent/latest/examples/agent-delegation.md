@@ -31,7 +31,7 @@ Every template in the tree is an ordinary AgentTemplate, and only the coordinato
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}).
+1. [Install kagent]({{< link path="setup" >}}).
 
 2. [Create your first agent]({{< link path="get-started/your-first-agent" >}}), so that you have a Harness to pair with. This example uses a Harness named `my-first-harness` in the `kagent` namespace.
 

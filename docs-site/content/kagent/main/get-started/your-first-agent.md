@@ -1,15 +1,17 @@
 ---
 title: Your first agent
 description: Create and communicate with your first agent by using the kagent project.
-weight: 10
+weight: 20
 author: kagent.dev
 ---
+
+{{< tutorial-banner >}}
 
 This guide walks you through creating an agent, from applying a Harness and an AgentTemplate to holding a conversation with the Agent that pairs them. You apply the Harness, the AgentTemplate, and the Agent as Kubernetes resources. Then, you create and talk to a Session with the kagent CLI. For definitions of each of these components, review the [core concepts]({{< link path="about/core-concepts" >}}). For an overview of how each component fits together in {{< reuse "kagent-docs/snippets/name-product.md" >}}, review the [architecture]({{< link path="about/architecture/kagent" >}}). For the complete schema of every field that this guide sets, see the [API reference]({{< link path="reference/api-ref" >}}).
 
 ## Before you begin
 
-1. [Install kagent with a WorkerPool provisioned]({{< link path="setup/installation" >}}).
+1. [Install kagent with a WorkerPool provisioned]({{< link path="setup" >}}).
 2. {{< reuse "kagent-docs/snippets/install-cli.md" >}}
 
 3. Install [`jq`](https://jqlang.org/download/), to read the Session ID out of the CLI's JSON output.

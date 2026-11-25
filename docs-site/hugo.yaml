@@ -312,14 +312,6 @@ menu:
       weight: 2
       params:
         localHref: /blog
-    - name: Tools
-      weight: 3
-      params:
-        localHref: /tools
-    - name: Agents
-      weight: 4
-      params:
-        localHref: /agents
     - name: Community
       weight: 5
       params:

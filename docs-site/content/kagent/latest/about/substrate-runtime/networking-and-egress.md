@@ -7,6 +7,8 @@ aliases:
   - /kagent/latest/substrate-runtime/networking-and-egress/
 ---
 
+{{< tutorial-banner >}}
+
 An agent reaches the network only through Agent Substrate's egress gateway, and the gateway authorizes every connection against a policy attached to that {{< gloss "Actor" >}}Actor{{< /gloss >}}. The policy is default-deny. An Actor can attempt any request, and the gateway denies the ones that no rule allows. kagent derives the policy from the AgentTemplate, so a documented agent works without any egress configuration of its own. An Agent can also select EgressPolicy resources, which grant destinations that the AgentTemplate does not name. For more information, see [Egress policies]({{< link path="agents/egress-policies" >}}). A standalone Sandbox has no derived destinations, so its policy allows only what the EgressPolicy resources of its SandboxTemplate grant. For more information, see [Grant network access]({{< link path="sandboxes/templates#grant-network-access" >}}).
 
 > [!NOTE]

@@ -26,7 +26,7 @@ The MCP server exposes three tools, and an AgentTemplate names the ones it wants
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and [create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a Harness and know which label it admits.
+1. [Install kagent]({{< link path="setup" >}}), and [create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a Harness and know which label it admits.
 
 2. Install [Node.js](https://nodejs.org) 20 or later, to run doc2vec.
 

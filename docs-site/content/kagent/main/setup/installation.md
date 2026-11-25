@@ -1,9 +1,16 @@
 ---
-title: Install kagent
-description: Install kagent 1.0 and Agent Substrate on a Kubernetes cluster.
+title: Advanced Install
+description: Customize the CLI installation, or install each chart yourself with Helm against your own PostgreSQL database.
 weight: 10
+linkTitle: Advanced Install
 author: kagent.dev
+# Tab groups with the same tab names switch together, so picking a provider for
+# the API key also picks it for the install command.
+tabs:
+  sync: true
 ---
+
+This page covers the installations that need more than one command. To get kagent running quickly, see [Install]({{< link path="setup" >}}) instead.
 
 {{< reuse "kagent-docs/snippets/name-product.md" >}} 1.0 runs every agent on [Agent Substrate]({{< link path="about/architecture/agent-substrate" >}}), so an installation sets up two systems in the same cluster. Agent Substrate provides the sandboxed compute that agents run on. kagent provides the Harness, AgentTemplate, and Agent API that you author against.
 
@@ -12,11 +19,13 @@ author: kagent.dev
 
 ## Before you begin
 
-1. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
+1. Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl) and [`helm`](https://helm.sh/docs/intro/install/) 3. The kagent CLI runs `helm` to install each chart.
+
+2. Prepare a Kubernetes cluster at **1.37 or later**. Agent Substrate depends on the `PodCertificateRequest` and `ClusterTrustBundle` APIs. Both are generally available (GA) in 1.37 and served at `certificates.k8s.io/v1` by default.
 
    {{< tabs >}}
    {{% tab name="Local kind cluster" %}}
-   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. The cluster does not need extra API configuration.
+   For local testing and development, create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) cluster at Kubernetes 1.37 or later. Use kind v0.32.0 or later. The cluster does not need extra API configuration.<span class="kind-tab-marker"></span>
    ```bash
    kind create cluster --name kagent --image kindest/node:v1.37.0
    ```
@@ -40,20 +49,38 @@ author: kagent.dev
    {{% /tab %}}
    {{< /tabs >}}
 
-2. Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl) and [`helm`](https://helm.sh/docs/intro/install/) 3. The kagent CLI runs `helm` to install each chart.
+3. Set the API key of your model provider. The CLI installation reads it from this variable. A Helm installation stores it in a Secret in a later step.
 
-## Install with the CLI {#install-kagent}
+   {{< tabs >}}
+   {{% tab name="OpenAI" %}}
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-Set your OpenAI API key, then install the kagent CLI and run it.
+   {{% tab name="Anthropic" %}}
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-curl -sL https://kagent.dev/install | bash && kagent install
-```
+   {{% tab name="Gemini" %}}
+   ```bash
+   export GOOGLE_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-When `kagent install` finishes, it prints the next steps. To open the UI, run `kagent dashboard`. To create an agent, continue with [Your first agent]({{< link path="get-started/your-first-agent" >}}).
+   {{% tab name="Ollama" %}}
+   The installer sets up an [Ollama Cloud](https://docs.ollama.com/cloud) model, which takes an API key. To use an Ollama server that you host yourself, see [Ollama]({{< link path="setup/model-providers/ollama" >}}).
+   ```bash
+   export OLLAMA_API_KEY="your-api-key-here"
+   ```
+   {{% /tab %}}
 
-The CLI installation suits evaluation, because it deploys a development PostgreSQL database. For a production installation that Helm manages from the start, [install with Helm](#install-with-helm) instead. To use another model provider, pin a release, or pass your own chart values, see [Customize the CLI installation](#customize-the-cli-installation).
+   {{% tab name="Others" %}}
+   For every other provider, such as xAI, Azure OpenAI, Amazon Bedrock, Google Vertex AI, or a provider of your own, see [Configure model providers]({{< link path="setup/model-providers" >}}).
+   {{% /tab %}}
+   {{< /tabs >}}
 
 ## Customize the CLI installation
 

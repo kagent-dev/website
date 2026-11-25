@@ -22,7 +22,7 @@ When set, a single value controls the `<base href>` tag, the client-side router 
 
 ## Setting the value
 
-Put `ui.basePath` in the Helm values at install time, rather than in a follow-up `helm upgrade`. The install steps live on the [Install kagent]({{< link path="setup/installation" >}}) page; the value is the only non-default setting this page needs.
+Put `ui.basePath` in the Helm values at install time, rather than in a follow-up `helm upgrade`. The install steps live on the [Install kagent]({{< link path="setup" >}}) page; the value is the only non-default setting this page needs.
 
 ```bash
 helm upgrade --install kagent \
@@ -136,6 +136,6 @@ Error: execution error at (kagent/templates/ui-deployment.yaml:21:31): ui.basePa
 ## Next steps
 
 {{< cards >}}
-  {{< card link=`{{< link path="setup/installation" >}}` title="Install kagent" subtitle="The full install steps this page's `ui.basePath` value plugs into." >}}
+  {{< card link=`{{< link path="setup" >}}` title="Install kagent" subtitle="The full install steps this page's `ui.basePath` value plugs into." >}}
   {{< card link=`{{< link path="about/substrate-runtime/identity" >}}` title="Identity" subtitle="How kagent resolves a caller's identity and scopes a Session to its creator." >}}
 {{< /cards >}}

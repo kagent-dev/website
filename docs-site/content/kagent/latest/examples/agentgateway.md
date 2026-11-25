@@ -65,7 +65,7 @@ Only `policies.promptGuard` is new in this example. The routing fields and `poli
 
 ## Before you begin
 
-1. [Install kagent]({{< link path="setup/installation" >}}), and [create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a {{< gloss "Harness" >}}Harness{{< /gloss >}} to pair with. This example uses a Harness named `my-first-harness` in the `kagent` namespace.
+1. [Install kagent]({{< link path="setup" >}}), and [create your first agent]({{< link path="get-started/your-first-agent" >}}) so that you have a {{< gloss "Harness" >}}Harness{{< /gloss >}} to pair with. This example uses a Harness named `my-first-harness` in the `kagent` namespace.
 
 2. Set up [agentgateway model routing]({{< link path="setup/model-providers/byo-agentgateway#set-up-agentgateway-model-routing" >}}), which installs agentgateway with `--set agentgatewayModels.enabled=true` and creates a `Gateway` named `agentgateway-proxy` and an `AgentgatewayModel` named `gpt-4o-mini`.
 

@@ -1,0 +1,37 @@
+{{- /*
+  One step of a story-path: a numbered marker on the path line, then a card
+  with the tutorial's title, what the reader ends up with, and a still from
+  its recording. The whole card is one link. The number comes from the step's
+  position, so reordering the steps renumbers them.
+
+  Parameters:
+    - title | string | yes | — | Tutorial title.
+    - page | path | yes | — | The tutorial page, relative to the current page.
+      The build fails if it does not exist.
+    - text | string | no | — | What the reader builds in this step.
+    - result | string | no | — | Short "you end up with" label.
+    - image | string | no | — | assets-relative image for the thumbnail.
+    - kicker | string | no | Step | Word in front of the number, such as "Project".
+*/ -}}
+{{- $target := .Page.GetPage (.Get "page") -}}
+{{- if not $target -}}
+  {{- errorf "story-step: page %q not found, called from %s" (.Get "page") .Position -}}
+{{- else -}}
+<li class="story-step">
+  <span class="story-step-marker" aria-hidden="true">{{ add .Ordinal 1 }}</span>
+  <a class="story-step-card" href="{{ $target.RelPermalink }}">
+    <span class="story-step-body">
+      <span class="story-step-kicker">{{ .Get "kicker" | default "Step" }} {{ add .Ordinal 1 }}</span>
+      <span class="story-step-title">{{ .Get "title" }}</span>
+      {{- with .Get "text" }}<span class="story-step-text">{{ . }}</span>{{ end -}}
+      {{- with .Get "result" }}<span class="story-step-result">{{ . }}</span>{{ end -}}
+    </span>
+    {{- with .Get "image" -}}
+      {{- with resources.Get . -}}
+        {{- $img := .Resize "560x webp q82" -}}
+        <img class="story-step-image" src="{{ $img.RelPermalink }}" width="{{ $img.Width }}" height="{{ $img.Height }}" alt="" loading="lazy" />
+      {{- end -}}
+    {{- end -}}
+  </a>
+</li>
+{{- end -}}

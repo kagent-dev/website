@@ -8,6 +8,21 @@
 */ -}}
 {{ partial "themeExtras/head-end.html" . }}
 
+{{- /* The /docs home has no content of its own: it always sends the reader to
+       the current kagent docs main page. Done in <head> so it fires before the
+       page paints. `location.replace` keeps /docs out of the history, so Back
+       does not bounce straight forward again; the meta refresh covers readers
+       without JavaScript, and content/_index.md carries a visible link for
+       anything that follows neither. In production the same redirect could be
+       served as an HTTP 3xx, but /docs/* is static assets that Cloudflare
+       serves before the Worker (and its next.config.mjs redirects) runs. */ -}}
+{{- if .IsHome -}}
+  {{- with site.GetPage "/kagent/latest" }}
+<script>window.location.replace({{ .RelPermalink }});</script>
+<meta http-equiv="refresh" content="0; url={{ .RelPermalink }}">
+  {{- end -}}
+{{- end }}
+
 {{/* Consumer-local PostCSS pipeline (Tailwind utilities on top of the module CSS) */}}
 {{ $options := dict "inlineImports" true "config" "./assets/css/postcss.config.js" }}
 {{ $styles := resources.Get "css/styles.css" }}

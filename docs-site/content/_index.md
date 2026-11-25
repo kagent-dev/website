@@ -6,4 +6,4 @@ cascade:
   type: docs
 ---
 
-kagent and kmcp documentation.
+This page redirects to the [kagent documentation](kagent/latest/).

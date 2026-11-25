@@ -7,6 +7,8 @@ aliases:
   - /kagent/latest/substrate-runtime/identity/
 ---
 
+{{< tutorial-banner >}}
+
 A {{< reuse "kagent-docs/snippets/name-product.md" >}} installation identifies each kind of caller with a different system.
 
 - An operator applying a {{< gloss "Harness" >}}Harness{{< /gloss >}} is authenticated by [Kubernetes](#the-kubernetes-plane).
