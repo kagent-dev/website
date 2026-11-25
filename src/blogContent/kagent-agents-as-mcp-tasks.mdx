@@ -1,0 +1,310 @@
+export const metadata = {
+  title: "Hand the Job to an Agent: kagent Agents Run as MCP Tasks",
+  publishDate: "2026-11-25T12:00:00Z",
+  description:
+    "kagent serves every agent over MCP, and it implements the MCP Tasks extension. An MCP client hands a kagent agent a long job, gets a task handle back in half a second, and collects the result later. The agent can ask a question halfway through, the client can cancel, and the task survives a controller restart. This post runs all of it on a local cluster and shows why Agent Substrate makes it work.",
+  author: "Sebastian Maniak",
+  authorIds: ["sebastianmaniak"],
+};
+
+# Hand the Job to an Agent: kagent Agents Run as MCP Tasks
+
+kagent agents run as MCP tasks. Any MCP client can hand a kagent agent a long job, get a task handle back straight away, and collect the result when it's ready.
+
+MCP started as a way to call tools. A tool call is a function call: you send arguments, you wait, you get a result. That works for a lookup that takes 200 milliseconds. It doesn't work for an agent that needs three minutes to download a dataset, analyse it and write a report. The caller blocks, the connection times out, and the work is lost.
+
+The MCP Tasks extension fixes that, and kagent implements it. With tasks, a client works with a kagent agent the way you'd work with a colleague: hand over the job, get on with something else, answer a question if one comes up, and pick up the result when it's done.
+
+I ran all of this on kagent 1.0.1 on a local kind cluster. Every command and every output below is from that run.
+
+```mermaid
+sequenceDiagram
+    participant C as MCP client
+    participant K as kagent /mcp
+    participant A as Agent in a Substrate sandbox
+    C->>K: tools/call invoke_agent
+    K->>A: start a session and a turn
+    K-->>C: task handle, status working
+    Note over C: The client is free to do other work
+    A->>A: download, analyse, write
+    C->>K: tasks/get
+    K-->>C: working
+    C->>K: tasks/get
+    K-->>C: completed, with the result
+```
+
+## Every agent is already on the endpoint
+
+The kagent controller serves a Streamable HTTP MCP endpoint at `/mcp` on port `8083`. You don't deploy anything to get it, and you don't wrap your agents. Create an `Agent` and it's callable.
+
+The agent in this post is `kev-analyst`. It writes patch-priority briefs from the CISA Known Exploited Vulnerabilities catalog. It runs on Agent Substrate with default-deny egress, so it gets one [egress policy](/blog/kagent-policies-ui-egress-policy-walkthrough) for the one host it needs:
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: api.kagent.dev/v1alpha3
+kind: EgressPolicy
+metadata:
+  name: cisa-kev
+  namespace: kagent
+spec:
+  destinations:
+    - origin: https://www.cisa.gov
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: kev-analyst
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  egressPolicyRefs:
+    - name: cisa-kev
+  template:
+    inline:
+      description: Researches the CISA Known Exploited Vulnerabilities catalog and writes a patch-priority brief
+      modelConfig:
+        name: default-model-config
+      systemPrompt: |-
+        You are a vulnerability analyst. You write patch-priority briefs from the CISA Known Exploited Vulnerabilities (KEV) catalog.
+        If the request does not name a vendor or product to focus on, ask which one with the ask_user tool before you do anything else.
+        Never answer from memory. Download the catalog first with the bash tool:
+        wget -qO /data/workspace/kev.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+        Then analyse the file with bash tools such as grep, head and wc. Do not print the whole file.
+        The brief lists the matching vulnerabilities, newest first, with the CVE ID, product, date added, due date, and whether it is used in ransomware campaigns. End with the three to patch first and why.
+        If a command fails, say so and show the error.
+EOF
+```
+
+To talk to the endpoint, forward the controller port:
+
+```bash
+kubectl port-forward -n kagent svc/kagent-controller 8083:8083
+```
+
+The endpoint is stateless. There's no handshake to keep alive and no session to pin to a replica. Each request says what the client supports, including the tasks extension. That makes a 20-line shell script a complete client. Save this as `mcp.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Minimal MCP client for kagent: one JSON-RPC request per call, no session.
+# usage: mcp.sh <method> '<params json>'
+set -euo pipefail
+method=$1
+params=${2:-'{}'}
+meta='{"io.modelcontextprotocol/protocolVersion":"2026-07-28",
+       "io.modelcontextprotocol/clientInfo":{"name":"curl","version":"1"},
+       "io.modelcontextprotocol/clientCapabilities":{"extensions":{"io.modelcontextprotocol/tasks":{}}}}'
+body=$(jq -cn --arg m "$method" --argjson p "$params" --argjson meta "$meta" \
+  '{jsonrpc:"2.0",id:1,method:$m,params:($p+{_meta:$meta})}')
+name=$(jq -r '.name // .taskId // empty' <<<"$params")
+curl -s -X POST "${KAGENT_MCP:-http://localhost:8083/mcp}" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'Mcp-Protocol-Version: 2026-07-28' \
+  -H "Mcp-Method: $method" ${name:+-H "Mcp-Name: $name"} \
+  -d "$body" | sed 's/^data: //;/^event:/d;/^$/d' | jq '(.result // .error) | del(._meta)'
+```
+
+Ask the endpoint which agents it has:
+
+```bash
+./mcp.sh tools/call '{"name":"list_agents","arguments":{}}' | jq -c .structuredContent
+```
+
+```console
+{"agents":[{"name":"kev-analyst","namespace":"kagent"}]}
+```
+
+## Hand off long-running work
+
+**The problem:** a tool call has to finish before the caller can move on.
+
+**With tasks:** `invoke_agent` returns a task handle as soon as kagent accepts the turn.
+
+```bash
+./mcp.sh tools/call '{
+  "name": "invoke_agent",
+  "arguments": {
+    "agent": {"namespace": "kagent", "name": "kev-analyst"},
+    "message": "Write a patch-priority brief for Microsoft Windows vulnerabilities added to the KEV catalog in 2026."
+  }
+}'
+```
+
+```console
+{
+  "taskId": "v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1OC0xMDlmLTc4YWIt...",
+  "status": "working",
+  "createdAt": "2026-11-25T15:34:28.710228Z",
+  "lastUpdatedAt": "2026-11-25T15:34:28.710228Z",
+  "ttlMs": null,
+  "pollIntervalMs": 1000,
+  "resultType": "task"
+}
+```
+
+That came back in half a second. The agent then worked for 2 minutes and 46 seconds. To check on it, call `tasks/get` with the task ID:
+
+```bash
+./mcp.sh tasks/get '{"taskId":"v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1OC0xMDlmLTc4YWIt..."}'
+```
+
+While the agent is busy the status is `working`. When it finishes, the same call returns `completed` and the result:
+
+```console
+{
+  "taskId": "v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1OC0xMDlmLTc4YWIt...",
+  "status": "completed",
+  "createdAt": "2026-11-25T15:34:28.710228Z",
+  "lastUpdatedAt": "2026-11-25T15:37:14.482Z",
+  "resultType": "complete",
+  "result": {
+    "structuredContent": {
+      "session_id": "01a21358-109f-78ab-aa6d-7cf962fda7f4",
+      "task_id": "01a21358-1255-7303-8436-a1811ef54477",
+      "state": "TASK_STATE_COMPLETED",
+      "text": "I downloaded and analyzed the CISA KEV catalog ... Three to patch first (priority rationale) ..."
+    }
+  }
+}
+```
+
+The brief listed 15 Windows entries and picked three to patch first, two of them because the catalog marks them as used in ransomware campaigns.
+
+Nothing about the work is hidden behind the task handle. The task is an ordinary kagent session, so it's in the UI with every step the agent took:
+
+![The kagent chat view for the session the MCP task created, showing the request and the agent's bash tool calls](/images/blog/kagent-agents-as-mcp-tasks/02-task-running-in-sandbox.png "The session behind the task. Nobody typed this request into the UI; it arrived over MCP.")
+
+## Answer a question in the middle of the job
+
+**The problem:** a long job often needs one more fact from the person who asked for it. With a plain tool call, the only options are to guess or to fail.
+
+**With tasks:** the agent pauses and the task moves to `input_required`.
+
+I sent a request that leaves out the vendor on purpose:
+
+```bash
+./mcp.sh tools/call '{
+  "name": "invoke_agent",
+  "arguments": {
+    "agent": {"namespace": "kagent", "name": "kev-analyst"},
+    "message": "Write me a patch-priority brief."
+  }
+}'
+```
+
+Three seconds later, `tasks/get` showed the agent waiting, with its question as a form the client can render:
+
+```console
+{
+  "status": "input_required",
+  "statusMessage": "Which vendor or product should I focus on for the KEV patch-priority brief? Please name a vendor (e.g., Microsoft) or specific product (e.g., Microsoft Exchange).",
+  "inputRequests": {
+    "01a2135a-c827-73a4-9122-aa67d0c58ea3": {
+      "method": "elicitation/create",
+      "params": {
+        "mode": "form",
+        "message": "Which vendor or product should I focus on for the KEV patch-priority brief? ...",
+        "requestedSchema": {
+          "type": "object",
+          "properties": {
+            "response": {"type": "string", "description": "Which vendor or product should I focus on ..."}
+          },
+          "required": ["response"]
+        }
+      }
+    }
+  }
+}
+```
+
+Answer with `tasks/update`, using the key of the input request:
+
+```bash
+./mcp.sh tasks/update '{
+  "taskId": "v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1YS1iZDA5LTcwNmMt...",
+  "inputResponses": {
+    "01a2135a-c827-73a4-9122-aa67d0c58ea3": {
+      "action": "accept",
+      "content": {"response": "Cisco"}
+    }
+  }
+}'
+```
+
+The task went back to `working` and the agent wrote the Cisco brief. The same mechanism carries kagent's tool approvals: when an agent needs sign-off before it runs a tool, the task asks the client for a yes or no.
+
+![The kagent chat view showing the agent's question marked as answered with Cisco, followed by the agent's tool calls](/images/blog/kagent-agents-as-mcp-tasks/03-question-answered.png "The question and the answer in the session. The answer came from tasks/update, not from the chat box.")
+
+## Stop a job you no longer need
+
+Start a task, change your mind, and call `tasks/cancel`:
+
+```bash
+./mcp.sh tasks/cancel '{"taskId":"v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1YS1mODMyLTc1MzUt..."}'
+./mcp.sh tasks/get    '{"taskId":"v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1YS1mODMyLTc1MzUt..."}'
+```
+
+```console
+{
+  "taskId": "v1.eyJzZXNzaW9uSWQiOiIwMWEyMTM1YS1mODMyLTc1MzUt...",
+  "status": "cancelled",
+  "createdAt": "2026-11-25T15:37:38.749549Z",
+  "lastUpdatedAt": "2026-11-25T15:37:46.912Z",
+  "resultType": "complete"
+}
+```
+
+The agent stops. It doesn't keep spending model tokens on a brief nobody will read.
+
+## Built on Agent Substrate
+
+Handing off a job is only useful if the job is safe to leave alone. That part isn't MCP. It's the runtime underneath, and it's where kagent is different.
+
+**The task is durable.** kagent doesn't keep a separate table of MCP tasks. The task ID is an opaque reference to a session and an A2A task that kagent already stores in its database. To test it, I started a task and restarted the controller 15 seconds later:
+
+```bash
+kubectl rollout restart deployment/kagent-controller -n kagent
+```
+
+The new controller was up 15 seconds after that. I called `tasks/get` with the same task ID. It said `working`, and 84 seconds later it said `completed`, with the full Fortinet brief. The agent never noticed, because it doesn't run in the controller. It runs in its own sandbox on a Substrate worker.
+
+**Every task gets its own sandbox.** Each session is an Actor in a gVisor sandbox, started from a prepared snapshot. Seven tasks means seven isolated workspaces. One task can't read another's files.
+
+**The agent can't wander.** Substrate denies outbound traffic by default. `kev-analyst` can reach its model and `www.cisa.gov`, because that's what its egress policy allows, and nothing else. That matters more when nobody is watching the job.
+
+**A finished task costs nothing.** When a turn ends, Substrate suspends the Actor. The result stays in the database and the session can be resumed with a follow-up, but no compute is held. Here's the Substrate page after seven tasks, with two still in flight:
+
+![The kagent Substrate page listing seven actors: five suspended with no worker pod, two running on the same worker](/images/blog/kagent-agents-as-mcp-tasks/04-substrate-actors-running-and-suspended.png "Seven tasks, one worker pod. Five Actors are suspended and hold no worker. Two are running.")
+
+**It's the same task everywhere.** MCP is one more way in to the same control plane. A task started over MCP shows up in the UI and over A2A, with the same history.
+
+![The kagent dashboard listing recent sessions for kev-analyst, each one started by an MCP task](/images/blog/kagent-agents-as-mcp-tasks/01-dashboard-sessions-from-mcp.png "The dashboard after the run. Every session here was started by an MCP task.")
+
+## Good to know
+
+- **Clients that don't support tasks still work.** If a client doesn't declare the tasks extension, `invoke_agent` is an ordinary tool call that blocks until the agent answers.
+- **Follow up in the same session.** Pass the `session_id` from a result back to `invoke_agent` in place of `agent`. The Actor resumes with its files and its conversation. I asked the first session to list its workspace ten minutes after it had been suspended, and `kev.json` was still there, all 1,882,385 bytes of it.
+- **There's more on the endpoint.** It has 27 tools: sessions, checkpoints, forking a session from a checkpoint, and standalone sandboxes. kagent also registers the endpoint as an MCP server named `kagent-api`, so your own agents can use those tools.
+- **Sort out authentication before you expose it.** The CLI install is a development setup, and it accepted my calls without credentials. The endpoint sits behind the same authenticator as the rest of the kagent API.
+
+![The kagent MCP Servers page listing kagent-tool-server with 126 tools and kagent-api with 27 tools](/images/blog/kagent-agents-as-mcp-tasks/05-mcp-servers-kagent-api.png "kagent-api is the same /mcp endpoint, registered for agents inside the cluster.")
+
+## Try it
+
+You need a cluster, a model API key, and one command:
+
+```bash
+kind create cluster --name kagent --image kindest/node:v1.37.0
+export OPENAI_API_KEY=your-key
+curl -sL https://kagent.dev/install | bash && kagent install
+```
+
+Then apply the agent above, forward port `8083`, and hand it a job.
+
+- [Install kagent in One Command with the kagent CLI](/blog/install-kagent-with-the-cli): the full install walkthrough.
+- [kagent Has a Policies Page Now](/blog/kagent-policies-ui-egress-policy-walkthrough): how egress policies work, screen by screen.
+- [kagent 1.0 Is Here: Open Source Agents on Agent Substrate](/blog/kagent-v1-0-release): why agents run on Substrate.
+- [The MCP architecture notes](https://github.com/kagent-dev/kagent/blob/main/docs/architecture/mcp.md) in the kagent repository: how the endpoint maps MCP tasks to A2A tasks.
+
+The task support was built by the kagent maintainers and contributors in the open. If you try it with your own MCP client, tell us how it went on [GitHub](https://github.com/kagent-dev/kagent) or [Discord](https://discord.gg/Fu3k65f2k3).

@@ -9,6 +9,15 @@ import { BlogIndex, type BlogCardPost, type Category } from "@/components/blog/b
 
 const posts: { slug: string; publishDate: string; title: string; description: string; authorId: string; category: Category; image?: string }[] = [
     {
+        slug: 'kagent-agents-as-mcp-tasks',
+        image: '/images/blog/thumbnails/kagent-agents-as-mcp-tasks.webp',
+        publishDate: '2026-11-25',
+        title: 'Hand the Job to an Agent: kagent Agents Run as MCP Tasks',
+        description: 'kagent serves every agent over MCP and implements the MCP Tasks extension. Hand an agent a long job, get a task handle back in half a second, answer its questions, cancel it, and collect the result later. A live run on a local cluster, including a task that survives a controller restart, and why Agent Substrate makes it work.',
+        authorId: 'sebastianmaniak',
+        category: 'Feature',
+    },
+    {
         slug: 'kagent-policies-ui-egress-policy-walkthrough',
         image: '/images/blog/thumbnails/kagent-policies-ui-egress-policy-walkthrough.webp',
         publishDate: '2026-11-24',
