@@ -29,7 +29,7 @@ const posts: { slug: string; publishDate: string; title: string; description: st
     {
         slug: 'install-kagent-with-the-cli',
         publishDate: '2026-11-24',
-        title: 'Install kagent in One Command with the kagent CLI',
+        title: 'Install Agent Substrate in One Command with the kagent CLI',
         description: 'The fastest way to get kagent running: create a cluster, set a model API key, and run one command. The kagent CLI installs the CRDs, Agent Substrate, a development PostgreSQL database, and kagent for you.',
         authorId: 'sebastianmaniak',
         category: 'Tutorial',
