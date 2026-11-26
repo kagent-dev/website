@@ -53,6 +53,13 @@ const posts: { slug: string; publishDate: string; title: string; description: st
         category: 'Tutorial',
     },
     {
+        slug: 'infrastructure-as-code-kagent',
+        publishDate: '2026-11-20',
+        title: 'Infrastructure as code from a kagent agent',
+        description: 'Give a kagent agent Terraform plan and apply as MCP tools, keep the cloud key out of its sandbox, and let a person approve every plan before it runs.',
+        authorId: 'eronwright',
+    },
+    {
         slug: 'install-agent-substrate-any-cluster',
         image: '/images/blog/thumbnails/install-agent-substrate-any-cluster.webp',
         publishDate: '2026-11-11',

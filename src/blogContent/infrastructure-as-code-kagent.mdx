@@ -1,0 +1,145 @@
+export const metadata = {
+  title: "Infrastructure as code from a kagent agent",
+  publishDate: "2026-11-20T15:00:00Z",
+  description: "Give a kagent agent Terraform plan and apply as MCP tools, keep the cloud key out of its sandbox, and let a person approve every plan before it runs.",
+  author: "Eron Wright",
+  authorIds: ["eronwright"],
+  tags: ["kagent", "mcp", "infrastructure-as-code", "terraform", "opentofu", "human-in-the-loop"],
+}
+
+# Infrastructure as code from a kagent agent
+
+kagent 1.0 turned my Kubernetes cluster into the control plane for the infrastructure around it: cloud resources, other clusters, anything with a Terraform provider. An agent runs in the cluster, in a sandbox, and takes its instructions from wherever you work: the kagent UI, another agent over A2A, the CLI. Ask it for a Lambda fleet or a new EKS cluster and it plans the change with Terraform, then applies it once a person has approved the plan. It writes no Terraform of its own: it draws on HCL configurations your platform team has already written and reviewed, mounted read-only, and sets only what they leave open as variables: a stack name, a namespace, a region.
+
+Everything else stays in the cluster, each piece in its own place: an MCP server with Terraform tools, the Terraform state in Kubernetes Secrets, so there is no bucket to set up first, and the cloud key in the one component that applies. The agent holds nothing. This post is how we wired it, what kagent gave us for free, and what a run looks like. The example is [Turf](https://turf.build), the infrastructure-as-code tool I work on, but the shape works for any MCP server that plans and applies.
+
+## The cluster is the control plane
+
+The agent never touches a cloud API. It gets Terraform's verbs as tools from an MCP server in the cluster, registered with kagent as a `RemoteMCPServer`: `init`, `plan`, `apply`, and a few more. The MCP server connects to the Turf engine, a Knative service on restate-server, which runs the providers and is the only thing that holds the cloud key.
+
+![What runs where: kagent, the Turf MCP server, the Turf engine, and what gets built outside the cluster](/images/blog/infrastructure-as-code-kagent/what-runs-where.png)
+*What runs where. The sandbox holds no credentials. The engine holds the cloud credentials and runs the providers. Everything built is outside the cluster.*
+
+Three things from kagent 1.0 made this clean:
+
+- **The sandbox.** Agent Substrate runs each conversation in its own gVisor sandbox. There is nothing in it to steal: no cloud credentials, no state, no kubeconfig.
+- **The egress gateway.** Every connection out of the sandbox goes through it, and it adds the `Authorization: Bearer` header the MCP server requires. The agent never sees the token either.
+- **`requireApproval`.** The `apply` tool is bound with `requireApproval: true`, so kagent asks a person before it runs. The agent's `apply` call carries the plan's digest, so what you approve is that exact plan, not "whatever the agent does next".
+
+State is a Secret per stack in the `turf` namespace, the OpenTofu kubernetes backend. The MCP server's ServiceAccount can read and write Secrets and Leases there, and nothing else. The engine's ServiceAccount has exactly the ClusterRole an approved plan may need.
+
+## What the agent is told
+
+The wiring is two kagent resources. The `RemoteMCPServer` names the tool server and the header every call carries; the header's value comes from a Secret, and the egress gateway puts it on the request on the way out:
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata:
+  name: turf
+  namespace: kagent
+spec:
+  url: http://turf-mcp-server.turf.svc.cluster.local:3000/mcp
+  protocol: STREAMABLE_HTTP
+  headersFrom:
+    - name: Authorization
+      valueFrom:
+        type: Secret
+        name: turf-mcp-auth
+        key: authorization
+```
+
+The `AgentTemplate` is where the agent learns the rules. Its system prompt says which configuration it operates and how to open state, and its tool list says which calls wait for a person. Trimmed:
+
+```yaml
+apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: turf
+  namespace: kagent
+spec:
+  modelConfig:
+    name: turf-model
+  systemPrompt: |
+    You are turf, an infrastructure agent running in a Kubernetes cluster.
+
+    Follow the turf MCP server's instructions. Call `skill_deployment` at
+    the start of every session, before any other turf tool.
+
+    You operate the configuration mounted at `/turf/config`: a versioned
+    configuration image, read-only. You do not author Terraform.
+
+    Use the Kubernetes state backend, in the `turf` namespace. Give every
+    stack its own workspace, with the stack's name as its alias:
+
+        open({
+          workspace_name:  "<stack-name>",
+          backend_type:    "kubernetes",
+          backend_config:  { secret_suffix: "turf", namespace: "turf",
+                             in_cluster_config: true }
+        })
+
+    A person approves every `apply` in kagent before it runs. Before you
+    call it, write the plan: what it adds, changes and destroys, and the
+    risk. Your text is the plan they read.
+  tools:
+    - mcp:
+        server: { kind: RemoteMCPServer, name: turf }
+        tools: [skill_deployment, read_skill_file, init, open, up, destroy,
+                plan, show, output, state_list, cancel]   # change nothing on their own
+    - mcp:
+        server: { kind: RemoteMCPServer, name: turf }
+        tools: [apply, taint, delete]
+        requireApproval: true                              # each one pauses for a person
+```
+
+Notice the first instruction: call `skill_deployment` before anything else. The Turf MCP server ships its skills as tools. `skill_deployment` returns the runbook for planning, applying and destroying a configuration, for turf actions and for recovery, and `read_skill_file` fetches its reference files. The agent definition stays short because the tool server teaches the agent how to use it, and the lesson changes with the server, not with the agent. In the run below it is the first call, three seconds after the ask.
+
+## A run, start to finish
+
+The ask was one sentence in the kagent chat: "Deploy a Lambda fleet as a stack called demo." Nine resources: two AWS Lambda functions, their public URLs, an IAM role, and one action for the agent.
+
+```
+18:26:15   "Deploy a Lambda fleet as a stack called demo."
+18:26:18 ✓ skill_deployment   → the runbook: plan, apply, destroy, turf actions, recovery
+18:26:19 ✓ init   path: /turf/config
+18:26:23 ✓ open   workspace demo · backend: kubernetes · state: empty
+18:26:25 ✓ up({ var: { fleet_size: 2, greeting: "Hello from the cluster.", … } })
+18:27:01 ✓ plan   → awaiting_approval · add 9, change 0, destroy 0
+18:27:05 ◷ apply({ convergence_id: "p-10a4344a", plan_digest: "sha256:f5bf…" })   asked · approved 18:27:58
+18:28:42 ✓ apply  → awaiting_actions · action.turf_action.verify
+18:28:44 ✓ bash   wget -qO- -S https://…lambda-url.us-west-2.on.aws/   → 200 · {"message":"Hello from the cluster."}
+18:28:44 ✓ bash   wget -qO- -S https://…lambda-url.us-west-2.on.aws/   → 200 · {"message":"Hello from the cluster."}
+18:28:48 ◷ apply({ action_results: { …verify…: { succeeded: true } } })   asked · approved 18:29:09
+18:29:11 ✓ apply  → converged · applied 9, invoked 1, deferred 0
+```
+
+Just under three minutes from the ask to the end, and 75 seconds of that was waiting for a person. The report that came back:
+
+![The agent's report in the kagent chat: the plan, the verification, the two URLs](/images/blog/infrastructure-as-code-kagent/kagent-report.png)
+*The agent's report in the kagent chat: what the plan added, the verification, and the two URLs.*
+
+The apply paused in the middle. That is a **turf action**: a step of the apply that the agent carries out. This one asked it to fetch each function's URL and compare the answer. Its report, with both responses, is what the person approved the second time.
+
+## Several sessions, one engine
+
+The engine is a `RestateDeployment` in Knative mode, `minScale: 0`, `maxScale: 2`. Three sessions asked for a fleet each, a minute apart, through one agent definition. All three were up 3 minutes 22 seconds after the first ask, and nothing was lost to a pod coming or going: restate-server keeps the record of every plan and apply.
+
+![Three sessions on one engine: the timeline of the three runs and the engine's pods](/images/blog/infrastructure-as-code-kagent/three-sessions-one-engine.png)
+*The engine went from no pods to one at the first ask, two while the applies overlapped, and back to none a minute after the last run ended.*
+
+The engine keeps the record of every run, and Turf's console reads it. The agent's messages link to it, so a person can open the plan the agent is describing.
+
+![The plan in Turf's console: nine resources and one action](/images/blog/infrastructure-as-code-kagent/turf-console-plan.png)
+*The demo run in Turf's console: round 1, nine resources to create and the verify action that runs after them.*
+
+## Run it
+
+The example is public: [github.com/turfbuild/turf-kagent](https://github.com/turfbuild/turf-kagent). You need a kind cluster on Kubernetes 1.37, the kagent CLI, an Anthropic key and an AWS account.
+
+1. Install Turf, then run `turf -C setup/aws up` once with your own AWS credentials. It creates the engine's key: an IAM user scoped by name to `turf-kagent-*`.
+2. Run `./setup/up.sh`: Knative, the Restate operator, kagent, the Secrets, then Turf and the agent.
+3. Open the kagent UI, pick the agent `turf`, and ask it for a fleet as a stack called demo. Approve the plan, then the agent's report.
+4. Destroy the stacks before you delete the cluster. The functions are outside it.
+
+Turf is a self-hosted, autonomous infrastructure-as-code tool built on OpenTofu; it is free for noncommercial use. The longer write-up, with the stills and the Knative timeline, is [Agentic IaC for Platform Teams](https://turf.build/reference-architectures/agentic-iac-for-platform-teams/). Questions: find me on the kagent Discord, or on Turf's at turf.build/discord.

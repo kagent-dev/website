@@ -77,6 +77,13 @@ export const authors: Author[] = [
     photo: "",
     bio: "Steven is a software engineer at Solo.io working on kagent.",
   },
+  {
+    id: 'eronwright',
+    name: 'Eron Wright',
+    title: 'Founder, Turf',
+    photo: '/images/authors/eronwright.jpg',
+    bio: 'Eron Wright is the founder of Turf, an autonomous infrastructure-as-code tool built on OpenTofu. Before Turf he worked on Pulumi and on Azure, and on Apache Flink. He contributed the Terraform deployer to NVIDIA AI Cluster Runtime.',
+  },
 ];
 
 export const getAuthorById = (id: string): Author | undefined => {
