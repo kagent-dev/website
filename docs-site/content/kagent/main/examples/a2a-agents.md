@@ -348,7 +348,12 @@ Build the receiver around these rules:
 
 * Any `2xx` response acknowledges a delivery. Every other response counts as a failed attempt, and a redirect is one of them, so register the final callback URL.
 * A delivery can arrive more than once, or out of order. Treat `GetTask` as the source of truth for the task's current state.
+{{% version include-if="1.0.x,0.x" %}}
 * kagent makes up to ten attempts for each state that a task publishes, and the count carries across controller restarts. After the last attempt, kagent drops that delivery but keeps the callback registered, so the next state still reaches the receiver.
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+* The controller makes up to 20 attempts for each state that a task publishes, and the count carries across controller restarts. Retry waits start at 5 seconds and double to a maximum of 60 seconds. After the last attempt, the controller drops that delivery but keeps the callback registered, so the next state still reaches the receiver.
+{{% /version %}}
 * kagent does not expose delivery status, so nothing reports whether a delivery failed.
 
 To tune delivery, configure the following Helm values under `config.push`.
@@ -357,7 +362,8 @@ To tune delivery, configure the following Helm values under `config.push`.
 | ----- | ------- | ------ |
 | `maxConcurrency` | `10` | The number of deliveries that each controller replica sends at once. Setting `1` sends them one at a time. |
 | `sendTimeout` | `5s` | How long one HTTP attempt can take before it counts as failed. |
-| `recoveryInterval` | `60s` | How often an idle controller scans for deliveries that a missed wake-up left pending. |
+| `recoveryInterval` | `60s` | How often an idle controller scans for deliveries that a missed wake-up left pending. |{{< version exclude-if="1.0.x,0.x" >}}
+| `signingKeyActivationDelay` | `300s` | How long the controller publishes a replacement signing key before it signs callbacks with the replacement key. Use a value that covers the receiver's JWKS cache refresh interval. The maximum is `86400s`. |{{< /version >}}
 
 ### Secure callback deliveries
 
@@ -391,6 +397,10 @@ kagent does not generate its own signing key, so you are responsible for creatin
    ```
 
    The issuer that a receiver trusts must match the host that it fetches the JSON Web Key Set (JWKS) from. When you omit `config.push.issuer`, Helm derives it from `ui.externalUrl` and then from the in-cluster A2A gateway URL. Either fallback can point to a host that does not serve the JWKS.
+
+{{% version exclude-if="1.0.x,0.x" %}}
+   To rotate a key without interrupting signed deliveries, update the Secret and leave `config.push.signingKeyActivationDelay` long enough for receiver JWKS caches to refresh. The controller reloads the mounted key file every 15 seconds, publishes the replacement public key before it signs callbacks with the key, and adds a fixed 30-second buffer to the configured delay.
+{{% /version %}}
 
 4. Confirm that the controller publishes a verification key. Before you set the Secret, this path returns `404`.
    ```bash

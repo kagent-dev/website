@@ -261,6 +261,7 @@ To sign callbacks, generate one unencrypted PKCS#8 Ed25519 key and store it in a
    ```
 
 3. Name the Secret in your {{< reuse "kagent-docs/snippets/name-product.md" >}} Helm values, and apply the values to the kagent release.
+{{% version include-if="1.0.x,0.x" %}}
    ```yaml
    controller:
      push:
@@ -270,13 +271,27 @@ To sign callbacks, generate one unencrypted PKCS#8 Ed25519 key and store it in a
      push:
        issuer: https://kagent.example.com
    ```
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+   ```yaml
+   controller:
+     push:
+       signing:
+         secretName: kagent-push-signing
+   config:
+     push:
+       issuer: https://kagent.example.com
+       signingKeyActivationDelay: 300s
+   ```
+{{% /version %}}
 
    `controller.push.signing` configures the Kubernetes packaging of the key, and `config.push` configures the controller.
 
    | Setting | Description |
    | ------- | ----------- |
    | `controller.push.signing.secretName` | The Secret that holds `private-key.pem`. Leave it empty to send push notifications without JSON Web Token (JWT) authentication. Helm references a Secret that you create, and neither generates nor rotates signing keys. If you set this field, the chart mounts the key and sets `config.push.signingPrivateKeyFile` to `/etc/kagent/secrets/push-private-key.pem`. |
-   | `config.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |
+   | `config.push.issuer` | The stable URL that webhook receivers trust as the JWT issuer. If you omit the key, the chart derives the issuer from `ui.externalUrl`, and then from the in-cluster A2A gateway URL. An empty string is rejected, because the controller requires an absolute `http://` or `https://` URL. |{{< version exclude-if="1.0.x,0.x" >}}
+   | `config.push.signingKeyActivationDelay` | How long the controller publishes a replacement public key before it signs callbacks with the replacement key. The default is `300s`, and the maximum is `86400s`. Add enough time for receivers to refresh their JWKS cache. The controller also adds a fixed 30-second buffer before signing with the replacement key. |{{< /version >}}
 
    ```bash
    helm upgrade kagent \
@@ -289,7 +304,14 @@ To sign callbacks, generate one unencrypted PKCS#8 Ed25519 key and store it in a
 
 When a signing key is configured, each callback attempt carries a newly issued five-minute Ed25519 JWT in an `Authorization: Bearer` header, and the `/.well-known/jwks.json` endpoint publishes the matching public key.
 
+{{% version include-if="1.0.x,0.x" %}}
 Every controller replica must load the same key. After you rotate the key, restart all controller pods together, because replicas that run on different keys publish different JSON Web Key Sets.
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+Every controller replica must load the same key. The controller reopens the mounted key file every 15 seconds, so a Secret or Container Storage Interface (CSI) rotation does not need a controller restart. The JWKS endpoint publishes the replacement public key as soon as a replica reloads the key, but the replica keeps signing with the previous key until `config.push.signingKeyActivationDelay` plus the 30-second buffer passes. After activation, the previous public key stays in the JWKS until issued five-minute tokens expire, plus 30 seconds of clock skew.
+
+Restarting the controller loses key history. After a restart, the controller immediately signs with the key that is mounted in the pod and publishes only that key.
+{{% /version %}}
 
 ## Tune push notification delivery
 
