@@ -115,6 +115,9 @@ For example, if your cluster uses a DNS domain other than `cluster.local`, set `
 
 * A development PostgreSQL database, `kagent-postgresql` in the kagent namespace. kagent and Agent Substrate connect to it with Pod Certificates. The database runs the stock `postgres` image, which does not include the `pgvector` extension that [long-term memory]({{< link path="agents/agent-memory" >}}) needs. For production database requirements, see [Operational considerations]({{< link path="operations/operational-considerations#choose-a-database" >}}).
 * The `kagent-default` WorkerPool, and the `kagent-default`, `codex-default`, and `claude-default` Harnesses that run on it. An Agent in the kagent namespace can set `spec.harnessRef` to one of these Harnesses without you writing your own. `spec.harnessRef` is namespace-local, so an Agent in another namespace needs its own Harness.
+{{% version exclude-if="1.0.x,0.x" %}}
+* The `platform-agent` example Agent, its specialist AgentTemplates, and the built-in skills that the UI offers from the packaged `kagent-tools` image. The Prometheus skill appears only when `kagent-tools.tools.prometheus.url` starts with `http://` or `https://`.
+{{% /version %}}
 * gRPC server reflection on the controller, so that guides that use `grpcurl` can discover the controller API.
 
 To check each component, see [Verify the installation](#verify-the-installation).
@@ -429,9 +432,13 @@ Install the kagent control plane into the `kagent` namespace. The controller app
    * `controller.substrateClientCertificate.enabled` mounts the certificates that the controller presents to the Agent Substrate API server, and the trust bundle that verifies the server.
    * `substrateWorkerPool` creates the `kagent-default` WorkerPool. `workerImage` tags the Worker image with the Agent Substrate version, because the Agent Substrate controller starts each Worker with the flags of its own version.
    * `harnesses.enabled` creates the `kagent-default`, `codex-default`, and `claude-default` Harnesses on that WorkerPool, which `kagent install` also creates. The chart leaves them off by default. Each Harness stores its snapshots at `harnesses.snapshotLocation`, which defaults to `s3://ate-snapshots/kagent/` in the bundled object store of Agent Substrate. To skip one runtime, set `harnesses.kagent.enabled`, `harnesses.codex.enabled`, or `harnesses.claude.enabled` to `false`.
+   {{% version exclude-if="1.0.x,0.x" %}}
+   * `examples.enabled` creates the `platform-agent` example Agent and offers built-in skills in the UI. The example Agent requires `harnesses.enabled`, `harnesses.kagent.enabled`, and `kagent-tools.enabled`. To include the Prometheus specialist, set `kagent-tools.tools.prometheus.url` to a URL that starts with `http://` or `https://`.
+   {{% /version %}}
    * `config.server.grpcReflection` enables gRPC server reflection, so that guides that use `grpcurl` can discover the controller API.
 
    If your cluster uses a DNS domain other than `cluster.local`, also set `global.clusterDomain`. The chart builds the URLs of the controller and the built-in `kagent-tool-server` MCP server from this domain, so agents cannot reach either service when the value is wrong.
+   {{% version include-if="1.0.x,0.x" %}}
    ```bash
    helm upgrade --install kagent \
      {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
@@ -451,6 +458,30 @@ Install the kagent control plane into the `kagent` namespace. The controller app
      enabled: true
    EOF
    ```
+   {{% /version %}}
+   {{% version exclude-if="1.0.x,0.x" %}}
+   ```bash
+   helm upgrade --install kagent \
+     {{< reuse "kagent-docs/snippets/helm-path.md" >}}/{{< reuse "kagent-docs/snippets/helm-kagent.md" >}} \
+     --version {{< reuse "kagent-docs/versions/kagent.md" >}} \
+     --namespace kagent --timeout 12m \
+     -f - <<EOF
+   config:
+     server:
+       grpcReflection: true
+   controller:
+     substrateClientCertificate:
+       enabled: true
+   substrateWorkerPool:
+     create: true
+     workerImage: "{{< reuse "kagent-docs/snippets/image-substrate.md" >}}/ateworker-gvisor:v{{< reuse "kagent-docs/versions/agent-substrate-chart.md" >}}"
+   harnesses:
+     enabled: true
+   examples:
+     enabled: true
+   EOF
+   ```
+   {{% /version %}}
 
 4. Wait for the controller to roll out.
    ```bash
