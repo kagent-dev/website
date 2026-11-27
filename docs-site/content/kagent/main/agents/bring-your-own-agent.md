@@ -217,6 +217,11 @@ For a complete executor, see [`go/core/test/byoa2a/main.go`](https://github.com/
 {{% tab name="Python" %}}
 The `kagent-adk` package provides helpers for agents that are built with the Google Agent Development Kit (ADK). `KAgentApp` wraps an ADK agent rather than an arbitrary framework, serves A2A over gRPC, and answers the readiness endpoint on 8081. `materialize_from_bootstrap` fetches the bootstrap bundle and writes its documents to `/config`, and `KAgentConfig.from_file` reads the `runtime` object back. The listener defaults to `[::]:80`, which matches what kagent dials.
 
+{{% version exclude-if="1.0.x,0.x" %}}
+The `kagent-langgraph`, `kagent-crewai`, and `kagent-openai` packages each expose a `KAgentApp` helper that uses the same `app.build().run()` server lifecycle.
+{{% /version %}}
+
+{{% version include-if="1.0.x,0.x" %}}
 ```python
 from kagent.adk import KAgentApp
 from kagent.core import KAgentConfig, materialize_from_bootstrap
@@ -231,11 +236,30 @@ app = KAgentApp(
     app_name=config.app_name,
 ).build()
 ```
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+```python
+from kagent.adk import KAgentApp
+from kagent.core import KAgentConfig, materialize_from_bootstrap
+
+materialize_from_bootstrap("/config")
+config = KAgentConfig.from_file()
+
+app = KAgentApp(
+    root_agent_factory=build_agent,
+    agent_card=card,
+    kagent_api_url=config.api_url,
+    app_name=config.app_name,
+)
+app.build().run()
+```
+{{% /version %}}
 
 `from_file` raises `ValueError` when the document omits `control_plane_url`, `gateway_url`, `name`, or `namespace`. Because `from_file` only reads the file, a standalone process that runs outside Agent Substrate skips `materialize_from_bootstrap` and supplies its own `/config/config.json`.
 
 The page uses two configuration objects. `KAgentConfig` holds only the `runtime` object, which supplies the API URL and the app name. `kagent.adk.types.parse_config` parses the whole document into a `Config`, and `KAgentApp` reads the listener address from that `Config`. To bind the address that the configuration names, pass a parsed `Config` as the `config` argument. `parse_config` takes JSON text or a dict rather than a path, so read the file first. Call `materialize_from_bootstrap` before either reader, because only `materialize_from_bootstrap` writes the file.
 
+{{% version include-if="1.0.x,0.x" %}}
 ```python
 from pathlib import Path
 
@@ -249,6 +273,23 @@ app = KAgentApp(
     config=parse_config(Path("/config/config.json").read_text()),
 ).build()
 ```
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+```python
+from pathlib import Path
+
+from kagent.adk.types import parse_config
+
+app = KAgentApp(
+    root_agent_factory=build_agent,
+    agent_card=card,
+    kagent_api_url=config.api_url,
+    app_name=config.app_name,
+    config=parse_config(Path("/config/config.json").read_text()),
+)
+app.build().run()
+```
+{{% /version %}}
 
 The `a2a_grpc_address` argument overrides both the default and the configured address.
 {{% /tab %}}
@@ -270,7 +311,12 @@ The kagent helpers also save the bundle to `/data/kagent/bootstrap/bundle.pb`, a
 ## Known limitations
 
 - **The A2A interface is fixed.** kagent advertises `http://127.0.0.1:80` over gRPC, and `spec.byo` does not take a field that changes the address, the port, or the protocol. An image that serves A2A over only HTTP JSON-RPC cannot run on this harness.
+{{% version include-if="1.0.x,0.x" %}}
 - **The LangGraph, CrewAI, and OpenAI adapters do not satisfy the contract.** The `kagent-langgraph`, `kagent-crewai`, and `kagent-openai` packages each build a FastAPI application with A2A JSON-RPC routes, without a gRPC server. Running LangGraph, CrewAI, or the OpenAI Agents SDK under `byo` means serving A2A over gRPC yourself, as the **Any other language** tab in [Build the image](#build-the-image) describes.
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+- **Python adapters must run the server that `build()` returns.** The `kagent-adk`, `kagent-langgraph`, `kagent-crewai`, and `kagent-openai` packages each build an A2A gRPC server. Start the returned server with `app.build().run()` rather than passing `app.build()` to Uvicorn.
+{{% /version %}}
 - **Skills load only when the image reads them.** kagent mounts each skill and plugin that an AgentTemplate attaches, and describes them in the agent configuration. The Go helper reads that description. The Python helper does not yet read it, so a Python image runs without its skills.
 - **Long-term memory is unavailable.** Memory is configured under `spec.kagent.memory`, and only the `kagent` harness wires it up. A `byo` Harness does not take an equivalent setting. For what a BYO image would need to replace, see [Agent memory]({{< link path="agents/agent-memory" >}}).
 - **A broken port mapping looks like a healthy agent.** For the failure and what avoids it, see [The A2A contract](#the-a2a-contract).
