@@ -11,7 +11,12 @@ author: kagent.dev
 
 ### Enable the metrics endpoint
 
+{{% version include-if="1.0.x,0.x" %}}
 The controller serves its metrics over HTTPS, and accepts a scrape only from a ServiceAccount that holds the `<fullname>-metrics-reader` ClusterRole. Enabling the endpoint creates a dedicated metrics Service and that ClusterRole.
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+The controller serves its metrics over HTTPS by default. With `config.metrics.secure: true`, the endpoint accepts a scrape only from a ServiceAccount that holds the `<fullname>-metrics-reader` ClusterRole. Enabling the endpoint creates a dedicated metrics Service and the metrics role-based access control (RBAC).
+{{% /version %}}
 
 ```yaml
 controller:
@@ -23,12 +28,34 @@ config:
     secure: true
 ```
 
+{{% version include-if="1.0.x,0.x" %}}
 These two sections divide the listener from its Kubernetes packaging. `config.metrics` sets the address that the controller binds and whether it serves over HTTPS. `controller.metrics` creates the Service, the ClusterRoles, and the optional ServiceMonitor. Setting `controller.metrics.enabled` to `false` overrides `config.metrics.bindAddress` with `0`, which disables the listener as well. Change the port through `config.metrics.bindAddress`, because the chart derives the Service `targetPort` and the pod `containerPort` from it at template time.
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+These two sections divide the listener from its Kubernetes packaging. `config.metrics` sets the address that the controller binds and whether it serves over HTTPS. `controller.metrics` creates the Service and the optional ServiceMonitor. For secure metrics, it also creates the ClusterRoles. Setting `controller.metrics.enabled` to `false` overrides `config.metrics.bindAddress` with `0`, which disables the listener as well. Change the port through `config.metrics.bindAddress`, because the chart derives the Service `targetPort` and the pod `containerPort` from it at template time.
+
+To serve HTTP metrics without authentication or authorization, set `config.metrics.secure` to `false`. With HTTP metrics, the chart omits the metrics RBAC resources, including when `rbac.namespaces` or `global.watchNamespaces` restricts the installation to specific namespaces.
+
+```yaml
+controller:
+  metrics:
+    enabled: true
+config:
+  metrics:
+    secure: false
+```
+{{% /version %}}
 
 Grant your Prometheus instance access in one of the following ways.
 
+{{% version include-if="1.0.x,0.x" %}}
 - **With the Prometheus Operator**: Set `controller.metrics.serviceMonitor.enabled` to `true`. The chart creates a ServiceMonitor for the metrics Service. Also set `controller.metrics.serviceMonitor.prometheusServiceAccount.name` and `.namespace` to the ServiceAccount that Prometheus runs as, and the chart binds the metrics reader ClusterRole to it. The chart renders the ServiceMonitor only when the cluster serves the `monitoring.coreos.com/v1` API. For an example, see [OTel stack]({{< link path="observability/otel-stack#send-kagent-telemetry-to-the-collector" >}}).
 - **Without the Prometheus Operator**: Bind the `<fullname>-metrics-reader` ClusterRole to the Prometheus ServiceAccount yourself, and add a scrape job for the `<fullname>-controller-metrics` Service on port `8443`. The job must use HTTPS, send the ServiceAccount token, and skip verification of the controller's self-signed certificate. For an example, see [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#install-prometheus" >}}).
+{{% /version %}}
+{{% version exclude-if="1.0.x,0.x" %}}
+- **With the Prometheus Operator**: Set `controller.metrics.serviceMonitor.enabled` to `true`. The chart creates a ServiceMonitor for the metrics Service. For secure metrics, also set `controller.metrics.serviceMonitor.prometheusServiceAccount.name` and `.namespace` to the ServiceAccount that Prometheus runs as, and the chart binds the metrics reader ClusterRole to it. The chart renders the ServiceMonitor only when the cluster serves the `monitoring.coreos.com/v1` API. For an example, see [OTel stack]({{< link path="observability/otel-stack#send-kagent-telemetry-to-the-collector" >}}).
+- **Without the Prometheus Operator**: Add a scrape job for the `<fullname>-controller-metrics` Service on port `8443`. For secure metrics, bind the `<fullname>-metrics-reader` ClusterRole to the Prometheus ServiceAccount yourself. The secure scrape job must use HTTPS, send the ServiceAccount token, and skip verification of the controller's self-signed certificate. For an example, see [Lightweight OTel stack]({{< link path="observability/lightweight-otel-stack#install-prometheus" >}}).
+{{% /version %}}
 
 ### Metric reference
 
