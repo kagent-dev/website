@@ -151,17 +151,19 @@ Create an EgressPolicy that lists the destinations that you want to grant access
 
    The update is asynchronous, so if the result still says `blocked`, wait a few seconds and send the request again.
 
-The grant reaches existing workloads as well as new ones. kagent updates the policy of every running and suspended Actor without restarting it. For an Agent, this update covers every {{< gloss "Session" >}}Session{{< /gloss >}}. For a SandboxTemplate, the update covers every Sandbox that was created from the template. The update is asynchronous, so a request that is sent immediately after the change might still use the previous policy.
+The grant reaches existing workloads as well as new ones. kagent updates the policy of every running and suspended Actor without restarting it. For an Agent, this update covers every {{< gloss "Session" >}}Session{{< /gloss >}}. For a SandboxTemplate, the update covers every Sandbox that was created from the template. The update is asynchronous, so a request that is sent immediately after the change might still use the previous policy. A grant is not part of a snapshot. If you revoke a grant while a Session or Sandbox is suspended, the grant stays revoked when the Session or Sandbox resumes.
 
 ## Inject a credential
 
 The gateway can add a credential to each request for an origin. The agent sends the header with a placeholder value, and the gateway replaces this value as the request passes through. The credential is not stored in the agent's revision and never reaches the sandbox. The following steps inject a value from a Kubernetes Secret. To inject a token that identifies the calling agent, see [Inject the Actor's token](#inject-the-actors-token).
 
-1. Create the Secret in the namespace of the EgressPolicy. To rotate the credential later, update the Secret. The gateway reads the value from the Secret, so the agent's revision does not change.
+1. Create the Secret in the namespace of the EgressPolicy. To rotate the credential later, update the Secret. The gateway reads the value from the Secret, so the agent's revision does not change. The gateway caches a credential for up to five minutes, so requests can carry the previous value until the cache refreshes. You do not need to restart the agent or the sandbox.
    ```bash
    kubectl create secret generic ticket-auth -n kagent \
      --from-literal=token=<your-api-token>
    ```
+
+   Deleting the Secret revokes the whole grant, not only the credential. The policy becomes invalid, the `EgressPoliciesApplied` condition reports `InvalidEgressPolicy`, and requests to the destination fail. When you create the Secret again, the grant comes back.
 
 2. Create an EgressPolicy with an `authentication` block for the destination.
    ```yaml
@@ -291,7 +293,9 @@ A grant conflict happens in the following cases:
 - A grant sets a credential for an origin that uses token passthrough. Token passthrough and a Secret credential cannot share an origin.
 - The compiled policy would exceed 256 rules.
 
-In a standalone Sandbox, a destination that no grant allows does not resolve. A client therefore reports a name-resolution error, not an HTTP error. For example, `curl` fails with `Could not resolve host` and exit code `6`. For how to find a denied request in the gateway's log, see [Diagnose a denied request]({{< link path="about/substrate-runtime/networking-and-egress#diagnose-a-denied-request" >}}).
+The `EgressPoliciesApplied` condition reports admission, not delivery. The admission check confirms that the Secret and its key exist, but not the value. When the gateway cannot produce a credential that a request needs, it denies the request with `503 Service Unavailable` instead of sending the placeholder upstream. The denial happens, for example, when the Secret key holds an empty value, or when the credential provider is unavailable for a credential the gateway has not cached. A request without the credential header still goes through.
+
+In a Session or a standalone Sandbox, a destination that no grant allows does not resolve. A client therefore reports a name-resolution error, not an HTTP error. For example, `curl` fails with `Could not resolve host` and exit code `6`, and BusyBox `wget` reports `bad address`. A request that still reaches the gateway, such as one sent to an IP address, is refused with `403 Forbidden`. For how to find a denied request in the gateway's log, see [Diagnose a denied request]({{< link path="about/substrate-runtime/networking-and-egress#diagnose-a-denied-request" >}}).
 
 A destination that redirects to another origin needs a grant for that origin as well. For example, a package registry often serves downloads from a separate host, so an install fails at that host until the policy grants it too.
 
@@ -300,6 +304,8 @@ A destination that redirects to another origin needs a grant for that origin as 
 An origin can have only one value for each scheme, host, and port. The scheme must be `http` or `https`. When the port is omitted, kagent uses `443` for `https` and `80` for `http`. The API server rejects an origin that contains a path, a query, a fragment, user information, or an IP address.
 
 A wildcard can replace the leftmost label of the hostname. For example, `https://*.example.com` matches `api.example.com`, but it matches neither `example.com` nor `a.b.example.com`. The API server rejects `*` and `https://*.com`.
+
+A wildcard origin never carries a credential. When a wildcard and an exact origin with a credential both match a request, the exact origin's credential wins, and the gateway injects it. The credential applies only to that scheme, host, and port. Another host that the wildcard matches, or the same host on another port, receives the request with its placeholder unchanged.
 
 The API server rejects an `egressPolicyRefs` list that selects more than 16 policies and a policy that lists more than 64 destinations. The compiled policy limit also counts the destinations that kagent inferred, so an Agent with many tools reaches it sooner.
 
